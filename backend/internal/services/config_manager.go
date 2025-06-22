@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
@@ -38,10 +39,15 @@ type ConfigManagerInterface interface {
 }
 
 // ConfigManagerImpl provides thread-safe configuration management with copy-on-write semantics
+// Enhanced with BF-005 distributed locking and consistency validation
 type ConfigManagerImpl struct {
 	db               *sqlx.DB
 	campaignStore    store.CampaignStore
 	stateCoordinator StateCoordinator
+
+	// BF-005: Distributed locking and consistency validation
+	lockingService       config.ConfigLockingService
+	consistencyValidator config.ConfigConsistencyValidator
 
 	// Configuration cache with copy-on-write semantics
 	configCache map[string]*atomicConfigEntry
@@ -59,6 +65,8 @@ type ConfigManagerImpl struct {
 	cacheMisses       int64
 	updateCount       int64
 	coordinationCount int64
+	distributedLocks  int64
+	validationChecks  int64
 	metricsLock       sync.RWMutex
 }
 
@@ -84,16 +92,31 @@ func NewConfigManager(
 	stateCoordinator StateCoordinator,
 	config ConfigManagerConfig,
 ) ConfigManagerInterface {
+	return NewConfigManagerWithServices(db, campaignStore, stateCoordinator, nil, nil, config)
+}
+
+// NewConfigManagerWithServices creates a new configuration manager with BF-005 enhancements
+func NewConfigManagerWithServices(
+	db *sqlx.DB,
+	campaignStore store.CampaignStore,
+	stateCoordinator StateCoordinator,
+	lockingService config.ConfigLockingService,
+	consistencyValidator config.ConfigConsistencyValidator,
+	config ConfigManagerConfig,
+) ConfigManagerInterface {
 	cm := &ConfigManagerImpl{
-		db:               db,
-		campaignStore:    campaignStore,
-		stateCoordinator: stateCoordinator,
-		configCache:      make(map[string]*atomicConfigEntry),
-		configLocks:      make(map[string]*sync.RWMutex),
+		db:                   db,
+		campaignStore:        campaignStore,
+		stateCoordinator:     stateCoordinator,
+		lockingService:       lockingService,
+		consistencyValidator: consistencyValidator,
+		configCache:          make(map[string]*atomicConfigEntry),
+		configLocks:          make(map[string]*sync.RWMutex),
 	}
 
-	log.Printf("ConfigManager: Initialized with caching=%v, state_tracking=%v",
-		config.EnableCaching, config.EnableStateTracking)
+	log.Printf("ConfigManager: Initialized with caching=%v, state_tracking=%v, distributed_locking=%v, consistency_validation=%v",
+		config.EnableCaching, config.EnableStateTracking,
+		lockingService != nil, consistencyValidator != nil)
 
 	return cm
 }
@@ -159,15 +182,107 @@ func (cm *ConfigManagerImpl) GetDomainGenerationConfig(ctx context.Context, conf
 }
 
 // UpdateDomainGenerationConfig performs atomic configuration updates with versioning
+// Enhanced with BF-005 distributed locking and consistency validation
 func (cm *ConfigManagerImpl) UpdateDomainGenerationConfig(ctx context.Context, configHash string, updateFn func(*models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error)) (*models.ConfigVersion, error) {
-	log.Printf("ConfigManager: Updating domain generation config for hash %s", configHash)
+	log.Printf("ConfigManager: Updating domain generation config for hash %s with BF-005 enhancements", configHash)
 
+	atomic.AddInt64(&cm.updateCount, 1)
+
+	// BF-005 Enhancement: Use distributed locking if available
+	if cm.lockingService != nil {
+		return cm.updateWithDistributedLocking(ctx, configHash, updateFn)
+	}
+
+	// Fallback to local locking for backward compatibility
+	return cm.updateWithLocalLocking(ctx, configHash, updateFn)
+}
+
+// updateWithDistributedLocking performs update with BF-005 distributed locking
+func (cm *ConfigManagerImpl) updateWithDistributedLocking(ctx context.Context, configHash string, updateFn func(*models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error)) (*models.ConfigVersion, error) {
+	owner := fmt.Sprintf("config_manager_%d", time.Now().UnixNano())
+	timeout := 30 * time.Second
+
+	atomic.AddInt64(&cm.distributedLocks, 1)
+
+	var result *models.ConfigVersion
+	var updateErr error
+
+	// Use distributed locking service for COW configuration updates
+	lockErr := cm.lockingService.WithConfigLock(ctx, configHash, models.ConfigLockTypeExclusive, owner, timeout, func() error {
+		// Pre-update consistency validation
+		if cm.consistencyValidator != nil {
+			atomic.AddInt64(&cm.validationChecks, 1)
+			log.Printf("ConfigManager: Validating config consistency before update for hash %s", configHash)
+
+			// Get current state for validation
+			currentConfig, err := cm.getDomainGenerationConfigInternal(ctx, configHash)
+			if err != nil {
+				return fmt.Errorf("failed to get config for validation: %w", err)
+			}
+
+			var currentState *models.DomainGenerationConfigState
+			if currentConfig != nil {
+				currentState = currentConfig.ConfigState
+			}
+
+			validationResult, err := cm.consistencyValidator.ValidateConfigConsistency(ctx, configHash, currentState)
+			if err != nil {
+				log.Printf("ConfigManager: Consistency validation failed for hash %s: %v", configHash, err)
+				return fmt.Errorf("consistency validation failed: %w", err)
+			}
+
+			if !validationResult.IsValid {
+				log.Printf("ConfigManager: Configuration invalid for hash %s: %v", configHash, validationResult.ValidationErrors)
+				return fmt.Errorf("configuration validation failed: %v", validationResult.ValidationErrors)
+			}
+
+			log.Printf("ConfigManager: Configuration validation passed for hash %s", configHash)
+		}
+
+		// Perform the actual update within the distributed lock
+		result, updateErr = cm.updateWithLocalLocking(ctx, configHash, updateFn)
+		if updateErr != nil {
+			return updateErr
+		}
+
+		// Post-update integrity verification
+		if cm.consistencyValidator != nil {
+			log.Printf("ConfigManager: Verifying config integrity after update for hash %s", configHash)
+
+			integrityResult, err := cm.consistencyValidator.VerifyConfigIntegrity(ctx, configHash, result.ConfigState)
+			if err != nil {
+				log.Printf("ConfigManager: Integrity verification failed for hash %s: %v", configHash, err)
+				return fmt.Errorf("integrity verification failed: %w", err)
+			}
+
+			if !integrityResult.IntegrityValid {
+				log.Printf("ConfigManager: Configuration integrity invalid for hash %s: %v", configHash, integrityResult.IntegrityErrors)
+				return fmt.Errorf("configuration integrity verification failed: %v", integrityResult.IntegrityErrors)
+			}
+
+			log.Printf("ConfigManager: Configuration integrity verified for hash %s", configHash)
+		}
+
+		return nil
+	})
+
+	if lockErr != nil {
+		return nil, fmt.Errorf("distributed lock operation failed: %w", lockErr)
+	}
+
+	if updateErr != nil {
+		return nil, updateErr
+	}
+
+	return result, nil
+}
+
+// updateWithLocalLocking performs update with local locking (original implementation)
+func (cm *ConfigManagerImpl) updateWithLocalLocking(ctx context.Context, configHash string, updateFn func(*models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error)) (*models.ConfigVersion, error) {
 	// Get exclusive lock for this configuration
 	lock := cm.getConfigLock(configHash)
 	lock.Lock()
 	defer lock.Unlock()
-
-	atomic.AddInt64(&cm.updateCount, 1)
 
 	// Get current configuration without acquiring additional locks (we already have exclusive lock)
 	currentConfig, err := cm.getDomainGenerationConfigInternal(ctx, configHash)
@@ -341,7 +456,7 @@ func (cm *ConfigManagerImpl) GetConfigMetrics() map[string]int64 {
 	activeLocks := int64(len(cm.configLocks))
 	cm.locksMutex.RUnlock()
 
-	return map[string]int64{
+	metrics := map[string]int64{
 		"cache_hits":      atomic.LoadInt64(&cm.cacheHits),
 		"cache_misses":    atomic.LoadInt64(&cm.cacheMisses),
 		"updates":         atomic.LoadInt64(&cm.updateCount),
@@ -349,7 +464,27 @@ func (cm *ConfigManagerImpl) GetConfigMetrics() map[string]int64 {
 		"cache_size":      cacheSize,
 		"active_locks":    activeLocks,
 		"version_counter": atomic.LoadInt64(&cm.versionCounter),
+		// BF-005 enhancement metrics
+		"distributed_locks": atomic.LoadInt64(&cm.distributedLocks),
+		"validation_checks": atomic.LoadInt64(&cm.validationChecks),
 	}
+
+	// Include metrics from BF-005 services if available
+	if cm.lockingService != nil {
+		lockingMetrics := cm.lockingService.GetMetrics()
+		for key, value := range lockingMetrics {
+			metrics["locking_"+key] = value
+		}
+	}
+
+	if cm.consistencyValidator != nil {
+		validationMetrics := cm.consistencyValidator.GetValidationMetrics()
+		for key, value := range validationMetrics {
+			metrics["validation_"+key] = value
+		}
+	}
+
+	return metrics
 }
 
 // Internal helper methods
@@ -368,7 +503,9 @@ func (cm *ConfigManagerImpl) getCachedConfig(configHash string) *models.ConfigVe
 	atomic.AddInt64(&entry.accessCount, 1)
 
 	if configValue := entry.config.Load(); configValue != nil {
-		return configValue.(*models.ConfigVersion)
+		if config, ok := configValue.(*models.ConfigVersion); ok {
+			return config
+		}
 	}
 
 	return nil
@@ -500,13 +637,13 @@ func (cm *ConfigManagerImpl) executeInTransaction(ctx context.Context, fn func(*
 
 		defer func() {
 			if r := recover(); r != nil {
-				tx.Rollback()
+				_ = tx.Rollback()
 				panic(r)
 			}
 		}()
 
 		if err := fn(tx); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 
