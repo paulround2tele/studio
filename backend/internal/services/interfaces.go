@@ -35,9 +35,9 @@ type UpdateCampaignRequest struct {
 // --- Unified Campaign Creation Request DTO ---
 
 type CreateCampaignRequest struct {
-	CampaignType string `json:"campaignType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation"`
-	Name         string `json:"name" validate:"required"`
-	Description  string `json:"description,omitempty"`
+	CampaignType string    `json:"campaignType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation"`
+	Name         string    `json:"name" validate:"required"`
+	Description  string    `json:"description,omitempty"`
 	UserID       uuid.UUID `json:"userId,omitempty"`
 
 	// Domain Generation specific fields
@@ -85,12 +85,12 @@ type HttpKeywordParams struct {
 // --- Campaign Creation Request DTOs (specific to each campaign type) ---
 
 type CreateDomainGenerationCampaignRequest struct {
-	Name                 string `json:"name" validate:"required"`
-	PatternType          string `json:"patternType" validate:"required,oneof=prefix suffix both"`
-	VariableLength       int    `json:"variableLength" validate:"required,gt=0"`
-	CharacterSet         string `json:"characterSet" validate:"required"`
-	ConstantString       string `json:"constantString" validate:"required"`
-	TLD                  string `json:"tld" validate:"required"`
+	Name                 string    `json:"name" validate:"required"`
+	PatternType          string    `json:"patternType" validate:"required,oneof=prefix suffix both"`
+	VariableLength       int       `json:"variableLength" validate:"required,gt=0"`
+	CharacterSet         string    `json:"characterSet" validate:"required"`
+	ConstantString       string    `json:"constantString" validate:"required"`
+	TLD                  string    `json:"tld" validate:"required"`
 	NumDomainsToGenerate int64     `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0"`
 	UserID               uuid.UUID `json:"userId,omitempty"`
 }

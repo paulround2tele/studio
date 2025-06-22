@@ -40,6 +40,13 @@ type CampaignStore interface {
 	UpdateCampaignStatus(ctx context.Context, exec Querier, id uuid.UUID, status models.CampaignStatusEnum, errorMessage sql.NullString) error
 	UpdateCampaignProgress(ctx context.Context, exec Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error
 
+	// User-filtered methods providing tenant isolation at database query level
+	GetCampaignByIDWithUserFilter(ctx context.Context, exec Querier, id uuid.UUID, userID uuid.UUID) (*models.Campaign, error)
+	UpdateCampaignWithUserFilter(ctx context.Context, exec Querier, campaign *models.Campaign, userID uuid.UUID) error
+	DeleteCampaignWithUserFilter(ctx context.Context, exec Querier, id uuid.UUID, userID uuid.UUID) error
+	UpdateCampaignStatusWithUserFilter(ctx context.Context, exec Querier, id uuid.UUID, status models.CampaignStatusEnum, errorMessage sql.NullString, userID uuid.UUID) error
+	UpdateCampaignProgressWithUserFilter(ctx context.Context, exec Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64, userID uuid.UUID) error
+
 	CreateDomainGenerationParams(ctx context.Context, exec Querier, params *models.DomainGenerationCampaignParams) error
 	GetDomainGenerationParams(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.DomainGenerationCampaignParams, error)
 	UpdateDomainGenerationParamsOffset(ctx context.Context, exec Querier, campaignID uuid.UUID, newOffset int64) error
@@ -47,6 +54,11 @@ type CampaignStore interface {
 	// Methods for DomainGenerationConfigState
 	GetDomainGenerationConfigStateByHash(ctx context.Context, exec Querier, configHash string) (*models.DomainGenerationConfigState, error)
 	CreateOrUpdateDomainGenerationConfigState(ctx context.Context, exec Querier, state *models.DomainGenerationConfigState) error
+
+	// Atomic configuration operations for BL-002 remediation
+	AtomicUpdateDomainGenerationConfigState(ctx context.Context, exec Querier, request *models.ConfigUpdateRequest) (*models.AtomicConfigUpdateResult, error)
+	GetVersionedDomainGenerationConfigState(ctx context.Context, exec Querier, configHash string, lockType models.ConfigLockType) (*models.VersionedDomainGenerationConfigState, error)
+	ValidateConfigConsistency(ctx context.Context, exec Querier, configHash string) (*models.ConfigValidationResult, error)
 
 	CreateGeneratedDomains(ctx context.Context, exec Querier, domains []*models.GeneratedDomain) error
 	GetGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error)
@@ -152,6 +164,11 @@ type AuditLogStore interface {
 	// No Transactor needed. exec Querier allows running in existing Tx if caller provides one.
 	CreateAuditLog(ctx context.Context, exec Querier, logEntry *models.AuditLog) error
 	ListAuditLogs(ctx context.Context, exec Querier, filter ListAuditLogsFilter) ([]*models.AuditLog, error)
+
+	// BL-006 COMPLIANCE: Enhanced audit logging with user context validation
+	CreateAuditLogWithValidation(ctx context.Context, exec Querier, logEntry *models.AuditLog) error
+	GetAuditLogsWithUserFilter(ctx context.Context, exec Querier, userID uuid.UUID, filter ListAuditLogsFilter) ([]*models.AuditLog, error)
+	ValidateAuditLogCompleteness(ctx context.Context, exec Querier, startTime, endTime time.Time) ([]string, error)
 }
 
 type ListAuditLogsFilter struct {

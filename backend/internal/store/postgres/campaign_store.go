@@ -20,12 +20,16 @@ import (
 
 // campaignStorePostgres implements the store.CampaignStore interface for PostgreSQL
 type campaignStorePostgres struct {
-	db *sqlx.DB
+	db          *sqlx.DB
+	stmtManager *PreparedStatementManager
 }
 
 // NewCampaignStorePostgres creates a new CampaignStore for PostgreSQL
 func NewCampaignStorePostgres(db *sqlx.DB) store.CampaignStore {
-	return &campaignStorePostgres{db: db}
+	return &campaignStorePostgres{
+		db:          db,
+		stmtManager: NewPreparedStatementManager(),
+	}
 }
 
 // BeginTxx starts a new transaction.
@@ -56,6 +60,20 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 	return campaign, err
 }
 
+// GetCampaignByIDWithUserFilter retrieves a campaign by ID with mandatory user ownership validation
+// This method provides tenant isolation at the database query level
+func (s *campaignStorePostgres) GetCampaignByIDWithUserFilter(ctx context.Context, exec store.Querier, id uuid.UUID, userID uuid.UUID) (*models.Campaign, error) {
+	campaign := &models.Campaign{}
+	query := `SELECT id, name, campaign_type, status, user_id, created_at, updated_at,
+					 started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message
+			  FROM campaigns WHERE id = $1 AND user_id = $2`
+	err := exec.GetContext(ctx, campaign, query, id, userID)
+	if err == sql.ErrNoRows {
+		return nil, store.ErrNotFound
+	}
+	return campaign, err
+}
+
 func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
 	query := `UPDATE campaigns SET
 				name = :name, campaign_type = :campaign_type, status = :status, user_id = :user_id,
@@ -74,9 +92,52 @@ func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Q
 	return err
 }
 
+// UpdateCampaignWithUserFilter updates a campaign with mandatory user ownership validation
+// This method provides tenant isolation at the database query level
+func (s *campaignStorePostgres) UpdateCampaignWithUserFilter(ctx context.Context, exec store.Querier, campaign *models.Campaign, userID uuid.UUID) error {
+	query := `UPDATE campaigns SET
+				name = $2, campaign_type = $3, status = $4, user_id = $5,
+				updated_at = $6, started_at = $7, completed_at = $8,
+				progress_percentage = $9, total_items = $10,
+				processed_items = $11, successful_items = $12, failed_items = $13,
+				metadata = $14, error_message = $15
+			  WHERE id = $1 AND user_id = $16`
+
+	result, err := exec.ExecContext(ctx, query,
+		campaign.ID, campaign.Name, campaign.CampaignType, campaign.Status, campaign.UserID,
+		campaign.UpdatedAt, campaign.StartedAt, campaign.CompletedAt,
+		campaign.ProgressPercentage, campaign.TotalItems,
+		campaign.ProcessedItems, campaign.SuccessfulItems, campaign.FailedItems,
+		campaign.Metadata, campaign.ErrorMessage, userID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err == nil && rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+	return err
+}
+
 func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Querier, id uuid.UUID) error {
 	query := `DELETE FROM campaigns WHERE id = $1`
 	result, err := exec.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err == nil && rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+	return err
+}
+
+// DeleteCampaignWithUserFilter deletes a campaign with mandatory user ownership validation
+// This method provides tenant isolation at the database query level
+func (s *campaignStorePostgres) DeleteCampaignWithUserFilter(ctx context.Context, exec store.Querier, id uuid.UUID, userID uuid.UUID) error {
+	query := `DELETE FROM campaigns WHERE id = $1 AND user_id = $2`
+	result, err := exec.ExecContext(ctx, query, id, userID)
 	if err != nil {
 		return err
 	}
@@ -203,20 +264,65 @@ func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec s
 	return err
 }
 
+// UpdateCampaignStatusWithUserFilter updates campaign status with mandatory user ownership validation
+// This method provides tenant isolation at the database query level
+func (s *campaignStorePostgres) UpdateCampaignStatusWithUserFilter(ctx context.Context, exec store.Querier, id uuid.UUID, status models.CampaignStatusEnum, errorMessage sql.NullString, userID uuid.UUID) error {
+	query := `UPDATE campaigns SET status = $1, error_message = $2, updated_at = NOW() WHERE id = $3 AND user_id = $4`
+	result, err := exec.ExecContext(ctx, query, status, errorMessage, id, userID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err == nil && rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+	return err
+}
+
 func (s *campaignStorePostgres) UpdateCampaignProgress(ctx context.Context, exec store.Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error {
 	// First, update the progress and set status to 'running' if it's not already completed or failed
-	query := `UPDATE campaigns 
-		SET processed_items = $1, 
-			total_items = $2, 
-			progress_percentage = $3, 
-			status = CASE 
-				WHEN status NOT IN ('completed', 'failed') THEN 'running' 
-				ELSE status 
+	query := `UPDATE campaigns
+		SET processed_items = $1,
+			total_items = $2,
+			progress_percentage = $3,
+			status = CASE
+				WHEN status NOT IN ('completed', 'failed') THEN 'running'
+				ELSE status
 			END,
-			updated_at = NOW() 
+			updated_at = NOW()
 		WHERE id = $4`
 
 	result, err := exec.ExecContext(ctx, query, processedItems, totalItems, progressPercentage, id)
+	if err != nil {
+		return fmt.Errorf("error updating campaign progress: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error getting rows affected: %w", err)
+	}
+	if rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+
+	return nil
+}
+
+// UpdateCampaignProgressWithUserFilter updates campaign progress with mandatory user ownership validation
+// This method provides tenant isolation at the database query level
+func (s *campaignStorePostgres) UpdateCampaignProgressWithUserFilter(ctx context.Context, exec store.Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64, userID uuid.UUID) error {
+	query := `UPDATE campaigns
+		SET processed_items = $1,
+			total_items = $2,
+			progress_percentage = $3,
+			status = CASE
+				WHEN status NOT IN ('completed', 'failed') THEN 'running'
+				ELSE status
+			END,
+			updated_at = NOW()
+		WHERE id = $4 AND user_id = $5`
+
+	result, err := exec.ExecContext(ctx, query, processedItems, totalItems, progressPercentage, id, userID)
 	if err != nil {
 		return fmt.Errorf("error updating campaign progress: %w", err)
 	}
@@ -285,9 +391,123 @@ func (s *campaignStorePostgres) CreateOrUpdateDomainGenerationConfigState(ctx co
 			  ON CONFLICT (config_hash) DO UPDATE SET
 				last_offset = EXCLUDED.last_offset,
 				config_details = EXCLUDED.config_details,
-				updated_at = EXCLUDED.updated_at`
+				updated_at = EXCLUDED.updated_at,
+				version = COALESCE(domain_generation_config_states.version, 0) + 1`
 	_, err := exec.NamedExecContext(ctx, query, state)
 	return err
+}
+
+// AtomicUpdateDomainGenerationConfigState performs atomic configuration update with optimistic locking
+func (s *campaignStorePostgres) AtomicUpdateDomainGenerationConfigState(ctx context.Context, exec store.Querier, request *models.ConfigUpdateRequest) (*models.AtomicConfigUpdateResult, error) {
+	query := `SELECT * FROM atomic_update_domain_config_state($1, $2, $3, $4)`
+
+	var result models.AtomicConfigUpdateResult
+	err := exec.GetContext(ctx, &result, query,
+		request.ConfigHash,
+		request.ExpectedVersion,
+		request.NewLastOffset,
+		request.ConfigDetails,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("atomic config update failed: %w", err)
+	}
+
+	return &result, nil
+}
+
+// GetVersionedDomainGenerationConfigState retrieves versioned configuration with optional locking
+func (s *campaignStorePostgres) GetVersionedDomainGenerationConfigState(ctx context.Context, exec store.Querier, configHash string, lockType models.ConfigLockType) (*models.VersionedDomainGenerationConfigState, error) {
+	query := `SELECT * FROM get_domain_config_state_with_lock($1, $2)`
+
+	var state models.VersionedDomainGenerationConfigState
+	err := exec.GetContext(ctx, &state, query, configHash, string(lockType))
+
+	if err == sql.ErrNoRows {
+		return nil, store.ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get versioned config state: %w", err)
+	}
+
+	return &state, nil
+}
+
+// ValidateConfigConsistency validates configuration state consistency
+func (s *campaignStorePostgres) ValidateConfigConsistency(ctx context.Context, exec store.Querier, configHash string) (*models.ConfigValidationResult, error) {
+	state, err := s.GetVersionedDomainGenerationConfigState(ctx, exec, configHash, models.ConfigLockTypeShared)
+	if err != nil {
+		return &models.ConfigValidationResult{
+			IsValid:          false,
+			ConfigHash:       configHash,
+			ValidationErrors: []string{fmt.Sprintf("Failed to retrieve config: %v", err)},
+			ValidatedAt:      time.Now().UTC(),
+		}, nil
+	}
+
+	var validationErrors []string
+	var validationChecks []models.ConfigValidationCheck
+
+	// Check version consistency
+	if state.Version <= 0 {
+		validationErrors = append(validationErrors, "Invalid version: must be positive")
+		validationChecks = append(validationChecks, models.ConfigValidationCheck{
+			CheckType:    "version_validation",
+			CheckPassed:  false,
+			ErrorMessage: "Version must be positive",
+			CheckedAt:    time.Now().UTC(),
+		})
+	} else {
+		validationChecks = append(validationChecks, models.ConfigValidationCheck{
+			CheckType:   "version_validation",
+			CheckPassed: true,
+			CheckedAt:   time.Now().UTC(),
+		})
+	}
+
+	// Check offset consistency
+	if state.LastOffset < 0 {
+		validationErrors = append(validationErrors, "Invalid offset: must be non-negative")
+		validationChecks = append(validationChecks, models.ConfigValidationCheck{
+			CheckType:    "offset_validation",
+			CheckPassed:  false,
+			ErrorMessage: "Offset must be non-negative",
+			CheckedAt:    time.Now().UTC(),
+		})
+	} else {
+		validationChecks = append(validationChecks, models.ConfigValidationCheck{
+			CheckType:   "offset_validation",
+			CheckPassed: true,
+			CheckedAt:   time.Now().UTC(),
+		})
+	}
+
+	// Check config details
+	if len(state.ConfigDetails) == 0 {
+		validationErrors = append(validationErrors, "Invalid config details: cannot be empty")
+		validationChecks = append(validationChecks, models.ConfigValidationCheck{
+			CheckType:    "config_details_validation",
+			CheckPassed:  false,
+			ErrorMessage: "Config details cannot be empty",
+			CheckedAt:    time.Now().UTC(),
+		})
+	} else {
+		validationChecks = append(validationChecks, models.ConfigValidationCheck{
+			CheckType:   "config_details_validation",
+			CheckPassed: true,
+			CheckedAt:   time.Now().UTC(),
+		})
+	}
+
+	return &models.ConfigValidationResult{
+		IsValid:          len(validationErrors) == 0,
+		ConfigHash:       configHash,
+		CurrentVersion:   state.Version,
+		CurrentOffset:    state.LastOffset,
+		ValidationErrors: validationErrors,
+		ValidationChecks: validationChecks,
+		ValidatedAt:      time.Now().UTC(),
+	}, nil
 }
 
 // --- Generated Domains --- //
@@ -296,6 +516,10 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 	if len(domains) == 0 {
 		return nil
 	}
+
+	// Add timeout to context if not present
+	timeoutCtx, cancel := WithTimeout(ctx, DefaultTimeout)
+	defer cancel()
 
 	// Extract campaign ID for logging
 	var campaignID string
@@ -312,35 +536,37 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 	query := `INSERT INTO generated_domains
 		(id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at)
 		VALUES (:id, :domain_generation_campaign_id, :domain_name, :source_keyword, :source_pattern, :tld, :offset_index, :generated_at, :created_at)`
-	
+
 	monitoring.LogPreparedStatementLifecycle("CreateGeneratedDomains", campaignID, query, "prepare_start", nil)
-	stmt, err := exec.PrepareNamedContext(ctx, query)
+
+	// Use SafePreparedStatement to ensure proper cleanup
+	err := s.stmtManager.SafePreparedStatement(timeoutCtx, exec, query, "CreateGeneratedDomains", func(stmt *sqlx.NamedStmt) error {
+		monitoring.LogPreparedStatementLifecycle("CreateGeneratedDomains", campaignID, query, "prepare_success", nil)
+
+		for _, domain := range domains {
+			if domain.ID == uuid.Nil {
+				domain.ID = uuid.New()
+			}
+			if domain.GeneratedAt.IsZero() {
+				domain.GeneratedAt = time.Now().UTC()
+			}
+			if domain.CreatedAt.IsZero() {
+				domain.CreatedAt = time.Now().UTC()
+			}
+			_, err := stmt.ExecContext(timeoutCtx, domain)
+			if err != nil {
+				monitoring.LogPreparedStatementLifecycle("CreateGeneratedDomains", campaignID, query, "exec_failed", err)
+				return fmt.Errorf("failed to insert domain %s: %w", domain.DomainName, err)
+			}
+		}
+
+		monitoring.LogPreparedStatementLifecycle("CreateGeneratedDomains", campaignID, query, "complete", nil)
+		return nil
+	})
+
 	if err != nil {
 		monitoring.LogPreparedStatementLifecycle("CreateGeneratedDomains", campaignID, query, "prepare_failed", err)
 		return err
-	}
-	monitoring.LogPreparedStatementLifecycle("CreateGeneratedDomains", campaignID, query, "prepare_success", nil)
-
-	defer func() {
-		closeErr := stmt.Close()
-		monitoring.LogResourceCleanup("prepared_statement", campaignID, closeErr == nil, closeErr)
-	}()
-
-	for _, domain := range domains {
-		if domain.ID == uuid.Nil {
-			domain.ID = uuid.New()
-		}
-		if domain.GeneratedAt.IsZero() {
-			domain.GeneratedAt = time.Now().UTC()
-		}
-		if domain.CreatedAt.IsZero() {
-			domain.CreatedAt = time.Now().UTC()
-		}
-		_, err := stmt.ExecContext(ctx, domain)
-		if err != nil {
-			monitoring.LogPreparedStatementLifecycle("CreateGeneratedDomains", campaignID, query, "exec_failed", err)
-			return err
-		}
 	}
 
 	// Log final database metrics
@@ -349,7 +575,6 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 		metrics.LogConnectionPoolStats("CreateGeneratedDomains_end", campaignID)
 	}
 
-	monitoring.LogPreparedStatementLifecycle("CreateGeneratedDomains", campaignID, query, "complete", nil)
 	return nil
 }
 
@@ -450,6 +675,10 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 		return nil
 	}
 
+	// Add timeout to context if not present
+	timeoutCtx, cancel := WithTimeout(ctx, DefaultTimeout)
+	defer cancel()
+
 	// Extract campaign ID for logging
 	var campaignID string
 	if len(results) > 0 && results[0] != nil {
@@ -471,34 +700,36 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 	           last_checked_at = EXCLUDED.last_checked_at, created_at = EXCLUDED.created_at`
 
 	monitoring.LogPreparedStatementLifecycle("CreateDNSValidationResults", campaignID, query, "prepare_start", nil)
-	stmt, err := exec.PrepareNamedContext(ctx, query)
+
+	// Use SafePreparedStatement to ensure proper cleanup
+	err := s.stmtManager.SafePreparedStatement(timeoutCtx, exec, query, "CreateDNSValidationResults", func(stmt *sqlx.NamedStmt) error {
+		monitoring.LogPreparedStatementLifecycle("CreateDNSValidationResults", campaignID, query, "prepare_success", nil)
+
+		for _, result := range results {
+			if result.ID == uuid.Nil {
+				result.ID = uuid.New()
+			}
+			if result.LastCheckedAt == nil || result.LastCheckedAt.IsZero() {
+				now := time.Now().UTC()
+				result.LastCheckedAt = &now
+			}
+			if result.CreatedAt.IsZero() {
+				result.CreatedAt = time.Now().UTC()
+			}
+			_, err := stmt.ExecContext(timeoutCtx, result)
+			if err != nil {
+				monitoring.LogPreparedStatementLifecycle("CreateDNSValidationResults", campaignID, query, "exec_failed", err)
+				return fmt.Errorf("failed to insert DNS validation result for domain %s: %w", result.DomainName, err)
+			}
+		}
+
+		monitoring.LogPreparedStatementLifecycle("CreateDNSValidationResults", campaignID, query, "complete", nil)
+		return nil
+	})
+
 	if err != nil {
 		monitoring.LogPreparedStatementLifecycle("CreateDNSValidationResults", campaignID, query, "prepare_failed", err)
 		return err
-	}
-	monitoring.LogPreparedStatementLifecycle("CreateDNSValidationResults", campaignID, query, "prepare_success", nil)
-
-	defer func() {
-		closeErr := stmt.Close()
-		monitoring.LogResourceCleanup("prepared_statement", campaignID, closeErr == nil, closeErr)
-	}()
-
-	for _, result := range results {
-		if result.ID == uuid.Nil {
-			result.ID = uuid.New()
-		}
-		if result.LastCheckedAt == nil || result.LastCheckedAt.IsZero() {
-			now := time.Now().UTC()
-			result.LastCheckedAt = &now
-		}
-		if result.CreatedAt.IsZero() {
-			result.CreatedAt = time.Now().UTC()
-		}
-		_, err := stmt.ExecContext(ctx, result)
-		if err != nil {
-			monitoring.LogPreparedStatementLifecycle("CreateDNSValidationResults", campaignID, query, "exec_failed", err)
-			return err
-		}
 	}
 
 	// Log final database metrics
@@ -507,7 +738,6 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 		metrics.LogConnectionPoolStats("CreateDNSValidationResults_end", campaignID)
 	}
 
-	monitoring.LogPreparedStatementLifecycle("CreateDNSValidationResults", campaignID, query, "complete", nil)
 	return nil
 }
 
@@ -742,6 +972,10 @@ func (s *campaignStorePostgres) CreateHTTPKeywordResults(ctx context.Context, ex
 		return nil
 	}
 
+	// Add timeout to context if not present
+	timeoutCtx, cancel := WithTimeout(ctx, DefaultTimeout)
+	defer cancel()
+
 	// Extract campaign ID for logging
 	var campaignID string
 	if len(results) > 0 && results[0] != nil {
@@ -766,36 +1000,38 @@ func (s *campaignStorePostgres) CreateHTTPKeywordResults(ctx context.Context, ex
 		          attempts = http_keyword_results.attempts + 1, last_checked_at = EXCLUDED.last_checked_at, created_at = EXCLUDED.created_at`
 
 	monitoring.LogPreparedStatementLifecycle("CreateHTTPKeywordResults", campaignID, query, "prepare_start", nil)
-	stmt, err := exec.PrepareNamedContext(ctx, query)
+
+	// Use SafePreparedStatement to ensure proper cleanup
+	err := s.stmtManager.SafePreparedStatement(timeoutCtx, exec, query, "CreateHTTPKeywordResults", func(stmt *sqlx.NamedStmt) error {
+		monitoring.LogPreparedStatementLifecycle("CreateHTTPKeywordResults", campaignID, query, "prepare_success", nil)
+
+		for _, result := range results {
+			if result.ID == uuid.Nil {
+				result.ID = uuid.New()
+			}
+			if result.LastCheckedAt == nil || result.LastCheckedAt.IsZero() {
+				now := time.Now().UTC()
+				result.LastCheckedAt = &now
+			}
+
+			dbRes := *result
+			if dbRes.CreatedAt.IsZero() {
+				dbRes.CreatedAt = time.Now().UTC()
+			}
+			_, err := stmt.ExecContext(timeoutCtx, &dbRes)
+			if err != nil {
+				monitoring.LogPreparedStatementLifecycle("CreateHTTPKeywordResults", campaignID, query, "exec_failed", err)
+				return fmt.Errorf("failed to insert HTTP keyword result for domain %s: %w", result.DomainName, err)
+			}
+		}
+
+		monitoring.LogPreparedStatementLifecycle("CreateHTTPKeywordResults", campaignID, query, "complete", nil)
+		return nil
+	})
+
 	if err != nil {
 		monitoring.LogPreparedStatementLifecycle("CreateHTTPKeywordResults", campaignID, query, "prepare_failed", err)
 		return err
-	}
-	monitoring.LogPreparedStatementLifecycle("CreateHTTPKeywordResults", campaignID, query, "prepare_success", nil)
-
-	defer func() {
-		closeErr := stmt.Close()
-		monitoring.LogResourceCleanup("prepared_statement", campaignID, closeErr == nil, closeErr)
-	}()
-
-	for _, result := range results {
-		if result.ID == uuid.Nil {
-			result.ID = uuid.New()
-		}
-		if result.LastCheckedAt == nil || result.LastCheckedAt.IsZero() {
-			now := time.Now().UTC()
-			result.LastCheckedAt = &now
-		}
-
-		dbRes := *result
-		if dbRes.CreatedAt.IsZero() {
-			dbRes.CreatedAt = time.Now().UTC()
-		}
-		_, err := stmt.ExecContext(ctx, &dbRes)
-		if err != nil {
-			monitoring.LogPreparedStatementLifecycle("CreateHTTPKeywordResults", campaignID, query, "exec_failed", err)
-			return err
-		}
 	}
 
 	// Log final database metrics
@@ -804,7 +1040,6 @@ func (s *campaignStorePostgres) CreateHTTPKeywordResults(ctx context.Context, ex
 		metrics.LogConnectionPoolStats("CreateHTTPKeywordResults_end", campaignID)
 	}
 
-	monitoring.LogPreparedStatementLifecycle("CreateHTTPKeywordResults", campaignID, query, "complete", nil)
 	return nil
 }
 

@@ -81,7 +81,7 @@ func ValidateResponseMiddleware() gin.HandlerFunc {
 		// Capture the response
 		writer := &responseWriter{
 			ResponseWriter: c.Writer,
-			body:          &bytes.Buffer{},
+			body:           &bytes.Buffer{},
 		}
 		c.Writer = writer
 

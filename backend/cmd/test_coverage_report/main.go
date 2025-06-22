@@ -82,7 +82,10 @@ func parseCoverageProfile(filename string) (map[string]float64, error) {
 		// Extract coverage percentage
 		coverageStr := strings.TrimSuffix(fields[len(fields)-1], "%")
 		var coverage float64
-		fmt.Sscanf(coverageStr, "%f", &coverage)
+		if _, err := fmt.Sscanf(coverageStr, "%f", &coverage); err != nil {
+			log.Printf("Failed to parse coverage percentage '%s': %v", coverageStr, err)
+			continue
+		}
 
 		// Aggregate coverage by package
 		if existingCoverage, ok := coverageData[packagePath]; ok {

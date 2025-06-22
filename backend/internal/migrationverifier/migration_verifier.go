@@ -3,7 +3,7 @@ package migrationverifier
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -148,7 +148,7 @@ func (v *MigrationVerifier) getAppliedMigrations(ctx context.Context, tableExist
 // getMigrationFiles gets the list of migration files from disk
 func (v *MigrationVerifier) getMigrationFiles() (map[string]string, error) {
 	migrationsDir := "./migrations"
-	files, err := ioutil.ReadDir(migrationsDir)
+	files, err := os.ReadDir(migrationsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (v *MigrationVerifier) getMigrationFiles() (map[string]string, error) {
 		path := filepath.Join(migrationsDir, file.Name())
 
 		// Read file content
-		content, err := ioutil.ReadFile(path)
+		content, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}

@@ -652,7 +652,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	if campaign.ProgressPercentage != nil && campaign.ProcessedItems != nil && campaign.TotalItems != nil {
 		processedCount := *campaign.ProcessedItems
 		totalCount := *campaign.TotalItems
-		
+
 		if done {
 			// Campaign completed
 			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "dns_validation")

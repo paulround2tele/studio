@@ -22,7 +22,23 @@ type DomainGenerationServiceTestSuite struct {
 }
 
 func (s *DomainGenerationServiceTestSuite) SetupTest() {
-	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	// Create StateCoordinator for centralized state management
+	stateCoordinatorConfig := services.StateCoordinatorConfig{
+		EnableValidation:     true,
+		EnableReconciliation: false,
+		ValidationInterval:   30 * time.Second,
+	}
+	stateCoordinator := services.NewStateCoordinator(s.DB, s.CampaignStore, s.AuditLogStore, stateCoordinatorConfig)
+
+	// Create ConfigManager for thread-safe configuration management
+	configManagerConfig := services.ConfigManagerConfig{
+		EnableCaching:       true,
+		CacheEvictionTime:   time.Hour,
+		MaxCacheEntries:     1000,
+		EnableStateTracking: true,
+	}
+	configManager := services.NewConfigManager(s.DB, s.CampaignStore, stateCoordinator, configManagerConfig)
+	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore, configManager)
 }
 
 func TestDomainGenerationService(t *testing.T) {

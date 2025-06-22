@@ -16,6 +16,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// StateCoordinator interface for centralized state management
+type StateCoordinator interface {
+	TransitionState(ctx context.Context, campaignID uuid.UUID, toState models.CampaignStatusEnum, source models.StateEventSourceEnum, actor, reason string, context *models.StateEventContext) error
+	ValidateStateConsistency(ctx context.Context, campaignID uuid.UUID) error
+	ReconcileState(ctx context.Context, campaignID uuid.UUID) error
+	GetStateHistory(ctx context.Context, campaignID uuid.UUID, limit, offset int) ([]*models.StateChangeEvent, error)
+	AddEventHandler(eventType models.StateEventTypeEnum, handler StateEventHandler)
+	AddStateValidator(validator StateValidator)
+	GetMetrics() map[string]int64
+}
+
 type campaignOrchestratorServiceImpl struct {
 	db               *sqlx.DB
 	campaignStore    store.CampaignStore
@@ -29,26 +40,31 @@ type campaignOrchestratorServiceImpl struct {
 	dnsService         DNSCampaignService
 	httpKeywordService HTTPKeywordCampaignService
 
-	// State machine for campaign status transitions
-	stateMachine *CampaignStateMachine
+	// Centralized state coordination (replaces local state machine)
+	stateCoordinator StateCoordinator
+
+	// BL-006 compliance: Audit context service for complete user context integration
+	auditContextService AuditContextService
 }
 
 func NewCampaignOrchestratorService(
 	db *sqlx.DB,
 	cs store.CampaignStore, ps store.PersonaStore, ks store.KeywordStore, as store.AuditLogStore, cjs store.CampaignJobStore,
 	dgs DomainGenerationService, dNSService DNSCampaignService, hkService HTTPKeywordCampaignService,
+	stateCoordinator StateCoordinator, auditContextService AuditContextService,
 ) CampaignOrchestratorService {
 	return &campaignOrchestratorServiceImpl{
-		db:                 db,
-		campaignStore:      cs,
-		personaStore:       ps,
-		keywordStore:       ks,
-		auditLogStore:      as,
-		campaignJobStore:   cjs,
-		domainGenService:   dgs,
-		dnsService:         dNSService,
-		httpKeywordService: hkService,
-		stateMachine:       NewCampaignStateMachine(),
+		db:                  db,
+		campaignStore:       cs,
+		personaStore:        ps,
+		keywordStore:        ks,
+		auditLogStore:       as,
+		campaignJobStore:    cjs,
+		domainGenService:    dgs,
+		dnsService:          dNSService,
+		httpKeywordService:  hkService,
+		stateCoordinator:    stateCoordinator,
+		auditContextService: auditContextService,
 	}
 }
 
@@ -833,16 +849,13 @@ func (s *campaignOrchestratorServiceImpl) SetCampaignStatus(ctx context.Context,
 func (s *campaignOrchestratorServiceImpl) updateCampaignStatusInTx(ctx context.Context, querier store.Querier, campaign *models.Campaign, newStatus models.CampaignStatusEnum, errMsg string, auditDesc string, auditAction string) error {
 	originalStatus := campaign.Status
 
-	// Validate state transition using the state machine
-	currentState := CampaignStatus(string(originalStatus))
-	newState := CampaignStatus(string(newStatus))
-
-	if err := s.stateMachine.ValidateTransition(currentState, newState); err != nil {
-		// Log the invalid transition attempt
-		log.Printf("Invalid state transition attempt for campaign %s: %v", campaign.ID, err)
+	// Use centralized state coordinator for validation and transition
+	if err := s.stateCoordinator.TransitionState(ctx, campaign.ID, newStatus, models.StateEventSourceOrchestrator, auditDesc, auditAction, nil); err != nil {
+		log.Printf("State transition failed for campaign %s: %v", campaign.ID, err)
 		return fmt.Errorf("state transition validation failed for campaign %s: %w", campaign.ID, err)
 	}
 
+	// Update campaign metadata that isn't handled by state coordinator
 	campaign.Status = newStatus
 	campaign.UpdatedAt = time.Now().UTC()
 	if errMsg != "" {
@@ -866,12 +879,71 @@ func (s *campaignOrchestratorServiceImpl) updateCampaignStatusInTx(ctx context.C
 	return nil
 }
 
-// logAuditEvent correctly uses the passed exec (querier)
+// logAuditEvent uses the audit context service for BL-006 compliance
 func (s *campaignOrchestratorServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
+	// BL-006 compliance: Use audit context service for complete user context
+	if s.auditContextService == nil {
+		log.Printf("Warning: auditContextService is nil for campaign %s, action %s. Falling back to legacy audit logging.", campaign.ID, action)
+		s.logAuditEventLegacy(ctx, exec, campaign, action, description)
+		return
+	}
+
+	// Create enhanced audit event details with campaign context
+	details := map[string]interface{}{
+		"campaign_name":      campaign.Name,
+		"campaign_type":      string(campaign.CampaignType),
+		"campaign_status":    string(campaign.Status),
+		"campaign_id":        campaign.ID.String(),
+		"description":        description,
+		"orchestrator_event": true,
+		"bl_006_compliant":   true,
+		"audit_source":       "campaign_orchestrator",
+		"entity_type":        "Campaign",
+		"operation_type":     "campaign_lifecycle",
+		"service_layer":      "orchestrator",
+	}
+
+	// Create system audit event if no user context available
+	if campaign.UserID == nil {
+		systemIdentifier := "campaign_orchestrator_service"
+		if err := s.auditContextService.CreateSystemAuditEvent(ctx, systemIdentifier, action, "Campaign", &campaign.ID, details); err != nil {
+			log.Printf("Orchestrator Audit: Error creating system audit event for campaign %s, action %s: %v", campaign.ID, action, err)
+			// Fall back to legacy logging on error
+			s.logAuditEventLegacy(ctx, exec, campaign, action, description)
+		}
+		return
+	}
+
+	// Create audit user context for campaign owner
+	userCtx := &AuditUserContext{
+		UserID:             *campaign.UserID,
+		AuthenticationType: "session",               // Default for campaign operations
+		SessionID:          "orchestrator_internal", // Mark as internal service call
+		RequestID:          uuid.New().String(),
+		ClientIP:           "internal",
+		UserAgent:          "campaign_orchestrator_service",
+		HTTPMethod:         "SERVICE_CALL",
+		RequestPath:        fmt.Sprintf("/internal/campaigns/%s", campaign.ID),
+		RequestTimestamp:   time.Now().UTC(),
+		Permissions:        []string{"campaign:manage"},
+		Roles:              []string{"campaign_owner"},
+	}
+
+	// Create audit event with full user context
+	if err := s.auditContextService.CreateAuditEvent(ctx, userCtx, action, "Campaign", &campaign.ID, details); err != nil {
+		log.Printf("Orchestrator Audit: Error creating audit event for campaign %s, action %s: %v", campaign.ID, action, err)
+		// Fall back to legacy logging on error
+		s.logAuditEventLegacy(ctx, exec, campaign, action, description)
+	}
+}
+
+// logAuditEventLegacy provides fallback audit logging for BL-006 compatibility
+func (s *campaignOrchestratorServiceImpl) logAuditEventLegacy(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
 	detailsMap := map[string]string{
 		"campaign_name":      campaign.Name,
 		"description":        description,
 		"orchestrator_event": "true",
+		"bl_006_fallback":    "true", // Mark as fallback for compliance tracking
 	}
 	detailsJSON, err := json.Marshal(detailsMap)
 	if err != nil {
@@ -891,13 +963,13 @@ func (s *campaignOrchestratorServiceImpl) logAuditEvent(ctx context.Context, exe
 		EntityID:   uuid.NullUUID{UUID: campaign.ID, Valid: true},
 		Details:    models.JSONRawMessagePtr(detailsJSON),
 	}
-	// s.auditLogStore.CreateAuditLog will use the exec (querier)
+
 	if s.auditLogStore == nil {
-		log.Printf("Warning: auditLogStore is nil for campaign %s, action %s. Skipping audit log creation.", campaign.ID, action)
+		log.Printf("Warning: auditLogStore is nil for campaign %s, action %s. Skipping legacy audit log creation.", campaign.ID, action)
 	} else if exec == nil {
-		log.Printf("Warning: exec is nil for campaign %s, action %s. Skipping audit log creation.", campaign.ID, action)
+		log.Printf("Warning: exec is nil for campaign %s, action %s. Skipping legacy audit log creation.", campaign.ID, action)
 	} else if err := s.auditLogStore.CreateAuditLog(ctx, exec, auditLog); err != nil {
-		log.Printf("Orchestrator Audit: Error creating log for campaign %s, action %s: %v", campaign.ID, action, err)
+		log.Printf("Orchestrator Audit: Error creating legacy log for campaign %s, action %s: %v", campaign.ID, action, err)
 	}
 }
 

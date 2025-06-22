@@ -804,7 +804,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 
 					// Set system-level status to success since HTTP validation succeeded
 					dbRes.ValidationStatus = string(models.HTTPValidationStatusSuccess)
-					
+
 					// Set business-level status based on keyword findings
 					if (foundKeywordsFromSetsJSON != nil && string(foundKeywordsFromSetsJSON) != "null" && string(foundKeywordsFromSetsJSON) != "[]") || len(adhocKeywordsFoundForThisDomain) > 0 {
 						leadValid := models.HTTPBusinessStatusLeadValid
@@ -936,7 +936,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	if campaign.ProgressPercentage != nil && campaign.ProcessedItems != nil && campaign.TotalItems != nil {
 		processedCount := *campaign.ProcessedItems
 		totalCount := *campaign.TotalItems
-		
+
 		if done {
 			// Campaign completed
 			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "http_keyword_validation")

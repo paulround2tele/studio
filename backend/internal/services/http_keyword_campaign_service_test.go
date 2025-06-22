@@ -44,7 +44,22 @@ func (s *HTTPKeywordCampaignServiceTestSuite) SetupTest() {
 	kwordScannerSvc := keywordscanner.NewService(s.KeywordStore)
 	proxyMgr := proxymanager.NewProxyManager(s.AppConfig.Proxies, 30*time.Second)
 
-	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	// Create StateCoordinator and ConfigManager for domain generation service
+	stateCoordinatorConfig := services.StateCoordinatorConfig{
+		EnableValidation:     true,
+		EnableReconciliation: false,
+		ValidationInterval:   30 * time.Second,
+	}
+	stateCoordinator := services.NewStateCoordinator(s.DB, s.CampaignStore, s.AuditLogStore, stateCoordinatorConfig)
+
+	configManagerConfig := services.ConfigManagerConfig{
+		EnableCaching:       true,
+		CacheEvictionTime:   time.Hour,
+		MaxCacheEntries:     1000,
+		EnableStateTracking: true,
+	}
+	configManager := services.NewConfigManager(s.DB, s.CampaignStore, stateCoordinator, configManagerConfig)
+	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore, configManager)
 	s.dnsService = services.NewDNSCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.AuditLogStore, s.CampaignJobStore, s.AppConfig)
 	s.httpService = services.NewHTTPKeywordCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.ProxyStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, httpValSvc, kwordScannerSvc, proxyMgr, s.AppConfig)
 }

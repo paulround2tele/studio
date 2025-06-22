@@ -16,12 +16,16 @@ import (
 
 // campaignJobStorePostgres implements store.CampaignJobStore for PostgreSQL
 type campaignJobStorePostgres struct {
-	db *sqlx.DB
+	db        *sqlx.DB
+	txManager *TransactionManager
 }
 
 // NewCampaignJobStorePostgres creates a new CampaignJobStore for PostgreSQL.
 func NewCampaignJobStorePostgres(db *sqlx.DB) store.CampaignJobStore {
-	return &campaignJobStorePostgres{db: db}
+	return &campaignJobStorePostgres{
+		db:        db,
+		txManager: NewTransactionManager(db),
+	}
 }
 
 // BeginTxx starts a new transaction.
@@ -204,80 +208,80 @@ func (s *campaignJobStorePostgres) UpdateJob(ctx context.Context, exec store.Que
 }
 
 func (s *campaignJobStorePostgres) GetNextQueuedJob(ctx context.Context, campaignTypes []models.CampaignTypeEnum, workerID string) (*models.CampaignJob, error) {
-	tx, err := s.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("pg: failed to begin transaction for GetNextQueuedJob: %w", err)
-	}
-	defer tx.Rollback()
+	// Add timeout to context if not present
+	timeoutCtx, cancel := WithTimeout(ctx, DefaultTimeout)
+	defer cancel()
 
-	now := time.Now().UTC()
-	selectArgs := []interface{}{models.JobStatusQueued, now}
-	// Check for queued jobs AND jobs with retry business status that are ready to be executed again
-	selectQuery := "SELECT id FROM campaign_jobs WHERE (status = $1 OR (business_status = 'retry' AND next_execution_at <= $2)) AND (scheduled_at IS NULL OR scheduled_at <= $2)"
+	var job *models.CampaignJob
 
-	if len(campaignTypes) > 0 {
-		var typePlaceholders []string
-		for _, ct := range campaignTypes {
-			typePlaceholders = append(typePlaceholders, fmt.Sprintf("$%d", len(selectArgs)+1))
-			selectArgs = append(selectArgs, string(ct))
+	// Use SafeTransaction to ensure proper cleanup
+	err := s.txManager.SafeTransaction(timeoutCtx, nil, "GetNextQueuedJob", func(tx *sqlx.Tx) error {
+		now := time.Now().UTC()
+		selectArgs := []interface{}{models.JobStatusQueued, now}
+		// Check for queued jobs AND jobs with retry business status that are ready to be executed again
+		selectQuery := "SELECT id FROM campaign_jobs WHERE (status = $1 OR (business_status = 'retry' AND next_execution_at <= $2)) AND (scheduled_at IS NULL OR scheduled_at <= $2)"
+
+		if len(campaignTypes) > 0 {
+			var typePlaceholders []string
+			for _, ct := range campaignTypes {
+				typePlaceholders = append(typePlaceholders, fmt.Sprintf("$%d", len(selectArgs)+1))
+				selectArgs = append(selectArgs, string(ct))
+			}
+			selectQuery += fmt.Sprintf(" AND job_type IN (%s)", strings.Join(typePlaceholders, ","))
 		}
-		selectQuery += fmt.Sprintf(" AND job_type IN (%s)", strings.Join(typePlaceholders, ","))
-	}
-	selectQuery += " ORDER BY COALESCE(scheduled_at, '1970-01-01'::timestamp) ASC, created_at ASC FOR UPDATE SKIP LOCKED LIMIT 1"
+		selectQuery += " ORDER BY COALESCE(scheduled_at, '1970-01-01'::timestamp) ASC, created_at ASC FOR UPDATE SKIP LOCKED LIMIT 1"
 
-	var jobID uuid.UUID
-	err = tx.GetContext(ctx, &jobID, selectQuery, selectArgs...)
-	if err == sql.ErrNoRows {
-		return nil, store.ErrNotFound
-	}
+		var jobID uuid.UUID
+		err := tx.GetContext(timeoutCtx, &jobID, selectQuery, selectArgs...)
+		if err == sql.ErrNoRows {
+			return store.ErrNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("failed to select next queued job: %w", err)
+		}
+
+		// First, update the job to mark it as running with processing business status
+		updateQuery := `UPDATE campaign_jobs SET
+					status = $1,
+					business_status = $2,
+					processing_server_id = $3,
+					updated_at = NOW(),
+					attempts = attempts + 1,
+					scheduled_at = COALESCE(scheduled_at, NOW())
+				  WHERE id = $4`
+
+		result, err := tx.ExecContext(timeoutCtx, updateQuery, models.JobStatusRunning, models.JobBusinessStatusProcessing, workerID, jobID)
+		if err != nil {
+			return fmt.Errorf("failed to update job %s: %w", jobID, err)
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("failed to get rows affected for job %s: %w", jobID, err)
+		}
+		if rowsAffected == 0 {
+			return store.ErrNotFound
+		}
+
+		// Then, fetch the full job details
+		job = &models.CampaignJob{} // This will be populated by GetContext
+		fetchQuery := `SELECT id, campaign_id, job_type, status, job_payload,
+						attempts, max_attempts, last_error, last_attempted_at, created_at, updated_at, scheduled_at,
+						next_execution_at, -- Assuming next_execution_at is a distinct column or handled by COALESCE if needed
+						processing_server_id, locked_at, locked_by
+				  FROM campaign_jobs
+				  WHERE id = $1`
+		// sqlx.GetContext will map columns to struct fields based on db tags in models.CampaignJob
+		err = tx.GetContext(timeoutCtx, job, fetchQuery, jobID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch updated job %s: %w", jobID, err)
+		}
+
+		return nil // Success
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("pg: failed to select next queued job: %w", err)
-	}
-
-	// First, update the job to mark it as running with processing business status
-	updateQuery := `UPDATE campaign_jobs SET
-				status = $1,
-				business_status = $2,
-				processing_server_id = $3,
-				updated_at = NOW(),
-				attempts = attempts + 1,
-				scheduled_at = COALESCE(scheduled_at, NOW())
-			  WHERE id = $4`
-
-	result, err := tx.ExecContext(ctx, updateQuery, models.JobStatusRunning, models.JobBusinessStatusProcessing, workerID, jobID)
-	if err != nil {
-		return nil, fmt.Errorf("pg: failed to update job %s: %w", jobID, err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return nil, fmt.Errorf("pg: failed to get rows affected for job %s: %w", jobID, err)
-	}
-	if rowsAffected == 0 {
-		return nil, store.ErrNotFound
-	}
-
-	// Then, fetch the full job details
-	job := &models.CampaignJob{} // This will be populated by GetContext
-	fetchQuery := `SELECT id, campaign_id, job_type, status, job_payload,
-					attempts, max_attempts, last_error, last_attempted_at, created_at, updated_at, scheduled_at,
-					next_execution_at, -- Assuming next_execution_at is a distinct column or handled by COALESCE if needed
-					processing_server_id, locked_at, locked_by
-			  FROM campaign_jobs
-			  WHERE id = $1`
-	// sqlx.GetContext will map columns to struct fields based on db tags in models.CampaignJob
-	err = tx.GetContext(ctx, job, fetchQuery, jobID)
-	if err != nil {
-		return nil, fmt.Errorf("pg: failed to fetch updated job %s: %w", jobID, err)
-	}
-	// No need to manually set job.ScheduledAt if it's correctly fetched via db tag
-	// and dbJob struct is not used for this final fetch.
-	// If job.ScheduledAt can be NULL in DB and needs a default in Go model if NULL,
-	// that logic would be here or in the model itself.
-	// For now, assume direct mapping is sufficient.
-
-	if err = tx.Commit(); err != nil {
-		return nil, fmt.Errorf("pg: failed to commit transaction for GetNextQueuedJob: %w", err)
+		return nil, fmt.Errorf("pg: GetNextQueuedJob transaction failed: %w", err)
 	}
 
 	return job, nil

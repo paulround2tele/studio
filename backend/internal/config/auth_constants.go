@@ -2,11 +2,11 @@ package config
 
 // Cookie names - shared between frontend and backend
 const (
-	SessionCookieName    = "domainflow_session"  // Fixed to match frontend expectation
+	SessionCookieName    = "domainflow_session" // Fixed to match frontend expectation
 	AuthTokensCookieName = "auth_tokens"
 
 	// Legacy cookie name for backward compatibility
-	LegacySessionCookieName = "sessionId"  // Swapped: old name is now legacy
+	LegacySessionCookieName = "sessionId" // Swapped: old name is now legacy
 )
 
 // Cookie settings

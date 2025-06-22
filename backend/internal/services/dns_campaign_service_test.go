@@ -32,7 +32,22 @@ func TestDNSCampaignService(t *testing.T) {
 
 // Helper function to create a dummy DomainGeneration campaign for source
 func (s *DNSCampaignServiceTestSuite) createTestSourceDomainGenerationCampaign(ctx context.Context, name string, numDomains int) *models.Campaign {
-	dgService := services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	// Create StateCoordinator and ConfigManager for the helper service
+	stateCoordinatorConfig := services.StateCoordinatorConfig{
+		EnableValidation:     true,
+		EnableReconciliation: false,
+		ValidationInterval:   30 * time.Second,
+	}
+	stateCoordinator := services.NewStateCoordinator(s.DB, s.CampaignStore, s.AuditLogStore, stateCoordinatorConfig)
+
+	configManagerConfig := services.ConfigManagerConfig{
+		EnableCaching:       true,
+		CacheEvictionTime:   time.Hour,
+		MaxCacheEntries:     1000,
+		EnableStateTracking: true,
+	}
+	configManager := services.NewConfigManager(s.DB, s.CampaignStore, stateCoordinator, configManagerConfig)
+	dgService := services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore, configManager)
 	campaign, _ := testutil.CreateTestDomainGenerationCampaignAndJob(s.T(), ctx, dgService, s.CampaignJobStore, name, int64(numDomains))
 	return campaign
 }

@@ -23,15 +23,17 @@ type domainGenerationServiceImpl struct {
 	campaignStore    store.CampaignStore
 	campaignJobStore store.CampaignJobStore
 	auditLogStore    store.AuditLogStore
+	configManager    ConfigManagerInterface
 }
 
 // NewDomainGenerationService creates a new DomainGenerationService.
-func NewDomainGenerationService(db *sqlx.DB, cs store.CampaignStore, cjs store.CampaignJobStore, as store.AuditLogStore) DomainGenerationService {
+func NewDomainGenerationService(db *sqlx.DB, cs store.CampaignStore, cjs store.CampaignJobStore, as store.AuditLogStore, cm ConfigManagerInterface) DomainGenerationService {
 	return &domainGenerationServiceImpl{
 		db:               db,
 		campaignStore:    cs,
 		campaignJobStore: cjs,
 		auditLogStore:    as,
+		configManager:    cm,
 	}
 }
 
@@ -118,16 +120,33 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		log.Printf("[DomainGenerationService.CreateCampaign] Operating in Firestore mode for %s (no service-level transaction).", req.Name)
 	}
 
-	existingConfigState, errGetState := s.campaignStore.GetDomainGenerationConfigStateByHash(ctx, querier, configHashString)
-	if errGetState == nil && existingConfigState != nil {
-		startingOffset = existingConfigState.LastOffset
-		log.Printf("Found existing config state for hash %s. Starting new campaign %s from global offset: %d", configHashString, req.Name, startingOffset)
-	} else if errGetState != nil && errGetState != store.ErrNotFound {
-		opErr = fmt.Errorf("failed to get existing domain generation config state: %w", errGetState)
-		log.Printf("Error for campaign %s: %v", req.Name, opErr)
-		return nil, opErr
+	// Use thread-safe configuration manager to get existing config state
+	if s.configManager != nil {
+		existingConfig, errGetConfig := s.configManager.GetDomainGenerationConfig(ctx, configHashString)
+		if errGetConfig != nil {
+			opErr = fmt.Errorf("failed to get existing domain generation config state: %w", errGetConfig)
+			log.Printf("Error for campaign %s: %v", req.Name, opErr)
+			return nil, opErr
+		}
+		if existingConfig != nil && existingConfig.ConfigState != nil {
+			startingOffset = existingConfig.ConfigState.LastOffset
+			log.Printf("Found existing config state for hash %s. Starting new campaign %s from global offset: %d", configHashString, req.Name, startingOffset)
+		} else {
+			log.Printf("No existing config state found for hash %s. New campaign %s will start from offset 0 globally for this config.", configHashString, req.Name)
+		}
 	} else {
-		log.Printf("No existing config state found for hash %s (or ErrNotFound). New campaign %s will start from offset 0 globally for this config.", configHashString, req.Name)
+		// Fallback to direct access if config manager not available
+		existingConfigState, errGetState := s.campaignStore.GetDomainGenerationConfigStateByHash(ctx, querier, configHashString)
+		if errGetState == nil && existingConfigState != nil {
+			startingOffset = existingConfigState.LastOffset
+			log.Printf("Found existing config state for hash %s. Starting new campaign %s from global offset: %d", configHashString, req.Name, startingOffset)
+		} else if errGetState != nil && errGetState != store.ErrNotFound {
+			opErr = fmt.Errorf("failed to get existing domain generation config state: %w", errGetState)
+			log.Printf("Error for campaign %s: %v", req.Name, opErr)
+			return nil, opErr
+		} else {
+			log.Printf("No existing config state found for hash %s (or ErrNotFound). New campaign %s will start from offset 0 globally for this config.", configHashString, req.Name)
+		}
 	}
 
 	// Ensure required fields for domainGen are not nil
@@ -226,15 +245,32 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		UpdatedAt:     functionStartTime, // Use functionStartTime
 	}
 
-	if err := s.campaignStore.CreateOrUpdateDomainGenerationConfigState(ctx, querier, globalConfigState); err != nil {
-		opErr = fmt.Errorf("failed to create/update domain generation config state: %w", err)
-		log.Printf("Error creating/updating DomainGenerationConfigState for hash %s, campaign %s: %v", configHashString, req.Name, opErr)
-		return nil, opErr
-	}
-	if existingConfigState == nil {
-		log.Printf("Initial DomainGenerationConfigState created for hash %s, campaign %s.", configHashString, req.Name)
+	// Use thread-safe configuration manager to update config state
+	if s.configManager != nil {
+		_, err := s.configManager.UpdateDomainGenerationConfig(ctx, configHashString, func(currentState *models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error) {
+			// Create or update the global config state
+			updatedState := &models.DomainGenerationConfigState{
+				ConfigHash:    configHashString,
+				LastOffset:    startingOffset,
+				ConfigDetails: configDetailsBytes,
+				UpdatedAt:     functionStartTime,
+			}
+			return updatedState, nil
+		})
+		if err != nil {
+			opErr = fmt.Errorf("failed to create/update domain generation config state via config manager: %w", err)
+			log.Printf("Error creating/updating DomainGenerationConfigState for hash %s, campaign %s: %v", configHashString, req.Name, opErr)
+			return nil, opErr
+		}
+		log.Printf("DomainGenerationConfigState created/updated for hash %s, campaign %s via ConfigManager.", configHashString, req.Name)
 	} else {
-		log.Printf("DomainGenerationConfigState for hash %s already exists, ensured updated_at for campaign %s.", configHashString, req.Name)
+		// Fallback to direct access
+		if err := s.campaignStore.CreateOrUpdateDomainGenerationConfigState(ctx, querier, globalConfigState); err != nil {
+			opErr = fmt.Errorf("failed to create/update domain generation config state: %w", err)
+			log.Printf("Error creating/updating DomainGenerationConfigState for hash %s, campaign %s: %v", configHashString, req.Name, opErr)
+			return nil, opErr
+		}
+		log.Printf("DomainGenerationConfigState created/updated for hash %s, campaign %s.", configHashString, req.Name)
 	}
 
 	if opErr == nil {
@@ -448,7 +484,7 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			return false, 0, opErr
 		}
 		log.Printf("ProcessGenerationCampaignBatch: Campaign %s marked as Running (was %s).", campaignID, originalStatus)
-		
+
 		// Broadcast campaign status change via WebSocket
 		websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, "running", "domain_generation")
 	} else if campaign.Status != models.CampaignStatusRunning {
@@ -637,7 +673,7 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		}
 		processedInThisBatch = len(generatedDomainsToStore)
 		log.Printf("ProcessGenerationCampaignBatch: Saved %d domains for campaign %s.", processedInThisBatch, campaignID)
-		
+
 		// Broadcast domain generation progress via WebSocket
 		newProcessedItems := processedItems + int64(processedInThisBatch)
 		targetDomains := int64(genParams.NumDomainsToGenerate)
@@ -668,18 +704,45 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		return false, processedInThisBatch, opErr
 	}
 
-	globalConfigState := &models.DomainGenerationConfigState{
-		ConfigHash:    configHashStringForUpdate,
-		LastOffset:    nextGeneratorOffsetAbsolute,
-		ConfigDetails: normalizedHashedParamsBytesForUpdate,
-		UpdatedAt:     nowTime,
+	// Use thread-safe configuration manager for atomic offset updates
+	if s.configManager != nil {
+		_, errUpdateConfig := s.configManager.UpdateDomainGenerationConfig(ctx, configHashStringForUpdate, func(currentState *models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error) {
+			// Perform atomic update with copy-on-write semantics
+			updatedState := &models.DomainGenerationConfigState{
+				ConfigHash:    configHashStringForUpdate,
+				LastOffset:    nextGeneratorOffsetAbsolute,
+				ConfigDetails: normalizedHashedParamsBytesForUpdate,
+				UpdatedAt:     nowTime,
+			}
+
+			// Validate that we're not moving backwards in offset (race condition protection)
+			if currentState != nil && currentState.LastOffset > nextGeneratorOffsetAbsolute {
+				return nil, fmt.Errorf("detected race condition: trying to update offset to %d but current offset is %d", nextGeneratorOffsetAbsolute, currentState.LastOffset)
+			}
+
+			return updatedState, nil
+		})
+		if errUpdateConfig != nil {
+			opErr = fmt.Errorf("failed to update global domain generation config state for hash %s to offset %d via config manager: %w", configHashStringForUpdate, nextGeneratorOffsetAbsolute, errUpdateConfig)
+			log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+			return false, processedInThisBatch, opErr
+		}
+		log.Printf("ProcessGenerationCampaignBatch: Thread-safely updated global offset for config hash %s to %d for campaign %s", configHashStringForUpdate, nextGeneratorOffsetAbsolute, campaignID)
+	} else {
+		// Fallback to direct access
+		globalConfigState := &models.DomainGenerationConfigState{
+			ConfigHash:    configHashStringForUpdate,
+			LastOffset:    nextGeneratorOffsetAbsolute,
+			ConfigDetails: normalizedHashedParamsBytesForUpdate,
+			UpdatedAt:     nowTime,
+		}
+		if errUpdateGlobalState := s.campaignStore.CreateOrUpdateDomainGenerationConfigState(ctx, querier, globalConfigState); errUpdateGlobalState != nil {
+			opErr = fmt.Errorf("failed to update global domain generation config state for hash %s to offset %d: %w", configHashStringForUpdate, nextGeneratorOffsetAbsolute, errUpdateGlobalState)
+			log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+			return false, processedInThisBatch, opErr
+		}
+		log.Printf("ProcessGenerationCampaignBatch: Updated global offset for config hash %s to %d for campaign %s", configHashStringForUpdate, nextGeneratorOffsetAbsolute, campaignID)
 	}
-	if errUpdateGlobalState := s.campaignStore.CreateOrUpdateDomainGenerationConfigState(ctx, querier, globalConfigState); errUpdateGlobalState != nil {
-		opErr = fmt.Errorf("failed to update global domain generation config state for hash %s to offset %d: %w", configHashStringForUpdate, nextGeneratorOffsetAbsolute, errUpdateGlobalState)
-		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
-		return false, processedInThisBatch, opErr
-	}
-	log.Printf("ProcessGenerationCampaignBatch: Updated global offset for config hash %s to %d for campaign %s", configHashStringForUpdate, nextGeneratorOffsetAbsolute, campaignID)
 
 	// Ensure pointers are not nil before operating on them. They should be initialized when campaign is created/fetched.
 	if campaign.ProcessedItems == nil {
@@ -714,12 +777,12 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		done = true
 		log.Printf("ProcessGenerationCampaignBatch: Campaign %s completed. Processed: %d. Target: %d. Global Offset: %d. Total Possible: %d",
 			campaignID, campaign.ProcessedItems, genParams.NumDomainsToGenerate, genParams.CurrentOffset, genParams.TotalPossibleCombinations)
-		
+
 		// Broadcast campaign completion via WebSocket
 		websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "domain_generation")
 	} else {
 		done = false
-		
+
 		// Broadcast campaign progress update via WebSocket
 		progressPercent := 0.0
 		if campaign.ProgressPercentage != nil {

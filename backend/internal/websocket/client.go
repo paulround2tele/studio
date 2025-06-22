@@ -48,14 +48,14 @@ type WebSocketMessage struct {
 	Status         string      `json:"status,omitempty"`
 	Progress       float64     `json:"progress,omitempty"`
 	ErrorMessage   string      `json:"error,omitempty"`
-	
+
 	// Real-time update specific fields
-	ProxyID        string      `json:"proxyId,omitempty"`
-	ProxyStatus    string      `json:"proxyStatus,omitempty"`
-	PersonaID      string      `json:"personaId,omitempty"`
-	PersonaStatus  string      `json:"personaStatus,omitempty"`
-	ValidationsProcessed int64 `json:"validationsProcessed,omitempty"`
-	DomainsGenerated     int64 `json:"domainsGenerated,omitempty"`
+	ProxyID                string `json:"proxyId,omitempty"`
+	ProxyStatus            string `json:"proxyStatus,omitempty"`
+	PersonaID              string `json:"personaId,omitempty"`
+	PersonaStatus          string `json:"personaStatus,omitempty"`
+	ValidationsProcessed   int64  `json:"validationsProcessed,omitempty"`
+	DomainsGenerated       int64  `json:"domainsGenerated,omitempty"`
 	EstimatedTimeRemaining string `json:"estimatedTimeRemaining,omitempty"`
 }
 
@@ -94,8 +94,15 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	if err := c.conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+		log.Printf("websocket set read deadline error: %v", err)
+	}
+	c.conn.SetPongHandler(func(string) error {
+		if err := c.conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+			log.Printf("websocket pong handler set read deadline error: %v", err)
+		}
+		return nil
+	})
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
@@ -122,10 +129,15 @@ func (c *Client) writePump() {
 	for {
 		select {
 		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				log.Printf("websocket set write deadline error: %v", err)
+				return
+			}
 			if !ok {
 				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err := c.conn.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
+					log.Printf("websocket close message error: %v", err)
+				}
 				return
 			}
 
@@ -134,13 +146,22 @@ func (c *Client) writePump() {
 				log.Printf("websocket next writer error: %v", err)
 				return
 			}
-			w.Write(message)
+			if _, err := w.Write(message); err != nil {
+				log.Printf("websocket write message error: %v", err)
+				return
+			}
 
 			// Add queued messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
-				w.Write(newline) // Ensure newline is written correctly
-				w.Write(<-c.send)
+				if _, err := w.Write(newline); err != nil {
+					log.Printf("websocket write newline error: %v", err)
+					return
+				}
+				if _, err := w.Write(<-c.send); err != nil {
+					log.Printf("websocket write queued message error: %v", err)
+					return
+				}
 			}
 
 			if err := w.Close(); err != nil {
@@ -148,7 +169,10 @@ func (c *Client) writePump() {
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				log.Printf("websocket set write deadline for ping error: %v", err)
+				return
+			}
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Printf("websocket ping error: %v", err)
 				return
@@ -373,7 +397,7 @@ func CreateDomainGenerationMessage(campaignID string, domainsGenerated int64, to
 	if totalDomains > 0 {
 		progress = float64(domainsGenerated) / float64(totalDomains) * 100
 	}
-	
+
 	return WebSocketMessage{
 		ID:             uuid.New().String(),
 		Timestamp:      time.Now().UTC().Format(time.RFC3339),
@@ -396,7 +420,7 @@ func CreateValidationProgressMessage(campaignID string, validationsProcessed int
 	if totalValidations > 0 {
 		progress = float64(validationsProcessed) / float64(totalValidations) * 100
 	}
-	
+
 	return WebSocketMessage{
 		ID:             uuid.New().String(),
 		Timestamp:      time.Now().UTC().Format(time.RFC3339),

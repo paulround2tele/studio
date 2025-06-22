@@ -4,7 +4,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -81,7 +80,7 @@ func Load(mainConfigPath string) (*AppConfig, error) {
 	appCfgJSON := DefaultAppConfigJSON()
 	var originalLoadError error
 
-	data, err := ioutil.ReadFile(mainConfigPath)
+	data, err := os.ReadFile(mainConfigPath)
 	if err != nil {
 		originalLoadError = err
 		if os.IsNotExist(err) {
@@ -156,7 +155,7 @@ func SaveAppConfig(cfg *AppConfig) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal app config to JSON: %w", err)
 	}
-	if err := ioutil.WriteFile(cfg.loadedFromPath, data, 0644); err != nil {
+	if err := os.WriteFile(cfg.loadedFromPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write app config to file '%s': %w", cfg.loadedFromPath, err)
 	}
 	log.Printf("Config: Successfully saved main configuration to '%s'", cfg.loadedFromPath)

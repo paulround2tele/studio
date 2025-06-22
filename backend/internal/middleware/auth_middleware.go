@@ -81,7 +81,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 		// Enhanced session-based CSRF protection through origin validation
 		if !m.validateRequestOrigin(c) {
 			duration := time.Since(startTime)
-			
+
 			logging.LogMiddlewareExecution(
 				"session_auth",
 				nil,
@@ -93,10 +93,10 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 				false,
 				http.StatusForbidden,
 				map[string]interface{}{
-					"method": c.Request.Method,
-					"path":   c.Request.URL.Path,
-					"stage":  "origin_validation_failed",
-					"origin": c.GetHeader("Origin"),
+					"method":  c.Request.Method,
+					"path":    c.Request.URL.Path,
+					"stage":   "origin_validation_failed",
+					"origin":  c.GetHeader("Origin"),
 					"referer": c.GetHeader("Referer"),
 				},
 			)
@@ -207,7 +207,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 		validationStart := time.Now()
 		sessionData, err := m.sessionService.ValidateSession(sessionID, ipAddress)
 		validationDuration := time.Since(validationStart)
-		
+
 		// Create security context from session data
 		var securityContext *models.SecurityContext
 		if sessionData != nil {
@@ -641,12 +641,12 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Header("X-XSS-Protection", "1; mode=block")
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-		
+
 		// Only add HSTS in production with HTTPS
 		if c.Request.TLS != nil {
 			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		}
-		
+
 		c.Next()
 	}
 }

@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -26,7 +25,7 @@ type ProxyConfigEntry struct {
 func LoadProxies(configDir string) ([]ProxyConfigEntry, error) {
 	filePath := filepath.Join(configDir, proxiesConfigFilename) // Uses constant from defaults.go
 	var proxies []ProxyConfigEntry
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("Config: Proxies config file '%s' not found. No pre-defined proxies will be loaded.", filePath)
@@ -58,7 +57,7 @@ func SaveProxies(proxies []ProxyConfigEntry, configDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal proxies to JSON: %w", err)
 	}
-	if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write proxies to file '%s': %w", filePath, err)
 	}
 	log.Printf("Config: Successfully saved %d proxies to '%s'", len(proxies), filePath)

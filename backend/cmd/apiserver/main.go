@@ -39,9 +39,9 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	_ "github.com/fntelecomllc/studio/backend/docs"
 	"github.com/fntelecomllc/studio/backend/internal/api"
 	"github.com/fntelecomllc/studio/backend/internal/config"
-	_ "github.com/fntelecomllc/studio/backend/docs"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
@@ -177,8 +177,27 @@ func main() {
 	}
 	log.Println("Session service initialized.")
 
+	// Initialize state coordinator with proper configuration
+	stateCoordinatorConfig := services.StateCoordinatorConfig{
+		EnableValidation:     true,
+		EnableReconciliation: true,
+		ValidationInterval:   5 * time.Minute,
+	}
+	stateCoordinator := services.NewStateCoordinator(db, campaignStore, auditLogStore, stateCoordinatorConfig)
+	log.Println("StateCoordinator initialized.")
+
+	// Initialize config manager for domain generation service
+	configManagerConfig := services.ConfigManagerConfig{
+		EnableCaching:       true,
+		CacheEvictionTime:   1 * time.Hour,
+		MaxCacheEntries:     1000,
+		EnableStateTracking: true,
+	}
+	configManager := services.NewConfigManager(db, campaignStore, stateCoordinator, configManagerConfig)
+	log.Println("ConfigManager initialized.")
+
 	// All stores including campaignJobStore are now properly initialized above
-	domainGenSvc := services.NewDomainGenerationService(db, campaignStore, campaignJobStore, auditLogStore)
+	domainGenSvc := services.NewDomainGenerationService(db, campaignStore, campaignJobStore, auditLogStore, configManager)
 	log.Println("DomainGenerationService initialized.")
 
 	dnsCampaignSvc := services.NewDNSCampaignService(db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig)
@@ -192,6 +211,11 @@ func main() {
 	)
 	log.Println("HTTPKeywordCampaignService initialized.")
 
+	// Initialize audit context service for BL-006 compliance
+	// This service provides complete user context extraction for audit logging
+	auditContextService := services.NewAuditContextService(auditLogStore)
+	log.Println("AuditContextService initialized for BL-006 compliance.")
+
 	campaignOrchestratorSvc := services.NewCampaignOrchestratorService(
 		db,
 		campaignStore,
@@ -202,8 +226,10 @@ func main() {
 		domainGenSvc,
 		dnsCampaignSvc,
 		httpKeywordCampaignSvc,
+		stateCoordinator,
+		auditContextService, // BL-006 compliance integration
 	)
-	log.Println("CampaignOrchestratorService initialized.")
+	log.Println("CampaignOrchestratorService initialized with BL-006 compliance.")
 
 	serverInstanceID, _ := os.Hostname()
 	if serverInstanceID == "" {
@@ -247,6 +273,10 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(sessionService, sessionConfig)
 	securityMiddleware := middleware.NewSecurityMiddleware()
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware()
+
+	// Initialize access control service for campaign access middleware
+	accessControlService := services.NewAccessControlService(db, campaignStore)
+	campaignAccessMiddleware := middleware.NewCampaignAccessMiddleware(accessControlService)
 	log.Println("Security middleware initialized.")
 
 	// Initialize health check handler
@@ -285,7 +315,7 @@ func main() {
 			securityMiddleware.RequestSizeLimit(10 * 1024 * 1024)(c)
 		})
 	}
-	
+
 	router.Use(nonWSMiddleware())
 	router.Use(rateLimitMiddleware.IPRateLimit(100, time.Minute)) // 100 requests per minute per IP
 
@@ -333,7 +363,7 @@ func main() {
 
 		// Current user routes (authenticated users)
 		apiV2.GET("/me", authHandler.Me)
-		apiV2.GET("/auth/permissions", authHandler.GetPermissions)  // New permissions endpoint
+		apiV2.GET("/auth/permissions", authHandler.GetPermissions) // New permissions endpoint
 		apiV2.POST("/change-password", authHandler.ChangePassword)
 
 		// Persona routes with permission-based access control
@@ -429,7 +459,7 @@ func main() {
 	campaignApiV2.Use(authMiddleware.SessionAuth())
 	campaignApiV2.Use(securityMiddleware.SessionProtection())
 	newCampaignRoutesGroup := campaignApiV2.Group("/campaigns")
-	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware)
+	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware, campaignAccessMiddleware)
 	log.Println("Registered new campaign orchestration routes under /api/v2/campaigns.")
 
 	// Use environment variable for port if set, otherwise use config

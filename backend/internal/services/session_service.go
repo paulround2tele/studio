@@ -23,9 +23,9 @@ import (
 // Session service errors
 var (
 	ErrSessionSecurityViolation = fmt.Errorf("session security violation")
-	ErrSessionLimitExceeded    = fmt.Errorf("session limit exceeded")
-	ErrSessionNotFound         = fmt.Errorf("session not found")
-	ErrSessionExpired          = fmt.Errorf("session expired")
+	ErrSessionLimitExceeded     = fmt.Errorf("session limit exceeded")
+	ErrSessionNotFound          = fmt.Errorf("session not found")
+	ErrSessionExpired           = fmt.Errorf("session expired")
 )
 
 // DefaultSessionConfig returns default session configuration
@@ -70,23 +70,23 @@ type SessionData struct {
 
 // SessionMetrics tracks session performance metrics
 type SessionMetrics struct {
-	TotalSessions    int64
-	ActiveSessions   int64
-	CacheHitRate     float64
-	AvgLookupTime    time.Duration
-	CleanupCount     int64
-	SecurityEvents   int64
-	mutex            sync.RWMutex
+	TotalSessions  int64
+	ActiveSessions int64
+	CacheHitRate   float64
+	AvgLookupTime  time.Duration
+	CleanupCount   int64
+	SecurityEvents int64
+	mutex          sync.RWMutex
 }
 
 // SessionService provides comprehensive session management
 type SessionService struct {
-	db              *sqlx.DB
-	inMemoryStore   *InMemorySessionStore
-	config          *config.SessionConfig
-	auditLogStore   store.AuditLogStore
-	cleanupTicker   *time.Ticker
-	mutex           sync.RWMutex
+	db            *sqlx.DB
+	inMemoryStore *InMemorySessionStore
+	config        *config.SessionConfig
+	auditLogStore store.AuditLogStore
+	cleanupTicker *time.Ticker
+	mutex         sync.RWMutex
 }
 
 // NewSessionService creates a new session service
@@ -215,12 +215,12 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 func (s *SessionService) ValidateSession(sessionID, clientIP string) (*SessionData, error) {
 	startTime := time.Now()
 	fmt.Printf("DEBUG: Validating session ID: %s for client IP: %s\n", sessionID, clientIP)
-	
+
 	// Try memory first for performance
 	session, found := s.getFromMemory(sessionID)
 	cacheHit := found
 	fmt.Printf("DEBUG: Memory lookup result: found=%v\n", found)
-	
+
 	if !found {
 		// Fallback to database
 		fmt.Printf("DEBUG: Session not in memory, checking database\n")
@@ -244,7 +244,7 @@ func (s *SessionService) ValidateSession(sessionID, clientIP string) (*SessionDa
 	}
 
 	now := time.Now()
-	
+
 	// Check hard expiration
 	if now.After(session.ExpiresAt) {
 		s.invalidateSession(sessionID)
@@ -293,12 +293,12 @@ func (s *SessionService) ValidateSession(sessionID, clientIP string) (*SessionDa
 // InvalidateSession invalidates a specific session
 func (s *SessionService) InvalidateSession(sessionID string) error {
 	s.removeFromMemory(sessionID)
-	
+
 	// Update metrics
 	s.inMemoryStore.metrics.mutex.Lock()
 	s.inMemoryStore.metrics.ActiveSessions--
 	s.inMemoryStore.metrics.mutex.Unlock()
-	
+
 	return s.markInactiveInDatabase(sessionID)
 }
 
@@ -310,11 +310,11 @@ func (s *SessionService) InvalidateAllUserSessions(userID uuid.UUID) error {
 	// Get all user sessions from memory
 	if sessionIDsInterface, exists := s.inMemoryStore.userSessions.Load(userID); exists {
 		sessionIDs := sessionIDsInterface.([]string)
-		
+
 		// Remove from memory
 		for _, sessionID := range sessionIDs {
 			s.inMemoryStore.sessions.Delete(sessionID)
-			
+
 			// Update metrics
 			s.inMemoryStore.metrics.mutex.Lock()
 			s.inMemoryStore.metrics.ActiveSessions--
@@ -326,11 +326,11 @@ func (s *SessionService) InvalidateAllUserSessions(userID uuid.UUID) error {
 	// Mark inactive in database
 	query := `UPDATE auth.sessions SET is_active = false WHERE user_id = $1`
 	_, err := s.db.Exec(query, userID)
-	
+
 	if err == nil {
 		s.logAuditEvent(nil, "", userID, "all_sessions_invalidated", fmt.Sprintf("All sessions invalidated for user %s", userID))
 	}
-	
+
 	return err
 }
 
@@ -358,7 +358,7 @@ func (s *SessionService) GetConfig() *config.SessionConfig {
 func (s *SessionService) GetMetrics() *SessionMetrics {
 	s.inMemoryStore.metrics.mutex.RLock()
 	defer s.inMemoryStore.metrics.mutex.RUnlock()
-	
+
 	// Return a copy to avoid race conditions
 	return &SessionMetrics{
 		TotalSessions:  s.inMemoryStore.metrics.TotalSessions,
@@ -389,12 +389,12 @@ func (s *SessionService) generateFingerprint(ipAddress, userAgent string) string
 func (s *SessionService) enforceSessionLimits(userID uuid.UUID) error {
 	if sessionIDsInterface, exists := s.inMemoryStore.userSessions.Load(userID); exists {
 		sessionIDs := sessionIDsInterface.([]string)
-		
+
 		if len(sessionIDs) >= s.config.MaxSessionsPerUser {
 			// Remove oldest session
 			oldestSessionID := sessionIDs[0]
 			s.InvalidateSession(oldestSessionID)
-			
+
 			// Update user sessions list
 			newSessionIDs := sessionIDs[1:]
 			s.inMemoryStore.userSessions.Store(userID, newSessionIDs)
@@ -444,7 +444,7 @@ func (s *SessionService) persistSession(session *SessionData) error {
 
 	_, err := s.db.Exec(insertQuery, session.ID, session.UserID, session.IPAddress, session.UserAgent,
 		session.IsActive, session.ExpiresAt, session.LastActivity, session.CreatedAt)
-	
+
 	if err != nil {
 		return err
 	}
@@ -454,7 +454,7 @@ func (s *SessionService) persistSession(session *SessionData) error {
 		SELECT session_fingerprint, browser_fingerprint, screen_resolution
 		FROM auth.sessions
 		WHERE id = $1`
-	
+
 	var fingerprint, browserFingerprint, screenResolution sql.NullString
 	err = s.db.QueryRow(selectQuery, session.ID).Scan(&fingerprint, &browserFingerprint, &screenResolution)
 	if err != nil {
@@ -471,7 +471,7 @@ func (s *SessionService) persistSession(session *SessionData) error {
 
 func (s *SessionService) storeInMemory(session *SessionData) {
 	s.inMemoryStore.sessions.Store(session.ID, session)
-	
+
 	// Update user sessions mapping
 	if sessionIDsInterface, exists := s.inMemoryStore.userSessions.Load(session.UserID); exists {
 		sessionIDs := sessionIDsInterface.([]string)
@@ -492,10 +492,10 @@ func (s *SessionService) getFromMemory(sessionID string) (*SessionData, bool) {
 func (s *SessionService) removeFromMemory(sessionID string) {
 	if sessionInterface, exists := s.inMemoryStore.sessions.Load(sessionID); exists {
 		session := sessionInterface.(*SessionData)
-		
+
 		// Remove from sessions map
 		s.inMemoryStore.sessions.Delete(sessionID)
-		
+
 		// Remove from user sessions map
 		if sessionIDsInterface, exists := s.inMemoryStore.userSessions.Load(session.UserID); exists {
 			sessionIDs := sessionIDsInterface.([]string)
@@ -523,13 +523,13 @@ func (s *SessionService) loadFromDatabase(sessionID string) (*SessionData, error
 
 	var session SessionData
 	var ipAddress, userAgent, fingerprint, browserFingerprint, screenResolution sql.NullString
-	
+
 	err := s.db.QueryRow(query, sessionID).Scan(
 		&session.ID, &session.UserID, &ipAddress, &userAgent, &fingerprint,
 		&browserFingerprint, &screenResolution, &session.IsActive,
 		&session.ExpiresAt, &session.LastActivity, &session.CreatedAt,
 	)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -570,7 +570,7 @@ func (s *SessionService) validateSessionSecurity(session *SessionData, clientIP,
 		s.inMemoryStore.metrics.mutex.Lock()
 		s.inMemoryStore.metrics.SecurityEvents++
 		s.inMemoryStore.metrics.mutex.Unlock()
-		
+
 		return fmt.Errorf("IP address mismatch: expected %s, got %s", session.IPAddress, clientIP)
 	}
 
@@ -579,7 +579,7 @@ func (s *SessionService) validateSessionSecurity(session *SessionData, clientIP,
 		s.inMemoryStore.metrics.mutex.Lock()
 		s.inMemoryStore.metrics.SecurityEvents++
 		s.inMemoryStore.metrics.mutex.Unlock()
-		
+
 		return fmt.Errorf("user agent mismatch")
 	}
 
@@ -589,7 +589,7 @@ func (s *SessionService) validateSessionSecurity(session *SessionData, clientIP,
 func (s *SessionService) updateCacheMetrics(cacheHit bool) {
 	s.inMemoryStore.metrics.mutex.Lock()
 	defer s.inMemoryStore.metrics.mutex.Unlock()
-	
+
 	// Simple moving average for cache hit rate
 	if cacheHit {
 		s.inMemoryStore.metrics.CacheHitRate = (s.inMemoryStore.metrics.CacheHitRate*0.9 + 1.0*0.1)
@@ -600,7 +600,7 @@ func (s *SessionService) updateCacheMetrics(cacheHit bool) {
 
 func (s *SessionService) startCleanup() {
 	s.cleanupTicker = time.NewTicker(s.config.CleanupInterval)
-	
+
 	go func() {
 		for range s.cleanupTicker.C {
 			s.performCleanup()
@@ -611,7 +611,7 @@ func (s *SessionService) startCleanup() {
 func (s *SessionService) performCleanup() {
 	now := time.Now()
 	expiredSessions := 0
-	
+
 	// Clean up expired sessions from memory
 	s.inMemoryStore.sessions.Range(func(key, value interface{}) bool {
 		session := value.(*SessionData)
@@ -625,7 +625,7 @@ func (s *SessionService) performCleanup() {
 	// Clean up expired sessions from database
 	query := `UPDATE auth.sessions SET is_active = false 
 	          WHERE is_active = true AND (expires_at < NOW() OR last_activity_at < NOW() - INTERVAL '%d minutes')`
-	
+
 	_, err := s.db.Exec(fmt.Sprintf(query, int(s.config.IdleTimeout.Minutes())))
 	if err != nil {
 		logging.LogDatabaseOperation(

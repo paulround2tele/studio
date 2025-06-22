@@ -18,12 +18,16 @@ import (
 
 // keywordStorePostgres implements the store.KeywordStore interface
 type keywordStorePostgres struct {
-	db *sqlx.DB // Retains DB for Transactor part of the interface
+	db          *sqlx.DB // Retains DB for Transactor part of the interface
+	stmtManager *PreparedStatementManager
 }
 
 // NewKeywordStorePostgres creates a new KeywordStore for PostgreSQL
 func NewKeywordStorePostgres(db *sqlx.DB) store.KeywordStore {
-	return &keywordStorePostgres{db: db}
+	return &keywordStorePostgres{
+		db:          db,
+		stmtManager: NewPreparedStatementManager(),
+	}
 }
 
 // BeginTxx starts a new transaction.
@@ -288,31 +292,34 @@ func (s *keywordStorePostgres) CreateKeywordRules(ctx context.Context, exec stor
 		return nil
 	}
 
-	stmt, err := exec.PrepareNamedContext(ctx, `INSERT INTO keyword_rules
-        (id, keyword_set_id, pattern, rule_type, is_case_sensitive, category, context_chars, created_at, updated_at)
-        VALUES (:id, :keyword_set_id, :pattern, :rule_type, :is_case_sensitive, :category, :context_chars, :created_at, :updated_at)`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+	// Add timeout to context if not present
+	timeoutCtx, cancel := WithTimeout(ctx, DefaultTimeout)
+	defer cancel()
 
-	for _, rule := range rules {
-		if rule.ID == uuid.Nil {
-			rule.ID = uuid.New()
+	// Use SafePreparedStatement to ensure proper cleanup
+	query := `INSERT INTO keyword_rules
+        (id, keyword_set_id, pattern, rule_type, is_case_sensitive, category, context_chars, created_at, updated_at)
+        VALUES (:id, :keyword_set_id, :pattern, :rule_type, :is_case_sensitive, :category, :context_chars, :created_at, :updated_at)`
+
+	return s.stmtManager.SafePreparedStatement(timeoutCtx, exec, query, "CreateKeywordRules", func(stmt *sqlx.NamedStmt) error {
+		for _, rule := range rules {
+			if rule.ID == uuid.Nil {
+				rule.ID = uuid.New()
+			}
+			now := time.Now().UTC()
+			if rule.CreatedAt.IsZero() {
+				rule.CreatedAt = now
+			}
+			if rule.UpdatedAt.IsZero() {
+				rule.UpdatedAt = now
+			}
+			_, err := stmt.ExecContext(timeoutCtx, rule)
+			if err != nil {
+				return fmt.Errorf("failed to execute rule insertion: %w", err)
+			}
 		}
-		now := time.Now().UTC()
-		if rule.CreatedAt.IsZero() {
-			rule.CreatedAt = now
-		}
-		if rule.UpdatedAt.IsZero() {
-			rule.UpdatedAt = now
-		}
-		_, err := stmt.ExecContext(ctx, rule)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func (s *keywordStorePostgres) GetKeywordRulesBySetID(ctx context.Context, exec store.Querier, keywordSetID uuid.UUID) ([]models.KeywordRule, error) {

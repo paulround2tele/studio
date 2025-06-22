@@ -39,34 +39,35 @@ func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestrator
 // - Uses discriminated union based on "campaignType" field
 // - Provides comprehensive validation and error handling
 // - All legacy type-specific endpoints have been removed in favor of this unified approach
-func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware, campaignAccessMiddleware *middleware.CampaignAccessMiddleware) {
 	// === CAMPAIGN CREATION ENDPOINTS ===
-	
+
 	// Unified campaign creation endpoint (preferred)
 	// Supports all campaign types through discriminated union
-	group.POST("", authMiddleware.RequirePermission("campaigns:create"), h.createCampaign)
+	// Uses campaign access middleware for creation validation
+	group.POST("", authMiddleware.RequirePermission("campaigns:create"), campaignAccessMiddleware.RequireCampaignCreationAccess(), h.createCampaign)
 
-	// Campaign reading routes - require campaigns:read permission
-	group.GET("", authMiddleware.RequirePermission("campaigns:read"), h.listCampaigns)
-	group.GET("/:campaignId", authMiddleware.RequirePermission("campaigns:read"), h.getCampaignDetails)
-	// group.GET("/:campaignId/status", authMiddleware.RequirePermission("campaigns:read"), h.getCampaignStatus)
+	// Campaign reading routes - require campaigns:read permission + ownership validation
+	group.GET("", authMiddleware.RequirePermission("campaigns:read"), campaignAccessMiddleware.RequireCampaignOwnershipForListing(), h.listCampaigns)
+	group.GET("/:campaignId", authMiddleware.RequirePermission("campaigns:read"), campaignAccessMiddleware.RequireCampaignOwnership("read"), h.getCampaignDetails)
+	// group.GET("/:campaignId/status", authMiddleware.RequirePermission("campaigns:read"), campaignAccessMiddleware.RequireCampaignOwnership("read"), h.getCampaignStatus)
 
-	// Campaign control routes - require campaigns:execute permission
-	group.POST("/:campaignId/start", authMiddleware.RequirePermission("campaigns:execute"), h.startCampaign)
-	group.POST("/:campaignId/pause", authMiddleware.RequirePermission("campaigns:execute"), h.pauseCampaign)
-	group.POST("/:campaignId/resume", authMiddleware.RequirePermission("campaigns:execute"), h.resumeCampaign)
-	group.POST("/:campaignId/cancel", authMiddleware.RequirePermission("campaigns:execute"), h.cancelCampaign)
+	// Campaign control routes - require campaigns:execute permission + ownership validation
+	group.POST("/:campaignId/start", authMiddleware.RequirePermission("campaigns:execute"), campaignAccessMiddleware.RequireCampaignOwnership("execute"), h.startCampaign)
+	group.POST("/:campaignId/pause", authMiddleware.RequirePermission("campaigns:execute"), campaignAccessMiddleware.RequireCampaignOwnership("execute"), h.pauseCampaign)
+	group.POST("/:campaignId/resume", authMiddleware.RequirePermission("campaigns:execute"), campaignAccessMiddleware.RequireCampaignOwnership("execute"), h.resumeCampaign)
+	group.POST("/:campaignId/cancel", authMiddleware.RequirePermission("campaigns:execute"), campaignAccessMiddleware.RequireCampaignOwnership("execute"), h.cancelCampaign)
 
-	// Campaign modification routes - require campaigns:update permission
-	// group.PUT("/:campaignId", authMiddleware.RequirePermission("campaigns:update"), h.updateCampaign)
+	// Campaign modification routes - require campaigns:update permission + ownership validation
+	// group.PUT("/:campaignId", authMiddleware.RequirePermission("campaigns:update"), campaignAccessMiddleware.RequireCampaignOwnership("update"), h.updateCampaign)
 
-	// Campaign deletion routes - require campaigns:delete permission
-	group.DELETE("/:campaignId", authMiddleware.RequirePermission("campaigns:delete"), h.deleteCampaign)
+	// Campaign deletion routes - require campaigns:delete permission + ownership validation
+	group.DELETE("/:campaignId", authMiddleware.RequirePermission("campaigns:delete"), campaignAccessMiddleware.RequireCampaignOwnership("delete"), h.deleteCampaign)
 
-	// Campaign results routes - require campaigns:read permission
-	group.GET("/:campaignId/results/generated-domains", authMiddleware.RequirePermission("campaigns:read"), h.getGeneratedDomains)
-	group.GET("/:campaignId/results/dns-validation", authMiddleware.RequirePermission("campaigns:read"), h.getDNSValidationResults)
-	group.GET("/:campaignId/results/http-keyword", authMiddleware.RequirePermission("campaigns:read"), h.getHTTPKeywordResults)
+	// Campaign results routes - require campaigns:read permission + ownership validation
+	group.GET("/:campaignId/results/generated-domains", authMiddleware.RequirePermission("campaigns:read"), campaignAccessMiddleware.RequireCampaignOwnership("read"), h.getGeneratedDomains)
+	group.GET("/:campaignId/results/dns-validation", authMiddleware.RequirePermission("campaigns:read"), campaignAccessMiddleware.RequireCampaignOwnership("read"), h.getDNSValidationResults)
+	group.GET("/:campaignId/results/http-keyword", authMiddleware.RequirePermission("campaigns:read"), campaignAccessMiddleware.RequireCampaignOwnership("read"), h.getHTTPKeywordResults)
 }
 
 // --- Unified Campaign Creation Handler ---
@@ -124,6 +125,23 @@ func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 		return
 	}
 
+	// Get user ID from campaign creation access middleware
+	creatorUserID, exists := c.Get("campaign_creator_user_id")
+	if !exists {
+		respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
+			"Failed to get user context for campaign creation", []ErrorDetail{
+				{
+					Code:    ErrorCodeInternalServer,
+					Message: "User context missing from request",
+				},
+			})
+		return
+	}
+
+	// Assign ownership to the creating user
+	userID := creatorUserID.(uuid.UUID)
+	req.UserID = userID
+
 	// Create campaign using the orchestrator service
 	campaign, err := h.orchestratorService.CreateCampaignUnified(c.Request.Context(), req)
 	if err != nil {
@@ -136,11 +154,14 @@ func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 					Message: err.Error(),
 					Context: map[string]interface{}{
 						"campaign_type": req.CampaignType,
+						"user_id":       userID.String(),
 					},
 				},
 			})
 		return
 	}
+
+	log.Printf("Campaign created successfully with ownership - Campaign: %s, Owner: %s", campaign.ID, userID)
 	respondWithJSONGin(c, http.StatusCreated, campaign)
 }
 
@@ -287,7 +308,6 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, resp)
 }
 
-
 // --- Campaign Control Handlers ---
 
 func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
@@ -384,7 +404,6 @@ func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
 	}
 	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": "Campaign cancellation requested"})
 }
-
 
 func (h *CampaignOrchestratorAPIHandler) deleteCampaign(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")

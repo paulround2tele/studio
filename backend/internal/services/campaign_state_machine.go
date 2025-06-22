@@ -13,7 +13,7 @@ const (
 	StatusPending   CampaignStatus = "pending"
 	StatusQueued    CampaignStatus = "queued"
 	StatusRunning   CampaignStatus = "running"
-	StatusPausing   CampaignStatus = "pausing"  // FIXED: Added missing StatusPausing
+	StatusPausing   CampaignStatus = "pausing" // FIXED: Added missing StatusPausing
 	StatusPaused    CampaignStatus = "paused"
 	StatusCompleted CampaignStatus = "completed"
 	StatusFailed    CampaignStatus = "failed"
@@ -34,16 +34,16 @@ func NewCampaignStateMachine() *CampaignStateMachine {
 			// FIXED: Added missing transitions for business logic
 			StatusPending:   {StatusQueued, StatusRunning, StatusFailed, StatusCancelled}, // Allow direct pending->failed for job failures
 			StatusQueued:    {StatusRunning, StatusPausing, StatusPaused, StatusCancelled},
-			StatusRunning:   {StatusPausing, StatusPaused, StatusCompleted, StatusFailed},
+			StatusRunning:   {StatusPausing, StatusPaused, StatusCompleted, StatusFailed, StatusCancelled},
 			StatusPausing:   {StatusPaused, StatusRunning, StatusCancelled}, // FIXED: Added missing StatusPausing transitions
 			StatusPaused:    {StatusRunning, StatusCancelled, StatusArchived},
 			StatusCompleted: {StatusArchived},
 			StatusFailed:    {StatusQueued, StatusArchived}, // Allow retry or archive
-			StatusArchived:  {}, // No transitions from archived - terminal state
-			StatusCancelled: {}, // No transitions from cancelled - terminal state
+			StatusArchived:  {},                             // No transitions from archived - terminal state
+			StatusCancelled: {},                             // No transitions from cancelled - terminal state
 		},
 	}
-	
+
 	log.Printf("CampaignStateMachine: Initialized with %d status types and comprehensive transition rules", len(sm.transitions))
 	return sm
 }
@@ -65,7 +65,7 @@ func (sm *CampaignStateMachine) CanTransition(current, target CampaignStatus) bo
 			return true
 		}
 	}
-	
+
 	log.Printf("CampaignStateMachine: INVALID transition '%s' → '%s'. Valid transitions from '%s': %v",
 		current, target, current, validTransitions)
 	return false
@@ -74,13 +74,13 @@ func (sm *CampaignStateMachine) CanTransition(current, target CampaignStatus) bo
 // ValidateTransition returns an error if the transition is invalid
 func (sm *CampaignStateMachine) ValidateTransition(current, target CampaignStatus) error {
 	log.Printf("CampaignStateMachine: Validating transition '%s' → '%s'", current, target)
-	
+
 	if !sm.CanTransition(current, target) {
 		errMsg := fmt.Sprintf("invalid state transition from %s to %s", current, target)
 		log.Printf("CampaignStateMachine: VALIDATION FAILED - %s", errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	
+
 	log.Printf("CampaignStateMachine: VALIDATION PASSED - transition '%s' → '%s' is allowed", current, target)
 	return nil
 }

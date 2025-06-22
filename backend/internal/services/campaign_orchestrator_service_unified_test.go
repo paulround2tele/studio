@@ -4,6 +4,7 @@ package services_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
@@ -19,10 +20,29 @@ type CampaignOrchestratorUnifiedTestSuite struct {
 }
 
 func (s *CampaignOrchestratorUnifiedTestSuite) SetupTest() {
-	dgService := services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	// Create StateCoordinator for centralized state management
+	stateCoordinatorConfig := services.StateCoordinatorConfig{
+		EnableValidation:     true,
+		EnableReconciliation: false,
+		ValidationInterval:   30 * time.Second,
+	}
+	stateCoordinator := services.NewStateCoordinator(s.DB, s.CampaignStore, s.AuditLogStore, stateCoordinatorConfig)
+
+	// Create ConfigManager for thread-safe configuration management
+	configManagerConfig := services.ConfigManagerConfig{
+		EnableCaching:       true,
+		CacheEvictionTime:   time.Hour,
+		MaxCacheEntries:     1000,
+		EnableStateTracking: true,
+	}
+	configManager := services.NewConfigManager(s.DB, s.CampaignStore, stateCoordinator, configManagerConfig)
+	dgService := services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore, configManager)
 	dnsService := services.NewDNSCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.AuditLogStore, s.CampaignJobStore, s.AppConfig)
 	httpKeywordService := services.NewHTTPKeywordCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.ProxyStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, nil, nil, nil, s.AppConfig)
-	
+
+	// Create audit context service for BL-006 compliance
+	auditContextService := services.NewAuditContextService(s.AuditLogStore)
+
 	s.orchestrator = services.NewCampaignOrchestratorService(
 		s.DB,
 		s.CampaignStore,
@@ -33,6 +53,8 @@ func (s *CampaignOrchestratorUnifiedTestSuite) SetupTest() {
 		dgService,
 		dnsService,
 		httpKeywordService,
+		stateCoordinator,
+		auditContextService, // BL-006 compliance integration
 	)
 }
 

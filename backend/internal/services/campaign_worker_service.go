@@ -195,10 +195,10 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 			// Update campaign status - state machine now properly handles all transitions including pending->failed
 			if s.campaignOrchestratorSvc != nil {
 				errMsg := fmt.Sprintf("Job %s failed after max retries: %v", job.ID, processErr)
-				
+
 				log.Printf("Worker [%s]: Job %s failed after %d attempts, setting campaign %s status to failed",
 					workerName, job.ID, job.Attempts, job.CampaignID)
-				
+
 				// Use SetCampaignErrorStatus which will now properly validate the transition using the fixed state machine
 				if err := s.campaignOrchestratorSvc.SetCampaignErrorStatus(jobCtx, job.CampaignID, errMsg); err != nil {
 					log.Printf("Worker [%s]: Failed to set campaign %s error status: %v", workerName, job.CampaignID, err)

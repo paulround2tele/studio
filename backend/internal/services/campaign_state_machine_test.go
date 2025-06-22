@@ -15,14 +15,14 @@ func TestCampaignStateMachine(t *testing.T) {
 	}{
 		// Valid transitions - UPDATED to match fixed business requirements
 		{"pending to queued", StatusPending, StatusQueued, true},
-		{"pending to running", StatusPending, StatusRunning, true},     // FIXED: Now valid for business logic
-		{"pending to failed", StatusPending, StatusFailed, true},       // FIXED: Critical for job failures
+		{"pending to running", StatusPending, StatusRunning, true}, // FIXED: Now valid for business logic
+		{"pending to failed", StatusPending, StatusFailed, true},   // FIXED: Critical for job failures
 		{"pending to cancelled", StatusPending, StatusCancelled, true},
 		{"queued to running", StatusQueued, StatusRunning, true},
-		{"queued to pausing", StatusQueued, StatusPausing, true},       // FIXED: Added missing pausing support
+		{"queued to pausing", StatusQueued, StatusPausing, true}, // FIXED: Added missing pausing support
 		{"queued to paused", StatusQueued, StatusPaused, true},
 		{"queued to cancelled", StatusQueued, StatusCancelled, true},
-		{"running to pausing", StatusRunning, StatusPausing, true},     // FIXED: Added missing pausing support
+		{"running to pausing", StatusRunning, StatusPausing, true}, // FIXED: Added missing pausing support
 		{"running to paused", StatusRunning, StatusPaused, true},
 		{"running to completed", StatusRunning, StatusCompleted, true},
 		{"running to failed", StatusRunning, StatusFailed, true},
@@ -31,7 +31,7 @@ func TestCampaignStateMachine(t *testing.T) {
 		{"pausing to cancelled", StatusPausing, StatusCancelled, true}, // FIXED: Added missing pausing transitions
 		{"paused to running", StatusPaused, StatusRunning, true},
 		{"paused to cancelled", StatusPaused, StatusCancelled, true},
-		{"paused to archived", StatusPaused, StatusArchived, true},     // FIXED: Allow direct archive from paused
+		{"paused to archived", StatusPaused, StatusArchived, true}, // FIXED: Allow direct archive from paused
 		{"completed to archived", StatusCompleted, StatusArchived, true},
 		{"failed to queued", StatusFailed, StatusQueued, true},
 		{"failed to archived", StatusFailed, StatusArchived, true},
