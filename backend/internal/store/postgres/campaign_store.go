@@ -95,16 +95,17 @@ func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Q
 // UpdateCampaignWithUserFilter updates a campaign with mandatory user ownership validation
 // This method provides tenant isolation at the database query level
 func (s *campaignStorePostgres) UpdateCampaignWithUserFilter(ctx context.Context, exec store.Querier, campaign *models.Campaign, userID uuid.UUID) error {
+	// SECURITY: user_id field is NOT included in update to prevent ownership changes
 	query := `UPDATE campaigns SET
-				name = $2, campaign_type = $3, status = $4, user_id = $5,
-				updated_at = $6, started_at = $7, completed_at = $8,
-				progress_percentage = $9, total_items = $10,
-				processed_items = $11, successful_items = $12, failed_items = $13,
-				metadata = $14, error_message = $15
-			  WHERE id = $1 AND user_id = $16`
+				name = $2, campaign_type = $3, status = $4,
+				updated_at = $5, started_at = $6, completed_at = $7,
+				progress_percentage = $8, total_items = $9,
+				processed_items = $10, successful_items = $11, failed_items = $12,
+				metadata = $13, error_message = $14
+			  WHERE id = $1 AND user_id = $15`
 
 	result, err := exec.ExecContext(ctx, query,
-		campaign.ID, campaign.Name, campaign.CampaignType, campaign.Status, campaign.UserID,
+		campaign.ID, campaign.Name, campaign.CampaignType, campaign.Status,
 		campaign.UpdatedAt, campaign.StartedAt, campaign.CompletedAt,
 		campaign.ProgressPercentage, campaign.TotalItems,
 		campaign.ProcessedItems, campaign.SuccessfulItems, campaign.FailedItems,
@@ -1091,6 +1092,362 @@ func (s *campaignStorePostgres) GetDomainsForHTTPValidation(ctx context.Context,
 	       ORDER BY dvr.domain_name ASC LIMIT $4`
 	err := exec.SelectContext(ctx, &dnsResults, query, httpKeywordCampaignID, sourceCampaignID, lastDomainName, limit)
 	return dnsResults, err
+}
+
+// --- SI-002 State Event Store Implementation --- //
+
+// CreateStateEvent creates a new state event with automatic sequence numbering
+func (s *campaignStorePostgres) CreateStateEvent(ctx context.Context, exec store.Querier, event *models.StateChangeEvent) (*models.StateEventResult, error) {
+	// Use the database function for atomic sequence numbering
+	query := `SELECT * FROM create_campaign_state_event($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	
+	var result struct {
+		EventID        uuid.UUID `db:"event_id"`
+		SequenceNumber int64     `db:"sequence_number"`
+		Success        bool      `db:"success"`
+		ErrorMessage   sql.NullString `db:"error_message"`
+	}
+	
+	// Convert event context to JSONB
+	var eventData *json.RawMessage
+	if event.Context != nil {
+		eventData = event.Context
+	} else {
+		emptyJSON := json.RawMessage("{}")
+		eventData = &emptyJSON
+	}
+	
+	// Convert actor and reason to proper strings
+	var actor, reason string
+	if event.Actor.Valid {
+		actor = event.Actor.String
+	} else {
+		actor = "system"
+	}
+	if event.Reason.Valid {
+		reason = event.Reason.String
+	}
+	
+	err := exec.GetContext(ctx, &result, query,
+		event.CampaignID,
+		string(event.EventType),
+		string(event.PreviousState), // source_state
+		string(event.NewState),      // target_state
+		reason,
+		actor,
+		eventData,
+		json.RawMessage("{}"), // operation_context
+		nil,                   // correlation_id
+	)
+	
+	if err != nil {
+		return nil, fmt.Errorf("failed to create state event: %w", err)
+	}
+	
+	stateResult := &models.StateEventResult{
+		EventID:        result.EventID,
+		SequenceNumber: result.SequenceNumber,
+		Success:        result.Success,
+		CreatedAt:      time.Now().UTC(),
+	}
+	
+	if result.ErrorMessage.Valid {
+		stateResult.ErrorMessage = result.ErrorMessage.String
+		stateResult.Success = false
+	}
+	
+	return stateResult, nil
+}
+
+// GetStateEventsByCampaign retrieves state events for a campaign with pagination
+func (s *campaignStorePostgres) GetStateEventsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, fromSequence int64, limit int) ([]*models.StateChangeEvent, error) {
+	query := `SELECT * FROM get_campaign_state_events_for_replay($1, $2, $3, $4)`
+	
+	type eventRow struct {
+		ID               uuid.UUID        `db:"id"`
+		EventType        string           `db:"event_type"`
+		SourceState      sql.NullString   `db:"source_state"`
+		TargetState      sql.NullString   `db:"target_state"`
+		Reason           sql.NullString   `db:"reason"`
+		TriggeredBy      string           `db:"triggered_by"`
+		EventData        *json.RawMessage `db:"event_data"`
+		OperationContext *json.RawMessage `db:"operation_context"`
+		SequenceNumber   int64            `db:"sequence_number"`
+		OccurredAt       time.Time        `db:"occurred_at"`
+		CorrelationID    uuid.NullUUID    `db:"correlation_id"`
+	}
+	
+	var rows []eventRow
+	err := exec.SelectContext(ctx, &rows, query, campaignID, fromSequence, nil, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get state events: %w", err)
+	}
+	
+	events := make([]*models.StateChangeEvent, 0, len(rows))
+	for _, row := range rows {
+		event := &models.StateChangeEvent{
+			ID:               row.ID,
+			CampaignID:       campaignID,
+			EventType:        models.StateEventTypeEnum(row.EventType),
+			EventSource:      models.StateEventSourceStateCoordinator, // Default source
+			Reason:           row.Reason,
+			Actor:            sql.NullString{String: row.TriggeredBy, Valid: true},
+			Context:          row.EventData,
+			ValidationPassed: true, // Events from database are considered validated
+			Timestamp:        row.OccurredAt,
+			SequenceNumber:   row.SequenceNumber,
+			CreatedAt:        row.OccurredAt,
+		}
+		
+		// Set states based on what's available
+		if row.SourceState.Valid {
+			event.PreviousState = models.CampaignStatusEnum(row.SourceState.String)
+		}
+		if row.TargetState.Valid {
+			event.NewState = models.CampaignStatusEnum(row.TargetState.String)
+		}
+		
+		events = append(events, event)
+	}
+	
+	return events, nil
+}
+
+// CreateStateTransition creates a state transition record
+func (s *campaignStorePostgres) CreateStateTransition(ctx context.Context, exec store.Querier, transition *models.StateTransitionEvent) error {
+	query := `INSERT INTO campaign_state_transitions
+		(id, state_event_id, campaign_id, from_state, to_state, is_valid_transition,
+		 validation_errors, transition_metadata, triggered_by, initiated_at, completed_at, duration_ms)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+	
+	// Use the correct state event ID to satisfy the foreign key constraint
+	stateEventID := transition.StateEventID
+	
+	// Calculate completed time and duration
+	var completedAt sql.NullTime
+	var durationMs sql.NullInt32
+	
+	if transition.ProcessingTime > 0 {
+		completedAt = sql.NullTime{Time: transition.Timestamp.Add(time.Duration(transition.ProcessingTime) * time.Millisecond), Valid: true}
+		durationMs = sql.NullInt32{Int32: int32(transition.ProcessingTime), Valid: true}
+	}
+	
+	// Convert validation errors to JSONB
+	validationErrors := json.RawMessage("[]")
+	if transition.Metadata != nil {
+		validationErrors = *transition.Metadata
+	}
+	
+	_, err := exec.ExecContext(ctx, query,
+		transition.ID,
+		stateEventID,
+		transition.CampaignID,
+		string(transition.FromState),
+		string(transition.ToState),
+		transition.ValidationResult,
+		validationErrors,
+		transition.Metadata,
+		transition.TriggerActor.String,
+		transition.Timestamp,
+		completedAt,
+		durationMs,
+	)
+	
+	return err
+}
+
+// GetStateTransitionsByCampaign retrieves state transitions for a campaign
+func (s *campaignStorePostgres) GetStateTransitionsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, limit int) ([]*models.StateTransitionEvent, error) {
+	query := `SELECT id, state_event_id, campaign_id, from_state, to_state, is_valid_transition,
+		             validation_errors, transition_metadata, triggered_by, initiated_at, completed_at, duration_ms
+		      FROM campaign_state_transitions
+		      WHERE campaign_id = $1
+		      ORDER BY initiated_at DESC
+		      LIMIT $2`
+	
+	type transitionRow struct {
+		ID                 uuid.UUID        `db:"id"`
+		StateEventID       uuid.UUID        `db:"state_event_id"`
+		CampaignID         uuid.UUID        `db:"campaign_id"`
+		FromState          string           `db:"from_state"`
+		ToState            string           `db:"to_state"`
+		IsValidTransition  bool             `db:"is_valid_transition"`
+		ValidationErrors   *json.RawMessage `db:"validation_errors"`
+		TransitionMetadata *json.RawMessage `db:"transition_metadata"`
+		TriggeredBy        string           `db:"triggered_by"`
+		InitiatedAt        time.Time        `db:"initiated_at"`
+		CompletedAt        sql.NullTime     `db:"completed_at"`
+		DurationMs         sql.NullInt32    `db:"duration_ms"`
+	}
+	
+	var rows []transitionRow
+	err := exec.SelectContext(ctx, &rows, query, campaignID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get state transitions: %w", err)
+	}
+	
+	transitions := make([]*models.StateTransitionEvent, 0, len(rows))
+	for _, row := range rows {
+		transition := &models.StateTransitionEvent{
+			ID:               row.ID,
+			CampaignID:       row.CampaignID,
+			TransitionID:     row.StateEventID,
+			FromState:        models.CampaignStatusEnum(row.FromState),
+			ToState:          models.CampaignStatusEnum(row.ToState),
+			TriggerSource:    models.StateEventSourceStateCoordinator,
+			TriggerActor:     sql.NullString{String: row.TriggeredBy, Valid: true},
+			ValidationResult: row.IsValidTransition,
+			RetryCount:       0,
+			Metadata:         row.TransitionMetadata,
+			Timestamp:        row.InitiatedAt,
+			CreatedAt:        row.InitiatedAt,
+		}
+		
+		if row.DurationMs.Valid {
+			transition.ProcessingTime = int64(row.DurationMs.Int32)
+		}
+		
+		transitions = append(transitions, transition)
+	}
+	
+	return transitions, nil
+}
+
+// CreateStateSnapshot creates a state snapshot
+func (s *campaignStorePostgres) CreateStateSnapshot(ctx context.Context, exec store.Querier, snapshot *models.StateSnapshotEvent) error {
+	query := `SELECT * FROM create_campaign_state_snapshot($1, $2, $3, $4, $5)`
+	
+	var result struct {
+		SnapshotID   uuid.UUID      `db:"snapshot_id"`
+		Success      bool           `db:"success"`
+		ErrorMessage sql.NullString `db:"error_message"`
+	}
+	
+	err := exec.GetContext(ctx, &result, query,
+		snapshot.CampaignID,
+		string(snapshot.CurrentState),
+		snapshot.StateData,
+		snapshot.LastEventSequence,
+		snapshot.SnapshotMetadata,
+	)
+	
+	if err != nil {
+		return fmt.Errorf("failed to create state snapshot: %w", err)
+	}
+	
+	if !result.Success && result.ErrorMessage.Valid {
+		return fmt.Errorf("snapshot creation failed: %s", result.ErrorMessage.String)
+	}
+	
+	// Update the snapshot ID with the returned value
+	snapshot.ID = result.SnapshotID
+	
+	return nil
+}
+
+// GetLatestStateSnapshot retrieves the latest valid snapshot for a campaign
+func (s *campaignStorePostgres) GetLatestStateSnapshot(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.StateSnapshotEvent, error) {
+	query := `SELECT * FROM get_latest_campaign_state_snapshot($1)`
+	
+	type snapshotRow struct {
+		ID                uuid.UUID        `db:"id"`
+		CurrentState      string           `db:"current_state"`
+		StateData         *json.RawMessage `db:"state_data"`
+		LastEventSequence int64            `db:"last_event_sequence"`
+		SnapshotMetadata  *json.RawMessage `db:"snapshot_metadata"`
+		CreatedAt         time.Time        `db:"created_at"`
+		Checksum          string           `db:"checksum"`
+	}
+	
+	var row snapshotRow
+	err := exec.GetContext(ctx, &row, query, campaignID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to get latest state snapshot: %w", err)
+	}
+	
+	snapshot := &models.StateSnapshotEvent{
+		ID:                row.ID,
+		CampaignID:        campaignID,
+		CurrentState:      models.CampaignStatusEnum(row.CurrentState),
+		StateData:         row.StateData,
+		LastEventSequence: row.LastEventSequence,
+		SnapshotMetadata:  row.SnapshotMetadata,
+		Checksum:          row.Checksum,
+		IsValid:           true,
+		CreatedAt:         row.CreatedAt,
+	}
+	
+	return snapshot, nil
+}
+
+// ReplayStateEvents retrieves state events for replay from a specific sequence (exclusive)
+func (s *campaignStorePostgres) ReplayStateEvents(ctx context.Context, exec store.Querier, campaignID uuid.UUID, fromSequence int64) ([]*models.StateChangeEvent, error) {
+	// Replay should be exclusive - get events AFTER the specified sequence
+	// Use fromSequence+1 to make it exclusive while reusing GetStateEventsByCampaign
+	return s.GetStateEventsByCampaign(ctx, exec, campaignID, fromSequence+1, 10000) // Large limit for replay
+}
+
+// ValidateStateEventIntegrity validates the integrity of state events for a campaign
+func (s *campaignStorePostgres) ValidateStateEventIntegrity(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.StateIntegrityResult, error) {
+	integrityResult := models.NewStateIntegrityResult(campaignID, true)
+	
+	// Check total events and sequence continuity
+	query := `SELECT COUNT(*) as count, COALESCE(MAX(sequence_number), 0) as max_sequence, COALESCE(MIN(sequence_number), 0) as min_sequence
+		      FROM campaign_state_events
+		      WHERE campaign_id = $1`
+	
+	var statsResult struct {
+		Count       int64 `db:"count"`
+		MaxSequence int64 `db:"max_sequence"`
+		MinSequence int64 `db:"min_sequence"`
+	}
+	
+	err := exec.GetContext(ctx, &statsResult, query, campaignID)
+	
+	if err != nil {
+		integrityResult.IsValid = false
+		integrityResult.ValidationErrors = append(integrityResult.ValidationErrors, fmt.Sprintf("Failed to query event statistics: %v", err))
+		return integrityResult, nil
+	}
+	
+	integrityResult.TotalEvents = statsResult.Count
+	integrityResult.LastSequence = statsResult.MaxSequence
+	
+	// Check for sequence gaps
+	if statsResult.Count > 0 && statsResult.MaxSequence-statsResult.MinSequence+1 != statsResult.Count {
+		integrityResult.IsValid = false
+		integrityResult.ValidationErrors = append(integrityResult.ValidationErrors, "Sequence gaps detected")
+		
+		// Find missing sequences
+		gapQuery := `SELECT generate_series($1, $2) AS expected_seq
+		             EXCEPT
+		             SELECT sequence_number FROM campaign_state_events WHERE campaign_id = $3
+		             ORDER BY expected_seq`
+		
+		var missingSeqs []int64
+		err = exec.SelectContext(ctx, &missingSeqs, gapQuery, statsResult.MinSequence, statsResult.MaxSequence, campaignID)
+		if err == nil {
+			integrityResult.MissingSequences = missingSeqs
+		}
+	}
+	
+	// Add validation checks
+	integrityResult.ValidationChecks = append(integrityResult.ValidationChecks, models.StateIntegrityCheck{
+		CheckType:   "sequence_continuity",
+		CheckPassed: len(integrityResult.MissingSequences) == 0,
+		CheckedAt:   time.Now().UTC(),
+	})
+	
+	integrityResult.ValidationChecks = append(integrityResult.ValidationChecks, models.StateIntegrityCheck{
+		CheckType:   "total_events",
+		CheckPassed: statsResult.Count >= 0,
+		CheckedAt:   time.Now().UTC(),
+	})
+	
+	return integrityResult, nil
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)

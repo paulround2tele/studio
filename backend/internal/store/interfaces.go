@@ -78,6 +78,15 @@ type CampaignStore interface {
 	CreateHTTPKeywordResults(ctx context.Context, exec Querier, results []*models.HTTPKeywordResult) error
 	GetHTTPKeywordResultsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, filter ListValidationResultsFilter) ([]*models.HTTPKeywordResult, error)
 	GetDomainsForHTTPValidation(ctx context.Context, exec Querier, httpKeywordCampaignID uuid.UUID, sourceCampaignID uuid.UUID, limit int, lastDomainName string) ([]*models.DNSValidationResult, error)
+	// SI-002 State Event Store Methods for centralized state management
+	CreateStateEvent(ctx context.Context, exec Querier, event *models.StateChangeEvent) (*models.StateEventResult, error)
+	GetStateEventsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, fromSequence int64, limit int) ([]*models.StateChangeEvent, error)
+	CreateStateTransition(ctx context.Context, exec Querier, transition *models.StateTransitionEvent) error
+	GetStateTransitionsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, limit int) ([]*models.StateTransitionEvent, error)
+	CreateStateSnapshot(ctx context.Context, exec Querier, snapshot *models.StateSnapshotEvent) error
+	GetLatestStateSnapshot(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.StateSnapshotEvent, error)
+	ReplayStateEvents(ctx context.Context, exec Querier, campaignID uuid.UUID, fromSequence int64) ([]*models.StateChangeEvent, error)
+	ValidateStateEventIntegrity(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.StateIntegrityResult, error)
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same
@@ -204,6 +213,40 @@ type ListJobsFilter struct {
 	Offset       int
 	SortBy       string
 	SortOrder    string
+}
+
+// TransactionManager interface for enhanced transaction management (SI-001)
+type TransactionManager interface {
+	SafeCampaignTransaction(ctx context.Context, opts *CampaignTransactionOptions, fn func(*sqlx.Tx) error) error
+	ExecuteTransactionBoundary(ctx context.Context, boundary *TransactionBoundary, campaignID string, executor func(*sqlx.Tx, []TransactionStep) error) error
+	GetActiveTransactionCount() int64
+	DetectLeaks(maxDuration time.Duration) []string
+}
+
+// CampaignTransactionOptions provides campaign-specific transaction configuration (SI-001)
+type CampaignTransactionOptions struct {
+	Operation       string
+	CampaignID      string
+	Timeout         time.Duration
+	IsolationLevel  *sql.IsolationLevel
+	ReadOnly        bool
+	MaxRetries      int
+	RetryDelay      time.Duration
+}
+
+// TransactionBoundary defines a logical transaction boundary for complex operations (SI-001)
+type TransactionBoundary struct {
+	Name        string
+	Description string
+	Steps       []TransactionStep
+}
+
+// TransactionStep represents an individual step within a transaction boundary (SI-001)
+type TransactionStep struct {
+	Name        string
+	Description string
+	Required    bool
+	Rollback    func(*sqlx.Tx) error
 }
 
 func BoolPtr(b bool) *bool {

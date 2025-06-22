@@ -218,6 +218,51 @@ func (m *MockCampaignStore) ValidateConfigConsistency(ctx context.Context, exec 
 	}, nil
 }
 
+// SI-002 State Event Store Methods for centralized state management
+func (m *MockCampaignStore) CreateStateEvent(ctx context.Context, exec store.Querier, event *models.StateChangeEvent) (*models.StateEventResult, error) {
+	return &models.StateEventResult{
+		EventID:        uuid.New(),
+		SequenceNumber: 1,
+		Success:        true,
+		CreatedAt:      time.Now().UTC(),
+	}, nil
+}
+
+func (m *MockCampaignStore) GetStateEventsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, fromSequence int64, limit int) ([]*models.StateChangeEvent, error) {
+	return []*models.StateChangeEvent{}, nil
+}
+
+func (m *MockCampaignStore) CreateStateTransition(ctx context.Context, exec store.Querier, transition *models.StateTransitionEvent) error {
+	return nil
+}
+
+func (m *MockCampaignStore) GetStateTransitionsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, limit int) ([]*models.StateTransitionEvent, error) {
+	return []*models.StateTransitionEvent{}, nil
+}
+
+func (m *MockCampaignStore) CreateStateSnapshot(ctx context.Context, exec store.Querier, snapshot *models.StateSnapshotEvent) error {
+	return nil
+}
+
+func (m *MockCampaignStore) GetLatestStateSnapshot(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.StateSnapshotEvent, error) {
+	return nil, nil
+}
+
+func (m *MockCampaignStore) ReplayStateEvents(ctx context.Context, exec store.Querier, campaignID uuid.UUID, fromSequence int64) ([]*models.StateChangeEvent, error) {
+	return []*models.StateChangeEvent{}, nil
+}
+
+func (m *MockCampaignStore) ValidateStateEventIntegrity(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.StateIntegrityResult, error) {
+	return &models.StateIntegrityResult{
+		CampaignID:       campaignID,
+		IsValid:          true,
+		TotalEvents:      0,
+		LastSequence:     0,
+		ValidationChecks: make([]models.StateIntegrityCheck, 0),
+		ValidatedAt:      time.Now().UTC(),
+	}, nil
+}
+
 type MockAuditLogStore struct {
 	logs []models.AuditLog
 	mu   sync.RWMutex

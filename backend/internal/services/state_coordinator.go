@@ -17,6 +17,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// StateCoordinator defines the interface for state coordination
+type StateCoordinator interface {
+	TransitionState(ctx context.Context, campaignID uuid.UUID, toState models.CampaignStatusEnum, source models.StateEventSourceEnum, actor, reason string, context *models.StateEventContext) error
+	ValidateStateConsistency(ctx context.Context, campaignID uuid.UUID) error
+	ReconcileState(ctx context.Context, campaignID uuid.UUID) error
+	GetStateHistory(ctx context.Context, campaignID uuid.UUID, limit, offset int) ([]*models.StateChangeEvent, error)
+	AddEventHandler(eventType models.StateEventTypeEnum, handler StateEventHandler)
+	AddStateValidator(validator StateValidator)
+	GetMetrics() map[string]int64
+}
+
 // TransactionManagerInterface defines the interface for transaction management
 type TransactionManagerInterface interface {
 	SafeTransaction(ctx context.Context, opts *sql.TxOptions, operation string, fn func(*sqlx.Tx) error) error
@@ -97,9 +108,9 @@ func NewStateCoordinator(
 		validationInterval:   config.ValidationInterval,
 	}
 
-	// Initialize event store (will be implemented as part of campaign store)
+	// Initialize event store with real database persistence via campaign store
 	sc.eventStore = &stateEventStoreImpl{
-		db: db,
+		campaignStore: campaignStore,
 	}
 
 	// Set up default validators
@@ -194,8 +205,8 @@ func (sc *StateCoordinatorImpl) performStateTransition(
 		return fmt.Errorf("failed to store state change event: %w", err)
 	}
 
-	// Create detailed transition event
-	transitionEvent := models.NewStateTransitionEvent(campaignID, fromState, toState, source, actor)
+	// Create detailed transition event with the state event ID
+	transitionEvent := models.NewStateTransitionEvent(stateChangeEvent.ID, campaignID, fromState, toState, source, actor)
 	transitionEvent.ProcessingTime = time.Since(startTime).Milliseconds()
 
 	// Add metadata if context provided
@@ -512,43 +523,159 @@ func (sm *CampaignStateMachine) IsValidState(status CampaignStatus) bool {
 	return exists
 }
 
-// Basic implementation of StateEventStore
+// Real StateEventStore implementation using campaign store database methods
 type stateEventStoreImpl struct {
-	db *sqlx.DB
+	campaignStore store.CampaignStore
 }
 
 func (s *stateEventStoreImpl) CreateStateChangeEvent(ctx context.Context, exec store.Querier, event *models.StateChangeEvent) error {
-	// This would be implemented as part of the campaign store extension
-	// For now, log the event
-	log.Printf("StateEventStore: Would create state change event: %+v", event)
+	// Use the campaign store's CreateStateEvent method
+	result, err := s.campaignStore.CreateStateEvent(ctx, exec, event)
+	if err != nil {
+		return fmt.Errorf("failed to create state change event in database: %w", err)
+	}
+	
+	// Update the event with the database result
+	event.ID = result.EventID
+	event.SequenceNumber = result.SequenceNumber
+	event.CreatedAt = result.CreatedAt
+	
+	if !result.Success {
+		return fmt.Errorf("state change event creation failed: %s", result.ErrorMessage)
+	}
+	
+	log.Printf("StateEventStore: Created state change event %s for campaign %s (sequence: %d)",
+		result.EventID, event.CampaignID, result.SequenceNumber)
 	return nil
 }
 
 func (s *stateEventStoreImpl) CreateStateTransitionEvent(ctx context.Context, exec store.Querier, event *models.StateTransitionEvent) error {
-	// This would be implemented as part of the campaign store extension
-	log.Printf("StateEventStore: Would create state transition event: %+v", event)
+	err := s.campaignStore.CreateStateTransition(ctx, exec, event)
+	if err != nil {
+		return fmt.Errorf("failed to create state transition event in database: %w", err)
+	}
+	
+	log.Printf("StateEventStore: Created state transition event %s for campaign %s (%s -> %s)",
+		event.ID, event.CampaignID, event.FromState, event.ToState)
 	return nil
 }
 
 func (s *stateEventStoreImpl) CreateStateValidationEvent(ctx context.Context, exec store.Querier, event *models.StateValidationEvent) error {
-	// This would be implemented as part of the campaign store extension
-	log.Printf("StateEventStore: Would create state validation event: %+v", event)
+	// Convert to state change event for storage (validation events are stored as state events)
+	stateEvent := &models.StateChangeEvent{
+		ID:               event.ID,
+		CampaignID:       event.CampaignID,
+		EventType:        models.StateEventTypeValidationResult,
+		EventSource:      models.StateEventSourceStateCoordinator,
+		PreviousState:    event.CurrentState,
+		NewState:         event.ExpectedState,
+		ValidationPassed: event.ValidationPassed,
+		Timestamp:        event.Timestamp,
+		CreatedAt:        event.CreatedAt,
+	}
+	
+	// Add validation context
+	if event.CheckedBy.Valid || event.FailureReason.Valid {
+		contextData := map[string]interface{}{
+			"validation_type": event.ValidationType,
+			"validation_passed": event.ValidationPassed,
+		}
+		if event.CheckedBy.Valid {
+			contextData["checked_by"] = event.CheckedBy.String
+		}
+		if event.FailureReason.Valid {
+			contextData["failure_reason"] = event.FailureReason.String
+		}
+		
+		contextJSON, err := json.Marshal(contextData)
+		if err == nil {
+			rawJSON := json.RawMessage(contextJSON)
+			stateEvent.Context = &rawJSON
+		}
+	}
+	
+	result, err := s.campaignStore.CreateStateEvent(ctx, exec, stateEvent)
+	if err != nil {
+		return fmt.Errorf("failed to create state validation event in database: %w", err)
+	}
+	
+	// Update the validation event with database result
+	event.ID = result.EventID
+	event.CreatedAt = result.CreatedAt
+	
+	log.Printf("StateEventStore: Created state validation event %s for campaign %s (passed: %v)",
+		result.EventID, event.CampaignID, event.ValidationPassed)
 	return nil
 }
 
 func (s *stateEventStoreImpl) CreateStateReconciliationEvent(ctx context.Context, exec store.Querier, event *models.StateReconciliationEvent) error {
-	// This would be implemented as part of the campaign store extension
-	log.Printf("StateEventStore: Would create state reconciliation event: %+v", event)
+	// Convert to state change event for storage
+	stateEvent := &models.StateChangeEvent{
+		ID:            event.ID,
+		CampaignID:    event.CampaignID,
+		EventType:     models.StateEventTypeProgressUpdate,
+		EventSource:   models.StateEventSourceStateCoordinator,
+		PreviousState: event.DetectedState,
+		NewState:      event.AuthorativeState,
+		Timestamp:     event.Timestamp,
+		CreatedAt:     event.CreatedAt,
+	}
+	
+	// Add reconciliation context
+	contextData := map[string]interface{}{
+		"discrepancy_type": event.DiscrepancyType,
+		"reconciliation_action": event.ReconciliationAction,
+	}
+	if event.ReconciliationBy.Valid {
+		contextData["reconciliation_by"] = event.ReconciliationBy.String
+	}
+	if event.Resolution.Valid {
+		contextData["resolution"] = event.Resolution.String
+	}
+	
+	contextJSON, err := json.Marshal(contextData)
+	if err == nil {
+		rawJSON := json.RawMessage(contextJSON)
+		stateEvent.Context = &rawJSON
+	}
+	
+	result, err := s.campaignStore.CreateStateEvent(ctx, exec, stateEvent)
+	if err != nil {
+		return fmt.Errorf("failed to create state reconciliation event in database: %w", err)
+	}
+	
+	// Update the reconciliation event with database result
+	event.ID = result.EventID
+	event.CreatedAt = result.CreatedAt
+	
+	log.Printf("StateEventStore: Created state reconciliation event %s for campaign %s (%s)",
+		result.EventID, event.CampaignID, event.DiscrepancyType)
 	return nil
 }
 
 func (s *stateEventStoreImpl) GetStateEventsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, limit int, offset int) ([]*models.StateChangeEvent, error) {
-	// This would be implemented as part of the campaign store extension
-	log.Printf("StateEventStore: Would get state events for campaign %s", campaignID)
-	return []*models.StateChangeEvent{}, nil
+	// Convert offset to sequence number for the campaign store method
+	fromSequence := int64(offset)
+	
+	events, err := s.campaignStore.GetStateEventsByCampaign(ctx, exec, campaignID, fromSequence, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get state events from database: %w", err)
+	}
+	
+	log.Printf("StateEventStore: Retrieved %d state events for campaign %s (from sequence: %d, limit: %d)",
+		len(events), campaignID, fromSequence, limit)
+	return events, nil
 }
 
 func (s *stateEventStoreImpl) GetLastSequenceNumber(ctx context.Context, exec store.Querier) (int64, error) {
-	// This would be implemented as part of the campaign store extension
-	return 0, nil
+	// Query the maximum sequence number across all campaigns
+	query := `SELECT COALESCE(MAX(sequence_number), 0) FROM campaign_state_events`
+	
+	var lastSequence int64
+	err := exec.GetContext(ctx, &lastSequence, query)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get last sequence number: %w", err)
+	}
+	
+	return lastSequence, nil
 }
