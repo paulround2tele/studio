@@ -516,6 +516,10 @@ func TestExtractUserContext_ClientIPExtraction_EdgeCases(t *testing.T) {
 			// Set API key authentication for simplicity
 			c.Set("auth_type", "api_key")
 
+			// Clear default headers first for clean test
+			c.Request.Header.Del("X-Forwarded-For")
+			c.Request.Header.Del("X-Real-IP")
+
 			// Set headers
 			for key, value := range tc.headers {
 				c.Request.Header.Set(key, value)

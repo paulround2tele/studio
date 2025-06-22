@@ -70,16 +70,63 @@ func main() {
 		log.Printf("Successfully loaded environment variables from %s", envPath)
 	}
 
-	// Load configuration with environment variable support
-	appConfig, err := config.LoadWithEnv("")
+	// Initialize centralized configuration manager for SI-003 remediation
+	log.Println("Initializing centralized configuration management system...")
+
+	// Get current working directory for config path resolution
+	currentDir, err := os.Getwd()
 	if err != nil {
-		log.Printf("Warning: Failed to load config file: %v", err)
-		log.Println("Using environment variables and defaults...")
-		// Create minimal config from environment
-		appConfig = &config.AppConfig{}
-		config.LoadWithEnv("") // This will apply env overrides even without config file
+		log.Printf("Warning: Could not get current directory: %v", err)
+		currentDir = "."
 	}
-	log.Println("Configuration loaded with environment overrides.")
+
+	// Configure centralized config manager with current directory as base
+	centralizedConfigManagerConfig := config.CentralizedConfigManagerConfig{
+		ConfigDir:                  currentDir,
+		MainConfigPath:             filepath.Join(currentDir, "config.json"),
+		EnableEnvironmentOverrides: true,
+		EnableCaching:              true,
+		EnableHotReload:            false, // Disabled for production stability
+		ReloadCheckInterval:        5 * time.Minute,
+		ValidationMode:             "warn", // Use warn mode for production stability
+	}
+
+	// Create centralized configuration manager
+	centralizedConfigManager, err := config.NewCentralizedConfigManager(centralizedConfigManagerConfig)
+	if err != nil {
+		log.Fatalf("FATAL: Failed to initialize centralized configuration manager: %v", err)
+	}
+
+	// Load unified configuration
+	ctx := context.Background()
+	unifiedConfig, err := centralizedConfigManager.LoadConfiguration(ctx)
+	if err != nil {
+		log.Fatalf("FATAL: Failed to load centralized configuration: %v", err)
+	}
+
+	// Extract AppConfig for backward compatibility
+	appConfig := unifiedConfig.AppConfig
+	if appConfig == nil {
+		log.Fatalf("FATAL: AppConfig not available from centralized configuration")
+	}
+
+	// Log configuration loading summary
+	loadSummary := fmt.Sprintf("Centralized configuration loaded - Sources: [Defaults: %v, Main: %v, DNS: %v, HTTP: %v, Proxies: %v, Keywords: %v, Env: %v]",
+		unifiedConfig.LoadedFrom.Defaults,
+		unifiedConfig.LoadedFrom.MainConfigFile,
+		unifiedConfig.LoadedFrom.DNSPersonasFile,
+		unifiedConfig.LoadedFrom.HTTPPersonasFile,
+		unifiedConfig.LoadedFrom.ProxiesFile,
+		unifiedConfig.LoadedFrom.KeywordsFile,
+		unifiedConfig.LoadedFrom.Environment,
+	)
+	log.Println(loadSummary)
+
+	// Log metrics for monitoring
+	configMetrics := centralizedConfigManager.GetMetrics()
+	log.Printf("Configuration loading metrics: %+v", configMetrics)
+
+	log.Println("SI-003 remediation: Centralized configuration management system active.")
 
 	wsBroadcaster := websocket.InitGlobalBroadcaster()
 	log.Println("Global WebSocket broadcaster initialized and started.")
@@ -144,8 +191,8 @@ func main() {
 	log.Println("Successfully connected to PostgreSQL database.")
 
 	// Log initial database connection pool metrics and establish baseline
-	metrics := monitoring.NewDatabaseMetrics(db)
-	metrics.LogConnectionPoolStats("application_startup", "server_init")
+	dbMetrics := monitoring.NewDatabaseMetrics(db)
+	dbMetrics.LogConnectionPoolStats("application_startup", "server_init")
 	log.Println("Database connection pool monitoring initialized.")
 
 	campaignStore = pg_store.NewCampaignStorePostgres(db)
@@ -156,12 +203,17 @@ func main() {
 	campaignJobStore = pg_store.NewCampaignJobStorePostgres(db)
 	log.Println("PostgreSQL-backed stores initialized.")
 
+	// Initialize transaction manager for SI-001 transaction management patterns
+	transactionManager := pg_store.NewTransactionManagerAdapter(db)
+	log.Println("TransactionManager initialized for SI-001 compliance.")
+
 	var defaultProxyTimeout time.Duration = 30 * time.Second
 	if appConfig.HTTPValidator.RequestTimeoutSeconds > 0 {
 		defaultProxyTimeout = time.Duration(appConfig.HTTPValidator.RequestTimeoutSeconds) * time.Second
 	}
-	proxyMgr := proxymanager.NewProxyManager(appConfig.Proxies, defaultProxyTimeout)
-	log.Println("ProxyManager initialized.")
+	// Use unified proxies configuration for enhanced proxy management
+	proxyMgr := proxymanager.NewProxyManager(unifiedConfig.Proxies, defaultProxyTimeout)
+	log.Println("ProxyManager initialized with centralized proxy configuration.")
 
 	httpValSvc := httpvalidator.NewHTTPValidator(appConfig)
 	log.Println("HTTPValidator service initialized.")
@@ -211,10 +263,39 @@ func main() {
 	)
 	log.Println("HTTPKeywordCampaignService initialized.")
 
-	// Initialize audit context service for BL-006 compliance
+	// Initialize audit context service for BL-006 compliance with database support
 	// This service provides complete user context extraction for audit logging
-	auditContextService := services.NewAuditContextService(auditLogStore)
-	log.Println("AuditContextService initialized for BL-006 compliance.")
+	auditContextService := services.NewAuditContextServiceWithDB(auditLogStore, db)
+	log.Println("AuditContextService initialized for BL-006 compliance with database support.")
+
+	// Initialize API authorization service for BL-005 compliance
+	apiAuthorizationService := services.NewAPIAuthorizationService(db, auditContextService)
+	log.Println("APIAuthorizationService initialized for BL-005 compliance.")
+
+	// Initialize domain validation service for BL-007 compliance
+	domainValidationService := services.NewDomainValidationService(db)
+	log.Println("DomainValidationService initialized for BL-007 compliance.")
+
+	// Initialize SI-004 connection pool monitoring
+	poolConfig := config.OptimizedDatabasePoolConfig()
+	poolConfig.ConfigureDatabase(db)
+	log.Println("SI-004 optimized database pool configuration applied.")
+
+	// Initialize connection pool monitor with 30-second intervals for production
+	poolMonitor := monitoring.NewConnectionPoolMonitor(db, 30*time.Second)
+	if err := poolMonitor.Start(ctx); err != nil {
+		log.Printf("Warning: Failed to start SI-004 connection pool monitor: %v", err)
+	} else {
+		log.Println("SI-004 connection pool monitor started with 30-second intervals.")
+	}
+
+	// Initialize connection leak detector for production
+	leakDetector := monitoring.NewConnectionLeakDetector(db)
+	if err := leakDetector.Start(ctx); err != nil {
+		log.Printf("Warning: Failed to start SI-004 connection leak detector: %v", err)
+	} else {
+		log.Println("SI-004 connection leak detector started.")
+	}
 
 	campaignOrchestratorSvc := services.NewCampaignOrchestratorService(
 		db,
@@ -228,6 +309,7 @@ func main() {
 		httpKeywordCampaignSvc,
 		stateCoordinator,
 		auditContextService, // BL-006 compliance integration
+		transactionManager,  // SI-001 transaction management integration
 	)
 	log.Println("CampaignOrchestratorService initialized with BL-006 compliance.")
 
@@ -243,6 +325,7 @@ func main() {
 		campaignOrchestratorSvc,
 		serverInstanceID,
 		appConfig,
+		db,
 	)
 	log.Println("CampaignWorkerService initialized.")
 
@@ -259,7 +342,7 @@ func main() {
 	)
 	log.Println("Main APIHandler initialized.")
 
-	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(campaignOrchestratorSvc)
+	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(campaignOrchestratorSvc, domainValidationService)
 	log.Println("CampaignOrchestratorAPIHandler initialized.")
 
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)
@@ -269,15 +352,18 @@ func main() {
 	authHandler := api.NewAuthHandler(sessionService, sessionConfig, db)
 	log.Println("AuthHandler initialized.")
 
-	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(sessionService, sessionConfig)
+	// Initialize middleware with BL-006 audit context integration and BL-005 API authorization
+	authMiddleware := middleware.NewAuthMiddleware(sessionService, auditContextService, apiAuthorizationService, sessionConfig)
 	securityMiddleware := middleware.NewSecurityMiddleware()
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware()
 
 	// Initialize access control service for campaign access middleware
 	accessControlService := services.NewAccessControlService(db, campaignStore)
 	campaignAccessMiddleware := middleware.NewCampaignAccessMiddleware(accessControlService)
-	log.Println("Security middleware initialized.")
+
+	// Initialize BL007 input validation middleware for BL-007 compliance
+	bl007InputValidationMiddleware := middleware.NewBL007InputValidationMiddleware(db)
+	log.Println("Security middleware initialized with BL-006 audit context integration and BL-007 input validation.")
 
 	// Initialize health check handler
 	healthCheckHandler := api.NewHealthCheckHandler(db.DB)
@@ -459,7 +545,7 @@ func main() {
 	campaignApiV2.Use(authMiddleware.SessionAuth())
 	campaignApiV2.Use(securityMiddleware.SessionProtection())
 	newCampaignRoutesGroup := campaignApiV2.Group("/campaigns")
-	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware, campaignAccessMiddleware)
+	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware, campaignAccessMiddleware, bl007InputValidationMiddleware)
 	log.Println("Registered new campaign orchestration routes under /api/v2/campaigns.")
 
 	// Use environment variable for port if set, otherwise use config

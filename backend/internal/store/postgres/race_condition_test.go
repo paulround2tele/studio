@@ -477,8 +477,8 @@ func TestHighConcurrencyJobClaiming(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// Launch many workers
-	numWorkers := 200 // Much higher contention
+	// Launch many workers with reasonable database connection limits
+	numWorkers := 50 // High contention while respecting PostgreSQL max_connections
 	claimedJobs := make(chan *models.CampaignJob, numJobs)
 	workerErrors := make(chan error, numWorkers)
 
@@ -496,16 +496,22 @@ func TestHighConcurrencyJobClaiming(t *testing.T) {
 
 			workerName := fmt.Sprintf("stress-worker-%d", workerID)
 
-			job, err := jobStore.GetNextQueuedJob(ctx, nil, workerName)
-			if errors.Is(err, store.ErrNotFound) {
-				return // Expected for excess workers
-			}
-			if err != nil {
-				workerErrors <- fmt.Errorf("worker %d: %w", workerID, err)
-				return
-			}
+			// Each worker tries to claim multiple jobs until none available
+			for {
+				job, err := jobStore.GetNextQueuedJob(ctx, nil, workerName)
+				if errors.Is(err, store.ErrNotFound) {
+					return // No more jobs available
+				}
+				if err != nil {
+					workerErrors <- fmt.Errorf("worker %d: %w", workerID, err)
+					return
+				}
 
-			claimedJobs <- job
+				claimedJobs <- job
+
+				// Small delay to allow other workers to compete
+				time.Sleep(1 * time.Millisecond)
+			}
 		}(i)
 	}
 

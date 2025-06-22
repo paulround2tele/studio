@@ -13,14 +13,14 @@ import (
 type StateEventTypeEnum string
 
 const (
-	StateEventTypeTransition       StateEventTypeEnum = "state_transition"
-	StateEventTypeValidationResult StateEventTypeEnum = "validation_result"
-	StateEventTypeProgressUpdate   StateEventTypeEnum = "progress_update"
-	StateEventTypeErrorOccurred    StateEventTypeEnum = "error_occurred"
-	StateEventTypeConfigChange     StateEventTypeEnum = "configuration_change"
-	StateEventTypeResourceAlloc    StateEventTypeEnum = "resource_allocation"
-	StateEventTypeBatchProcessed   StateEventTypeEnum = "batch_processed"
-	StateEventTypeWorkerAssigned   StateEventTypeEnum = "worker_assigned"
+	StateEventTypeTransition        StateEventTypeEnum = "state_transition"
+	StateEventTypeValidationResult  StateEventTypeEnum = "validation_result"
+	StateEventTypeProgressUpdate    StateEventTypeEnum = "progress_update"
+	StateEventTypeErrorOccurred     StateEventTypeEnum = "error_occurred"
+	StateEventTypeConfigChange      StateEventTypeEnum = "configuration_change"
+	StateEventTypeResourceAlloc     StateEventTypeEnum = "resource_allocation"
+	StateEventTypeBatchProcessed    StateEventTypeEnum = "batch_processed"
+	StateEventTypeWorkerAssigned    StateEventTypeEnum = "worker_assigned"
 	StateEventTypeCheckpointCreated StateEventTypeEnum = "checkpoint_created"
 )
 
@@ -239,28 +239,28 @@ type StateEventResult struct {
 
 // StateSnapshotEvent represents a state snapshot for faster replay
 type StateSnapshotEvent struct {
-	ID                 uuid.UUID          `db:"id" json:"id"`
-	CampaignID         uuid.UUID          `db:"campaign_id" json:"campaignId"`
-	CurrentState       CampaignStatusEnum `db:"current_state" json:"currentState"`
-	StateData          *json.RawMessage   `db:"state_data" json:"stateData"`
-	LastEventSequence  int64              `db:"last_event_sequence" json:"lastEventSequence"`
-	SnapshotMetadata   *json.RawMessage   `db:"snapshot_metadata" json:"snapshotMetadata,omitempty"`
-	Checksum           string             `db:"checksum" json:"checksum"`
-	IsValid            bool               `db:"is_valid" json:"isValid"`
-	CreatedAt          time.Time          `db:"created_at" json:"createdAt"`
+	ID                uuid.UUID          `db:"id" json:"id"`
+	CampaignID        uuid.UUID          `db:"campaign_id" json:"campaignId"`
+	CurrentState      CampaignStatusEnum `db:"current_state" json:"currentState"`
+	StateData         *json.RawMessage   `db:"state_data" json:"stateData"`
+	LastEventSequence int64              `db:"last_event_sequence" json:"lastEventSequence"`
+	SnapshotMetadata  *json.RawMessage   `db:"snapshot_metadata" json:"snapshotMetadata,omitempty"`
+	Checksum          string             `db:"checksum" json:"checksum"`
+	IsValid           bool               `db:"is_valid" json:"isValid"`
+	CreatedAt         time.Time          `db:"created_at" json:"createdAt"`
 }
 
 // StateIntegrityResult represents the result of state integrity validation
 type StateIntegrityResult struct {
-	CampaignID         uuid.UUID                 `json:"campaignId"`
-	IsValid            bool                      `json:"isValid"`
-	TotalEvents        int64                     `json:"totalEvents"`
-	LastSequence       int64                     `json:"lastSequence"`
-	MissingSequences   []int64                   `json:"missingSequences,omitempty"`
-	DuplicateSequences []int64                   `json:"duplicateSequences,omitempty"`
-	ValidationErrors   []string                  `json:"validationErrors,omitempty"`
-	ValidationChecks   []StateIntegrityCheck     `json:"validationChecks"`
-	ValidatedAt        time.Time                 `json:"validatedAt"`
+	CampaignID         uuid.UUID             `json:"campaignId"`
+	IsValid            bool                  `json:"isValid"`
+	TotalEvents        int64                 `json:"totalEvents"`
+	LastSequence       int64                 `json:"lastSequence"`
+	MissingSequences   []int64               `json:"missingSequences,omitempty"`
+	DuplicateSequences []int64               `json:"duplicateSequences,omitempty"`
+	ValidationErrors   []string              `json:"validationErrors,omitempty"`
+	ValidationChecks   []StateIntegrityCheck `json:"validationChecks"`
+	ValidatedAt        time.Time             `json:"validatedAt"`
 }
 
 // StateIntegrityCheck represents an individual integrity validation check
@@ -282,7 +282,7 @@ func StateEventSlicePtr(v []string) *[]string {
 // NewStateSnapshotEvent creates a new state snapshot event
 func NewStateSnapshotEvent(campaignID uuid.UUID, currentState CampaignStatusEnum, stateData *json.RawMessage, lastSequence int64) *StateSnapshotEvent {
 	now := time.Now().UTC()
-	
+
 	return &StateSnapshotEvent{
 		ID:                uuid.New(),
 		CampaignID:        campaignID,

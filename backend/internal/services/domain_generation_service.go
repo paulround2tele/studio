@@ -13,27 +13,42 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/monitoring"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
 type domainGenerationServiceImpl struct {
-	db               *sqlx.DB // This will be nil when using Firestore
-	campaignStore    store.CampaignStore
-	campaignJobStore store.CampaignJobStore
-	auditLogStore    store.AuditLogStore
-	configManager    ConfigManagerInterface
+	db                        *sqlx.DB // This will be nil when using Firestore
+	campaignStore             store.CampaignStore
+	campaignJobStore          store.CampaignJobStore
+	auditLogStore             store.AuditLogStore
+	configManager             ConfigManagerInterface
+	workerCoordinationService *WorkerCoordinationService
+	txManager                 *postgres.TransactionManager
 }
 
 // NewDomainGenerationService creates a new DomainGenerationService.
 func NewDomainGenerationService(db *sqlx.DB, cs store.CampaignStore, cjs store.CampaignJobStore, as store.AuditLogStore, cm ConfigManagerInterface) DomainGenerationService {
+	var workerCoordService *WorkerCoordinationService
+	var txManager *postgres.TransactionManager
+
+	if db != nil {
+		// Initialize worker coordination service with a unique worker ID
+		workerID := fmt.Sprintf("domain-gen-worker-%d", time.Now().Unix())
+		workerCoordService = NewWorkerCoordinationService(db, workerID)
+		txManager = postgres.NewTransactionManager(db)
+	}
+
 	return &domainGenerationServiceImpl{
-		db:               db,
-		campaignStore:    cs,
-		campaignJobStore: cjs,
-		auditLogStore:    as,
-		configManager:    cm,
+		db:                        db,
+		campaignStore:             cs,
+		campaignJobStore:          cjs,
+		auditLogStore:             as,
+		configManager:             cm,
+		workerCoordinationService: workerCoordService,
+		txManager:                 txManager,
 	}
 }
 
@@ -805,4 +820,160 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		campaignID, processedInThisBatch, done, currentProcessedItems, genParams.CurrentOffset)
 
 	return done, processedInThisBatch, opErr
+}
+
+// ProcessDomainGenerationBatch processes domain generation with worker coordination (BF-002)
+func (s *domainGenerationServiceImpl) ProcessDomainGenerationBatch(
+	ctx context.Context,
+	campaignID uuid.UUID,
+) error {
+	if s.db == nil || s.workerCoordinationService == nil || s.txManager == nil {
+		log.Printf("ProcessDomainGenerationBatch: Missing dependencies for coordinated processing, falling back to standard processing")
+		_, _, err := s.ProcessGenerationCampaignBatch(ctx, campaignID)
+		return err
+	}
+
+	log.Printf("ProcessDomainGenerationBatch: Starting coordinated batch processing for campaign %s", campaignID)
+
+	// Register worker for this campaign
+	if err := s.workerCoordinationService.RegisterWorker(ctx, campaignID, "domain_generation"); err != nil {
+		return fmt.Errorf("failed to register worker for campaign %s: %w", campaignID, err)
+	}
+
+	// Start heartbeat for worker coordination
+	s.workerCoordinationService.StartHeartbeat(ctx)
+	defer s.workerCoordinationService.StopHeartbeat()
+
+	// Update worker status to working
+	if err := s.workerCoordinationService.UpdateWorkerStatus(ctx, campaignID, "working", "domain_generation_batch"); err != nil {
+		log.Printf("WARNING: Failed to update worker status for campaign %s: %v", campaignID, err)
+	}
+
+	// Acquire resource lock for domain generation coordination
+	resourceLockManager := NewResourceLockManager(s.db, fmt.Sprintf("domain-gen-worker-%d", time.Now().Unix()))
+	lockID, err := resourceLockManager.AcquireResourceLock(
+		ctx,
+		"campaign_processing",
+		campaignID.String(),
+		"EXCLUSIVE",
+		30*time.Second,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to acquire resource lock for campaign %s: %w", campaignID, err)
+	}
+	defer func() {
+		if releaseErr := resourceLockManager.ReleaseResourceLock(
+			ctx,
+			"campaign_processing",
+			campaignID.String(),
+			"EXCLUSIVE",
+		); releaseErr != nil {
+			log.Printf("WARNING: Failed to release resource lock for campaign %s: %v", campaignID, releaseErr)
+		}
+	}()
+
+	log.Printf("ProcessDomainGenerationBatch: Acquired resource lock %s for campaign %s", lockID, campaignID)
+
+	// Try to assign a domain generation batch
+	batchID, err := s.workerCoordinationService.AssignDomainBatch(ctx, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to assign domain batch for campaign %s: %w", campaignID, err)
+	}
+
+	if batchID == nil {
+		log.Printf("ProcessDomainGenerationBatch: No batch available for campaign %s", campaignID)
+		// Update worker status to idle
+		if err := s.workerCoordinationService.UpdateWorkerStatus(ctx, campaignID, "idle", "no_batch_available"); err != nil {
+			log.Printf("WARNING: Failed to update worker status to idle for campaign %s: %v", campaignID, err)
+		}
+		return nil
+	}
+
+	log.Printf("ProcessDomainGenerationBatch: Assigned batch %s for campaign %s", *batchID, campaignID)
+
+	// Process the batch with coordination
+	opts := &postgres.CampaignTransactionOptions{
+		Operation:  "coordinated_domain_generation_batch",
+		CampaignID: campaignID.String(),
+		Timeout:    5 * time.Minute, // Extended timeout for batch processing
+		MaxRetries: 3,
+		RetryDelay: 200 * time.Millisecond,
+	}
+
+	err = s.txManager.SafeCampaignTransaction(ctx, opts, func(tx *sqlx.Tx) error {
+		// Update batch status to processing (batch should be 'assigned' after AssignDomainBatch)
+		updateBatchQuery := `
+			UPDATE domain_generation_batches
+			SET status = 'processing', started_at = NOW()
+			WHERE batch_id = $1 AND status = 'assigned'`
+
+		result, err := tx.ExecContext(ctx, updateBatchQuery, *batchID)
+		if err != nil {
+			return fmt.Errorf("failed to update batch status: %w", err)
+		}
+
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			return fmt.Errorf("batch %s was not in pending status or does not exist", *batchID)
+		}
+
+		// Process the actual domain generation
+		done, processedCount, processingErr := s.ProcessGenerationCampaignBatch(ctx, campaignID)
+		if processingErr != nil {
+			// Update batch status to failed
+			failBatchQuery := `
+				UPDATE domain_generation_batches
+				SET status = 'failed',
+					failed_domains = failed_domains + $2,
+					error_details = $3,
+					completed_at = NOW()
+				WHERE batch_id = $1`
+
+			errorDetails, _ := json.Marshal(map[string]interface{}{
+				"error":     processingErr.Error(),
+				"timestamp": time.Now().Unix(),
+			})
+
+			_, updateErr := tx.ExecContext(ctx, failBatchQuery, *batchID, processedCount, errorDetails)
+			if updateErr != nil {
+				log.Printf("WARNING: Failed to update batch %s to failed status: %v", *batchID, updateErr)
+			}
+
+			return fmt.Errorf("domain generation processing failed: %w", processingErr)
+		}
+
+		// Update batch with processed domains count
+		completeBatchQuery := `
+			UPDATE domain_generation_batches
+			SET processed_domains = processed_domains + $2,
+				status = CASE WHEN $3 THEN 'completed' ELSE 'processing' END,
+				completed_at = CASE WHEN $3 THEN NOW() ELSE completed_at END
+			WHERE batch_id = $1`
+
+		_, err = tx.ExecContext(ctx, completeBatchQuery, *batchID, processedCount, done)
+		if err != nil {
+			return fmt.Errorf("failed to update batch completion status: %w", err)
+		}
+
+		log.Printf("ProcessDomainGenerationBatch: Batch %s processed %d domains for campaign %s (done: %t)",
+			*batchID, processedCount, campaignID, done)
+
+		return nil
+	})
+
+	if err != nil {
+		// Update worker status to error
+		if statusErr := s.workerCoordinationService.UpdateWorkerStatus(ctx, campaignID, "error", fmt.Sprintf("batch_processing_error: %v", err)); statusErr != nil {
+			log.Printf("WARNING: Failed to update worker status to error for campaign %s: %v", campaignID, statusErr)
+		}
+		return fmt.Errorf("coordinated batch processing failed for campaign %s: %w", campaignID, err)
+	}
+
+	// Update worker status back to idle after successful processing
+	if err := s.workerCoordinationService.UpdateWorkerStatus(ctx, campaignID, "idle", "batch_completed_successfully"); err != nil {
+		log.Printf("WARNING: Failed to update worker status to idle after completion for campaign %s: %v", campaignID, err)
+	}
+
+	log.Printf("ProcessDomainGenerationBatch: Successfully completed coordinated batch processing for campaign %s", campaignID)
+	return nil
 }

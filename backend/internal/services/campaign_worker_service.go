@@ -4,6 +4,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +14,9 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 // Default worker settings if not provided by config
@@ -31,7 +34,10 @@ type campaignWorkerServiceImpl struct {
 	httpKeywordService      HTTPKeywordCampaignService
 	campaignOrchestratorSvc CampaignOrchestratorService
 	workerID                string
-	appConfig               *config.AppConfig // Added AppConfig
+	appConfig               *config.AppConfig
+	db                      *sqlx.DB
+	workerCoordinationSvc   *WorkerCoordinationService
+	txManager               *postgres.TransactionManager
 }
 
 // NewCampaignWorkerService creates a new CampaignWorkerService.
@@ -42,7 +48,8 @@ func NewCampaignWorkerService(
 	hks HTTPKeywordCampaignService,
 	cos CampaignOrchestratorService,
 	serverInstanceID string,
-	appCfg *config.AppConfig, // Added appCfg parameter
+	appCfg *config.AppConfig,
+	db *sqlx.DB,
 ) CampaignWorkerService {
 	workerID := serverInstanceID
 	if workerID == "" {
@@ -52,6 +59,15 @@ func NewCampaignWorkerService(
 		}
 		workerID = fmt.Sprintf("workerpool-%s", host)
 	}
+
+	var workerCoordSvc *WorkerCoordinationService
+	var txManager *postgres.TransactionManager
+
+	if db != nil {
+		workerCoordSvc = NewWorkerCoordinationService(db, workerID)
+		txManager = postgres.NewTransactionManager(db)
+	}
+
 	return &campaignWorkerServiceImpl{
 		jobStore:                js,
 		genService:              gs,
@@ -59,7 +75,10 @@ func NewCampaignWorkerService(
 		httpKeywordService:      hks,
 		campaignOrchestratorSvc: cos,
 		workerID:                workerID,
-		appConfig:               appCfg, // Store appConfig
+		appConfig:               appCfg,
+		db:                      db,
+		workerCoordinationSvc:   workerCoordSvc,
+		txManager:               txManager,
 	}
 }
 
@@ -323,4 +342,147 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 		log.Printf("Worker [%s]: CRITICAL - Failed to update job %s status to %s: %v.",
 			workerName, job.ID, job.Status, err)
 	}
+}
+
+// ConcurrentWorkerOperation executes operations with worker coordination (BF-002)
+func (s *campaignWorkerServiceImpl) ConcurrentWorkerOperation(
+	ctx context.Context,
+	campaignID uuid.UUID,
+	operation string,
+	operationFunc func(context.Context, uuid.UUID) error,
+) error {
+	if s.db == nil || s.workerCoordinationSvc == nil || s.txManager == nil {
+		log.Printf("ConcurrentWorkerOperation: Missing dependencies for coordinated operation, executing directly")
+		return operationFunc(ctx, campaignID)
+	}
+
+	log.Printf("ConcurrentWorkerOperation: Starting coordinated operation '%s' for campaign %s", operation, campaignID)
+
+	// Register worker for this campaign
+	if err := s.workerCoordinationSvc.RegisterWorker(ctx, campaignID, "campaign_worker"); err != nil {
+		return fmt.Errorf("failed to register worker for coordinated operation: %w", err)
+	}
+
+	// Start heartbeat for worker coordination
+	s.workerCoordinationSvc.StartHeartbeat(ctx)
+	defer s.workerCoordinationSvc.StopHeartbeat()
+
+	// Update worker status to working
+	if err := s.workerCoordinationSvc.UpdateWorkerStatus(ctx, campaignID, "working", operation); err != nil {
+		log.Printf("WARNING: Failed to update worker status for operation '%s': %v", operation, err)
+	}
+
+	// Acquire resource lock for the operation
+	resourceLockManager := NewResourceLockManager(s.db, s.workerID)
+	lockID, err := resourceLockManager.AcquireResourceLock(
+		ctx,
+		"worker_operation",
+		campaignID.String(),
+		"EXCLUSIVE",
+		2*time.Minute, // Extended timeout for worker operations
+	)
+	if err != nil {
+		return fmt.Errorf("failed to acquire resource lock for operation '%s': %w", operation, err)
+	}
+	defer func() {
+		if releaseErr := resourceLockManager.ReleaseResourceLock(
+			ctx,
+			"worker_operation",
+			campaignID.String(),
+			"EXCLUSIVE",
+		); releaseErr != nil {
+			log.Printf("WARNING: Failed to release resource lock for operation '%s': %v", operation, releaseErr)
+		}
+	}()
+
+	log.Printf("ConcurrentWorkerOperation: Acquired resource lock %s for operation '%s'", lockID, operation)
+
+	// Execute the operation with coordination
+	opts := &postgres.CampaignTransactionOptions{
+		Operation:  fmt.Sprintf("coordinated_worker_%s", operation),
+		CampaignID: campaignID.String(),
+		Timeout:    5 * time.Minute, // Extended timeout for worker operations
+		MaxRetries: 3,
+		RetryDelay: 500 * time.Millisecond,
+	}
+
+	err = s.txManager.SafeCampaignTransaction(ctx, opts, func(tx *sqlx.Tx) error {
+		// Update worker coordination metadata
+		metadata := map[string]interface{}{
+			"operation":   operation,
+			"lock_id":     lockID.String(),
+			"started_at":  time.Now().Unix(),
+			"campaign_id": campaignID.String(),
+		}
+
+		metadataJSON, _ := json.Marshal(metadata)
+		updateWorkerQuery := `
+			UPDATE worker_coordination
+			SET metadata = $1, last_heartbeat = NOW(), updated_at = NOW()
+			WHERE worker_id = $2`
+
+		_, err := tx.ExecContext(ctx, updateWorkerQuery, metadataJSON, s.workerID)
+		if err != nil {
+			log.Printf("WARNING: Failed to update worker metadata for operation '%s': %v", operation, err)
+		}
+
+		// Execute the actual operation
+		operationStartTime := time.Now()
+		operationErr := operationFunc(ctx, campaignID)
+		operationDuration := time.Since(operationStartTime)
+
+		if operationErr != nil {
+			log.Printf("ConcurrentWorkerOperation: Operation '%s' failed after %v: %v", operation, operationDuration, operationErr)
+
+			// Update worker status to error
+			if statusErr := s.workerCoordinationSvc.UpdateWorkerStatus(ctx, campaignID, "error", fmt.Sprintf("%s_failed: %v", operation, operationErr)); statusErr != nil {
+				log.Printf("WARNING: Failed to update worker status to error: %v", statusErr)
+			}
+
+			return fmt.Errorf("coordinated operation '%s' failed: %w", operation, operationErr)
+		}
+
+		log.Printf("ConcurrentWorkerOperation: Operation '%s' completed successfully in %v", operation, operationDuration)
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("coordinated worker operation '%s' failed: %w", operation, err)
+	}
+
+	// Update worker status back to idle after successful operation
+	if err := s.workerCoordinationSvc.UpdateWorkerStatus(ctx, campaignID, "idle", fmt.Sprintf("%s_completed", operation)); err != nil {
+		log.Printf("WARNING: Failed to update worker status to idle after operation '%s': %v", operation, err)
+	}
+
+	log.Printf("ConcurrentWorkerOperation: Successfully completed coordinated operation '%s' for campaign %s", operation, campaignID)
+	return nil
+}
+
+// CleanupStaleWorkers cleans up stale workers from the coordination system
+func (s *campaignWorkerServiceImpl) CleanupStaleWorkers(ctx context.Context) error {
+	if s.workerCoordinationSvc == nil {
+		log.Printf("CleanupStaleWorkers: Worker coordination service not available")
+		return nil
+	}
+
+	return s.workerCoordinationSvc.CleanupStaleWorkers(ctx)
+}
+
+// GetWorkerStats returns worker coordination statistics
+func (s *campaignWorkerServiceImpl) GetWorkerStats(ctx context.Context) (map[string]interface{}, error) {
+	if s.workerCoordinationSvc == nil {
+		return map[string]interface{}{
+			"coordination_enabled": false,
+		}, nil
+	}
+
+	stats, err := s.workerCoordinationSvc.GetWorkerStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	stats["coordination_enabled"] = true
+	stats["worker_id"] = s.workerID
+	return stats, nil
 }

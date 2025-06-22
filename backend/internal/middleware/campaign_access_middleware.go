@@ -57,7 +57,12 @@ func (m *CampaignAccessMiddleware) RequireCampaignOwnership(action string) gin.H
 			return
 		}
 
-		ctx := securityContext.(*models.SecurityContext)
+		ctx, ok := securityContext.(*models.SecurityContext)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid security context"})
+			c.Abort()
+			return
+		}
 
 		// Extract campaign ID from URL path
 		campaignID, err := m.extractCampaignID(c)
@@ -236,7 +241,12 @@ func (m *CampaignAccessMiddleware) RequireCampaignOwnershipForListing() gin.Hand
 			return
 		}
 
-		ctx := securityContext.(*models.SecurityContext)
+		ctx, ok := securityContext.(*models.SecurityContext)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid security context"})
+			c.Abort()
+			return
+		}
 
 		// For listing operations, we'll enforce tenant isolation at the service layer
 		// but we can store user context here for filtering
@@ -286,7 +296,12 @@ func (m *CampaignAccessMiddleware) RequireCampaignCreationAccess() gin.HandlerFu
 			return
 		}
 
-		ctx := securityContext.(*models.SecurityContext)
+		ctx, ok := securityContext.(*models.SecurityContext)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid security context"})
+			c.Abort()
+			return
+		}
 
 		// Check if user has campaign creation permissions
 		if !ctx.HasPermission("campaigns:create") {

@@ -46,7 +46,10 @@ func (m *RateLimitMiddleware) UserRateLimit(maxRequests int, window time.Duratio
 		KeyFunc: func(c *gin.Context) string {
 			// Try to get user ID from context
 			if userID, exists := c.Get("user_id"); exists {
-				return userID.(string)
+				if userIDStr, ok := userID.(string); ok {
+					return userIDStr
+				}
+				return ""
 			}
 			// Fall back to IP if no user context
 			return getClientIP(c)

@@ -11,6 +11,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq" // PostgreSQL driver
 	"github.com/stretchr/testify/assert"
@@ -129,7 +130,10 @@ func (s *CampaignWorkerServiceTestSuite) SetupTest() {
 	// Create audit context service for BL-006 compliance
 	auditContextService := services.NewAuditContextService(s.AuditLogStore)
 
-	s.orchestratorService = services.NewCampaignOrchestratorService(s.DB, s.CampaignStore, s.PersonaStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, s.dgService, s.dnsService, s.httpService, stateCoordinator, auditContextService)
+	// Create TransactionManager for SI-001 compliance
+	transactionManager := pg_store.NewTransactionManagerAdapter(s.DB)
+
+	s.orchestratorService = services.NewCampaignOrchestratorService(s.DB, s.CampaignStore, s.PersonaStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, s.dgService, s.dnsService, s.httpService, stateCoordinator, auditContextService, transactionManager)
 }
 
 func TestCampaignWorkerService(t *testing.T) {
@@ -141,7 +145,7 @@ func (s *CampaignWorkerServiceTestSuite) TestSuccessfulDomainGenerationJobProces
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	testWorkerID := "test-worker-001"
-	workerService := services.NewCampaignWorkerService(s.CampaignJobStore, s.dgService, s.dnsService, s.httpService, s.orchestratorService, testWorkerID, s.AppConfig)
+	workerService := services.NewCampaignWorkerService(s.CampaignJobStore, s.dgService, s.dnsService, s.httpService, s.orchestratorService, testWorkerID, s.AppConfig, s.DB)
 
 	numDomains := int64(2)
 	userID := uuid.New()
@@ -254,6 +258,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobProcessingFailure() {
 		s.orchestratorService,
 		testWorkerID+"-fail",
 		s.AppConfig,
+		s.DB,
 	)
 
 	userID := uuid.New()
@@ -335,6 +340,7 @@ func (s *CampaignWorkerServiceTestSuite) TestRetryThenSuccess() {
 		s.orchestratorService,
 		testWorkerID+"-retry",
 		s.AppConfig,
+		s.DB,
 	)
 
 	userID := uuid.New()
@@ -416,6 +422,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobCancellation() {
 		s.orchestratorService,
 		testWorkerID+"-cancel",
 		s.AppConfig,
+		s.DB,
 	)
 
 	userID := uuid.New()
@@ -488,6 +495,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobStuckInProcessing() {
 		s.orchestratorService,
 		testWorkerID+"-dbfail",
 		s.AppConfig,
+		s.DB,
 	)
 
 	userID := uuid.New()

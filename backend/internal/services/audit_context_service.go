@@ -12,8 +12,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
+
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+)
+
+const (
+	authTypeSession       = "session"
+	authTypeAPIKey        = "api_key"
+	authTypeSystem        = "system"
+	complianceOperational = "operational"
 )
 
 // AuditContextService provides comprehensive audit logging with complete authorization context
@@ -35,6 +45,28 @@ type AuditContextService interface {
 
 	// Create audit event with API key context
 	CreateAPIKeyAuditEvent(ctx context.Context, apiKeyIdentifier, action, entityType string, entityID *uuid.UUID, details interface{}) error
+
+	// BL-006: Enhanced authorization context logging
+	LogAuthorizationDecision(ctx context.Context, authCtx *EnhancedAuthorizationContext) error
+}
+
+// EnhancedAuthorizationContext captures complete authorization decision context (BL-006)
+type EnhancedAuthorizationContext struct {
+	UserID              uuid.UUID              `json:"user_id"`
+	SessionID           string                 `json:"session_id"`
+	RequestID           string                 `json:"request_id"`
+	ResourceType        string                 `json:"resource_type"`
+	ResourceID          string                 `json:"resource_id"`
+	Action              string                 `json:"action"`
+	Decision            string                 `json:"decision"`
+	PolicyVersion       string                 `json:"policy_version"`
+	EvaluatedPolicies   []string               `json:"evaluated_policies"`
+	PermissionsRequired []string               `json:"permissions_required"`
+	PermissionsGranted  []string               `json:"permissions_granted"`
+	DenialReason        string                 `json:"denial_reason,omitempty"`
+	RiskScore           int                    `json:"risk_score"`
+	RequestContext      map[string]interface{} `json:"request_context"`
+	Timestamp           time.Time              `json:"timestamp"`
 }
 
 // AuditUserContext represents comprehensive user context for audit logging
@@ -78,12 +110,21 @@ type AuditEventDetails struct {
 // auditContextServiceImpl implements AuditContextService
 type auditContextServiceImpl struct {
 	auditLogStore store.AuditLogStore
+	db            *sqlx.DB // For direct database operations (BL-006)
 }
 
 // NewAuditContextService creates a new audit context service
 func NewAuditContextService(auditLogStore store.AuditLogStore) AuditContextService {
 	return &auditContextServiceImpl{
 		auditLogStore: auditLogStore,
+	}
+}
+
+// NewAuditContextServiceWithDB creates a new audit context service with database support (BL-006)
+func NewAuditContextServiceWithDB(auditLogStore store.AuditLogStore, db *sqlx.DB) AuditContextService {
+	return &auditContextServiceImpl{
+		auditLogStore: auditLogStore,
+		db:            db,
 	}
 }
 
@@ -107,23 +148,23 @@ func (s *auditContextServiceImpl) ExtractUserContext(c *gin.Context) (*AuditUser
 
 	// Get request ID if available
 	if requestID, exists := c.Get("request_id"); exists {
-		userCtx.RequestID = requestID.(string)
+		if reqIDStr, ok := requestID.(string); ok {
+			userCtx.RequestID = reqIDStr
+		}
 	} else {
 		userCtx.RequestID = uuid.New().String()
 	}
 
 	switch authType {
-	case "session":
+	case authTypeSession:
 		if err := s.extractSessionContext(c, userCtx); err != nil {
 			return nil, fmt.Errorf("failed to extract session context: %w", err)
 		}
-		userCtx.AuthenticationType = "session"
+		userCtx.AuthenticationType = authTypeSession
 
-	case "api_key":
-		if err := s.extractAPIKeyContext(c, userCtx); err != nil {
-			return nil, fmt.Errorf("failed to extract API key context: %w", err)
-		}
-		userCtx.AuthenticationType = "api_key"
+	case authTypeAPIKey:
+		s.extractAPIKeyContext(userCtx)
+		userCtx.AuthenticationType = authTypeAPIKey
 
 	default:
 		return nil, fmt.Errorf("unknown authentication type: %s", authType)
@@ -141,7 +182,10 @@ func (s *auditContextServiceImpl) extractSessionContext(c *gin.Context, userCtx 
 		return fmt.Errorf("security context not found")
 	}
 
-	ctx := securityContext.(*models.SecurityContext)
+	ctx, ok := securityContext.(*models.SecurityContext)
+	if !ok {
+		return fmt.Errorf("invalid security context type")
+	}
 
 	userCtx.UserID = ctx.UserID
 	userCtx.SessionID = ctx.SessionID
@@ -155,17 +199,15 @@ func (s *auditContextServiceImpl) extractSessionContext(c *gin.Context, userCtx 
 }
 
 // extractAPIKeyContext extracts API key-based authentication context
-func (s *auditContextServiceImpl) extractAPIKeyContext(c *gin.Context, userCtx *AuditUserContext) error {
+func (s *auditContextServiceImpl) extractAPIKeyContext(userCtx *AuditUserContext) {
 	// For API key authentication, we need to create a system-like context
 	// since API keys don't have user sessions
-	userCtx.APIKeyIdentifier = "api_key" // This should be enhanced to include actual API key identifier
-	userCtx.UserID = uuid.Nil            // API keys don't have associated users in this implementation
+	userCtx.APIKeyIdentifier = authTypeAPIKey // This should be enhanced to include actual API key identifier
+	userCtx.UserID = uuid.Nil                 // API keys don't have associated users in this implementation
 
 	// API keys have limited permissions - define based on your system
 	userCtx.Permissions = []string{"api:access"}
 	userCtx.Roles = []string{"api_user"}
-
-	return nil
 }
 
 // CreateAuditEvent creates a comprehensive audit event with full user context
@@ -221,7 +263,7 @@ func (s *auditContextServiceImpl) CreateAuditEvent(ctx context.Context, userCtx 
 	} else if userCtx.AuthenticationType == "api_key" {
 		// For API keys, we still want to track the action but mark it as API key access
 		auditLog.UserID = uuid.NullUUID{Valid: false} // No specific user for API key
-	} else if userCtx.AuthenticationType == "system" {
+	} else if userCtx.AuthenticationType == authTypeSystem {
 		auditLog.UserID = uuid.NullUUID{Valid: false} // No specific user for system actions
 	}
 
@@ -406,7 +448,7 @@ func (s *auditContextServiceImpl) generateBusinessContext(entityType string, ent
 	switch entityType {
 	case "campaign":
 		context["business_domain"] = "campaign_management"
-		context["compliance_category"] = "operational"
+		context["compliance_category"] = complianceOperational
 
 	case "user":
 		context["business_domain"] = "user_management"
@@ -449,4 +491,113 @@ func nullStringFromString(s string) sql.NullString {
 		return sql.NullString{Valid: false}
 	}
 	return sql.NullString{String: s, Valid: true}
+}
+
+// LogAuthorizationDecision logs comprehensive authorization context (BL-006)
+func (s *auditContextServiceImpl) LogAuthorizationDecision(
+	ctx context.Context,
+	authCtx *EnhancedAuthorizationContext,
+) error {
+	// Validate required fields
+	if authCtx.UserID == uuid.Nil || authCtx.Action == "" || authCtx.Decision == "" {
+		return fmt.Errorf("invalid authorization context: missing required fields")
+	}
+
+	// If no database connection available, fall back to standard audit logging
+	if s.db == nil {
+		log.Printf("WARNING: No database connection for enhanced authorization logging, falling back to standard audit")
+		return s.logAuthorizationFallback(ctx, authCtx)
+	}
+
+	// Prepare context for database
+	contextJSON, err := json.Marshal(authCtx.RequestContext)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request context: %w", err)
+	}
+
+	// Log using PostgreSQL function
+	var securityEventID uuid.UUID
+	query := `SELECT log_authorization_decision($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+
+	err = s.db.QueryRowContext(
+		ctx, query,
+		authCtx.UserID,
+		authCtx.ResourceType,
+		authCtx.ResourceID,
+		authCtx.Action,
+		authCtx.Decision,
+		pq.Array(authCtx.EvaluatedPolicies),
+		json.RawMessage(contextJSON),
+		json.RawMessage(contextJSON),
+		authCtx.RiskScore,
+	).Scan(&securityEventID)
+
+	if err != nil {
+		return fmt.Errorf("failed to log authorization decision: %w", err)
+	}
+
+	// Emit security event for real-time monitoring
+	if authCtx.RiskScore > 50 {
+		s.emitHighRiskSecurityEvent(securityEventID, authCtx)
+	}
+
+	return nil
+}
+
+// logAuthorizationFallback provides fallback logging when database connection is unavailable
+func (s *auditContextServiceImpl) logAuthorizationFallback(ctx context.Context, authCtx *EnhancedAuthorizationContext) error {
+	// Create standard audit log entry with authorization context
+	details := map[string]interface{}{
+		"authorization_decision": authCtx.Decision,
+		"permissions_required":   authCtx.PermissionsRequired,
+		"permissions_granted":    authCtx.PermissionsGranted,
+		"risk_score":             authCtx.RiskScore,
+		"denial_reason":          authCtx.DenialReason,
+		"request_context":        authCtx.RequestContext,
+		"evaluated_policies":     authCtx.EvaluatedPolicies,
+		"policy_version":         authCtx.PolicyVersion,
+	}
+
+	// Use existing audit context service for fallback
+	userCtx := &AuditUserContext{
+		UserID:             authCtx.UserID,
+		SessionID:          authCtx.SessionID,
+		RequestID:          authCtx.RequestID,
+		RequestTimestamp:   authCtx.Timestamp,
+		AuthenticationType: "session", // Default assumption
+	}
+
+	// Extract request context if available
+	if authCtx.RequestContext != nil {
+		if clientIP, ok := authCtx.RequestContext["source_ip"].(string); ok {
+			userCtx.ClientIP = clientIP
+		}
+		if userAgent, ok := authCtx.RequestContext["user_agent"].(string); ok {
+			userCtx.UserAgent = userAgent
+		}
+		if method, ok := authCtx.RequestContext["method"].(string); ok {
+			userCtx.HTTPMethod = method
+		}
+		if path, ok := authCtx.RequestContext["path"].(string); ok {
+			userCtx.RequestPath = path
+		}
+	}
+
+	var entityID *uuid.UUID
+	if authCtx.ResourceID != "" {
+		if id, err := uuid.Parse(authCtx.ResourceID); err == nil {
+			entityID = &id
+		}
+	}
+
+	return s.CreateAuditEvent(ctx, userCtx, authCtx.Action, authCtx.ResourceType, entityID, details)
+}
+
+// emitHighRiskSecurityEvent emits security events for high-risk authorization decisions
+func (s *auditContextServiceImpl) emitHighRiskSecurityEvent(securityEventID uuid.UUID, authCtx *EnhancedAuthorizationContext) {
+	log.Printf("HIGH RISK SECURITY EVENT: User %s, Action %s, Decision %s, Risk Score %d, Event ID %s",
+		authCtx.UserID, authCtx.Action, authCtx.Decision, authCtx.RiskScore, securityEventID)
+
+	// Additional alerting logic could be added here
+	// For example: integration with monitoring systems, webhooks, etc.
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
+	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,6 +44,9 @@ func (s *CampaignOrchestratorUnifiedTestSuite) SetupTest() {
 	// Create audit context service for BL-006 compliance
 	auditContextService := services.NewAuditContextService(s.AuditLogStore)
 
+	// Create TransactionManager for SI-001 compliance
+	transactionManager := pg_store.NewTransactionManagerAdapter(s.DB)
+
 	s.orchestrator = services.NewCampaignOrchestratorService(
 		s.DB,
 		s.CampaignStore,
@@ -55,6 +59,7 @@ func (s *CampaignOrchestratorUnifiedTestSuite) SetupTest() {
 		httpKeywordService,
 		stateCoordinator,
 		auditContextService, // BL-006 compliance integration
+		transactionManager,  // SI-001 transaction management integration
 	)
 }
 

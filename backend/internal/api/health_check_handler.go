@@ -84,7 +84,7 @@ func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 		}
 	}
 
-	respondWithJSONGin(c, http.StatusOK, status)
+	c.JSON(http.StatusOK, status)
 }
 
 // HandleReadinessCheck handles GET /health/ready requests
@@ -97,13 +97,13 @@ func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 		return
 	}
 
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"status": "ready"})
+	c.JSON(http.StatusOK, map[string]string{"status": "ready"})
 }
 
 // HandleLivenessCheck handles GET /health/live requests
 func (h *HealthCheckHandler) HandleLivenessCheck(c *gin.Context) {
 	// For liveness, we just check if the service is running
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"status": "alive"})
+	c.JSON(http.StatusOK, map[string]string{"status": "alive"})
 }
 
 // checkDatabaseStatus checks the status of the database connection

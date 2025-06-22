@@ -20,13 +20,17 @@ import (
 
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
 type CampaignOrchestratorAPIHandler struct {
-	orchestratorService services.CampaignOrchestratorService
+	orchestratorService   services.CampaignOrchestratorService
+	domainValidationService *services.DomainValidationService
 	// No direct store access needed here, orchestrator service handles it.
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
-func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService) *CampaignOrchestratorAPIHandler {
-	return &CampaignOrchestratorAPIHandler{orchestratorService: orchService}
+func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService, domainValidationService *services.DomainValidationService) *CampaignOrchestratorAPIHandler {
+	return &CampaignOrchestratorAPIHandler{
+		orchestratorService:     orchService,
+		domainValidationService: domainValidationService,
+	}
 }
 
 // RegisterCampaignOrchestrationRoutes registers all campaign orchestration related routes.
@@ -39,13 +43,17 @@ func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestrator
 // - Uses discriminated union based on "campaignType" field
 // - Provides comprehensive validation and error handling
 // - All legacy type-specific endpoints have been removed in favor of this unified approach
-func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware, campaignAccessMiddleware *middleware.CampaignAccessMiddleware) {
+func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware, campaignAccessMiddleware *middleware.CampaignAccessMiddleware, bl007ValidationMiddleware *middleware.BL007InputValidationMiddleware) {
 	// === CAMPAIGN CREATION ENDPOINTS ===
 
 	// Unified campaign creation endpoint (preferred)
 	// Supports all campaign types through discriminated union
-	// Uses campaign access middleware for creation validation
-	group.POST("", authMiddleware.RequirePermission("campaigns:create"), campaignAccessMiddleware.RequireCampaignCreationAccess(), h.createCampaign)
+	// Uses campaign access middleware for creation validation and BL-007 input validation
+	group.POST("",
+		authMiddleware.RequirePermission("campaigns:create"),
+		campaignAccessMiddleware.RequireCampaignCreationAccess(),
+		bl007ValidationMiddleware.ValidateRequest(),
+		h.createCampaign)
 
 	// Campaign reading routes - require campaigns:read permission + ownership validation
 	group.GET("", authMiddleware.RequirePermission("campaigns:read"), campaignAccessMiddleware.RequireCampaignOwnershipForListing(), h.listCampaigns)
@@ -141,6 +149,47 @@ func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 	// Assign ownership to the creating user
 	userID := creatorUserID.(uuid.UUID)
 	req.UserID = userID
+
+	// Perform domain-specific business logic validation using BL-007
+	if h.domainValidationService != nil {
+		validationResult, err := h.domainValidationService.ValidateCampaignCreation(c.Request.Context(), req, userID)
+		if err != nil {
+			log.Printf("Error during domain validation for campaign creation: %v", err)
+			respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
+				"Failed to validate campaign request", []ErrorDetail{
+					{
+						Code:    ErrorCodeInternalServer,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_type": req.CampaignType,
+							"user_id":       userID.String(),
+						},
+					},
+				})
+			return
+		}
+
+		// Check if validation failed
+		if !validationResult.IsValid {
+			var validationErrors []ErrorDetail
+			for _, violation := range validationResult.Violations {
+				validationErrors = append(validationErrors, ErrorDetail{
+					Field:   violation.Field,
+					Code:    ErrorCodeValidation,
+					Message: violation.Message,
+					Context: violation.Context,
+				})
+			}
+			respondWithValidationErrorGin(c, validationErrors)
+			return
+		}
+
+		// Log warnings if any
+		for _, warning := range validationResult.Warnings {
+			log.Printf("Campaign creation warning - Field: %s, Code: %s, Message: %s",
+				warning.Field, warning.Code, warning.Message)
+		}
+	}
 
 	// Create campaign using the orchestrator service
 	campaign, err := h.orchestratorService.CreateCampaignUnified(c.Request.Context(), req)

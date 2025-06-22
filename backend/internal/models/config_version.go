@@ -44,14 +44,23 @@ const (
 	ConfigChangeTypeReconcile    ConfigChangeTypeEnum = "reconcile"
 )
 
-// ConfigLockInfo represents information about configuration locks
+// ConfigLockInfo represents information about configuration locks with distributed locking support
+// Uses ConfigLockType from versioned_config.go (shared, exclusive, none)
 type ConfigLockInfo struct {
-	ConfigHash string     `db:"config_hash" json:"configHash"`
-	LockedBy   string     `db:"locked_by" json:"lockedBy"`
-	LockType   string     `db:"lock_type" json:"lockType"` // "read", "write", "exclusive"
-	LockReason string     `db:"lock_reason" json:"lockReason"`
-	LockedAt   time.Time  `db:"locked_at" json:"lockedAt"`
-	ExpiresAt  *time.Time `db:"expires_at" json:"expiresAt,omitempty"`
+	ID         uuid.UUID      `db:"id" json:"id"`
+	ConfigHash string         `db:"config_hash" json:"configHash"`
+	LockType   ConfigLockType `db:"lock_type" json:"lockType"`
+	Owner      string         `db:"owner" json:"owner"`
+	LockReason string         `db:"lock_reason" json:"lockReason"`
+	AcquiredAt time.Time      `db:"acquired_at" json:"acquiredAt"`
+	ExpiresAt  *time.Time     `db:"expires_at" json:"expiresAt,omitempty"`
+	IsActive   bool           `db:"is_active" json:"isActive"`
+	CreatedAt  time.Time      `db:"created_at" json:"createdAt"`
+	UpdatedAt  time.Time      `db:"updated_at" json:"updatedAt"`
+
+	// Backward compatibility fields (deprecated)
+	LockedBy string    `db:"-" json:"lockedBy,omitempty"` // Maps to Owner
+	LockedAt time.Time `db:"-" json:"lockedAt,omitempty"` // Maps to AcquiredAt
 }
 
 // ConfigMetrics represents configuration access and performance metrics

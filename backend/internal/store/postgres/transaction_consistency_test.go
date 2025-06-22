@@ -29,14 +29,14 @@ type TransactionConsistencyTestSuite struct {
 // setupTransactionConsistencyTest initializes test environment for SI-001 validation
 func setupTransactionConsistencyTest(t *testing.T) *TransactionConsistencyTestSuite {
 	db := setupTestDB(t)
-	
+
 	// Initialize stores
 	campaignStore := NewCampaignStorePostgres(db).(*campaignStorePostgres)
 	campaignJobStore := NewCampaignJobStorePostgres(db).(*campaignJobStorePostgres)
-	
+
 	// Initialize transaction manager
 	transactionManager := NewTransactionManager(db)
-	
+
 	return &TransactionConsistencyTestSuite{
 		db:                 db,
 		transactionManager: transactionManager,
@@ -150,11 +150,11 @@ func TestSI001_ConcurrentTransactionIsolation(t *testing.T) {
 			defer wg.Done()
 
 			opts := &CampaignTransactionOptions{
-				Operation:      fmt.Sprintf("concurrent_test_%d", index),
-				CampaignID:     campaignID.String(),
-				Timeout:        15 * time.Second,
-				MaxRetries:     3,
-				RetryDelay:     100 * time.Millisecond,
+				Operation:  fmt.Sprintf("concurrent_test_%d", index),
+				CampaignID: campaignID.String(),
+				Timeout:    15 * time.Second,
+				MaxRetries: 3,
+				RetryDelay: 100 * time.Millisecond,
 				IsolationLevel: func() *sql.IsolationLevel {
 					level := sql.LevelReadCommitted
 					return &level
@@ -329,7 +329,7 @@ func TestSI001_TransactionBoundaryComplexOperations(t *testing.T) {
 	}
 
 	// Execute complex transaction boundary
-	err := suite.transactionManager.ExecuteTransactionBoundary(ctx, boundary, campaignID.String(), 
+	err := suite.transactionManager.ExecuteTransactionBoundary(ctx, boundary, campaignID.String(),
 		func(tx *sqlx.Tx, steps []TransactionStep) error {
 			// Step 1: Create campaign
 			campaign := &models.Campaign{
@@ -445,7 +445,7 @@ func TestSI001_TransactionLeakDetection(t *testing.T) {
 	leaks := suite.transactionManager.DetectLeaks(1 * time.Second)
 	assert.Empty(t, leaks, "No transaction leaks should be detected")
 
-	t.Logf("SI-001: Transaction leak detection validated - initial: %d, final: %d", 
+	t.Logf("SI-001: Transaction leak detection validated - initial: %d, final: %d",
 		initialActiveCount, finalActiveCount)
 }
 
@@ -488,18 +488,18 @@ func TestSI001_RaceConditionPrevention(t *testing.T) {
 			defer wg.Done()
 
 			opts := &CampaignTransactionOptions{
-				Operation:      fmt.Sprintf("status_transition_%d", index),
-				CampaignID:     campaignID.String(),
-				Timeout:        10 * time.Second,
-				MaxRetries:     2,
-				RetryDelay:     50 * time.Millisecond,
+				Operation:  fmt.Sprintf("status_transition_%d", index),
+				CampaignID: campaignID.String(),
+				Timeout:    10 * time.Second,
+				MaxRetries: 2,
+				RetryDelay: 50 * time.Millisecond,
 				IsolationLevel: func() *sql.IsolationLevel {
 					level := sql.LevelSerializable
 					return &level
 				}(), // Highest isolation for race prevention
 			}
 
-			transitionResults[index] = suite.transactionManager.SafeCampaignTransaction(ctx, opts, 
+			transitionResults[index] = suite.transactionManager.SafeCampaignTransaction(ctx, opts,
 				func(tx *sqlx.Tx) error {
 					currentCampaign, err := suite.campaignStore.GetCampaignByID(ctx, tx, campaignID)
 					if err != nil {
@@ -541,7 +541,7 @@ func TestSI001_RaceConditionPrevention(t *testing.T) {
 	assert.Greater(t, successCount, 0, "At least one status transition should succeed")
 	assert.NotEqual(t, models.CampaignStatusPending, finalCampaign.Status, "Campaign status should have changed")
 
-	t.Logf("SI-001: Race condition prevention validated - final status: %s, successful transitions: %d/%d", 
+	t.Logf("SI-001: Race condition prevention validated - final status: %s, successful transitions: %d/%d",
 		finalCampaign.Status, successCount, len(statusTransitions))
 }
 

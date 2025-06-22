@@ -296,6 +296,51 @@ func (m *ConfigManagerMockCampaignStore) UpdateCampaignProgressWithUserFilter(ct
 	return nil
 }
 
+// SI-002 State Event Store Methods for centralized state management
+func (m *ConfigManagerMockCampaignStore) CreateStateEvent(ctx context.Context, exec store.Querier, event *models.StateChangeEvent) (*models.StateEventResult, error) {
+	return &models.StateEventResult{
+		EventID:        uuid.New(),
+		SequenceNumber: 1,
+		Success:        true,
+		CreatedAt:      time.Now().UTC(),
+	}, nil
+}
+
+func (m *ConfigManagerMockCampaignStore) GetStateEventsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, fromSequence int64, limit int) ([]*models.StateChangeEvent, error) {
+	return []*models.StateChangeEvent{}, nil
+}
+
+func (m *ConfigManagerMockCampaignStore) CreateStateTransition(ctx context.Context, exec store.Querier, transition *models.StateTransitionEvent) error {
+	return nil
+}
+
+func (m *ConfigManagerMockCampaignStore) GetStateTransitionsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, limit int) ([]*models.StateTransitionEvent, error) {
+	return []*models.StateTransitionEvent{}, nil
+}
+
+func (m *ConfigManagerMockCampaignStore) CreateStateSnapshot(ctx context.Context, exec store.Querier, snapshot *models.StateSnapshotEvent) error {
+	return nil
+}
+
+func (m *ConfigManagerMockCampaignStore) GetLatestStateSnapshot(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.StateSnapshotEvent, error) {
+	return nil, nil
+}
+
+func (m *ConfigManagerMockCampaignStore) ReplayStateEvents(ctx context.Context, exec store.Querier, campaignID uuid.UUID, fromSequence int64) ([]*models.StateChangeEvent, error) {
+	return []*models.StateChangeEvent{}, nil
+}
+
+func (m *ConfigManagerMockCampaignStore) ValidateStateEventIntegrity(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.StateIntegrityResult, error) {
+	return &models.StateIntegrityResult{
+		CampaignID:       campaignID,
+		IsValid:          true,
+		TotalEvents:      0,
+		LastSequence:     0,
+		ValidationChecks: make([]models.StateIntegrityCheck, 0),
+		ValidatedAt:      time.Now().UTC(),
+	}, nil
+}
+
 // ConfigManagerMockStateCoordinator for testing
 type ConfigManagerMockStateCoordinator struct {
 	transactionMgr *ConfigManagerMockTransactionManager

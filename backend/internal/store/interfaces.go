@@ -225,13 +225,13 @@ type TransactionManager interface {
 
 // CampaignTransactionOptions provides campaign-specific transaction configuration (SI-001)
 type CampaignTransactionOptions struct {
-	Operation       string
-	CampaignID      string
-	Timeout         time.Duration
-	IsolationLevel  *sql.IsolationLevel
-	ReadOnly        bool
-	MaxRetries      int
-	RetryDelay      time.Duration
+	Operation      string
+	CampaignID     string
+	Timeout        time.Duration
+	IsolationLevel *sql.IsolationLevel
+	ReadOnly       bool
+	MaxRetries     int
+	RetryDelay     time.Duration
 }
 
 // TransactionBoundary defines a logical transaction boundary for complex operations (SI-001)

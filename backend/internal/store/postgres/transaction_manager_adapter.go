@@ -5,20 +5,63 @@ import (
 	"context"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/monitoring"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/jmoiron/sqlx"
 )
 
 // TransactionManagerAdapter adapts postgres.TransactionManager to store.TransactionManager interface
 type TransactionManagerAdapter struct {
-	impl *TransactionManager
+	impl                *TransactionManager
+	poolMonitor         *monitoring.ConnectionPoolMonitor
+	leakDetector        *monitoring.ConnectionLeakDetector
+	poolConfig          *config.DatabasePoolConfig
 }
 
-// NewTransactionManagerAdapter creates a new adapter for store compatibility
+// NewTransactionManagerAdapter creates a new adapter for store compatibility with SI-004 monitoring
 func NewTransactionManagerAdapter(db *sqlx.DB) store.TransactionManager {
+	// Apply optimized pool configuration
+	poolConfig := config.OptimizedDatabasePoolConfig()
+	poolConfig.ConfigureDatabase(db)
+	
+	// Create connection pool monitor
+	poolMonitor := monitoring.NewConnectionPoolMonitor(db, poolConfig.MetricsInterval)
+	
+	// Create connection leak detector
+	leakDetector := monitoring.NewConnectionLeakDetector(db)
+	leakDetector.SetLeakTimeout(poolConfig.LeakDetectionTimeout)
+	
 	return &TransactionManagerAdapter{
-		impl: NewTransactionManager(db),
+		impl:         NewTransactionManager(db),
+		poolMonitor:  poolMonitor,
+		leakDetector: leakDetector,
+		poolConfig:   poolConfig,
 	}
+}
+
+// StartMonitoring starts the SI-004 monitoring systems
+func (a *TransactionManagerAdapter) StartMonitoring(ctx context.Context) error {
+	if err := a.poolMonitor.Start(ctx); err != nil {
+		return err
+	}
+	return a.leakDetector.Start(ctx)
+}
+
+// StopMonitoring stops the SI-004 monitoring systems
+func (a *TransactionManagerAdapter) StopMonitoring() {
+	a.poolMonitor.Stop()
+	a.leakDetector.Stop()
+}
+
+// GetPoolMetrics returns current connection pool metrics
+func (a *TransactionManagerAdapter) GetPoolMetrics() *monitoring.PoolMetrics {
+	return a.poolMonitor.GetLastMetrics()
+}
+
+// GetConnectionLeaks returns recent connection leaks
+func (a *TransactionManagerAdapter) GetConnectionLeaks(since time.Time) ([]*monitoring.ConnectionLeak, error) {
+	return a.leakDetector.GetLeakHistory(since)
 }
 
 // SafeCampaignTransaction implements store.TransactionManager interface

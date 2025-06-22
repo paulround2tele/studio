@@ -322,14 +322,32 @@ func (s *CampaignStoreTestSuite) TestGeneratedDomains() {
 }
 
 func (s *CampaignStoreTestSuite) TestCampaignPagination() {
-	// Create multiple campaigns
+	// Use a specific test user ID to ensure test isolation
+	testUserID := uuid.New()
+
+	// Create multiple campaigns with the same user ID
 	for i := 0; i < 15; i++ {
-		s.createTestCampaign(s.T(), "Campaign "+string(rune('A'+i)), models.CampaignTypeDomainGeneration)
+		campaign := &models.Campaign{
+			ID:                 uuid.New(),
+			Name:               "Campaign " + string(rune('A'+i)),
+			CampaignType:       models.CampaignTypeDomainGeneration,
+			Status:             models.CampaignStatusPending,
+			UserID:             &testUserID,
+			CreatedAt:          time.Now().UTC(),
+			UpdatedAt:          time.Now().UTC(),
+			ProgressPercentage: models.Float64Ptr(0),
+			TotalItems:         models.Int64Ptr(100),
+			ProcessedItems:     models.Int64Ptr(0),
+			ErrorMessage:       nil,
+		}
+		err := s.store.CreateCampaign(context.Background(), s.tx, campaign)
+		require.NoError(s.T(), err, "Failed to create test campaign")
 	}
 
-	// Test pagination
+	// Test pagination with user filtering for test isolation
 	filter := store.ListCampaignsFilter{
 		Type:   models.CampaignTypeDomainGeneration,
+		UserID: testUserID.String(),
 		Limit:  1,
 		Offset: 1,
 	}

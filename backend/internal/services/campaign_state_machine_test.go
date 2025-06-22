@@ -65,7 +65,7 @@ func TestGetValidTransitions(t *testing.T) {
 		// FIXED: Updated to match corrected state machine transitions
 		{StatusPending, []CampaignStatus{StatusQueued, StatusRunning, StatusFailed, StatusCancelled}},
 		{StatusQueued, []CampaignStatus{StatusRunning, StatusPausing, StatusPaused, StatusCancelled}},
-		{StatusRunning, []CampaignStatus{StatusPausing, StatusPaused, StatusCompleted, StatusFailed}},
+		{StatusRunning, []CampaignStatus{StatusPausing, StatusPaused, StatusCompleted, StatusFailed, StatusCancelled}},
 		{StatusPausing, []CampaignStatus{StatusPaused, StatusRunning, StatusCancelled}}, // FIXED: Added missing StatusPausing
 		{StatusPaused, []CampaignStatus{StatusRunning, StatusCancelled, StatusArchived}},
 		{StatusCompleted, []CampaignStatus{StatusArchived}},

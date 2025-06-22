@@ -3,6 +3,7 @@ package postgres
 
 import (
 	"context"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // PostgreSQL driver
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -184,17 +186,33 @@ func TestCampaignJobStoreLeakPrevention(t *testing.T) {
 	createTestTables(t, db)
 
 	store := NewCampaignJobStorePostgres(db)
+	campaignStore := NewCampaignStorePostgres(db)
 
 	t.Run("GetNextQueuedJob_NoLeaksOnSuccess", func(t *testing.T) {
-		// Create a test job
-		job := &models.CampaignJob{
-			ID:         uuid.New(),
-			CampaignID: uuid.New(),
-			JobType:    models.CampaignTypeDomainGeneration,
-			Status:     models.JobStatusQueued,
+		// First create a test campaign (required for foreign key constraint)
+		campaignID := uuid.New()
+		campaign := &models.Campaign{
+			ID:           campaignID,
+			Name:         "Test Campaign for Job",
+			CampaignType: models.CampaignTypeDomainGeneration,
+			Status:       models.CampaignStatusPending,
+			CreatedAt:    time.Now().UTC(),
+			UpdatedAt:    time.Now().UTC(),
 		}
 
-		err := store.CreateJob(context.Background(), nil, job)
+		err := campaignStore.CreateCampaign(context.Background(), db, campaign)
+		require.NoError(t, err)
+
+		// Now create a test job with valid campaign ID
+		job := &models.CampaignJob{
+			ID:          uuid.New(),
+			CampaignID:  campaignID, // Use the actual campaign ID
+			JobType:     models.CampaignTypeDomainGeneration,
+			Status:      models.JobStatusQueued,
+			MaxAttempts: 3, // Required: must be > 0 per database constraint
+		}
+
+		err = store.CreateJob(context.Background(), nil, job)
 		require.NoError(t, err)
 
 		// Get initial connection count
@@ -295,8 +313,13 @@ func BenchmarkTransactionManager(b *testing.B) {
 
 // Helper functions for test setup
 func setupTestDB(t testing.TB) *sqlx.DB {
-	// For tests, we'll use SQLite in-memory database
-	db, err := sqlx.Open("sqlite3", ":memory:")
+	// Use PostgreSQL test database
+	dsn := os.Getenv("TEST_POSTGRES_DSN")
+	if dsn == "" {
+		dsn = "postgres://domainflow:pNpTHxEWr2SmY270p1IjGn3dP@localhost:5432/domainflow_production?sslmode=disable"
+	}
+
+	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		t.Fatalf("Failed to open test database: %v", err)
 	}
@@ -305,28 +328,7 @@ func setupTestDB(t testing.TB) *sqlx.DB {
 }
 
 func createTestTables(t *testing.T, db *sqlx.DB) {
-	// Create minimal campaign_jobs table for testing
-	schema := `
-	CREATE TABLE IF NOT EXISTS campaign_jobs (
-		id TEXT PRIMARY KEY,
-		campaign_id TEXT NOT NULL,
-		job_type TEXT NOT NULL,
-		status TEXT NOT NULL,
-		job_payload TEXT,
-		attempts INTEGER DEFAULT 0,
-		max_attempts INTEGER DEFAULT 3,
-		last_error TEXT,
-		last_attempted_at DATETIME,
-		created_at DATETIME NOT NULL,
-		updated_at DATETIME NOT NULL,
-		scheduled_at DATETIME,
-		next_execution_at DATETIME,
-		processing_server_id TEXT,
-		locked_at DATETIME,
-		locked_by TEXT,
-		business_status TEXT DEFAULT 'pending'
-	);`
-
-	_, err := db.Exec(schema)
-	require.NoError(t, err)
+	// Tables should already exist in the PostgreSQL test database
+	// This function is kept for compatibility but no longer creates tables
+	// since we're using the actual production database schema
 }
