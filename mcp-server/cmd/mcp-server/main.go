@@ -21,13 +21,17 @@ import (
 func main() {
 	// Parse command line flags
 	var (
-		configFile  = flag.String("config", "", "Path to configuration file")
-		backendPath = flag.String("backend-path", "", "Path to backend codebase for analysis")
-		dbURL       = flag.String("db-url", "", "Database connection URL")
-		port        = flag.Int("port", 8081, "Port to listen on")
-		logLevel    = flag.String("log-level", "info", "Log level (debug, info, warn, error)")
-		enableCORS  = flag.Bool("enable-cors", false, "Enable CORS headers")
-		version     = flag.Bool("version", false, "Show version information")
+		configFile       = flag.String("config", "", "Path to configuration file")
+		backendPath      = flag.String("backend-path", "", "Path to backend codebase for analysis")
+		dbURL            = flag.String("db-url", "", "Database connection URL")
+		port             = flag.Int("port", 8081, "Port to listen on")
+		logLevel         = flag.String("log-level", "info", "Log level (debug, info, warn, error)")
+		enableCORS       = flag.Bool("enable-cors", false, "Enable CORS headers")
+		readOnly         = flag.Bool("read-only", false, "Guarantee MCP will never mutate source files")
+		allowUnsafeImports = flag.Bool("allow-unsafe-imports", false, "Toggle bridge enforcement in dev mode")
+		enableCache      = flag.Bool("enable-cache", true, "Enable in-memory caching for expensive operations")
+		maxCacheSize     = flag.Int("max-cache-size", 100, "Maximum number of cached entries")
+		version          = flag.Bool("version", false, "Show version information")
 	)
 	flag.Parse()
 
@@ -39,12 +43,16 @@ func main() {
 
 	// Initialize configuration
 	cfg, err := config.LoadConfig(&config.Options{
-		ConfigFile:  *configFile,
-		BackendPath: *backendPath,
-		DatabaseURL: *dbURL,
-		Port:        *port,
-		LogLevel:    *logLevel,
-		EnableCORS:  *enableCORS,
+		ConfigFile:         *configFile,
+		BackendPath:        *backendPath,
+		DatabaseURL:        *dbURL,
+		Port:               *port,
+		LogLevel:           *logLevel,
+		EnableCORS:         *enableCORS,
+		ReadOnly:           *readOnly,
+		AllowUnsafeImports: *allowUnsafeImports,
+		EnableCache:        *enableCache,
+		MaxCacheSize:       *maxCacheSize,
 	})
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)

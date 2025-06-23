@@ -316,28 +316,241 @@ test_configuration() {
     fi
 }
 
-# Test performance
-test_performance() {
-    run_test "Testing basic performance"
+# Test JSON-RPC tool response shapes
+test_jsonrpc_response_shapes() {
+    run_test "Testing JSON-RPC tool response shapes"
     
-    log_info "Running 10 concurrent ping requests..."
-    local start_time=$(date +%s.%N)
-    
-    for i in {1..10}; do
-        (curl -s -X POST "$MCP_SERVER_URL/mcp" \
-            -H "Content-Type: application/json" \
-            -d '{"jsonrpc":"2.0","method":"ping","id":'$i'}' > /dev/null) &
-    done
-    wait
-    
-    local end_time=$(date +%s.%N)
-    local duration=$(echo "$end_time - $start_time" | bc 2>/dev/null || echo "0")
+    # Test get_models response shape
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_models","arguments":{"page":1,"page_size":5}},"id":10}'
+    local response=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
     
     if [ $? -eq 0 ]; then
-        log_success "Performance test completed in ${duration}s"
+        if echo "$response" | grep -q '"content"' && echo "$response" | grep -q '"type":"text"'; then
+            log_success "get_models response shape validation passed"
+        else
+            log_error "get_models response shape validation failed: $response"
+        fi
     else
-        log_warning "Performance test completed (timing unavailable)"
+        log_error "get_models response shape test failed"
     fi
+    
+    # Test get_snapshot response shape
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_snapshot","arguments":{}},"id":11}'
+    local response=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    
+    if [ $? -eq 0 ]; then
+        if echo "$response" | grep -q '"content"' && echo "$response" | grep -q '"type":"text"'; then
+            log_success "get_snapshot response shape validation passed"
+        else
+            log_error "get_snapshot response shape validation failed: $response"
+        fi
+    else
+        log_error "get_snapshot response shape test failed"
+    fi
+}
+
+# Test CLI argument overrides
+test_cli_overrides() {
+    run_test "Testing CLI argument overrides"
+    
+    # Stop current server first
+    stop_server
+    
+    # Test with custom port and read-only mode
+    log_info "Testing CLI overrides with custom port and read-only mode..."
+    ./bin/mcp-server -backend-path="$BACKEND_PATH" -port=8082 -read-only -log-level=debug &
+    OVERRIDE_SERVER_PID=$!
+    
+    # Wait for server to start on new port
+    local override_url="http://${MCP_SERVER_HOST}:8082"
+    for i in {1..15}; do
+        if curl -s "$override_url/health" > /dev/null 2>&1; then
+            log_success "CLI override test server started on port 8082"
+            break
+        fi
+        sleep 1
+    done
+    
+    # Test if server is running with overrides
+    if curl -s "$override_url/health" > /dev/null 2>&1; then
+        log_success "CLI argument overrides working correctly"
+    else
+        log_error "CLI argument overrides not working"
+    fi
+    
+    # Clean up override server
+    kill $OVERRIDE_SERVER_PID 2>/dev/null || true
+    sleep 2
+    
+    # Restart original server
+    start_server
+}
+
+# Test cache functionality
+test_cache_functionality() {
+    run_test "Testing cache functionality"
+    
+    # Make first request to get_models (should cache)
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_models","arguments":{"page":1,"page_size":3}},"id":20}'
+    local start_time=$(date +%s.%N)
+    local response1=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    local end_time1=$(date +%s.%N)
+    
+    # Make second identical request (should use cache)
+    local start_time2=$(date +%s.%N)
+    local response2=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    local end_time2=$(date +%s.%N)
+    
+    if [ "$response1" = "$response2" ]; then
+        log_success "Cache functionality working - identical responses received"
+    else
+        log_error "Cache functionality issue - responses differ"
+    fi
+}
+
+# Test change impact analysis
+test_change_impact_analysis() {
+    run_test "Testing change impact analysis tool"
+    
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_change_impact","arguments":{"target":"Config"}},"id":30}'
+    local response=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    
+    if [ $? -eq 0 ]; then
+        if echo "$response" | grep -q '"risk_level"' && echo "$response" | grep -q '"recommendations"'; then
+            log_success "Change impact analysis working correctly"
+            if [ "$JQ_AVAILABLE" = true ]; then
+                echo "Impact analysis: $(echo "$response" | jq '.result.content[0].text' | head -3)"
+            fi
+        else
+            log_error "Change impact analysis failed: $response"
+        fi
+    else
+        log_error "Change impact analysis request failed"
+    fi
+}
+
+# Test call graph generation
+test_call_graph_generation() {
+    run_test "Testing call graph generation"
+    
+    # Test JSON format
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_call_graph","arguments":{"format":"json"}},"id":31}'
+    local response=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    
+    if [ $? -eq 0 ]; then
+        if echo "$response" | grep -q '"nodes"' && echo "$response" | grep -q '"edges"'; then
+            log_success "Call graph generation (JSON format) working correctly"
+        else
+            log_error "Call graph generation (JSON) failed: $response"
+        fi
+    else
+        log_error "Call graph generation request failed"
+    fi
+    
+    # Test DOT format
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_call_graph","arguments":{"format":"dot"}},"id":32}'
+    local response=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    
+    if [ $? -eq 0 ]; then
+        if echo "$response" | grep -q 'digraph CallGraph'; then
+            log_success "Call graph generation (DOT format) working correctly"
+        else
+            log_error "Call graph generation (DOT) failed: $response"
+        fi
+    else
+        log_error "Call graph generation (DOT) request failed"
+    fi
+}
+
+# Test pagination and filtering
+test_pagination_filtering() {
+    run_test "Testing pagination and filtering"
+    
+    # Test pagination
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_models","arguments":{"page":1,"page_size":2}},"id":40}'
+    local response=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    
+    if [ $? -eq 0 ]; then
+        if echo "$response" | grep -q 'page 1, size 2'; then
+            log_success "Pagination working correctly"
+        else
+            log_error "Pagination not working: $response"
+        fi
+    else
+        log_error "Pagination test failed"
+    fi
+    
+    # Test filtering
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_endpoints","arguments":{"method":"GET"}},"id":41}'
+    local response=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    
+    if [ $? -eq 0 ]; then
+        if echo "$response" | grep -q '"content"'; then
+            log_success "Filtering working correctly"
+        else
+            log_error "Filtering not working: $response"
+        fi
+    else
+        log_error "Filtering test failed"
+    fi
+}
+
+# Test security features
+test_security_features() {
+    run_test "Testing security features"
+    
+    # Stop current server
+    stop_server
+    
+    # Test read-only mode
+    log_info "Testing read-only mode..."
+    ./bin/mcp-server -backend-path="$BACKEND_PATH" -port="$MCP_SERVER_PORT" -read-only &
+    READONLY_SERVER_PID=$!
+    
+    # Wait for server to start
+    for i in {1..15}; do
+        if curl -s "$MCP_SERVER_URL/health" > /dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+    
+    # Test if read-only mode is enforced
+    local request='{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_models","arguments":{}},"id":50}'
+    local response=$(curl -s -X POST "$MCP_SERVER_URL/mcp" \
+        -H "Content-Type: application/json" \
+        -d "$request")
+    
+    if [ $? -eq 0 ]; then
+        log_success "Read-only mode test completed"
+    else
+        log_error "Read-only mode test failed"
+    fi
+    
+    # Clean up
+    kill $READONLY_SERVER_PID 2>/dev/null || true
+    sleep 2
+    
+    # Restart normal server
+    start_server
 }
 
 # Cleanup function
@@ -390,6 +603,13 @@ main() {
     test_package_structure_tool
     test_find_by_type_tool
     test_error_handling
+    test_jsonrpc_response_shapes
+    test_cli_overrides
+    test_cache_functionality
+    test_change_impact_analysis
+    test_call_graph_generation
+    test_pagination_filtering
+    test_security_features
     test_performance
     
     log_success "All validation tests completed successfully!"

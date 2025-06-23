@@ -20,6 +20,14 @@ type Config struct {
 	BackendPath string `json:"backend_path"`
 	DatabaseURL string `json:"database_url"`
 
+	// Security and safety settings
+	ReadOnly           bool `json:"read_only"`
+	AllowUnsafeImports bool `json:"allow_unsafe_imports"`
+
+	// Cache configuration
+	EnableCache  bool `json:"enable_cache"`
+	MaxCacheSize int  `json:"max_cache_size"`
+
 	// Analysis settings
 	Analysis AnalysisConfig `json:"analysis"`
 
@@ -84,12 +92,16 @@ type SecurityConfig struct {
 
 // Options for loading configuration
 type Options struct {
-	ConfigFile  string
-	BackendPath string
-	DatabaseURL string
-	Port        int
-	LogLevel    string
-	EnableCORS  bool
+	ConfigFile         string
+	BackendPath        string
+	DatabaseURL        string
+	Port               int
+	LogLevel           string
+	EnableCORS         bool
+	ReadOnly           bool
+	AllowUnsafeImports bool
+	EnableCache        bool
+	MaxCacheSize       int
 }
 
 // LoadConfig loads configuration from file and CLI options
@@ -128,8 +140,12 @@ func DefaultConfig() *Config {
 		LogLevel:   "info",
 		EnableCORS: false,
 		
-		BackendPath: "./backend",
-		DatabaseURL: "",
+		BackendPath:        "./backend",
+		DatabaseURL:        "",
+		ReadOnly:           false,
+		AllowUnsafeImports: false,
+		EnableCache:        true,
+		MaxCacheSize:       100,
 
 		Analysis: AnalysisConfig{
 			EnableASTAnalysis:       true,
@@ -209,6 +225,12 @@ func (c *Config) ApplyOptions(opts *Options) {
 		c.DatabaseURL = opts.DatabaseURL
 	}
 	c.EnableCORS = opts.EnableCORS
+	c.ReadOnly = opts.ReadOnly
+	c.AllowUnsafeImports = opts.AllowUnsafeImports
+	c.EnableCache = opts.EnableCache
+	if opts.MaxCacheSize > 0 {
+		c.MaxCacheSize = opts.MaxCacheSize
+	}
 }
 
 // ApplyEnvironmentVariables applies environment variable overrides

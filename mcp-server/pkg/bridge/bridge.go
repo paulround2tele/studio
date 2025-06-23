@@ -3,14 +3,21 @@ package bridge
 import (
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/fntelecomllc/studio/mcp-server/internal/analysis"
+	"github.com/fntelecomllc/studio/mcp-server/internal/cache"
 	"github.com/fntelecomllc/studio/mcp-server/internal/config"
+	"github.com/fntelecomllc/studio/mcp-server/internal/handlers"
 )
 
 // MCPBridge provides a safe public API interface that prevents internal package leaks
 // This implements the Bridge Pattern to isolate internal implementation details
 type MCPBridge struct {
-	config *config.Config
+	config   *config.Config
+	analyzer *analysis.CodeAnalyzer
+	cache    *cache.MemoryCache
+	handlers *handlers.MCPHandlers
 	
 	// Private internal components - not exposed
 	schemaService  schemaServiceInterface
@@ -43,13 +50,13 @@ type ContentBlock struct {
 
 // Public interfaces that hide internal implementations
 type schemaServiceInterface interface {
-	GetModels() (*ToolResult, error)
+	GetModels(params map[string]interface{}) (*ToolResult, error)
 	GetDatabaseSchema() (*ToolResult, error)
 	GetAPISchema() (*ToolResult, error)
 }
 
 type apiServiceInterface interface {
-	GetEndpoints() (*ToolResult, error)
+	GetEndpoints(params map[string]interface{}) (*ToolResult, error)
 	GetRoutes() (*ToolResult, error)
 	GetMiddleware() (*ToolResult, error)
 }
@@ -57,7 +64,7 @@ type apiServiceInterface interface {
 type serviceServiceInterface interface {
 	GetServices() (*ToolResult, error)
 	GetDependencies() (*ToolResult, error)
-	GetCallGraph() (*ToolResult, error)
+	GetCallGraph(params map[string]interface{}) (*ToolResult, error)
 }
 
 type businessServiceInterface interface {
@@ -78,10 +85,36 @@ type navigationServiceInterface interface {
 	GetPackageStructure() (*ToolResult, error)
 }
 
+// Context awareness interfaces
+type contextServiceInterface interface {
+	GetSnapshot() (*ToolResult, error)
+	GetChangeImpact(params map[string]interface{}) (*ToolResult, error)
+}
+
 // NewMCPBridge creates a new MCP bridge with internal services
 func NewMCPBridge(cfg *config.Config) (*MCPBridge, error) {
+	// Initialize code analyzer
+	analyzer := analysis.NewCodeAnalyzer(cfg.BackendPath)
+	if err := analyzer.ParseProject(); err != nil {
+		log.Printf("Warning: failed to parse project: %v", err)
+	}
+
+	// Initialize cache if enabled
+	var memCache *cache.MemoryCache
+	if cfg.EnableCache {
+		memCache = cache.NewMemoryCache(cfg.MaxCacheSize, time.Duration(cfg.Analysis.CacheTimeout)*time.Second)
+		// Start cleanup worker
+		memCache.StartCleanupWorker(5 * time.Minute)
+	}
+
+	// Initialize handlers
+	mcpHandlers := handlers.NewMCPHandlers(cfg, analyzer, memCache)
+
 	bridge := &MCPBridge{
-		config: cfg,
+		config:   cfg,
+		analyzer: analyzer,
+		cache:    memCache,
+		handlers: mcpHandlers,
 	}
 
 	// Initialize internal services through the bridge
@@ -96,15 +129,32 @@ func NewMCPBridge(cfg *config.Config) (*MCPBridge, error) {
 func (b *MCPBridge) GetAvailableTools() []Tool {
 	tools := make([]Tool, 0)
 
-	// Schema Tools
+	// Schema Tools with enhanced filtering and pagination
 	if b.config.Tools.EnableSchemaTools {
 		tools = append(tools, []Tool{
 			{
 				Name:        "get_models",
-				Description: "Get database models and entity definitions from the codebase",
+				Description: "Get database models and entity definitions with enhanced filtering and pagination",
 				InputSchema: map[string]interface{}{
 					"type": "object",
 					"properties": map[string]interface{}{
+						"filter": map[string]interface{}{
+							"type":        "string",
+							"description": "Filter models by name or package",
+						},
+						"page": map[string]interface{}{
+							"type":        "integer",
+							"description": "Page number for pagination",
+							"default":     1,
+							"minimum":     1,
+						},
+						"page_size": map[string]interface{}{
+							"type":        "integer",
+							"description": "Number of items per page",
+							"default":     50,
+							"minimum":     1,
+							"maximum":     200,
+						},
 						"include_fields": map[string]interface{}{
 							"type":        "boolean",
 							"description": "Include field definitions in the output",
@@ -154,12 +204,51 @@ func (b *MCPBridge) GetAvailableTools() []Tool {
 		}...)
 	}
 
-	// API Tools
+	// Context Awareness Tools
+	tools = append(tools, []Tool{
+		{
+			Name:        "get_snapshot",
+			Description: "Export current context state for caching or preloading in Copilot agent sessions",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"include_cache_stats": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Include cache statistics in snapshot",
+						"default":     false,
+					},
+				},
+			},
+		},
+		{
+			Name:        "get_change_impact",
+			Description: "Analyze the impact of changes to a file, function, or model on the codebase",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"target": map[string]interface{}{
+						"type":        "string",
+						"description": "Target file path, function name, or model name to analyze",
+					},
+					"depth": map[string]interface{}{
+						"type":        "integer",
+						"description": "Analysis depth for indirect dependencies",
+						"default":     3,
+						"minimum":     1,
+						"maximum":     10,
+					},
+				},
+				"required": []string{"target"},
+			},
+		},
+	}...)
+
+	// API Tools with enhanced filtering
 	if b.config.Tools.EnableAPITools {
 		tools = append(tools, []Tool{
 			{
 				Name:        "get_endpoints",
-				Description: "List all API endpoints with their HTTP methods and handler functions",
+				Description: "List all API endpoints with enhanced filtering and analysis",
 				InputSchema: map[string]interface{}{
 					"type": "object",
 					"properties": map[string]interface{}{
@@ -167,9 +256,22 @@ func (b *MCPBridge) GetAvailableTools() []Tool {
 							"type":        "string",
 							"description": "Filter by HTTP method (GET, POST, PUT, DELETE, etc.)",
 						},
-						"path_pattern": map[string]interface{}{
+						"route": map[string]interface{}{
 							"type":        "string",
-							"description": "Filter by path pattern (supports wildcards)",
+							"description": "Filter by route pattern (supports partial matching)",
+						},
+						"page": map[string]interface{}{
+							"type":        "integer",
+							"description": "Page number for pagination",
+							"default":     1,
+							"minimum":     1,
+						},
+						"page_size": map[string]interface{}{
+							"type":        "integer",
+							"description": "Number of items per page",
+							"default":     50,
+							"minimum":     1,
+							"maximum":     200,
 						},
 					},
 				},
@@ -205,7 +307,7 @@ func (b *MCPBridge) GetAvailableTools() []Tool {
 		}...)
 	}
 
-	// Service Tools
+	// Service Tools with enhanced call graph and dependency analysis
 	if b.config.Tools.EnableServiceTools {
 		tools = append(tools, []Tool{
 			{
@@ -246,18 +348,31 @@ func (b *MCPBridge) GetAvailableTools() []Tool {
 			},
 			{
 				Name:        "get_call_graph",
-				Description: "Generate call graph showing function and method relationships",
+				Description: "Generate call graph with visualization options (JSON, DOT, text formats)",
 				InputSchema: map[string]interface{}{
 					"type": "object",
 					"properties": map[string]interface{}{
-						"entry_point": map[string]interface{}{
+						"format": map[string]interface{}{
 							"type":        "string",
-							"description": "Starting point for call graph analysis",
+							"enum":        []string{"json", "dot", "text"},
+							"description": "Output format (JSON for data, DOT for GraphViz, text for readable)",
+							"default":     "json",
+						},
+						"focus": map[string]interface{}{
+							"type":        "string",
+							"description": "Focus on specific function/package for filtered graph",
 						},
 						"max_depth": map[string]interface{}{
 							"type":        "integer",
 							"description": "Maximum depth for call graph traversal",
 							"default":     5,
+							"minimum":     1,
+							"maximum":     20,
+						},
+						"include_external": map[string]interface{}{
+							"type":        "boolean",
+							"description": "Include external package calls",
+							"default":     false,
 						},
 					},
 				},
@@ -432,29 +547,35 @@ func (b *MCPBridge) GetAvailableTools() []Tool {
 // ExecuteTool executes a specific MCP tool with the given arguments
 func (b *MCPBridge) ExecuteTool(toolName string, args map[string]interface{}) (*ToolResult, error) {
 	switch toolName {
-	// Schema Tools
+	// Context Awareness Tools
+	case "get_snapshot":
+		return b.executeSnapshotTool()
+	case "get_change_impact":
+		return b.executeChangeImpactTool(args)
+
+	// Schema Tools with enhanced parameters
 	case "get_models":
 		if !b.config.Tools.EnableSchemaTools {
 			return nil, fmt.Errorf("schema tools are disabled")
 		}
-		return b.schemaService.GetModels()
+		return b.executeModelsTool(args)
 	case "get_database_schema":
 		if !b.config.Tools.EnableSchemaTools {
 			return nil, fmt.Errorf("schema tools are disabled")
 		}
-		return b.schemaService.GetDatabaseSchema()
+		return b.executeDatabaseSchemaTool()
 	case "get_api_schema":
 		if !b.config.Tools.EnableSchemaTools {
 			return nil, fmt.Errorf("schema tools are disabled")
 		}
 		return b.schemaService.GetAPISchema()
 
-	// API Tools
+	// API Tools with enhanced parameters
 	case "get_endpoints":
 		if !b.config.Tools.EnableAPITools {
 			return nil, fmt.Errorf("API tools are disabled")
 		}
-		return b.apiService.GetEndpoints()
+		return b.executeEndpointsTool(args)
 	case "get_routes":
 		if !b.config.Tools.EnableAPITools {
 			return nil, fmt.Errorf("API tools are disabled")
@@ -466,7 +587,7 @@ func (b *MCPBridge) ExecuteTool(toolName string, args map[string]interface{}) (*
 		}
 		return b.apiService.GetMiddleware()
 
-	// Service Tools
+	// Service Tools with enhanced call graph
 	case "get_services":
 		if !b.config.Tools.EnableServiceTools {
 			return nil, fmt.Errorf("service tools are disabled")
@@ -481,7 +602,7 @@ func (b *MCPBridge) ExecuteTool(toolName string, args map[string]interface{}) (*
 		if !b.config.Tools.EnableServiceTools {
 			return nil, fmt.Errorf("service tools are disabled")
 		}
-		return b.serviceService.GetCallGraph()
+		return b.executeCallGraphTool(args)
 
 	// Business Logic Tools
 	case "get_workflows":
@@ -574,7 +695,7 @@ func (b *MCPBridge) initializeServices() error {
 
 // Placeholder implementations - these will be replaced with real implementations
 type placeholderSchemaService struct{}
-func (s *placeholderSchemaService) GetModels() (*ToolResult, error) {
+func (s *placeholderSchemaService) GetModels(params map[string]interface{}) (*ToolResult, error) {
 	return &ToolResult{
 		Content: []ContentBlock{{Type: "text", Text: "Schema service not yet implemented"}},
 	}, nil
@@ -591,7 +712,7 @@ func (s *placeholderSchemaService) GetAPISchema() (*ToolResult, error) {
 }
 
 type placeholderAPIService struct{}
-func (s *placeholderAPIService) GetEndpoints() (*ToolResult, error) {
+func (s *placeholderAPIService) GetEndpoints(params map[string]interface{}) (*ToolResult, error) {
 	return &ToolResult{
 		Content: []ContentBlock{{Type: "text", Text: "API endpoints service not yet implemented"}},
 	}, nil
@@ -610,67 +731,67 @@ func (s *placeholderAPIService) GetMiddleware() (*ToolResult, error) {
 type placeholderServiceService struct{}
 func (s *placeholderServiceService) GetServices() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Services analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Services service not yet implemented"}},
 	}, nil
 }
 func (s *placeholderServiceService) GetDependencies() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Dependencies analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Dependencies service not yet implemented"}},
 	}, nil
 }
-func (s *placeholderServiceService) GetCallGraph() (*ToolResult, error) {
+func (s *placeholderServiceService) GetCallGraph(params map[string]interface{}) (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Call graph analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Call graph service not yet implemented"}},
 	}, nil
 }
 
 type placeholderBusinessService struct{}
 func (s *placeholderBusinessService) GetWorkflows() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Workflow analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Workflows service not yet implemented"}},
 	}, nil
 }
 func (s *placeholderBusinessService) GetBusinessRules() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Business rules analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Business rules service not yet implemented"}},
 	}, nil
 }
 func (s *placeholderBusinessService) GetHandlers() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Handlers analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Handlers service not yet implemented"}},
 	}, nil
 }
 
 type placeholderConfigService struct{}
 func (s *placeholderConfigService) GetEnvVars() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Environment variables analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Environment variables service not yet implemented"}},
 	}, nil
 }
 func (s *placeholderConfigService) GetConfig() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Configuration analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Config service not yet implemented"}},
 	}, nil
 }
 func (s *placeholderConfigService) GetFeatureFlags() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Feature flags analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Feature flags service not yet implemented"}},
 	}, nil
 }
 
 type placeholderNavigationService struct{}
 func (s *placeholderNavigationService) FindByType(typeName string) (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: fmt.Sprintf("Type search for '%s' not yet implemented", typeName)}},
+		Content: []ContentBlock{{Type: "text", Text: "Find by type service not yet implemented"}},
 	}, nil
 }
 func (s *placeholderNavigationService) SearchCode(query string) (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: fmt.Sprintf("Code search for '%s' not yet implemented", query)}},
+		Content: []ContentBlock{{Type: "text", Text: "Search code service not yet implemented"}},
 	}, nil
 }
 func (s *placeholderNavigationService) GetPackageStructure() (*ToolResult, error) {
 	return &ToolResult{
-		Content: []ContentBlock{{Type: "text", Text: "Package structure analysis not yet implemented"}},
+		Content: []ContentBlock{{Type: "text", Text: "Package structure service not yet implemented"}},
 	}, nil
 }
