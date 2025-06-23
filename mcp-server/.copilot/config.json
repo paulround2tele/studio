@@ -1,0 +1,30 @@
+{
+  "mcp_server": {
+    "port": 8081,
+    "log_level": "info",
+    "backend_path": "../backend",
+    "tools": {
+      "enable_schema_tools": true,
+      "enable_api_tools": true,
+      "enable_service_tools": true,
+      "enable_business_logic_tools": true,
+      "enable_configuration_tools": true,
+      "enable_navigation_tools": true
+    },
+    "analysis": {
+      "enable_ast_analysis": true,
+      "enable_database_analysis": true,
+      "enable_middleware_tracing": true,
+      "enable_dependency_graph": true,
+      "max_concurrent_analysis": 4,
+      "cache_timeout_seconds": 300
+    }
+  },
+  "github_copilot": {
+    "context_sources": [
+      "mcp_server"
+    ],
+    "tools_enabled": true,
+    "introspection_depth": 3
+  }
+}
