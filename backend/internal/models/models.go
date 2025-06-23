@@ -466,6 +466,23 @@ type ProxyPoolMembership struct {
 	AddedAt  time.Time `db:"added_at" json:"addedAt"`
 }
 
+// Domain represents a generated domain
+type Domain struct {
+	ID                         uuid.UUID `db:"id" json:"id"`
+	DomainGenerationCampaignID uuid.UUID `db:"domain_generation_campaign_id" json:"domainGenerationCampaignId"`
+	DomainName                 string    `db:"domain_name" json:"domainName"`
+	SourceKeyword              *string   `db:"source_keyword" json:"sourceKeyword,omitempty"`
+	SourcePattern              *string   `db:"source_pattern" json:"sourcePattern,omitempty"`
+	TLD                        *string   `db:"tld" json:"tld,omitempty"`
+	OffsetIndex                int64     `db:"offset_index" json:"offsetIndex"`
+	GeneratedAt                time.Time `db:"generated_at" json:"generatedAt"`
+	CreatedAt                  time.Time `db:"created_at" json:"createdAt"`
+
+	// Additional fields for optimization (not in DB but calculated)
+	Status           string   `json:"status,omitempty" db:"-"`
+	PerformanceScore *float64 `json:"performance_score,omitempty" db:"-"`
+}
+
 // DereferenceGeneratedDomainSlice converts a slice of *GeneratedDomain to []GeneratedDomain.
 func DereferenceGeneratedDomainSlice(slice []*GeneratedDomain) []GeneratedDomain {
 	if slice == nil {

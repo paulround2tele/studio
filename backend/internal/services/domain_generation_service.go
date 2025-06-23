@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
@@ -579,6 +580,27 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		}
 		return true, 0, opErr
 	}
+
+	// Configure memory-efficient generation for PF-002 optimization
+	memConfig := domainexpert.DefaultMemoryEfficiencyConfig()
+	memConfig.EnableMemoryLogging = false // Disable logging in production, enable for debugging
+
+	// Adjust memory limits based on available system memory
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+	availableMemoryMB := memStats.Sys / 1024 / 1024
+
+	// Use up to 25% of available memory for domain generation batches
+	if availableMemoryMB > 2048 { // If more than 2GB available
+		memConfig.MaxMemoryUsageMB = int(availableMemoryMB / 4)
+	} else {
+		memConfig.MaxMemoryUsageMB = 256 // Conservative limit for smaller systems
+	}
+
+	domainGen.WithMemoryConfig(memConfig)
+
+	log.Printf("ProcessGenerationCampaignBatch: Configured memory-efficient generation for campaign %s (memory limit: %dMB)",
+		campaignID, memConfig.MaxMemoryUsageMB)
 	// Ensure campaign.ProcessedItems is not nil for comparison
 	processedItems := int64(0)
 	if campaign.ProcessedItems != nil {

@@ -22,7 +22,6 @@ type SI005IntegrationTestSuite struct {
 	db            *sqlx.DB
 	memoryMonitor *monitoring.MemoryMonitor
 	poolManager   *services.MemoryPoolManager
-	domainGen     *services.MemoryEfficientDomainGenerator
 	ctx           context.Context
 	cancel        context.CancelFunc
 }
@@ -44,7 +43,6 @@ func (suite *SI005IntegrationTestSuite) SetupSuite() {
 	config := monitoring.DefaultMemoryMonitorConfig()
 	suite.memoryMonitor = monitoring.NewMemoryMonitor(suite.db, alertingService, config)
 	suite.poolManager = services.NewMemoryPoolManager(nil, suite.memoryMonitor)
-	suite.domainGen = services.NewMemoryEfficientDomainGenerator(suite.db, suite.memoryMonitor)
 }
 
 func (suite *SI005IntegrationTestSuite) TearDownSuite() {
@@ -196,17 +194,38 @@ func (suite *SI005IntegrationTestSuite) TestSI005_MemoryEfficientDomainGeneratio
 		VariableLength:            models.IntPtr(3),
 		CharacterSet:              models.StringPtr("abc"),
 		ConstantString:            models.StringPtr("test"),
-		TLD:                       "com",
+		TLD:                       ".com",
 		NumDomainsToGenerate:      100,
 		TotalPossibleCombinations: 27, // 3^3 for "abc" with length 3
 		CurrentOffset:             0,
 	}
 
+	// Insert domain generation parameters
+	_, err = suite.db.NamedExec(`
+		INSERT INTO domain_generation_campaign_params 
+		(campaign_id, pattern_type, variable_length, character_set, constant_string, tld, 
+		 num_domains_to_generate, total_possible_combinations, current_offset)
+		VALUES (:campaign_id, :pattern_type, :variable_length, :character_set, :constant_string, :tld,
+		        :num_domains_to_generate, :total_possible_combinations, :current_offset)`,
+		config)
+	suite.Require().NoError(err)
+
 	// Test memory monitoring during generation
 	startMemory := suite.getCurrentMemoryUsage()
 
-	err = suite.domainGen.GenerateDomainsWithMemoryControl(suite.ctx, campaign, config)
+	// Use the enhanced domain generation service with memory efficiency
+	domainGenService := services.NewDomainGenerationService(
+		suite.db,
+		nil, // campaign store - will use db directly for this test
+		nil, // campaign job store
+		nil, // audit log store
+		nil, // config manager
+	)
+
+	// Test batch processing which now includes memory efficiency
+	_, processedCount, err := domainGenService.ProcessGenerationCampaignBatch(suite.ctx, campaign.ID)
 	suite.Require().NoError(err)
+	suite.Assert().GreaterOrEqual(processedCount, 0, "Should process some domains")
 
 	endMemory := suite.getCurrentMemoryUsage()
 

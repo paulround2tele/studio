@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -78,7 +79,7 @@ func (sm *CampaignStateMachine) ValidateTransition(current, target CampaignStatu
 	if !sm.CanTransition(current, target) {
 		errMsg := fmt.Sprintf("invalid state transition from %s to %s", current, target)
 		log.Printf("CampaignStateMachine: VALIDATION FAILED - %s", errMsg)
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	log.Printf("CampaignStateMachine: VALIDATION PASSED - transition '%s' → '%s' is allowed", current, target)
