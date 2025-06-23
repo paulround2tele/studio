@@ -65,6 +65,11 @@ backend/debug_auth_service
 backend/debug-auth-service
 backend/domainflow-apiserver
 
+# MCP Server build artifacts
+mcp-server/dist/
+mcp-server/node_modules/
+mcp-server/*.tsbuildinfo
+
 # IDX specific (if any, good to have as a general rule for cloud IDEs)
 .idx/
 *.gz

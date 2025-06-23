@@ -16,9 +16,9 @@ import type {
  * Provides intelligence about stealth validation and persona management
  */
 export class PersonaContextProvider implements MCPContextProvider {
-  private stealthStrategies: Map<string, AntiDetectionStrategy>;
-  private personaConfigurations: Map<string, PersonaContext>;
-  private detectionCountermeasures: Record<string, any>;
+  private stealthStrategies!: Map<string, AntiDetectionStrategy>;
+  private personaConfigurations!: Map<string, PersonaContext>;
+  private detectionCountermeasures!: Record<string, any>;
 
   constructor() {
     this.initializeStealthStrategies();
@@ -477,7 +477,7 @@ export class PersonaContextProvider implements MCPContextProvider {
     if (personaId) {
       return {
         personaId,
-        limits: baseConfig.personaSpecificLimits[personaId] || baseConfig.globalLimits,
+        limits: (baseConfig.personaSpecificLimits as any)[personaId] || baseConfig.globalLimits,
         adaptiveSettings: baseConfig.adaptiveThrottling,
         currentUsage: this.getCurrentUsageStats(personaId)
       };

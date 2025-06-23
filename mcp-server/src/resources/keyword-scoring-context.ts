@@ -15,10 +15,10 @@ import type {
  * Provides telecom-specific lead intelligence and keyword scoring
  */
 export class KeywordScoringContextProvider implements MCPContextProvider {
-  private telecomKeywords: Map<string, any>;
-  private scoringAlgorithms: Map<string, any>;
-  private industryContext: TelecomIndustryContext;
-  private leadQualificationRules: Record<string, any>;
+  private telecomKeywords!: Map<string, any>;
+  private scoringAlgorithms!: Map<string, any>;
+  private industryContext!: TelecomIndustryContext;
+  private leadQualificationRules!: Record<string, any>;
 
   constructor() {
     this.initializeTelecomKeywords();
@@ -302,20 +302,35 @@ export class KeywordScoringContextProvider implements MCPContextProvider {
         }
       },
       regionalFactors: {
-        'US': {
-          regulations: ['FCC compliance', 'CPNI protection', 'net neutrality'],
-          complianceKeywords: ['FCC', 'regulatory', 'compliance', 'tariff'],
-          impact: 'neutral'
+        regulatoryEnvironment: {
+          US: {
+            regulations: ['FCC compliance', 'CPNI protection', 'net neutrality'],
+            complianceKeywords: ['FCC', 'regulatory', 'compliance', 'tariff'],
+            impact: 'neutral' as const
+          },
+          CA: {
+            regulations: ['CRTC compliance', 'PIPEDA', 'telecom regulations'],
+            complianceKeywords: ['CRTC', 'Canadian', 'telecom act', 'PIPEDA'],
+            impact: 'neutral' as const
+          },
+          EU: {
+            regulations: ['GDPR', 'telecom regulations', 'data protection'],
+            complianceKeywords: ['GDPR', 'European', 'data protection', 'privacy'],
+            impact: 'positive' as const
+          }
         },
-        'CA': {
-          regulations: ['CRTC compliance', 'PIPEDA', 'telecom regulations'],
-          complianceKeywords: ['CRTC', 'Canadian', 'telecom act', 'PIPEDA'],
-          impact: 'neutral'
+        marketMaturity: {
+          US: 'mature' as const,
+          CA: 'mature' as const,
+          EU: 'mature' as const,
+          APAC: 'developing' as const
         },
-        'EU': {
-          regulations: ['GDPR', 'telecom regulations', 'data protection'],
-          complianceKeywords: ['GDPR', 'European', 'data protection', 'privacy'],
-          impact: 'positive'
+        competitiveLandscape: {
+          US: {
+            majorPlayers: ['Verizon', 'AT&T', 'T-Mobile'],
+            marketConcentration: 'concentrated' as const,
+            competitionLevel: 'intense' as const
+          }
         }
       }
     };
@@ -599,7 +614,7 @@ export class KeywordScoringContextProvider implements MCPContextProvider {
     };
 
     if (includeAnalysis) {
-      mockScoring['detailedAnalysis'] = {
+      (mockScoring as any).detailedAnalysis = {
         contentStructure: this.analyzeContentStructure(),
         keywordDensity: this.calculateKeywordDensity(),
         competitiveAnalysis: this.performCompetitiveAnalysis(),

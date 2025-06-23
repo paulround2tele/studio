@@ -15,9 +15,9 @@ import type {
  * Provides intelligence about DomainFlow's 3-phase campaign architecture
  */
 export class CampaignFlowContextProvider implements MCPContextProvider {
-  private campaignFlowRules: CampaignPhaseFlow;
-  private phaseTransitionMatrix: Record<string, string[]>;
-  private gatingConditions: Record<string, any>;
+  private campaignFlowRules!: CampaignPhaseFlow;
+  private phaseTransitionMatrix!: Record<string, string[]>;
+  private gatingConditions!: Record<string, any>;
 
   constructor() {
     this.initializeCampaignFlowRules();

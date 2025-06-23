@@ -402,7 +402,7 @@ export class CampaignFlowAnalyzer implements MCPToolProvider {
     };
 
     if (includeRecommendations) {
-      flowOptimization['recommendations'] = [
+      (flowOptimization as any).recommendations = [
         {
           priority: 'high',
           action: 'Implement intelligent batching for immediate gains',
