@@ -1,0 +1,18 @@
+# Binaries
+mcp-server
+mcp-server.exe
+
+# Test outputs
+*.test
+*.out
+
+# Go build artifacts
+*.sum
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
