@@ -4,16 +4,18 @@
 
 1. [Development Environment Setup](#development-environment-setup)
 2. [Architecture Overview](#architecture-overview)
-3. [Authentication System Development](#authentication-system-development)
-4. [Backend Development](#backend-development)
-5. [Frontend Development](#frontend-development)
-6. [Database Development](#database-development)
-7. [API Development](#api-development)
-8. [Testing Guidelines](#testing-guidelines)
-9. [Security Development](#security-development)
-10. [Deployment & DevOps](#deployment--devops)
-11. [Contributing Guidelines](#contributing-guidelines)
-12. [Troubleshooting Development Issues](#troubleshooting-development-issues)
+3. [Phase 2 Implementation Guide](#phase-2-implementation-guide)
+4. [Authentication System Development](#authentication-system-development)
+5. [Backend Development](#backend-development)
+6. [Frontend Development](#frontend-development)
+7. [Database Development](#database-development)
+8. [API Development](#api-development)
+9. [Testing Guidelines](#testing-guidelines)
+10. [Security Development](#security-development)
+11. [Performance Monitoring](#performance-monitoring)
+12. [Deployment & DevOps](#deployment--devops)
+13. [Contributing Guidelines](#contributing-guidelines)
+14. [Troubleshooting Development Issues](#troubleshooting-development-issues)
 
 ## Development Environment Setup
 
@@ -304,335 +306,131 @@ domainflow/
 └── .github/                   # GitHub workflows
 ```
 
-## Authentication System Development
+## Phase 2 Implementation Guide
 
-### Authentication Architecture
+### **Phase 2 Status Overview**
+DomainFlow has successfully completed **Phase 2a Foundation**, **Phase 2b Security**, and **Phase 2c Performance** implementations. This section provides developers with comprehensive guidance on working with these enhanced capabilities.
 
-The DomainFlow authentication system implements a dual approach:
+#### **Implementation Documentation**
+- 📄 [Phase 2a & 2b Verification Report](./PHASE_2A_2B_VERIFICATION_REPORT.md) - Complete verification of foundation and security implementations
+- 📄 [Phase 2c Implementation Summary](./PHASE_2C_IMPLEMENTATION_SUMMARY.md) - Performance monitoring implementation details
+- 📄 [Phase 2 Integration Summary](./PHASE_2_INTEGRATION_SUMMARY.md) - Cross-phase integration verification
+- 📄 [Tactical Plans Directory](./tactical_plans/README.md) - Individual implementation specifications
 
-1. **Session-based authentication** for web interface
-2. **API key authentication** for programmatic access
+### **Phase 2a Foundation - Developer Guide**
 
-#### Core Components
-
+#### **Transaction Management (SI-001)**
 ```go
-// internal/auth/types.go
-type AuthService interface {
-    Login(ctx context.Context, req LoginRequest) (*LoginResponse, error)
-    Logout(ctx context.Context, sessionID string) error
-    ValidateSession(ctx context.Context, sessionID string) (*User, error)
-    ValidateAPIKey(ctx context.Context, apiKey string) (*User, error)
-    RefreshSession(ctx context.Context, sessionID string) error
-}
-
-type User struct {
-    ID          string    `json:"id" gorm:"primaryKey"`
-    Email       string    `json:"email" gorm:"uniqueIndex"`
-    FirstName   string    `json:"firstName"`
-    LastName    string    `json:"lastName"`
-    PasswordHash string   `json:"-"`
-    IsActive    bool      `json:"isActive"`
-    Roles       []Role    `json:"roles" gorm:"many2many:user_roles;"`
-    CreatedAt   time.Time `json:"createdAt"`
-    UpdatedAt   time.Time `json:"updatedAt"`
-}
-
-type Session struct {
-    ID           string    `json:"id" gorm:"primaryKey"`
-    UserID       string    `json:"userId"`
-    User         User      `json:"user"`
-    IPAddress    string    `json:"ipAddress"`
-    UserAgent    string    `json:"userAgent"`
-    ExpiresAt    time.Time `json:"expiresAt"`
-    LastActivity time.Time `json:"lastActivity"`
-    IsActive     bool      `json:"isActive"`
+// Use the enhanced TransactionManager for all campaign operations
+func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID string, updates CampaignUpdates) error {
+    return s.txManager.SafeCampaignTransaction(ctx, &CampaignTransactionOptions{
+        Operation:  "update_campaign",
+        CampaignID: campaignID,
+        MaxRetries: 3,
+        Timeout:    30 * time.Second,
+    }, func(tx *sqlx.Tx) error {
+        // Your business logic here
+        return s.store.UpdateCampaign(ctx, tx, campaignID, updates)
+    })
 }
 ```
 
-#### Password Security Implementation
+**Best Practices**:
+- Always use `SafeCampaignTransaction` for campaign operations
+- Set appropriate timeouts for long-running operations
+- Use retry logic for transient failures
+- Log transaction metrics for performance monitoring
 
+#### **State Management (SI-002)**
 ```go
-// internal/auth/password.go
-package auth
-
-import (
-    "crypto/rand"
-    "crypto/subtle"
-    "encoding/base64"
-    "fmt"
-    "golang.org/x/crypto/bcrypt"
-)
+// Campaign status management with validation
+type CampaignStatus string
 
 const (
-    MinPasswordLength = 12
-    MaxPasswordLength = 128
-    BcryptCost       = 12
+    CampaignStatusDraft     CampaignStatus = "draft"
+    CampaignStatusReady     CampaignStatus = "ready"
+    CampaignStatusRunning   CampaignStatus = "running"
+    CampaignStatusPaused    CampaignStatus = "paused"
+    CampaignStatusCompleted CampaignStatus = "completed"
+    CampaignStatusCancelled CampaignStatus = "cancelled"
+    CampaignStatusFailed    CampaignStatus = "failed"
 )
 
-type PasswordService struct {
-    pepper []byte
-}
-
-func NewPasswordService(pepper string) *PasswordService {
-    return &PasswordService{
-        pepper: []byte(pepper),
-    }
-}
-
-func (ps *PasswordService) HashPassword(password string) (string, error) {
-    if err := ps.validatePassword(password); err != nil {
-        return "", err
-    }
-    
-    // Add pepper to password
-    pepperedPassword := append([]byte(password), ps.pepper...)
-    
-    // Generate bcrypt hash
-    hash, err := bcrypt.GenerateFromPassword(pepperedPassword, BcryptCost)
-    if err != nil {
-        return "", fmt.Errorf("failed to hash password: %w", err)
-    }
-    
-    return string(hash), nil
-}
-
-func (ps *PasswordService) VerifyPassword(password, hash string) bool {
-    pepperedPassword := append([]byte(password), ps.pepper...)
-    err := bcrypt.CompareHashAndPassword([]byte(hash), pepperedPassword)
-    return err == nil
-}
-
-func (ps *PasswordService) validatePassword(password string) error {
-    if len(password) < MinPasswordLength {
-        return fmt.Errorf("password must be at least %d characters", MinPasswordLength)
-    }
-    
-    if len(password) > MaxPasswordLength {
-        return fmt.Errorf("password must be no more than %d characters", MaxPasswordLength)
-    }
-    
-    // Check for required character types
-    var hasUpper, hasLower, hasDigit, hasSpecial bool
-    
-    for _, char := range password {
-        switch {
-        case char >= 'A' && char <= 'Z':
-            hasUpper = true
-        case char >= 'a' && char <= 'z':
-            hasLower = true
-        case char >= '0' && char <= '9':
-            hasDigit = true
-        case isSpecialChar(char):
-            hasSpecial = true
-        }
-    }
-    
-    if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
-        return fmt.Errorf("password must contain uppercase, lowercase, digit, and special character")
-    }
-    
-    return nil
-}
-
-func isSpecialChar(char rune) bool {
-    specialChars := "!@#$%^&*()_+-=[]{}|;:,.<>?"
-    for _, special := range specialChars {
-        if char == special {
-            return true
-        }
-    }
-    return false
+// State transition validation
+func (s *CampaignService) ValidateStateTransition(from, to CampaignStatus) error {
+    // Implement state transition rules
 }
 ```
 
-#### Session Management
+**Development Guidelines**:
+- Use enum types for all status fields
+- Implement state transition validation
+- Include business status separate from operational status
+- Audit all state changes
 
+#### **Concurrency Control (BF-002)**
 ```go
-// internal/auth/session.go
-package auth
-
-import (
-    "context"
-    "crypto/rand"
-    "encoding/hex"
-    "time"
-    "gorm.io/gorm"
-)
-
-type SessionManager struct {
-    db             *gorm.DB
-    sessionTimeout time.Duration
-    cleanupInterval time.Duration
-}
-
-func NewSessionManager(db *gorm.DB) *SessionManager {
-    sm := &SessionManager{
-        db:              db,
-        sessionTimeout:  30 * time.Minute,
-        cleanupInterval: 1 * time.Hour,
+// Safe concurrent processing with proper locking
+func (s *CampaignWorkerService) ProcessConcurrentJobs(ctx context.Context, jobIDs []string) error {
+    var wg sync.WaitGroup
+    errChan := make(chan error, len(jobIDs))
+    
+    for _, jobID := range jobIDs {
+        wg.Add(1)
+        go func(id string) {
+            defer wg.Done()
+            if err := s.ProcessSingleJob(ctx, id); err != nil {
+                errChan <- err
+            }
+        }(jobID)
     }
     
-    // Start cleanup goroutine
-    go sm.cleanupExpiredSessions()
-    
-    return sm
-}
-
-func (sm *SessionManager) CreateSession(ctx context.Context, userID, ipAddress, userAgent string) (*Session, error) {
-    sessionID, err := generateSecureToken(32)
-    if err != nil {
-        return nil, err
-    }
-    
-    session := &Session{
-        ID:           sessionID,
-        UserID:       userID,
-        IPAddress:    ipAddress,
-        UserAgent:    userAgent,
-        ExpiresAt:    time.Now().Add(24 * time.Hour),
-        LastActivity: time.Now(),
-        IsActive:     true,
-    }
-    
-    if err := sm.db.WithContext(ctx).Create(session).Error; err != nil {
-        return nil, err
-    }
-    
-    return session, nil
-}
-
-func (sm *SessionManager) ValidateSession(ctx context.Context, sessionID string) (*Session, error) {
-    var session Session
-    err := sm.db.WithContext(ctx).
-        Preload("User").
-        Where("id = ? AND is_active = ? AND expires_at > ?", sessionID, true, time.Now()).
-        First(&session).Error
-    
-    if err != nil {
-        return nil, err
-    }
-    
-    // Check session timeout
-    if time.Since(session.LastActivity) > sm.sessionTimeout {
-        sm.InvalidateSession(ctx, sessionID)
-        return nil, fmt.Errorf("session expired")
-    }
-    
-    // Update last activity
-    sm.db.WithContext(ctx).Model(&session).Update("last_activity", time.Now())
-    
-    return &session, nil
-}
-
-func (sm *SessionManager) InvalidateSession(ctx context.Context, sessionID string) error {
-    return sm.db.WithContext(ctx).
-        Model(&Session{}).
-        Where("id = ?", sessionID).
-        Update("is_active", false).Error
-}
-
-func generateSecureToken(length int) (string, error) {
-    bytes := make([]byte, length)
-    if _, err := rand.Read(bytes); err != nil {
-        return "", err
-    }
-    return hex.EncodeToString(bytes), nil
-}
-
-func (sm *SessionManager) cleanupExpiredSessions() {
-    ticker := time.NewTicker(sm.cleanupInterval)
-    defer ticker.Stop()
-    
-    for range ticker.C {
-        sm.db.Where("expires_at < ? OR (last_activity < ? AND is_active = ?)",
-            time.Now(),
-            time.Now().Add(-sm.sessionTimeout),
-            true,
-        ).Delete(&Session{})
-    }
+    wg.Wait()
+    // Handle errors...
 }
 ```
 
-#### Authentication Middleware
+### **Phase 2b Security - Developer Guide**
 
+#### **Authorization Context (BL-006)**
 ```go
-// internal/middleware/auth.go
-package middleware
+// Include authorization context in all operations
+func (s *AuthService) LogAuthorizationDecision(ctx context.Context, decision AuthorizationDecision) error {
+    return s.auditService.LogWithContext(ctx, AuditLog{
+        Action:               decision.Action,
+        EntityType:          decision.ResourceType,
+        EntityID:            decision.ResourceID,
+        AuthorizationContext: decision.Context,
+        UserID:              decision.UserID,
+        Decision:            decision.Result,
+    })
+}
+```
 
-import (
-    "net/http"
-    "strings"
-    "github.com/gin-gonic/gin"
-    "your-project/internal/auth"
-)
+**Security Development Practices**:
+- Always log authorization decisions with full context
+- Include request metadata in authorization context
+- Track policy evaluation for security investigations
+- Correlate authorization events with performance metrics
 
-func AuthMiddleware(authService auth.AuthService) gin.HandlerFunc {
+#### **API Authorization (BL-005)**
+```go
+// Endpoint-level authorization middleware
+func (m *AuthMiddleware) CheckEndpointAuthorization() gin.HandlerFunc {
     return func(c *gin.Context) {
-        // Try API key authentication first
-        if apiKey := extractAPIKey(c); apiKey != "" {
-            user, err := authService.ValidateAPIKey(c.Request.Context(), apiKey)
-            if err == nil {
-                c.Set("user", user)
-                c.Set("auth_method", "api_key")
-                c.Next()
-                return
-            }
-        }
+        userID := extractUserID(c)
+        endpoint := c.FullPath()
+        method := c.Request.Method
         
-        // Try session authentication
-        if sessionID := extractSessionID(c); sessionID != "" {
-            user, err := authService.ValidateSession(c.Request.Context(), sessionID)
-            if err == nil {
-                c.Set("user", user)
-                c.Set("auth_method", "session")
-                c.Next()
-                return
-            }
-        }
-        
-        // No valid authentication found
-        c.JSON(http.StatusUnauthorized, gin.H{
-            "error": "Authentication required",
-            "code":  "AUTH_REQUIRED",
+        result, err := m.authService.CheckEndpointAccess(c.Request.Context(), EndpointAuthRequest{
+            UserID:          userID,
+            EndpointPattern: endpoint,
+            HTTPMethod:      method,
+            ResourceID:      c.Param("id"),
         })
-        c.Abort()
-    }
-}
-
-func extractAPIKey(c *gin.Context) string {
-    auth := c.GetHeader("Authorization")
-    if strings.HasPrefix(auth, "Bearer ") {
-        return strings.TrimPrefix(auth, "Bearer ")
-    }
-    return ""
-}
-
-func extractSessionID(c *gin.Context) string {
-    cookie, err := c.Cookie("domainflow_session")
-    if err != nil {
-        return ""
-    }
-    return cookie
-}
-
-func RequirePermission(permission string) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        user, exists := c.Get("user")
-        if !exists {
-            c.JSON(http.StatusUnauthorized, gin.H{
-                "error": "Authentication required",
-                "code":  "AUTH_REQUIRED",
-            })
-            c.Abort()
-            return
-        }
         
-        if !hasPermission(user.(*auth.User), permission) {
-            c.JSON(http.StatusForbidden, gin.H{
-                "error": "Insufficient permissions",
-                "code":  "AUTH_INSUFFICIENT_PERMISSIONS",
-                "required": permission,
-            })
+        if err != nil || result.Decision != "allow" {
+            c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
             c.Abort()
             return
         }
@@ -642,424 +440,164 @@ func RequirePermission(permission string) gin.HandlerFunc {
 }
 ```
 
-### Frontend Authentication
-
-#### Auth Context Implementation
-
-```typescript
-// src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  roles: string[];
-  permissions: string[];
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<AuthResult>;
-  logout: () => Promise<void>;
-  refreshSession: () => Promise<boolean>;
-  hasPermission: (permission: string) => boolean;
-  hasRole: (role: string) => boolean;
-}
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-  rememberMe?: boolean;
-}
-
-interface AuthResult {
-  success: boolean;
-  user?: User;
-  error?: string;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const isAuthenticated = !!user;
-
-  useEffect(() => {
-    // Check for existing session on mount
-    checkSession();
-  }, []);
-
-  const checkSession = async () => {
-    try {
-      const response = await fetch('/api/v2/auth/me', {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      }
-    } catch (error) {
-      console.error('Session check failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = async (credentials: LoginCredentials): Promise<AuthResult> => {
-    try {
-      const response = await fetch('/api/v2/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setUser(data.user);
-        return { success: true, user: data.user };
-      } else {
-        return { success: false, error: data.error || 'Login failed' };
-      }
-    } catch (error) {
-      return { success: false, error: 'Network error' };
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await fetch('/api/v2/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-    }
-  };
-
-  const refreshSession = async (): Promise<boolean> => {
-    try {
-      const response = await fetch('/api/v2/auth/refresh', {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        return true;
-      }
-    } catch (error) {
-      console.error('Session refresh failed:', error);
-    }
-    return false;
-  };
-
-  const hasPermission = (permission: string): boolean => {
-    return user?.permissions?.includes(permission) || false;
-  };
-
-  const hasRole = (role: string): boolean => {
-    return user?.roles?.includes(role) || false;
-  };
-
-  const value: AuthContextType = {
-    user,
-    isAuthenticated,
-    isLoading,
-    login,
-    logout,
-    refreshSession,
-    hasPermission,
-    hasRole,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
-```
-
-#### Protected Route Component
-
-```typescript
-// src/components/auth/ProtectedRoute.tsx
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredPermission?: string;
-  requiredRole?: string;
-  fallbackPath?: string;
-}
-
-export function ProtectedRoute({
-  children,
-  requiredPermission,
-  requiredRole,
-  fallbackPath = '/login'
-}: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, hasPermission, hasRole } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push(fallbackPath);
-        return;
-      }
-
-      if (requiredPermission && !hasPermission(requiredPermission)) {
-        router.push('/unauthorized');
-        return;
-      }
-
-      if (requiredRole && !hasRole(requiredRole)) {
-        router.push('/unauthorized');
-        return;
-      }
-    }
-  }, [isAuthenticated, isLoading, requiredPermission, requiredRole, router]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  if (requiredPermission && !hasPermission(requiredPermission)) {
-    return null;
-  }
-
-  if (requiredRole && !hasRole(requiredRole)) {
-    return null;
-  }
-
-  return <>{children}</>;
-}
-```
-
-## Backend Development
-
-### Project Structure
-
-```
-backend/
-├── cmd/
-│   ├── apiserver/           # Main API server
-│   ├── migrate/             # Database migration tool
-│   └── worker/              # Background worker
-├── internal/
-│   ├── auth/                # Authentication system
-│   ├── config/              # Configuration management
-│   ├── handlers/            # HTTP request handlers
-│   ├── middleware/          # HTTP middleware
-│   ├── models/              # Data models
-│   ├── repositories/        # Data access layer
-│   ├── services/            # Business logic
-│   └── utils/               # Utility functions
-├── database/
-│   ├── migrations/          # SQL migration files
-│   └── schema.sql           # Complete database schema
-└── tests/                   # Test files
-```
-
-### Configuration Management
-
+#### **Input Validation (BL-007)**
 ```go
-// internal/config/config.go
-package config
-
-import (
-    "fmt"
-    "os"
-    "strconv"
-    "time"
-)
-
-type Config struct {
-    Environment string
-    Server      ServerConfig
-    Database    DatabaseConfig
-    Auth        AuthConfig
-    Security    SecurityConfig
-    Logging     LoggingConfig
+// Comprehensive input validation
+type CampaignCreateRequest struct {
+    Name        string    `json:"name" validate:"required,min=3,max=100"`
+    Description string    `json:"description" validate:"max=500"`
+    DomainCount int       `json:"domain_count" validate:"required,min=1,max=10000"`
+    Status      string    `json:"status" validate:"required,oneof=draft ready"`
 }
 
-type ServerConfig struct {
-    Port         int
-    Host         string
-    ReadTimeout  time.Duration
-    WriteTimeout time.Duration
-    IdleTimeout  time.Duration
-}
-
-type DatabaseConfig struct {
-    Host            string
-    Port            int
-    Name            string
-    User            string
-    Password        string
-    SSLMode         string
-    MaxOpenConns    int
-    MaxIdleConns    int
-    ConnMaxLifetime time.Duration
-}
-
-type AuthConfig struct {
-    JWTSecret       string
-    SessionTimeout  time.Duration
-    PasswordPepper  string
-    BcryptCost      int
-}
-
-type SecurityConfig struct {
-    CORSOrigins       []string
-    EnableSecureHeaders bool
-    RateLimitEnabled  bool
-}
-
-type LoggingConfig struct {
-    Level  string
-    Format string
-}
-
-func Load() (*Config, error) {
-    config := &Config{
-        Environment: getEnv("ENV", "development"),
-        Server: ServerConfig{
-            Port:         getEnvAsInt("SERVER_PORT", 8080),
-            Host:         getEnv("SERVER_HOST", "0.0.0.0"),
-            ReadTimeout:  getEnvAsDuration("SERVER_READ_TIMEOUT", "30s"),
-            WriteTimeout: getEnvAsDuration("SERVER_WRITE_TIMEOUT", "30s"),
-            IdleTimeout:  getEnvAsDuration("SERVER_IDLE_TIMEOUT", "120s"),
-        },
-        Database: DatabaseConfig{
-            Host:            getEnv("DB_HOST", "localhost"),
-            Port:            getEnvAsInt("DB_PORT", 5432),
-            Name:            getEnv("DB_NAME", "domainflow_dev"),
-            User:            getEnv("DB_USER", "domainflow_dev"),
-            Password:        getEnv("DB_PASSWORD", ""),
-            SSLMode:         getEnv("DB_SSLMODE", "disable"),
-            MaxOpenConns:    getEnvAsInt("DB_MAX_OPEN_CONNS", 25),
-            MaxIdleConns:    getEnvAsInt("DB_MAX_IDLE_CONNS", 10),
-            ConnMaxLifetime: getEnvAsDuration("DB_CONN_MAX_LIFETIME", "1h"),
-        },
-        Auth: AuthConfig{
-            JWTSecret:      getEnv("JWT_SECRET", "dev-secret-key"),
-            SessionTimeout: getEnvAsDuration("SESSION_TIMEOUT", "30m"),
-            PasswordPepper: getEnv("PASSWORD_PEPPER", "dev-pepper"),
-            BcryptCost:     getEnvAsInt("BCRYPT_COST", 12),
-        },
-        Security: SecurityConfig{
-            CORSOrigins:       getEnvAsSlice("CORS_ORIGINS", []string{"http://localhost:3000"}),
-            EnableSecureHeaders: getEnvAsBool("ENABLE_SECURE_HEADERS", false),
-            RateLimitEnabled:  getEnvAsBool("RATE_LIMIT_ENABLED", true),
-        },
-        Logging: LoggingConfig{
-            Level:  getEnv("LOG_LEVEL", "DEBUG"),
-            Format: getEnv("LOG_FORMAT", "console"),
-        },
-    }
-
-    return config, config.validate()
-}
-
-func (c *Config) validate() error {
-    if c.Database.Password == "" {
-        return fmt.Errorf("database password is required")
+func (h *CampaignHandler) CreateCampaign(c *gin.Context) {
+    var req CampaignCreateRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+        return
     }
     
-    if c.Auth.JWTSecret == "" {
-        return fmt.Errorf("JWT secret is required")
+    if err := h.validator.Struct(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "validation failed", "details": err.Error()})
+        return
     }
     
-    return nil
-}
-
-// Helper functions for environment variable parsing
-func getEnv(key, defaultValue string) string {
-    if value := os.Getenv(key); value != "" {
-        return value
-    }
-    return defaultValue
-}
-
-func getEnvAsInt(key string, defaultValue int) int {
-    if value := os.Getenv(key); value != "" {
-        if intValue, err := strconv.Atoi(value); err == nil {
-            return intValue
-        }
-    }
-    return defaultValue
-}
-
-func getEnvAsBool(key string, defaultValue bool) bool {
-    if value := os.Getenv(key); value != "" {
-        if boolValue, err := strconv.ParseBool(value); err == nil {
-            return boolValue
-        }
-    }
-    return defaultValue
-}
-
-func getEnvAsDuration(key string, defaultValue string) time.Duration {
-    if value := os.Getenv(key); value != "" {
-        if duration, err := time.ParseDuration(value); err == nil {
-            return duration
-        }
-    }
-    duration, _ := time.ParseDuration(defaultValue)
-    return duration
-}
-
-func getEnvAsSlice(key string, defaultValue []string) []string {
-    if value := os.Getenv(key); value != "" {
-        return strings.Split(value, ",")
-    }
-    return defaultValue
+    // Process validated request...
 }
 ```
 
-### Service Layer Pattern
+### **Phase 2c Performance - Developer Guide**
+
+#### **Query Performance Monitoring (PF-001)**
+```go
+// Use QueryPerformanceMonitor for all database operations
+func (s *DomainService) GetDomainsByStatus(ctx context.Context, status string) ([]Domain, error) {
+    startTime := time.Now()
+    
+    domains, err := s.store.GetDomainsByStatus(ctx, status)
+    
+    // Record performance metrics
+    s.performanceMonitor.RecordQuery(ctx, QueryMetrics{
+        QueryType:       "domain_lookup",
+        ExecutionTime:   time.Since(startTime),
+        RowsAffected:    len(domains),
+        QueryHash:       generateQueryHash("GetDomainsByStatus", status),
+    })
+    
+    return domains, err
+}
+```
+
+#### **Response Time Optimization (PF-002)**
+```go
+// Response time middleware for all endpoints
+func (m *ResponseTimeMiddleware) TrackResponseTime() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        start := time.Now()
+        
+        c.Next()
+        
+        duration := time.Since(start)
+        m.recordResponseTime(ResponseTimeMetric{
+            Endpoint:     c.FullPath(),
+            Method:       c.Request.Method,
+            Duration:     duration,
+            StatusCode:   c.Writer.Status(),
+            PayloadSize:  c.Writer.Size(),
+        })
+        
+        // Alert on slow responses
+        if duration > m.slowThreshold {
+            m.alerting.SendSlowResponseAlert(c.FullPath(), duration)
+        }
+    }
+}
+```
+
+#### **Caching Implementation (PF-004)**
+```go
+// Intelligent caching with invalidation
+func (s *CampaignService) GetCampaignWithCache(ctx context.Context, campaignID string) (*Campaign, error) {
+    cacheKey := fmt.Sprintf("campaign:%s", campaignID)
+    
+    // Try cache first
+    if cached, found := s.cache.Get(cacheKey); found {
+        s.metrics.IncrementCacheHit("campaign")
+        return cached.(*Campaign), nil
+    }
+    
+    // Cache miss - fetch from database
+    campaign, err := s.store.GetCampaign(ctx, campaignID)
+    if err != nil {
+        return nil, err
+    }
+    
+    // Cache with TTL
+    s.cache.Set(cacheKey, campaign, 10*time.Minute)
+    s.metrics.IncrementCacheMiss("campaign")
+    
+    return campaign, nil
+}
+```
+
+### **Development Workflow with Phase 2**
+
+#### **Required Testing Pattern**
+```go
+func TestCampaignOperationWithAllPhases(t *testing.T) {
+    // Phase 2a: Transaction setup
+    txManager := NewTransactionManager(testDB)
+    
+    // Phase 2b: Authorization context
+    authService := NewAuthService(testDB)
+    userID := createTestUser(t)
+    
+    // Phase 2c: Performance monitoring
+    perfMonitor := NewQueryPerformanceMonitor(testDB, nil)
+    
+    // Test the integrated operation
+    service := &CampaignService{
+        txManager:          txManager,
+        authService:        authService,
+        performanceMonitor: perfMonitor,
+    }
+    
+    // Execute operation and verify all phases work together
+    err := service.CreateCampaign(ctx, CreateCampaignRequest{
+        Name:        "Test Campaign",
+        Description: "Integration test",
+        UserID:      userID,
+    })
+    
+    assert.NoError(t, err)
+    
+    // Verify Phase 2a: Transaction completed
+    // Verify Phase 2b: Authorization logged
+    // Verify Phase 2c: Performance recorded
+}
+```
+
+#### **Monitoring Integration**
+All developers should integrate monitoring into their code:
 
 ```go
-// internal/services/campaign_service.go
-package services
-
-import (
-    "context"
-    "fmt"
-    "time"
-    "your-project/internal/models"
-    "your-project/internal/repositories"
-)
-
-type CampaignService interface {
-    CreateCampaign(ctx context.Context, req CreateCampaignRequest) (*models.Campaign, error)
-    GetCampaign(ctx context.Context, id string) (*models.Campaign, error)
-    ListCampaigns(ctx context.Context, userID string, filters CampaignFilters) ([]*models.Campaign, error)
-    UpdateCampaign(ctx context.Context, id string, req UpdateCampaignRequest) (*models.Campaign, error)
-    DeleteCampaign(ctx context.Context, i
+// Standard monitoring pattern for new features
+func (s *Service) NewFeature(ctx context.Context, req Request) error {
+    // Phase 2c: Start monitoring
+    start := time.Now()
+    defer func() {
+        s.monitor.RecordOperation("new_feature", time.Since(start))
+    }()
+    
+    // Phase 2b: Check authorization
+    if err := s.auth.ValidateAccess(ctx, req.UserID, "new_feature", req.ResourceID); err != nil {
+        return fmt.Errorf("authorization failed: %w", err)
+    }
+    
+    // Phase 2a: Execute in transaction
+    return s.txManager.SafeTransaction(ctx, func(tx *sqlx.Tx) error {
+        // Business logic implementation
+        return s.store.ExecuteNewFeature(ctx, tx, req)
+    })
+}
+```

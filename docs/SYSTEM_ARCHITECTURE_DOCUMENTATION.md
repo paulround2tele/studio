@@ -1,9 +1,10 @@
 # System Architecture Documentation - DomainFlow Offline Authentication System
 
-**Document Version:** 1.0  
-**Last Updated:** June 10, 2025  
+**Document Version:** 2.0  
+**Last Updated:** June 23, 2025  
 **System:** DomainFlow Offline Authentication System  
-**Architecture Status:** Production Ready  
+**Architecture Status:** Production Ready - Phase 2c Performance Complete  
+**Latest Implementation**: Phase 2c Performance Monitoring & Optimization  
 
 ## Executive Summary
 
@@ -11,10 +12,18 @@ The DomainFlow offline authentication system is designed as a secure, scalable, 
 
 ### Key Architectural Principles
 - **Complete Offline Operation**: Zero external dependencies
-- **Security-First Design**: Multi-layered security controls
-- **Scalable Architecture**: Designed for growth and high availability
+- **Security-First Design**: Multi-layered security controls with comprehensive audit logging
+- **Scalable Architecture**: Designed for growth and high availability with performance monitoring
 - **Maintainable Codebase**: Clean architecture with clear separation of concerns
-- **Performance Optimized**: Efficient resource utilization and fast response times
+- **Performance Optimized**: Efficient resource utilization with real-time monitoring and optimization
+- **Transaction Integrity**: ACID-compliant transaction management across all operations
+- **Authorization Context**: Complete audit trail for all security decisions and user actions
+
+### **Phase 2 Implementation Status**
+- ✅ **Phase 2a Foundation**: Transaction management, state management, concurrency controls
+- ✅ **Phase 2b Security**: Authorization context, API authorization, input validation  
+- ✅ **Phase 2c Performance**: Query optimization, response time monitoring, resource utilization, caching
+- 🔄 **Phase 2d Architecture**: Ready for implementation (service architecture, microservices, event-driven patterns)
 
 ## System Overview
 
@@ -34,17 +43,22 @@ graph TB
     subgraph "Application Layer"
         FE[Frontend - Next.js]
         BE[Backend - Go API]
+        MON_SVC[Performance Monitoring]
+        AUTH_SVC[Authorization Service]
     end
     
     subgraph "Data Layer"
         DB[(PostgreSQL Database)]
-        CACHE[Redis Cache]
+        CACHE[Redis Cache - Phase 2c]
+        PERF_DB[(Performance Metrics)]
+        AUDIT_DB[(Audit Logs)]
     end
     
     subgraph "Infrastructure Layer"
-        MON[Monitoring]
-        LOG[Logging]
+        MON[Real-time Monitoring]
+        LOG[Structured Logging]
         BACKUP[Backup System]
+        ALERTS[Performance Alerts]
     end
     
     WEB --> LB
@@ -55,8 +69,14 @@ graph TB
     BE --> DB
     BE --> CACHE
     BE --> LOG
+    BE --> PERF_DB
+    BE --> AUDIT_DB
+    MON_SVC --> PERF_DB
+    AUTH_SVC --> AUDIT_DB
     MON --> BE
     MON --> DB
+    MON --> PERF_DB
+    ALERTS --> MON
     BACKUP --> DB
 ```
 
@@ -65,11 +85,14 @@ graph TB
 | Component | Technology | Purpose | Status |
 |-----------|------------|---------|--------|
 | Frontend | Next.js 13.5 | User interface and client-side logic | ✅ Production Ready |
-| Backend API | Go 1.21 | Authentication service and business logic | ✅ Production Ready |
-| Database | PostgreSQL 14+ | Data persistence and session storage | ✅ Production Ready |
-| Cache | Redis 7 | Session and query caching | ✅ Optional Enhancement |
+| Backend API | Go 1.21 | Authentication service and business logic | ✅ Production Ready + Phase 2c Enhanced |
+| Database | PostgreSQL 14+ | Data persistence and session storage | ✅ Production Ready + Performance Optimized |
+| Cache | Redis 7 | Session and query caching | ✅ Phase 2c Implemented |
 | Load Balancer | Nginx | Traffic distribution and SSL termination | ✅ Production Ready |
-| Monitoring | Custom + Prometheus | System monitoring and alerting | ✅ Production Ready |
+| Monitoring | Custom + Prometheus | System monitoring and alerting | ✅ Phase 2c Enhanced |
+| Performance Tracking | Custom Go Services | Query and resource monitoring | ✅ Phase 2c New Feature |
+| Authorization System | PostgreSQL Functions | Role-based access control | ✅ Phase 2b Implemented |
+| Transaction Management | Go Service Layer | ACID transaction handling | ✅ Phase 2a Implemented |
 
 ## Frontend Architecture
 
@@ -196,22 +219,31 @@ func (s *AuthService) AuthenticateUser(ctx context.Context, credentials LoginCre
 
 #### 2. Middleware Pattern
 ```go
-// Composable middleware chain
+// Composable middleware chain with Phase 2 enhancements
 func SetupMiddleware(r *gin.Engine) {
     r.Use(SecurityMiddleware())
     r.Use(LoggingMiddleware())
     r.Use(RateLimitMiddleware())
     r.Use(AuthMiddleware())
+    r.Use(ResponseTimeMiddleware())    // Phase 2c Performance
+    r.Use(AuthorizationContextMiddleware()) // Phase 2b Security
+    r.Use(TransactionMiddleware())     // Phase 2a Foundation
 }
 ```
 
-#### 3. Repository Pattern
+#### 3. Repository Pattern with Performance Monitoring
 ```go
-// Data access abstraction
+// Data access abstraction with Phase 2c monitoring
 type UserRepository interface {
     GetByEmail(ctx context.Context, email string) (*User, error)
     Create(ctx context.Context, user *User) error
     Update(ctx context.Context, user *User) error
+}
+
+// Performance-monitored implementation
+type PostgresUserRepository struct {
+    db      *sqlx.DB
+    monitor *QueryPerformanceMonitor  // Phase 2c
 }
 ```
 
@@ -220,8 +252,10 @@ type UserRepository interface {
 #### Authentication and Authorization
 - **bcrypt Password Hashing**: Cost factor 12 with pepper
 - **Session Management**: Secure session tokens with expiration
-- **Role-Based Access Control**: Granular permission system
+- **Role-Based Access Control**: Granular permission system with Phase 2b enhancements
 - **Account Protection**: Brute force protection and account lockout
+- **Authorization Context**: Complete audit trail for all authorization decisions (Phase 2b)
+- **API Authorization**: Endpoint-level permission checking with resource ownership validation
 
 #### Security Middleware
 - **Rate Limiting**: IP-based and user-based rate limiting
@@ -916,7 +950,7 @@ graph TB
 
 #### Recommended Requirements
 - **CPU**: 8 cores @ 2.4GHz
-- **Memory**: 16GB RAM
+-
 - **Storage**: 100GB NVMe SSD
 - **Network**: 1Gbps
 - **OS**: Ubuntu 22.04 LTS

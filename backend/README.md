@@ -123,16 +123,35 @@ Create `config.json` based on `config.example.json`:
 
 ### Database Setup
 
+**Quick Setup (Recommended):**
 ```bash
-# Create database
-createdb domainflow_dev
+# Run the automated setup script
+./database/setup.sh
 
-# Run migrations
-psql domainflow_dev < database/schema.sql
-
-# Or use the migration tool
-make migrate
+# Or with seed data for development
+./database/setup.sh --with-seed-data
 ```
+
+**Manual Setup:**
+```bash
+# 1. Create database and user
+sudo -u postgres psql << EOF
+CREATE DATABASE domainflow_production;
+CREATE USER domainflow WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE domainflow_production TO domainflow;
+ALTER USER domainflow CREATEDB;
+\q
+EOF
+
+# 2. Apply schema
+psql "postgres://domainflow:password@localhost:5432/domainflow_production" < database/schema.sql
+
+# 3. Create environment file
+cp .env.example .env
+# Edit .env with your database credentials
+```
+
+For detailed setup instructions, see [database/README.md](./database/README.md).
 
 ## 🔧 Build Commands
 
