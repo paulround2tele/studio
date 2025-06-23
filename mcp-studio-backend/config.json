@@ -10,6 +10,14 @@
     "args": [],
     "env": {}
   },
+  "studio_backend_path": "/path/to/studio/backend",
+  "database_connection": "postgresql://user:pass@localhost:5432/studio",
+  "analysis_depth": "deep",
+  "cache_ttl": 300,
+  "include_test_files": true,
+  "include_vendor_deps": false,
+  "performance_monitoring": true,
+  "real_time_sync": true,
   "resources": {
     "studioBackend": {
       "name": "Studio Backend Context",
@@ -105,6 +113,146 @@
     {
       "name": "get_call_graph",
       "description": "Get function call relationships"
+    },
+    {
+      "name": "get_campaign_types",
+      "description": "Return all campaign types (domain_generation, dns_validation, etc.)"
+    },
+    {
+      "name": "get_pattern_types",
+      "description": "Return valid domain generation patterns and their rules"
+    },
+    {
+      "name": "get_campaign_states",
+      "description": "Return campaign state machine transitions and rules"
+    },
+    {
+      "name": "get_domain_validation_rules",
+      "description": "Return TLD, domain, and validation constraints"
+    },
+    {
+      "name": "analyze_campaign_flow",
+      "description": "Trace campaign workflow from creation to completion"
+    },
+    {
+      "name": "get_performance_metrics",
+      "description": "Return performance enhancement patterns (like BF-005)"
+    },
+    {
+      "name": "get_concurrency_patterns",
+      "description": "Document worker pools, goroutines, and concurrent processing"
+    },
+    {
+      "name": "get_caching_strategies",
+      "description": "Return cache implementations and configurations"
+    },
+    {
+      "name": "get_optimization_patterns",
+      "description": "Document memory and CPU optimization techniques"
+    },
+    {
+      "name": "analyze_bottlenecks",
+      "description": "Identify potential performance bottlenecks in code"
+    },
+    {
+      "name": "get_state_machines",
+      "description": "Return state machine definitions and transition rules"
+    },
+    {
+      "name": "get_orchestration_patterns",
+      "description": "Document campaign orchestration and coordination"
+    },
+    {
+      "name": "get_job_processing_flows",
+      "description": "Return job processing workflows and retry mechanisms"
+    },
+    {
+      "name": "get_config_management",
+      "description": "Document configuration versioning and state tracking"
+    },
+    {
+      "name": "analyze_state_consistency",
+      "description": "Check for state consistency issues"
+    },
+    {
+      "name": "get_test_patterns",
+      "description": "Return common test patterns and setup procedures"
+    },
+    {
+      "name": "get_test_fixtures",
+      "description": "Return test data creation and cleanup patterns"
+    },
+    {
+      "name": "get_mock_strategies",
+      "description": "Document mocking patterns for external dependencies"
+    },
+    {
+      "name": "analyze_test_coverage",
+      "description": "Return test coverage analysis for specific components"
+    },
+    {
+      "name": "get_integration_tests",
+      "description": "Document integration test setup and execution"
+    },
+    {
+      "name": "get_transaction_patterns",
+      "description": "Document transaction management and rollback strategies"
+    },
+    {
+      "name": "get_connection_pooling",
+      "description": "Return database connection management patterns"
+    },
+    {
+      "name": "get_query_optimization",
+      "description": "Document query patterns and performance optimizations"
+    },
+    {
+      "name": "analyze_deadlock_prevention",
+      "description": "Return deadlock prevention strategies"
+    },
+    {
+      "name": "get_migration_strategies",
+      "description": "Document safe migration and rollback procedures"
+    },
+    {
+      "name": "get_error_patterns",
+      "description": "Return error handling and propagation strategies"
+    },
+    {
+      "name": "get_retry_mechanisms",
+      "description": "Document retry logic and backoff strategies"
+    },
+    {
+      "name": "get_circuit_breakers",
+      "description": "Return circuit breaker and fallback implementations"
+    },
+    {
+      "name": "get_timeout_strategies",
+      "description": "Document timeout handling across services"
+    },
+    {
+      "name": "analyze_failure_modes",
+      "description": "Identify potential failure points and mitigations"
+    },
+    {
+      "name": "search_by_campaign_type",
+      "description": "Find code related to specific campaign types"
+    },
+    {
+      "name": "search_by_domain_pattern",
+      "description": "Find domain generation patterns and validation"
+    },
+    {
+      "name": "search_performance_code",
+      "description": "Find performance-related optimizations"
+    },
+    {
+      "name": "search_state_transitions",
+      "description": "Find state machine and workflow code"
+    },
+    {
+      "name": "search_error_handling",
+      "description": "Find error handling and recovery code"
     }
   ]
 }

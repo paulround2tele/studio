@@ -75,6 +75,69 @@ func (s *MCPServer) registerHandlers() {
 	s.handlers["find_usage"] = handlers.HandleFindUsage
 	s.handlers["get_references"] = handlers.HandleGetReferences
 	s.handlers["get_call_graph"] = handlers.HandleGetCallGraph
+	
+	// =============================================================================
+	// DOMAIN-SPECIFIC TOOLS (Campaign & Domain Generation)
+	// =============================================================================
+	s.handlers["get_campaign_types"] = handlers.HandleGetCampaignTypes
+	s.handlers["get_pattern_types"] = handlers.HandleGetPatternTypes
+	s.handlers["get_campaign_states"] = handlers.HandleGetCampaignStates
+	s.handlers["get_domain_validation_rules"] = handlers.HandleGetDomainValidationRules
+	s.handlers["analyze_campaign_flow"] = handlers.HandleAnalyzeCampaignFlow
+	
+	// =============================================================================
+	// PERFORMANCE ANALYSIS TOOLS
+	// =============================================================================
+	s.handlers["get_performance_metrics"] = handlers.HandleGetPerformanceMetrics
+	s.handlers["get_concurrency_patterns"] = handlers.HandleGetConcurrencyPatterns
+	s.handlers["get_caching_strategies"] = handlers.HandleGetCachingStrategies
+	s.handlers["get_optimization_patterns"] = handlers.HandleGetOptimizationPatterns
+	s.handlers["analyze_bottlenecks"] = handlers.HandleAnalyzeBottlenecks
+	
+	// =============================================================================
+	// STATE MANAGEMENT & ORCHESTRATION TOOLS
+	// =============================================================================
+	s.handlers["get_state_machines"] = handlers.HandleGetStateMachines
+	s.handlers["get_orchestration_patterns"] = handlers.HandleGetOrchestrationPatterns
+	s.handlers["get_job_processing_flows"] = handlers.HandleGetJobProcessingFlows
+	s.handlers["get_config_management"] = handlers.HandleGetConfigManagement
+	s.handlers["analyze_state_consistency"] = handlers.HandleAnalyzeStateConsistency
+	
+	// =============================================================================
+	// TESTING & QUALITY ASSURANCE TOOLS
+	// =============================================================================
+	s.handlers["get_test_patterns"] = handlers.HandleGetTestPatterns
+	s.handlers["get_test_fixtures"] = handlers.HandleGetTestFixtures
+	s.handlers["get_mock_strategies"] = handlers.HandleGetMockStrategies
+	s.handlers["analyze_test_coverage"] = handlers.HandleAnalyzeTestCoverage
+	s.handlers["get_integration_tests"] = handlers.HandleGetIntegrationTests
+	
+	// =============================================================================
+	// TRANSACTION & DATA MANAGEMENT TOOLS
+	// =============================================================================
+	s.handlers["get_transaction_patterns"] = handlers.HandleGetTransactionPatterns
+	s.handlers["get_connection_pooling"] = handlers.HandleGetConnectionPooling
+	s.handlers["get_query_optimization"] = handlers.HandleGetQueryOptimization
+	s.handlers["analyze_deadlock_prevention"] = handlers.HandleAnalyzeDeadlockPrevention
+	s.handlers["get_migration_strategies"] = handlers.HandleGetMigrationStrategies
+	
+	// =============================================================================
+	// ERROR HANDLING & RESILIENCE TOOLS
+	// =============================================================================
+	s.handlers["get_error_patterns"] = handlers.HandleGetErrorPatterns
+	s.handlers["get_retry_mechanisms"] = handlers.HandleGetRetryMechanisms
+	s.handlers["get_circuit_breakers"] = handlers.HandleGetCircuitBreakers
+	s.handlers["get_timeout_strategies"] = handlers.HandleGetTimeoutStrategies
+	s.handlers["analyze_failure_modes"] = handlers.HandleAnalyzeFailureModes
+	
+	// =============================================================================
+	// ENHANCED SEARCH CAPABILITIES
+	// =============================================================================
+	s.handlers["search_by_campaign_type"] = handlers.HandleSearchByCampaignType
+	s.handlers["search_by_domain_pattern"] = handlers.HandleSearchByDomainPattern
+	s.handlers["search_performance_code"] = handlers.HandleSearchPerformanceCode
+	s.handlers["search_state_transitions"] = handlers.HandleSearchStateTransitions
+	s.handlers["search_error_handling"] = handlers.HandleSearchErrorHandling
 }
 
 // Run starts the MCP server and handles incoming requests
