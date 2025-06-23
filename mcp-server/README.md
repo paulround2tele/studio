@@ -10,6 +10,13 @@ A comprehensive Model Context Protocol (MCP) server that provides domain-specifi
 - **Bottleneck Detection**: Real-time analysis of campaign performance and optimization opportunities
 - **Data Flow Mapping**: Cross-phase data inheritance and transformation rules
 
+### 🏗️ Backend Architecture Intelligence (Source of Truth)
+- **Go Models Context**: Comprehensive understanding of backend data structures, enums, and business entities
+- **Service Layer Analysis**: Deep insights into business logic, orchestration, and service dependencies
+- **REST API Knowledge**: Complete mapping of endpoints, request/response patterns, and security models
+- **Database Schema Intelligence**: PostgreSQL schema understanding with relationships and performance optimization
+- **Architecture Patterns**: Layered architecture analysis with design patterns and scalability strategies
+
 ### 🎭 Persona & Stealth Intelligence
 - **Anti-Detection Strategies**: Comprehensive fingerprint randomization and behavioral simulation
 - **Stealth Validation**: HTTP validation with persona profiles and rotation strategies
@@ -67,6 +74,11 @@ The server provides contextual intelligence through these resource URIs:
 - `domainflow://contract-drift/detection` - Contract validation and drift monitoring
 - `domainflow://concurrency/optimization` - Performance and concurrency patterns
 - `domainflow://enum-contracts/validation` - Enum consistency management
+- `domainflow://backend/models` - Go backend models, enums, and data structures (source of truth)
+- `domainflow://backend/services` - Go backend service layer architecture and business logic
+- `domainflow://backend/api` - Go backend REST API endpoints and patterns
+- `domainflow://backend/database` - PostgreSQL database schema and relationships
+- `domainflow://backend/architecture` - Overall Go backend architecture and design patterns
 
 ### Available Tools
 
@@ -113,6 +125,35 @@ Performs telecom-specific lead scoring and qualification.
 - `batch_score` - Score multiple domains
 - `competitor_analysis` - Competitive positioning analysis
 - `market_positioning` - Market segment analysis
+
+#### Backend Context Analyzer
+Comprehensive analysis of Go backend architecture serving as the source of truth.
+
+```typescript
+{
+  "name": "backend_context_analyzer",
+  "arguments": {
+    "operation": "analyze_models",
+    "scope": "campaigns",
+    "includeExamples": true,
+    "format": "detailed"
+  }
+}
+```
+
+**Operations:**
+- `analyze_models` - Analyze Go models and enums
+- `analyze_services` - Analyze service layer architecture  
+- `analyze_api` - Analyze REST API endpoints and patterns
+- `analyze_database` - Analyze PostgreSQL database schema
+- `analyze_architecture` - Analyze overall backend architecture
+- `analyze_data_flow` - Analyze data flow patterns
+- `analyze_validation` - Analyze validation rules
+- `analyze_dependencies` - Analyze component dependencies
+- `analyze_performance` - Analyze performance characteristics
+- `analyze_security` - Analyze security implementation
+- `find_inconsistencies` - Find potential inconsistencies
+- `suggest_improvements` - Suggest architectural improvements
 
 #### Persona Configuration Manager
 Manages persona configurations and stealth strategies.

@@ -15,6 +15,13 @@ import { CampaignFlowContextProvider } from './resources/campaign-flow-context.j
 import { PersonaContextProvider } from './resources/persona-context.js';
 import { KeywordScoringContextProvider } from './resources/keyword-scoring-context.js';
 
+// Backend Context Resources
+import { BACKEND_MODELS_CONTEXT, BACKEND_DATA_FLOW_PATTERNS, BACKEND_VALIDATION_RULES } from './resources/backend-models-context.js';
+import { BACKEND_SERVICES_CONTEXT } from './resources/backend-services-context.js';
+import { BACKEND_API_CONTEXT } from './resources/backend-api-context.js';
+import { DATABASE_SCHEMA_CONTEXT } from './resources/database-schema-context.js';
+import { BACKEND_ARCHITECTURE_CONTEXT } from './resources/backend-architecture-context.js';
+
 // Tools
 import { CampaignFlowAnalyzer } from './tools/campaign-flow-analyzer.js';
 import { LeadScorer } from './tools/lead-scorer.js';
@@ -107,6 +114,36 @@ class DomainFlowMCPServer {
             description: 'Cross-layer enum consistency validation and management',
             mimeType: 'application/json',
           },
+          {
+            uri: 'domainflow://backend/models',
+            name: 'Backend Models Context',
+            description: 'Go backend models, enums, and data structures (source of truth)',
+            mimeType: 'application/json',
+          },
+          {
+            uri: 'domainflow://backend/services',
+            name: 'Backend Services Context',
+            description: 'Go backend service layer architecture and business logic',
+            mimeType: 'application/json',
+          },
+          {
+            uri: 'domainflow://backend/api',
+            name: 'Backend API Context',
+            description: 'Go backend REST API endpoints and patterns',
+            mimeType: 'application/json',
+          },
+          {
+            uri: 'domainflow://backend/database',
+            name: 'Database Schema Context',
+            description: 'PostgreSQL database schema and relationships',
+            mimeType: 'application/json',
+          },
+          {
+            uri: 'domainflow://backend/architecture',
+            name: 'Backend Architecture Context',
+            description: 'Overall Go backend architecture and design patterns',
+            mimeType: 'application/json',
+          },
         ],
       };
     });
@@ -127,6 +164,9 @@ class DomainFlowMCPServer {
         } else if (uri.startsWith('domainflow://keyword-scoring/')) {
           const contextType = uri.split('/').pop() || 'telecom';
           resourceResult = await this.keywordProvider.getContext({ contextType });
+        } else if (uri.startsWith('domainflow://backend/')) {
+          const contextType = uri.split('/').pop() || 'models';
+          resourceResult = this.getBackendContext(contextType);
         } else {
           throw new Error(`Resource not found: ${uri}`);
         }
@@ -266,6 +306,46 @@ class DomainFlowMCPServer {
               }
             },
           },
+          {
+            name: 'backend_context_analyzer',
+            description: 'Analyzes Go backend architecture, models, services, API, and database schema',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                operation: {
+                  type: 'string',
+                  enum: [
+                    'analyze_models', 'analyze_services', 'analyze_api', 'analyze_database',
+                    'analyze_architecture', 'analyze_data_flow', 'analyze_validation',
+                    'analyze_dependencies', 'analyze_performance', 'analyze_security',
+                    'find_inconsistencies', 'suggest_improvements'
+                  ],
+                  description: 'Type of backend analysis to perform'
+                },
+                scope: {
+                  type: 'string',
+                  description: 'Specific scope to analyze (e.g., campaigns, personas, authentication)'
+                },
+                includeExamples: {
+                  type: 'boolean',
+                  description: 'Include implementation examples in the analysis',
+                  default: false
+                },
+                includeMetrics: {
+                  type: 'boolean',
+                  description: 'Include performance metrics in the analysis',
+                  default: false
+                },
+                format: {
+                  type: 'string',
+                  enum: ['detailed', 'summary', 'checklist'],
+                  description: 'Format of the analysis output',
+                  default: 'detailed'
+                }
+              },
+              required: ['operation']
+            },
+          },
         ],
       };
     });
@@ -313,6 +393,9 @@ class DomainFlowMCPServer {
           case 'enum_consistency_validator':
             return await this.executeEnumValidator(args || {});
 
+          case 'backend_context_analyzer':
+            return await this.executeBackendContextAnalyzer(args || {});
+
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -331,6 +414,46 @@ class DomainFlowMCPServer {
   }
 
   // Tool execution methods for tools not yet fully implemented
+
+  private getBackendContext(contextType: string) {
+    let content: any;
+    let uri: string;
+    
+    switch (contextType) {
+      case 'models':
+        content = {
+          models: BACKEND_MODELS_CONTEXT,
+          dataFlow: BACKEND_DATA_FLOW_PATTERNS,
+          validation: BACKEND_VALIDATION_RULES
+        };
+        uri = 'domainflow://backend/models';
+        break;
+      case 'services':
+        content = BACKEND_SERVICES_CONTEXT;
+        uri = 'domainflow://backend/services';
+        break;
+      case 'api':
+        content = BACKEND_API_CONTEXT;
+        uri = 'domainflow://backend/api';
+        break;
+      case 'database':
+        content = DATABASE_SCHEMA_CONTEXT;
+        uri = 'domainflow://backend/database';
+        break;
+      case 'architecture':
+        content = BACKEND_ARCHITECTURE_CONTEXT;
+        uri = 'domainflow://backend/architecture';
+        break;
+      default:
+        throw new Error(`Unknown backend context type: ${contextType}`);
+    }
+
+    return {
+      uri,
+      mimeType: 'application/json',
+      content: JSON.stringify(content, null, 2)
+    };
+  }
 
   private async executePersonaManager(args: Record<string, any>) {
     const { operation, personaId, stealthLevel } = args;
@@ -514,6 +637,42 @@ class DomainFlowMCPServer {
         },
       ],
     };
+  }
+
+  private async executeBackendContextAnalyzer(args: Record<string, any>) {
+    const { operation, scope = 'all', includeExamples = false, includeMetrics = false, format = 'detailed' } = args;
+
+    try {
+      // Import the execution function
+      const { executeBackendContextAnalyzer } = await import('./tools/backend-context-analyzer.js');
+      
+      const result = await executeBackendContextAnalyzer({
+        operation,
+        scope,
+        includeExamples,
+        includeMetrics,
+        format
+      });
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Backend context analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          },
+        ],
+        isError: true,
+      };
+    }
   }
 
   async run(): Promise<void> {
