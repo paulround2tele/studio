@@ -47,6 +47,8 @@ type mockDomainGenerationService struct {
 	failProcessingCountLock sync.Mutex
 	failProcessingError     error
 	processDelay            time.Duration
+	failForCampaigns        map[uuid.UUID]bool // Only fail for specific campaigns
+	failCampaignsLock       sync.RWMutex
 }
 
 // newMockDomainGenerationService creates a new mock service that wraps a real service
@@ -54,7 +56,18 @@ func newMockDomainGenerationService(realService services.DomainGenerationService
 	return &mockDomainGenerationService{
 		DomainGenerationService: realService,
 		failProcessingError:     errors.New("simulated processing failure"),
+		failForCampaigns:        make(map[uuid.UUID]bool),
 	}
+}
+
+// SetFailProcessingCountForCampaign configures the mock to fail the first N calls for a specific campaign
+func (m *mockDomainGenerationService) SetFailProcessingCountForCampaign(campaignID uuid.UUID, count int) {
+	m.failProcessingCountLock.Lock()
+	defer m.failProcessingCountLock.Unlock()
+	m.failCampaignsLock.Lock()
+	defer m.failCampaignsLock.Unlock()
+	m.failProcessingCount = count
+	m.failForCampaigns[campaignID] = true
 }
 
 // SetFailProcessingCount configures the mock to fail the first N calls to ProcessGenerationCampaignBatch
@@ -81,13 +94,20 @@ func (m *mockDomainGenerationService) ProcessGenerationCampaignBatch(ctx context
 		}
 	}
 
-	// Check if we should fail this call
-	m.failProcessingCountLock.Lock()
-	shouldFail := m.failProcessingCount > 0
-	if shouldFail {
-		m.failProcessingCount--
+	// Check if we should fail this call for this specific campaign
+	m.failCampaignsLock.RLock()
+	shouldCheckFailure := m.failForCampaigns[campaignID]
+	m.failCampaignsLock.RUnlock()
+
+	var shouldFail bool
+	if shouldCheckFailure {
+		m.failProcessingCountLock.Lock()
+		shouldFail = m.failProcessingCount > 0
+		if shouldFail {
+			m.failProcessingCount--
+		}
+		m.failProcessingCountLock.Unlock()
 	}
-	m.failProcessingCountLock.Unlock()
 
 	if shouldFail {
 		return false, 0, m.failProcessingError
@@ -98,7 +118,7 @@ func (m *mockDomainGenerationService) ProcessGenerationCampaignBatch(ctx context
 }
 
 type CampaignWorkerServiceTestSuite struct {
-	ServiceTestSuite // This line was already correct, CampaignServiceTestSuite is in the services package.
+	ServiceTestSuite    // This line was already correct, CampaignServiceTestSuite is in the services package.
 	dgService           services.DomainGenerationService
 	dnsService          services.DNSCampaignService
 	httpService         services.HTTPKeywordCampaignService
@@ -106,7 +126,8 @@ type CampaignWorkerServiceTestSuite struct {
 }
 
 func (s *CampaignWorkerServiceTestSuite) SetupTest() {
-	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	configManager := services.NewConfigManager(s.DB)
+	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore, configManager)
 	s.dnsService = services.NewDNSCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.AuditLogStore, s.CampaignJobStore, s.AppConfig)
 	s.httpService = services.NewHTTPKeywordCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.ProxyStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, nil, nil, nil, s.AppConfig)
 	s.orchestratorService = services.NewCampaignOrchestratorService(s.DB, s.CampaignStore, s.PersonaStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, s.dgService, s.dnsService, s.httpService)
@@ -121,7 +142,7 @@ func (s *CampaignWorkerServiceTestSuite) TestSuccessfulDomainGenerationJobProces
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	testWorkerID := "test-worker-001"
-	workerService := services.NewCampaignWorkerService(s.CampaignJobStore, s.dgService, s.dnsService, s.httpService, s.orchestratorService, testWorkerID, s.AppConfig)
+	workerService := services.NewCampaignWorkerService(s.CampaignJobStore, s.dgService, s.dnsService, s.httpService, s.orchestratorService, testWorkerID, s.AppConfig, s.DB)
 
 	numDomains := int64(2)
 	userID := uuid.New()
@@ -224,7 +245,6 @@ func (s *CampaignWorkerServiceTestSuite) TestJobProcessingFailure() {
 	testWorkerID := "test-worker-001"
 
 	mockDGService := newMockDomainGenerationService(s.dgService)
-	mockDGService.SetFailProcessingCount(3)
 
 	mockWorkerService := services.NewCampaignWorkerService(
 		s.CampaignJobStore,
@@ -234,6 +254,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobProcessingFailure() {
 		s.orchestratorService,
 		testWorkerID+"-fail",
 		s.AppConfig,
+		s.DB,
 	)
 
 	userID := uuid.New()
@@ -251,6 +272,9 @@ func (s *CampaignWorkerServiceTestSuite) TestJobProcessingFailure() {
 	campaign, err := s.dgService.CreateCampaign(ctx, genReq)
 	require.NoError(t, err)
 	require.NotNil(t, campaign)
+
+	// Configure the mock to fail 3 times for this specific campaign
+	mockDGService.SetFailProcessingCountForCampaign(campaign.ID, 3)
 
 	jobs, err := s.CampaignJobStore.ListJobs(ctx, store.ListJobsFilter{CampaignID: uuid.NullUUID{UUID: campaign.ID, Valid: true}, Limit: 1})
 	require.NoError(t, err)
@@ -305,7 +329,6 @@ func (s *CampaignWorkerServiceTestSuite) TestRetryThenSuccess() {
 	testWorkerID := "test-worker-001"
 
 	mockDGService := newMockDomainGenerationService(s.dgService)
-	mockDGService.SetFailProcessingCount(1)
 
 	mockWorkerService := services.NewCampaignWorkerService(
 		s.CampaignJobStore,
@@ -315,6 +338,7 @@ func (s *CampaignWorkerServiceTestSuite) TestRetryThenSuccess() {
 		s.orchestratorService,
 		testWorkerID+"-retry",
 		s.AppConfig,
+		s.DB,
 	)
 
 	userID := uuid.New()
@@ -332,6 +356,9 @@ func (s *CampaignWorkerServiceTestSuite) TestRetryThenSuccess() {
 	campaign, err := s.dgService.CreateCampaign(ctx, genReq)
 	require.NoError(t, err)
 	require.NotNil(t, campaign)
+
+	// Configure the mock to fail 1 time for this specific campaign
+	mockDGService.SetFailProcessingCountForCampaign(campaign.ID, 1)
 
 	jobs, err := s.CampaignJobStore.ListJobs(ctx, store.ListJobsFilter{CampaignID: uuid.NullUUID{UUID: campaign.ID, Valid: true}, Limit: 1})
 	require.NoError(t, err)
@@ -396,6 +423,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobCancellation() {
 		s.orchestratorService,
 		testWorkerID+"-cancel",
 		s.AppConfig,
+		s.DB,
 	)
 
 	userID := uuid.New()
@@ -433,13 +461,13 @@ func (s *CampaignWorkerServiceTestSuite) TestJobCancellation() {
 	for i := 0; i < 10; i++ {
 		processingJob, err = s.CampaignJobStore.GetJobByID(ctx, initialJob.ID)
 		require.NoError(t, err)
-		if processingJob != nil && processingJob.Status == models.JobStatusProcessing {
-			t.Logf("Job %s is now processing (iteration %d)", initialJob.ID, i+1)
+		if processingJob != nil && processingJob.Status == models.JobStatusRunning {
+			t.Logf("Job %s is now running (iteration %d)", initialJob.ID, i+1)
 			break
 		}
 		time.Sleep(300 * time.Millisecond)
 	}
-	assert.Equal(t, models.JobStatusProcessing, processingJob.Status, "Job should be in processing state before cancellation")
+	assert.Equal(t, models.JobStatusRunning, processingJob.Status, "Job should be in running state before cancellation")
 
 	workerCancelFunc()
 	workerWg.Wait()
@@ -449,7 +477,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobCancellation() {
 	require.NotNil(t, cancelledJob)
 	assert.NotEqual(t, models.JobStatusCompleted, cancelledJob.Status, "Job should NOT be marked as completed after cancellation")
 	assert.NotEqual(t, models.JobStatusFailed, cancelledJob.Status, "Job should NOT be marked as failed after cancellation")
-	assert.Contains(t, []models.CampaignJobStatusEnum{models.JobStatusProcessing, models.JobStatusQueued, models.JobStatusRetry}, cancelledJob.Status, "Job should be in a recoverable state after cancellation")
+	assert.Contains(t, []models.CampaignJobStatusEnum{models.JobStatusRunning, models.JobStatusQueued, models.JobStatusPending}, cancelledJob.Status, "Job should be in a recoverable state after cancellation")
 }
 
 func (s *CampaignWorkerServiceTestSuite) TestJobStuckInProcessing() {
@@ -468,6 +496,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobStuckInProcessing() {
 		s.orchestratorService,
 		testWorkerID+"-dbfail",
 		s.AppConfig,
+		s.DB,
 	)
 
 	userID := uuid.New()
@@ -508,7 +537,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobStuckInProcessing() {
 		require.NoError(t, err)
 		if stuckJob != nil {
 			observedStatuses = append(observedStatuses, stuckJob.Status)
-			if stuckJob.Status == models.JobStatusCompleted || stuckJob.Status == models.JobStatusFailed || stuckJob.Status == models.JobStatusRetry {
+			if stuckJob.Status == models.JobStatusCompleted || stuckJob.Status == models.JobStatusFailed || stuckJob.Status == models.JobStatusQueued {
 				break
 			}
 		}
@@ -518,7 +547,7 @@ func (s *CampaignWorkerServiceTestSuite) TestJobStuckInProcessing() {
 	workerCancelFunc()
 	workerWg.Wait()
 
-	assert.NotEqual(t, models.JobStatusProcessing, stuckJob.Status, "Job should not remain stuck in processing state after DB/network error")
-	assert.Contains(t, []models.CampaignJobStatusEnum{models.JobStatusRetry, models.JobStatusFailed, models.JobStatusCompleted}, stuckJob.Status, "Job should eventually transition out of processing state")
+	assert.NotEqual(t, models.JobStatusRunning, stuckJob.Status, "Job should not remain stuck in running state after DB/network error")
+	assert.Contains(t, []models.CampaignJobStatusEnum{models.JobStatusQueued, models.JobStatusFailed, models.JobStatusCompleted}, stuckJob.Status, "Job should eventually transition out of running state")
 	t.Logf("Observed job status transitions: %v", observedStatuses)
 }

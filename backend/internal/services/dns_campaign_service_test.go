@@ -32,7 +32,7 @@ func TestDNSCampaignService(t *testing.T) {
 
 // Helper function to create a dummy DomainGeneration campaign for source
 func (s *DNSCampaignServiceTestSuite) createTestSourceDomainGenerationCampaign(ctx context.Context, name string, numDomains int) *models.Campaign {
-	dgService := services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	dgService := services.NewDomainGenerationServiceStable(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
 	campaign, _ := testutil.CreateTestDomainGenerationCampaignAndJob(s.T(), ctx, dgService, s.CampaignJobStore, name, int64(numDomains))
 	return campaign
 }

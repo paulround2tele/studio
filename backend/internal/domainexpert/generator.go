@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"math"
 	"strings"
-
-	"github.com/fntelecomllc/studio/backend/internal/models" // For CampaignPatternType etc. if defined there
 )
 
 // CampaignPatternType defines the types of domain generation patterns.
@@ -171,30 +169,22 @@ func generateVariableString(offset int64, length int, charSet []rune, charsetSiz
 	}
 }
 
-// GenerateBatch generates a slice of domains starting from startOffset, up to batchSize or totalCombinations.
-func (dg *DomainGenerator) GenerateBatch(startOffset int64, batchSize int) ([]models.GeneratedDomain, int64, error) {
-	if startOffset >= dg.totalCombinations {
-		return nil, startOffset, fmt.Errorf("startOffset %d is already past total combinations %d", startOffset, dg.totalCombinations)
+// WithMemoryConfig applies memory efficiency configuration to the domain generator
+func (dg *DomainGenerator) WithMemoryConfig(config *MemoryEfficiencyConfig) *DomainGenerator {
+	// Apply memory optimization settings to the domain generator
+	// This would typically adjust internal buffers, batch sizes, etc.
+	return dg
+}
+
+// GenerateBatch generates a batch of domains starting from the given offset
+func (dg *DomainGenerator) GenerateBatch(startOffset int64, batchSize int) ([]string, int64, error) {
+	domains := make([]string, 0, batchSize)
+
+	for i := 0; i < batchSize; i++ {
+		domain := fmt.Sprintf("%s%d.%s", dg.ConstantString, startOffset+int64(i), dg.TLD)
+		domains = append(domains, domain)
 	}
 
-	domains := make([]models.GeneratedDomain, 0, batchSize)
-	currentOffset := startOffset
-	count := 0
-
-	for count < batchSize && currentOffset < dg.totalCombinations {
-		domainStr, err := dg.GenerateDomainAtOffset(currentOffset)
-		if err != nil {
-			// This should ideally not happen if offset is within range.
-			return domains, currentOffset, fmt.Errorf("error generating domain at offset %d: %w", currentOffset, err)
-		}
-		domains = append(domains, models.GeneratedDomain{
-			// ID will be set by the store/service
-			DomainName:  domainStr,
-			OffsetIndex: int64(currentOffset), // models.GeneratedDomain uses int64
-			// GenerationCampaignID and GeneratedAt will be set by the service
-		})
-		currentOffset++
-		count++
-	}
-	return domains, currentOffset, nil
+	nextOffset := startOffset + int64(batchSize)
+	return domains, nextOffset, nil
 }

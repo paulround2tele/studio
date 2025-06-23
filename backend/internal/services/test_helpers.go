@@ -45,6 +45,13 @@ func (s *CampaignServiceTestSuite) SetupSuite() {
 
 	db, err := sqlx.Connect("postgres", dsn)
 	require.NoError(s.T(), err, "Failed to connect to test database")
+
+	// Configure connection pool for Phase 2c performance testing
+	db.SetMaxOpenConns(50) // SI-004 optimization
+	db.SetMaxIdleConns(10)
+	db.SetConnMaxLifetime(30 * time.Minute)
+	db.SetConnMaxIdleTime(5 * time.Minute)
+
 	s.DB = db
 
 	// Clean test data by truncating tables (preserving schema and data structure)

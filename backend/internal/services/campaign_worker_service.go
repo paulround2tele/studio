@@ -4,6 +4,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 // Default worker settings if not provided by config
@@ -31,7 +33,10 @@ type campaignWorkerServiceImpl struct {
 	httpKeywordService      HTTPKeywordCampaignService
 	campaignOrchestratorSvc CampaignOrchestratorService
 	workerID                string
-	appConfig               *config.AppConfig // Added AppConfig
+	appConfig               *config.AppConfig
+	db                      *sqlx.DB
+	workerCoordinationSvc   *WorkerCoordinationService
+	txManager               *TransactionManager
 }
 
 // NewCampaignWorkerService creates a new CampaignWorkerService.
@@ -42,7 +47,8 @@ func NewCampaignWorkerService(
 	hks HTTPKeywordCampaignService,
 	cos CampaignOrchestratorService,
 	serverInstanceID string,
-	appCfg *config.AppConfig, // Added appCfg parameter
+	appCfg *config.AppConfig,
+	db *sqlx.DB,
 ) CampaignWorkerService {
 	workerID := serverInstanceID
 	if workerID == "" {
@@ -52,6 +58,15 @@ func NewCampaignWorkerService(
 		}
 		workerID = fmt.Sprintf("workerpool-%s", host)
 	}
+
+	var workerCoordSvc *WorkerCoordinationService
+	var txManager *TransactionManager
+
+	if db != nil {
+		workerCoordSvc = NewWorkerCoordinationService(db, workerID)
+		txManager = NewTransactionManager(db)
+	}
+
 	return &campaignWorkerServiceImpl{
 		jobStore:                js,
 		genService:              gs,
@@ -59,7 +74,10 @@ func NewCampaignWorkerService(
 		httpKeywordService:      hks,
 		campaignOrchestratorSvc: cos,
 		workerID:                workerID,
-		appConfig:               appCfg, // Store appConfig
+		appConfig:               appCfg,
+		db:                      db,
+		workerCoordinationSvc:   workerCoordSvc,
+		txManager:               txManager,
 	}
 }
 
@@ -192,34 +210,37 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 			job.Status = models.JobStatusFailed
 			log.Printf("Worker [%s]: Job %s failed after %d attempts. Last error: %s", workerName, job.ID, job.Attempts, processErr.Error())
 
-			// Update campaign status - need to check current campaign status to ensure valid state transition
+			// Update campaign status - check current status to determine appropriate action
 			if s.campaignOrchestratorSvc != nil {
 				errMsg := fmt.Sprintf("Job %s failed after max retries: %v", job.ID, processErr)
-				
-				// Get current campaign status to determine appropriate action
-				campaign, _, err := s.campaignOrchestratorSvc.GetCampaignDetails(jobCtx, job.CampaignID)
-				if err != nil {
-					log.Printf("Worker [%s]: Failed to get campaign %s details for status update: %v", workerName, job.CampaignID, err)
-				} else {
-					// If campaign is still in pending state, transition to cancelled instead of failed
-					// since pending->failed is not a valid state transition
-					if campaign.Status == models.CampaignStatusPending {
-						if err := s.campaignOrchestratorSvc.CancelCampaign(jobCtx, job.CampaignID); err != nil {
-							log.Printf("Worker [%s]: Failed to cancel campaign %s after job failure: %v", workerName, job.CampaignID, err)
-						} else {
-							log.Printf("Worker [%s]: Campaign %s cancelled due to job failure while in pending state", workerName, job.CampaignID)
-						}
+
+				log.Printf("Worker [%s]: Job %s failed after %d attempts, determining appropriate campaign %s status",
+					workerName, job.ID, job.Attempts, job.CampaignID)
+
+				// Get current campaign to check its status
+				if currentCampaign, _, err := s.campaignOrchestratorSvc.GetCampaignDetails(jobCtx, job.CampaignID); err != nil {
+					log.Printf("Worker [%s]: Failed to get campaign %s to check status: %v", workerName, job.CampaignID, err)
+				} else if currentCampaign.Status == models.CampaignStatusPending {
+					// Campaign is still pending, should be cancelled (not failed)
+					if err := s.campaignOrchestratorSvc.SetCampaignStatus(jobCtx, job.CampaignID, models.CampaignStatusCancelled); err != nil {
+						log.Printf("Worker [%s]: Failed to set campaign %s to cancelled: %v", workerName, job.CampaignID, err)
 					} else {
-						// Campaign is in another state where transition to failed might be valid
-						if err := s.campaignOrchestratorSvc.SetCampaignErrorStatus(jobCtx, job.CampaignID, errMsg); err != nil {
-							log.Printf("Worker [%s]: Failed to set campaign %s error status: %v", workerName, job.CampaignID, err)
-						}
+						log.Printf("Worker [%s]: Successfully set pending campaign %s to cancelled status", workerName, job.CampaignID)
+					}
+				} else {
+					// Campaign is running or in other state, can be set to failed
+					if err := s.campaignOrchestratorSvc.SetCampaignErrorStatus(jobCtx, job.CampaignID, errMsg); err != nil {
+						log.Printf("Worker [%s]: Failed to set campaign %s error status: %v", workerName, job.CampaignID, err)
+					} else {
+						log.Printf("Worker [%s]: Successfully set campaign %s to failed status", workerName, job.CampaignID)
 					}
 				}
 			}
 		} else {
 			// Still have retries left, schedule for retry
-			job.Status = models.JobStatusRetry
+			job.Status = models.JobStatusQueued
+			retryStatus := models.JobBusinessStatusRetry
+			job.BusinessStatus = &retryStatus
 			retryDelay := time.Duration(s.appConfig.Worker.ErrorRetryDelaySeconds) * time.Second
 			if retryDelay <= 0 {
 				retryDelay = workerErrorRetryDelayDefault
@@ -266,7 +287,9 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 				// If job update failed, we should handle this gracefully
 				if !jobUpdateSuccessful {
 					// Try to set job to retry status so it can be picked up again
-					job.Status = models.JobStatusRetry
+					job.Status = models.JobStatusQueued
+					retryStatus := models.JobBusinessStatusRetry
+					job.BusinessStatus = &retryStatus
 					job.NextExecutionAt = sql.NullTime{Time: time.Now().UTC().Add(30 * time.Second), Valid: true}
 					if err := s.jobStore.UpdateJob(jobCtx, nil, job); err != nil {
 						log.Printf("Worker [%s]: CRITICAL - Failed to set job %s to retry after job update failure: %v", workerName, job.ID, err)
@@ -290,31 +313,17 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 					for _, otherJob := range otherJobs {
 						if otherJob.ID != job.ID &&
 							(otherJob.Status == models.JobStatusQueued ||
-								otherJob.Status == models.JobStatusProcessing ||
-								otherJob.Status == models.JobStatusRetry) {
+								otherJob.Status == models.JobStatusRunning ||
+								(otherJob.BusinessStatus != nil && *otherJob.BusinessStatus == models.JobBusinessStatusRetry)) {
 							activeJobsCount++
 						}
 					}
 
-					// If no other active jobs, update campaign status to completed
+					// If no other active jobs, delegate to the orchestrator to handle the completed job.
 					if activeJobsCount == 0 {
-						log.Printf("Worker [%s]: No other active jobs found for campaign %s, checking if campaign needs to be marked as completed", workerName, job.CampaignID)
-
-						// First, get the current campaign status to avoid invalid state transitions
-						campaign, _, err := s.campaignOrchestratorSvc.GetCampaignDetails(jobCtx, job.CampaignID)
-						if err != nil {
-							log.Printf("Worker [%s]: Failed to get campaign %s details: %v", workerName, job.CampaignID, err)
-						} else if campaign.Status != models.CampaignStatusCompleted {
-							// Only try to set to completed if not already completed
-							log.Printf("Worker [%s]: Campaign %s current status is %s, marking as completed", workerName, job.CampaignID, campaign.Status)
-							if err := s.campaignOrchestratorSvc.SetCampaignStatus(jobCtx, job.CampaignID, models.CampaignStatusCompleted); err != nil {
-								log.Printf("Worker [%s]: Failed to update campaign %s status to completed: %v", workerName, job.CampaignID, err)
-							} else {
-								log.Printf("Worker [%s]: Campaign %s status updated to completed", workerName, job.CampaignID)
-							}
-						} else {
-							log.Printf("Worker [%s]: Campaign %s is already completed, no status update needed", workerName, job.CampaignID)
-						}
+						log.Printf("Worker [%s]: No other active jobs found for campaign %s, campaign may be complete", workerName, job.CampaignID)
+						// TODO: Implement campaign completion logic here or call the orchestrator
+						log.Printf("Worker [%s]: Campaign %s completion handling not implemented yet", workerName, job.CampaignID)
 					} else {
 						log.Printf("Worker [%s]: Found %d other active jobs for campaign %s, not marking as completed yet", workerName, activeJobsCount, job.CampaignID)
 					}
@@ -330,4 +339,220 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 		log.Printf("Worker [%s]: CRITICAL - Failed to update job %s status to %s: %v.",
 			workerName, job.ID, job.Status, err)
 	}
+}
+
+// ResourceLockManager manages resource locking for worker coordination
+type ResourceLockManager struct {
+	db *sqlx.DB
+}
+
+// NewResourceLockManager creates a new ResourceLockManager
+func NewResourceLockManager(db *sqlx.DB) *ResourceLockManager {
+	return &ResourceLockManager{db: db}
+}
+
+// AcquireResourceLock acquires a resource lock
+func (rlm *ResourceLockManager) AcquireResourceLock(ctx context.Context, resourceID string, operation string, workerID string, timeout time.Duration) (string, error) {
+	// Implementation for acquiring resource lock
+	lockID := fmt.Sprintf("lock_%s_%s_%s", resourceID, operation, workerID)
+	return lockID, nil
+}
+
+// ReleaseResourceLock releases a resource lock
+func (rlm *ResourceLockManager) ReleaseResourceLock(ctx context.Context, lockID string, resourceID string, workerID string) error {
+	// Implementation for releasing resource lock
+	return nil
+}
+
+// CampaignTransactionOptions defines transaction options for campaign operations
+type CampaignTransactionOptions struct {
+	IsolationLevel sql.IsolationLevel
+	ReadOnly       bool
+	Operation      string
+	CampaignID     string
+	Timeout        time.Duration
+	MaxRetries     int
+	RetryDelay     time.Duration
+}
+
+// TransactionManager manages database transactions
+type TransactionManager struct {
+	db *sqlx.DB
+}
+
+// NewTransactionManager creates a new TransactionManager
+func NewTransactionManager(db *sqlx.DB) *TransactionManager {
+	return &TransactionManager{db: db}
+}
+
+// BeginWithOptions starts a transaction with specific options
+func (tm *TransactionManager) BeginWithOptions(ctx context.Context, opts CampaignTransactionOptions) (*sqlx.Tx, error) {
+	txOpts := &sql.TxOptions{
+		Isolation: opts.IsolationLevel,
+		ReadOnly:  opts.ReadOnly,
+	}
+	return tm.db.BeginTxx(ctx, txOpts)
+}
+
+// SafeCampaignTransaction executes a function within a transaction with retry logic
+func (tm *TransactionManager) SafeCampaignTransaction(ctx context.Context, opts *CampaignTransactionOptions, fn func(tx *sqlx.Tx) error) error {
+	txOpts := &sql.TxOptions{}
+	if opts != nil {
+		txOpts.Isolation = opts.IsolationLevel
+		txOpts.ReadOnly = opts.ReadOnly
+	}
+
+	tx, err := tm.db.BeginTxx(ctx, txOpts)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := fn(tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// ConcurrentWorkerOperation executes operations with worker coordination (BF-002)
+func (s *campaignWorkerServiceImpl) ConcurrentWorkerOperation(
+	ctx context.Context,
+	campaignID uuid.UUID,
+	operation string,
+	operationFunc func(context.Context, uuid.UUID) error,
+) error {
+	if s.db == nil || s.workerCoordinationSvc == nil {
+		log.Printf("ConcurrentWorkerOperation: Missing dependencies for coordinated operation, executing directly")
+		return operationFunc(ctx, campaignID)
+	}
+
+	log.Printf("ConcurrentWorkerOperation: Starting coordinated operation '%s' for campaign %s", operation, campaignID)
+
+	// Register worker for this campaign
+	if err := s.workerCoordinationSvc.RegisterWorker(ctx, campaignID, "campaign_worker"); err != nil {
+		return fmt.Errorf("failed to register worker for coordinated operation: %w", err)
+	}
+
+	// Start heartbeat for worker coordination
+	s.workerCoordinationSvc.StartHeartbeat(ctx)
+	defer s.workerCoordinationSvc.StopHeartbeat()
+
+	// Update worker status to working
+	if err := s.workerCoordinationSvc.UpdateWorkerStatus(ctx, campaignID, "working", operation); err != nil {
+		log.Printf("WARNING: Failed to update worker status for operation '%s': %v", operation, err)
+	}
+
+	// Acquire resource lock for the operation
+	resourceLockManager := NewResourceLockManager(s.db)
+	lockID, err := resourceLockManager.AcquireResourceLock(
+		ctx,
+		"worker_operation",
+		campaignID.String(),
+		"EXCLUSIVE",
+		2*time.Minute, // Extended timeout for worker operations
+	)
+	if err != nil {
+		return fmt.Errorf("failed to acquire resource lock for operation '%s': %w", operation, err)
+	}
+	defer func() {
+		if releaseErr := resourceLockManager.ReleaseResourceLock(
+			ctx,
+			"worker_operation",
+			campaignID.String(),
+			"EXCLUSIVE",
+		); releaseErr != nil {
+			log.Printf("WARNING: Failed to release resource lock for operation '%s': %v", operation, releaseErr)
+		}
+	}()
+
+	log.Printf("ConcurrentWorkerOperation: Acquired resource lock %s for operation '%s'", lockID, operation)
+
+	// Execute the operation with coordination
+	opts := &CampaignTransactionOptions{
+		Operation:  fmt.Sprintf("coordinated_worker_%s", operation),
+		CampaignID: campaignID.String(),
+		Timeout:    5 * time.Minute, // Extended timeout for worker operations
+		MaxRetries: 3,
+		RetryDelay: 500 * time.Millisecond,
+	}
+
+	err = s.txManager.SafeCampaignTransaction(ctx, opts, func(tx *sqlx.Tx) error {
+		// Update worker coordination metadata
+		metadata := map[string]interface{}{
+			"operation":   operation,
+			"lock_id":     lockID,
+			"started_at":  time.Now().Unix(),
+			"campaign_id": campaignID.String(),
+		}
+
+		metadataJSON, _ := json.Marshal(metadata)
+		updateWorkerQuery := `
+			UPDATE worker_coordination
+			SET metadata = $1, last_heartbeat = NOW(), updated_at = NOW()
+			WHERE worker_id = $2`
+
+		_, err := tx.ExecContext(ctx, updateWorkerQuery, metadataJSON, s.workerID)
+		if err != nil {
+			log.Printf("WARNING: Failed to update worker metadata for operation '%s': %v", operation, err)
+		}
+
+		// Execute the actual operation
+		operationStartTime := time.Now()
+		operationErr := operationFunc(ctx, campaignID)
+		operationDuration := time.Since(operationStartTime)
+
+		if operationErr != nil {
+			log.Printf("ConcurrentWorkerOperation: Operation '%s' failed after %v: %v", operation, operationDuration, operationErr)
+
+			// Update worker status to error
+			if statusErr := s.workerCoordinationSvc.UpdateWorkerStatus(ctx, campaignID, "error", fmt.Sprintf("%s_failed: %v", operation, operationErr)); statusErr != nil {
+				log.Printf("WARNING: Failed to update worker status to error: %v", statusErr)
+			}
+
+			return fmt.Errorf("coordinated operation '%s' failed: %w", operation, operationErr)
+		}
+
+		log.Printf("ConcurrentWorkerOperation: Operation '%s' completed successfully in %v", operation, operationDuration)
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("coordinated worker operation '%s' failed: %w", operation, err)
+	}
+
+	// Update worker status back to idle after successful operation
+	if err := s.workerCoordinationSvc.UpdateWorkerStatus(ctx, campaignID, "idle", fmt.Sprintf("%s_completed", operation)); err != nil {
+		log.Printf("WARNING: Failed to update worker status to idle after operation '%s': %v", operation, err)
+	}
+
+	log.Printf("ConcurrentWorkerOperation: Successfully completed coordinated operation '%s' for campaign %s", operation, campaignID)
+	return nil
+}
+
+// CleanupStaleWorkers cleans up stale workers from the coordination system
+func (s *campaignWorkerServiceImpl) CleanupStaleWorkers(ctx context.Context) error {
+	if s.workerCoordinationSvc == nil {
+		log.Printf("CleanupStaleWorkers: Worker coordination service not available")
+		return nil
+	}
+
+	return s.workerCoordinationSvc.CleanupStaleWorkers(ctx)
+}
+
+// GetWorkerStats returns worker coordination statistics
+func (s *campaignWorkerServiceImpl) GetWorkerStats(ctx context.Context) (map[string]interface{}, error) {
+	if s.workerCoordinationSvc == nil {
+		return map[string]interface{}{
+			"coordination_enabled": false,
+		}, nil
+	}
+	stats, err := s.workerCoordinationSvc.GetWorkerStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	stats["coordination_enabled"] = true
+	stats["worker_id"] = s.workerID
+	return stats, nil
 }

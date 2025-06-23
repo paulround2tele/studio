@@ -19,10 +19,10 @@ type CampaignOrchestratorUnifiedTestSuite struct {
 }
 
 func (s *CampaignOrchestratorUnifiedTestSuite) SetupTest() {
-	dgService := services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	dgService := services.NewDomainGenerationServiceStable(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
 	dnsService := services.NewDNSCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.AuditLogStore, s.CampaignJobStore, s.AppConfig)
 	httpKeywordService := services.NewHTTPKeywordCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.ProxyStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, nil, nil, nil, s.AppConfig)
-	
+
 	s.orchestrator = services.NewCampaignOrchestratorService(
 		s.DB,
 		s.CampaignStore,

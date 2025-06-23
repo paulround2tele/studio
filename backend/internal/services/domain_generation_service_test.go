@@ -22,7 +22,7 @@ type DomainGenerationServiceTestSuite struct {
 }
 
 func (s *DomainGenerationServiceTestSuite) SetupTest() {
-	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	s.dgService = services.NewDomainGenerationServiceStable(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
 }
 
 func TestDomainGenerationService(t *testing.T) {

@@ -44,7 +44,7 @@ func (s *HTTPKeywordCampaignServiceTestSuite) SetupTest() {
 	kwordScannerSvc := keywordscanner.NewService(s.KeywordStore)
 	proxyMgr := proxymanager.NewProxyManager(s.AppConfig.Proxies, 30*time.Second)
 
-	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
+	s.dgService = services.NewDomainGenerationServiceStable(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
 	s.dnsService = services.NewDNSCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.AuditLogStore, s.CampaignJobStore, s.AppConfig)
 	s.httpService = services.NewHTTPKeywordCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.ProxyStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, httpValSvc, kwordScannerSvc, proxyMgr, s.AppConfig)
 }
@@ -86,13 +86,15 @@ func (s *HTTPKeywordCampaignServiceTestSuite) TestCreateCampaign() {
 	// Create mock DNS validation results first
 	nowForLastCheckedAt132 := time.Now()
 	mockResolvedDomain1 := &models.DNSValidationResult{
-		ID: uuid.New(), DNSCampaignID: dnsCampaign.ID, DomainName: "resolved1.com", ValidationStatus: "valid_dns",
-		DNSRecords: models.JSONRawMessagePtr(json.RawMessage(`{"ips":["1.2.3.4"]}`)), LastCheckedAt: &nowForLastCheckedAt132,
+		ID: uuid.New(), DNSCampaignID: dnsCampaign.ID, DomainName: "resolved1.com", ValidationStatus: "resolved",
+		BusinessStatus: models.StringPtr("valid_dns"),
+		DNSRecords:     models.JSONRawMessagePtr(json.RawMessage(`{"ips":["1.2.3.4"]}`)), LastCheckedAt: &nowForLastCheckedAt132,
 	}
 	nowForLastCheckedAt136 := time.Now()
 	mockResolvedDomain2 := &models.DNSValidationResult{
-		ID: uuid.New(), DNSCampaignID: dnsCampaign.ID, DomainName: "resolved2.com", ValidationStatus: "valid_dns",
-		DNSRecords: models.JSONRawMessagePtr(json.RawMessage(`{"ips":["1.2.3.5"]}`)), LastCheckedAt: &nowForLastCheckedAt136,
+		ID: uuid.New(), DNSCampaignID: dnsCampaign.ID, DomainName: "resolved2.com", ValidationStatus: "resolved",
+		BusinessStatus: models.StringPtr("valid_dns"),
+		DNSRecords:     models.JSONRawMessagePtr(json.RawMessage(`{"ips":["1.2.3.5"]}`)), LastCheckedAt: &nowForLastCheckedAt136,
 	}
 	require.NoError(t, s.CampaignStore.CreateDNSValidationResults(ctx, s.DB, []*models.DNSValidationResult{mockResolvedDomain1, mockResolvedDomain2}))
 

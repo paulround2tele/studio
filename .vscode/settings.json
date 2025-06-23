@@ -15,5 +15,23 @@
         "**/node_modules": false
     },
     "npm.exclude": "",
-    "IDX.aI.enableCodebaseIndexing": true
+    "IDX.aI.enableCodebaseIndexing": true,
+    "mcp.servers": {
+        "studio-backend-context": {
+            "enabled": true,
+            "autoReconnect": true
+        },
+        "domainflow": {
+            "enabled": true,
+            "autoReconnect": true
+        }
+    },
+    "chat.mcp.serverSampling": {
+        "studio/.vscode/mcp.json: domainflow": {
+            "allowedModels": [
+                "github.copilot-chat/claude-sonnet-4",
+                "github.copilot-chat/claude-opus-4"
+            ]
+        }
+    }
 }

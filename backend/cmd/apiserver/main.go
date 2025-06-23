@@ -39,9 +39,9 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	_ "github.com/fntelecomllc/studio/backend/docs"
 	"github.com/fntelecomllc/studio/backend/internal/api"
 	"github.com/fntelecomllc/studio/backend/internal/config"
-	_ "github.com/fntelecomllc/studio/backend/docs"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
@@ -172,7 +172,8 @@ func main() {
 	log.Println("Session service initialized.")
 
 	// All stores including campaignJobStore are now properly initialized above
-	domainGenSvc := services.NewDomainGenerationService(db, campaignStore, campaignJobStore, auditLogStore)
+	configManager := services.NewConfigManager(db)
+	domainGenSvc := services.NewDomainGenerationService(db, campaignStore, campaignJobStore, auditLogStore, configManager)
 	log.Println("DomainGenerationService initialized.")
 
 	dnsCampaignSvc := services.NewDNSCampaignService(db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig)
@@ -211,6 +212,7 @@ func main() {
 		campaignOrchestratorSvc,
 		serverInstanceID,
 		appConfig,
+		db,
 	)
 	log.Println("CampaignWorkerService initialized.")
 
@@ -279,7 +281,7 @@ func main() {
 			securityMiddleware.RequestSizeLimit(10 * 1024 * 1024)(c)
 		})
 	}
-	
+
 	router.Use(nonWSMiddleware())
 	router.Use(rateLimitMiddleware.IPRateLimit(100, time.Minute)) // 100 requests per minute per IP
 
@@ -327,7 +329,7 @@ func main() {
 
 		// Current user routes (authenticated users)
 		apiV2.GET("/me", authHandler.Me)
-		apiV2.GET("/auth/permissions", authHandler.GetPermissions)  // New permissions endpoint
+		apiV2.GET("/auth/permissions", authHandler.GetPermissions) // New permissions endpoint
 		apiV2.POST("/change-password", authHandler.ChangePassword)
 
 		// Persona routes with permission-based access control

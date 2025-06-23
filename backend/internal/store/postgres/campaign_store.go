@@ -418,10 +418,10 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 		return nil
 	}
 	stmt, err := exec.PrepareNamedContext(ctx, `INSERT INTO dns_validation_results
-	       (id, dns_campaign_id, generated_domain_id, domain_name, validation_status, dns_records, validated_by_persona_id, attempts, last_checked_at, created_at)
-	       VALUES (:id, :dns_campaign_id, :generated_domain_id, :domain_name, :validation_status, :dns_records, :validated_by_persona_id, :attempts, :last_checked_at, :created_at)
+	       (id, dns_campaign_id, generated_domain_id, domain_name, validation_status, business_status, dns_records, validated_by_persona_id, attempts, last_checked_at, created_at)
+	       VALUES (:id, :dns_campaign_id, :generated_domain_id, :domain_name, :validation_status, :business_status, :dns_records, :validated_by_persona_id, :attempts, :last_checked_at, :created_at)
 	       ON CONFLICT (dns_campaign_id, domain_name) DO UPDATE SET
-	           validation_status = EXCLUDED.validation_status, dns_records = EXCLUDED.dns_records,
+	           validation_status = EXCLUDED.validation_status, business_status = EXCLUDED.business_status, dns_records = EXCLUDED.dns_records,
 	           validated_by_persona_id = EXCLUDED.validated_by_persona_id, attempts = dns_validation_results.attempts + 1,
 	           last_checked_at = EXCLUDED.last_checked_at, created_at = EXCLUDED.created_at`)
 	if err != nil {
@@ -487,8 +487,8 @@ func (s *campaignStorePostgres) CountDNSValidationResults(ctx context.Context, e
 	query := `SELECT COUNT(*) FROM dns_validation_results WHERE dns_campaign_id = $1`
 	args := []interface{}{campaignID}
 	if onlyValid {
-		query += " AND validation_status = $2"
-		args = append(args, "valid_dns")
+		query += " AND validation_status = $2 AND business_status = $3"
+		args = append(args, "resolved", "valid_dns")
 	}
 	var count int64
 	err := exec.GetContext(ctx, &count, query, args...)
@@ -497,7 +497,7 @@ func (s *campaignStorePostgres) CountDNSValidationResults(ctx context.Context, e
 
 func (s *campaignStorePostgres) GetDomainsForDNSValidation(ctx context.Context, exec store.Querier, dnsCampaignID uuid.UUID, sourceGenerationCampaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error) {
 	domains := []*models.GeneratedDomain{}
-	// Fetches generated domains that either don't have a DNS result for this campaign OR their result is not 'valid_dns'
+	// Fetches generated domains that either don't have a DNS result for this campaign OR their result is not 'resolved' with 'valid_dns' business status
 	// and their offset_index is greater than the last one processed.
 	query := `
 	       SELECT gd.id, gd.domain_generation_campaign_id, gd.domain_name, gd.source_keyword, gd.source_pattern, gd.tld, gd.offset_index, gd.generated_at, gd.created_at
@@ -505,7 +505,7 @@ func (s *campaignStorePostgres) GetDomainsForDNSValidation(ctx context.Context, 
 	       LEFT JOIN dns_validation_results dvr ON gd.id = dvr.generated_domain_id AND dvr.dns_campaign_id = $1
 	       WHERE gd.domain_generation_campaign_id = $2
 	         AND gd.offset_index > $3
-	         AND (dvr.id IS NULL OR dvr.validation_status NOT IN ('valid_dns'))
+	         AND (dvr.id IS NULL OR NOT (dvr.validation_status = 'resolved' AND dvr.business_status = 'valid_dns'))
 	       ORDER BY gd.offset_index ASC
 	       LIMIT $4`
 	err := exec.SelectContext(ctx, &domains, query, dnsCampaignID, sourceGenerationCampaignID, lastOffsetIndex, limit)
