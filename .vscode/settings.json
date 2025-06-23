@@ -15,5 +15,12 @@
         "**/node_modules": false
     },
     "npm.exclude": "",
-    "IDX.aI.enableCodebaseIndexing": true
+    "IDX.aI.enableCodebaseIndexing": true,
+    "github.copilot.chat.mcp.servers": {
+        "domainflow": {
+            "command": "node",
+            "args": ["./mcp-server/dist/index.js"],
+            "cwd": "${workspaceFolder}"
+        }
+    }
 }

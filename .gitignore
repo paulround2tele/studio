@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+# MCP Server dependencies
+/mcp-server/node_modules
+/mcp-server/dist
+
 # Next.js build output
 /.next/
 /out/
