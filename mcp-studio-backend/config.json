@@ -1,0 +1,110 @@
+{
+  "mcpVersion": "2024-11-05",
+  "name": "studio-backend-context",
+  "version": "1.0.0",
+  "description": "MCP Server providing comprehensive context about the Studio Golang backend application",
+  "author": "FNTelecom LLC",
+  "license": "MIT",
+  "server": {
+    "command": "./cmd/mcp-server/mcp-server",
+    "args": [],
+    "env": {}
+  },
+  "resources": {
+    "studioBackend": {
+      "name": "Studio Backend Context",
+      "description": "Complete context about the Studio backend application including models, APIs, database schema, and business logic",
+      "uri": "studio://backend"
+    }
+  },
+  "tools": [
+    {
+      "name": "get_models",
+      "description": "Return all data models with their fields, types, and validation tags"
+    },
+    {
+      "name": "get_enums",
+      "description": "Return all enum types and their possible values"
+    },
+    {
+      "name": "get_interfaces",
+      "description": "Return all interface definitions and their methods"
+    },
+    {
+      "name": "search_types",
+      "description": "Search for specific types or fields by name/pattern"
+    },
+    {
+      "name": "get_endpoints",
+      "description": "Return all REST API endpoints with methods, paths, and handlers"
+    },
+    {
+      "name": "get_handlers",
+      "description": "Return handler function signatures and their business logic"
+    },
+    {
+      "name": "get_middleware",
+      "description": "Return middleware functions and their purposes"
+    },
+    {
+      "name": "search_api",
+      "description": "Search API endpoints by path, method, or functionality"
+    },
+    {
+      "name": "get_tables",
+      "description": "Return database table structures and relationships"
+    },
+    {
+      "name": "get_migrations",
+      "description": "Return migration history and schema changes"
+    },
+    {
+      "name": "get_indexes",
+      "description": "Return database indexes and constraints"
+    },
+    {
+      "name": "search_schema",
+      "description": "Search database schema by table/column names"
+    },
+    {
+      "name": "get_services",
+      "description": "Return service layer functions and their purposes"
+    },
+    {
+      "name": "get_validators",
+      "description": "Return validation rules and business constraints"
+    },
+    {
+      "name": "get_workflows",
+      "description": "Return campaign workflows and state transitions"
+    },
+    {
+      "name": "search_logic",
+      "description": "Search business logic by functionality"
+    },
+    {
+      "name": "get_config",
+      "description": "Return configuration structures and their documentation"
+    },
+    {
+      "name": "get_env_vars",
+      "description": "Return environment variables and their purposes"
+    },
+    {
+      "name": "get_dependencies",
+      "description": "Return Go module dependencies and their versions"
+    },
+    {
+      "name": "find_usage",
+      "description": "Find where specific types/functions are used"
+    },
+    {
+      "name": "get_references",
+      "description": "Get cross-references between components"
+    },
+    {
+      "name": "get_call_graph",
+      "description": "Get function call relationships"
+    }
+  ]
+}
