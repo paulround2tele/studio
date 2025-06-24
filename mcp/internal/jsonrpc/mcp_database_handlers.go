@@ -133,7 +133,7 @@ func (s *JSONRPCServer) callGetSecurityAnalysis() (interface{}, error) {
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("Security analysis: %d vulnerabilities found, Risk Level: %s", analysis.VulnerabilitiesFound, analysis.RiskLevel),
+				"text": fmt.Sprintf("Security analysis: %d issues, Risk Level: %s, Score: %.1f", analysis.VulnerabilitiesFound, analysis.RiskLevel, analysis.SecurityScore),
 			},
 		},
 	}, nil
