@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -134,8 +135,8 @@ func (b *Bridge) GetDatabaseSchema() ([]models.Table, error) {
 	return tables, nil
 }
 
-// ApplyCodeChange applies a code diff using multiple strategies for maximum reliability.
-// This method tries git apply first, then falls back to patch with various options.
+// ApplyCodeChange applies a code diff using multiple patch strategies for maximum reliability.
+// This method tries patch with various options, then falls back to manual application.
 func (b *Bridge) ApplyCodeChange(diff string) (stdout string, stderr string, err error) {
 	if !config.Flags.AllowMutation {
 		return "", "", errors.New("code mutation is disabled")
@@ -181,9 +182,17 @@ func (b *Bridge) ApplyCodeChange(diff string) (stdout string, stderr string, err
 	var lastErr error
 	var combinedOut, combinedErr strings.Builder
 
-	// Strategy 1: Try git apply (most reliable for git repos)
-	if isGitRepo(projectRoot) {
-		cmd := exec.Command("git", "apply", "--ignore-whitespace", "--verbose")
+	// Strategy 1: Try patch with different strip levels and options
+	patchCommands := [][]string{
+		{"patch", "-p1", "--batch", "--verbose"},
+		{"patch", "-p1", "--batch", "--verbose", "--ignore-whitespace"},
+		{"patch", "-p0", "--batch", "--verbose"},
+		{"patch", "-p0", "--batch", "--verbose", "--ignore-whitespace"},
+		{"patch", "--batch", "--verbose"}, // no strip level
+	}
+
+	for _, cmdArgs := range patchCommands {
+		cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 		cmd.Dir = projectRoot
 		cmd.Stdin = bytes.NewBufferString(diff)
 
@@ -192,56 +201,17 @@ func (b *Bridge) ApplyCodeChange(diff string) (stdout string, stderr string, err
 		cmd.Stderr = &errOut
 
 		if err := cmd.Run(); err == nil {
-			combinedOut.WriteString("✅ Applied using git apply\n")
+			combinedOut.WriteString(fmt.Sprintf("✅ Applied using %s\n", strings.Join(cmdArgs, " ")))
 			combinedOut.WriteString(out.String())
-			return combinedOut.String(), errOut.String(), nil
+			return combinedOut.String(), combinedErr.String(), nil
 		} else {
 			lastErr = err
-			combinedOut.WriteString("❌ git apply failed: " + err.Error() + "\n")
-			combinedErr.WriteString("git apply error: " + errOut.String() + "\n")
+			combinedOut.WriteString(fmt.Sprintf("❌ %s failed: %v\n", strings.Join(cmdArgs, " "), err))
+			combinedErr.WriteString(fmt.Sprintf("%s error: %s\n", strings.Join(cmdArgs, " "), errOut.String()))
 		}
 	}
 
-	// Strategy 2: Try patch with -p1 (GNU patch)
-	cmd := exec.Command("patch", "-p1", "--batch", "--verbose")
-	cmd.Dir = projectRoot
-	cmd.Stdin = bytes.NewBufferString(diff)
-
-	var out, errOut bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errOut
-
-	if err := cmd.Run(); err == nil {
-		combinedOut.WriteString("✅ Applied using patch -p1\n")
-		combinedOut.WriteString(out.String())
-		return combinedOut.String(), combinedErr.String(), nil
-	} else {
-		lastErr = err
-		combinedOut.WriteString("❌ patch -p1 failed: " + err.Error() + "\n")
-		combinedErr.WriteString("patch -p1 error: " + errOut.String() + "\n")
-	}
-
-	// Strategy 3: Try patch with -p0
-	cmd = exec.Command("patch", "-p0", "--batch", "--verbose")
-	cmd.Dir = projectRoot
-	cmd.Stdin = bytes.NewBufferString(diff)
-
-	out.Reset()
-	errOut.Reset()
-	cmd.Stdout = &out
-	cmd.Stderr = &errOut
-
-	if err := cmd.Run(); err == nil {
-		combinedOut.WriteString("✅ Applied using patch -p0\n")
-		combinedOut.WriteString(out.String())
-		return combinedOut.String(), combinedErr.String(), nil
-	} else {
-		lastErr = err
-		combinedOut.WriteString("❌ patch -p0 failed: " + err.Error() + "\n")
-		combinedErr.WriteString("patch -p0 error: " + errOut.String() + "\n")
-	}
-
-	// Strategy 4: Manual application if we can identify the target file
+	// Strategy 2: Manual application if we can identify the target file
 	if targetFile != "" && relPath != "" {
 		combinedOut.WriteString(fmt.Sprintf("🔧 Attempting manual application to %s\n", targetFile))
 		if manualOut, manualErr := b.applyDiffManually(diff, targetFile, relPath); manualErr == nil {
@@ -263,16 +233,7 @@ func (b *Bridge) ApplyCodeChange(diff string) (stdout string, stderr string, err
 	return combinedOut.String(), combinedErr.String(), fmt.Errorf("failed to apply patch: %v", lastErr)
 }
 
-// isGitRepo checks if the directory is a git repository
-func isGitRepo(dir string) bool {
-	gitDir := filepath.Join(dir, ".git")
-	if info, err := os.Stat(gitDir); err == nil {
-		return info.IsDir()
-	}
-	return false
-}
-
-// applyDiffManually attempts to apply a simple diff manually
+// applyDiffManually attempts to apply a unified diff manually with proper hunk parsing
 func (b *Bridge) applyDiffManually(diff, targetFile, relPath string) (string, error) {
 	// Check if target file exists
 	if _, err := os.Stat(targetFile); os.IsNotExist(err) {
@@ -285,41 +246,197 @@ func (b *Bridge) applyDiffManually(diff, targetFile, relPath string) (string, er
 		return "", fmt.Errorf("failed to read target file: %v", err)
 	}
 
-	// Parse the diff to extract additions
-	lines := strings.Split(diff, "\n")
-	var additions []string
-	inHunk := false
+	lines := strings.Split(string(content), "\n")
+	diffLines := strings.Split(diff, "\n")
 
-	for _, line := range lines {
+	// Parse diff and apply changes
+	var hunks []hunkInfo
+	var currentHunk *hunkInfo
+
+	for i, line := range diffLines {
 		if strings.HasPrefix(line, "@@") {
-			inHunk = true
-			continue
-		}
-		if inHunk && strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
-			// This is an addition line
-			additions = append(additions, strings.TrimPrefix(line, "+"))
+			// Parse hunk header: @@ -oldstart,oldlines +newstart,newlines @@
+			if currentHunk != nil {
+				hunks = append(hunks, *currentHunk)
+			}
+
+			hunk, err := parseHunkHeader(line)
+			if err != nil {
+				return "", fmt.Errorf("failed to parse hunk header '%s': %v", line, err)
+			}
+			currentHunk = &hunk
+			currentHunk.diffStartLine = i + 1
+		} else if currentHunk != nil && (strings.HasPrefix(line, "+") || strings.HasPrefix(line, "-") || strings.HasPrefix(line, " ")) {
+			// Add line to current hunk
+			if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
+				currentHunk.additions = append(currentHunk.additions, diffLine{
+					lineNum: len(currentHunk.contextLines) + len(currentHunk.additions) + len(currentHunk.deletions),
+					content: strings.TrimPrefix(line, "+"),
+				})
+			} else if strings.HasPrefix(line, "-") && !strings.HasPrefix(line, "---") {
+				currentHunk.deletions = append(currentHunk.deletions, diffLine{
+					lineNum: len(currentHunk.contextLines) + len(currentHunk.additions) + len(currentHunk.deletions),
+					content: strings.TrimPrefix(line, "-"),
+				})
+			} else if strings.HasPrefix(line, " ") {
+				currentHunk.contextLines = append(currentHunk.contextLines, diffLine{
+					lineNum: len(currentHunk.contextLines) + len(currentHunk.additions) + len(currentHunk.deletions),
+					content: strings.TrimPrefix(line, " "),
+				})
+			}
 		}
 	}
 
-	if len(additions) > 0 {
-		// Simple approach: append the additions to the file
-		currentContent := string(content)
+	// Add the last hunk
+	if currentHunk != nil {
+		hunks = append(hunks, *currentHunk)
+	}
 
-		// Add the new lines
-		for _, addition := range additions {
-			currentContent += "\n" + addition
+	if len(hunks) == 0 {
+		return "", fmt.Errorf("no valid hunks found in diff")
+	}
+
+	// Apply hunks in reverse order to maintain line numbers
+	modifiedLines := make([]string, len(lines))
+	copy(modifiedLines, lines)
+
+	for i := len(hunks) - 1; i >= 0; i-- {
+		hunk := hunks[i]
+		if err := applyHunk(&modifiedLines, hunk); err != nil {
+			return "", fmt.Errorf("failed to apply hunk at line %d: %v", hunk.newStart, err)
 		}
+	}
 
-		// Write back to file
-		err = os.WriteFile(targetFile, []byte(currentContent), 0644)
+	// Write back to file
+	newContent := strings.Join(modifiedLines, "\n")
+	err = os.WriteFile(targetFile, []byte(newContent), 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to write modified content: %v", err)
+	}
+
+	return fmt.Sprintf("✅ Successfully applied %d hunks to %s", len(hunks), relPath), nil
+}
+
+type hunkInfo struct {
+	oldStart      int
+	oldLines      int
+	newStart      int
+	newLines      int
+	diffStartLine int
+	contextLines  []diffLine
+	additions     []diffLine
+	deletions     []diffLine
+}
+
+type diffLine struct {
+	lineNum int
+	content string
+}
+
+func parseHunkHeader(header string) (hunkInfo, error) {
+	// Example: @@ -1,3 +1,4 @@
+	var hunk hunkInfo
+
+	// Find the range indicators
+	parts := strings.Fields(header)
+	if len(parts) < 3 {
+		return hunk, fmt.Errorf("invalid hunk header format")
+	}
+
+	// Parse old range (-oldstart,oldlines)
+	oldRange := strings.TrimPrefix(parts[1], "-")
+	if strings.Contains(oldRange, ",") {
+		oldParts := strings.Split(oldRange, ",")
+		if len(oldParts) != 2 {
+			return hunk, fmt.Errorf("invalid old range format")
+		}
+		var err error
+		hunk.oldStart, err = strconv.Atoi(oldParts[0])
 		if err != nil {
-			return "", fmt.Errorf("failed to write modified content: %v", err)
+			return hunk, fmt.Errorf("invalid old start line: %v", err)
 		}
-
-		return fmt.Sprintf("✅ Successfully applied %d additions to %s", len(additions), relPath), nil
+		hunk.oldLines, err = strconv.Atoi(oldParts[1])
+		if err != nil {
+			return hunk, fmt.Errorf("invalid old line count: %v", err)
+		}
+	} else {
+		var err error
+		hunk.oldStart, err = strconv.Atoi(oldRange)
+		if err != nil {
+			return hunk, fmt.Errorf("invalid old start line: %v", err)
+		}
+		hunk.oldLines = 1
 	}
 
-	return "", fmt.Errorf("no additions found in diff to apply manually")
+	// Parse new range (+newstart,newlines)
+	newRange := strings.TrimPrefix(parts[2], "+")
+	if strings.Contains(newRange, ",") {
+		newParts := strings.Split(newRange, ",")
+		if len(newParts) != 2 {
+			return hunk, fmt.Errorf("invalid new range format")
+		}
+		var err error
+		hunk.newStart, err = strconv.Atoi(newParts[0])
+		if err != nil {
+			return hunk, fmt.Errorf("invalid new start line: %v", err)
+		}
+		hunk.newLines, err = strconv.Atoi(newParts[1])
+		if err != nil {
+			return hunk, fmt.Errorf("invalid new line count: %v", err)
+		}
+	} else {
+		var err error
+		hunk.newStart, err = strconv.Atoi(newRange)
+		if err != nil {
+			return hunk, fmt.Errorf("invalid new start line: %v", err)
+		}
+		hunk.newLines = 1
+	}
+
+	return hunk, nil
+}
+
+func applyHunk(lines *[]string, hunk hunkInfo) error {
+	// Convert to 0-based indexing
+	startIdx := hunk.oldStart - 1
+
+	if startIdx < 0 || startIdx >= len(*lines) {
+		return fmt.Errorf("hunk start line %d is out of bounds (file has %d lines)", hunk.oldStart, len(*lines))
+	}
+
+	// Build the new lines for this hunk
+	var newHunkLines []string
+
+	// First, collect all the lines that should remain (context and additions)
+	contextIdx := 0
+	additionIdx := 0
+
+	for i := 0; i < hunk.newLines; i++ {
+		// Determine what type of line this should be
+		// This is a simplified approach - we apply all additions after context lines
+		if contextIdx < len(hunk.contextLines) {
+			newHunkLines = append(newHunkLines, hunk.contextLines[contextIdx].content)
+			contextIdx++
+		} else if additionIdx < len(hunk.additions) {
+			newHunkLines = append(newHunkLines, hunk.additions[additionIdx].content)
+			additionIdx++
+		}
+	}
+
+	// Replace the old lines with new lines
+	endIdx := startIdx + hunk.oldLines
+	if endIdx > len(*lines) {
+		endIdx = len(*lines)
+	}
+
+	// Build the new slice
+	newLines := make([]string, 0, len(*lines)-hunk.oldLines+len(newHunkLines))
+	newLines = append(newLines, (*lines)[:startIdx]...)
+	newLines = append(newLines, newHunkLines...)
+	newLines = append(newLines, (*lines)[endIdx:]...)
+
+	*lines = newLines
+	return nil
 }
 
 // GetModels fetches Go models from the backend

@@ -1,0 +1,8 @@
+--- a/test_complex.go
++++ b/test_complex.go
+@@ -1,4 +1,5 @@
+ // Test file for diff application
++import "fmt"
+ func main() {
+     fmt.Println("Hello")
+     fmt.Println("World")

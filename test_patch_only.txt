@@ -1,0 +1,4 @@
+original line 1
+inserted line
+original line 2
+original line 3

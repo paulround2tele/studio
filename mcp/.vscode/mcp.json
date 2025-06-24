@@ -1,7 +1,7 @@
 {
   "servers": {
     "studio-backend-context": {
-      "command": "/home/vboxuser/studio/mcp/mcp-server",
+      "command": "/home/vboxuser/studio/mcp/bin/mcp-server",
       "args": [
         "-allow-terminal",
         "-allow-mutation"

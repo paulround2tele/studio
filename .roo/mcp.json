@@ -1,3 +1,26 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "studio-backend-context": {
+      "command": "/home/vboxuser/studio/mcp/bin/mcp-server",
+      "args": [
+        "-allow-terminal",
+        "-allow-mutation"
+      ],
+      "cwd": "/home/vboxuser/studio",
+      "env": {
+        "STUDIO_BACKEND_PATH": "/home/vboxuser/studio/backend"
+      },
+      "alwaysAllow": [
+        "get_models",
+        "get_routes",
+        "get_dependencies",
+        "get_handlers",
+        "get_api_schema",
+        "get_database_schema",
+        "get_services",
+        "get_interfaces",
+        "find_implementations"
+      ]
+    }
+  }
 }
