@@ -170,27 +170,89 @@ func ParseGinRoutes(filePath string) ([]models.Route, error) {
 		return nil, err
 	}
 
+	// Track router groups and their prefixes
+	routerGroups := make(map[string]string)
+
 	ast.Inspect(node, func(n ast.Node) bool {
 		if callExpr, ok := n.(*ast.CallExpr); ok {
 			if selExpr, ok := callExpr.Fun.(*ast.SelectorExpr); ok {
-				// Look for router.GET, router.POST, etc.
 				method := selExpr.Sel.Name
+
+				// Check for router group definitions: router.Group("/path")
+				if method == "Group" && len(callExpr.Args) >= 1 {
+					if pathLit, ok := callExpr.Args[0].(*ast.BasicLit); ok {
+						groupPath := strings.Trim(pathLit.Value, "\"")
+						// Store group path for potential future use
+						routerGroups["group"] = groupPath
+					}
+				}
+
+				// Check for HTTP method calls
 				if isHTTPMethod(method) && len(callExpr.Args) >= 2 {
 					// First argument should be the path
 					if pathLit, ok := callExpr.Args[0].(*ast.BasicLit); ok {
 						path := strings.Trim(pathLit.Value, "\"")
 
-						// Second argument should be the handler
+						// Find the handler (last argument that's a function)
 						var handler string
-						if ident, ok := callExpr.Args[1].(*ast.Ident); ok {
-							handler = ident.Name
-						} else if selExpr, ok := callExpr.Args[1].(*ast.SelectorExpr); ok {
-							handler = selExpr.Sel.Name
+						for i := len(callExpr.Args) - 1; i >= 1; i-- {
+							arg := callExpr.Args[i]
+							if ident, ok := arg.(*ast.Ident); ok {
+								handler = ident.Name
+								break
+							} else if selExpr, ok := arg.(*ast.SelectorExpr); ok {
+								// Build full selector path (e.g., apiHandler.ListUsersGin)
+								if x, ok := selExpr.X.(*ast.Ident); ok {
+									handler = x.Name + "." + selExpr.Sel.Name
+								} else {
+									handler = selExpr.Sel.Name
+								}
+								break
+							}
+						}
+
+						// Determine if this is part of a group by checking the receiver
+						var fullPath string
+						if x, ok := selExpr.X.(*ast.Ident); ok {
+							// Check common group patterns
+							switch x.Name {
+							case "authRoutes":
+								fullPath = "/api/v2/auth" + path
+							case "apiV2":
+								fullPath = "/api/v2" + path
+							case "adminRoutes":
+								fullPath = "/api/v2/admin" + path
+							case "personaGroup":
+								fullPath = "/api/v2/personas" + path
+							case "proxyGroup":
+								fullPath = "/api/v2/proxies" + path
+							case "configGroup":
+								fullPath = "/api/v2/config" + path
+							case "keywordSetGroup":
+								fullPath = "/api/v2/keywords/sets" + path
+							case "extractGroup":
+								fullPath = "/api/v2/extract/keywords" + path
+							case "newCampaignRoutesGroup":
+								fullPath = "/api/v2/campaigns" + path
+							case "dnsPersonaGroup":
+								fullPath = "/api/v2/personas/dns" + path
+							case "httpPersonaGroup":
+								fullPath = "/api/v2/personas/http" + path
+							case "campaignApiV2":
+								fullPath = "/api/v2" + path
+							case "router":
+								fullPath = path
+							default:
+								// Fallback to just the path
+								fullPath = path
+							}
+						} else {
+							fullPath = path
 						}
 
 						routes = append(routes, models.Route{
 							Method:  strings.ToUpper(method),
-							Path:    path,
+							Path:    fullPath,
 							Handler: handler,
 						})
 					}

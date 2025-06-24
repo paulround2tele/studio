@@ -862,20 +862,92 @@ func (b *Bridge) AnalyzeCodeQuality() (models.CodeQuality, error) {
 	return quality, nil
 }
 
-// GetAPISchema returns comprehensive API schema information
+// GetAPISchema returns comprehensive API schema information by analyzing actual backend implementation
 func (b *Bridge) GetAPISchema() (models.APISchema, error) {
-	// This would typically parse OpenAPI specs, route definitions, etc.
-	// For now, return comprehensive API schema information
-	return models.APISchema{
-		OpenAPIVersion: "3.0.0",
-		Endpoints:      []string{"/api/v1/campaigns", "/api/v1/domains", "/api/v1/auth"},
-		Methods:        []string{"GET", "POST", "PUT", "DELETE"},
-		SchemaFiles:    []string{"api/openapi.yaml", "docs/api.md"},
-		ValidationRules: map[string]interface{}{
-			"campaigns": map[string]string{"name": "required|string", "status": "enum:active,paused"},
-			"domains":   map[string]string{"name": "required|domain", "status": "enum:pending,validated"},
-		},
-	}, nil
+	schema := models.APISchema{
+		Endpoints:       []string{},
+		Methods:         []string{},
+		SchemaFiles:     []string{},
+		ValidationRules: make(map[string]interface{}),
+	}
+
+	// Check for actual Swagger/OpenAPI files in the backend
+	backendDocsPath := filepath.Join(b.BackendPath, "docs")
+
+	// Check for Swagger YAML
+	swaggerYaml := filepath.Join(backendDocsPath, "swagger.yaml")
+	if _, err := os.Stat(swaggerYaml); err == nil {
+		schema.SchemaFiles = append(schema.SchemaFiles, "docs/swagger.yaml")
+
+		// Read the swagger.yaml to determine version
+		content, err := os.ReadFile(swaggerYaml)
+		if err == nil {
+			contentStr := string(content)
+			if strings.Contains(contentStr, `swagger: "2.0"`) {
+				schema.OpenAPIVersion = "2.0"
+			} else if strings.Contains(contentStr, "openapi: 3.") {
+				schema.OpenAPIVersion = "3.0.0"
+			}
+		}
+	}
+
+	// Check for generated docs.go (swaggo)
+	docsGo := filepath.Join(backendDocsPath, "docs.go")
+	if _, err := os.Stat(docsGo); err == nil {
+		schema.SchemaFiles = append(schema.SchemaFiles, "docs/docs.go")
+
+		// Read docs.go to confirm it's swaggo generated
+		content, err := os.ReadFile(docsGo)
+		if err == nil {
+			contentStr := string(content)
+			if strings.Contains(contentStr, "swaggo/swag") {
+				// It's swaggo generated
+				if strings.Contains(contentStr, `"swagger": "2.0"`) {
+					schema.OpenAPIVersion = "2.0"
+				}
+			}
+		}
+	}
+
+	// Parse actual routes from the main.go file
+	mainGoPath := filepath.Join(b.BackendPath, "cmd/apiserver/main.go")
+	routes, err := analyzer.ParseGinRoutes(mainGoPath)
+	if err == nil {
+		methodsMap := make(map[string]bool)
+		endpointsMap := make(map[string]bool)
+
+		for _, route := range routes {
+			methodsMap[route.Method] = true
+			endpointsMap[route.Path] = true
+		}
+
+		// Convert maps to slices
+		for method := range methodsMap {
+			schema.Methods = append(schema.Methods, method)
+		}
+		for endpoint := range endpointsMap {
+			schema.Endpoints = append(schema.Endpoints, endpoint)
+		}
+	}
+
+	// Check for swaggo annotations in main.go
+	if content, err := os.ReadFile(mainGoPath); err == nil {
+		contentStr := string(content)
+		if strings.Contains(contentStr, "@title") && strings.Contains(contentStr, "ginSwagger") {
+			schema.ValidationRules["implementation"] = "gin-swagger with swaggo annotations"
+		}
+	}
+
+	// If no version detected yet, default based on files found
+	if schema.OpenAPIVersion == "" {
+		if len(schema.SchemaFiles) > 0 {
+			schema.OpenAPIVersion = "2.0" // Most likely swaggo/gin-swagger
+		} else {
+			schema.OpenAPIVersion = "unknown"
+		}
+	}
+
+	return schema, nil
 }
 
 // TraceMiddlewareFlow traces middleware execution pipeline

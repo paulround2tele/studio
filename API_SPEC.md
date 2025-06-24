@@ -1,553 +1,456 @@
-# DomainFlow API Specification
-
-## Overview
-
-DomainFlow API v2 provides a comprehensive REST API for domain generation, validation, and campaign management. The API follows OpenAPI 3.0 specification and includes real-time WebSocket communication for live updates.
-
-**Base URL**: `http://localhost:8080/api/v2`  
-**WebSocket URL**: `ws://localhost:8080/ws`  
-**API Version**: 2.0  
-**Authentication**: Session-based with HTTP-only cookies
-
-## Authentication
-
-### Session-Based Authentication
-All API endpoints (except public endpoints) require authentication via session cookies. The authentication flow uses HTTP-only cookies for security.
-
-#### Login
-```http
-POST /auth/login
-Content-Type: application/json
-
-{
-  "username": "string",
-  "password": "string"
-}
-```
-
-**Response (200)**:
-```json
-{
-  "status": "success",
-  "message": "Login successful",
-  "user": {
-    "id": "uuid",
-    "username": "string",
-    "email": "string",
-    "role": "admin|user",
-    "permissions": ["string"]
-  }
-}
-```
-
-#### Logout
-```http
-POST /auth/logout
-```
-
-#### Session Status
-```http
-GET /auth/status
-```
-
-**Response (200)**:
-```json
-{
-  "authenticated": true,
-  "user": {
-    "id": "uuid",
-    "username": "string",
-    "role": "string",
-    "permissions": ["string"]
-  }
-}
-```
-
-## Core API Endpoints
-
-### Campaigns
-
-#### List Campaigns
-```http
-GET /api/v2/campaigns
-```
-
-**Query Parameters**:
-- `page` (integer): Page number (default: 1)
-- `limit` (integer): Items per page (default: 20)
-- `status` (string): Filter by status
-- `type` (string): Filter by campaign type
-
-**Response (200)**:
-```json
-{
-  "campaigns": [
-    {
-      "id": "uuid",
-      "name": "string",
-      "description": "string",
-      "type": "domain_generation|dns_validation|http_keyword",
-      "status": "pending|running|completed|failed",
-      "createdAt": "2025-06-19T10:00:00Z",
-      "updatedAt": "2025-06-19T10:00:00Z",
-      "userId": "uuid",
-      "parameters": {
-        // Campaign-specific parameters
-      },
-      "progress": {
-        "totalItems": 1000,
-        "processedItems": 450,
-        "successCount": 425,
-        "errorCount": 25
-      }
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 150,
-    "totalPages": 8
-  }
-}
-```
-
-#### Create Campaign
-```http
-POST /api/v2/campaigns
-Content-Type: application/json
-
-{
-  "name": "string",
-  "description": "string",
-  "type": "domain_generation|dns_validation|http_keyword",
-  "parameters": {
-    // Type-specific parameters
-  }
-}
-```
-
-**Domain Generation Parameters**:
-```json
-{
-  "type": "domain_generation",
-  "parameters": {
-    "keywords": ["example", "test"],
-    "tlds": [".com", ".net"],
-    "maxLength": 20,
-    "includeDashes": true,
-    "includeNumbers": true
-  }
-}
-```
-
-**DNS Validation Parameters**:
-```json
-{
-  "type": "dns_validation",
-  "parameters": {
-    "domains": ["example.com", "test.net"],
-    "recordTypes": ["A", "AAAA", "MX"],
-    "timeout": 30
-  }
-}
-```
-
-**HTTP Keyword Parameters**:
-```json
-{
-  "type": "http_keyword",
-  "parameters": {
-    "urls": ["https://example.com"],
-    "keywords": ["product", "service"],
-    "timeout": 30,
-    "followRedirects": true
-  }
-}
-```
-
-#### Get Campaign
-```http
-GET /api/v2/campaigns/{id}
-```
-
-#### Update Campaign
-```http
-PUT /api/v2/campaigns/{id}
-Content-Type: application/json
-
-{
-  "name": "string",
-  "description": "string",
-  "parameters": {
-    // Updated parameters
-  }
-}
-```
-
-#### Delete Campaign
-```http
-DELETE /api/v2/campaigns/{id}
-```
-
-#### Start Campaign
-```http
-POST /api/v2/campaigns/{id}/start
-```
-
-#### Stop Campaign
-```http
-POST /api/v2/campaigns/{id}/stop
-```
-
-#### Get Campaign Results
-```http
-GET /api/v2/campaigns/{id}/results
-```
-
-**Query Parameters**:
-- `page` (integer): Page number
-- `limit` (integer): Items per page
-- `status` (string): Filter by result status
-
-### Admin Operations
-
-#### List Users
-```http
-GET /api/v2/admin/users
-```
-
-**Required Permission**: `admin:users:read`
-
-**Response (200)**:
-```json
-{
-  "users": [
-    {
-      "id": "uuid",
-      "username": "string",
-      "email": "string",
-      "role": "admin|user",
-      "isActive": true,
-      "createdAt": "2025-06-19T10:00:00Z",
-      "lastLogin": "2025-06-19T09:00:00Z"
-    }
-  ]
-}
-```
-
-#### Create User
-```http
-POST /api/v2/admin/users
-Content-Type: application/json
-
-{
-  "username": "string",
-  "email": "string",
-  "password": "string",
-  "role": "admin|user"
-}
-```
-
-**Required Permission**: `admin:users:create`
-
-#### Update User
-```http
-PUT /api/v2/admin/users/{id}
-Content-Type: application/json
-
-{
-  "username": "string",
-  "email": "string",
-  "role": "admin|user",
-  "isActive": true
-}
-```
-
-**Required Permission**: `admin:users:update`
-
-#### Delete User
-```http
-DELETE /api/v2/admin/users/{id}
-```
-
-**Required Permission**: `admin:users:delete`
-
-### Keyword Sets
-
-#### List Keyword Sets
-```http
-GET /api/v2/keyword-sets
-```
-
-#### Create Keyword Set
-```http
-POST /api/v2/keyword-sets
-Content-Type: application/json
-
-{
-  "name": "string",
-  "description": "string",
-  "keywords": ["string"]
-}
-```
-
-### Personas
-
-#### List Personas
-```http
-GET /api/v2/personas
-```
-
-#### Create Persona
-```http
-POST /api/v2/personas
-Content-Type: application/json
-
-{
-  "name": "string",
-  "description": "string",
-  "userAgent": "string",
-  "acceptLanguage": "string",
-  "acceptEncoding": "string"
-}
-```
-
-### Proxies
-
-#### List Proxies
-```http
-GET /api/v2/proxies
-```
-
-#### Create Proxy
-```http
-POST /api/v2/proxies
-Content-Type: application/json
-
-{
-  "name": "string",
-  "description": "string",
-  "host": "string",
-  "port": 8080,
-  "protocol": "http|https|socks5",
-  "username": "string",
-  "password": "string"
-}
-```
-
-## WebSocket API
-
-### Connection
-```javascript
-const ws = new WebSocket('ws://localhost:8080/ws');
-```
-
-### Message Format
-All WebSocket messages follow this standardized format:
-
-```json
-{
-  "type": "string",
-  "timestamp": "2025-06-19T10:00:00Z",
-  "data": {
-    // Message-specific data
-  }
-}
-```
-
-### Message Types
-
-#### Campaign Progress
-```json
-{
-  "type": "campaign_progress",
-  "timestamp": "2025-06-19T10:00:00Z",
-  "data": {
-    "campaignId": "uuid",
-    "totalItems": 1000,
-    "processedItems": 450,
-    "successCount": 425,
-    "errorCount": 25,
-    "estimatedCompletion": "2025-06-19T10:30:00Z"
-  }
-}
-```
-
-#### Campaign Complete
-```json
-{
-  "type": "campaign_complete",
-  "timestamp": "2025-06-19T10:00:00Z",
-  "data": {
-    "campaignId": "uuid",
-    "status": "completed|failed",
-    "totalItems": 1000,
-    "successCount": 950,
-    "errorCount": 50,
-    "duration": "00:30:15"
-  }
-}
-```
-
-#### System Notification
-```json
-{
-  "type": "system_notification",
-  "timestamp": "2025-06-19T10:00:00Z",
-  "data": {
-    "level": "info|warning|error",
-    "message": "string",
-    "details": {}
-  }
-}
-```
-
-## Error Responses
-
-### Standard Error Format
-```json
-{
-  "error": {
-    "code": "string",
-    "message": "string",
-    "details": {},
-    "timestamp": "2025-06-19T10:00:00Z"
-  }
-}
-```
-
-### Common Error Codes
-
-#### Authentication Errors
-- `401 Unauthorized`: Invalid or missing authentication
-- `403 Forbidden`: Insufficient permissions
-
-#### Validation Errors
-- `400 Bad Request`: Invalid request data
-- `422 Unprocessable Entity`: Validation failed
-
-#### Resource Errors
-- `404 Not Found`: Resource not found
-- `409 Conflict`: Resource conflict
-
-#### Server Errors
-- `500 Internal Server Error`: Server error
-- `503 Service Unavailable`: Service temporarily unavailable
-
-### Example Error Response
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid campaign parameters",
-    "details": {
-      "field": "keywords",
-      "reason": "Keywords array cannot be empty"
-    },
-    "timestamp": "2025-06-19T10:00:00Z"
-  }
-}
-```
-
-## Data Models
-
-### Campaign Model
-```typescript
-interface Campaign {
-  id: string;
-  name: string;
-  description?: string;
-  type: 'domain_generation' | 'dns_validation' | 'http_keyword';
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  userId: string;
-  parameters: CampaignParameters;
-  progress?: CampaignProgress;
-  createdAt: string;
-  updatedAt: string;
-}
-```
-
-### User Model
-```typescript
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: 'admin' | 'user';
-  permissions: string[];
-  isActive: boolean;
-  createdAt: string;
-  lastLogin?: string;
-}
-```
-
-### Campaign Progress Model
-```typescript
-interface CampaignProgress {
-  totalItems: number;
-  processedItems: number;
-  successCount: number;
-  errorCount: number;
-  estimatedCompletion?: string;
-}
-```
-
-## Rate Limiting
-
-- **Authentication endpoints**: 10 requests per minute per IP
-- **Campaign operations**: 100 requests per minute per user
-- **WebSocket connections**: 5 concurrent connections per user
-- **General API**: 1000 requests per hour per user
-
-## Security Considerations
-
-### HTTPS Only
-All production deployments must use HTTPS for secure communication.
-
-### CORS Configuration
-Configure CORS origins appropriately for your frontend domains.
-
-### Session Security
-- Sessions use HTTP-only cookies
-- SameSite attribute set to 'Strict'
-- Secure flag enabled in production
-- Session expiration: 24 hours (configurable)
-
-### Input Validation
-- All inputs are validated server-side
-- SQL injection prevention with parameterized queries
-- XSS protection with proper output encoding
-
-## SDKs and Client Libraries
-
-### TypeScript/JavaScript Client
-Auto-generated TypeScript client available in `/src/lib/api-client/`
-
-```typescript
-import { CampaignsApi, Configuration } from '@/lib/api-client';
-
-const config = new Configuration({
-  basePath: 'http://localhost:8080/api/v2'
-});
-
-const campaignsApi = new CampaignsApi(config);
-```
-
-## Changelog
-
-### Version 2.0 (Current)
-- Added comprehensive runtime validation
-- Implemented permission-based access control
-- Standardized WebSocket message types
-- Added admin user management endpoints
-- Enhanced campaign orchestration controls
-
-### Version 1.0
-- Initial API implementation
-- Basic campaign management
-- User authentication
-- WebSocket support
-
----
-
-For technical support or API questions, refer to the main documentation or contact the development team.
+openapi: 3.0.0
+info:
+  title: DomainFlow API
+  version: 2.0
+  description: DomainFlow API v2 provides a comprehensive REST API for domain generation, validation, and campaign management.
+  contact:
+    name: API Support
+    url: http://www.domainflow.com/support
+    email: support@domainflow.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:8080/api/v2
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate a user with email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+  /auth/logout:
+    post:
+      summary: User logout
+      responses:
+        '200':
+          description: Logout successful
+  /auth/status:
+    get:
+      summary: Session status
+      responses:
+        '200':
+          description: Session status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authenticated:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+  /campaigns:
+    get:
+      summary: List campaigns
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of campaigns
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaigns:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Campaign'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+    post:
+      summary: Create a campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Campaign'
+      responses:
+        '201':
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+  /campaigns/{id}:
+    get:
+      summary: Get a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: A single campaign
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+    put:
+      summary: Update a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Campaign'
+      responses:
+        '200':
+          description: Campaign updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+    delete:
+      summary: Delete a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Campaign deleted
+  /campaigns/{id}/start:
+    post:
+      summary: Start a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Campaign started
+  /campaigns/{id}/stop:
+    post:
+      summary: Stop a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Campaign stopped
+  /campaigns/{id}/results:
+    get:
+      summary: Get campaign results
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of campaign results
+  /admin/users:
+    get:
+      summary: List users
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+    post:
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /admin/users/{id}:
+    put:
+      summary: Update a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      summary: Delete a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: User deleted
+  /keyword-sets:
+    get:
+      summary: List keyword sets
+      responses:
+        '200':
+          description: A list of keyword sets
+    post:
+      summary: Create a keyword set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeywordSet'
+      responses:
+        '201':
+          description: Keyword set created
+  /personas:
+    get:
+      summary: List personas
+      responses:
+        '200':
+          description: A list of personas
+    post:
+      summary: Create a persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Persona'
+      responses:
+        '201':
+          description: Persona created
+  /proxies:
+    get:
+      summary: List proxies
+      responses:
+        '200':
+          description: A list of proxies
+    post:
+      summary: Create a proxy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Proxy'
+      responses:
+        '201':
+          description: Proxy created
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, user]
+        permissions:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastLogin:
+          type: string
+          format: date-time
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [domain_generation, dns_validation, http_keyword]
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+        parameters:
+          type: object
+        progress:
+          $ref: '#/components/schemas/CampaignProgress'
+    CampaignProgress:
+      type: object
+      properties:
+        totalItems:
+          type: integer
+        processedItems:
+          type: integer
+        successCount:
+          type: integer
+        errorCount:
+          type: integer
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+    KeywordSet:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+    Persona:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        userAgent:
+          type: string
+        acceptLanguage:
+          type: string
+        acceptEncoding:
+          type: string
+    Proxy:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        host:
+          type: string
+        port:
+          type: integer
+        protocol:
+          type: string
+          enum: [http, https, socks5]
+        username:
+          type: string
+        password:
+          type: string
