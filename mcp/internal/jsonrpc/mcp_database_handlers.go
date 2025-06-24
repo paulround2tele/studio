@@ -205,7 +205,7 @@ func (s *JSONRPCServer) callAnalyzeCodeQuality() (interface{}, error) {
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("Code quality analysis: Score %.2f/10, %d issues found", quality.Score, quality.IssuesFound),
+				"text": fmt.Sprintf("Code quality analysis: Score %.2f/100, %d issues found", quality.Score, quality.IssuesFound),
 			},
 		},
 	}, nil
