@@ -16,6 +16,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // AuthHandler handles authentication-related HTTP requests
@@ -46,7 +47,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Printf("DEBUG: Request parsed successfully: %s\n", req.Email)
 
 	// Get client information
-	ipAddress := getClientIP(c)
+	ipAddress := utils.GetClientIP(c)
 	fmt.Printf("DEBUG: Client IP: %s\n", ipAddress)
 
 	// Validate credentials and authenticate user
@@ -256,7 +257,7 @@ func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	}
 
 	// Get client IP
-	ipAddress := getClientIP(c)
+	ipAddress := utils.GetClientIP(c)
 
 	// Validate session using session service
 	_, err = h.sessionService.ValidateSession(sessionID, ipAddress)
@@ -802,25 +803,6 @@ func (h *AuthHandler) DeleteUser(c *gin.Context) {
 }
 
 // Helper functions
-
-func getClientIP(c *gin.Context) string {
-	// Check for forwarded IP first
-	forwarded := c.GetHeader("X-Forwarded-For")
-	if forwarded != "" {
-		// Take the first IP if multiple are present
-		ips := strings.Split(forwarded, ",")
-		return strings.TrimSpace(ips[0])
-	}
-
-	// Check for real IP header
-	realIP := c.GetHeader("X-Real-IP")
-	if realIP != "" {
-		return realIP
-	}
-
-	// Fall back to remote address
-	return c.ClientIP()
-}
 
 func (h *AuthHandler) clearSessionCookies(c *gin.Context) {
 	// Clear new session cookie

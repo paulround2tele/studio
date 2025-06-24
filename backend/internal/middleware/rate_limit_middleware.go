@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/fntelecomllc/studio/backend/internal/logging"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // RateLimitMiddleware provides rate limiting functionality
@@ -33,7 +34,7 @@ func (m *RateLimitMiddleware) IPRateLimit(maxRequests int, window time.Duration)
 		MaxRequests: maxRequests,
 		Window:      window,
 		KeyFunc: func(c *gin.Context) string {
-			return getClientIP(c)
+			return utils.GetClientIP(c)
 		},
 	})
 }
@@ -49,7 +50,7 @@ func (m *RateLimitMiddleware) UserRateLimit(maxRequests int, window time.Duratio
 				return userID.(string)
 			}
 			// Fall back to IP if no user context
-			return getClientIP(c)
+			return utils.GetClientIP(c)
 		},
 	})
 }
@@ -59,7 +60,7 @@ func (m *RateLimitMiddleware) RateLimit(config RateLimitConfig) gin.HandlerFunc 
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		requestID := uuid.New().String()
-		ipAddress := getClientIP(c)
+		ipAddress := utils.GetClientIP(c)
 		userAgent := c.GetHeader("User-Agent")
 
 		// Generate rate limit key
@@ -140,7 +141,7 @@ func (m *RateLimitMiddleware) RateLimit(config RateLimitConfig) gin.HandlerFunc 
 // LoginRateLimit applies specific rate limiting for login attempts
 func (m *RateLimitMiddleware) LoginRateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		_ = getClientIP(c) // TODO: Use IP address for rate limiting
+		_ = utils.GetClientIP(c) // TODO: Use IP address for rate limiting
 
 		// This would use the rate limiting logic in AuthService
 		// For now, just continue
@@ -151,7 +152,7 @@ func (m *RateLimitMiddleware) LoginRateLimit() gin.HandlerFunc {
 // PasswordResetRateLimit applies specific rate limiting for password reset attempts
 func (m *RateLimitMiddleware) PasswordResetRateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		_ = getClientIP(c) // TODO: Use IP address for rate limiting
+		_ = utils.GetClientIP(c) // TODO: Use IP address for rate limiting
 
 		// This would use the rate limiting logic in AuthService
 		// For now, just continue

@@ -13,6 +13,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/logging"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // AuthMiddleware provides authentication middleware
@@ -34,7 +35,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		requestID := uuid.New().String()
-		ipAddress := getClientIP(c)
+		ipAddress := utils.GetClientIP(c)
 		userAgent := c.GetHeader("User-Agent")
 
 		// Log middleware execution start
@@ -81,7 +82,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 		// Enhanced session-based CSRF protection through origin validation
 		if !m.validateRequestOrigin(c) {
 			duration := time.Since(startTime)
-			
+
 			logging.LogMiddlewareExecution(
 				"session_auth",
 				nil,
@@ -93,10 +94,10 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 				false,
 				http.StatusForbidden,
 				map[string]interface{}{
-					"method": c.Request.Method,
-					"path":   c.Request.URL.Path,
-					"stage":  "origin_validation_failed",
-					"origin": c.GetHeader("Origin"),
+					"method":  c.Request.Method,
+					"path":    c.Request.URL.Path,
+					"stage":   "origin_validation_failed",
+					"origin":  c.GetHeader("Origin"),
 					"referer": c.GetHeader("Referer"),
 				},
 			)
@@ -207,7 +208,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 		validationStart := time.Now()
 		sessionData, err := m.sessionService.ValidateSession(sessionID, ipAddress)
 		validationDuration := time.Since(validationStart)
-		
+
 		// Create security context from session data
 		var securityContext *models.SecurityContext
 		if sessionData != nil {
@@ -411,7 +412,7 @@ func (m *AuthMiddleware) DualAuth(apiKey string) gin.HandlerFunc {
 		}
 
 		// Get client IP
-		ipAddress := getClientIP(c)
+		ipAddress := utils.GetClientIP(c)
 
 		// Validate session
 		sessionData, err := m.sessionService.ValidateSession(sessionID, ipAddress)
@@ -641,12 +642,12 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Header("X-XSS-Protection", "1; mode=block")
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-		
+
 		// Only add HSTS in production with HTTPS
 		if c.Request.TLS != nil {
 			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		}
-		
+
 		c.Next()
 	}
 }
@@ -667,24 +668,4 @@ func ContentTypeValidationMiddleware() gin.HandlerFunc {
 		}
 		c.Next()
 	}
-}
-
-// getClientIP extracts the real client IP address
-func getClientIP(c *gin.Context) string {
-	// Check for forwarded IP first
-	forwarded := c.GetHeader("X-Forwarded-For")
-	if forwarded != "" {
-		// Take the first IP if multiple are present
-		ips := strings.Split(forwarded, ",")
-		return strings.TrimSpace(ips[0])
-	}
-
-	// Check for real IP header
-	realIP := c.GetHeader("X-Real-IP")
-	if realIP != "" {
-		return realIP
-	}
-
-	// Fall back to remote address
-	return c.ClientIP()
 }
