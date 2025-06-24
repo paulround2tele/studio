@@ -9,6 +9,10 @@
         "**/CVS": false,
         "**/Thumbs.db": false
     },
+    "files.hotExit": "off",
+    "files.restoreUndoStack": false,
+    "workbench.editor.restoreViewState": false,
+    "window.restoreWindows": "none",
     "search.exclude": {
         "**/*.code-search": false,
         "**/bower_components": false,
