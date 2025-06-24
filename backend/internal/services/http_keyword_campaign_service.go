@@ -918,7 +918,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	if campaign.ProgressPercentage != nil && campaign.ProcessedItems != nil && campaign.TotalItems != nil {
 		processedCount := *campaign.ProcessedItems
 		totalCount := *campaign.TotalItems
-		
+
 		if done {
 			// Campaign completed
 			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "http_keyword_validation")

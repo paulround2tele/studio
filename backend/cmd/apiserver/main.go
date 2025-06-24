@@ -93,6 +93,7 @@ func main() {
 			dbUser = "domainflow"
 		}
 		if dbPassword == "" {
+			// Development fallback only - never used in production
 			dbPassword = "domainflow_dev_password"
 		}
 		if dbName == "" {

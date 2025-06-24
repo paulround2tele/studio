@@ -81,10 +81,10 @@ func TestPersonaStore_CreatePersona(t *testing.T) {
 	t.Run("successful creation", func(t *testing.T) {
 		clearPersonasTable(t, testDB)
 		details := json.RawMessage(`{"userAgent": "test-agent"}`)
-		persona := &models.Persona{		ID:            uuid.New(),
-		Name:          "Test Create Persona",
-		PersonaType:   models.PersonaTypeHTTP,
-		Description:   sql.NullString{String: "A test persona", Valid: true},
+		persona := &models.Persona{ID: uuid.New(),
+			Name:          "Test Create Persona",
+			PersonaType:   models.PersonaTypeHTTP,
+			Description:   sql.NullString{String: "A test persona", Valid: true},
 			ConfigDetails: details,
 			IsEnabled:     true,
 			CreatedAt:     time.Now(),

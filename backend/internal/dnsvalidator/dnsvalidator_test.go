@@ -3,6 +3,7 @@ package dnsvalidator
 import (
 	"context"
 	"encoding/json"
+
 	// "fmt" // Removed unused import
 	"net/http"
 	"net/http/httptest"

@@ -20,8 +20,8 @@ import (
 // --- DTOs for User Management API ---
 
 type ListUsersResponse struct {
-	Users      []UserResponse             `json:"users"`
-	Pagination PaginationResponse         `json:"pagination"`
+	Users      []UserResponse     `json:"users"`
+	Pagination PaginationResponse `json:"pagination"`
 }
 
 type UserResponse struct {
@@ -143,7 +143,7 @@ func (h *APIHandler) ListUsersGin(c *gin.Context) {
 			FROM auth.roles r
 			JOIN auth.user_roles ur ON r.id = ur.role_id
 			WHERE ur.user_id = $1 AND (ur.expires_at IS NULL OR ur.expires_at > NOW())`
-		
+
 		var roleNames []string
 		err = h.DB.Select(&roleNames, rolesQuery, user.ID)
 		if err != nil {
@@ -363,7 +363,7 @@ func (h *APIHandler) GetUserGin(c *gin.Context) {
 		FROM auth.roles r
 		JOIN auth.user_roles ur ON r.id = ur.role_id
 		WHERE ur.user_id = $1 AND (ur.expires_at IS NULL OR ur.expires_at > NOW())`
-	
+
 	var roleNames []string
 	err = h.DB.Select(&roleNames, rolesQuery, user.ID)
 	if err != nil {
@@ -545,7 +545,7 @@ func (h *APIHandler) UpdateUserGin(c *gin.Context) {
 		// Fetch updated user
 		var user models.User
 		var lastLoginAt sql.NullTime
-		
+
 		selectQuery := `
 			SELECT u.id, u.email, u.email_verified, u.first_name, u.last_name, u.avatar_url,
 			       u.is_active, u.is_locked, u.failed_login_attempts, u.last_login_at,

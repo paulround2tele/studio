@@ -8,7 +8,6 @@ import (
 	"errors" // Added for errors.Is
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -542,12 +541,12 @@ func (dv *DNSValidator) queryDoHRecord(ctx context.Context, domain string, recor
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := ioutil.ReadAll(io.LimitReader(resp.Body, 1024)) // Limit reading body
+		bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, 1024)) // Limit reading body
 		return nil, fmt.Errorf("DoH: request for %s type %s returned status %d using %s. Body: %s", domain, dns.TypeToString[recordType], resp.StatusCode, resolver.Address, string(bodyBytes))
 	}
 
 	var dohResp DoHJSONResponse
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("DoH: read body failed for %s: %w", domain, err)
 	}
@@ -590,12 +589,6 @@ func (dv *DNSValidator) queryDoHRecord(ctx context.Context, domain string, recor
 // NOTE: The ValidationResult struct definition that was here has been removed
 // as it is already defined in models.go within the same package.
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
 func deduplicateIPs(ips []string) []string {
 	seen := make(map[string]struct{}, len(ips))
 	j := 0

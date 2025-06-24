@@ -41,7 +41,7 @@ func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestrator
 // - All legacy type-specific endpoints have been removed in favor of this unified approach
 func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	// === CAMPAIGN CREATION ENDPOINTS ===
-	
+
 	// Unified campaign creation endpoint (preferred)
 	// Supports all campaign types through discriminated union
 	group.POST("", authMiddleware.RequirePermission("campaigns:create"), h.createCampaign)
@@ -259,7 +259,6 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, resp)
 }
 
-
 // --- Campaign Control Handlers ---
 
 func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
@@ -356,7 +355,6 @@ func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
 	}
 	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": "Campaign cancellation requested"})
 }
-
 
 func (h *CampaignOrchestratorAPIHandler) deleteCampaign(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")

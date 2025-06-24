@@ -8,10 +8,11 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq" // Imported for pq.Error
-	"strings"
 )
 
 // personaStorePostgres implements the store.PersonaStore interface

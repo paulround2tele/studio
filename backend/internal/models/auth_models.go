@@ -27,19 +27,19 @@ type User struct {
 	LastLoginIP              *net.IP    `json:"lastLoginIp" db:"last_login_ip"`
 	PasswordChangedAt        time.Time  `json:"-" db:"password_changed_at"`
 	MustChangePassword       bool       `json:"mustChangePassword" db:"must_change_password"`
-	
+
 	// MFA support fields
 	MFAEnabled              bool       `json:"mfaEnabled" db:"mfa_enabled"`
 	MFASecretEncrypted      *[]byte    `json:"-" db:"mfa_secret_encrypted"`
 	MFABackupCodesEncrypted *[]byte    `json:"-" db:"mfa_backup_codes_encrypted"`
 	MFALastUsedAt           *time.Time `json:"mfaLastUsedAt" db:"mfa_last_used_at"`
-	
+
 	// Additional security fields
-	EncryptedFields             *string `json:"-" db:"encrypted_fields"`                  // JSONB stored as string
-	SecurityQuestionsEncrypted  *[]byte `json:"-" db:"security_questions_encrypted"`
-	
-	CreatedAt                time.Time  `json:"createdAt" db:"created_at"`
-	UpdatedAt                time.Time  `json:"updatedAt" db:"updated_at"`
+	EncryptedFields            *string `json:"-" db:"encrypted_fields"` // JSONB stored as string
+	SecurityQuestionsEncrypted *[]byte `json:"-" db:"security_questions_encrypted"`
+
+	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 
 	// Computed fields (not stored in DB)
 	Name        string       `json:"name,omitempty" db:"-"`
@@ -83,18 +83,18 @@ func (u *User) PublicUser() *User {
 
 // Session represents a user session with enhanced security features
 type Session struct {
-	ID                  string     `json:"id" db:"id"`
-	UserID              uuid.UUID  `json:"userId" db:"user_id"`
-	IPAddress           *string    `json:"ipAddress" db:"ip_address"`
-	UserAgent           *string    `json:"userAgent" db:"user_agent"`
-	UserAgentHash       *string    `json:"userAgentHash" db:"user_agent_hash"`
-	SessionFingerprint  *string    `json:"sessionFingerprint" db:"session_fingerprint"`
-	BrowserFingerprint  *string    `json:"browserFingerprint" db:"browser_fingerprint"`
-	ScreenResolution    *string    `json:"screenResolution" db:"screen_resolution"`
-	IsActive            bool       `json:"isActive" db:"is_active"`
-	ExpiresAt           time.Time  `json:"expiresAt" db:"expires_at"`
-	LastActivityAt      time.Time  `json:"lastActivityAt" db:"last_activity_at"`
-	CreatedAt           time.Time  `json:"createdAt" db:"created_at"`
+	ID                 string    `json:"id" db:"id"`
+	UserID             uuid.UUID `json:"userId" db:"user_id"`
+	IPAddress          *string   `json:"ipAddress" db:"ip_address"`
+	UserAgent          *string   `json:"userAgent" db:"user_agent"`
+	UserAgentHash      *string   `json:"userAgentHash" db:"user_agent_hash"`
+	SessionFingerprint *string   `json:"sessionFingerprint" db:"session_fingerprint"`
+	BrowserFingerprint *string   `json:"browserFingerprint" db:"browser_fingerprint"`
+	ScreenResolution   *string   `json:"screenResolution" db:"screen_resolution"`
+	IsActive           bool      `json:"isActive" db:"is_active"`
+	ExpiresAt          time.Time `json:"expiresAt" db:"expires_at"`
+	LastActivityAt     time.Time `json:"lastActivityAt" db:"last_activity_at"`
+	CreatedAt          time.Time `json:"createdAt" db:"created_at"`
 }
 
 // Role represents a user role
@@ -148,7 +148,7 @@ type AuthAuditLog struct {
 	UserAgent          *string    `json:"userAgent" db:"user_agent"`
 	SessionFingerprint *string    `json:"sessionFingerprint" db:"session_fingerprint"`
 	SecurityFlags      *string    `json:"securityFlags" db:"security_flags"` // JSONB stored as string
-	Details            *string    `json:"details" db:"details"`                // JSONB stored as string
+	Details            *string    `json:"details" db:"details"`              // JSONB stored as string
 	RiskScore          int        `json:"riskScore" db:"risk_score"`
 	CreatedAt          time.Time  `json:"createdAt" db:"created_at"`
 }

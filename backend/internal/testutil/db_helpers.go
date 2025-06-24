@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fntelecomllc/studio/backend/internal/store"
+	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/fntelecomllc/studio/backend/internal/store"
-	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
