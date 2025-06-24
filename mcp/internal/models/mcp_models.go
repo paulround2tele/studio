@@ -110,6 +110,20 @@ type Dependency struct {
 	Version string `json:"version"`
 }
 
+// DependencyEdge represents a directed edge between two packages.
+type DependencyEdge struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+// DependencyGraph represents the package dependency graph.
+// DOT contains an optional Graphviz representation.
+type DependencyGraph struct {
+	Nodes []string         `json:"nodes"`
+	Edges []DependencyEdge `json:"edges"`
+	DOT   string           `json:"dot,omitempty"`
+}
+
 // PackageStructureNode represents a node in the package structure tree.
 type PackageStructureNode struct {
 	Name     string                 `json:"name"`

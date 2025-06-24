@@ -30,6 +30,7 @@ The following tool endpoints are available:
 | **Search**        | `/tools/search_code`              | Searches for a pattern in the codebase.                                     |
 |                   | `/tools/get_package_structure`    | Returns the package structure of the project.                               |
 |                   | `/tools/get_dependencies`         | Returns a list of project dependencies from `go.mod`.                       |
+|                   | `/tools/get_dependency_graph`     | Builds a package dependency graph (DOT format optional).                    |
 |                   | `/tools/get_env_vars`             | Finds all usages of environment variables.                                  |
 | **Business Logic**| `/tools/get_middleware_usage`     | Finds all routes that use a given middleware.                               |
 |                   | `/tools/get_workflows`            | Identifies and lists potential business workflows.                          |
