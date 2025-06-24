@@ -10,23 +10,28 @@ This project is a Go-based MCP (Model Context Protocol) server designed to provi
 
 ## Tool Endpoints
 
-The following tool endpoints are available:
+The following tool endpoints are available (41 total):
 
 | Category          | Endpoint                      | Description                                                                 |
 | ----------------- | ----------------------------- | --------------------------------------------------------------------------- |
 | **Code**          | `/tools/get_models`               | Returns a list of Go structs (models) from the specified models directory.  |
 |                   | `/tools/get_routes`               | Returns a list of API routes from the main application file.                |
+|                   | `/tools/get_endpoints`            | Alias of `get_routes` providing all endpoints.                              |
+|                   | `/tools/get_api_schema`           | Returns the OpenAPI schema and route definitions.                           |
 |                   | `/tools/get_handlers`             | Returns a list of API handlers from the specified handlers directory.       |
 |                   | `/tools/get_services`             | Returns a list of services (interfaces and implementations).                |
 |                   | `/tools/get_interfaces`           | Returns a list of Go interfaces defined in the project.                     |
 |                   | `/tools/find_implementations`     | Finds all types that implement a given interface.                           |
 |                   | `/tools/get_call_graph`           | Returns the call graph for a specific function.                             |
 | **Database**      | `/tools/get_database_schema`      | Returns the database schema by parsing a `schema.sql` file.                 |
+|                   | `/tools/get_database_stats`       | Provides database performance statistics and metrics.                       |
 | **Configuration** | `/tools/get_config`               | Returns the application's configuration schema.                             |
 |                   | `/tools/get_middleware`           | Returns a list of available middleware.                                     |
 | **WebSockets**    | `/tools/get_websocket_endpoints`  | Returns a list of WebSocket endpoints.                                      |
 |                   | `/tools/get_websocket_handlers`   | Returns a list of WebSocket handlers.                                       |
 |                   | `/tools/get_websocket_messages`   | Returns a list of WebSocket message structs.                                |
+|                   | `/tools/get_websocket_lifecycle`  | Returns WebSocket connection lifecycle details.                             |
+|                   | `/tools/test_websocket_flow`      | Tests WebSocket message flow and connectivity.                              |
 | **Search**        | `/tools/search_code`              | Searches for a pattern in the codebase.                                     |
 |                   | `/tools/get_package_structure`    | Returns the package structure of the project.                               |
 |                   | `/tools/get_dependencies`         | Returns a list of project dependencies from `go.mod`.                       |
@@ -34,6 +39,7 @@ The following tool endpoints are available:
 |                   | `/tools/get_env_vars`             | Finds all usages of environment variables.                                  |
 | **Business Logic**| `/tools/get_middleware_usage`     | Finds all routes that use a given middleware.                               |
 |                   | `/tools/get_workflows`            | Identifies and lists potential business workflows.                          |
+|                   | `/tools/trace_middleware_flow`    | Traces the execution path through middleware layers.                        |
 |                   | `/tools/get_business_rules`       | Lists functions that appear to contain business rules.                      |
 |                   | `/tools/get_feature_flags`        | Lists all identified feature flags.                                         |
 |                   | `/tools/find_by_type`             | Finds all variables or instances of a specific Go type.                     |
@@ -41,6 +47,11 @@ The following tool endpoints are available:
 |                   | `/tools/get_change_impact`        | Analyzes the potential impact of a code change.                             |
 |                   | `/tools/snapshot`                 | Creates a git stash snapshot of the current changes.                        |
 |                   | `/tools/contract_drift_check`     | Checks for API contract drift between the code and the OpenAPI schema.      |
+|                   | `/tools/get_test_coverage`        | Provides test coverage metrics.                                            |
+|                   | `/tools/analyze_code_quality`     | Analyzes code quality and technical debt.                                  |
+|                   | `/tools/analyze_performance`      | Analyzes application performance bottlenecks.                               |
+|                   | `/tools/get_security_analysis`    | Performs a security analysis of the codebase.                               |
+|                   | `/tools/validate_api_contracts`   | Validates API contracts and OpenAPI specifications.                         |
 |                   | `/tools/analyze_complexity`       | Reports cyclomatic complexity for functions using gocyclo.                  |
 | **Interactive**   | `/tools/run_terminal_command`     | Executes a terminal command.                                                |
 |                   | `/tools/apply_code_change`        | Applies a diff to a file.                                                   |
