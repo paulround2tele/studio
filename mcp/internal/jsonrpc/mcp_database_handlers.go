@@ -30,6 +30,41 @@ func (s *JSONRPCServer) callGetDatabaseSchema() (interface{}, error) {
 	}, nil
 }
 
+// callGetAPISchema implements the get_api_schema MCP tool
+func (s *JSONRPCServer) callGetAPISchema() (interface{}, error) {
+	if s.bridge == nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": "Bridge not initialized",
+				},
+			},
+		}, nil
+	}
+
+	schema, err := s.bridge.GetAPISchema()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("Error getting API schema: %v", err),
+				},
+			},
+		}, nil
+	}
+
+	return map[string]interface{}{
+		"content": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": fmt.Sprintf("API Schema Analysis:\n%+v", schema),
+			},
+		},
+	}, nil
+}
+
 // Additional tool handlers
 
 // callGetDatabaseStats implements the get_database_stats tool

@@ -466,3 +466,65 @@ type CodeQuality struct {
 	Maintainability string  `json:"maintainability"`
 	Complexity      string  `json:"complexity"`
 }
+
+// API Schema models
+type APISchema struct {
+	OpenAPIVersion  string                 `json:"openapi_version"`
+	Endpoints       []string               `json:"endpoints"`
+	Methods         []string               `json:"methods"`
+	SchemaFiles     []string               `json:"schema_files"`
+	ValidationRules map[string]interface{} `json:"validation_rules"`
+}
+
+// Middleware Flow models
+type MiddlewareStep struct {
+	Name          string `json:"name"`
+	Order         int    `json:"order"`
+	ExecutionTime string `json:"execution_time"`
+	Status        string `json:"status"`
+}
+
+type MiddlewareFlow struct {
+	Pipeline           []MiddlewareStep `json:"pipeline"`
+	TotalExecutionTime string           `json:"total_execution_time"`
+	BottleneckDetected bool             `json:"bottleneck_detected"`
+	Recommendations    []string         `json:"recommendations"`
+}
+
+// WebSocket Lifecycle models
+type WSConnectionState struct {
+	State    string `json:"state"`
+	Count    int    `json:"count"`
+	Duration string `json:"duration"`
+}
+
+type WSEvent struct {
+	Type     string `json:"type"`
+	Count    int    `json:"count"`
+	LastSeen string `json:"last_seen"`
+}
+
+type WebSocketLifecycle struct {
+	ConnectionStates  []WSConnectionState `json:"connection_states"`
+	Events            []WSEvent           `json:"events"`
+	ActiveConnections int                 `json:"active_connections"`
+	TotalConnections  int                 `json:"total_connections"`
+	MessageThroughput string              `json:"message_throughput"`
+}
+
+// WebSocket Test models
+type WSTestStep struct {
+	Name     string `json:"name"`
+	Status   string `json:"status"`
+	Duration string `json:"duration"`
+	Details  string `json:"details"`
+}
+
+type WebSocketTestResult struct {
+	ConnectionTest  WSTestStep   `json:"connection_test"`
+	MessageTests    []WSTestStep `json:"message_tests"`
+	OverallStatus   string       `json:"overall_status"`
+	TotalDuration   string       `json:"total_duration"`
+	Recommendations []string     `json:"recommendations"`
+	Errors          []string     `json:"errors"`
+}

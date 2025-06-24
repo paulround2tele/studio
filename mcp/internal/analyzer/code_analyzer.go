@@ -29,8 +29,7 @@ func GetValidationRules(dir string) ([]models.ValidationRule, error) {
 		}
 
 		lines := strings.Split(string(content), "\n")
-		for i, line := range lines {
-			// Look for struct tags with validation
+		for i, line := range lines { // Look for struct tags with validation
 			if strings.Contains(line, `validate:"`) {
 				start := strings.Index(line, `validate:"`) + 10
 				end := strings.Index(line[start:], `"`)
@@ -400,6 +399,86 @@ func GetDependencies(dirPath string) ([]models.Dependency, error) {
 	return dependencies, nil
 }
 
+// ParseGoModDependencies parses dependencies from go.mod file
+func ParseGoModDependencies(goModPath string) ([]models.Dependency, error) {
+	var dependencies []models.Dependency
+
+	content, err := os.ReadFile(goModPath)
+	if err != nil {
+		return dependencies, err
+	}
+
+	lines := strings.Split(string(content), "\n")
+	inRequireBlock := false
+	inReplaceBlock := false
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		// Handle require block
+		if line == "require (" {
+			inRequireBlock = true
+			continue
+		}
+
+		if line == "replace (" {
+			inReplaceBlock = true
+			continue
+		}
+
+		if line == ")" && (inRequireBlock || inReplaceBlock) {
+			inRequireBlock = false
+			inReplaceBlock = false
+			continue
+		}
+
+		// Parse require statements
+		if inRequireBlock || strings.HasPrefix(line, "require ") {
+			parts := strings.Fields(line)
+			if len(parts) >= 2 {
+				path := parts[0]
+				version := parts[1]
+
+				// Skip "require" keyword if present
+				if path == "require" && len(parts) >= 3 {
+					path = parts[1]
+					version = parts[2]
+				}
+
+				// Remove comments and extra flags
+				if idx := strings.Index(version, "//"); idx != -1 {
+					version = strings.TrimSpace(version[:idx])
+				}
+
+				dependencies = append(dependencies, models.Dependency{
+					Path:    path,
+					Version: version,
+				})
+			}
+		}
+
+		// Parse single-line require statements
+		if strings.HasPrefix(line, "require ") && !inRequireBlock {
+			parts := strings.Fields(line[8:]) // Remove "require "
+			if len(parts) >= 2 {
+				path := parts[0]
+				version := parts[1]
+
+				if idx := strings.Index(version, "//"); idx != -1 {
+					version = strings.TrimSpace(version[:idx])
+				}
+
+				dependencies = append(dependencies, models.Dependency{
+					Path:    path,
+					Version: version,
+				})
+			}
+		}
+	}
+
+	return dependencies, nil
+}
+
 // GetReferences finds references to a symbol in the codebase
 func GetReferences(dirPath, symbol, filePath string) ([]models.Reference, error) {
 	var references []models.Reference
@@ -566,4 +645,183 @@ func RunTerminalCommand(command, workingDir string) (models.CommandResult, error
 	}
 
 	return result, err
+}
+
+// ParseApiSchema analyzes API schema from Go files
+func ParseApiSchema(apiDir string) (interface{}, error) {
+	var schema struct {
+		Routes     []models.Route         `json:"routes"`
+		Models     []models.GoModel       `json:"models"`
+		Handlers   []models.Handler       `json:"handlers"`
+		Middleware []models.Middleware    `json:"middleware"`
+		Types      map[string]interface{} `json:"types"`
+	}
+
+	// Parse routes
+	routes, err := ParseGinRoutes(filepath.Join(apiDir, "main.go"))
+	if err == nil {
+		schema.Routes = routes
+	}
+
+	// Parse models
+	models, err := parseModelsFromDir(apiDir)
+	if err == nil {
+		schema.Models = models
+	}
+
+	// Parse handlers
+	handlers, err := ParseHandlers(apiDir)
+	if err == nil {
+		schema.Handlers = handlers
+	}
+
+	// Parse middleware
+	middleware, err := ParseMiddleware(apiDir)
+	if err == nil {
+		schema.Middleware = middleware
+	}
+
+	// Parse type definitions
+	types, err := parseTypeDefinitions(apiDir)
+	if err == nil {
+		schema.Types = types
+	}
+
+	return schema, nil
+}
+
+// parseModelsFromDir extracts model definitions from a directory
+func parseModelsFromDir(dir string) ([]models.GoModel, error) {
+	var goModels []models.GoModel
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		fset := token.NewFileSet()
+		node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+
+		ast.Inspect(node, func(n ast.Node) bool {
+			if genDecl, ok := n.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
+				for _, spec := range genDecl.Specs {
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+							fields := extractFieldsFromStruct(structType)
+							goModels = append(goModels, models.GoModel{
+								Name:   typeSpec.Name.Name,
+								File:   path,
+								Fields: fields,
+							})
+						}
+					}
+				}
+			}
+			return true
+		})
+
+		return nil
+	})
+
+	return goModels, err
+}
+
+// extractFieldsFromStruct extracts field information from a struct type
+func extractFieldsFromStruct(structType *ast.StructType) []models.Field {
+	var fields []models.Field
+
+	for _, field := range structType.Fields.List {
+		for _, name := range field.Names {
+			fieldType := getTypeString(field.Type)
+			jsonTag := getJSONTag(field.Tag)
+			fields = append(fields, models.Field{
+				Name: name.Name,
+				Type: fieldType,
+				Tag:  jsonTag,
+			})
+		}
+	}
+
+	return fields
+}
+
+// parseTypeDefinitions extracts type definitions and creates a schema map
+func parseTypeDefinitions(dir string) (map[string]interface{}, error) {
+	types := make(map[string]interface{})
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		fset := token.NewFileSet()
+		node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+
+		ast.Inspect(node, func(n ast.Node) bool {
+			if genDecl, ok := n.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
+				for _, spec := range genDecl.Specs {
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						typeName := typeSpec.Name.Name
+						typeInfo := map[string]interface{}{
+							"name": typeName,
+							"file": path,
+							"kind": getTypeKind(typeSpec.Type),
+						}
+
+						// Add specific information based on type
+						switch t := typeSpec.Type.(type) {
+						case *ast.StructType:
+							typeInfo["fields"] = extractFieldsFromStruct(t)
+						case *ast.InterfaceType:
+							typeInfo["methods"] = extractInterfaceMethods(t)
+						case *ast.ArrayType:
+							typeInfo["elementType"] = getTypeString(t.Elt)
+						case *ast.MapType:
+							typeInfo["keyType"] = getTypeString(t.Key)
+							typeInfo["valueType"] = getTypeString(t.Value)
+						}
+
+						types[typeName] = typeInfo
+					}
+				}
+			}
+			return true
+		})
+
+		return nil
+	})
+
+	return types, err
+}
+
+// getTypeKind returns the kind of a type (struct, interface, slice, etc.)
+func getTypeKind(expr ast.Expr) string {
+	switch expr.(type) {
+	case *ast.StructType:
+		return "struct"
+	case *ast.InterfaceType:
+		return "interface"
+	case *ast.ArrayType:
+		return "slice"
+	case *ast.MapType:
+		return "map"
+	case *ast.ChanType:
+		return "channel"
+	case *ast.FuncType:
+		return "function"
+	case *ast.Ident:
+		return "basic"
+	case *ast.SelectorExpr:
+		return "qualified"
+	case *ast.StarExpr:
+		return "pointer"
+	default:
+		return "unknown"
+	}
 }

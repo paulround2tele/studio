@@ -21,6 +21,14 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"properties": map[string]interface{}{},
 			},
 		},
+		{
+			Name:        "get_api_schema",
+			Description: "Get API schema including OpenAPI specifications and route definitions",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
 
 		// Code Analysis Tools (7)
 		{
@@ -181,11 +189,35 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"properties": map[string]interface{}{},
 			},
 		},
+		{
+			Name:        "get_websocket_lifecycle",
+			Description: "Get WebSocket connection lifecycle and state management",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "test_websocket_flow",
+			Description: "Test WebSocket message flow and connectivity",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
 
 		// Business Logic Tools (4)
 		{
 			Name:        "get_middleware_usage",
 			Description: "Get middleware usage patterns and analysis",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "trace_middleware_flow",
+			Description: "Trace middleware execution flow and pipeline",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
@@ -385,6 +417,8 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 	// Database Tools
 	case "get_database_schema":
 		return s.callGetDatabaseSchema()
+	case "get_api_schema":
+		return s.callGetAPISchema()
 	case "get_database_stats":
 		return s.callGetDatabaseStats()
 
@@ -411,6 +445,8 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetMiddleware()
 	case "get_env_vars":
 		return s.callGetEnvVars()
+	case "trace_middleware_flow":
+		return s.callTraceMiddlewareFlow()
 
 	// Search Tools
 	case "search_code":
@@ -427,6 +463,10 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetWebSocketHandlers(ctx)
 	case "get_websocket_messages":
 		return s.callGetWebSocketMessages(ctx)
+	case "get_websocket_lifecycle":
+		return s.callGetWebSocketLifecycle(ctx)
+	case "test_websocket_flow":
+		return s.callTestWebSocketFlow(ctx)
 
 	// Business Logic Tools
 	case "get_middleware_usage":

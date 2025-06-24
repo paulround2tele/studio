@@ -78,3 +78,73 @@ func (s *JSONRPCServer) callGetWebSocketMessages(ctx context.Context) (interface
 		},
 	}, nil
 }
+
+// callGetWebSocketLifecycle implements the get_websocket_lifecycle MCP tool
+func (s *JSONRPCServer) callGetWebSocketLifecycle(ctx context.Context) (interface{}, error) {
+	if s.bridge == nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": "Bridge not initialized",
+				},
+			},
+		}, nil
+	}
+
+	lifecycle, err := s.bridge.GetWebSocketLifecycle()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("Error getting WebSocket lifecycle: %v", err),
+				},
+			},
+		}, nil
+	}
+
+	return map[string]interface{}{
+		"content": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": fmt.Sprintf("WebSocket Lifecycle Analysis:\n%+v", lifecycle),
+			},
+		},
+	}, nil
+}
+
+// callTestWebSocketFlow implements the test_websocket_flow MCP tool
+func (s *JSONRPCServer) callTestWebSocketFlow(ctx context.Context) (interface{}, error) {
+	if s.bridge == nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": "Bridge not initialized",
+				},
+			},
+		}, nil
+	}
+
+	result, err := s.bridge.TestWebSocketFlow()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("Error testing WebSocket flow: %v", err),
+				},
+			},
+		}, nil
+	}
+
+	return map[string]interface{}{
+		"content": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": fmt.Sprintf("WebSocket Flow Test Results:\n%+v", result),
+			},
+		},
+	}, nil
+}

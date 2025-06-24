@@ -77,3 +77,38 @@ func (s *JSONRPCServer) callGetEnvVars() (interface{}, error) {
 		},
 	}, nil
 }
+
+// callTraceMiddlewareFlow implements the trace_middleware_flow MCP tool
+func (s *JSONRPCServer) callTraceMiddlewareFlow() (interface{}, error) {
+	if s.bridge == nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": "Bridge not initialized",
+				},
+			},
+		}, nil
+	}
+
+	flow, err := s.bridge.TraceMiddlewareFlow()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("Error tracing middleware flow: %v", err),
+				},
+			},
+		}, nil
+	}
+
+	return map[string]interface{}{
+		"content": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": fmt.Sprintf("Middleware Flow Trace:\n%+v", flow),
+			},
+		},
+	}, nil
+}

@@ -2,7 +2,6 @@ package server
 
 import (
 	"database/sql"
-	"log"
 	"mcp/internal/config"
 	"os"
 
@@ -10,7 +9,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// Server is the MCP server.
+// Server represents the MCP server with database and bridge access.
+// Note: This struct is kept for compatibility but the actual MCP server
+// now runs as JSON-RPC 2.0 over stdio, not HTTP.
 type Server struct {
 	Router *gin.Engine
 	DB     *sql.DB
@@ -36,14 +37,5 @@ func NewServer() *Server {
 		DB:     db,
 		Bridge: NewBridge(db, cwd),
 	}
-	s.routes()
 	return s
-}
-
-// StartHTTPServer starts the Gin HTTP server.
-func (s *Server) StartHTTPServer() {
-	log.Println("Starting HTTP server on :8080")
-	if err := s.Router.Run(":8080"); err != nil {
-		log.Fatalf("could not start HTTP server: %v", err)
-	}
 }
