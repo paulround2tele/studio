@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
 )
 
@@ -41,7 +42,7 @@ func TestProxy(proxyEntry config.ProxyConfigEntry) ProxyTestResult {
 	startTime := time.Now()
 	result := ProxyTestResult{ProxyID: proxyEntry.ID}
 	lcProtocol := strings.ToLower(proxyEntry.Protocol)
-	if lcProtocol != "http" && lcProtocol != "https" {
+	if lcProtocol != constants.ProtocolHTTP && lcProtocol != constants.ProtocolHTTPS {
 		result.Error = fmt.Sprintf("Unsupported proxy protocol for testing: %s. Only http/https are supported.", proxyEntry.Protocol)
 		result.DurationMs = time.Since(startTime).Milliseconds()
 		return result

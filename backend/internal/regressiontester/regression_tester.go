@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 )
 
 // RegressionTester analyzes regression test results
@@ -116,13 +118,13 @@ func (r *RegressionTester) ParseResults(resultFiles []string) (*RegressionTestRe
 				if event.Output != "" {
 					testResult.Output = append(testResult.Output, event.Output)
 				}
-			case "pass":
+			case constants.TestResultPass:
 				// Test passed
-				testResult.Status = "pass"
+				testResult.Status = constants.TestResultPass
 				testResult.Duration = event.Elapsed
-			case "fail":
+			case constants.TestResultFail:
 				// Test failed
-				testResult.Status = "fail"
+				testResult.Status = constants.TestResultFail
 				testResult.Duration = event.Elapsed
 
 				// Extract failure message from output
@@ -137,9 +139,9 @@ func (r *RegressionTester) ParseResults(resultFiles []string) (*RegressionTestRe
 				if testResult.FailMessage == "" && len(testResult.Output) > 0 {
 					testResult.FailMessage = testResult.Output[len(testResult.Output)-1]
 				}
-			case "skip":
+			case constants.TestResultSkip:
 				// Test skipped
-				testResult.Status = "skip"
+				testResult.Status = constants.TestResultSkip
 			}
 
 			// Get or create package result
