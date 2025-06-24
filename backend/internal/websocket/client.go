@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -48,14 +49,14 @@ type WebSocketMessage struct {
 	Status         string      `json:"status,omitempty"`
 	Progress       float64     `json:"progress,omitempty"`
 	ErrorMessage   string      `json:"error,omitempty"`
-	
+
 	// Real-time update specific fields
-	ProxyID        string      `json:"proxyId,omitempty"`
-	ProxyStatus    string      `json:"proxyStatus,omitempty"`
-	PersonaID      string      `json:"personaId,omitempty"`
-	PersonaStatus  string      `json:"personaStatus,omitempty"`
-	ValidationsProcessed int64 `json:"validationsProcessed,omitempty"`
-	DomainsGenerated     int64 `json:"domainsGenerated,omitempty"`
+	ProxyID                string `json:"proxyId,omitempty"`
+	ProxyStatus            string `json:"proxyStatus,omitempty"`
+	PersonaID              string `json:"personaId,omitempty"`
+	PersonaStatus          string `json:"personaStatus,omitempty"`
+	ValidationsProcessed   int64  `json:"validationsProcessed,omitempty"`
+	DomainsGenerated       int64  `json:"domainsGenerated,omitempty"`
 	EstimatedTimeRemaining string `json:"estimatedTimeRemaining,omitempty"`
 }
 
@@ -84,7 +85,7 @@ type Client struct {
 	sequenceNumbers map[string]int64
 
 	// Security context for authentication and authorization
-	securityContext *SecurityContext
+	securityContext *models.SecurityContext
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -183,7 +184,7 @@ func (c *Client) handleMessage(message []byte) {
 		response := c.createMessage("connection_ack", nil)
 		userId := ""
 		if c.securityContext != nil {
-			userId = c.securityContext.UserID
+			userId = c.securityContext.UserID.String()
 		}
 		response.Data = map[string]interface{}{
 			"connectionId":       uuid.New().String(),
@@ -311,7 +312,7 @@ func NewClient(hub Broadcaster, conn *websocket.Conn) *Client {
 }
 
 // NewClientWithSecurity creates a new client with security context
-func NewClientWithSecurity(hub Broadcaster, conn *websocket.Conn, securityContext *SecurityContext) *Client {
+func NewClientWithSecurity(hub Broadcaster, conn *websocket.Conn, securityContext *models.SecurityContext) *Client {
 	client := &Client{
 		hub:                   hub,
 		conn:                  conn,
@@ -330,7 +331,7 @@ func NewClientWithSecurity(hub Broadcaster, conn *websocket.Conn, securityContex
 }
 
 // GetSecurityContext returns the client's security context
-func (c *Client) GetSecurityContext() *SecurityContext {
+func (c *Client) GetSecurityContext() *models.SecurityContext {
 	return c.securityContext
 }
 
@@ -373,7 +374,7 @@ func CreateDomainGenerationMessage(campaignID string, domainsGenerated int64, to
 	if totalDomains > 0 {
 		progress = float64(domainsGenerated) / float64(totalDomains) * 100
 	}
-	
+
 	return WebSocketMessage{
 		ID:             uuid.New().String(),
 		Timestamp:      time.Now().UTC().Format(time.RFC3339),
@@ -396,7 +397,7 @@ func CreateValidationProgressMessage(campaignID string, validationsProcessed int
 	if totalValidations > 0 {
 		progress = float64(validationsProcessed) / float64(totalValidations) * 100
 	}
-	
+
 	return WebSocketMessage{
 		ID:             uuid.New().String(),
 		Timestamp:      time.Now().UTC().Format(time.RFC3339),

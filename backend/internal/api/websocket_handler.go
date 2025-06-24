@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	// Alias your internal websocket package to avoid collision with gorilla/websocket
+	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	internalwebsocket "github.com/fntelecomllc/studio/backend/internal/websocket"
 
@@ -21,7 +23,7 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		// CRITICAL SECURITY FIX: Proper origin validation for production
 		origin := r.Header.Get("Origin")
-		
+
 		log.Printf("WebSocket origin validation check: origin='%s', gin.Mode='%s'", origin, gin.Mode())
 
 		// Debug: Log environment variables
@@ -40,7 +42,7 @@ var upgrader = websocket.Upgrader{
 			strings.EqualFold(os.Getenv("ENV"), "dev") ||
 			strings.EqualFold(os.Getenv("ENVIRONMENT"), "development") ||
 			strings.EqualFold(os.Getenv("ENVIRONMENT"), "dev")
-		
+
 		// ADDITIONAL: If environment variables indicate production but we're clearly in a local development setup
 		// (localhost origins), treat it as development. This handles cases where deploy scripts set ENV=production
 		// but we're actually running locally for development.
@@ -61,17 +63,17 @@ var upgrader = websocket.Upgrader{
 				"http://127.0.0.1:8080",
 				"http://localhost:8000",
 				"http://127.0.0.1:8000",
-				"http://0.0.0.0:3000",   // Docker development
+				"http://0.0.0.0:3000", // Docker development
 				"http://0.0.0.0:3001",
 			}
-			
+
 			for _, allowed := range developmentOrigins {
 				if origin == allowed {
 					log.Printf("WebSocket origin validation: ALLOWED development origin '%s'", origin)
 					return true
 				}
 			}
-			
+
 			// Additional check for any localhost pattern in development
 			if strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") || strings.Contains(origin, "0.0.0.0") {
 				log.Printf("WebSocket origin validation: ALLOWED localhost pattern '%s' in development mode", origin)
@@ -149,7 +151,7 @@ func (h *WebSocketHandler) HandleConnections(c *gin.Context) {
 
 	// Origin validation for cross-site request protection (no token-based CSRF needed)
 	origin := c.GetHeader("Origin")
-	
+
 	// Validate origin for cross-site request protection
 	if !h.isValidOrigin(origin) {
 		log.Printf("WebSocket connection rejected: invalid origin '%s'", origin)
@@ -162,7 +164,7 @@ func (h *WebSocketHandler) HandleConnections(c *gin.Context) {
 	// Validate the session with enhanced security checks
 	clientIP := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
-	
+
 	// Use session service for validation
 	sessionData, err := h.sessionService.ValidateSession(sessionID, clientIP)
 	if err != nil {
@@ -193,11 +195,15 @@ func (h *WebSocketHandler) HandleConnections(c *gin.Context) {
 	}
 
 	// Create a new client with session-based security context
-	wsSecurityContext := &internalwebsocket.SecurityContext{
-		UserID:      sessionData.UserID.String(),
-		SessionID:   sessionID,
-		ClientIP:    clientIP,
-		Permissions: sessionData.Permissions,
+	wsSecurityContext := &models.SecurityContext{
+		UserID:                 sessionData.UserID,
+		SessionID:              sessionID,
+		LastActivity:           time.Now(),
+		SessionExpiry:          time.Now().Add(24 * time.Hour), // Default 24 hour expiry
+		RequiresPasswordChange: false,                          // Default to false for websocket
+		RiskScore:              0,                              // Default risk score
+		Permissions:            sessionData.Permissions,
+		Roles:                  sessionData.Roles, // Assuming sessionData has Roles
 	}
 
 	// Create and start the client (note: client is used by being passed to the constructor)
@@ -228,7 +234,7 @@ func (h *WebSocketHandler) isValidOrigin(origin string) bool {
 	isLocalhost := strings.Contains(origin, "localhost") ||
 		strings.Contains(origin, "127.0.0.1") ||
 		strings.Contains(origin, "0.0.0.0")
-	
+
 	if !isDevelopment && isLocalhost {
 		isDevelopment = true
 	}
@@ -247,13 +253,13 @@ func (h *WebSocketHandler) isValidOrigin(origin string) bool {
 			"http://0.0.0.0:3000",
 			"http://0.0.0.0:3001",
 		}
-		
+
 		for _, allowed := range developmentOrigins {
 			if origin == allowed {
 				return true
 			}
 		}
-		
+
 		// Additional check for any localhost pattern in development
 		if isLocalhost {
 			return true
@@ -300,7 +306,7 @@ func (h *WebSocketHandler) validateSessionFingerprint(sessionData *services.Sess
 		// Extract major browser info for comparison
 		sessionBrowser := h.extractBrowserInfo(sessionData.UserAgent)
 		currentBrowser := h.extractBrowserInfo(userAgent)
-		
+
 		if sessionBrowser != currentBrowser {
 			log.Printf("Session fingerprint mismatch: User agent browser changed from %s to %s", sessionBrowser, currentBrowser)
 			return false
@@ -313,7 +319,7 @@ func (h *WebSocketHandler) validateSessionFingerprint(sessionData *services.Sess
 // extractBrowserInfo extracts basic browser information for fingerprint comparison
 func (h *WebSocketHandler) extractBrowserInfo(userAgent string) string {
 	userAgent = strings.ToLower(userAgent)
-	
+
 	// Simple browser detection for fingerprint validation
 	if strings.Contains(userAgent, "chrome") && !strings.Contains(userAgent, "edge") && !strings.Contains(userAgent, "opr") {
 		return "chrome"
@@ -326,6 +332,6 @@ func (h *WebSocketHandler) extractBrowserInfo(userAgent string) string {
 	} else if strings.Contains(userAgent, "opr") || strings.Contains(userAgent, "opera") {
 		return "opera"
 	}
-	
+
 	return "unknown"
 }
