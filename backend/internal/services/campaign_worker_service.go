@@ -406,7 +406,11 @@ func (tm *TransactionManager) SafeCampaignTransaction(ctx context.Context, opts 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			log.Printf("Error rolling back transaction in withTransaction: %v", err)
+		}
+	}()
 
 	if err := fn(tx); err != nil {
 		return err

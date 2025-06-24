@@ -309,7 +309,10 @@ func (s *SessionService) InvalidateAllUserSessions(userID uuid.UUID) error {
 
 	// Get all user sessions from memory
 	if sessionIDsInterface, exists := s.inMemoryStore.userSessions.Load(userID); exists {
-		sessionIDs := sessionIDsInterface.([]string)
+		sessionIDs, ok := sessionIDsInterface.([]string)
+		if !ok {
+			return fmt.Errorf("invalid session IDs type for user %s", userID)
+		}
 
 		// Remove from memory
 		for _, sessionID := range sessionIDs {
@@ -338,7 +341,10 @@ func (s *SessionService) InvalidateAllUserSessions(userID uuid.UUID) error {
 func (s *SessionService) ExtendSession(sessionID string, newExpiry time.Time) error {
 	// Update in memory
 	if sessionInterface, exists := s.inMemoryStore.sessions.Load(sessionID); exists {
-		session := sessionInterface.(*SessionData)
+		session, ok := sessionInterface.(*SessionData)
+		if !ok {
+			return fmt.Errorf("invalid session data type for session %s", sessionID)
+		}
 		session.ExpiresAt = newExpiry
 		s.inMemoryStore.sessions.Store(sessionID, session)
 	}

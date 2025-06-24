@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -208,7 +209,11 @@ func (s *campaignJobStorePostgres) GetNextQueuedJob(ctx context.Context, campaig
 	if err != nil {
 		return nil, fmt.Errorf("pg: failed to begin transaction for GetNextQueuedJob: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			log.Printf("Error rolling back transaction in GetNextQueuedJob: %v", err)
+		}
+	}()
 
 	now := time.Now().UTC()
 	selectArgs := []interface{}{models.JobStatusQueued, models.JobBusinessStatusRetry, now}
