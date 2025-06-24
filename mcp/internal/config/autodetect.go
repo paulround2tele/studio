@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // DatabaseConfig represents database configuration
@@ -129,12 +128,4 @@ func FindProjectRoot(startDir string) string {
 
 	// Default to current directory if no markers found
 	return startDir
-}
-
-// getStringDefault returns the value if not empty, otherwise returns the default
-func getStringDefault(value, defaultValue string) string {
-	if strings.TrimSpace(value) == "" {
-		return defaultValue
-	}
-	return value
 }

@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 // Table represents a database table.
 type Table struct {
 	Name    string   `json:"name"`
@@ -99,6 +101,7 @@ type CallGraphNode struct {
 	Package      string   `json:"package"`
 	File         string   `json:"file"`
 	Calls        []string `json:"calls"`
+	CallCount    int      `json:"callCount"`
 }
 
 // Dependency represents a single Go module dependency.
@@ -129,41 +132,47 @@ type Field struct {
 	Tag  string `json:"tag"`
 }
 
-// Workflow represents a potential business workflow identified in the code.
-type Workflow struct {
-	Name         string   `json:"name"`
-	File         string   `json:"file"`
-	ServiceCalls []string `json:"service_calls"`
-	Description  string   `json:"description"`
-}
-
-// BusinessRule represents a function or method that appears to contain business logic.
-type BusinessRule struct {
-	Name        string `json:"name"`
-	File        string `json:"file"`
-	Line        int    `json:"line"`
-	Description string `json:"description"`
-}
-
-// FeatureFlag represents a usage of a feature flag.
-type FeatureFlag struct {
-	Name        string `json:"name"`
-	File        string `json:"file"`
-	Line        int    `json:"line"`
-	Description string `json:"description"`
-}
-
 // MiddlewareUsage represents an instance of a middleware being used by a route.
 type MiddlewareUsage struct {
 	MiddlewareName string `json:"middleware_name"`
 	Route          Route  `json:"route"`
 }
 
-// Reference represents a single reference to a symbol.
+// Reference represents a code reference
 type Reference struct {
+	Name string `json:"name"`
 	File string `json:"file"`
 	Line int    `json:"line"`
-	Text string `json:"text"`
+	Type string `json:"type"`
+}
+
+// Workflow represents a business workflow
+type Workflow struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Steps       []string `json:"steps"`
+	Status      string   `json:"status"`
+}
+
+// BusinessRule represents a business rule
+type BusinessRule struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Condition   string `json:"condition"`
+	Action      string `json:"action"`
+	Priority    int    `json:"priority"`
+	Enabled     bool   `json:"enabled"`
+}
+
+// FeatureFlag represents a feature flag
+type FeatureFlag struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+	File        string `json:"file"`
+	Line        int    `json:"line"`
 }
 
 // GetReferencesRequest is the request for the get_references tool.
@@ -247,6 +256,8 @@ type ChangeImpact struct {
 	AffectedTypes     []Reference `json:"affectedTypes"`
 	AffectedTests     []Reference `json:"affectedTests"`
 	RiskLevel         string      `json:"riskLevel"`
+	FilesAffected     int         `json:"filesAffected"`
+	Severity          string      `json:"severity"`
 }
 
 // Snapshot represents a code snapshot
@@ -264,6 +275,8 @@ type ContractDrift struct {
 	AddedRoutes   []string `json:"addedRoutes"`
 	RemovedRoutes []string `json:"removedRoutes"`
 	Details       []string `json:"details"`
+	IssuesFound   int      `json:"issuesFound"`
+	Status        string   `json:"status"`
 }
 
 // CommandResult represents the result of a terminal command
@@ -273,4 +286,183 @@ type CommandResult struct {
 	Stdout   string `json:"stdout"`
 	Stderr   string `json:"stderr"`
 	Duration string `json:"duration"`
+}
+
+// MCP Protocol Types
+
+// MCPRequest represents a generic MCP request
+type MCPRequest struct {
+	Method string          `json:"method"`
+	Params json.RawMessage `json:"params,omitempty"`
+}
+
+// MCPResponse represents a generic MCP response
+type MCPResponse struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
+}
+
+// MCPInitializeParams represents MCP initialize parameters
+type MCPInitializeParams struct {
+	ProtocolVersion string                 `json:"protocolVersion"`
+	Capabilities    map[string]interface{} `json:"capabilities"`
+	ClientInfo      struct {
+		Name    string `json:"name"`
+		Version string `json:"version"`
+	} `json:"clientInfo"`
+}
+
+// MCPInitializeResult represents MCP initialize result
+type MCPInitializeResult struct {
+	ProtocolVersion string                 `json:"protocolVersion"`
+	Capabilities    map[string]interface{} `json:"capabilities"`
+	ServerInfo      struct {
+		Name    string `json:"name"`
+		Version string `json:"version"`
+	} `json:"serverInfo"`
+	Tools []MCPTool `json:"tools"`
+}
+
+// MCPTool represents an MCP tool definition
+type MCPTool struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	InputSchema interface{} `json:"inputSchema"`
+}
+
+// MCPToolCall represents an MCP tool call
+type MCPToolCall struct {
+	Name      string                 `json:"name"`
+	Arguments map[string]interface{} `json:"arguments"`
+}
+
+// GoFile represents a Go source file for analysis
+type GoFile struct {
+	Name        string   `json:"name"`
+	Path        string   `json:"path"`
+	Package     string   `json:"package"`
+	PackageName string   `json:"packageName"`
+	Imports     []string `json:"imports"`
+	Functions   []string `json:"functions"`
+	Types       []string `json:"types"`
+	Structs     []string `json:"structs"`
+	Interfaces  []string `json:"interfaces"`
+}
+
+// ValidationRule represents a data validation rule
+type ValidationRule struct {
+	Field       string `json:"field"`
+	Rule        string `json:"rule"`
+	Message     string `json:"message"`
+	File        string `json:"file"`
+	LineNumber  int    `json:"line_number"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Pattern     string `json:"pattern"`
+	Severity    string `json:"severity"`
+}
+
+// ErrorHandler represents an error handling pattern
+type ErrorHandler struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	File        string `json:"file"`
+	Middleware  string `json:"middleware,omitempty"`
+	Description string `json:"description"`
+	Pattern     string `json:"pattern"`
+	Location    string `json:"location"`
+}
+
+// SecurityPolicy represents a security policy or access control
+type SecurityPolicy struct {
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`
+	Rules       []string `json:"rules"`
+	File        string   `json:"file"`
+	Enabled     bool     `json:"enabled"`
+	Description string   `json:"description"`
+	Pattern     string   `json:"pattern"`
+	Location    string   `json:"location"`
+}
+
+// PerformanceMetrics represents performance analysis results
+type PerformanceMetrics struct {
+	ResponseTime    float64 `json:"responseTime"`
+	Throughput      float64 `json:"throughput"`
+	MemoryUsage     int64   `json:"memoryUsage"`
+	CPUUsage        float64 `json:"cpuUsage"`
+	DatabaseQueries int     `json:"databaseQueries"`
+	CacheHits       int     `json:"cacheHits"`
+	Name            string  `json:"name"`
+	Type            string  `json:"type"`
+	File            string  `json:"file"`
+	Description     string  `json:"description"`
+	Pattern         string  `json:"pattern"`
+	Location        string  `json:"location"`
+	Value           string  `json:"value"`
+	Threshold       string  `json:"threshold"`
+	Status          string  `json:"status"`
+}
+
+// AuditLog represents an audit log entry
+type AuditLog struct {
+	ID          string `json:"id"`
+	Timestamp   string `json:"timestamp"`
+	Action      string `json:"action"`
+	User        string `json:"user"`
+	UserID      string `json:"userID"`
+	Resource    string `json:"resource"`
+	Details     string `json:"details"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	File        string `json:"file"`
+	Description string `json:"description"`
+	Pattern     string `json:"pattern"`
+	Location    string `json:"location"`
+}
+
+// DatabaseStats represents database statistics
+type DatabaseStats struct {
+	TotalTables      int     `json:"totalTables"`
+	TotalColumns     int     `json:"totalColumns"`
+	TotalIndexes     int     `json:"totalIndexes"`
+	DatabaseSize     int64   `json:"databaseSize"`
+	ConnectionCount  int     `json:"connectionCount"`
+	QueryPerformance float64 `json:"queryPerformance"`
+}
+
+// SecurityAnalysis represents security analysis results
+type SecurityAnalysis struct {
+	VulnerabilitiesFound int      `json:"vulnerabilitiesFound"`
+	SecurityScore        float64  `json:"securityScore"`
+	Recommendations      []string `json:"recommendations"`
+	CriticalIssues       []string `json:"criticalIssues"`
+	RiskLevel            string   `json:"riskLevel"`
+}
+
+// APIContractValidation represents API contract validation results
+type APIContractValidation struct {
+	ContractsValidated int    `json:"contractsValidated"`
+	ErrorsFound        int    `json:"errorsFound"`
+	WarningsFound      int    `json:"warningsFound"`
+	Status             string `json:"status"`
+}
+
+// TestCoverage represents test coverage metrics
+type TestCoverage struct {
+	OverallPercentage float64 `json:"overallPercentage"`
+	FilesCovered      int     `json:"filesCovered"`
+	TotalFiles        int     `json:"totalFiles"`
+	LinesCovered      int     `json:"linesCovered"`
+	TotalLines        int     `json:"totalLines"`
+}
+
+// CodeQuality represents code quality analysis
+type CodeQuality struct {
+	Score           float64 `json:"score"`
+	IssuesFound     int     `json:"issuesFound"`
+	TechnicalDebt   string  `json:"technicalDebt"`
+	Maintainability string  `json:"maintainability"`
+	Complexity      string  `json:"complexity"`
 }

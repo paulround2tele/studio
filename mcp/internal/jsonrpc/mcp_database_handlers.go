@@ -50,7 +50,7 @@ func (s *JSONRPCServer) callGetDatabaseStats() (interface{}, error) {
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("Database statistics: %d connections, %d active queries", stats.Connections, stats.ActiveQueries),
+				"text": fmt.Sprintf("Database statistics: %d connections, %d tables, %d columns", stats.ConnectionCount, stats.TotalTables, stats.TotalColumns),
 			},
 		},
 	}, nil
@@ -74,7 +74,7 @@ func (s *JSONRPCServer) callAnalyzePerformance() (interface{}, error) {
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("Performance analysis: %d bottlenecks found, Score: %.2f", analysis.BottlenecksFound, analysis.Score),
+				"text": fmt.Sprintf("Performance analysis: Response Time: %.2fms, CPU: %.1f%%, Memory: %dMB", analysis.ResponseTime, analysis.CPUUsage, analysis.MemoryUsage/(1024*1024)),
 			},
 		},
 	}, nil

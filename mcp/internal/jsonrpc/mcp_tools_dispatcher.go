@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"mcp/internal/models"
 )
 
 // handleListTools handles MCP tools/list request
 func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMessage) (interface{}, error) {
-	tools := []MCPTool{
+	tools := []models.MCPTool{
 		// Database Tools (1)
 		{
 			Name:        "get_database_schema",
@@ -372,7 +374,7 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 
 // handleCallTool handles MCP tools/call request
 func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessage) (interface{}, error) {
-	var toolCall MCPToolCall
+	var toolCall models.MCPToolCall
 	if err := json.Unmarshal(params, &toolCall); err != nil {
 		return nil, err
 	}
