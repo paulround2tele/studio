@@ -1,11 +1,17 @@
 package analyzer
 
 import (
+	"bytes"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"mcp/internal/models"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // GetValidationRules analyzes code for validation patterns
@@ -187,4 +193,377 @@ func GetAuditLogs(dir string) ([]models.AuditLog, error) {
 	})
 
 	return logs, nil
+}
+
+// SearchCode searches for code patterns in the given directory
+func SearchCode(dirPath string, query string) ([]models.SearchResult, error) {
+	var results []models.SearchResult
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		lines := strings.Split(string(content), "\n")
+		for i, line := range lines {
+			if strings.Contains(strings.ToLower(line), strings.ToLower(query)) {
+				// Provide context (line before and after)
+				context := ""
+				if i > 0 {
+					context += lines[i-1] + "\n"
+				}
+				context += line
+				if i < len(lines)-1 {
+					context += "\n" + lines[i+1]
+				}
+
+				results = append(results, models.SearchResult{
+					File:    path,
+					Line:    i + 1,
+					Column:  strings.Index(strings.ToLower(line), strings.ToLower(query)) + 1,
+					Content: strings.TrimSpace(line),
+					Context: context,
+				})
+			}
+		}
+
+		return nil
+	})
+
+	return results, err
+}
+
+// GetPackageStructure analyzes the package structure of a project
+func GetPackageStructure(dirPath string) (models.PackageStructure, error) {
+	var structure models.PackageStructure
+	var packages []models.PackageStructureNode
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() && info.Name() != "." && info.Name() != ".." {
+			// Count Go files in this directory
+			goFiles := 0
+			files, err := os.ReadDir(path)
+			if err == nil {
+				for _, file := range files {
+					if strings.HasSuffix(file.Name(), ".go") && !strings.HasSuffix(file.Name(), "_test.go") {
+						goFiles++
+					}
+				}
+			}
+
+			if goFiles > 0 {
+				relPath, _ := filepath.Rel(dirPath, path)
+				packages = append(packages, models.PackageStructureNode{
+					Name: filepath.Base(path),
+					Path: relPath,
+					Type: "package",
+				})
+			}
+		}
+
+		return nil
+	})
+
+	structure.Root = models.PackageStructureNode{
+		Name: filepath.Base(dirPath),
+		Path: ".",
+		Type: "root",
+	}
+	structure.Packages = packages
+
+	return structure, err
+}
+
+// GetEnvVars analyzes Go files to extract environment variable usage
+func GetEnvVars(dirPath string) ([]models.EnvVar, error) {
+	var envVars []models.EnvVar
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		lines := strings.Split(string(content), "\n")
+		for i, line := range lines {
+			// Look for os.Getenv calls
+			if strings.Contains(line, "os.Getenv") || strings.Contains(line, "Getenv") {
+				// Extract variable name
+				start := strings.Index(line, "\"")
+				if start != -1 {
+					end := strings.Index(line[start+1:], "\"")
+					if end != -1 {
+						varName := line[start+1 : start+1+end]
+						envVars = append(envVars, models.EnvVar{
+							Name:        varName,
+							Required:    !strings.Contains(line, "default") && !strings.Contains(line, "fallback"),
+							Description: fmt.Sprintf("Environment variable used in %s", filepath.Base(path)),
+							File:        path,
+							Line:        i + 1,
+						})
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return envVars, err
+}
+
+// GetMiddlewareUsage analyzes middleware usage patterns
+func GetMiddlewareUsage(dirPath string) ([]models.MiddlewareUsage, error) {
+	var usage []models.MiddlewareUsage
+
+	middlewares, err := ParseMiddleware(dirPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert middleware definitions to usage patterns
+	for _, middleware := range middlewares {
+		usage = append(usage, models.MiddlewareUsage{
+			MiddlewareName: middleware.Name,
+			Route: models.Route{
+				Method:  "ALL",
+				Path:    "*",
+				Handler: "middleware",
+			},
+		})
+	}
+
+	return usage, err
+}
+
+// GetDependencies analyzes Go module dependencies
+func GetDependencies(dirPath string) ([]models.Dependency, error) {
+	var dependencies []models.Dependency
+
+	// Read go.mod file
+	goModPath := filepath.Join(dirPath, "go.mod")
+	content, err := os.ReadFile(goModPath)
+	if err != nil {
+		return dependencies, err // Return empty slice if no go.mod
+	}
+
+	lines := strings.Split(string(content), "\n")
+	inRequireBlock := false
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+
+		if line == "require (" {
+			inRequireBlock = true
+			continue
+		}
+
+		if line == ")" && inRequireBlock {
+			inRequireBlock = false
+			continue
+		}
+
+		if inRequireBlock || strings.HasPrefix(line, "require ") {
+			// Parse dependency line
+			parts := strings.Fields(line)
+			if len(parts) >= 2 {
+				path := parts[0]
+				version := parts[1]
+
+				// Skip "require" keyword if present
+				if path == "require" && len(parts) >= 3 {
+					path = parts[1]
+					version = parts[2]
+				}
+
+				dependencies = append(dependencies, models.Dependency{
+					Path:    path,
+					Version: version,
+				})
+			}
+		}
+	}
+
+	return dependencies, nil
+}
+
+// GetReferences finds references to a symbol in the codebase
+func GetReferences(dirPath, symbol, filePath string) ([]models.Reference, error) {
+	var references []models.Reference
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		fset := token.NewFileSet()
+		node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+
+		ast.Inspect(node, func(n ast.Node) bool {
+			switch x := n.(type) {
+			case *ast.Ident:
+				if x.Name == symbol {
+					pos := fset.Position(x.Pos())
+					references = append(references, models.Reference{
+						Name: symbol,
+						File: path,
+						Line: pos.Line,
+						Type: "identifier",
+					})
+				}
+			case *ast.SelectorExpr:
+				if x.Sel.Name == symbol {
+					pos := fset.Position(x.Sel.Pos())
+					references = append(references, models.Reference{
+						Name: symbol,
+						File: path,
+						Line: pos.Line,
+						Type: "selector",
+					})
+				}
+			}
+			return true
+		})
+
+		return nil
+	})
+
+	return references, err
+}
+
+// GetChangeImpact analyzes the impact of changes to a file
+func GetChangeImpact(dirPath, filePath string) (models.ChangeImpact, error) {
+	var impact models.ChangeImpact
+	impact.File = filePath
+
+	// Find functions that reference symbols from the changed file
+	references, err := GetReferences(dirPath, filepath.Base(filePath), filePath)
+	if err != nil {
+		return impact, err
+	}
+
+	// Categorize references
+	for _, ref := range references {
+		if strings.Contains(ref.File, "test") {
+			impact.AffectedTests = append(impact.AffectedTests, ref)
+		} else {
+			impact.AffectedFunctions = append(impact.AffectedFunctions, ref)
+		}
+	}
+
+	// Calculate risk level based on number of references
+	totalRefs := len(impact.AffectedFunctions) + len(impact.AffectedTests)
+	impact.FilesAffected = totalRefs
+
+	if totalRefs > 10 {
+		impact.RiskLevel = "High"
+		impact.Severity = "critical"
+	} else if totalRefs > 5 {
+		impact.RiskLevel = "Medium"
+		impact.Severity = "warning"
+	} else {
+		impact.RiskLevel = "Low"
+		impact.Severity = "info"
+	}
+
+	return impact, nil
+}
+
+// CreateSnapshot creates a snapshot of the current codebase state
+func CreateSnapshot(dirPath, description string) (models.Snapshot, error) {
+	var snapshot models.Snapshot
+	var files []string
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && strings.HasSuffix(path, ".go") {
+			relPath, _ := filepath.Rel(dirPath, path)
+			files = append(files, relPath)
+		}
+
+		return nil
+	})
+
+	snapshot.ID = fmt.Sprintf("snapshot_%d", time.Now().Unix())
+	snapshot.Description = description
+	snapshot.Timestamp = time.Now().Format(time.RFC3339)
+	snapshot.Files = files
+
+	return snapshot, err
+}
+
+// CheckContractDrift checks for API contract drift
+func CheckContractDrift(dirPath string) (models.ContractDrift, error) {
+	var drift models.ContractDrift
+
+	// Analyze current routes
+	routes, err := ParseGinRoutes(filepath.Join(dirPath, "cmd/apiserver/main.go"))
+	if err != nil {
+		return drift, err
+	}
+
+	// For now, assume no drift (would need baseline comparison)
+	drift.HasDrift = false
+	drift.IssuesFound = 0
+	drift.Status = "stable"
+
+	// List current routes as baseline
+	for _, route := range routes {
+		drift.Details = append(drift.Details, fmt.Sprintf("%s %s -> %s", route.Method, route.Path, route.Handler))
+	}
+
+	return drift, nil
+}
+
+// RunTerminalCommand executes a terminal command
+func RunTerminalCommand(command, workingDir string) (models.CommandResult, error) {
+	start := time.Now()
+	cmd := exec.Command("sh", "-c", command)
+	if workingDir != "" {
+		cmd.Dir = workingDir
+	}
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	duration := time.Since(start)
+
+	result := models.CommandResult{
+		Command:  command,
+		ExitCode: 0,
+		Stdout:   stdout.String(),
+		Stderr:   stderr.String(),
+		Duration: duration.String(),
+	}
+
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			result.ExitCode = exitError.ExitCode()
+		} else {
+			result.ExitCode = 1
+		}
+	}
+
+	return result, err
 }

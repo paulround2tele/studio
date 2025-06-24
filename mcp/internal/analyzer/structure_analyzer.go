@@ -282,3 +282,161 @@ func GetCallGraph(dirPath string, functionName string) (models.CallGraphNode, er
 	callGraph.CallCount = len(callGraph.Calls)
 	return callGraph, err
 }
+
+// ParseMiddleware analyzes Go files to extract middleware definitions
+func ParseMiddleware(dirPath string) ([]models.Middleware, error) {
+	var middlewares []models.Middleware
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		fset := token.NewFileSet()
+		node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+
+		ast.Inspect(node, func(n ast.Node) bool {
+			if fn, ok := n.(*ast.FuncDecl); ok && fn.Name != nil {
+				// Look for middleware functions (typically return http.Handler or similar)
+				funcName := fn.Name.Name
+				if strings.Contains(strings.ToLower(funcName), "middleware") ||
+					strings.Contains(strings.ToLower(funcName), "auth") ||
+					strings.Contains(strings.ToLower(funcName), "cors") ||
+					strings.Contains(strings.ToLower(funcName), "logger") {
+
+					pos := fset.Position(fn.Pos())
+					middlewares = append(middlewares, models.Middleware{
+						Name: funcName,
+						File: path,
+						Line: pos.Line,
+					})
+				}
+			}
+			return true
+		})
+
+		return nil
+	})
+
+	return middlewares, err
+}
+
+// ParseWebSocketEndpoints analyzes Go files to extract WebSocket endpoints
+func ParseWebSocketEndpoints(dirPath string) ([]models.WebSocketEndpoint, error) {
+	var endpoints []models.WebSocketEndpoint
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		lines := strings.Split(string(content), "\n")
+		for _, line := range lines {
+			// Look for WebSocket upgrade patterns
+			if strings.Contains(strings.ToLower(line), "websocket") &&
+				(strings.Contains(strings.ToLower(line), "upgrade") ||
+					strings.Contains(strings.ToLower(line), "conn")) {
+
+				// Extract route information if available
+				endpoints = append(endpoints, models.WebSocketEndpoint{
+					Method:  "GET",
+					Path:    "/ws", // Default, would need more sophisticated parsing
+					Handler: "WebSocketHandler",
+				})
+				break // Only add one per file to avoid duplicates
+			}
+		}
+
+		return nil
+	})
+
+	return endpoints, err
+}
+
+// ParseWebSocketHandlers analyzes Go files to extract WebSocket handlers
+func ParseWebSocketHandlers(dirPath string) ([]models.WebSocketHandler, error) {
+	var handlers []models.WebSocketHandler
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		fset := token.NewFileSet()
+		node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+
+		ast.Inspect(node, func(n ast.Node) bool {
+			if fn, ok := n.(*ast.FuncDecl); ok && fn.Name != nil {
+				funcName := fn.Name.Name
+				// Look for WebSocket handler functions
+				if strings.Contains(strings.ToLower(funcName), "websocket") ||
+					strings.Contains(strings.ToLower(funcName), "ws") {
+
+					handlers = append(handlers, models.WebSocketHandler{
+						Name: funcName,
+						File: path,
+					})
+				}
+			}
+			return true
+		})
+
+		return nil
+	})
+
+	return handlers, err
+}
+
+// ParseWebSocketMessages analyzes Go files to extract WebSocket message types
+func ParseWebSocketMessages(dirPath string) ([]models.WebSocketMessage, error) {
+	var messages []models.WebSocketMessage
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+
+		fset := token.NewFileSet()
+		node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+
+		ast.Inspect(node, func(n ast.Node) bool {
+			if genDecl, ok := n.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
+				for _, spec := range genDecl.Specs {
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						typeName := typeSpec.Name.Name
+						if strings.Contains(strings.ToLower(typeName), "message") ||
+							strings.Contains(strings.ToLower(typeName), "msg") ||
+							strings.Contains(strings.ToLower(typeName), "request") ||
+							strings.Contains(strings.ToLower(typeName), "response") {
+
+							messages = append(messages, models.WebSocketMessage{
+								Name: typeName,
+								File: path,
+								Type: "message",
+							})
+						}
+					}
+				}
+			}
+			return true
+		})
+
+		return nil
+	})
+
+	return messages, err
+}
