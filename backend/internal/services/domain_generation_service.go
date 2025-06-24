@@ -145,15 +145,15 @@ func logTransactionEvent(id string, operation string, status string, err error) 
 	}
 }
 
-type DatabaseMetrics struct {
+type DatabaseConnectionMetrics struct {
 	db *sqlx.DB
 }
 
-func newDatabaseMetrics(db *sqlx.DB) *DatabaseMetrics {
-	return &DatabaseMetrics{db: db}
+func newDatabaseConnectionMetrics(db *sqlx.DB) *DatabaseConnectionMetrics {
+	return &DatabaseConnectionMetrics{db: db}
 }
 
-func (dm *DatabaseMetrics) LogConnectionMetrics(operation string, campaignID string) {
+func (dm *DatabaseConnectionMetrics) LogConnectionMetrics(operation string, campaignID string) {
 	if dm.db == nil {
 		return
 	}
@@ -163,9 +163,9 @@ func (dm *DatabaseMetrics) LogConnectionMetrics(operation string, campaignID str
 }
 
 // LogConnectionPoolStats logs database connection pool statistics
-func (dm *DatabaseMetrics) LogConnectionPoolStats(operation string, campaignID string) {
+func (dm *DatabaseConnectionMetrics) LogConnectionPoolStats(operation string, campaignID string) {
 	// Implementation for logging connection pool stats
-	log.Printf("DatabaseMetrics: Connection pool stats for %s on campaign %s", operation, campaignID)
+	log.Printf("DatabaseConnectionMetrics: Connection pool stats for %s on campaign %s", operation, campaignID)
 }
 
 type domainGenerationServiceImpl struct {
@@ -308,7 +308,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 
 		// Log initial database metrics
 		if s.db != nil {
-			metrics := newDatabaseMetrics(s.db)
+			metrics := newDatabaseConnectionMetrics(s.db)
 			metrics.LogConnectionPoolStats("CreateCampaign_tx_start", campaignID.String())
 		}
 
@@ -341,7 +341,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 
 			// Log final database metrics
 			if s.db != nil {
-				metrics := newDatabaseMetrics(s.db)
+				metrics := newDatabaseConnectionMetrics(s.db)
 				metrics.LogConnectionPoolStats("CreateCampaign_tx_end", campaignID.String())
 			}
 		}()
@@ -639,7 +639,7 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 
 		// Log initial database metrics
 		if s.db != nil {
-			metrics := newDatabaseMetrics(s.db)
+			metrics := newDatabaseConnectionMetrics(s.db)
 			metrics.LogConnectionPoolStats("ProcessBatch_tx_start", campaignID.String())
 		}
 
@@ -672,7 +672,7 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 
 			// Log final database metrics
 			if s.db != nil {
-				metrics := newDatabaseMetrics(s.db)
+				metrics := newDatabaseConnectionMetrics(s.db)
 				metrics.LogConnectionPoolStats("ProcessBatch_tx_end", campaignID.String())
 			}
 		}()

@@ -57,8 +57,8 @@ type AuthLogEntry struct {
 	Function     string                 `json:"function,omitempty"`
 }
 
-// DatabaseMetrics represents database operation metrics
-type DatabaseMetrics struct {
+// DatabaseOperationMetrics represents database operation metrics
+type DatabaseOperationMetrics struct {
 	QueryDuration     time.Duration `json:"queryDurationMs"`
 	ConnectionsActive int           `json:"connectionsActive"`
 	ConnectionsIdle   int           `json:"connectionsIdle"`
@@ -161,7 +161,7 @@ func (l *AuthLogger) LogDatabaseOperation(
 	userID *uuid.UUID,
 	success bool,
 	duration time.Duration,
-	metrics *DatabaseMetrics,
+	metrics *DatabaseOperationMetrics,
 	err error,
 ) {
 	details := map[string]interface{}{
@@ -444,7 +444,7 @@ func LogDatabaseOperation(
 	userID *uuid.UUID,
 	success bool,
 	duration time.Duration,
-	metrics *DatabaseMetrics,
+	metrics *DatabaseOperationMetrics,
 	err error,
 ) {
 	GlobalAuthLogger.LogDatabaseOperation(operation, userID, success, duration, metrics, err)
