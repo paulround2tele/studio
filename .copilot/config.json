@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "studio-backend": {
+      "command": "./mcp/mcp-server",
+      "args": ["-backend-path=./studio/backend", "--allow-terminal=*"]
+    }
+  }
+}

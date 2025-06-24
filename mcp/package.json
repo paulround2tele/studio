@@ -1,0 +1,45 @@
+{
+  "name": "mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) JSON-RPC 2.0 Server",
+  "main": "index.js",
+  "scripts": {
+    "build": "go build -o mcp-server ./cmd/mcpserver",
+    "start": "go run ./cmd/mcpserver",
+    "test": "./test.sh",
+    "dev": "go run ./cmd/mcpserver"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "jsonrpc",
+    "language-server",
+    "vscode",
+    "lsp"
+  ],
+  "author": "MCP Team",
+  "license": "MIT",
+  "mcpServer": {
+    "command": "go",
+    "args": ["run", "./cmd/mcpserver"],
+    "cwd": ".",
+    "env": {
+      "DB_CONNECTION": "postgres://user:password@localhost/mcpdb?sslmode=disable"
+    }
+  },
+  "contributes": {
+    "mcpServers": {
+      "studio-backend": {
+        "command": "go",
+        "args": ["run", "./cmd/mcpserver"],
+        "env": {
+          "DB_CONNECTION": "${env:DB_CONNECTION}"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /tools/get_database_schema --> mcp/internal/server.(*Server).routes.func1 (3 handlers)
+[GIN-debug] POST   /tools/apply_code_change  --> mcp/internal/server.(*Server).routes.func2 (3 handlers)
+[GIN-debug] POST   /initialize               --> mcp/internal/server.(*Server).routes.func3 (3 handlers)
+2025/06/24 12:03:43 MCP LSP server starting...
+2025/06/24 12:03:43 Read 126 bytes. Raw body: 
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":123,"rootPath":"/home/vboxuser/studio","capabilities":{}
+2025/06/24 12:03:43 Error unmarshaling message: unexpected end of JSON input
+Content-Length: 107
+Content-Type: application/json
+
+{"jsonrpc":"2.0","method":"","error":{"code":-32700,"message":"Parse Error: unexpected end of JSON input"}}2025/06/24 12:03:43 Invalid header: }}
+2025/06/24 12:03:43 Error reading header: EOF

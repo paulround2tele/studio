@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "studio-backend-context": {
+      "command": "/home/vboxuser/studio/mcp/mcp-server",
+      "args": [
+        "-allow-terminal",
+        "-allow-mutation"
+      ],
+      "cwd": "/home/vboxuser/studio",
+      "env": {
+        "STUDIO_BACKEND_PATH": "/home/vboxuser/studio/backend"
+      }
+    }
+  }
+}
