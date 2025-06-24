@@ -855,61 +855,109 @@ func (b *Bridge) GetTestCoverage() (models.TestCoverage, error) {
 // AnalyzeCodeQuality returns code quality analysis
 func (b *Bridge) AnalyzeCodeQuality() (models.CodeQuality, error) {
 	quality := models.CodeQuality{
-		Score:           85.0,
+		Score:           100.0,
 		IssuesFound:     0,
 		TechnicalDebt:   "0 hours",
-		Maintainability: "Good",
+		Maintainability: "Excellent",
 		Complexity:      "Low",
+		LinterIssues:    []string{},
 	}
 
-	if b.BackendPath != "" {
-		// Check for long functions (basic complexity check)
-		cmd := exec.Command("grep", "-r", "-c", "func.*{", b.BackendPath)
-		output, err := cmd.Output()
-		if err == nil {
-			// Count functions to estimate complexity
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			funcCount := len(lines)
-			if funcCount > 100 {
-				quality.Complexity = "High"
-				quality.Score -= 10.0
-			} else if funcCount > 50 {
-				quality.Complexity = "Moderate"
-				quality.Score -= 5.0
+	if b.BackendPath == "" {
+		return quality, fmt.Errorf("backend path not set")
+	}
+
+	var cmd *exec.Cmd
+	var linter string
+	if _, err := exec.LookPath("golangci-lint"); err == nil {
+		linter = "golangci-lint"
+		cmd = exec.Command("golangci-lint", "run", "--out-format", "json", "--issues-exit-code", "0")
+		cmd.Dir = b.BackendPath
+	} else if _, err := exec.LookPath("staticcheck"); err == nil {
+		linter = "staticcheck"
+		cmd = exec.Command("staticcheck", "./...")
+		cmd.Dir = b.BackendPath
+	} else {
+		return quality, fmt.Errorf("neither golangci-lint nor staticcheck is installed")
+	}
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			out.Write(exitErr.Stderr)
+		} else {
+			return quality, err
+		}
+	}
+
+	switch linter {
+	case "golangci-lint":
+		type lintIssue struct {
+			FromLinter string `json:"FromLinter"`
+			Text       string `json:"Text"`
+		}
+		var report struct {
+			Issues []lintIssue `json:"Issues"`
+		}
+		if err := json.Unmarshal(out.Bytes(), &report); err == nil {
+			quality.IssuesFound = len(report.Issues)
+			for _, is := range report.Issues {
+				quality.LinterIssues = append(quality.LinterIssues, fmt.Sprintf("%s: %s", is.FromLinter, is.Text))
+			}
+		} else if out.Len() > 0 {
+			lines := strings.Split(strings.TrimSpace(out.String()), "\n")
+			quality.IssuesFound = len(lines)
+			quality.LinterIssues = append(quality.LinterIssues, lines...)
+		}
+	case "staticcheck":
+		lines := strings.Split(strings.TrimSpace(out.String()), "\n")
+		for _, line := range lines {
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			quality.LinterIssues = append(quality.LinterIssues, line)
+		}
+		quality.IssuesFound = len(quality.LinterIssues)
+	}
+
+	// Derive maintainability and score from issue count
+	quality.TechnicalDebt = fmt.Sprintf("%.1f hours", float64(quality.IssuesFound)*0.5)
+	switch {
+	case quality.IssuesFound > 50:
+		quality.Maintainability = "Poor"
+		quality.Score -= float64(quality.IssuesFound) * 1.0
+	case quality.IssuesFound > 20:
+		quality.Maintainability = "Fair"
+		quality.Score -= float64(quality.IssuesFound) * 0.8
+	case quality.IssuesFound > 10:
+		quality.Maintainability = "Good"
+		quality.Score -= float64(quality.IssuesFound) * 0.5
+	default:
+		quality.Maintainability = "Excellent"
+		quality.Score -= float64(quality.IssuesFound) * 0.3
+	}
+
+	// Determine complexity from gocyclo results
+	if reports, err := b.AnalyzeComplexity(); err == nil {
+		maxC := 0
+		for _, r := range reports {
+			if r.Complexity > maxC {
+				maxC = r.Complexity
 			}
 		}
-
-		// Check for TODO/FIXME comments (technical debt indicators)
-		cmd = exec.Command("grep", "-r", "-i", "TODO\\|FIXME\\|HACK", b.BackendPath)
-		output, err = cmd.Output()
-		if err == nil && len(output) > 0 {
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			todoCount := len(lines)
-			quality.IssuesFound += todoCount
-			quality.TechnicalDebt = fmt.Sprintf("%.1f hours", float64(todoCount)*0.5)
-			if todoCount > 20 {
-				quality.Maintainability = "Poor"
-				quality.Score -= 15.0
-			} else if todoCount > 10 {
-				quality.Maintainability = "Fair"
-				quality.Score -= 8.0
-			}
+		switch {
+		case maxC > 30:
+			quality.Complexity = "High"
+		case maxC > 15:
+			quality.Complexity = "Moderate"
+		default:
+			quality.Complexity = "Low"
 		}
+	}
 
-		// Check for long lines (code style)
-		cmd = exec.Command("grep", "-r", "-E", ".{120,}", b.BackendPath)
-		output, err = cmd.Output()
-		if err == nil && len(output) > 0 {
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			longLineCount := len(lines)
-			quality.IssuesFound += longLineCount
-			quality.Score -= float64(longLineCount) * 0.1
-		}
-
-		// Ensure score doesn't go below 0
-		if quality.Score < 0 {
-			quality.Score = 0
-		}
+	if quality.Score < 0 {
+		quality.Score = 0
 	}
 
 	return quality, nil

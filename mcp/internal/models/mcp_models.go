@@ -474,11 +474,12 @@ type TestCoverage struct {
 
 // CodeQuality represents code quality analysis
 type CodeQuality struct {
-	Score           float64 `json:"score"`
-	IssuesFound     int     `json:"issuesFound"`
-	TechnicalDebt   string  `json:"technicalDebt"`
-	Maintainability string  `json:"maintainability"`
-	Complexity      string  `json:"complexity"`
+	Score           float64  `json:"score"`
+	IssuesFound     int      `json:"issuesFound"`
+	TechnicalDebt   string   `json:"technicalDebt"`
+	Maintainability string   `json:"maintainability"`
+	Complexity      string   `json:"complexity"`
+	LinterIssues    []string `json:"linterIssues"`
 }
 
 // ComplexityReport represents cyclomatic complexity results for a function
