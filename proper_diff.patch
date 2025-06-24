@@ -1,0 +1,8 @@
+--- test_original.md	2025-06-24 18:04:02.779178359 +0000
++++ test_file_modified.md	2025-06-24 18:04:11.863178636 +0000
+@@ -3,3 +3,5 @@
+ This is a test file to demonstrate the MCP server's apply_code_change tool.
+ 
+ ✅ All 39 tools are working perfectly!
++
++🚀 Testing enhanced apply_code_change with production-grade error handling!

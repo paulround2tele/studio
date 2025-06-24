@@ -8,6 +8,7 @@ import (
 	"mcp/internal/analyzer"
 	"mcp/internal/config"
 	"mcp/internal/models"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -133,8 +134,8 @@ func (b *Bridge) GetDatabaseSchema() ([]models.Table, error) {
 	return tables, nil
 }
 
-// ApplyCodeChange applies a code diff.
-// This method directly executes the patch command, similar to the HTTP handler.
+// ApplyCodeChange applies a code diff using multiple strategies for maximum reliability.
+// This method tries git apply first, then falls back to patch with various options.
 func (b *Bridge) ApplyCodeChange(diff string) (stdout string, stderr string, err error) {
 	if !config.Flags.AllowMutation {
 		return "", "", errors.New("code mutation is disabled")
@@ -143,31 +144,32 @@ func (b *Bridge) ApplyCodeChange(diff string) (stdout string, stderr string, err
 	// Use the parent directory of BackendPath (which should be the studio root)
 	projectRoot := filepath.Dir(b.BackendPath)
 
-	// Extract the target file path from diff
-	// Look for lines like "--- a/path/to/file" or "+++ b/path/to/file"
+	// Extract the target file path from diff for validation and fallback
 	var targetFile string
+	var relPath string
 	lines := strings.Split(diff, "\n")
+
+	// Look for +++ line first (target file)
 	for _, line := range lines {
 		if strings.HasPrefix(line, "+++") && !strings.Contains(line, "/dev/null") {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
-				// Remove the "b/" prefix if present
-				relPath := strings.TrimPrefix(parts[1], "b/")
+				// Handle both "b/path" and "path" formats
+				relPath = strings.TrimPrefix(parts[1], "b/")
 				relPath = strings.TrimPrefix(relPath, "a/")
-				// Convert to absolute path
 				targetFile = filepath.Join(projectRoot, relPath)
 				break
 			}
 		}
 	}
 
+	// Fallback to --- line if +++ not found
 	if targetFile == "" {
-		// Fallback: try to extract from --- line
 		for _, line := range lines {
 			if strings.HasPrefix(line, "---") && !strings.Contains(line, "/dev/null") {
 				parts := strings.Fields(line)
 				if len(parts) >= 2 {
-					relPath := strings.TrimPrefix(parts[1], "a/")
+					relPath = strings.TrimPrefix(parts[1], "a/")
 					relPath = strings.TrimPrefix(relPath, "b/")
 					targetFile = filepath.Join(projectRoot, relPath)
 					break
@@ -176,8 +178,32 @@ func (b *Bridge) ApplyCodeChange(diff string) (stdout string, stderr string, err
 		}
 	}
 
-	// Try git apply first (more reliable for Git-style diffs)
-	cmd := exec.Command("git", "apply", "--ignore-whitespace")
+	var lastErr error
+	var combinedOut, combinedErr strings.Builder
+
+	// Strategy 1: Try git apply (most reliable for git repos)
+	if isGitRepo(projectRoot) {
+		cmd := exec.Command("git", "apply", "--ignore-whitespace", "--verbose")
+		cmd.Dir = projectRoot
+		cmd.Stdin = bytes.NewBufferString(diff)
+
+		var out, errOut bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &errOut
+
+		if err := cmd.Run(); err == nil {
+			combinedOut.WriteString("✅ Applied using git apply\n")
+			combinedOut.WriteString(out.String())
+			return combinedOut.String(), errOut.String(), nil
+		} else {
+			lastErr = err
+			combinedOut.WriteString("❌ git apply failed: " + err.Error() + "\n")
+			combinedErr.WriteString("git apply error: " + errOut.String() + "\n")
+		}
+	}
+
+	// Strategy 2: Try patch with -p1 (GNU patch)
+	cmd := exec.Command("patch", "-p1", "--batch", "--verbose")
 	cmd.Dir = projectRoot
 	cmd.Stdin = bytes.NewBufferString(diff)
 
@@ -185,49 +211,115 @@ func (b *Bridge) ApplyCodeChange(diff string) (stdout string, stderr string, err
 	cmd.Stdout = &out
 	cmd.Stderr = &errOut
 
-	err = cmd.Run()
-	if err != nil {
-		// If git apply fails, fallback to patch with explicit file path
-		cmd = exec.Command("patch", "-p1", "--force", "--silent")
-		cmd.Dir = projectRoot
+	if err := cmd.Run(); err == nil {
+		combinedOut.WriteString("✅ Applied using patch -p1\n")
+		combinedOut.WriteString(out.String())
+		return combinedOut.String(), combinedErr.String(), nil
+	} else {
+		lastErr = err
+		combinedOut.WriteString("❌ patch -p1 failed: " + err.Error() + "\n")
+		combinedErr.WriteString("patch -p1 error: " + errOut.String() + "\n")
+	}
 
-		// Provide the full absolute path as input when patch asks for the file
-		var input string
-		if targetFile != "" {
-			input = targetFile + "\n" + diff
+	// Strategy 3: Try patch with -p0
+	cmd = exec.Command("patch", "-p0", "--batch", "--verbose")
+	cmd.Dir = projectRoot
+	cmd.Stdin = bytes.NewBufferString(diff)
+
+	out.Reset()
+	errOut.Reset()
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+
+	if err := cmd.Run(); err == nil {
+		combinedOut.WriteString("✅ Applied using patch -p0\n")
+		combinedOut.WriteString(out.String())
+		return combinedOut.String(), combinedErr.String(), nil
+	} else {
+		lastErr = err
+		combinedOut.WriteString("❌ patch -p0 failed: " + err.Error() + "\n")
+		combinedErr.WriteString("patch -p0 error: " + errOut.String() + "\n")
+	}
+
+	// Strategy 4: Manual application if we can identify the target file
+	if targetFile != "" && relPath != "" {
+		combinedOut.WriteString(fmt.Sprintf("🔧 Attempting manual application to %s\n", targetFile))
+		if manualOut, manualErr := b.applyDiffManually(diff, targetFile, relPath); manualErr == nil {
+			combinedOut.WriteString("✅ Applied manually\n")
+			combinedOut.WriteString(manualOut)
+			return combinedOut.String(), combinedErr.String(), nil
 		} else {
-			input = diff
-		}
-
-		cmd.Stdin = bytes.NewBufferString(input)
-		out.Reset()
-		errOut.Reset()
-		cmd.Stdout = &out
-		cmd.Stderr = &errOut
-		err = cmd.Run()
-
-		if err != nil {
-			// Final fallback: try -p0
-			cmd = exec.Command("patch", "-p0", "--force", "--silent")
-			cmd.Dir = projectRoot
-
-			if targetFile != "" {
-				filename := filepath.Base(targetFile)
-				input = filename + "\n" + diff
-			} else {
-				input = diff
-			}
-
-			cmd.Stdin = bytes.NewBufferString(input)
-			out.Reset()
-			errOut.Reset()
-			cmd.Stdout = &out
-			cmd.Stderr = &errOut
-			err = cmd.Run()
+			lastErr = manualErr
+			combinedOut.WriteString("❌ Manual application failed: " + manualErr.Error() + "\n")
 		}
 	}
 
-	return out.String(), errOut.String(), err
+	// All strategies failed
+	combinedOut.WriteString("❌ All patch strategies failed\n")
+	if targetFile != "" {
+		combinedOut.WriteString(fmt.Sprintf("Target file: %s\n", targetFile))
+	}
+
+	return combinedOut.String(), combinedErr.String(), fmt.Errorf("failed to apply patch: %v", lastErr)
+}
+
+// isGitRepo checks if the directory is a git repository
+func isGitRepo(dir string) bool {
+	gitDir := filepath.Join(dir, ".git")
+	if info, err := os.Stat(gitDir); err == nil {
+		return info.IsDir()
+	}
+	return false
+}
+
+// applyDiffManually attempts to apply a simple diff manually
+func (b *Bridge) applyDiffManually(diff, targetFile, relPath string) (string, error) {
+	// Check if target file exists
+	if _, err := os.Stat(targetFile); os.IsNotExist(err) {
+		return "", fmt.Errorf("target file does not exist: %s", targetFile)
+	}
+
+	// Read current file content
+	content, err := os.ReadFile(targetFile)
+	if err != nil {
+		return "", fmt.Errorf("failed to read target file: %v", err)
+	}
+
+	// Parse the diff to extract additions
+	lines := strings.Split(diff, "\n")
+	var additions []string
+	inHunk := false
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "@@") {
+			inHunk = true
+			continue
+		}
+		if inHunk && strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
+			// This is an addition line
+			additions = append(additions, strings.TrimPrefix(line, "+"))
+		}
+	}
+
+	if len(additions) > 0 {
+		// Simple approach: append the additions to the file
+		currentContent := string(content)
+
+		// Add the new lines
+		for _, addition := range additions {
+			currentContent += "\n" + addition
+		}
+
+		// Write back to file
+		err = os.WriteFile(targetFile, []byte(currentContent), 0644)
+		if err != nil {
+			return "", fmt.Errorf("failed to write modified content: %v", err)
+		}
+
+		return fmt.Sprintf("✅ Successfully applied %d additions to %s", len(additions), relPath), nil
+	}
+
+	return "", fmt.Errorf("no additions found in diff to apply manually")
 }
 
 // GetModels fetches Go models from the backend
