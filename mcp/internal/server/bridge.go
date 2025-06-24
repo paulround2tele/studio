@@ -697,43 +697,91 @@ func (b *Bridge) AnalyzePerformance() (models.PerformanceMetrics, error) {
 func (b *Bridge) GetSecurityAnalysis() (models.SecurityAnalysis, error) {
 	analysis := models.SecurityAnalysis{
 		VulnerabilitiesFound: 0,
-		SecurityScore:        85.5,
+		SecurityScore:        100.0,
 		Recommendations:      []string{},
 		CriticalIssues:       []string{},
 		RiskLevel:            "Low",
 	}
 
-	// Check for common security issues in the backend
-	if b.BackendPath != "" {
-		// Check for hardcoded credentials
-		cmd := exec.Command("grep", "-r", "-i", "password\\|secret\\|api[_-]key", b.BackendPath)
-		output, err := cmd.Output()
-		if err == nil && len(output) > 0 {
-			analysis.VulnerabilitiesFound++
-			analysis.CriticalIssues = append(analysis.CriticalIssues, "Potential hardcoded credentials found")
-			analysis.RiskLevel = "Medium"
-			analysis.SecurityScore -= 10.0
-		}
-
-		// Check for SQL injection vulnerabilities (basic check)
-		cmd = exec.Command("grep", "-r", "Query.*+\\|Exec.*+", b.BackendPath)
-		output, err = cmd.Output()
-		if err == nil && len(output) > 0 {
-			analysis.VulnerabilitiesFound++
-			analysis.CriticalIssues = append(analysis.CriticalIssues, "Potential SQL injection vulnerability")
-			analysis.RiskLevel = "High"
-			analysis.SecurityScore -= 20.0
-		}
-
-		// Check for HTTP instead of HTTPS
-		cmd = exec.Command("grep", "-r", "http://", b.BackendPath)
-		output, err = cmd.Output()
-		if err == nil && len(output) > 0 {
-			analysis.Recommendations = append(analysis.Recommendations, "Replace HTTP with HTTPS")
-		}
+	if b.BackendPath == "" {
+		return analysis, nil
 	}
 
-	// Standard security recommendations
+	// ------- Basic heuristics using grep -------
+	cmd := exec.Command("grep", "-r", "-i", "password\\|secret\\|api[_-]key", b.BackendPath)
+	if out, err := cmd.Output(); err == nil && len(out) > 0 {
+		analysis.VulnerabilitiesFound++
+		analysis.CriticalIssues = append(analysis.CriticalIssues, "Potential hardcoded credentials found")
+		analysis.SecurityScore -= 5
+	}
+
+	cmd = exec.Command("grep", "-r", "Query.*+\\|Exec.*+", b.BackendPath)
+	if out, err := cmd.Output(); err == nil && len(out) > 0 {
+		analysis.VulnerabilitiesFound++
+		analysis.CriticalIssues = append(analysis.CriticalIssues, "Potential SQL injection vulnerability")
+		analysis.SecurityScore -= 10
+	}
+
+	cmd = exec.Command("grep", "-r", "http://", b.BackendPath)
+	if out, err := cmd.Output(); err == nil && len(out) > 0 {
+		analysis.Recommendations = append(analysis.Recommendations, "Replace HTTP with HTTPS")
+	}
+
+	// ------- Static analysis: go vet -------
+	vetCmd := exec.Command("go", "vet", "./...")
+	vetCmd.Dir = b.BackendPath
+	vetOut, vetErr := vetCmd.CombinedOutput()
+	vetLines := strings.Split(strings.TrimSpace(string(vetOut)), "\n")
+	for _, l := range vetLines {
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		analysis.VulnerabilitiesFound++
+		analysis.CriticalIssues = append(analysis.CriticalIssues, l)
+		analysis.SecurityScore -= 1
+	}
+	if vetErr != nil && len(vetLines) == 0 {
+		analysis.Recommendations = append(analysis.Recommendations, "Run 'go vet' with full module access")
+	}
+
+	// ------- Static analysis: govulncheck -------
+	if _, err := exec.LookPath("govulncheck"); err == nil {
+		vulnCmd := exec.Command("govulncheck", "-format=json", "./...")
+		vulnCmd.Dir = b.BackendPath
+		vulnOut, err := vulnCmd.CombinedOutput()
+		var result struct {
+			Vulns []struct {
+				OSV struct {
+					ID string `json:"id"`
+				} `json:"osv"`
+			} `json:"vulns"`
+		}
+		if jsonErr := json.Unmarshal(vulnOut, &result); jsonErr == nil {
+			if len(result.Vulns) > 0 {
+				analysis.VulnerabilitiesFound += len(result.Vulns)
+				for _, v := range result.Vulns {
+					analysis.CriticalIssues = append(analysis.CriticalIssues, v.OSV.ID)
+				}
+				analysis.SecurityScore -= float64(len(result.Vulns)) * 5
+			}
+		} else if err != nil {
+			analysis.Recommendations = append(analysis.Recommendations, "govulncheck failed: "+err.Error())
+		}
+	} else {
+		analysis.Recommendations = append(analysis.Recommendations, "Install govulncheck for deeper analysis")
+	}
+
+	// Determine risk level based on findings
+	switch {
+	case analysis.VulnerabilitiesFound > 5 || analysis.SecurityScore < 60:
+		analysis.RiskLevel = "High"
+	case analysis.VulnerabilitiesFound > 0:
+		analysis.RiskLevel = "Medium"
+	default:
+		analysis.RiskLevel = "Low"
+	}
+
+	// Standard recommendations
 	analysis.Recommendations = append(analysis.Recommendations,
 		"Enable HTTPS",
 		"Update dependencies regularly",
@@ -741,6 +789,10 @@ func (b *Bridge) GetSecurityAnalysis() (models.SecurityAnalysis, error) {
 		"Implement proper authentication",
 		"Use secure headers",
 	)
+
+	if analysis.SecurityScore < 0 {
+		analysis.SecurityScore = 0
+	}
 
 	return analysis, nil
 }
