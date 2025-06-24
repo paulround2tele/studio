@@ -21,6 +21,7 @@ import (
 	"github.com/gorilla/websocket"
 	"net/url"
 	"regexp"
+	cover "golang.org/x/tools/cover"
 )
 
 // Bridge provides a programmatic interface to the MCP server's tools.
@@ -701,43 +702,91 @@ func (b *Bridge) AnalyzePerformance() (models.PerformanceMetrics, error) {
 func (b *Bridge) GetSecurityAnalysis() (models.SecurityAnalysis, error) {
 	analysis := models.SecurityAnalysis{
 		VulnerabilitiesFound: 0,
-		SecurityScore:        85.5,
+		SecurityScore:        100.0,
 		Recommendations:      []string{},
 		CriticalIssues:       []string{},
 		RiskLevel:            "Low",
 	}
 
-	// Check for common security issues in the backend
-	if b.BackendPath != "" {
-		// Check for hardcoded credentials
-		cmd := exec.Command("grep", "-r", "-i", "password\\|secret\\|api[_-]key", b.BackendPath)
-		output, err := cmd.Output()
-		if err == nil && len(output) > 0 {
-			analysis.VulnerabilitiesFound++
-			analysis.CriticalIssues = append(analysis.CriticalIssues, "Potential hardcoded credentials found")
-			analysis.RiskLevel = "Medium"
-			analysis.SecurityScore -= 10.0
-		}
-
-		// Check for SQL injection vulnerabilities (basic check)
-		cmd = exec.Command("grep", "-r", "Query.*+\\|Exec.*+", b.BackendPath)
-		output, err = cmd.Output()
-		if err == nil && len(output) > 0 {
-			analysis.VulnerabilitiesFound++
-			analysis.CriticalIssues = append(analysis.CriticalIssues, "Potential SQL injection vulnerability")
-			analysis.RiskLevel = "High"
-			analysis.SecurityScore -= 20.0
-		}
-
-		// Check for HTTP instead of HTTPS
-		cmd = exec.Command("grep", "-r", "http://", b.BackendPath)
-		output, err = cmd.Output()
-		if err == nil && len(output) > 0 {
-			analysis.Recommendations = append(analysis.Recommendations, "Replace HTTP with HTTPS")
-		}
+	if b.BackendPath == "" {
+		return analysis, nil
 	}
 
-	// Standard security recommendations
+	// ------- Basic heuristics using grep -------
+	cmd := exec.Command("grep", "-r", "-i", "password\\|secret\\|api[_-]key", b.BackendPath)
+	if out, err := cmd.Output(); err == nil && len(out) > 0 {
+		analysis.VulnerabilitiesFound++
+		analysis.CriticalIssues = append(analysis.CriticalIssues, "Potential hardcoded credentials found")
+		analysis.SecurityScore -= 5
+	}
+
+	cmd = exec.Command("grep", "-r", "Query.*+\\|Exec.*+", b.BackendPath)
+	if out, err := cmd.Output(); err == nil && len(out) > 0 {
+		analysis.VulnerabilitiesFound++
+		analysis.CriticalIssues = append(analysis.CriticalIssues, "Potential SQL injection vulnerability")
+		analysis.SecurityScore -= 10
+	}
+
+	cmd = exec.Command("grep", "-r", "http://", b.BackendPath)
+	if out, err := cmd.Output(); err == nil && len(out) > 0 {
+		analysis.Recommendations = append(analysis.Recommendations, "Replace HTTP with HTTPS")
+	}
+
+	// ------- Static analysis: go vet -------
+	vetCmd := exec.Command("go", "vet", "./...")
+	vetCmd.Dir = b.BackendPath
+	vetOut, vetErr := vetCmd.CombinedOutput()
+	vetLines := strings.Split(strings.TrimSpace(string(vetOut)), "\n")
+	for _, l := range vetLines {
+		if strings.TrimSpace(l) == "" {
+			continue
+		}
+		analysis.VulnerabilitiesFound++
+		analysis.CriticalIssues = append(analysis.CriticalIssues, l)
+		analysis.SecurityScore -= 1
+	}
+	if vetErr != nil && len(vetLines) == 0 {
+		analysis.Recommendations = append(analysis.Recommendations, "Run 'go vet' with full module access")
+	}
+
+	// ------- Static analysis: govulncheck -------
+	if _, err := exec.LookPath("govulncheck"); err == nil {
+		vulnCmd := exec.Command("govulncheck", "-format=json", "./...")
+		vulnCmd.Dir = b.BackendPath
+		vulnOut, err := vulnCmd.CombinedOutput()
+		var result struct {
+			Vulns []struct {
+				OSV struct {
+					ID string `json:"id"`
+				} `json:"osv"`
+			} `json:"vulns"`
+		}
+		if jsonErr := json.Unmarshal(vulnOut, &result); jsonErr == nil {
+			if len(result.Vulns) > 0 {
+				analysis.VulnerabilitiesFound += len(result.Vulns)
+				for _, v := range result.Vulns {
+					analysis.CriticalIssues = append(analysis.CriticalIssues, v.OSV.ID)
+				}
+				analysis.SecurityScore -= float64(len(result.Vulns)) * 5
+			}
+		} else if err != nil {
+			analysis.Recommendations = append(analysis.Recommendations, "govulncheck failed: "+err.Error())
+		}
+	} else {
+		analysis.Recommendations = append(analysis.Recommendations, "Install govulncheck for deeper analysis")
+	}
+
+	// Determine risk level based on findings
+	switch {
+	case analysis.VulnerabilitiesFound > 5 || analysis.SecurityScore < 60:
+		analysis.RiskLevel = "High"
+	case analysis.VulnerabilitiesFound > 0:
+		analysis.RiskLevel = "Medium"
+	default:
+		analysis.RiskLevel = "Low"
+	}
+
+	// Standard recommendations
 	analysis.Recommendations = append(analysis.Recommendations,
 		"Enable HTTPS",
 		"Update dependencies regularly",
@@ -745,6 +794,10 @@ func (b *Bridge) GetSecurityAnalysis() (models.SecurityAnalysis, error) {
 		"Implement proper authentication",
 		"Use secure headers",
 	)
+
+	if analysis.SecurityScore < 0 {
+		analysis.SecurityScore = 0
+	}
 
 	return analysis, nil
 }
@@ -802,55 +855,51 @@ func (b *Bridge) ValidateAPIContracts() (models.APIContractValidation, error) {
 
 // GetTestCoverage returns test coverage metrics
 func (b *Bridge) GetTestCoverage() (models.TestCoverage, error) {
-	coverage := models.TestCoverage{
-		OverallPercentage: 0.0,
-		FilesCovered:      0,
-		TotalFiles:        0,
-		LinesCovered:      0,
-		TotalLines:        0,
+	coverage := models.TestCoverage{}
+
+	if b.BackendPath == "" {
+		return coverage, fmt.Errorf("backend path not set")
 	}
 
-	if b.BackendPath != "" {
-		// Count total Go files
-		cmd := exec.Command("find", b.BackendPath, "-name", "*.go", "-not", "-path", "*/vendor/*")
-		output, err := cmd.Output()
-		if err == nil {
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			if len(lines) > 0 && len(lines[0]) > 0 {
-				coverage.TotalFiles = len(lines)
+	// Run go tests with coverage
+	coverFile := filepath.Join(b.BackendPath, "coverage.out")
+	cmd := exec.Command("go", "test", "./...", "-coverprofile", coverFile)
+	cmd.Dir = b.BackendPath
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return coverage, fmt.Errorf("go test failed: %v: %s", err, stderr.String())
+	}
+
+	// Parse coverage profile
+	profiles, err := cover.ParseProfiles(coverFile)
+	if err != nil {
+		return coverage, err
+	}
+	defer os.Remove(coverFile)
+
+	totalStmts := 0
+	coveredStmts := 0
+	allFiles := make(map[string]struct{})
+	coveredFiles := make(map[string]struct{})
+
+	for _, p := range profiles {
+		allFiles[p.FileName] = struct{}{}
+		for _, b := range p.Blocks {
+			totalStmts += b.NumStmt
+			if b.Count > 0 {
+				coveredStmts += b.NumStmt
+				coveredFiles[p.FileName] = struct{}{}
 			}
 		}
+	}
 
-		// Count test files
-		cmd = exec.Command("find", b.BackendPath, "-name", "*_test.go", "-not", "-path", "*/vendor/*")
-		output, err = cmd.Output()
-		if err == nil {
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			if len(lines) > 0 && len(lines[0]) > 0 {
-				coverage.FilesCovered = len(lines)
-			}
-		}
-
-		// Estimate coverage percentage
-		if coverage.TotalFiles > 0 {
-			coverage.OverallPercentage = float64(coverage.FilesCovered) / float64(coverage.TotalFiles) * 100.0
-		}
-
-		// Count total lines of code (rough estimate)
-		cmd = exec.Command("find", b.BackendPath, "-name", "*.go", "-not", "-path", "*/vendor/*", "-exec", "wc", "-l", "{}", "+")
-		output, err = cmd.Output()
-		if err == nil {
-			// Parse wc output to get total lines
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			if len(lines) > 0 {
-				// Last line contains total
-				lastLine := string(lines[len(lines)-1])
-				if len(lastLine) > 0 {
-					coverage.TotalLines = 1000 // Simplified estimate
-					coverage.LinesCovered = int(float64(coverage.TotalLines) * coverage.OverallPercentage / 100.0)
-				}
-			}
-		}
+	coverage.TotalFiles = len(allFiles)
+	coverage.FilesCovered = len(coveredFiles)
+	coverage.TotalLines = totalStmts
+	coverage.LinesCovered = coveredStmts
+	if totalStmts > 0 {
+		coverage.OverallPercentage = float64(coveredStmts) / float64(totalStmts) * 100.0
 	}
 
 	return coverage, nil

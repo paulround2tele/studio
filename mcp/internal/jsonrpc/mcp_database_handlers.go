@@ -133,7 +133,7 @@ func (s *JSONRPCServer) callGetSecurityAnalysis() (interface{}, error) {
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("Security analysis: %d vulnerabilities found, Risk Level: %s", analysis.VulnerabilitiesFound, analysis.RiskLevel),
+				"text": fmt.Sprintf("Security analysis: %d issues, Risk Level: %s, Score: %.1f", analysis.VulnerabilitiesFound, analysis.RiskLevel, analysis.SecurityScore),
 			},
 		},
 	}, nil
@@ -181,7 +181,7 @@ func (s *JSONRPCServer) callGetTestCoverage() (interface{}, error) {
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("Test coverage: %.2f%% overall, %d files covered", coverage.OverallPercentage, coverage.FilesCovered),
+				"text": fmt.Sprintf("Test coverage: %.2f%% (%d/%d lines across %d/%d files)", coverage.OverallPercentage, coverage.LinesCovered, coverage.TotalLines, coverage.FilesCovered, coverage.TotalFiles),
 			},
 		},
 	}, nil
