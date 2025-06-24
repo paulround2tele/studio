@@ -308,7 +308,8 @@ func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 	})
 }
 
-func (h *CampaignOrchestratorAPIHandler) pauseCampaign(c *gin.Context) {
+// Helper function to handle common campaign operation pattern
+func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context, operation string, operationFunc func(context.Context, uuid.UUID) error) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
@@ -316,60 +317,43 @@ func (h *CampaignOrchestratorAPIHandler) pauseCampaign(c *gin.Context) {
 		return
 	}
 
-	if err := h.orchestratorService.PauseCampaign(c.Request.Context(), campaignID); err != nil {
-		log.Printf("Error pausing campaign %s: %v", campaignIDStr, err)
-		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to pause campaign: %v", err))
+	if err := operationFunc(c.Request.Context(), campaignID); err != nil {
+		log.Printf("Error %s campaign %s: %v", operation, campaignIDStr, err)
+		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to %s campaign: %v", operation, err))
 		return
 	}
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": "Campaign pause requested"})
+	
+	var message string
+	switch operation {
+	case "pausing":
+		message = "Campaign pause requested"
+	case "resuming":
+		message = "Campaign queued for resume"
+	case "cancelling":
+		message = "Campaign cancellation requested"
+	case "deleting":
+		message = "Campaign deleted successfully"
+	default:
+		message = fmt.Sprintf("Campaign %s completed", operation)
+	}
+	
+	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": message})
+}
+
+func (h *CampaignOrchestratorAPIHandler) pauseCampaign(c *gin.Context) {
+	h.handleCampaignOperation(c, "pausing", h.orchestratorService.PauseCampaign)
 }
 
 func (h *CampaignOrchestratorAPIHandler) resumeCampaign(c *gin.Context) {
-	campaignIDStr := c.Param("campaignId")
-	campaignID, err := uuid.Parse(campaignIDStr)
-	if err != nil {
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid campaign ID format")
-		return
-	}
-
-	if err := h.orchestratorService.ResumeCampaign(c.Request.Context(), campaignID); err != nil {
-		log.Printf("Error resuming campaign %s: %v", campaignIDStr, err)
-		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to resume campaign: %v", err))
-		return
-	}
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": "Campaign queued for resume"})
+	h.handleCampaignOperation(c, "resuming", h.orchestratorService.ResumeCampaign)
 }
 
 func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
-	campaignIDStr := c.Param("campaignId")
-	campaignID, err := uuid.Parse(campaignIDStr)
-	if err != nil {
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid campaign ID format")
-		return
-	}
-
-	if err := h.orchestratorService.CancelCampaign(c.Request.Context(), campaignID); err != nil {
-		log.Printf("Error cancelling campaign %s: %v", campaignIDStr, err)
-		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to cancel campaign: %v", err))
-		return
-	}
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": "Campaign cancellation requested"})
+	h.handleCampaignOperation(c, "cancelling", h.orchestratorService.CancelCampaign)
 }
 
 func (h *CampaignOrchestratorAPIHandler) deleteCampaign(c *gin.Context) {
-	campaignIDStr := c.Param("campaignId")
-	campaignID, err := uuid.Parse(campaignIDStr)
-	if err != nil {
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid campaign ID format")
-		return
-	}
-
-	if err := h.orchestratorService.DeleteCampaign(c.Request.Context(), campaignID); err != nil {
-		log.Printf("Error deleting campaign %s: %v", campaignIDStr, err)
-		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete campaign: %v", err))
-		return
-	}
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": "Campaign deleted successfully"})
+	h.handleCampaignOperation(c, "deleting", h.orchestratorService.DeleteCampaign)
 }
 
 func (h *CampaignOrchestratorAPIHandler) getGeneratedDomains(c *gin.Context) {
