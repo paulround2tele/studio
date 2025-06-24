@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -81,7 +80,7 @@ func TestProxy(proxyEntry config.ProxyConfigEntry) ProxyTestResult {
 	}
 	defer resp.Body.Close()
 	result.StatusCode = resp.StatusCode
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		result.Error = "Failed to read proxy test response body: " + err.Error()
 		result.DurationMs = time.Since(startTime).Milliseconds()
@@ -202,7 +201,7 @@ func performSingleProxyCheck(ctx context.Context, proxyEntry config.ProxyConfigE
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		_, copyErr := ioutil.ReadAll(io.LimitReader(resp.Body, 512))
+		_, copyErr := io.ReadAll(io.LimitReader(resp.Body, 512))
 		if copyErr != nil {
 			result.Error = "failed to read small part of health check response body: " + copyErr.Error()
 			return result
@@ -289,7 +288,7 @@ func (pm *ProxyManager) ReportProxyHealth(proxyID string, wasSuccessful bool, fa
 	if statusChanged {
 		pm.allProxies[foundIndex] = foundProxy
 		pm.updateActiveProxies()
-		
+
 		// Broadcast proxy status change via WebSocket
 		status := "unhealthy"
 		if foundProxy.IsHealthy {
@@ -410,9 +409,7 @@ func (pm *ProxyManager) ForceCheckProxiesAsync(idsToCheck []string) {
 		proxiesToActuallyCheck := make([]*ProxyStatus, 0)
 		if len(idsToCheck) == 0 {
 			log.Printf("ProxyManager: ForceCheckProxiesAsync - Checking all %d managed proxies.", len(pm.allProxies))
-			for _, p := range pm.allProxies {
-				proxiesToActuallyCheck = append(proxiesToActuallyCheck, p)
-			}
+			proxiesToActuallyCheck = append(proxiesToActuallyCheck, pm.allProxies...)
 		} else {
 			idMap := make(map[string]bool)
 			for _, id := range idsToCheck {
@@ -451,7 +448,7 @@ func (pm *ProxyManager) ForceCheckProxiesAsync(idsToCheck []string) {
 					if !healthBeforeThisCheck {
 						overallStatusChangedSinceStartOfAsyncOp = true
 						log.Printf("ProxyManager: ForceCheckProxiesAsync - Proxy ID '%s' (%s) PASSED check and is now HEALTHY.", proxyStatus.ProxyConfigEntry.ID, proxyStatus.ProxyConfigEntry.Address)
-						
+
 						// Broadcast proxy status change via WebSocket
 						websocket.BroadcastProxyStatus(proxyStatus.ProxyConfigEntry.ID, "healthy", "")
 					}
@@ -462,7 +459,7 @@ func (pm *ProxyManager) ForceCheckProxiesAsync(idsToCheck []string) {
 						overallStatusChangedSinceStartOfAsyncOp = true
 						log.Printf("ProxyManager: ForceCheckProxiesAsync - Proxy ID '%s' (%s) FAILED check: %s. Marking UNHEALTHY.", proxyStatus.ProxyConfigEntry.ID, proxyStatus.ProxyConfigEntry.Address, checkResult.Error)
 						proxyStatus.ConsecutiveFailures = 1
-						
+
 						// Broadcast proxy status change via WebSocket
 						websocket.BroadcastProxyStatus(proxyStatus.ProxyConfigEntry.ID, "unhealthy", "")
 					} else {

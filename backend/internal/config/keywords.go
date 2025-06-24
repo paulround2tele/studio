@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -36,7 +35,7 @@ type KeywordSet struct {
 func LoadKeywordSets(configDir string) ([]KeywordSet, error) {
 	filePath := filepath.Join(configDir, keywordsConfigFilename) // Uses constant from defaults.go
 	var keywordSets []KeywordSet
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("Config: Keyword Sets config file '%s' not found. No keyword sets will be loaded.", filePath)

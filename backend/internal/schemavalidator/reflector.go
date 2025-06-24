@@ -53,12 +53,10 @@ func (r *ModelReflector) ExtractModelSchemas() (map[string]ModelSchema, error) {
 // extractModelSchema extracts schema for a single model
 func (r *ModelReflector) extractModelSchema(name string, model interface{}) (*ModelSchema, error) {
 	modelType := reflect.TypeOf(model)
-	modelValue := reflect.ValueOf(model)
 
 	// If it's a pointer, get the underlying type and value
 	if modelType.Kind() == reflect.Ptr {
 		modelType = modelType.Elem()
-		modelValue = modelValue.Elem()
 	}
 
 	// Ensure it's a struct
@@ -221,49 +219,6 @@ func toSnakeCase(s string) string {
 
 	// Return the snake case without pluralization
 	return snakeCase
-}
-
-// pluralize converts a singular snake_case word to its plural form
-// This is a simplified implementation that handles common cases
-func pluralize(word string) string {
-	// Special cases for irregular plurals
-	irregularPlurals := map[string]string{
-		"person": "people",
-		"child":  "children",
-		"foot":   "feet",
-		"tooth":  "teeth",
-		"goose":  "geese",
-		"mouse":  "mice",
-	}
-
-	if plural, found := irregularPlurals[word]; found {
-		return plural
-	}
-
-	// Handle common plural rules
-	if strings.HasSuffix(word, "s") ||
-		strings.HasSuffix(word, "x") ||
-		strings.HasSuffix(word, "z") ||
-		strings.HasSuffix(word, "ch") ||
-		strings.HasSuffix(word, "sh") {
-		return word + "es"
-	}
-
-	if strings.HasSuffix(word, "y") {
-		// If word ends with 'y' preceded by a consonant, change 'y' to 'ies'
-		if len(word) > 1 {
-			secondLastChar := word[len(word)-2]
-			isVowel := secondLastChar == 'a' || secondLastChar == 'e' ||
-				secondLastChar == 'i' || secondLastChar == 'o' ||
-				secondLastChar == 'u'
-			if !isVowel {
-				return word[:len(word)-1] + "ies"
-			}
-		}
-	}
-
-	// Default case: just add 's'
-	return word + "s"
 }
 
 // formatSnakeCaseToCamelCase converts a snake_case string to CamelCase

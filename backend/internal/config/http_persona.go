@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -118,7 +117,7 @@ func (hvc *HTTPValidatorConfig) ToModelHTTPConfigDetails() models.HTTPConfigDeta
 func LoadHTTPPersonas(configDir string) ([]HTTPPersona, error) {
 	filePath := filepath.Join(configDir, httpPersonasConfigFilename)
 	var personas []HTTPPersona
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("Config: HTTP Personas config file '%s' not found. No HTTP personas will be loaded.", filePath)
@@ -141,7 +140,7 @@ func SaveHTTPPersonas(personas []HTTPPersona, configDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal HTTP personas to JSON: %w", err)
 	}
-	if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write HTTP personas to file '%s': %w", filePath, err)
 	}
 	log.Printf("Config: Successfully saved %d HTTP Personas to '%s'", len(personas), filePath)

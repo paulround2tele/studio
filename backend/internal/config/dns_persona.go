@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -21,7 +20,7 @@ type DNSPersona struct {
 func LoadDNSPersonas(configDir string) ([]DNSPersona, error) {
 	filePath := filepath.Join(configDir, dnsPersonasConfigFilename) // Uses constant from defaults.go
 	var personas []DNSPersona
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("Config: DNS Personas config file '%s' not found. No DNS personas will be loaded.", filePath)
@@ -44,7 +43,7 @@ func SaveDNSPersonas(personas []DNSPersona, configDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal DNS personas to JSON: %w", err)
 	}
-	if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write DNS personas to file '%s': %w", filePath, err)
 	}
 	log.Printf("Config: Successfully saved %d DNS Personas to '%s'", len(personas), filePath)

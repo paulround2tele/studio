@@ -2,7 +2,7 @@ module github.com/fntelecomllc/studio/backend
 
 go 1.23.0
 
-toolchain go1.24.3
+toolchain go1.23.10
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2

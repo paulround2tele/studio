@@ -9,7 +9,6 @@ import (
 // --- TLS Helpers (from original config.go) ---
 
 var tlsVersionMap = map[string]uint16{
-	"SSL30": tls.VersionSSL30,
 	"TLS10": tls.VersionTLS10,
 	"TLS11": tls.VersionTLS11,
 	"TLS12": tls.VersionTLS12,

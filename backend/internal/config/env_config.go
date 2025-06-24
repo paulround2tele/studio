@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 )
 
 // LoadWithEnv loads configuration from JSON file and overrides with environment variables
@@ -101,19 +100,6 @@ func loadDatabaseConfig() *DatabaseConfig {
 	return config
 }
 
-func loadAuthConfig() *EnvAuthConfig {
-	return &EnvAuthConfig{
-		JWTSecret:      getEnvOrDefault("JWT_SECRET", ""),
-		SessionSecret:  getEnvOrDefault("SESSION_SECRET", ""),
-		EncryptionKey:  getEnvOrDefault("ENCRYPTION_KEY", ""),
-		APIKeySalt:     getEnvOrDefault("API_KEY_SALT", ""),
-		SessionTimeout: getEnvOrDefault("SESSION_TIMEOUT", "24h"),
-		CookieSecure:   getEnvAsBool("SESSION_COOKIE_SECURE", true),
-		CookieHTTPOnly: getEnvAsBool("SESSION_COOKIE_HTTPONLY", true),
-		CookieSameSite: getEnvOrDefault("SESSION_COOKIE_SAMESITE", "strict"),
-	}
-}
-
 func applyEnvironmentOverrides(config *AppConfig) {
 	// Server overrides
 	if port := os.Getenv("SERVER_PORT"); port != "" {
@@ -171,14 +157,6 @@ func getEnvAsInt(key string, defaultValue int) int {
 		if intVal, err := strconv.Atoi(value); err == nil {
 			return intVal
 		}
-	}
-	return defaultValue
-}
-
-func getEnvAsBool(key string, defaultValue bool) bool {
-	if value := os.Getenv(key); value != "" {
-		value = strings.ToLower(value)
-		return value == "true" || value == "1" || value == "yes" || value == "on"
 	}
 	return defaultValue
 }
