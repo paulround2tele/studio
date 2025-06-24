@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	cover "golang.org/x/tools/cover"
 )
 
 // Bridge provides a programmatic interface to the MCP server's tools.
@@ -798,55 +800,51 @@ func (b *Bridge) ValidateAPIContracts() (models.APIContractValidation, error) {
 
 // GetTestCoverage returns test coverage metrics
 func (b *Bridge) GetTestCoverage() (models.TestCoverage, error) {
-	coverage := models.TestCoverage{
-		OverallPercentage: 0.0,
-		FilesCovered:      0,
-		TotalFiles:        0,
-		LinesCovered:      0,
-		TotalLines:        0,
+	coverage := models.TestCoverage{}
+
+	if b.BackendPath == "" {
+		return coverage, fmt.Errorf("backend path not set")
 	}
 
-	if b.BackendPath != "" {
-		// Count total Go files
-		cmd := exec.Command("find", b.BackendPath, "-name", "*.go", "-not", "-path", "*/vendor/*")
-		output, err := cmd.Output()
-		if err == nil {
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			if len(lines) > 0 && len(lines[0]) > 0 {
-				coverage.TotalFiles = len(lines)
+	// Run go tests with coverage
+	coverFile := filepath.Join(b.BackendPath, "coverage.out")
+	cmd := exec.Command("go", "test", "./...", "-coverprofile", coverFile)
+	cmd.Dir = b.BackendPath
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return coverage, fmt.Errorf("go test failed: %v: %s", err, stderr.String())
+	}
+
+	// Parse coverage profile
+	profiles, err := cover.ParseProfiles(coverFile)
+	if err != nil {
+		return coverage, err
+	}
+	defer os.Remove(coverFile)
+
+	totalStmts := 0
+	coveredStmts := 0
+	allFiles := make(map[string]struct{})
+	coveredFiles := make(map[string]struct{})
+
+	for _, p := range profiles {
+		allFiles[p.FileName] = struct{}{}
+		for _, b := range p.Blocks {
+			totalStmts += b.NumStmt
+			if b.Count > 0 {
+				coveredStmts += b.NumStmt
+				coveredFiles[p.FileName] = struct{}{}
 			}
 		}
+	}
 
-		// Count test files
-		cmd = exec.Command("find", b.BackendPath, "-name", "*_test.go", "-not", "-path", "*/vendor/*")
-		output, err = cmd.Output()
-		if err == nil {
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			if len(lines) > 0 && len(lines[0]) > 0 {
-				coverage.FilesCovered = len(lines)
-			}
-		}
-
-		// Estimate coverage percentage
-		if coverage.TotalFiles > 0 {
-			coverage.OverallPercentage = float64(coverage.FilesCovered) / float64(coverage.TotalFiles) * 100.0
-		}
-
-		// Count total lines of code (rough estimate)
-		cmd = exec.Command("find", b.BackendPath, "-name", "*.go", "-not", "-path", "*/vendor/*", "-exec", "wc", "-l", "{}", "+")
-		output, err = cmd.Output()
-		if err == nil {
-			// Parse wc output to get total lines
-			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
-			if len(lines) > 0 {
-				// Last line contains total
-				lastLine := string(lines[len(lines)-1])
-				if len(lastLine) > 0 {
-					coverage.TotalLines = 1000 // Simplified estimate
-					coverage.LinesCovered = int(float64(coverage.TotalLines) * coverage.OverallPercentage / 100.0)
-				}
-			}
-		}
+	coverage.TotalFiles = len(allFiles)
+	coverage.FilesCovered = len(coveredFiles)
+	coverage.TotalLines = totalStmts
+	coverage.LinesCovered = coveredStmts
+	if totalStmts > 0 {
+		coverage.OverallPercentage = float64(coveredStmts) / float64(totalStmts) * 100.0
 	}
 
 	return coverage, nil
