@@ -79,7 +79,7 @@ func (s *JSONRPCServer) callGetWebSocketMessages(ctx context.Context) (interface
 	}, nil
 }
 
-// callGetWebSocketLifecycle implements the get_websocket_lifecycle MCP tool
+// callGetWebSocketLifecycle returns runtime statistics about WebSocket connections
 func (s *JSONRPCServer) callGetWebSocketLifecycle(ctx context.Context) (interface{}, error) {
 	if s.bridge == nil {
 		return map[string]interface{}{
@@ -114,7 +114,7 @@ func (s *JSONRPCServer) callGetWebSocketLifecycle(ctx context.Context) (interfac
 	}, nil
 }
 
-// callTestWebSocketFlow implements the test_websocket_flow MCP tool
+// callTestWebSocketFlow actively dials the configured WebSocket endpoint to verify connectivity
 func (s *JSONRPCServer) callTestWebSocketFlow(ctx context.Context) (interface{}, error) {
 	if s.bridge == nil {
 		return map[string]interface{}{
