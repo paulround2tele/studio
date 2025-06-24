@@ -90,3 +90,27 @@ func (s *JSONRPCServer) callGetDependencies(ctx context.Context) (interface{}, e
 		},
 	}, nil
 }
+
+// callGetDependencyGraph implements the get_dependency_graph tool
+func (s *JSONRPCServer) callGetDependencyGraph(ctx context.Context) (interface{}, error) {
+	graph, err := s.bridge.GetDependencyGraph()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("Error building dependency graph: %v", err),
+				},
+			},
+		}, nil
+	}
+
+	return map[string]interface{}{
+		"content": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": fmt.Sprintf("Dependency graph generated with %d nodes and %d edges", len(graph.Nodes), len(graph.Edges)),
+			},
+		},
+	}, nil
+}

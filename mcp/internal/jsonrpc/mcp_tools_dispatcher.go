@@ -132,7 +132,7 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 			},
 		},
 
-		// Search Tools (3)
+		// Search Tools (4)
 		{
 			Name:        "search_code",
 			Description: "Search for code patterns and implementations",
@@ -158,6 +158,14 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 		{
 			Name:        "get_dependencies",
 			Description: "Get project dependencies and their relationships",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_dependency_graph",
+			Description: "Get project package dependency graph",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
@@ -455,6 +463,8 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetPackageStructure(ctx)
 	case "get_dependencies":
 		return s.callGetDependencies(ctx)
+	case "get_dependency_graph":
+		return s.callGetDependencyGraph(ctx)
 
 	// WebSocket Tools
 	case "get_websocket_endpoints":

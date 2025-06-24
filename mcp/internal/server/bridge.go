@@ -3,8 +3,10 @@ package server
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"mcp/internal/analyzer"
 	"mcp/internal/config"
 	"mcp/internal/models"
@@ -542,6 +544,57 @@ func (b *Bridge) FindByType(typeName string) ([]models.Reference, error) {
 // GetDependencies fetches project dependencies
 func (b *Bridge) GetDependencies() ([]models.Dependency, error) {
 	return analyzer.GetDependencies(b.BackendPath)
+}
+
+// GetDependencyGraph builds a package dependency graph using `go list`.
+func (b *Bridge) GetDependencyGraph() (models.DependencyGraph, error) {
+	var graph models.DependencyGraph
+
+	cmd := exec.Command("go", "list", "-json", "./...")
+	cmd.Dir = b.BackendPath
+	out, err := cmd.Output()
+	if err != nil {
+		return graph, err
+	}
+
+	type pkgInfo struct {
+		ImportPath string
+		Imports    []string
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(out))
+	nodes := make(map[string]bool)
+	var edges []models.DependencyEdge
+
+	for {
+		var pkg pkgInfo
+		if err := dec.Decode(&pkg); err == io.EOF {
+			break
+		} else if err != nil {
+			return graph, err
+		}
+
+		nodes[pkg.ImportPath] = true
+		for _, imp := range pkg.Imports {
+			nodes[imp] = true
+			edges = append(edges, models.DependencyEdge{From: pkg.ImportPath, To: imp})
+		}
+	}
+
+	for n := range nodes {
+		graph.Nodes = append(graph.Nodes, n)
+	}
+	graph.Edges = edges
+
+	var buf bytes.Buffer
+	buf.WriteString("digraph G {\n")
+	for _, e := range edges {
+		fmt.Fprintf(&buf, "    \"%s\" -> \"%s\";\n", e.From, e.To)
+	}
+	buf.WriteString("}\n")
+	graph.DOT = buf.String()
+
+	return graph, nil
 }
 
 // GetReferences finds references to a symbol
