@@ -395,6 +395,14 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"properties": map[string]interface{}{},
 			},
 		},
+		{
+			Name:        "analyze_complexity",
+			Description: "Run gocyclo to report function complexity",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
 	}
 
 	log.Printf("Returning %d MCP tools", len(tools))
@@ -507,6 +515,8 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetTestCoverage()
 	case "analyze_code_quality":
 		return s.callAnalyzeCodeQuality()
+	case "analyze_complexity":
+		return s.callAnalyzeComplexity()
 
 	default:
 		return map[string]interface{}{

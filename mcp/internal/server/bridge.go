@@ -862,6 +862,59 @@ func (b *Bridge) AnalyzeCodeQuality() (models.CodeQuality, error) {
 	return quality, nil
 }
 
+// AnalyzeComplexity runs gocyclo to report cyclomatic complexity of functions
+func (b *Bridge) AnalyzeComplexity() ([]models.ComplexityReport, error) {
+	if b.BackendPath == "" {
+		return nil, fmt.Errorf("backend path not set")
+	}
+
+	if _, err := exec.LookPath("gocyclo"); err != nil {
+		return nil, fmt.Errorf("gocyclo not installed: %w", err)
+	}
+
+	cmd := exec.Command("gocyclo", b.BackendPath)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+
+	var reports []models.ComplexityReport
+	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		if len(fields) < 3 {
+			continue
+		}
+		comp, err := strconv.Atoi(fields[0])
+		if err != nil {
+			continue
+		}
+		loc := fields[1]
+		fn := strings.Join(fields[2:], " ")
+		file := loc
+		ln := 0
+		if idx := strings.Index(loc, ":"); idx != -1 {
+			file = loc[:idx]
+			rest := loc[idx+1:]
+			if idx2 := strings.Index(rest, ":"); idx2 != -1 {
+				rest = rest[:idx2]
+			}
+			if n, err := strconv.Atoi(rest); err == nil {
+				ln = n
+			}
+		}
+		reports = append(reports, models.ComplexityReport{
+			Function:   fn,
+			File:       file,
+			Line:       ln,
+			Complexity: comp,
+		})
+	}
+
+	return reports, nil
+}
+
 // GetAPISchema returns comprehensive API schema information by analyzing actual backend implementation
 func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 	schema := models.APISchema{

@@ -210,3 +210,27 @@ func (s *JSONRPCServer) callAnalyzeCodeQuality() (interface{}, error) {
 		},
 	}, nil
 }
+
+// callAnalyzeComplexity implements the analyze_complexity tool
+func (s *JSONRPCServer) callAnalyzeComplexity() (interface{}, error) {
+	reports, err := s.bridge.AnalyzeComplexity()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("Error analyzing complexity: %v", err),
+				},
+			},
+		}, nil
+	}
+
+	return map[string]interface{}{
+		"content": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": fmt.Sprintf("Complexity analysis completed: %d functions analyzed", len(reports)),
+			},
+		},
+	}, nil
+}
