@@ -1,0 +1,83 @@
+# API Alignment Analysis - Critical Mismatches Detected
+
+## Executive Summary
+**CRITICAL**: The backend is using Swagger 2.0 while API_SPEC.md mandates OpenAPI 3.0. This requires immediate migration.
+
+## Critical Mismatches Found
+
+### 1. OpenAPI Version Mismatch
+- **Required**: OpenAPI 3.0 (per API_SPEC.md)
+- **Current**: Swagger 2.0 (gin-swagger/swaggo)
+- **Impact**: 🔴 CRITICAL - Complete API documentation incompatibility
+
+### 2. Documentation Generation Method
+- **Current**: swaggo/gin-swagger annotations
+- **Files using Swagger 2.0 annotations**:
+  - `/backend/internal/api/auth_handlers.go`
+  - `/backend/internal/api/campaign_orchestrator_handlers.go`
+  - `/backend/cmd/apiserver/main.go`
+
+### 3. Generated Documentation Files
+- **Current**: `/backend/docs/swagger.yaml` (Swagger 2.0)
+- **Current**: `/backend/docs/docs.go` (Generated from Swagger 2.0)
+- **Required**: OpenAPI 3.0 specification
+
+### 4. Dependencies to Remove
+```go
+// Remove these imports:
+swaggerFiles "github.com/swaggo/files"
+ginSwagger "github.com/swaggo/gin-swagger"
+```
+
+### 5. Routes to Update
+```go
+// Remove this route:
+router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+```
+
+## Migration Plan
+
+### Phase 1: Remove Swagger 2.0 Dependencies
+1. Remove gin-swagger imports from `main.go`
+2. Remove swagger route registration
+3. Remove swaggo annotations from handlers
+4. Update go.mod dependencies
+
+### Phase 2: Create OpenAPI 3.0 Specification
+1. Create new OpenAPI 3.0 spec file
+2. Define all endpoints per API_SPEC.md
+3. Implement OpenAPI 3.0 compatible tooling
+4. Validate specification
+
+### Phase 3: Database Schema Alignment
+1. Ensure all API models match database schema
+2. Validate enum consistency across all layers
+3. Check data type alignment
+
+### Phase 4: Implement OpenAPI 3.0 Tooling
+1. Add OpenAPI 3.0 compatible documentation server
+2. Implement validation middleware
+3. Add API testing tools
+
+## Enums Found (Require Validation)
+- CampaignTypeEnum
+- CampaignStatusEnum  
+- PersonaTypeEnum
+- ProxyProtocolEnum
+- KeywordRuleTypeEnum
+- CampaignJobStatusEnum
+- JobBusinessStatusEnum
+- ValidationStatusEnum
+- DNSValidationStatusEnum
+- HTTPValidationStatusEnum
+
+## Next Steps
+1. **IMMEDIATE**: Remove all Swagger 2.0 code
+2. **HIGH PRIORITY**: Create OpenAPI 3.0 specification
+3. **MEDIUM**: Validate database schema alignment
+4. **LOW**: Implement enhanced tooling
+
+## Risk Assessment
+- **High Risk**: API documentation completely out of sync with requirements
+- **Medium Risk**: Frontend/backend contract mismatches possible
+- **Low Risk**: Performance impact from migration

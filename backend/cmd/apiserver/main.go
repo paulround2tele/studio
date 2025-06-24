@@ -1,25 +1,5 @@
 package main
 
-// @title DomainFlow API
-// @version 1.0
-// @description DomainFlow API for domain generation, validation, and campaign management
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.domainflow.com/support
-// @contact.email support@domainflow.com
-
-// @license.name MIT
-// @license.url https://opensource.org/licenses/MIT
-
-// @host localhost:8080
-// @basePath /
-
-// @securityDefinitions.apikey SessionAuth
-// @in cookie
-// @name session_id
-// @description Session-based authentication using HTTP cookies
-
 import (
 	"context"
 	"fmt"
@@ -31,15 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-
-	_ "github.com/fntelecomllc/studio/backend/docs"
 	"github.com/fntelecomllc/studio/backend/internal/api"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
@@ -50,6 +21,11 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 const (
@@ -292,9 +268,9 @@ func main() {
 	// Public routes (no authentication required)
 	router.GET("/ping", api.PingHandlerGin)
 
-	// Swagger documentation routes (public)
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	log.Println("Registered Swagger UI route under /swagger/")
+	// OpenAPI 3.0 specification (public)
+	router.StaticFile("/api/openapi.yaml", "./docs/openapi.yaml")
+	log.Println("Registered OpenAPI 3.0 specification route under /api/openapi.yaml")
 
 	// Authentication routes (public)
 	authRoutes := router.Group("/api/v2/auth")

@@ -1,0 +1,590 @@
+openapi: 3.0.3
+info:
+  title: DomainFlow API
+  version: 2.0.0
+  description: |
+    DomainFlow API for domain generation, validation, and campaign management.
+    
+    This API provides comprehensive functionality for:
+    - Entity management (Personas, Proxies, Keyword Sets)
+    - Configuration management
+    - Ad-hoc keyword extraction
+    - V2 Stateful Campaign Management system
+    - Real-time communication via WebSockets
+    - Comprehensive authentication
+    
+    **Authentication:**
+    The API uses session-based authentication with HTTP-only cookies:
+    
+    1. **Session-Based Authentication**: Secure HTTP-only cookie-based sessions with session fingerprinting
+       - Login via `POST /api/v2/auth/login`
+       - Session cookies: httpOnly, secure, sameSite=strict
+       - X-Requested-With header required for CSRF protection on state-changing operations
+       - Automatic session cleanup and concurrent session management
+    
+    All RESTful API endpoints under `/api/v2` (excluding `GET /ping`) require valid session authentication.
+    
+    For WebSocket connections, authentication is provided via session cookies (automatically included by browser).
+    
+  contact:
+    name: API Support
+    url: http://www.domainflow.com/support
+    email: support@domainflow.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.domainflow.com
+    description: Production server
+
+components:
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: session_id
+      description: Session-based authentication using HTTP cookies
+      
+  schemas:
+    # Base Types
+    UUID:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+      
+    Timestamp:
+      type: string
+      format: date-time
+      example: "2025-06-24T10:00:00Z"
+      
+    # Enums
+    CampaignTypeEnum:
+      type: string
+      enum:
+        - domain_generation
+        - dns_validation
+        - http_keyword_validation
+      example: domain_generation
+      
+    CampaignStatusEnum:
+      type: string
+      enum:
+        - pending
+        - queued
+        - running
+        - pausing
+        - paused
+        - completed
+        - failed
+        - archived
+        - cancelled
+      example: running
+      
+    PersonaTypeEnum:
+      type: string
+      enum:
+        - dns
+        - http
+      example: dns
+      
+    ProxyProtocolEnum:
+      type: string
+      enum:
+        - http
+        - https
+        - socks5
+        - socks4
+      example: http
+      
+    ValidationStatusEnum:
+      type: string
+      enum:
+        - pending
+        - valid
+        - invalid
+        - error
+        - skipped
+      example: valid
+      
+    # API Models
+    UserAPI:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        emailVerified:
+          type: boolean
+          example: true
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/avatar.jpg"
+        isActive:
+          type: boolean
+          example: true
+        isLocked:
+          type: boolean
+          example: false
+        lastLoginAt:
+          $ref: '#/components/schemas/Timestamp'
+          nullable: true
+        lastLoginIp:
+          type: string
+          nullable: true
+          example: "192.168.1.1"
+        mustChangePassword:
+          type: boolean
+          example: false
+        mfaEnabled:
+          type: boolean
+          example: false
+        mfaLastUsedAt:
+          $ref: '#/components/schemas/Timestamp'
+          nullable: true
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        name:
+          type: string
+          example: "John Doe"
+        roles:
+          type: array
+          items:
+            type: string
+          example: ["user", "admin"]
+        permissions:
+          type: array
+          items:
+            type: string
+          example: ["campaigns:read", "campaigns:create"]
+      required:
+        - id
+        - email
+        - firstName
+        - lastName
+        - isActive
+        - isLocked
+        - mustChangePassword
+        - mfaEnabled
+        - createdAt
+        - updatedAt
+        - name
+        - roles
+        - permissions
+        
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "admin"
+        password:
+          type: string
+          format: password
+          example: "password123"
+      required:
+        - username
+        - password
+        
+    LoginResponseAPI:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        user:
+          $ref: '#/components/schemas/UserAPI'
+          nullable: true
+        error:
+          type: string
+          nullable: true
+          example: "Invalid credentials"
+        requiresCaptcha:
+          type: boolean
+          nullable: true
+          example: false
+        sessionId:
+          type: string
+          nullable: true
+          example: "sess_123456789"
+        expiresAt:
+          $ref: '#/components/schemas/Timestamp'
+          nullable: true
+      required:
+        - success
+        
+    CampaignAPI:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          example: "Domain Discovery Campaign"
+        campaignType:
+          $ref: '#/components/schemas/CampaignTypeEnum'
+        status:
+          $ref: '#/components/schemas/CampaignStatusEnum'
+        userId:
+          $ref: '#/components/schemas/UUID'
+          nullable: true
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        startedAt:
+          $ref: '#/components/schemas/Timestamp'
+          nullable: true
+        completedAt:
+          $ref: '#/components/schemas/Timestamp'
+          nullable: true
+        progressPercentage:
+          type: number
+          format: float
+          nullable: true
+          minimum: 0
+          maximum: 100
+          example: 75.5
+        totalItems:
+          type: integer
+          format: int64
+          nullable: true
+          example: 1000
+        processedItems:
+          type: integer
+          format: int64
+          nullable: true
+          example: 755
+        successfulItems:
+          type: integer
+          format: int64
+          nullable: true
+          example: 700
+        failedItems:
+          type: integer
+          format: int64
+          nullable: true
+          example: 55
+        errorMessage:
+          type: string
+          nullable: true
+          example: "Network timeout error"
+        metadata:
+          type: object
+          nullable: true
+        estimatedCompletionAt:
+          $ref: '#/components/schemas/Timestamp'
+          nullable: true
+        avgProcessingRate:
+          type: number
+          format: float
+          nullable: true
+          example: 10.5
+        lastHeartbeatAt:
+          $ref: '#/components/schemas/Timestamp'
+          nullable: true
+      required:
+        - id
+        - name
+        - campaignType
+        - status
+        - createdAt
+        - updatedAt
+        
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Error message description"
+        status:
+          type: string
+          example: "error"
+      required:
+        - code
+        - message
+        - status
+
+security:
+  - SessionAuth: []
+
+paths:
+  # Health Check
+  /ping:
+    get:
+      tags:
+        - Health
+      summary: Server liveness check
+      description: Checks if the API server is running and reachable
+      security: []
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "pong"
+                  timestamp:
+                    $ref: '#/components/schemas/Timestamp'
+                required:
+                  - message
+                  - timestamp
+                  
+  # WebSocket
+  /api/v2/ws:
+    get:
+      tags:
+        - WebSocket
+      summary: WebSocket connection
+      description: |
+        Establishes a persistent WebSocket connection for real-time, bidirectional communication.
+        Used for live updates, notifications, or interactive commands.
+      responses:
+        '101':
+          description: WebSocket connection established
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  # Authentication
+  /api/v2/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticates a user and creates a secure session
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseAPI'
+          headers:
+            Set-Cookie:
+              description: Session cookie
+              schema:
+                type: string
+                example: "session=...; HttpOnly; Secure; SameSite=Strict"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '423':
+          description: Account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  /api/v2/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidates the current session and clears session cookie
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful"
+                required:
+                  - message
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  /api/v2/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user
+      description: Returns information about the currently authenticated user
+      responses:
+        '200':
+          description: Current user information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserAPI'
+                required:
+                  - user
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  /api/v2/auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh session
+      description: Refreshes the current session
+      requestBody:
+        required: false
+      responses:
+        '200':
+          description: Session refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Session refreshed"
+                required:
+                  - message
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  /api/v2/auth/permissions:
+    get:
+      tags:
+        - Authentication
+      summary: Get user permissions
+      description: Returns the permissions of the currently authenticated user
+      responses:
+        '200':
+          description: User permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                    example: ["campaigns:read", "campaigns:create"]
+                required:
+                  - permissions
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+          
+  /api/v2/change-password:
+    post:
+      tags:
+        - Authentication
+      summary: Change password
+      description: Changes the password for the currently authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                newPassword:
+                  type: string
+                  format: password
+              required:
+                - currentPassword
+                - newPassword
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password changed successfully"
+                required:
+                  - message
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+            
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+            
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+            
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+            
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

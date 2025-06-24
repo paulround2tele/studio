@@ -564,30 +564,75 @@ func GetChangeImpact(dirPath, filePath string) (models.ChangeImpact, error) {
 	return impact, nil
 }
 
-// CreateSnapshot creates a snapshot of the current codebase state
+// CreateSnapshot creates a snapshot of the current codebase state using git stash
 func CreateSnapshot(dirPath, description string) (models.Snapshot, error) {
 	var snapshot models.Snapshot
-	var files []string
 
-	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() && strings.HasSuffix(path, ".go") {
-			relPath, _ := filepath.Rel(dirPath, path)
-			files = append(files, relPath)
-		}
-
-		return nil
-	})
-
-	snapshot.ID = fmt.Sprintf("snapshot_%d", time.Now().Unix())
+	// Create a unique snapshot ID
+	timestamp := time.Now().Unix()
+	snapshot.ID = fmt.Sprintf("snapshot_%d", timestamp)
 	snapshot.Description = description
 	snapshot.Timestamp = time.Now().Format(time.RFC3339)
+
+	// Move to the project root (parent of backend directory)
+	projectRoot := filepath.Dir(dirPath)
+
+	// First, check if there are any changes to stash
+	statusCmd := exec.Command("git", "status", "--porcelain")
+	statusCmd.Dir = projectRoot
+	statusOutput, err := statusCmd.Output()
+	if err != nil {
+		return snapshot, fmt.Errorf("failed to check git status: %v", err)
+	}
+
+	if len(statusOutput) == 0 {
+		// No changes to stash
+		return snapshot, fmt.Errorf("no changes to snapshot - working directory is clean")
+	}
+
+	// Create git stash with meaningful message
+	stashMessage := fmt.Sprintf("MCP Snapshot: %s (ID: %s)", description, snapshot.ID)
+	cmd := exec.Command("git", "stash", "push", "-u", "-m", stashMessage)
+	cmd.Dir = projectRoot
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	if err != nil {
+		return snapshot, fmt.Errorf("failed to create git stash: %v, stdout: %s, stderr: %s",
+			err, stdout.String(), stderr.String())
+	}
+
+	// Get list of files that were stashed by parsing the status output
+	var files []string
+	statusLines := strings.Split(string(statusOutput), "\n")
+	for _, line := range statusLines {
+		if len(line) > 3 {
+			// Extract filename from git status line (format: " M filename" or "?? filename")
+			filename := strings.TrimSpace(line[3:])
+			if filename != "" {
+				files = append(files, filename)
+			}
+		}
+	}
+
 	snapshot.Files = files
 
-	return snapshot, err
+	// Verify the stash was created by checking git stash list
+	verifyCmd := exec.Command("git", "stash", "list", "--oneline", "-1")
+	verifyCmd.Dir = projectRoot
+	verifyOutput, verifyErr := verifyCmd.Output()
+
+	if verifyErr == nil && len(verifyOutput) > 0 {
+		// Check if our stash message is in the latest stash
+		if strings.Contains(string(verifyOutput), snapshot.ID) {
+			return snapshot, nil
+		}
+	}
+
+	return snapshot, nil
 }
 
 // CheckContractDrift checks for API contract drift
