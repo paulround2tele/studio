@@ -41,5 +41,19 @@ The following tool endpoints are available:
 |                   | `/tools/get_change_impact`        | Analyzes the potential impact of a code change.                             |
 |                   | `/tools/snapshot`                 | Creates a git stash snapshot of the current changes.                        |
 |                   | `/tools/contract_drift_check`     | Checks for API contract drift between the code and the OpenAPI schema.      |
+|                   | `/tools/analyze_complexity`       | Reports cyclomatic complexity for functions using gocyclo.                  |
 | **Interactive**   | `/tools/run_terminal_command`     | Executes a terminal command.                                                |
 |                   | `/tools/apply_code_change`        | Applies a diff to a file.                                                   |
+
+### Complexity Analysis
+
+The `analyze_complexity` endpoint runs `gocyclo` over the backend directory and
+returns a list of functions with their cyclomatic complexity.
+
+Example response snippet:
+
+```json
+[
+  {"function": "handlers.CreateUser", "file": "internal/handlers/user.go", "line": 42, "complexity": 16}
+]
+```

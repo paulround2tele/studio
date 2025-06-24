@@ -481,6 +481,14 @@ type CodeQuality struct {
 	Complexity      string  `json:"complexity"`
 }
 
+// ComplexityReport represents cyclomatic complexity results for a function
+type ComplexityReport struct {
+	Function   string `json:"function"`
+	File       string `json:"file"`
+	Line       int    `json:"line"`
+	Complexity int    `json:"complexity"`
+}
+
 // API Schema models
 type APISchema struct {
 	OpenAPIVersion  string                 `json:"openapi_version"`
