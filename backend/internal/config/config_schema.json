@@ -1,0 +1,54 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AppConfig schema",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "AppConfig": {
+        "type": "object",
+        "required": ["server", "logging", "dnsValidator", "httpValidator", "worker"],
+        "properties": {
+          "server": {
+            "type": "object",
+            "required": ["port"],
+            "properties": {
+              "port": {"type": "string"},
+              "ginMode": {"type": "string"},
+              "streamChunkSize": {"type": "integer", "minimum": 1}
+            }
+          },
+          "worker": {
+            "type": "object",
+            "properties": {
+              "numWorkers": {"type": "integer", "minimum": 1},
+              "pollIntervalSeconds": {"type": "integer", "minimum": 1}
+            }
+          },
+          "dnsValidator": {
+            "type": "object",
+            "properties": {
+              "queryTimeoutSeconds": {"type": "integer", "minimum": 1},
+              "maxDomainsPerRequest": {"type": "integer", "minimum": 1}
+            }
+          },
+          "httpValidator": {
+            "type": "object",
+            "properties": {
+              "requestTimeoutSeconds": {"type": "integer", "minimum": 1},
+              "maxRedirects": {"type": "integer", "minimum": 0},
+              "maxBodyReadBytes": {"type": "integer", "minimum": 0}
+            }
+          },
+          "logging": {
+            "type": "object",
+            "required": ["level"],
+            "properties": {"level": {"type": "string"}}
+          }
+        }
+      }
+    }
+  }
+}

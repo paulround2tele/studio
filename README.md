@@ -196,7 +196,7 @@ The API follows OpenAPI 3.0 specification with automatically generated TypeScrip
 - **Admin**: `/api/v2/admin/*` - User & system management (including PUT /users/:id)
 - **WebSocket**: `/ws` - Real-time campaign updates with SafeBigInt support
 
-See `API_SPEC.md` for complete API documentation.
+Refer to `backend/docs/openapi.yaml` for the canonical OpenAPI specification.
 
 ## 🗄️ Database
 
@@ -284,7 +284,7 @@ npm test src/lib/types/__tests__/uuid-type-safety-fix.test.ts
 
 - `COMPREHENSIVE_REMEDIATION_REPORT.md` - Complete contract alignment documentation
 - `DEPLOYMENT_GUIDE.md` - Step-by-step deployment instructions
-- `API_SPEC.md` - Complete API specification
+- `backend/docs/openapi.yaml` - Canonical OpenAPI specification
 - `DATABASE_SETUP_GUIDE.md` - Database schema & setup
 - `backend/README.md` - Backend-specific documentation
 - `docs/` - Component & architecture documentation
@@ -309,7 +309,7 @@ For technical questions or issues:
 1. Check the contract alignment report in `COMPREHENSIVE_REMEDIATION_REPORT.md`
 2. Review deployment guide in `DEPLOYMENT_GUIDE.md`
 3. Check the documentation in `/docs`
-4. Review API specification in `API_SPEC.md`
+4. Review the canonical API specification at `backend/docs/openapi.yaml`
 5. Check database setup in `DATABASE_SETUP_GUIDE.md`
 
 ---
