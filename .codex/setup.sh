@@ -10,6 +10,10 @@ echo "Updating package lists and installing Node.js and Go..."
 sudo apt-get update -y
 sudo apt-get install -y nodejs npm golang-go
 
+echo "Installing and configuring PostgreSQL for tests..."
+"$(dirname "$0")/setup_db.sh"
+
+
 echo "Running npm install..."
 npm install
 

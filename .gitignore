@@ -75,3 +75,4 @@ mcp/mcp-server.exe
 .idx/
 *.gz
 go1.22.3.linux-amd64.tar.gz
+.db_connection.test

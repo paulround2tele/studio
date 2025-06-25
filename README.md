@@ -82,6 +82,8 @@ git clone <repository-url>
 cd studio
 
 # If you're using the Codex environment, run the setup script to install
+# Node.js, Go, PostgreSQL and all dependencies. This also prepares a
+# local PostgreSQL database for running tests.
 # Node.js, Go and all dependencies
 ./.codex/setup.sh
 
