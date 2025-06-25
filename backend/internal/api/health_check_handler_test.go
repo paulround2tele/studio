@@ -1,12 +1,13 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,19 +17,19 @@ func TestHealthCheckHandler_HandleHealthCheck(t *testing.T) {
 	// Test cases
 	tests := []struct {
 		name           string
-		dbError        error
+		simulateDown   bool
 		expectedStatus string
 		expectedCode   int
 	}{
 		{
 			name:           "healthy service",
-			dbError:        nil,
+			simulateDown:   false,
 			expectedStatus: "ok",
 			expectedCode:   http.StatusOK,
 		},
 		{
 			name:           "database unavailable",
-			dbError:        sqlmock.ErrCancelled,
+			simulateDown:   true,
 			expectedStatus: "degraded",
 			expectedCode:   http.StatusOK, // Still return 200 but with degraded status
 		},
@@ -36,13 +37,13 @@ func TestHealthCheckHandler_HandleHealthCheck(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// Set up mock DB for each test case with monitoring pings enabled
-			db, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
+			dsn := os.Getenv("TEST_POSTGRES_DSN")
+			require.NotEmpty(t, dsn)
+			db, err := sql.Open("postgres", dsn)
 			require.NoError(t, err)
-			defer db.Close()
-
-			// Set up expectations
-			mock.ExpectPing().WillReturnError(tc.dbError)
+			if tc.simulateDown {
+				db.Close()
+			}
 
 			// Set up router
 			gin.SetMode(gin.TestMode)
@@ -62,9 +63,12 @@ func TestHealthCheckHandler_HandleHealthCheck(t *testing.T) {
 			assert.Equal(t, tc.expectedCode, w.Code)
 
 			// Parse response body
-			var response HealthStatus
-			err = json.Unmarshal(w.Body.Bytes(), &response)
+			var apiResp APIResponse
+			err = json.Unmarshal(w.Body.Bytes(), &apiResp)
 			require.NoError(t, err)
+			var response HealthStatus
+			jsonData, _ := json.Marshal(apiResp.Data)
+			_ = json.Unmarshal(jsonData, &response)
 
 			// Assert status
 			assert.Equal(t, tc.expectedStatus, response.Status)
@@ -73,8 +77,7 @@ func TestHealthCheckHandler_HandleHealthCheck(t *testing.T) {
 			assert.NotEmpty(t, response.Environment)
 			assert.Contains(t, response.Components, "database")
 
-			// Verify all expectations were met
-			assert.NoError(t, mock.ExpectationsWereMet())
+			// No mock expectations
 		})
 	}
 }
@@ -83,30 +86,30 @@ func TestHealthCheckHandler_HandleReadinessCheck(t *testing.T) {
 	// Test cases
 	tests := []struct {
 		name         string
-		dbError      error
+		simulateDown bool
 		expectedCode int
 	}{
 		{
 			name:         "service ready",
-			dbError:      nil,
+			simulateDown: false,
 			expectedCode: http.StatusOK,
 		},
 		{
 			name:         "service not ready",
-			dbError:      sqlmock.ErrCancelled,
+			simulateDown: true,
 			expectedCode: http.StatusServiceUnavailable,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// Set up mock DB for each test case with monitoring pings enabled
-			db, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
+			dsn := os.Getenv("TEST_POSTGRES_DSN")
+			require.NotEmpty(t, dsn)
+			db, err := sql.Open("postgres", dsn)
 			require.NoError(t, err)
-			defer db.Close()
-
-			// Set up expectations
-			mock.ExpectPing().WillReturnError(tc.dbError)
+			if tc.simulateDown {
+				db.Close()
+			}
 
 			// Set up router
 			gin.SetMode(gin.TestMode)
@@ -125,15 +128,15 @@ func TestHealthCheckHandler_HandleReadinessCheck(t *testing.T) {
 			// Assert response
 			assert.Equal(t, tc.expectedCode, w.Code)
 
-			// Verify all expectations were met
-			assert.NoError(t, mock.ExpectationsWereMet())
+			// No mock expectations
 		})
 	}
 }
 
 func TestHealthCheckHandler_HandleLivenessCheck(t *testing.T) {
-	// Set up mock DB
-	db, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	dsn := os.Getenv("TEST_POSTGRES_DSN")
+	require.NotEmpty(t, dsn)
+	db, err := sql.Open("postgres", dsn)
 	require.NoError(t, err)
 	defer db.Close()
 
@@ -155,13 +158,14 @@ func TestHealthCheckHandler_HandleLivenessCheck(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// Parse response body
-	var response map[string]string
-	err = json.Unmarshal(w.Body.Bytes(), &response)
+	var apiResp APIResponse
+	err = json.Unmarshal(w.Body.Bytes(), &apiResp)
 	require.NoError(t, err)
+	respMap, _ := apiResp.Data.(map[string]interface{})
+	statusVal, _ := respMap["status"].(string)
 
 	// Assert status
-	assert.Equal(t, "alive", response["status"])
+	assert.Equal(t, "alive", statusVal)
 
-	// Verify all expectations were met
-	assert.NoError(t, mock.ExpectationsWereMet())
+	// No mock expectations
 }
