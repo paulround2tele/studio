@@ -411,6 +411,14 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"properties": map[string]interface{}{},
 			},
 		},
+                {
+                        Name:        "get_lint_diagnostics",
+                        Description: "Run golangci-lint or staticcheck and go build",
+                        InputSchema: map[string]interface{}{
+                                "type":       "object",
+                                "properties": map[string]interface{}{},
+                        },
+                },
 	}
 
 	log.Printf("Returning %d MCP tools", len(tools))
@@ -525,8 +533,10 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetTestCoverage()
 	case "analyze_code_quality":
 		return s.callAnalyzeCodeQuality()
-	case "analyze_complexity":
-		return s.callAnalyzeComplexity()
+        case "analyze_complexity":
+                return s.callAnalyzeComplexity()
+        case "get_lint_diagnostics":
+                return s.callGetLintDiagnostics()
 
 	default:
 		return map[string]interface{}{

@@ -1069,6 +1069,75 @@ func (b *Bridge) AnalyzeComplexity() ([]models.ComplexityReport, error) {
 	return reports, nil
 }
 
+// GetLintDiagnostics runs a linter and go build to collect issues and compile errors
+func (b *Bridge) GetLintDiagnostics() (models.LintDiagnostics, error) {
+	diags := models.LintDiagnostics{Issues: []string{}, CompileErrors: []string{}}
+	if b.BackendPath == "" {
+		return diags, fmt.Errorf("backend path not set")
+	}
+
+	var cmd *exec.Cmd
+	if _, err := exec.LookPath("golangci-lint"); err == nil {
+		diags.Linter = "golangci-lint"
+		cmd = exec.Command("golangci-lint", "run", "--out-format", "json", "--issues-exit-code", "0")
+	} else if _, err := exec.LookPath("staticcheck"); err == nil {
+		diags.Linter = "staticcheck"
+		cmd = exec.Command("staticcheck", "./...")
+	} else {
+		return diags, fmt.Errorf("neither golangci-lint nor staticcheck is installed")
+	}
+	cmd.Dir = b.BackendPath
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			out.Write(exitErr.Stderr)
+		} else {
+			return diags, err
+		}
+	}
+
+	if diags.Linter == "golangci-lint" {
+		type lintIssue struct {
+			FromLinter string `json:"FromLinter"`
+			Text       string `json:"Text"`
+		}
+		var report struct {
+			Issues []lintIssue `json:"Issues"`
+		}
+		if err := json.Unmarshal(out.Bytes(), &report); err == nil {
+			for _, is := range report.Issues {
+				diags.Issues = append(diags.Issues, fmt.Sprintf("%s: %s", is.FromLinter, is.Text))
+			}
+		} else {
+			for _, line := range strings.Split(strings.TrimSpace(out.String()), "\n") {
+				if strings.TrimSpace(line) != "" {
+					diags.Issues = append(diags.Issues, line)
+				}
+			}
+		}
+	} else {
+		for _, line := range strings.Split(strings.TrimSpace(out.String()), "\n") {
+			if strings.TrimSpace(line) != "" {
+				diags.Issues = append(diags.Issues, line)
+			}
+		}
+	}
+
+	buildCmd := exec.Command("go", "build", "./...")
+	buildCmd.Dir = b.BackendPath
+	var buildOut bytes.Buffer
+	buildCmd.Stderr = &buildOut
+	if err := buildCmd.Run(); err != nil {
+		for _, line := range strings.Split(strings.TrimSpace(buildOut.String()), "\n") {
+			if strings.TrimSpace(line) != "" {
+				diags.CompileErrors = append(diags.CompileErrors, line)
+			}
+		}
+	}
+
+	return diags, nil
+}
 // GetAPISchema returns comprehensive API schema information by analyzing actual backend implementation
 func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 	schema := models.APISchema{
