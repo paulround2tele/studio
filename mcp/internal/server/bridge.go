@@ -813,8 +813,8 @@ func (b *Bridge) ValidateAPIContracts() (models.APIContractValidation, error) {
 	}
 
 	if b.BackendPath != "" {
-		// Look for OpenAPI/Swagger files
-		cmd := exec.Command("find", b.BackendPath, "-name", "*.yaml", "-o", "-name", "*.yml", "-o", "-name", "openapi.*", "-o", "-name", "swagger.*")
+		// Look for OpenAPI specification files
+		cmd := exec.Command("find", b.BackendPath, "-name", "openapi.yaml", "-o", "-name", "openapi.json")
 		output, err := cmd.Output()
 		if err == nil && len(output) > 0 {
 			lines := bytes.Split(bytes.TrimSpace(output), []byte("\n"))
@@ -1149,39 +1149,39 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 		ValidationRules: make(map[string]interface{}),
 	}
 
-	// Check for actual Swagger/OpenAPI files in the backend
+	// Check for actual OpenAPI files in the backend
 	backendDocsPath := filepath.Join(b.BackendPath, "docs")
 
-	// Check for Swagger YAML
-	swaggerYaml := filepath.Join(backendDocsPath, "swagger.yaml")
-	if _, err := os.Stat(swaggerYaml); err == nil {
-		schema.SchemaFiles = append(schema.SchemaFiles, "docs/swagger.yaml")
+	// Detect openapi.yaml
+	openapiYaml := filepath.Join(backendDocsPath, "openapi.yaml")
+	if _, err := os.Stat(openapiYaml); err == nil {
+		schema.SchemaFiles = append(schema.SchemaFiles, "docs/openapi.yaml")
 
-		// Read the swagger.yaml to determine version
-		content, err := os.ReadFile(swaggerYaml)
+		content, err := os.ReadFile(openapiYaml)
 		if err == nil {
 			contentStr := string(content)
-			if strings.Contains(contentStr, `swagger: "2.0"`) {
-				schema.OpenAPIVersion = "2.0"
-			} else if strings.Contains(contentStr, "openapi: 3.") {
-				schema.OpenAPIVersion = "3.0.0"
+			if strings.Contains(contentStr, "openapi:") {
+				parts := strings.SplitN(contentStr, "openapi:", 2)
+				if len(parts) > 1 {
+					ver := strings.Fields(parts[1])[0]
+					schema.OpenAPIVersion = strings.TrimSpace(ver)
+				}
 			}
 		}
 	}
 
-	// Check for generated docs.go (swaggo)
-	docsGo := filepath.Join(backendDocsPath, "docs.go")
-	if _, err := os.Stat(docsGo); err == nil {
-		schema.SchemaFiles = append(schema.SchemaFiles, "docs/docs.go")
-
-		// Read docs.go to confirm it's swaggo generated
-		content, err := os.ReadFile(docsGo)
-		if err == nil {
-			contentStr := string(content)
-			if strings.Contains(contentStr, "swaggo/swag") {
-				// It's swaggo generated
-				if strings.Contains(contentStr, `"swagger": "2.0"`) {
-					schema.OpenAPIVersion = "2.0"
+	// Detect openapi.json
+	openapiJSON := filepath.Join(backendDocsPath, "openapi.json")
+	if _, err := os.Stat(openapiJSON); err == nil {
+		schema.SchemaFiles = append(schema.SchemaFiles, "docs/openapi.json")
+		if schema.OpenAPIVersion == "" {
+			content, err := os.ReadFile(openapiJSON)
+			if err == nil {
+				var js map[string]interface{}
+				if json.Unmarshal(content, &js) == nil {
+					if v, ok := js["openapi"].(string); ok {
+						schema.OpenAPIVersion = v
+					}
 				}
 			}
 		}
