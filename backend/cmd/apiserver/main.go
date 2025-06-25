@@ -22,6 +22,7 @@ import (
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
 	"github.com/fntelecomllc/studio/backend/pkg/communication"
+	"github.com/fntelecomllc/studio/backend/pkg/architecture"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -172,6 +173,11 @@ func main() {
 	mq := communication.NewSimpleQueue(100)
 	es := communication.NewInMemoryEventStore()
 	asyncMgr := communication.NewAsyncPatternManager(mq, es, nil)
+
+	archRegistry := architecture.NewServiceRegistry(db.DB)
+	if err := services.RegisterServiceContracts(archRegistry); err != nil {
+		log.Printf("Warning: failed to register service contracts: %v", err)
+	}
 
 	campaignOrchestratorSvc := services.NewCampaignOrchestratorService(
 		db,
