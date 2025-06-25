@@ -223,7 +223,7 @@ func main() {
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(sessionService, sessionConfig)
 	securityMiddleware := middleware.NewSecurityMiddleware()
-	rateLimitMiddleware := middleware.NewRateLimitMiddleware()
+	rateLimitMiddleware := middleware.NewRateLimitMiddleware(db, appConfig.RateLimiter)
 	log.Println("Security middleware initialized.")
 
 	// Initialize health check handler
