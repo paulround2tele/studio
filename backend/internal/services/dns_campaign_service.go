@@ -25,6 +25,7 @@ type dnsCampaignServiceImpl struct {
 	campaignStore    store.CampaignStore
 	personaStore     store.PersonaStore
 	auditLogStore    store.AuditLogStore
+	auditLogger      *utils.AuditLogger
 	campaignJobStore store.CampaignJobStore
 	appConfig        *config.AppConfig
 }
@@ -36,6 +37,7 @@ func NewDNSCampaignService(db *sqlx.DB, cs store.CampaignStore, ps store.Persona
 		campaignStore:    cs,
 		personaStore:     ps,
 		auditLogStore:    as,
+		auditLogger:      utils.NewAuditLogger(as),
 		campaignJobStore: cjs,
 		appConfig:        appCfg,
 	}
@@ -221,7 +223,10 @@ func (s *dnsCampaignServiceImpl) validatePersonaIDs(ctx context.Context, querier
 }
 
 func (s *dnsCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
-	utils.LogCampaignAuditEvent(ctx, exec, s.auditLogStore, campaign, action, description)
+	if s.auditLogger == nil {
+		return
+	}
+	s.auditLogger.LogCampaignEvent(ctx, exec, campaign, action, description)
 }
 
 func modelsDNStoConfigDNSJSON(details models.DNSConfigDetails) config.DNSValidatorConfigJSON {

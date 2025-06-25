@@ -12,6 +12,7 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -22,6 +23,7 @@ type campaignOrchestratorServiceImpl struct {
 	personaStore     store.PersonaStore
 	keywordStore     store.KeywordStore
 	auditLogStore    store.AuditLogStore
+	auditLogger      *utils.AuditLogger
 	campaignJobStore store.CampaignJobStore
 
 	// Specialized services
@@ -44,6 +46,7 @@ func NewCampaignOrchestratorService(
 		personaStore:       ps,
 		keywordStore:       ks,
 		auditLogStore:      as,
+		auditLogger:        utils.NewAuditLogger(as),
 		campaignJobStore:   cjs,
 		domainGenService:   dgs,
 		dnsService:         dNSService,
@@ -867,37 +870,20 @@ func (s *campaignOrchestratorServiceImpl) updateCampaignStatusInTx(ctx context.C
 
 // logAuditEvent correctly uses the passed exec (querier)
 func (s *campaignOrchestratorServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
-	detailsMap := map[string]string{
+	if s.auditLogger == nil {
+		return
+	}
+	details := map[string]string{
 		"campaign_name":      campaign.Name,
 		"description":        description,
 		"orchestrator_event": "true",
 	}
-	detailsJSON, err := json.Marshal(detailsMap)
-	if err != nil {
-		log.Printf("Orchestrator Audit: Error marshalling details for campaign %s, action %s: %v. Using raw desc.", campaign.ID, action, err)
-		detailsJSON = json.RawMessage(fmt.Sprintf(`{"campaign_name": "%s", "description": "%s (details marshalling error)"}`, campaign.Name, description))
-	}
-
-	var auditLogUserID uuid.NullUUID
+	var userID *uuid.UUID
 	if campaign.UserID != nil {
-		auditLogUserID = uuid.NullUUID{UUID: *campaign.UserID, Valid: true}
+		uid := *campaign.UserID
+		userID = &uid
 	}
-	auditLog := &models.AuditLog{
-		Timestamp:  time.Now().UTC(),
-		UserID:     auditLogUserID,
-		Action:     action,
-		EntityType: sql.NullString{String: "Campaign", Valid: true},
-		EntityID:   uuid.NullUUID{UUID: campaign.ID, Valid: true},
-		Details:    models.JSONRawMessagePtr(detailsJSON),
-	}
-	// s.auditLogStore.CreateAuditLog will use the exec (querier)
-	if s.auditLogStore == nil {
-		log.Printf("Warning: auditLogStore is nil for campaign %s, action %s. Skipping audit log creation.", campaign.ID, action)
-	} else if exec == nil {
-		log.Printf("Warning: exec is nil for campaign %s, action %s. Skipping audit log creation.", campaign.ID, action)
-	} else if err := s.auditLogStore.CreateAuditLog(ctx, exec, auditLog); err != nil {
-		log.Printf("Orchestrator Audit: Error creating log for campaign %s, action %s: %v", campaign.ID, action, err)
-	}
+	s.auditLogger.LogGenericEvent(ctx, exec, userID, action, "Campaign", &campaign.ID, details)
 }
 
 func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, campaignID uuid.UUID, req UpdateCampaignRequest) (*models.Campaign, error) {

@@ -13,6 +13,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
 
 	// "github.com/fntelecomllc/studio/backend/internal/workers" // TODO: Implement workers package
@@ -173,6 +174,7 @@ type domainGenerationServiceImpl struct {
 	campaignStore             store.CampaignStore
 	campaignJobStore          store.CampaignJobStore
 	auditLogStore             store.AuditLogStore
+	auditLogger               *utils.AuditLogger
 	configManager             ConfigManagerInterface
 	workerCoordinationService *WorkerCoordinationService
 	txManager                 interface{} // Simplified for now
@@ -248,6 +250,7 @@ func NewDomainGenerationService(db *sqlx.DB, cs store.CampaignStore, cjs store.C
 		campaignStore:             cs,
 		campaignJobStore:          cjs,
 		auditLogStore:             as,
+		auditLogger:               utils.NewAuditLogger(as),
 		configManager:             cm,
 		workerCoordinationService: workerCoordService,
 		txManager:                 txManager,
@@ -580,41 +583,10 @@ func (s *domainGenerationServiceImpl) GetCampaignDetails(ctx context.Context, ca
 }
 
 func (s *domainGenerationServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
-	if campaign == nil { // Add nil check for campaign
-		log.Printf("Error in logAuditEvent: campaign object is nil. Action: %s, Description: %s", action, description)
+	if s.auditLogger == nil || campaign == nil {
 		return
 	}
-
-	detailsMap := map[string]string{
-		"campaign_name": campaign.Name, // Safe if campaign is not nil
-		"description":   description,
-	}
-	detailsJSON, err := json.Marshal(detailsMap)
-	if err != nil {
-		log.Printf("Error marshalling audit log details for campaign %s, action %s: %v. Using raw description.", campaign.ID, action, err)
-		detailsJSON = json.RawMessage(fmt.Sprintf(`{"campaign_name": "%s", "description": "Details marshalling error, raw: %s"}`, campaign.Name, description))
-	}
-
-	var auditLogUserID uuid.NullUUID
-	if campaign.UserID != nil {
-		auditLogUserID = uuid.NullUUID{UUID: *campaign.UserID, Valid: true}
-	}
-	auditLog := &models.AuditLog{
-		Timestamp:  time.Now().UTC(),
-		UserID:     auditLogUserID,
-		Action:     action,
-		EntityType: sql.NullString{String: "Campaign", Valid: true},
-		EntityID:   uuid.NullUUID{UUID: campaign.ID, Valid: true},
-		Details:    models.JSONRawMessagePtr(detailsJSON),
-	}
-
-	if s.auditLogStore == nil {
-		log.Printf("Warning: auditLogStore is nil for campaign %s, action %s. Skipping audit log creation.", campaign.ID, action)
-	} else if exec == nil {
-		log.Printf("Warning: exec is nil for campaign %s, action %s. Skipping audit log creation.", campaign.ID, action)
-	} else if err := s.auditLogStore.CreateAuditLog(ctx, exec, auditLog); err != nil {
-		log.Printf("Error creating audit log for campaign %s, action %s: %v", campaign.ID, action, err)
-	}
+	s.auditLogger.LogCampaignEvent(ctx, exec, campaign, action, description)
 }
 
 func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedInThisBatch int, opErr error) {
