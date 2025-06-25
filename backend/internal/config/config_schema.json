@@ -56,6 +56,21 @@
           }
         }
       }
+      ,
+      "EnvironmentConfig": {
+        "type": "object",
+        "required": ["environment", "service_name", "version", "configuration"],
+        "properties": {
+          "environment": {"type": "string"},
+          "service_name": {"type": "string"},
+          "version": {"type": "string"},
+          "configuration": {"type": "object"},
+          "encrypted_fields": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
     }
   }
 }
