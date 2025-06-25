@@ -25,7 +25,7 @@ print_error() {
 # Build the server first
 echo "Building MCP server..."
 cd "$(dirname "$0")"
-go build -o mcp-server ./cmd/mcpserver
+go build -o mcp-server ./cmd/mcp-server
 
 # Set test environment
 export DB_CONNECTION="postgres://user:password@localhost/mcpdb?sslmode=disable"

@@ -47,7 +47,7 @@ This directory contains a Model Context Protocol (MCP) server implemented as a J
 ```bash
 make build
 # or
-go build -o mcp-server ./cmd/mcpserver
+go build -o bin/mcp-server ./cmd/mcp-server
 ```
 
 ### 2. Set Environment Variables
@@ -106,7 +106,7 @@ import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-lan
 export function activate(context: vscode.ExtensionContext) {
     const serverOptions: ServerOptions = {
         command: 'go',
-        args: ['run', './cmd/mcpserver'],
+        args: ['run', './cmd/mcp-server'],
         options: {
             cwd: '/path/to/mcp/server',
             env: {
@@ -235,7 +235,7 @@ Content-Length: 200
 
 Enable debug logging by running the server with:
 ```bash
-go run ./cmd/mcpserver 2>debug.log
+go run ./cmd/mcp-server 2>debug.log
 ```
 
 This will write all debug information to `debug.log` while keeping JSON-RPC communication on stdout.

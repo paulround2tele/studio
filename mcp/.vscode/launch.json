@@ -6,7 +6,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/mcp/cmd/mcpserver",
+      "program": "${workspaceFolder}/mcp/cmd/mcp-server",
       "env": {
         "DB_CONNECTION": "postgres://user:password@localhost/mcpdb?sslmode=disable"
       },
@@ -19,7 +19,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/mcp/cmd/mcpserver",
+      "program": "${workspaceFolder}/mcp/cmd/mcp-server",
       "env": {
         "DB_CONNECTION": "postgres://user:password@localhost/mcpdb?sslmode=disable"
       },

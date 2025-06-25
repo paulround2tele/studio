@@ -48,7 +48,7 @@ cd "$(dirname "$0")"
 print_status "Building MCP JSON-RPC server..."
 
 # Build the server
-if go build -o mcp-server ./cmd/mcpserver; then
+if go build -o bin/mcp-server ./cmd/mcp-server; then
     print_success "Build completed successfully"
 else
     print_error "Build failed"
@@ -61,4 +61,4 @@ print_status "To test, send JSON-RPC messages to stdin"
 print_status "Press Ctrl+C to stop the server"
 
 # Start the server
-./mcp-server
+./bin/mcp-server
