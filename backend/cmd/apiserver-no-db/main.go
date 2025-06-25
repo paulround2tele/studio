@@ -72,9 +72,9 @@ func main() {
 	// Mock endpoints for contract testing
 	router.GET("/api/v2/auth/me", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"user_id": "mock-user-123",
-			"username": "mock-user",
-			"role": "admin",
+			"user_id":   "mock-user-123",
+			"username":  "mock-user",
+			"role":      "admin",
 			"mock_mode": true,
 		})
 	})
@@ -83,9 +83,9 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{
 			"campaigns": []gin.H{
 				{
-					"id": "mock-campaign-1",
-					"name": "Mock Campaign",
-					"status": "active",
+					"id":        "mock-campaign-1",
+					"name":      "Mock Campaign",
+					"status":    "active",
 					"mock_mode": true,
 				},
 			},
@@ -115,7 +115,7 @@ func main() {
 		log.Printf("  - GET /api/v2/contract/validate - Contract validation")
 		log.Printf("  - GET /api/v2/auth/me - Mock auth endpoint")
 		log.Printf("  - GET /api/v2/campaigns - Mock campaigns endpoint")
-		
+
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
 		}
