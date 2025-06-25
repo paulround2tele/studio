@@ -91,7 +91,7 @@ const environments: Record<string, EnvironmentConfig> = {
   
   staging: {
     api: {
-      baseUrl: '/api',
+      baseUrl: 'https://api.domainflow.com',
       timeout: 30000,
       retryAttempts: 3,
       retryDelay: 1000,
@@ -126,7 +126,7 @@ const environments: Record<string, EnvironmentConfig> = {
   
   production: {
     api: {
-      baseUrl: '/api',
+      baseUrl: 'https://api.domainflow.com',
       timeout: 30000,
       retryAttempts: 5,
       retryDelay: 2000,

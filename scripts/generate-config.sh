@@ -97,7 +97,7 @@ CORS_ALLOW_CREDENTIALS=true
 # Application Settings
 NODE_ENV=production
 APP_ENV=production
-NEXT_PUBLIC_API_URL=/api/v2
+NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.domainflow.com}
 LOG_LEVEL=info
 
 # Rate Limiting
