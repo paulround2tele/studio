@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'backend/**'
-      - 'backend/docs/openapi.json'
+      - 'backend/docs/openapi.yaml'
   push:
     branches:
       - main
