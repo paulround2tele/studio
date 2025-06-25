@@ -18,6 +18,7 @@ type AppConfig struct {
 	DNSValidator   DNSValidatorConfig  `json:"dnsValidator"`
 	HTTPValidator  HTTPValidatorConfig `json:"httpValidator"`
 	Logging        LoggingConfig       `json:"logging"`
+	RateLimiter    RateLimiterConfig   `json:"rateLimiter"`
 	DNSPersonas    []DNSPersona        `json:"dnsPersonas"`
 	HTTPPersonas   []HTTPPersona       `json:"httpPersonas"`
 	Proxies        []ProxyConfigEntry  `json:"proxies"`
@@ -173,6 +174,7 @@ func ConvertJSONToAppConfig(jsonCfg AppConfigJSON) *AppConfig {
 		DNSValidator:  ConvertJSONToDNSConfig(jsonCfg.DNSValidator),
 		HTTPValidator: ConvertJSONToHTTPConfig(jsonCfg.HTTPValidator),
 		Logging:       jsonCfg.Logging,
+		RateLimiter:   ConvertJSONToRateLimiterConfig(jsonCfg.RateLimiter),
 	}
 
 	if appCfg.Server.GinMode == "" {
@@ -199,6 +201,7 @@ func ConvertAppConfigToJSON(appCfg *AppConfig) AppConfigJSON {
 		DNSValidator:  ConvertDNSConfigToJSON(appCfg.DNSValidator),
 		HTTPValidator: ConvertHTTPConfigToJSON(appCfg.HTTPValidator),
 		Logging:       appCfg.Logging,
+		RateLimiter:   ConvertRateLimiterConfigToJSON(appCfg.RateLimiter),
 	}
 }
 
@@ -226,6 +229,23 @@ func ConvertJSONToWorkerConfig(jsonCfg WorkerConfig) WorkerConfig {
 // ConvertWorkerConfigToJSON prepares WorkerConfig for JSON (currently same structure).
 func ConvertWorkerConfigToJSON(cfg WorkerConfig) WorkerConfig {
 	return cfg // No specific conversion needed if JSON struct is same as internal
+}
+
+// ConvertJSONToRateLimiterConfig applies defaults to RateLimiterConfig from JSON.
+func ConvertJSONToRateLimiterConfig(jsonCfg RateLimiterConfig) RateLimiterConfig {
+	cfg := jsonCfg
+	if cfg.MaxRequests <= 0 {
+		cfg.MaxRequests = DefaultAPIRateLimitMaxRequests
+	}
+	if cfg.WindowSeconds <= 0 {
+		cfg.WindowSeconds = DefaultAPIRateLimitWindowSeconds
+	}
+	return cfg
+}
+
+// ConvertRateLimiterConfigToJSON prepares RateLimiterConfig for JSON.
+func ConvertRateLimiterConfigToJSON(cfg RateLimiterConfig) RateLimiterConfig {
+	return cfg
 }
 
 // ConvertJSONToDNSConfig, ConvertDNSConfigToJSON, ConvertJSONToHTTPConfig, ConvertHTTPConfigToJSON

@@ -37,6 +37,12 @@ type WorkerConfig struct {
 	HTTPKeywordSubtaskConcurrency int `json:"httpKeywordSubtaskConcurrency,omitempty"` // Added
 }
 
+// RateLimiterConfig defines global API rate limiting settings.
+type RateLimiterConfig struct {
+	MaxRequests   int `json:"maxRequests"`
+	WindowSeconds int `json:"windowSeconds"`
+}
+
 // ServerConfig defines server-specific settings.
 type ServerConfig struct {
 	Port                     string          `json:"port"`
@@ -128,4 +134,5 @@ type AppConfigJSON struct {
 	DNSValidator  DNSValidatorConfigJSON  `json:"dnsValidator"`
 	HTTPValidator HTTPValidatorConfigJSON `json:"httpValidator"`
 	Logging       LoggingConfig           `json:"logging"`
+	RateLimiter   RateLimiterConfig       `json:"rateLimiter,omitempty"`
 }

@@ -31,6 +31,10 @@ const (
 	DefaultHTTPFollowRedirects             = true
 	DefaultHTTPRequestTimeoutSeconds       = 15
 	DefaultHTTPMaxRedirects                = 7
+
+	// Global API rate limiter defaults
+	DefaultAPIRateLimitWindowSeconds = 900
+	DefaultAPIRateLimitMaxRequests   = 1000
 )
 
 // DefaultAppConfigJSON returns the default application configuration as an AppConfigJSON struct.
@@ -91,6 +95,10 @@ func DefaultAppConfigJSON() AppConfigJSON {
 		},
 		Logging: LoggingConfig{
 			Level: "INFO",
+		},
+		RateLimiter: RateLimiterConfig{
+			MaxRequests:   DefaultAPIRateLimitMaxRequests,
+			WindowSeconds: DefaultAPIRateLimitWindowSeconds,
 		},
 	}
 }
