@@ -1083,3 +1083,53 @@ func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Cont
 }
 
 // Legacy campaign creation methods (kept for backward compatibility)
+
+// HandleCampaignCompletion creates and queues the next campaign in the chain
+// when a campaign completes. Domain generation -> DNS -> HTTP.
+func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error {
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, s.db, campaignID)
+	if err != nil {
+		return err
+	}
+
+	switch campaign.CampaignType {
+	case models.CampaignTypeDomainGeneration:
+		enabled := true
+		personas, err := s.personaStore.ListPersonas(ctx, s.db, store.ListPersonasFilter{Type: models.PersonaTypeDNS, IsEnabled: &enabled, Limit: 1})
+		if err != nil || len(personas) == 0 {
+			return err
+		}
+		req := CreateDNSValidationCampaignRequest{
+			Name:                       campaign.Name + " DNS",
+			SourceGenerationCampaignID: campaignID,
+			PersonaIDs:                 []uuid.UUID{personas[0].ID},
+		}
+		nextCamp, err := s.dnsService.CreateCampaign(ctx, req)
+		if err != nil {
+			return err
+		}
+		return s.StartCampaign(ctx, nextCamp.ID)
+	case models.CampaignTypeDNSValidation:
+		enabled := true
+		personas, err := s.personaStore.ListPersonas(ctx, s.db, store.ListPersonasFilter{Type: models.PersonaTypeHTTP, IsEnabled: &enabled, Limit: 1})
+		if err != nil || len(personas) == 0 {
+			return err
+		}
+		sets, err := s.keywordStore.ListKeywordSets(ctx, s.db, store.ListKeywordSetsFilter{Limit: 1})
+		if err != nil || len(sets) == 0 {
+			return err
+		}
+		req := CreateHTTPKeywordCampaignRequest{
+			Name:             campaign.Name + " HTTP",
+			SourceCampaignID: campaignID,
+			PersonaIDs:       []uuid.UUID{personas[0].ID},
+			KeywordSetIDs:    []uuid.UUID{sets[0].ID},
+		}
+		nextCamp, err := s.httpKeywordService.CreateCampaign(ctx, req)
+		if err != nil {
+			return err
+		}
+		return s.StartCampaign(ctx, nextCamp.ID)
+	}
+	return nil
+}

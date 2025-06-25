@@ -323,8 +323,11 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 					// If no other active jobs, delegate to the orchestrator to handle the completed job.
 					if activeJobsCount == 0 {
 						log.Printf("Worker [%s]: No other active jobs found for campaign %s, campaign may be complete", workerName, job.CampaignID)
-						// TODO: Implement campaign completion logic here or call the orchestrator
-						log.Printf("Worker [%s]: Campaign %s completion handling not implemented yet", workerName, job.CampaignID)
+						if s.campaignOrchestratorSvc != nil {
+							if err := s.campaignOrchestratorSvc.HandleCampaignCompletion(jobCtx, job.CampaignID); err != nil {
+								log.Printf("Worker [%s]: Error handling completion for campaign %s: %v", workerName, job.CampaignID, err)
+							}
+						}
 					} else {
 						log.Printf("Worker [%s]: Found %d other active jobs for campaign %s, not marking as completed yet", workerName, activeJobsCount, job.CampaignID)
 					}

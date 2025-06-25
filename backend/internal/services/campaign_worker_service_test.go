@@ -551,3 +551,58 @@ func (s *CampaignWorkerServiceTestSuite) TestJobStuckInProcessing() {
 	assert.Contains(t, []models.CampaignJobStatusEnum{models.JobStatusQueued, models.JobStatusFailed, models.JobStatusCompleted}, stuckJob.Status, "Job should eventually transition out of running state")
 	t.Logf("Observed job status transitions: %v", observedStatuses)
 }
+
+func (s *CampaignWorkerServiceTestSuite) TestChainedCampaignExecution() {
+	t := s.T()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	testutil.CreateTestDNSPersona(t, ctx, s.PersonaStore, s.DB, "DNSChain"+uuid.NewString(), true)
+	testutil.CreateTestHTTPPersona(t, ctx, s.PersonaStore, s.DB, "HTTPChain"+uuid.NewString(), true)
+	testutil.CreateTestKeywordSet(t, ctx, s.KeywordStore, s.DB)
+
+	workerService := services.NewCampaignWorkerService(
+		s.CampaignJobStore,
+		s.dgService,
+		s.dnsService,
+		s.httpService,
+		s.orchestratorService,
+		"chain-worker",
+		s.AppConfig,
+		s.DB,
+	)
+
+	dgCampaign, _ := testutil.CreateTestDomainGenerationCampaignAndJob(t, ctx, s.dgService, s.CampaignJobStore, "ChainDG", 1)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	workerCtx, stop := context.WithCancel(ctx)
+	go func() {
+		defer wg.Done()
+		workerService.StartWorkers(workerCtx, 1)
+	}()
+
+	var httpCampaign *models.Campaign
+	for i := 0; i < 60; i++ {
+		campaigns, _ := s.CampaignStore.ListCampaigns(ctx, s.DB, store.ListCampaignsFilter{})
+		for _, c := range campaigns {
+			if c.CampaignType == models.CampaignTypeHTTPKeywordValidation {
+				httpCampaign = c
+			}
+		}
+		if httpCampaign != nil && httpCampaign.Status == models.CampaignStatusCompleted {
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	stop()
+	wg.Wait()
+
+	require.NotNil(t, httpCampaign)
+	assert.Equal(t, models.CampaignStatusCompleted, httpCampaign.Status)
+
+	dnsCampaigns, _ := s.CampaignStore.ListCampaigns(ctx, s.DB, store.ListCampaignsFilter{Type: models.CampaignTypeDNSValidation})
+	require.NotEmpty(t, dnsCampaigns)
+	assert.Equal(t, dgCampaign.ID, *dnsCampaigns[0].SourceGenerationCampaignID)
+}
