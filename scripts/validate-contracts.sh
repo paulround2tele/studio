@@ -26,8 +26,9 @@ if ! grep -q '^openapi:' backend/docs/openapi.yaml; then
     exit 1
 fi
 
-# Use the committed specification as the latest server output
-cp backend/docs/openapi.yaml backend/docs/openapi-fresh.yaml
+# Generate a fresh specification using the backend
+echo -e "${YELLOW}📦 Generating fresh OpenAPI specification from backend...${NC}"
+OPENAPI_OUT=backend/docs/openapi-fresh.yaml npm run --silent api:generate-spec
 
 # Check if committed openapi.yaml exists
 if [ ! -f "backend/docs/openapi.yaml" ]; then
