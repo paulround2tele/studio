@@ -68,6 +68,8 @@ backend/domainflow-apiserver
 # MCP Studio Backend Context Server
 mcp-studio-backend/mcp-server
 mcp-studio-backend/mcp-server.exe
+mcp/mcp-server
+mcp/mcp-server.exe
 
 # IDX specific (if any, good to have as a general rule for cloud IDEs)
 .idx/
