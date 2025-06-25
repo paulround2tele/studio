@@ -94,7 +94,7 @@ func ExtractKeywordsFromText(plainTextContent string, rules []models.KeywordRule
 		if err != nil {
 			return nil, err
 		}
-		
+
 		for _, matchIndices := range matches {
 			result := createResult(plainTextContent, rule, matchIndices)
 			results = append(results, result)
@@ -129,12 +129,12 @@ func findStringMatches(content, pattern string, caseSensitive bool) [][]int {
 	var matches [][]int
 	searchPattern := pattern
 	searchContent := content
-	
+
 	if !caseSensitive {
 		searchPattern = strings.ToLower(pattern)
 		searchContent = strings.ToLower(content)
 	}
-	
+
 	idx := 0
 	for {
 		foundIdx := strings.Index(searchContent[idx:], searchPattern)
@@ -156,12 +156,12 @@ func createResult(content string, rule models.KeywordRule, matchIndices []int) K
 	start := matchIndices[0]
 	end := matchIndices[1]
 	matchedText := content[start:end]
-	
+
 	var contexts []string
 	if rule.ContextChars > 0 {
 		contexts = extractContext(content, start, end, rule.ContextChars)
 	}
-	
+
 	return KeywordExtractionResult{
 		MatchedPattern: rule.Pattern,
 		MatchedText:    matchedText,

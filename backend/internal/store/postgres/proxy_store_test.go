@@ -354,7 +354,7 @@ func TestProxyStore_Transactionality(t *testing.T) {
 		err = proxyStore.CreateProxy(ctx, tx, proxyToRollback)
 		require.NoError(t, err)
 
-		err = _ = tx.Rollback()
+		err = tx.Rollback()
 		require.NoError(t, err)
 
 		_, err = proxyStore.GetProxyByID(ctx, testDB, proxyToRollback.ID)

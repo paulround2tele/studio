@@ -72,7 +72,7 @@ func (qb *QueryBuilder) Build() (string, []interface{}) {
 // ExecuteQuery executes the built query and returns results
 func (qb *QueryBuilder) ExecuteQuery(ctx context.Context, exec store.Querier, results interface{}) error {
 	query, args := qb.Build()
-	
+
 	var reboundQuery string
 	switch q := exec.(type) {
 	case *sqlx.DB:
