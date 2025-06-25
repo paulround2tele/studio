@@ -255,6 +255,20 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"properties": map[string]interface{}{},
 			},
 		},
+		{
+			Name:        "get_campaign_pipeline",
+			Description: "Get the pipeline status for a campaign",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"campaignId": map[string]interface{}{
+						"type":        "string",
+						"description": "Campaign UUID",
+					},
+				},
+				"required": []string{"campaignId"},
+			},
+		},
 
 		// Advanced Tools (5)
 		{
@@ -411,14 +425,14 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"properties": map[string]interface{}{},
 			},
 		},
-                {
-                        Name:        "get_lint_diagnostics",
-                        Description: "Run golangci-lint or staticcheck and go build",
-                        InputSchema: map[string]interface{}{
-                                "type":       "object",
-                                "properties": map[string]interface{}{},
-                        },
-                },
+		{
+			Name:        "get_lint_diagnostics",
+			Description: "Run golangci-lint or staticcheck and go build",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
 	}
 
 	log.Printf("Returning %d MCP tools", len(tools))
@@ -503,6 +517,8 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetBusinessRules()
 	case "get_feature_flags":
 		return s.callGetFeatureFlags()
+	case "get_campaign_pipeline":
+		return s.callGetCampaignPipeline(toolCall.Arguments)
 
 	// Advanced Tools
 	case "find_by_type":
@@ -533,10 +549,10 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetTestCoverage()
 	case "analyze_code_quality":
 		return s.callAnalyzeCodeQuality()
-        case "analyze_complexity":
-                return s.callAnalyzeComplexity()
-        case "get_lint_diagnostics":
-                return s.callGetLintDiagnostics()
+	case "analyze_complexity":
+		return s.callAnalyzeComplexity()
+	case "get_lint_diagnostics":
+		return s.callGetLintDiagnostics()
 
 	default:
 		return map[string]interface{}{

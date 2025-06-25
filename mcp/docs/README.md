@@ -10,7 +10,7 @@ This project is a Go-based MCP (Model Context Protocol) server designed to provi
 
 ## Tool Endpoints
 
-The following tool endpoints are available (42 total):
+The following tool endpoints are available (43 total):
 
 | Category          | Endpoint                      | Description                                                                 |
 | ----------------- | ----------------------------- | --------------------------------------------------------------------------- |
@@ -42,6 +42,7 @@ The following tool endpoints are available (42 total):
 |                   | `/tools/trace_middleware_flow`    | Traces the execution path through middleware layers.                        |
 |                   | `/tools/get_business_rules`       | Lists functions that appear to contain business rules.                      |
 |                   | `/tools/get_feature_flags`        | Lists all identified feature flags.                                         |
+|                   | `/tools/get_campaign_pipeline`    | Shows the campaign's pipeline steps and statuses.                           |
 |                   | `/tools/find_by_type`             | Finds all variables or instances of a specific Go type.                     |
 | **Advanced**      | `/tools/get_references`           | Finds all references to a function or type.                                 |
 |                   | `/tools/get_change_impact`        | Analyzes the potential impact of a code change.                             |
@@ -69,3 +70,22 @@ Example response snippet:
   {"function": "handlers.CreateUser", "file": "internal/handlers/user.go", "line": 42, "complexity": 16}
 ]
 ```
+
+### Campaign Pipeline
+
+The `get_campaign_pipeline` endpoint returns the ordered steps for a campaign.
+
+Example output:
+
+```json
+{
+  "campaignId": "123e4567-e89b-12d3-a456-426614174000",
+  "steps": [
+    {"name": "domain_generation", "status": "completed", "startedAt": "2025-07-01T10:00:00Z", "finishedAt": "2025-07-01T10:05:00Z"},
+    {"name": "dns_validation", "status": "running", "startedAt": "2025-07-01T10:05:01Z", "finishedAt": "0001-01-01T00:00:00Z"},
+    {"name": "http_keyword_validation", "status": "pending", "startedAt": "0001-01-01T00:00:00Z", "finishedAt": "0001-01-01T00:00:00Z"}
+  ]
+}
+```
+
+Steps always appear in the sequence: domain generation → DNS validation → HTTP keyword analysis.

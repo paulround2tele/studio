@@ -18,10 +18,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	cover "golang.org/x/tools/cover"
 	"net/url"
 	"regexp"
-	cover "golang.org/x/tools/cover"
 )
 
 // Bridge provides a programmatic interface to the MCP server's tools.
@@ -1138,6 +1139,7 @@ func (b *Bridge) GetLintDiagnostics() (models.LintDiagnostics, error) {
 
 	return diags, nil
 }
+
 // GetAPISchema returns comprehensive API schema information by analyzing actual backend implementation
 func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 	schema := models.APISchema{
@@ -1248,6 +1250,68 @@ func (b *Bridge) TraceMiddlewareFlow() (models.MiddlewareFlow, error) {
 	}
 
 	return models.MiddlewareFlow{Pipeline: steps}, nil
+}
+
+// GetCampaignPipeline builds a high level view of a campaign's pipeline
+func (b *Bridge) GetCampaignPipeline(campaignID uuid.UUID) (models.CampaignPipeline, error) {
+	if b.DB == nil {
+		return models.CampaignPipeline{}, fmt.Errorf("database not initialized")
+	}
+
+	query := `SELECT job_type, status, created_at, updated_at FROM campaign_jobs WHERE campaign_id = $1`
+	rows, err := b.DB.Query(query, campaignID)
+	if err != nil {
+		return models.CampaignPipeline{}, err
+	}
+	defer rows.Close()
+
+	type jobRec struct {
+		JobType   string
+		Status    string
+		CreatedAt time.Time
+		UpdatedAt time.Time
+	}
+
+	var jobs []jobRec
+	for rows.Next() {
+		var r jobRec
+		if err := rows.Scan(&r.JobType, &r.Status, &r.CreatedAt, &r.UpdatedAt); err != nil {
+			return models.CampaignPipeline{}, err
+		}
+		jobs = append(jobs, r)
+	}
+
+	order := []string{
+		string(models.CampaignTypeDomainGeneration),
+		string(models.CampaignTypeDNSValidation),
+		string(models.CampaignTypeHTTPKeywordValidation),
+	}
+
+	var steps []models.PipelineStep
+	for _, stepName := range order {
+		var latest *jobRec
+		for _, j := range jobs {
+			if j.JobType == stepName {
+				if latest == nil || j.UpdatedAt.After(latest.UpdatedAt) {
+					tmp := j
+					latest = &tmp
+				}
+			}
+		}
+
+		if latest != nil {
+			steps = append(steps, models.PipelineStep{
+				Name:       stepName,
+				Status:     latest.Status,
+				StartedAt:  latest.CreatedAt,
+				FinishedAt: latest.UpdatedAt,
+			})
+		} else {
+			steps = append(steps, models.PipelineStep{Name: stepName, Status: "pending"})
+		}
+	}
+
+	return models.CampaignPipeline{CampaignID: campaignID, Steps: steps}, nil
 }
 
 // GetWebSocketLifecycle returns WebSocket connection lifecycle information
