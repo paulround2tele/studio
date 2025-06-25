@@ -35,8 +35,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Install Go Swagger
-        run: go install github.com/swaggo/swag/cmd/swag@latest
         
       - name: Build backend (validate compilation)
         run: |
