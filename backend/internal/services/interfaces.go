@@ -171,6 +171,7 @@ type CampaignOrchestratorService interface {
 	DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error
 	SetCampaignErrorStatus(ctx context.Context, campaignID uuid.UUID, errorMessage string) error
 	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.CampaignStatusEnum) error
+	HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error
 }
 
 // DomainGenerationService defines the interface for domain generation campaign logic.
