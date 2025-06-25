@@ -4160,27 +4160,6 @@ COMMENT ON COLUMN public.http_keyword_campaign_params.source_type IS 'Source typ
 
 
 --
--- Name: http_keyword_params; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.http_keyword_params (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    campaign_id uuid NOT NULL,
-    target_url text NOT NULL,
-    keyword_set_id uuid,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    source_type text DEFAULT 'DomainGeneration'::text NOT NULL,
-    source_campaign_id uuid,
-    CONSTRAINT http_keyword_params_source_type_check CHECK ((source_type = ANY (ARRAY['DomainGeneration'::text, 'DNSValidation'::text])))
-);
-
-
---
--- Name: COLUMN http_keyword_params.source_type; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.http_keyword_params.source_type IS 'Valid values: DomainGeneration, DNSValidation (PascalCase required)';
 
 
 --
@@ -5789,11 +5768,6 @@ ALTER TABLE ONLY public.http_keyword_campaign_params
 
 
 --
--- Name: http_keyword_params http_keyword_params_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.http_keyword_params
-    ADD CONSTRAINT http_keyword_params_pkey PRIMARY KEY (id);
 
 
 --
@@ -7232,17 +7206,6 @@ CREATE INDEX idx_generated_domains_offset_index ON public.generated_domains USIN
 
 
 --
--- Name: idx_http_keyword_params_campaign_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_http_keyword_params_campaign_id ON public.http_keyword_params USING btree (campaign_id);
-
-
---
--- Name: idx_http_keyword_params_source_campaign_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_http_keyword_params_source_campaign_id ON public.http_keyword_params USING btree (source_campaign_id);
 
 
 --
@@ -8457,19 +8420,6 @@ ALTER TABLE ONLY public.http_keyword_campaign_params
 
 
 --
--- Name: http_keyword_params http_keyword_params_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.http_keyword_params
-    ADD CONSTRAINT http_keyword_params_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
-
-
---
--- Name: http_keyword_params http_keyword_params_source_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.http_keyword_params
-    ADD CONSTRAINT http_keyword_params_source_campaign_id_fkey FOREIGN KEY (source_campaign_id) REFERENCES public.campaigns(id) ON DELETE SET NULL;
 
 
 --
