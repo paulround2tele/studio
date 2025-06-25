@@ -52,7 +52,7 @@ All URIs are relative to *http://localhost:8080*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AuthenticationApi* | [**authLoginPost**](docs/AuthenticationApi.md#authloginpost) | **POST** /auth/login | User login
-*AuthenticationApi* | [**authMeGet**](docs/AuthenticationApi.md#authmeget) | **GET** /auth/me | Get current user
+*AuthenticationApi* | [**authMeGet**](docs/AuthenticationApi.md#authmeget) | **GET** /api/v2/me | Get current user
 *CampaignsApi* | [**campaignsGet**](docs/CampaignsApi.md#campaignsget) | **GET** /campaigns | List campaigns
 *CampaignsApi* | [**campaignsPost**](docs/CampaignsApi.md#campaignspost) | **POST** /campaigns | Create a new campaign
 

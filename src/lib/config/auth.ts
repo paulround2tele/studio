@@ -73,7 +73,7 @@ export const getSessionAuthSettings = () => {
     endpoints: {
       login: '/api/v2/auth/login',
       logout: '/api/v2/auth/logout',
-      me: '/api/v2/auth/me',
+      me: '/api/v2/me',
       refresh: '/api/v2/auth/refresh',
     },
   };

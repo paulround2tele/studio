@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost:8080*
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
 |[**authLoginPost**](#authloginpost) | **POST** /auth/login | User login|
-|[**authMeGet**](#authmeget) | **GET** /auth/me | Get current user|
+|[**authMeGet**](#authmeget) | **GET** /api/v2/me | Get current user|
 
 # **authLoginPost**
 > ModelsLoginResponseAPI authLoginPost(modelsLoginRequest)

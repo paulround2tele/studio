@@ -250,7 +250,7 @@ describe('WebSocket Authentication', () => {
 ```bash
 # Load test session validation
 # Target: <10ms average response time
-ab -n 10000 -c 100 https://domain/api/v2/auth/me
+ab -n 10000 -c 100 https://domain/api/v2/me
 ```
 
 #### **Cache Performance Testing**

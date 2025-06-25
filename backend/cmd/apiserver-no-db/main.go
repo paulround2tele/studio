@@ -70,7 +70,7 @@ func main() {
 	log.Println("Registered contract validation route: /api/v2/contract/validate")
 
 	// Mock endpoints for contract testing
-	router.GET("/api/v2/auth/me", func(c *gin.Context) {
+        router.GET("/api/v2/me", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"user_id":   "mock-user-123",
 			"username":  "mock-user",
@@ -113,7 +113,7 @@ func main() {
 		log.Printf("  - GET /health - Health status")
 		log.Printf("  - GET /api/openapi.yaml - OpenAPI specification")
 		log.Printf("  - GET /api/v2/contract/validate - Contract validation")
-		log.Printf("  - GET /api/v2/auth/me - Mock auth endpoint")
+                log.Printf("  - GET /api/v2/me - Mock auth endpoint")
 		log.Printf("  - GET /api/v2/campaigns - Mock campaigns endpoint")
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

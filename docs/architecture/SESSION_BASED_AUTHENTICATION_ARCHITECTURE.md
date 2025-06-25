@@ -629,7 +629,7 @@ class AuthService {
     // Session validation without tokens
     async validateSession(): Promise<boolean> {
         try {
-            const userData = await this.apiCall<any>('/api/v2/auth/me');
+            const userData = await this.apiCall<any>('/api/v2/me');
             
             // Update auth state with fresh data
             this.updateAuthState({
