@@ -25,10 +25,12 @@ if ! grep -q '^openapi:' backend/docs/openapi.yaml; then
     echo -e "${RED}❌ OpenAPI specification appears invalid${NC}"
     exit 1
 fi
+npm run --silent api:validate-spec
 
 # Generate a fresh specification using the backend
 echo -e "${YELLOW}📦 Generating fresh OpenAPI specification from backend...${NC}"
 OPENAPI_OUT=backend/docs/openapi-fresh.yaml npm run --silent api:generate-spec
+npm run --silent api:validate-spec
 
 # Check if committed openapi.yaml exists
 if [ ! -f "backend/docs/openapi.yaml" ]; then
