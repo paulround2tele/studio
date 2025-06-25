@@ -240,17 +240,17 @@ func (s *CampaignStoreTestSuite) TestDomainGenerationParams() {
 	campaign := s.createTestCampaign(t, "Domain Gen Test", models.CampaignTypeDomainGeneration)
 
 	// Create domain generation params
-	params := &models.DomainGenerationCampaignParams{
-		CampaignID:                campaign.ID,
-		PatternType:               "prefix",
-		VariableLength:            models.IntPtr(5),
-		CharacterSet:              models.StringPtr("abc"),
-		ConstantString:            models.StringPtr("test"),
-		TLD:                       ".com",
-		NumDomainsToGenerate:      100,
-		TotalPossibleCombinations: 1000,
-		CurrentOffset:             0,
-	}
+        params := &models.DomainGenerationCampaignParams{
+                CampaignID:                campaign.ID,
+                PatternType:               "prefix",
+                VariableLength:            5,
+                CharacterSet:              "abc",
+                ConstantString:            models.StringPtr("test"),
+                TLD:                       ".com",
+                NumDomainsToGenerate:      100,
+                TotalPossibleCombinations: 1000,
+                CurrentOffset:             0,
+        }
 
 	// Test create
 	err := s.store.CreateDomainGenerationParams(context.Background(), s.tx, params)
@@ -263,12 +263,10 @@ func (s *CampaignStoreTestSuite) TestDomainGenerationParams() {
 
 	// Verify the data
 	assert.Equal(t, params.PatternType, retrieved.PatternType, "PatternType should match")
-	require.NotNil(t, retrieved.VariableLength)
-	assert.Equal(t, *params.VariableLength, *retrieved.VariableLength, "VariableLength should match")
-	require.NotNil(t, retrieved.CharacterSet)
-	assert.Equal(t, *params.CharacterSet, *retrieved.CharacterSet, "CharacterSet should match")
-	require.NotNil(t, retrieved.ConstantString)
-	assert.Equal(t, *params.ConstantString, *retrieved.ConstantString, "ConstantString should match")
+        assert.Equal(t, params.VariableLength, retrieved.VariableLength, "VariableLength should match")
+        assert.Equal(t, params.CharacterSet, retrieved.CharacterSet, "CharacterSet should match")
+        require.NotNil(t, retrieved.ConstantString)
+        assert.Equal(t, *params.ConstantString, *retrieved.ConstantString, "ConstantString should match")
 	assert.Equal(t, params.TLD, retrieved.TLD, "TLD should match")
 
 	// Test update offset
