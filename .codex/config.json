@@ -1,0 +1,4 @@
+{
+  "allowNetwork": true,
+  "setupScript": "./setup.sh"
+}
