@@ -21,6 +21,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
+	"github.com/fntelecomllc/studio/backend/pkg/communication"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -168,6 +169,10 @@ func main() {
 	)
 	log.Println("HTTPKeywordCampaignService initialized.")
 
+	mq := communication.NewSimpleQueue(100)
+	es := communication.NewInMemoryEventStore()
+	asyncMgr := communication.NewAsyncPatternManager(mq, es, nil)
+
 	campaignOrchestratorSvc := services.NewCampaignOrchestratorService(
 		db,
 		campaignStore,
@@ -178,6 +183,7 @@ func main() {
 		domainGenSvc,
 		dnsCampaignSvc,
 		httpKeywordCampaignSvc,
+		asyncMgr,
 	)
 	log.Println("CampaignOrchestratorService initialized.")
 

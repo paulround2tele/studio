@@ -130,7 +130,7 @@ func (s *CampaignWorkerServiceTestSuite) SetupTest() {
 	s.dgService = services.NewDomainGenerationService(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore, configManager)
 	s.dnsService = services.NewDNSCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.AuditLogStore, s.CampaignJobStore, s.AppConfig)
 	s.httpService = services.NewHTTPKeywordCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.ProxyStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, nil, nil, nil, s.AppConfig)
-	s.orchestratorService = services.NewCampaignOrchestratorService(s.DB, s.CampaignStore, s.PersonaStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, s.dgService, s.dnsService, s.httpService)
+	s.orchestratorService = services.NewCampaignOrchestratorService(s.DB, s.CampaignStore, s.PersonaStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, s.dgService, s.dnsService, s.httpService, nil)
 }
 
 func TestCampaignWorkerService(t *testing.T) {

@@ -33,6 +33,7 @@ func (s *CampaignOrchestratorUnifiedTestSuite) SetupTest() {
 		dgService,
 		dnsService,
 		httpKeywordService,
+		nil,
 	)
 }
 
