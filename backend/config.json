@@ -84,5 +84,9 @@
     "batchSize": 100,
     "maxRetries": 3,
     "retryDelaySeconds": 30
+  },
+  "rateLimiter": {
+    "maxRequests": 1000,
+    "windowSeconds": 900
   }
 }

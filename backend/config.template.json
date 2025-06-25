@@ -84,5 +84,9 @@
     "batchSize": "${WORKER_BATCH_SIZE:-100}",
     "maxRetries": 3,
     "retryDelaySeconds": 30
+  },
+  "rateLimiter": {
+    "maxRequests": "${API_RATE_LIMIT_MAX_REQUESTS:-1000}",
+    "windowSeconds": "${API_RATE_LIMIT_WINDOW:-900}"
   }
 }

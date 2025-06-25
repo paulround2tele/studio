@@ -204,3 +204,90 @@ func (h *APIHandler) UpdateLoggingConfigGin(c *gin.Context) {
 	// TODO: Apply new logging level dynamically to the logger if possible
 	respondWithJSONGin(c, http.StatusOK, reqLogging)
 }
+
+// GetWorkerConfigGin retrieves the worker configuration.
+// GET /api/v2/config/worker
+func (h *APIHandler) GetWorkerConfigGin(c *gin.Context) {
+	h.configMutex.RLock()
+	workerCfg := h.Config.Worker
+	h.configMutex.RUnlock()
+	respondWithJSONGin(c, http.StatusOK, workerCfg)
+}
+
+// UpdateWorkerConfigGin updates the worker configuration.
+// POST /api/v2/config/worker
+func (h *APIHandler) UpdateWorkerConfigGin(c *gin.Context) {
+	var req config.WorkerConfig
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		return
+	}
+	updated := config.ConvertJSONToWorkerConfig(req)
+	h.configMutex.Lock()
+	h.Config.Worker = updated
+	h.configMutex.Unlock()
+	if err := config.SaveAppConfig(h.Config); err != nil {
+		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to save Worker configuration")
+		return
+	}
+	respondWithJSONGin(c, http.StatusOK, updated)
+}
+
+// GetRateLimiterConfigGin retrieves global rate limiter settings.
+// GET /api/v2/config/rate-limit
+func (h *APIHandler) GetRateLimiterConfigGin(c *gin.Context) {
+	h.configMutex.RLock()
+	rlCfg := h.Config.RateLimiter
+	h.configMutex.RUnlock()
+	respondWithJSONGin(c, http.StatusOK, rlCfg)
+}
+
+// UpdateRateLimiterConfigGin updates global rate limiter settings.
+// POST /api/v2/config/rate-limit
+func (h *APIHandler) UpdateRateLimiterConfigGin(c *gin.Context) {
+	var req config.RateLimiterConfig
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		return
+	}
+	updated := config.ConvertJSONToRateLimiterConfig(req)
+	h.configMutex.Lock()
+	h.Config.RateLimiter = updated
+	h.configMutex.Unlock()
+	if err := config.SaveAppConfig(h.Config); err != nil {
+		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to save rate limiter configuration")
+		return
+	}
+	respondWithJSONGin(c, http.StatusOK, updated)
+}
+
+// GetAuthConfigGin retrieves sanitized authentication configuration.
+// GET /api/v2/config/auth
+func (h *APIHandler) GetAuthConfigGin(c *gin.Context) {
+	h.configMutex.RLock()
+	authCfg := *h.Config.Server.AuthConfig
+	h.configMutex.RUnlock()
+	// Omit sensitive fields
+	authCfg.PepperKey = ""
+	authCfg.RecaptchaSecretKey = ""
+	authCfg.SMTPPassword = ""
+	respondWithJSONGin(c, http.StatusOK, authCfg)
+}
+
+// UpdateAuthConfigGin updates authentication configuration.
+// POST /api/v2/config/auth
+func (h *APIHandler) UpdateAuthConfigGin(c *gin.Context) {
+	var req config.AuthConfig
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		return
+	}
+	h.configMutex.Lock()
+	h.Config.Server.AuthConfig = &req
+	h.configMutex.Unlock()
+	if err := config.SaveAppConfig(h.Config); err != nil {
+		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to save auth configuration")
+		return
+	}
+	respondWithJSONGin(c, http.StatusOK, req)
+}

@@ -142,6 +142,14 @@ func applyEnvironmentOverrides(config *AppConfig) {
 	if httpTimeout := getEnvAsInt("HTTP_TIMEOUT_SECONDS", 0); httpTimeout > 0 {
 		config.HTTPValidator.RequestTimeoutSeconds = httpTimeout
 	}
+
+	// Global API rate limiter overrides
+	if rlWindow := getEnvAsInt("API_RATE_LIMIT_WINDOW", 0); rlWindow > 0 {
+		config.RateLimiter.WindowSeconds = rlWindow
+	}
+	if rlMax := getEnvAsInt("API_RATE_LIMIT_MAX_REQUESTS", 0); rlMax > 0 {
+		config.RateLimiter.MaxRequests = rlMax
+	}
 }
 
 // Helper functions

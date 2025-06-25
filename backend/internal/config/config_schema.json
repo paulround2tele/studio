@@ -46,6 +46,13 @@
             "type": "object",
             "required": ["level"],
             "properties": {"level": {"type": "string"}}
+          },
+          "rateLimiter": {
+            "type": "object",
+            "properties": {
+              "maxRequests": {"type": "integer", "minimum": 1},
+              "windowSeconds": {"type": "integer", "minimum": 1}
+            }
           }
         }
       }
