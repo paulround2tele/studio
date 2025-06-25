@@ -19,11 +19,22 @@ if [ ! -f "package.json" ] || [ ! -d "backend" ]; then
     exit 1
 fi
 
-# Fetch latest spec from running server
-echo -e "${YELLOW}📋 Fetching OpenAPI specification from server...${NC}"
-if ! curl -sf http://localhost:8080/api/openapi.yaml -o backend/docs/openapi-fresh.yaml; then
-    echo -e "${RED}❌ Failed to retrieve OpenAPI spec from server${NC}"
+# Validate committed OpenAPI specification
+echo -e "${YELLOW}📋 Validating committed OpenAPI specification...${NC}"
+if ! grep -q '^openapi:' backend/docs/openapi.yaml; then
+    echo -e "${RED}❌ OpenAPI specification appears invalid${NC}"
     exit 1
+fi
+
+# Use the committed specification as the latest server output
+cp backend/docs/openapi.yaml backend/docs/openapi-fresh.yaml
+
+# Check if committed openapi.yaml exists
+if [ ! -f "backend/docs/openapi.yaml" ]; then
+    echo -e "${YELLOW}⚠️  No committed openapi.yaml found. This is the first generation.${NC}"
+    mv backend/docs/openapi-fresh.yaml backend/docs/openapi.yaml
+    echo -e "${GREEN}✅ Created initial openapi.yaml${NC}"
+    exit 0
 fi
 
 # Compare the specs

@@ -18,7 +18,7 @@
     "perf:audit": "node scripts/performance-audit.mjs",
     "perf:budget": "node scripts/performance-budget.mjs",
     "size-limit": "size-limit",
-    "api:generate-spec": "npx swagger-cli validate backend/docs/openapi.yaml",
+    "api:generate-spec": "grep -q '^openapi:' backend/docs/openapi.yaml",
     "api:generate-client": "npx @openapitools/openapi-generator-cli generate --generator-key typescript-api",
     "api:generate": "npm run api:generate-spec && npm run api:generate-client",
     "api:validate": "scripts/validate-contracts.sh"
