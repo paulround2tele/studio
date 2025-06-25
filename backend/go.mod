@@ -18,14 +18,24 @@ require (
 	github.com/miekg/dns v1.1.66
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pquerna/otp v1.5.0
+	github.com/prometheus/client_golang v1.19.0
 	github.com/stretchr/testify v1.10.0
+	go.opentelemetry.io/otel v1.37.0
+	go.opentelemetry.io/otel/exporters/jaeger v1.17.0
+	go.opentelemetry.io/otel/exporters/zipkin v1.37.0
+	go.opentelemetry.io/otel/sdk v1.37.0
+	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/crypto v0.39.0
 	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476
 	golang.org/x/net v0.41.0
 )
 
 require (
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -33,7 +43,13 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037 // indirect
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
+	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
+	github.com/prometheus/client_model v0.5.0 // indirect
+	github.com/prometheus/common v0.48.0 // indirect
+	github.com/prometheus/procfs v0.12.0 // indirect
+	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
+	go.opentelemetry.io/otel/metric v1.37.0 // indirect
 )
 
 require (
