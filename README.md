@@ -314,6 +314,7 @@ npm test src/lib/types/__tests__/uuid-type-safety-fix.test.ts
 4. Update API documentation for endpoint changes
 5. Follow Go standard practices and error handling
 6. Ensure both frontend and backend build successfully
+7. Run `npm run api:generate` and commit updates in `src/lib/api-client`
 
 ## 📄 License
 
