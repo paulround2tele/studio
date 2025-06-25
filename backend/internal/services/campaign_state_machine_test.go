@@ -2,6 +2,8 @@ package services
 
 import (
 	"testing"
+
+	"github.com/fntelecomllc/studio/backend/internal/models"
 )
 
 func TestCampaignStateMachine(t *testing.T) {
@@ -9,33 +11,33 @@ func TestCampaignStateMachine(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		from     CampaignStatus
-		to       CampaignStatus
+		from     models.CampaignStatusEnum
+		to       models.CampaignStatusEnum
 		expected bool
 	}{
 		// Valid transitions
-		{"pending to queued", StatusPending, StatusQueued, true},
-		{"pending to cancelled", StatusPending, StatusCancelled, true},
-		{"queued to running", StatusQueued, StatusRunning, true},
-		{"queued to paused", StatusQueued, StatusPaused, true},
-		{"queued to cancelled", StatusQueued, StatusCancelled, true},
-		{"running to paused", StatusRunning, StatusPaused, true},
-		{"running to completed", StatusRunning, StatusCompleted, true},
-		{"running to failed", StatusRunning, StatusFailed, true},
-		{"paused to running", StatusPaused, StatusRunning, true},
-		{"paused to cancelled", StatusPaused, StatusCancelled, true},
-		{"completed to archived", StatusCompleted, StatusArchived, true},
-		{"failed to queued", StatusFailed, StatusQueued, true},
-		{"failed to archived", StatusFailed, StatusArchived, true},
+		{"pending to queued", models.CampaignStatusPending, models.CampaignStatusQueued, true},
+		{"pending to cancelled", models.CampaignStatusPending, models.CampaignStatusCancelled, true},
+		{"queued to running", models.CampaignStatusQueued, models.CampaignStatusRunning, true},
+		{"queued to paused", models.CampaignStatusQueued, models.CampaignStatusPaused, true},
+		{"queued to cancelled", models.CampaignStatusQueued, models.CampaignStatusCancelled, true},
+		{"running to paused", models.CampaignStatusRunning, models.CampaignStatusPaused, true},
+		{"running to completed", models.CampaignStatusRunning, models.CampaignStatusCompleted, true},
+		{"running to failed", models.CampaignStatusRunning, models.CampaignStatusFailed, true},
+		{"paused to running", models.CampaignStatusPaused, models.CampaignStatusRunning, true},
+		{"paused to cancelled", models.CampaignStatusPaused, models.CampaignStatusCancelled, true},
+		{"completed to archived", models.CampaignStatusCompleted, models.CampaignStatusArchived, true},
+		{"failed to queued", models.CampaignStatusFailed, models.CampaignStatusQueued, true},
+		{"failed to archived", models.CampaignStatusFailed, models.CampaignStatusArchived, true},
 
 		// Invalid transitions
-		{"pending to running", StatusPending, StatusRunning, false},
-		{"pending to completed", StatusPending, StatusCompleted, false},
-		{"queued to completed", StatusQueued, StatusCompleted, false},
-		{"running to queued", StatusRunning, StatusQueued, false},
-		{"completed to running", StatusCompleted, StatusRunning, false},
-		{"archived to any", StatusArchived, StatusRunning, false},
-		{"cancelled to any", StatusCancelled, StatusRunning, false},
+		{"pending to running", models.CampaignStatusPending, models.CampaignStatusRunning, false},
+		{"pending to completed", models.CampaignStatusPending, models.CampaignStatusCompleted, false},
+		{"queued to completed", models.CampaignStatusQueued, models.CampaignStatusCompleted, false},
+		{"running to queued", models.CampaignStatusRunning, models.CampaignStatusQueued, false},
+		{"completed to running", models.CampaignStatusCompleted, models.CampaignStatusRunning, false},
+		{"archived to any", models.CampaignStatusArchived, models.CampaignStatusRunning, false},
+		{"cancelled to any", models.CampaignStatusCancelled, models.CampaignStatusRunning, false},
 	}
 
 	for _, tt := range tests {
@@ -52,17 +54,17 @@ func TestGetValidTransitions(t *testing.T) {
 	sm := NewCampaignStateMachine()
 
 	tests := []struct {
-		status   CampaignStatus
-		expected []CampaignStatus
+		status   models.CampaignStatusEnum
+		expected []models.CampaignStatusEnum
 	}{
-		{StatusPending, []CampaignStatus{StatusQueued, StatusCancelled}},
-		{StatusQueued, []CampaignStatus{StatusRunning, StatusPaused, StatusCancelled}},
-		{StatusRunning, []CampaignStatus{StatusPaused, StatusCompleted, StatusFailed}},
-		{StatusPaused, []CampaignStatus{StatusRunning, StatusCancelled}},
-		{StatusCompleted, []CampaignStatus{StatusArchived}},
-		{StatusFailed, []CampaignStatus{StatusQueued, StatusArchived}},
-		{StatusArchived, []CampaignStatus{}},
-		{StatusCancelled, []CampaignStatus{}},
+		{models.CampaignStatusPending, []models.CampaignStatusEnum{models.CampaignStatusQueued, models.CampaignStatusCancelled}},
+		{models.CampaignStatusQueued, []models.CampaignStatusEnum{models.CampaignStatusRunning, models.CampaignStatusPaused, models.CampaignStatusCancelled}},
+		{models.CampaignStatusRunning, []models.CampaignStatusEnum{models.CampaignStatusPaused, models.CampaignStatusCompleted, models.CampaignStatusFailed}},
+		{models.CampaignStatusPaused, []models.CampaignStatusEnum{models.CampaignStatusRunning, models.CampaignStatusCancelled}},
+		{models.CampaignStatusCompleted, []models.CampaignStatusEnum{models.CampaignStatusArchived}},
+		{models.CampaignStatusFailed, []models.CampaignStatusEnum{models.CampaignStatusQueued, models.CampaignStatusArchived}},
+		{models.CampaignStatusArchived, []models.CampaignStatusEnum{}},
+		{models.CampaignStatusCancelled, []models.CampaignStatusEnum{}},
 	}
 
 	for _, tt := range tests {
@@ -85,17 +87,17 @@ func TestIsTerminalState(t *testing.T) {
 	sm := NewCampaignStateMachine()
 
 	tests := []struct {
-		status     CampaignStatus
+		status     models.CampaignStatusEnum
 		isTerminal bool
 	}{
-		{StatusPending, false},
-		{StatusQueued, false},
-		{StatusRunning, false},
-		{StatusPaused, false},
-		{StatusCompleted, false},
-		{StatusFailed, false},
-		{StatusArchived, true},
-		{StatusCancelled, true},
+		{models.CampaignStatusPending, false},
+		{models.CampaignStatusQueued, false},
+		{models.CampaignStatusRunning, false},
+		{models.CampaignStatusPaused, false},
+		{models.CampaignStatusCompleted, false},
+		{models.CampaignStatusFailed, false},
+		{models.CampaignStatusArchived, true},
+		{models.CampaignStatusCancelled, true},
 	}
 
 	for _, tt := range tests {
@@ -114,26 +116,26 @@ func TestTransitionManager(t *testing.T) {
 
 	// Test pre-hook
 	preHookCalled := false
-	tm.AddPreHook(func(campaignID string, from, to CampaignStatus) error {
+	tm.AddPreHook(func(campaignID string, from, to models.CampaignStatusEnum) error {
 		preHookCalled = true
 		if campaignID != "test-campaign" {
 			t.Errorf("Expected campaignID 'test-campaign', got '%s'", campaignID)
 		}
-		if from != StatusPending || to != StatusQueued {
-			t.Errorf("Expected transition from %s to %s, got from %s to %s", StatusPending, StatusQueued, from, to)
+		if from != models.CampaignStatusPending || to != models.CampaignStatusQueued {
+			t.Errorf("Expected transition from %s to %s, got from %s to %s", models.CampaignStatusPending, models.CampaignStatusQueued, from, to)
 		}
 		return nil
 	})
 
 	// Test post-hook
 	postHookCalled := false
-	tm.AddPostHook(func(campaignID string, from, to CampaignStatus) error {
+	tm.AddPostHook(func(campaignID string, from, to models.CampaignStatusEnum) error {
 		postHookCalled = true
 		return nil
 	})
 
 	// Execute valid transition
-	err := tm.ExecuteTransition("test-campaign", StatusPending, StatusQueued)
+	err := tm.ExecuteTransition("test-campaign", models.CampaignStatusPending, models.CampaignStatusQueued)
 	if err != nil {
 		t.Errorf("ExecuteTransition failed: %v", err)
 	}
@@ -146,7 +148,7 @@ func TestTransitionManager(t *testing.T) {
 	}
 
 	// Test invalid transition
-	err = tm.ExecuteTransition("test-campaign", StatusPending, StatusCompleted)
+	err = tm.ExecuteTransition("test-campaign", models.CampaignStatusPending, models.CampaignStatusCompleted)
 	if err == nil {
 		t.Error("Expected error for invalid transition, got nil")
 	}
