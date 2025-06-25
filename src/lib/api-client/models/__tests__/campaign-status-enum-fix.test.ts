@@ -1,18 +1,16 @@
 /**
- * Test for H-005: Campaign Status Enum - Remove 'archived' status
- * 
- * Backend doesn't include 'archived' in CampaignStatusEnum,
- * but frontend was including it, causing contract violation.
+ * Test for H-005 Updated: Campaign Status Enum - Include 'archived' status
+ *
+ * Backend and OpenAPI spec now include 'archived' in CampaignStatusEnum.
+ * Ensure the generated client matches the backend values.
  */
 
 import { ModelsCampaignStatusEnum } from '../models-campaign-status-enum';
 
 describe('H-005: Campaign Status Enum Contract Alignment', () => {
-  it('should not include archived status (not in backend)', () => {
-    // Verify that 'archived' is NOT in the enum
+  it('should include all backend statuses including archived', () => {
     const statusValues = Object.values(ModelsCampaignStatusEnum);
-    expect(statusValues).not.toContain('archived');
-    
+
     // Verify all valid statuses are present
     expect(statusValues).toContain('pending');
     expect(statusValues).toContain('queued');
@@ -21,16 +19,17 @@ describe('H-005: Campaign Status Enum Contract Alignment', () => {
     expect(statusValues).toContain('paused');
     expect(statusValues).toContain('completed');
     expect(statusValues).toContain('failed');
+    expect(statusValues).toContain('archived');
     expect(statusValues).toContain('cancelled');
   });
 
-  it('should have exactly 8 status values (matching backend)', () => {
+  it('should have exactly 9 status values (matching backend)', () => {
     const statusValues = Object.values(ModelsCampaignStatusEnum);
-    expect(statusValues).toHaveLength(8);
+    expect(statusValues).toHaveLength(9);
   });
 
-  it('should not have CampaignStatusArchived key', () => {
-    expect('CampaignStatusArchived' in ModelsCampaignStatusEnum).toBe(false);
+  it('should have CampaignStatusArchived key', () => {
+    expect('CampaignStatusArchived' in ModelsCampaignStatusEnum).toBe(true);
   });
 
   it('should match backend enum values exactly', () => {
@@ -43,6 +42,7 @@ describe('H-005: Campaign Status Enum Contract Alignment', () => {
       'paused',
       'completed',
       'failed',
+      'archived',
       'cancelled'
     ];
 
@@ -59,8 +59,8 @@ describe('H-005: Campaign Status Enum Contract Alignment', () => {
     const validStatus: StatusType = ModelsCampaignStatusEnum.CampaignStatusRunning;
     expect(validStatus).toBe('running');
 
-    // This would cause a TypeScript error if 'archived' was a valid value
-    // @ts-expect-error - 'archived' is not a valid status
-    const invalidStatus: StatusType = 'archived';
+    // Should allow archived as a valid value
+    const archivedStatus: StatusType = ModelsCampaignStatusEnum.CampaignStatusArchived;
+    expect(archivedStatus).toBe('archived');
   });
 });
