@@ -234,3 +234,27 @@ func (s *JSONRPCServer) callAnalyzeComplexity() (interface{}, error) {
 		},
 	}, nil
 }
+
+// callGetLintDiagnostics implements the get_lint_diagnostics tool
+func (s *JSONRPCServer) callGetLintDiagnostics() (interface{}, error) {
+        diags, err := s.bridge.GetLintDiagnostics()
+        if err != nil {
+                return map[string]interface{}{
+                        "content": []map[string]interface{}{
+                                {
+                                        "type": "text",
+                                        "text": fmt.Sprintf("Error getting lint diagnostics: %v", err),
+                                },
+                        },
+                }, nil
+        }
+
+        return map[string]interface{}{
+                "content": []map[string]interface{}{
+                        {
+                                "type": "text",
+                                "text": fmt.Sprintf("Lint diagnostics with %s: %d issues, %d compile errors", diags.Linter, len(diags.Issues), len(diags.CompileErrors)),
+                        },
+                },
+        }, nil
+}

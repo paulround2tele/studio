@@ -551,3 +551,10 @@ type WebSocketTestResult struct {
 	Recommendations []string     `json:"recommendations"`
 	Errors          []string     `json:"errors"`
 }
+
+// LintDiagnostics represents lint and build diagnostics
+type LintDiagnostics struct {
+	Linter string `json:"linter"`
+	Issues []string `json:"issues"`
+	CompileErrors []string `json:"compileErrors"`
+}

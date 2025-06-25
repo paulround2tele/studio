@@ -10,7 +10,7 @@ This project is a Go-based MCP (Model Context Protocol) server designed to provi
 
 ## Tool Endpoints
 
-The following tool endpoints are available (41 total):
+The following tool endpoints are available (42 total):
 
 | Category          | Endpoint                      | Description                                                                 |
 | ----------------- | ----------------------------- | --------------------------------------------------------------------------- |
@@ -53,6 +53,7 @@ The following tool endpoints are available (41 total):
 |                   | `/tools/get_security_analysis`    | Performs a security analysis of the codebase.                               |
 |                   | `/tools/validate_api_contracts`   | Validates API contracts and OpenAPI specifications.                         |
 |                   | `/tools/analyze_complexity`       | Reports cyclomatic complexity for functions using gocyclo.                  |
+|                   | `/tools/get_lint_diagnostics`  | Runs golangci-lint or staticcheck and go build. |
 | **Interactive**   | `/tools/run_terminal_command`     | Executes a terminal command.                                                |
 |                   | `/tools/apply_code_change`        | Applies a diff to a file.                                                   |
 
