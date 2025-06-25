@@ -97,7 +97,7 @@ func (d *ModelDocumenter) GenerateDocumentation() (string, error) {
 
 // generateTableInfo generates information about database tables
 func (d *ModelDocumenter) generateTableInfo(ctx context.Context, dbSchema map[string]schemavalidator.TableSchema, modelSchemas map[string]schemavalidator.ModelSchema) ([]TableInfo, error) {
-	var tables []TableInfo
+	tables := make([]TableInfo, 0, len(dbSchema))
 
 	// Get table descriptions
 	tableDescriptions, err := d.getTableDescriptions(ctx)

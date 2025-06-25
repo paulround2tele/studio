@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 
@@ -93,11 +94,11 @@ func (s *auditLogStorePostgres) ListAuditLogs(ctx context.Context, exec store.Qu
 	finalQuery += " ORDER BY timestamp DESC"
 
 	if filter.Limit > 0 {
-		finalQuery += " LIMIT ?"
+		finalQuery += constants.SQLLimit
 		args = append(args, filter.Limit)
 	}
 	if filter.Offset > 0 {
-		finalQuery += " OFFSET ?"
+		finalQuery += constants.SQLOffset
 		args = append(args, filter.Offset)
 	}
 

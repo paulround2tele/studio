@@ -60,7 +60,7 @@ func GetTLSVersion(versionStr string) (uint16, bool) {
 
 // GetCipherSuites translates a list of string cipher suite names to their crypto/tls constants.
 func GetCipherSuites(suiteNames []string) ([]uint16, error) {
-	var suites []uint16
+	suites := make([]uint16, 0, len(suiteNames))
 	for _, name := range suiteNames {
 		suiteID, ok := supportedCipherSuites[strings.ToUpper(name)]
 		if !ok {
@@ -78,7 +78,7 @@ func GetCipherSuites(suiteNames []string) ([]uint16, error) {
 
 // GetCurvePreferences translates a list of string curve names to their crypto/tls constants.
 func GetCurvePreferences(curveNames []string) ([]tls.CurveID, error) {
-	var curves []tls.CurveID
+	curves := make([]tls.CurveID, 0, len(curveNames))
 	for _, name := range curveNames {
 		curveID, ok := curvePreferenceMap[name]
 		if !ok {

@@ -51,6 +51,7 @@ const (
 // SQL query constants
 const (
 	SQLOrderByCreatedDesc = " ORDER BY created_at DESC"
+	SQLOrderByNameAsc     = " ORDER BY name ASC"
 	SQLOffset             = " OFFSET ?"
 	SQLLimit              = " LIMIT ?"
 )

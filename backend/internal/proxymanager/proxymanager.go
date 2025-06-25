@@ -124,7 +124,7 @@ func NewProxyManager(entries []config.ProxyConfigEntry, initialCheckTimeout time
 		pm.healthCheckTimeout = DefaultInitialHealthCheckTimeout
 	}
 	log.Printf("ProxyManager: Initializing with %d proxy entries.", len(entries))
-	var supportedProxies []*ProxyStatus
+	supportedProxies := make([]*ProxyStatus, 0, len(entries))
 	for _, entry := range entries {
 		lcProtocol := strings.ToLower(entry.Protocol)
 		if lcProtocol != "http" && lcProtocol != "https" {

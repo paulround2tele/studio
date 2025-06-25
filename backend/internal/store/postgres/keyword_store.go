@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/fntelecomllc/studio/backend/internal/models" // Corrected path
 	"github.com/fntelecomllc/studio/backend/internal/store"  // Corrected path
 
@@ -164,7 +165,7 @@ func (s *keywordStorePostgres) listKeywordSetsWithExec(ctx context.Context, exec
 	}
 
 	// Add ordering
-	finalQuery += " ORDER BY name ASC"
+	finalQuery += constants.SQLOrderByNameAsc
 
 	// Add pagination with safety checks
 	if filter.Limit > 0 {

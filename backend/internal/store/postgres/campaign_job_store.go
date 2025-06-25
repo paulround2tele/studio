@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
@@ -322,7 +323,7 @@ func (s *campaignJobStorePostgres) ListJobs(ctx context.Context, filter store.Li
 		baseQuery += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	baseQuery += " ORDER BY created_at DESC"
+	baseQuery += constants.SQLOrderByCreatedDesc
 
 	if filter.Limit > 0 {
 		baseQuery += fmt.Sprintf(" LIMIT %d", filter.Limit)
