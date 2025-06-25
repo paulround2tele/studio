@@ -107,6 +107,7 @@ CREATE TYPE public.campaign_status_enum AS ENUM (
     'paused',
     'completed',
     'failed',
+    'archived',
     'cancelled'
 );
 
@@ -115,7 +116,7 @@ CREATE TYPE public.campaign_status_enum AS ENUM (
 -- Name: TYPE campaign_status_enum; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TYPE public.campaign_status_enum IS 'Maps to Go CampaignStatusEnum - no archived status';
+COMMENT ON TYPE public.campaign_status_enum IS 'Maps to Go CampaignStatusEnum - includes archived status';
 
 
 --
@@ -3726,7 +3727,7 @@ CREATE TABLE public.campaigns (
     CONSTRAINT chk_campaigns_failed_items_non_negative CHECK ((failed_items >= 0)),
     CONSTRAINT chk_campaigns_processed_items_non_negative CHECK ((processed_items >= 0)),
     CONSTRAINT chk_campaigns_progress_percentage_range CHECK (((progress_percentage IS NULL) OR ((progress_percentage >= (0)::double precision) AND (progress_percentage <= (100)::double precision)))),
-    CONSTRAINT chk_campaigns_status_valid CHECK ((status = ANY (ARRAY['pending'::text, 'queued'::text, 'running'::text, 'pausing'::text, 'paused'::text, 'completed'::text, 'failed'::text, 'cancelled'::text]))),
+    CONSTRAINT chk_campaigns_status_valid CHECK ((status = ANY (ARRAY['pending'::text, 'queued'::text, 'running'::text, 'pausing'::text, 'paused'::text, 'completed'::text, 'failed'::text, 'archived'::text, 'cancelled'::text]))),
     CONSTRAINT chk_campaigns_successful_items_non_negative CHECK ((successful_items >= 0)),
     CONSTRAINT chk_campaigns_total_items_non_negative CHECK ((total_items >= 0))
 );
