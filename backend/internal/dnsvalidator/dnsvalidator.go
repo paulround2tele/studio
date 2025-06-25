@@ -151,7 +151,7 @@ func New(cfg config.DNSValidatorConfig) *DNSValidator {
 		}
 	}
 
-	if cfg.ResolverStrategy == "random_rotation" || (cfg.ResolverStrategy == "weighted_rotation" && len(validator.weightedResolvers) == 0) {
+	if cfg.ResolverStrategy == constants.DNSStrategyRandomRotation || (cfg.ResolverStrategy == constants.DNSStrategyWeightedRotation && len(validator.weightedResolvers) == 0) {
 		if len(validator.activeResolvers) > 0 {
 			rand.Shuffle(len(validator.activeResolvers), func(i, j int) {
 				validator.activeResolvers[i], validator.activeResolvers[j] = validator.activeResolvers[j], validator.activeResolvers[i]

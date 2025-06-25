@@ -11,10 +11,11 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq" // For pq.Array if needed for array types, and for error checking
+	"github.com/lib/pq"
 )
 
 // campaignStorePostgres implements the store.CampaignStore interface for PostgreSQL
@@ -452,34 +453,13 @@ func (s *campaignStorePostgres) GetDNSValidationResultsByCampaign(ctx context.Co
 	results := []*models.DNSValidationResult{}
 	baseQuery := `SELECT id, dns_campaign_id, generated_domain_id, domain_name, validation_status, dns_records, validated_by_persona_id, attempts, last_checked_at, created_at
 		                FROM dns_validation_results WHERE dns_campaign_id = ?`
-	args := []interface{}{campaignID}
-	finalQuery := baseQuery
+	
+	qb := utils.NewQueryBuilder(baseQuery, campaignID).
+		AddFilter("validation_status = ?", filter.ValidationStatus).
+		AddOrdering("ORDER BY domain_name ASC").
+		AddPagination(filter.Limit, filter.Offset)
 
-	if filter.ValidationStatus != "" {
-		finalQuery += " AND validation_status = ?"
-		args = append(args, filter.ValidationStatus)
-	}
-	finalQuery += " ORDER BY domain_name ASC"
-	if filter.Limit > 0 {
-		finalQuery += " LIMIT ?"
-		args = append(args, filter.Limit)
-	}
-	if filter.Offset > 0 {
-		finalQuery += " OFFSET ?"
-		args = append(args, filter.Offset)
-	}
-
-	var reboundQuery string
-	switch q := exec.(type) {
-	case *sqlx.DB:
-		reboundQuery = q.Rebind(finalQuery)
-	case *sqlx.Tx:
-		reboundQuery = q.Rebind(finalQuery)
-	default:
-		return nil, fmt.Errorf("unexpected Querier type: %T", exec)
-	}
-
-	err := exec.SelectContext(ctx, &results, reboundQuery, args...)
+	err := qb.ExecuteQuery(ctx, exec, &results)
 	return results, err
 }
 
@@ -717,34 +697,13 @@ func (s *campaignStorePostgres) GetHTTPKeywordResultsByCampaign(ctx context.Cont
 	results := []*models.HTTPKeywordResult{}
 	baseQuery := `SELECT id, http_keyword_campaign_id, dns_result_id, domain_name, validation_status, http_status_code, response_headers, page_title, extracted_content_snippet, found_keywords_from_sets, found_ad_hoc_keywords, content_hash, validated_by_persona_id, used_proxy_id, attempts, last_checked_at, created_at
 		                FROM http_keyword_results WHERE http_keyword_campaign_id = ?`
-	args := []interface{}{campaignID}
-	finalQuery := baseQuery
+	
+	qb := utils.NewQueryBuilder(baseQuery, campaignID).
+		AddFilter("validation_status = ?", filter.ValidationStatus).
+		AddOrdering("ORDER BY domain_name ASC").
+		AddPagination(filter.Limit, filter.Offset)
 
-	if filter.ValidationStatus != "" {
-		finalQuery += " AND validation_status = ?"
-		args = append(args, filter.ValidationStatus)
-	}
-	finalQuery += " ORDER BY domain_name ASC"
-	if filter.Limit > 0 {
-		finalQuery += " LIMIT ?"
-		args = append(args, filter.Limit)
-	}
-	if filter.Offset > 0 {
-		finalQuery += " OFFSET ?"
-		args = append(args, filter.Offset)
-	}
-
-	var reboundQuery string
-	switch q := exec.(type) {
-	case *sqlx.DB:
-		reboundQuery = q.Rebind(finalQuery)
-	case *sqlx.Tx:
-		reboundQuery = q.Rebind(finalQuery)
-	default:
-		return nil, fmt.Errorf("unexpected Querier type: %T", exec)
-	}
-
-	err := exec.SelectContext(ctx, &results, reboundQuery, args...)
+	err := qb.ExecuteQuery(ctx, exec, &results)
 	return results, err
 }
 

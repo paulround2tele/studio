@@ -117,7 +117,7 @@ func (rs *dnsResolverState) getNextResolver() (string, error) {
 	var resolverAddr string
 	strategy := strings.ToLower(rs.personaConfig.ResolverStrategy)
 
-	if strategy == "sequential_failover" {
+	if strategy == constants.DNSStrategySequentialFailover {
 		if rs.preferredOrderIdx >= len(rs.resolvers) {
 			return "", fmt.Errorf("all preferred resolvers exhausted for sequential_failover")
 		}

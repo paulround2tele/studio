@@ -250,7 +250,7 @@ func (r *RegressionTester) GenerateReport(results *RegressionTestResults) string
 		for _, packageResult := range results.PackageResults {
 			failedTests := []TestResult{}
 			for _, test := range packageResult.Tests {
-				if test.Status == "fail" {
+				if test.Status == constants.TestResultFail {
 					failedTests = append(failedTests, test)
 				}
 			}
@@ -291,9 +291,9 @@ func (r *RegressionTester) GenerateReport(results *RegressionTestResults) string
 
 		for _, test := range packageResult.Tests {
 			status := "✅ Pass"
-			if test.Status == "fail" {
+			if test.Status == constants.TestResultFail {
 				status = "❌ Fail"
-			} else if test.Status == "skip" {
+			} else if test.Status == constants.TestResultSkip {
 				status = "⏭️ Skip"
 			}
 
@@ -330,7 +330,7 @@ func (r *RegressionTester) PrintSummary(results *RegressionTestResults) {
 		fmt.Println("\nFailed Tests:")
 		for _, packageResult := range results.PackageResults {
 			for _, test := range packageResult.Tests {
-				if test.Status == "fail" {
+				if test.Status == constants.TestResultFail {
 					fmt.Printf("- %s: %s\n", packageResult.PackageName, test.TestName)
 				}
 			}

@@ -25,36 +25,60 @@ func CleanHTMLToText(htmlBody string) (string, error) {
 	}
 
 	var sb strings.Builder
-	var extract func(*html.Node)
-	extract = func(n *html.Node) {
-		if n.Type == html.TextNode {
-			trimmedData := strings.TrimSpace(n.Data)
-			if trimmedData != "" {
-				sb.WriteString(trimmedData)
-				sb.WriteString(" ")
-			}
-		} else if n.Type == html.ElementNode &&
-			(n.Data == "script" || n.Data == "style" || n.Data == "noscript" || n.Data == "head" || n.Data == "title" || n.Data == "nav" || n.Data == "footer" || n.Data == "aside") {
-			return
-		} else if n.Type == html.ElementNode && n.Data == "br" {
-			sb.WriteString(" ")
-		}
-
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			extract(c)
-		}
-
-		if n.Type == html.ElementNode {
-			switch n.Data {
-			case "p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "article", "section", "header":
-				sb.WriteString(" ")
-			}
-		}
-	}
-
-	extract(doc)
+	extractTextFromNode(doc, &sb)
 	cleanedText := strings.Join(strings.Fields(sb.String()), " ")
 	return cleanedText, nil
+}
+
+// extractTextFromNode recursively extracts text from HTML nodes, skipping unwanted elements
+func extractTextFromNode(n *html.Node, sb *strings.Builder) {
+	if n.Type == html.TextNode {
+		trimmedData := strings.TrimSpace(n.Data)
+		if trimmedData != "" {
+			sb.WriteString(trimmedData)
+			sb.WriteString(" ")
+		}
+	} else if shouldSkipElement(n) {
+		return
+	} else if n.Type == html.ElementNode && n.Data == "br" {
+		sb.WriteString(" ")
+	}
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		extractTextFromNode(c, sb)
+	}
+
+	if shouldAddSpaceAfterElement(n) {
+		sb.WriteString(" ")
+	}
+}
+
+// shouldSkipElement determines if an HTML element should be skipped during text extraction
+func shouldSkipElement(n *html.Node) bool {
+	if n.Type != html.ElementNode {
+		return false
+	}
+	skipElements := []string{"script", "style", "noscript", "head", "title", "nav", "footer", "aside"}
+	for _, element := range skipElements {
+		if n.Data == element {
+			return true
+		}
+	}
+	return false
+}
+
+// shouldAddSpaceAfterElement determines if a space should be added after an HTML element
+func shouldAddSpaceAfterElement(n *html.Node) bool {
+	if n.Type != html.ElementNode {
+		return false
+	}
+	spaceElements := []string{"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "article", "section", "header"}
+	for _, element := range spaceElements {
+		if n.Data == element {
+			return true
+		}
+	}
+	return false
 }
 
 // ExtractKeywordsFromText extracts keywords from already cleaned plain text based on a set of model rules.
@@ -66,68 +90,97 @@ func ExtractKeywordsFromText(plainTextContent string, rules []models.KeywordRule
 	}
 
 	for _, rule := range rules {
-		var allMatches [][]int
-
-		switch rule.RuleType {
-		case models.KeywordRuleTypeRegex:
-			re, err := regexp.Compile(rule.Pattern) // Compile regex for each rule
-			if err != nil {
-				// Log or return error for bad regex pattern
-				return nil, fmt.Errorf("failed to compile regex pattern '%s' for rule %s: %w", rule.Pattern, rule.ID, err)
-			}
-			allMatches = re.FindAllStringIndex(plainTextContent, -1)
-		case models.KeywordRuleTypeString:
-			searchPattern := rule.Pattern
-			textContentToSearch := plainTextContent
-			if !rule.IsCaseSensitive {
-				searchPattern = strings.ToLower(searchPattern)
-				textContentToSearch = strings.ToLower(textContentToSearch)
-			}
-			idx := 0
-			for {
-				foundIdx := strings.Index(textContentToSearch[idx:], searchPattern)
-				if foundIdx == -1 {
-					break
-				}
-				actualFoundIdx := idx + foundIdx
-				allMatches = append(allMatches, []int{actualFoundIdx, actualFoundIdx + len(searchPattern)})
-				idx = actualFoundIdx + len(searchPattern)
-				if idx >= len(textContentToSearch) {
-					break
-				}
-			}
-		default:
-			continue // Skip unknown rule type
+		matches, err := findMatches(plainTextContent, rule)
+		if err != nil {
+			return nil, err
 		}
-
-		for _, matchIndices := range allMatches {
-			start := matchIndices[0]
-			end := matchIndices[1]
-			matchedText := plainTextContent[start:end]
-
-			var contexts []string
-			if rule.ContextChars > 0 {
-				contextStart := start - rule.ContextChars
-				if contextStart < 0 {
-					contextStart = 0
-				}
-				contextEnd := end + rule.ContextChars
-				if contextEnd > len(plainTextContent) {
-					contextEnd = len(plainTextContent)
-				}
-				contexts = append(contexts, plainTextContent[contextStart:contextEnd])
-			}
-
-			result := KeywordExtractionResult{
-				MatchedPattern: rule.Pattern,
-				MatchedText:    matchedText,
-				Category:       rule.Category.String, // Use .String from sql.NullString
-				Contexts:       contexts,
-			}
+		
+		for _, matchIndices := range matches {
+			result := createResult(plainTextContent, rule, matchIndices)
 			results = append(results, result)
 		}
 	}
 	return results, nil
+}
+
+// findMatches finds all matches for a given rule in the text content
+func findMatches(content string, rule models.KeywordRule) ([][]int, error) {
+	switch rule.RuleType {
+	case models.KeywordRuleTypeRegex:
+		return findRegexMatches(content, rule.Pattern, rule.ID.String())
+	case models.KeywordRuleTypeString:
+		return findStringMatches(content, rule.Pattern, rule.IsCaseSensitive), nil
+	default:
+		return nil, nil // Skip unknown rule type
+	}
+}
+
+// findRegexMatches finds matches using regex pattern
+func findRegexMatches(content, pattern, ruleID string) ([][]int, error) {
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile regex pattern '%s' for rule %s: %w", pattern, ruleID, err)
+	}
+	return re.FindAllStringIndex(content, -1), nil
+}
+
+// findStringMatches finds matches using string pattern
+func findStringMatches(content, pattern string, caseSensitive bool) [][]int {
+	var matches [][]int
+	searchPattern := pattern
+	searchContent := content
+	
+	if !caseSensitive {
+		searchPattern = strings.ToLower(pattern)
+		searchContent = strings.ToLower(content)
+	}
+	
+	idx := 0
+	for {
+		foundIdx := strings.Index(searchContent[idx:], searchPattern)
+		if foundIdx == -1 {
+			break
+		}
+		actualFoundIdx := idx + foundIdx
+		matches = append(matches, []int{actualFoundIdx, actualFoundIdx + len(searchPattern)})
+		idx = actualFoundIdx + len(searchPattern)
+		if idx >= len(searchContent) {
+			break
+		}
+	}
+	return matches
+}
+
+// createResult creates a KeywordExtractionResult from match indices
+func createResult(content string, rule models.KeywordRule, matchIndices []int) KeywordExtractionResult {
+	start := matchIndices[0]
+	end := matchIndices[1]
+	matchedText := content[start:end]
+	
+	var contexts []string
+	if rule.ContextChars > 0 {
+		contexts = extractContext(content, start, end, rule.ContextChars)
+	}
+	
+	return KeywordExtractionResult{
+		MatchedPattern: rule.Pattern,
+		MatchedText:    matchedText,
+		Category:       rule.Category.String,
+		Contexts:       contexts,
+	}
+}
+
+// extractContext extracts surrounding context for a match
+func extractContext(content string, start, end, contextChars int) []string {
+	contextStart := start - contextChars
+	if contextStart < 0 {
+		contextStart = 0
+	}
+	contextEnd := end + contextChars
+	if contextEnd > len(content) {
+		contextEnd = len(content)
+	}
+	return []string{content[contextStart:contextEnd]}
 }
 
 // ExtractKeywords (from HTML) now uses ExtractKeywordsFromText after cleaning HTML.
