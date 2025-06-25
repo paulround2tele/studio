@@ -1,5 +1,0 @@
-test line 1
-new inserted line
-test line 2
-test line 3
-test line 4

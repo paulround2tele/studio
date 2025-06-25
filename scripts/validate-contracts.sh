@@ -29,24 +29,24 @@ fi
 
 # Convert to OpenAPI 3.0
 cd ..
-if ! npx swagger2openapi backend/docs/swagger.json -o backend/docs/openapi-fresh.json; then
+if ! npx swagger2openapi backend/docs/swagger.json -y -o backend/docs/openapi-fresh.yaml; then
     echo -e "${RED}❌ Failed to convert to OpenAPI 3.0${NC}"
     exit 1
 fi
 
-# Check if committed openapi.json exists
-if [ ! -f "backend/docs/openapi.json" ]; then
-    echo -e "${YELLOW}⚠️  No committed openapi.json found. This is the first generation.${NC}"
-    mv backend/docs/openapi-fresh.json backend/docs/openapi.json
-    echo -e "${GREEN}✅ Created initial openapi.json${NC}"
+# Check if committed openapi.yaml exists
+if [ ! -f "backend/docs/openapi.yaml" ]; then
+    echo -e "${YELLOW}⚠️  No committed openapi.yaml found. This is the first generation.${NC}"
+    mv backend/docs/openapi-fresh.yaml backend/docs/openapi.yaml
+    echo -e "${GREEN}✅ Created initial openapi.yaml${NC}"
     exit 0
 fi
 
 # Compare the specs
 echo -e "${YELLOW}🔍 Comparing current spec with committed spec...${NC}"
-if diff -q backend/docs/openapi.json backend/docs/openapi-fresh.json > /dev/null; then
+if diff -q backend/docs/openapi.yaml backend/docs/openapi-fresh.yaml > /dev/null; then
     echo -e "${GREEN}✅ Contract validation passed - specs are identical${NC}"
-    rm backend/docs/openapi-fresh.json
+    rm backend/docs/openapi-fresh.yaml
     exit 0
 else
     echo -e "${RED}❌ Contract validation failed - specs differ!${NC}"
@@ -59,7 +59,7 @@ else
     echo "2. If the backend changes are unintentional, revert the backend changes"
     echo ""
     echo "Differences:"
-    diff backend/docs/openapi.json backend/docs/openapi-fresh.json || true
-    rm backend/docs/openapi-fresh.json
+    diff backend/docs/openapi.yaml backend/docs/openapi-fresh.yaml || true
+    rm backend/docs/openapi-fresh.yaml
     exit 1
 fi

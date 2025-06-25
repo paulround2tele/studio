@@ -580,7 +580,7 @@ type CampaignPipeline struct {
 
 // Campaign type constants for pipeline steps
 const (
-	CampaignTypeDomainGeneration        = "domain_generation"
-	CampaignTypeDNSValidation          = "dns_validation"
-	CampaignTypeHTTPKeywordValidation  = "http_keyword_validation"
+	CampaignTypeDomainGeneration      = "domain_generation"
+	CampaignTypeDNSValidation         = "dns_validation"
+	CampaignTypeHTTPKeywordValidation = "http_keyword_validation"
 )

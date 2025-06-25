@@ -1,7 +1,0 @@
-# MCP Server Test
-
-This is a test file to demonstrate the MCP server's apply_code_change tool.
-
-✅ All 39 tools are working perfectly!
-
-🚀 Testing enhanced apply_code_change with production-grade error handling!

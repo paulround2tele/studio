@@ -949,7 +949,7 @@ https://api.domainflow.com/postman/collection.json
 #### OpenAPI Specification
 Download the OpenAPI spec:
 ```
-https://api.domainflow.com/openapi.json
+https://api.domainflow.com/openapi.yaml
 ```
 
 #### Interactive API Explorer
