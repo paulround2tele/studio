@@ -101,6 +101,9 @@ func Load(mainConfigPath string) (*AppConfig, error) {
 		if errUnmarshal := json.Unmarshal(data, &appCfgJSON); errUnmarshal != nil {
 			log.Printf("Config: Error unmarshalling main config '%s': %v. Using defaults for unparsed/defaulted fields.", mainConfigPath, errUnmarshal)
 			originalLoadError = errUnmarshal
+		} else if valErr := ValidateConfigBytes(data); valErr != nil {
+			log.Printf("Config: Validation failed for '%s': %v", mainConfigPath, valErr)
+			originalLoadError = valErr
 		}
 	}
 
