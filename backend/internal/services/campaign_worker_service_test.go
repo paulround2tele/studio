@@ -11,6 +11,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/testutil"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq" // PostgreSQL driver
 	"github.com/stretchr/testify/assert"
@@ -604,5 +605,9 @@ func (s *CampaignWorkerServiceTestSuite) TestChainedCampaignExecution() {
 
 	dnsCampaigns, _ := s.CampaignStore.ListCampaigns(ctx, s.DB, store.ListCampaignsFilter{Type: models.CampaignTypeDNSValidation})
 	require.NotEmpty(t, dnsCampaigns)
-	assert.Equal(t, dgCampaign.ID, *dnsCampaigns[0].SourceGenerationCampaignID)
+	params, err := s.CampaignStore.GetDNSValidationParams(ctx, s.DB, dnsCampaigns[0].ID)
+	require.NoError(t, err)
+	require.NotNil(t, params)
+	require.NotNil(t, params.SourceGenerationCampaignID)
+	assert.Equal(t, dgCampaign.ID, *params.SourceGenerationCampaignID)
 }
