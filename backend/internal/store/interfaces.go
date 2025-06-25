@@ -203,3 +203,16 @@ type SecurityStore interface {
 	GetAuthorizationDecisionByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.AuthorizationDecision, error)
 	DeleteAuthorizationDecision(ctx context.Context, exec Querier, id uuid.UUID) error
 }
+
+// ArchitectureStore defines operations for service architecture monitoring and
+// related tables.
+type ArchitectureStore interface {
+	Transactor
+	CreateServiceArchitectureMetric(ctx context.Context, exec Querier, m *models.ServiceArchitectureMetric) error
+	GetServiceArchitectureMetrics(ctx context.Context, exec Querier, serviceName string) ([]*models.ServiceArchitectureMetric, error)
+	CreateServiceDependency(ctx context.Context, exec Querier, dep *models.ServiceDependency) error
+	ListServiceDependencies(ctx context.Context, exec Querier, sourceService string) ([]*models.ServiceDependency, error)
+	CreateArchitectureRefactorLog(ctx context.Context, exec Querier, log *models.ArchitectureRefactorLog) error
+	CreateCommunicationPattern(ctx context.Context, exec Querier, p *models.CommunicationPattern) error
+	CreateServiceCapacityMetric(ctx context.Context, exec Querier, m *models.ServiceCapacityMetric) error
+}
