@@ -51,8 +51,12 @@ func main() {
 		log.Printf("Warning: Failed to load config file: %v", err)
 		log.Println("Using environment variables and defaults...")
 		// Create minimal config from environment
-		appConfig = &config.AppConfig{}
-		config.LoadWithEnv("") // This will apply env overrides even without config file
+		if envConfig, err := config.LoadWithEnv(""); err != nil {
+			log.Printf("Warning: Failed to load environment variables: %v", err)
+			appConfig = &config.AppConfig{}
+		} else {
+			appConfig = envConfig
+		}
 	}
 	log.Println("Configuration loaded with environment overrides.")
 

@@ -460,7 +460,13 @@ func (m *AuthMiddleware) RequirePermission(permission string) gin.HandlerFunc {
 			return
 		}
 
-		ctx := securityContext.(*models.SecurityContext)
+		ctx, ok := securityContext.(*models.SecurityContext)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Invalid security context",
+			})
+			return
+		}
 
 		// Check permission
 		if !ctx.HasPermission(permission) {
@@ -486,7 +492,13 @@ func (m *AuthMiddleware) RequireRole(role string) gin.HandlerFunc {
 			return
 		}
 
-		ctx := securityContext.(*models.SecurityContext)
+		ctx, ok := securityContext.(*models.SecurityContext)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Invalid security context",
+			})
+			return
+		}
 
 		// Check role
 		if !ctx.HasRole(role) {
@@ -512,7 +524,13 @@ func (m *AuthMiddleware) RequireAnyRole(roles []string) gin.HandlerFunc {
 			return
 		}
 
-		ctx := securityContext.(*models.SecurityContext)
+		ctx, ok := securityContext.(*models.SecurityContext)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Invalid security context",
+			})
+			return
+		}
 
 		// Check roles
 		if !ctx.HasAnyRole(roles) {
@@ -538,7 +556,13 @@ func (m *AuthMiddleware) RequireResourceAccess(resource, action string) gin.Hand
 			return
 		}
 
-		ctx := securityContext.(*models.SecurityContext)
+		ctx, ok := securityContext.(*models.SecurityContext)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Invalid security context",
+			})
+			return
+		}
 
 		// Check resource access
 		if !ctx.CanAccess(resource, action) {

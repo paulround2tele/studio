@@ -157,11 +157,11 @@ func (h *APIHandler) createPersonaGin(c *gin.Context, personaType models.Persona
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[createPersonaGin] Panic recovered during SQL persona creation for %s, rolling back: %v", req.Name, p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[createPersonaGin] Error occurred for %s (SQL), rolling back: %v", req.Name, opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[createPersonaGin] Error committing SQL transaction for %s: %v", req.Name, commitErr)
@@ -308,11 +308,11 @@ func (h *APIHandler) updatePersonaGin(c *gin.Context, personaType models.Persona
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[updatePersonaGin] Panic recovered during SQL persona update for %s, rolling back: %v", personaIDStr, p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[updatePersonaGin] Error occurred for %s (SQL), rolling back: %v", personaIDStr, opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[updatePersonaGin] Error committing SQL transaction for %s: %v", personaIDStr, commitErr)
@@ -456,11 +456,11 @@ func (h *APIHandler) deletePersonaGin(c *gin.Context, personaType models.Persona
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[deletePersonaGin] Panic recovered during SQL persona deletion for %s, rolling back: %v", personaIDStr, p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[deletePersonaGin] Error occurred for %s (SQL), rolling back: %v", personaIDStr, opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[deletePersonaGin] Error committing SQL transaction for %s: %v", personaIDStr, commitErr)

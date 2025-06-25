@@ -403,7 +403,7 @@ func TestPersonaStore_Transactionality(t *testing.T) {
 		err = personaStore.CreatePersona(ctx, tx, personaToRollback)
 		require.NoError(t, err)
 
-		err = tx.Rollback()
+		err = _ = tx.Rollback()
 		require.NoError(t, err)
 
 		// Verify data is NOT persisted

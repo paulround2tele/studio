@@ -229,11 +229,11 @@ func (h *APIHandler) CreateUserGin(c *gin.Context) {
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[CreateUserGin] Panic recovered during SQL user creation, rolling back: %v", p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[CreateUserGin] Error occurred (SQL), rolling back: %v", opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[CreateUserGin] Error committing SQL transaction: %v", commitErr)
@@ -416,11 +416,11 @@ func (h *APIHandler) UpdateUserGin(c *gin.Context) {
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[UpdateUserGin] Panic recovered, rolling back: %v", p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[UpdateUserGin] Error occurred, rolling back: %v", opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[UpdateUserGin] Error committing transaction: %v", commitErr)
@@ -599,11 +599,11 @@ func (h *APIHandler) DeleteUserGin(c *gin.Context) {
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[DeleteUserGin] Panic recovered, rolling back: %v", p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[DeleteUserGin] Error occurred, rolling back: %v", opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[DeleteUserGin] Error committing transaction: %v", commitErr)

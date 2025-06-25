@@ -195,11 +195,11 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[AddProxyGin] Panic recovered (SQL), rolling back: %v", p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[AddProxyGin] Error occurred (SQL), rolling back: %v", opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[AddProxyGin] Error committing SQL transaction: %v", commitErr)
@@ -273,11 +273,11 @@ func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[UpdateProxyGin] Panic recovered (SQL), rolling back: %v", p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[UpdateProxyGin] Error occurred (SQL), rolling back: %v", opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[UpdateProxyGin] Error committing SQL transaction: %v", commitErr)
@@ -404,11 +404,11 @@ func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 		defer func() {
 			if p := recover(); p != nil {
 				log.Printf("[DeleteProxyGin] Panic recovered (SQL), rolling back: %v", p)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 				panic(p)
 			} else if opErr != nil {
 				log.Printf("[DeleteProxyGin] Error occurred (SQL), rolling back: %v", opErr)
-				sqlTx.Rollback()
+				_ = sqlTx.Rollback()
 			} else {
 				if commitErr := sqlTx.Commit(); commitErr != nil {
 					log.Printf("[DeleteProxyGin] Error committing SQL transaction: %v", commitErr)

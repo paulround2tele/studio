@@ -77,7 +77,7 @@ func (s *CampaignStoreTestSuite) SetupTest() {
 	s.tx = tx
 	s.teardown = func() {
 		if r := recover(); r != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			panic(r)
 		}
 	}
@@ -88,7 +88,7 @@ func (s *CampaignStoreTestSuite) TearDownTest() {
 		s.teardown()
 	}
 	if s.tx != nil {
-		s.tx.Rollback()
+		s._ = tx.Rollback()
 	}
 }
 
@@ -380,7 +380,7 @@ func (s *CampaignStoreTestSuite) TestTransactionRollback() {
 	require.Error(s.T(), err)
 
 	// Rollback the transaction
-	err = tx.Rollback()
+	err = _ = tx.Rollback()
 	require.NoError(s.T(), err)
 
 	// Verify the campaign was not created
