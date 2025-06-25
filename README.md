@@ -81,6 +81,10 @@ external systems.
 git clone <repository-url>
 cd studio
 
+# If you're using the Codex environment, run the setup script to install
+# Node.js, Go and all dependencies
+./.codex/setup.sh
+
 # Frontend setup
 npm install
 npm run generate:schemas  # Generate TypeScript schemas from Go models
