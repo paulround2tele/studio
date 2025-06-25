@@ -249,6 +249,7 @@ type Campaign struct {
 	EstimatedCompletionAt *time.Time `db:"estimated_completion_at" json:"estimatedCompletionAt,omitempty"`
 	AvgProcessingRate     *float64   `db:"avg_processing_rate" json:"avgProcessingRate,omitempty"`
 	LastHeartbeatAt       *time.Time `db:"last_heartbeat_at" json:"lastHeartbeatAt,omitempty"`
+	BusinessStatus        *string    `db:"business_status" json:"businessStatus,omitempty"`
 
 	DomainGenerationParams      *DomainGenerationCampaignParams `json:"domainGenerationParams,omitempty"`
 	DNSValidationParams         *DNSValidationCampaignParams    `json:"dnsValidationParams,omitempty"`

@@ -81,7 +81,13 @@ export interface ModelsCampaignAPI {
      */
     'lastHeartbeatAt'?: string;
     /**
-     * 
+     *
+     * @type {string}
+     * @memberof ModelsCampaignAPI
+     */
+    'businessStatus'?: string;
+    /**
+     *
      * @type {object}
      * @memberof ModelsCampaignAPI
      */
