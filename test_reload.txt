@@ -1,4 +1,0 @@
-test line 1
-added line after reload
-test line 2
-test line 3

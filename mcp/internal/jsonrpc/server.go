@@ -24,7 +24,6 @@ type JSONRPCServer struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
 	mu       sync.Mutex
-	msgID    int
 	handlers map[string]Handler
 	shutdown bool
 }
