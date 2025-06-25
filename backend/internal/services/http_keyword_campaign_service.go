@@ -32,6 +32,7 @@ type httpKeywordCampaignServiceImpl struct {
 	proxyStore       store.ProxyStore
 	keywordStore     store.KeywordStore
 	auditLogStore    store.AuditLogStore
+	auditLogger      *utils.AuditLogger
 	campaignJobStore store.CampaignJobStore
 	httpValidator    *httpvalidator.HTTPValidator
 	keywordScanner   *keywordscanner.Service
@@ -53,6 +54,7 @@ func NewHTTPKeywordCampaignService(
 		proxyStore:       prStore,
 		keywordStore:     ks,
 		auditLogStore:    as,
+		auditLogger:      utils.NewAuditLogger(as),
 		campaignJobStore: cjs,
 		httpValidator:    hv,
 		keywordScanner:   kwScanner,
@@ -367,7 +369,10 @@ func (s *httpKeywordCampaignServiceImpl) validateKeywordSetIDs(ctx context.Conte
 }
 
 func (s *httpKeywordCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
-	utils.LogCampaignAuditEvent(ctx, exec, s.auditLogStore, campaign, action, description)
+	if s.auditLogger == nil {
+		return
+	}
+	s.auditLogger.LogCampaignEvent(ctx, exec, campaign, action, description)
 }
 
 func derefUUIDPtr(id *uuid.UUID) uuid.UUID {

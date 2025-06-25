@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -15,8 +14,8 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/logging"
-	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // Session service errors
@@ -83,6 +82,7 @@ type SessionService struct {
 	inMemoryStore *InMemorySessionStore
 	config        *config.SessionConfig
 	auditLogStore store.AuditLogStore
+	auditLogger   *utils.AuditLogger
 	cleanupTicker *time.Ticker
 }
 
@@ -104,6 +104,7 @@ func NewSessionService(db *sqlx.DB, config *config.SessionConfig, auditLogStore 
 		inMemoryStore: inMemoryStore,
 		config:        config,
 		auditLogStore: auditLogStore,
+		auditLogger:   utils.NewAuditLogger(auditLogStore),
 	}
 
 	// Start cleanup goroutine
@@ -663,29 +664,14 @@ func (s *SessionService) performCleanup() {
 
 // logAuditEvent logs an audit event for session operations
 func (s *SessionService) logAuditEvent(ctx context.Context, sessionID string, userID uuid.UUID, action, description string) {
-	if s.auditLogStore == nil {
+	if s.auditLogger == nil {
 		return
 	}
-
-	detailsJSON := json.RawMessage(fmt.Sprintf(`{"session_id": "%s", "description": "%s"}`, sessionID, description))
-	auditLog := &models.AuditLog{
-		ID:         uuid.New(),
-		Timestamp:  time.Now().UTC(),
-		UserID:     uuid.NullUUID{UUID: userID, Valid: true},
-		Action:     action,
-		EntityType: sql.NullString{String: "session", Valid: true},
-		EntityID:   uuid.NullUUID{UUID: userID, Valid: true}, // Use userID as entity for session events
-		Details:    &detailsJSON,
+	details := map[string]string{
+		"session_id":  sessionID,
+		"description": description,
 	}
-
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	if err := s.auditLogStore.CreateAuditLog(ctx, s.db, auditLog); err != nil {
-		// Log error but don't fail the operation
-		fmt.Printf("Failed to create audit log for session %s: %v\n", sessionID, err)
-	}
+	s.auditLogger.LogGenericEvent(ctx, s.db, &userID, action, "session", &userID, details)
 }
 
 // Stop stops the session service cleanup
