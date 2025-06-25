@@ -237,6 +237,25 @@ class CampaignService {
     }
   }
 
+  async chainCampaign(campaignId: string): Promise<CampaignOperationResponse> {
+    try {
+      console.log('[CampaignService] Triggering next phase for campaign:', campaignId);
+      const response = await apiClient.post<ModelsCampaignAPI>(`/api/v2/campaigns/${campaignId}/chain`);
+      console.log('[CampaignService] Chain campaign response:', response);
+
+      const transformedData = transformCampaignResponse(response.data);
+
+      return {
+        ...response,
+        data: transformedData as unknown as Campaign
+      };
+    } catch (error) {
+      console.error('[CampaignService] Chain campaign error:', error);
+      const standardizedError = transformErrorResponse(error, 500, `/api/v2/campaigns/${campaignId}/chain`);
+      throw new ApiError(standardizedError);
+    }
+  }
+
   /**
    * Delete campaign with transaction support
    * This ensures that all related resources are cleaned up
@@ -410,8 +429,11 @@ export const pauseCampaign = (campaignId: string) =>
 export const resumeCampaign = (campaignId: string) => 
   campaignService.resumeCampaign(campaignId);
 
-export const cancelCampaign = (campaignId: string) => 
+export const cancelCampaign = (campaignId: string) =>
   campaignService.cancelCampaign(campaignId);
+
+export const chainCampaign = (campaignId: string) =>
+  campaignService.chainCampaign(campaignId);
 
 export const deleteCampaign = (campaignId: string) => 
   campaignService.deleteCampaign(campaignId);

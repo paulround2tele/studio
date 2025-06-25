@@ -18,7 +18,7 @@ import { AlertCircle, Briefcase, Dna, Network, Globe, Play, RefreshCw, CheckCirc
 import type { LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { getCampaignById, startCampaign as startCampaignPhase, pauseCampaign, resumeCampaign, cancelCampaign as stopCampaign, getGeneratedDomains as getGeneratedDomainsForCampaign, getDNSValidationResults as getDnsCampaignDomains, getHTTPKeywordResults as getHttpCampaignItems } from '@/lib/services/campaignService.production';
+import { getCampaignById, startCampaign as startCampaignPhase, pauseCampaign, resumeCampaign, cancelCampaign as stopCampaign, chainCampaign, getGeneratedDomains as getGeneratedDomainsForCampaign, getDNSValidationResults as getDnsCampaignDomains, getHTTPKeywordResults as getHttpCampaignItems } from '@/lib/services/campaignService.production';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import { websocketService } from '@/lib/services/websocketService.simple';
 import PhaseGateButton from '@/components/campaigns/PhaseGateButton';
@@ -107,12 +107,15 @@ export default function CampaignDashboardPage() {
   const { toast } = useToast();
   const campaignId = params.id as string;
   const campaignTypeFromQuery = searchParams.get('type') as Campaign['campaignType'] | null;
+  const isSequenceMode = searchParams.get('sequence') === '1';
 
   const [campaign, setCampaign] = useState<CampaignViewModel | null>(null);
   const [generatedDomains, setGeneratedDomains] = useState<GeneratedDomain[]>([]);
   const [dnsCampaignItems, setDnsCampaignItems] = useState<CampaignValidationItem[]>([]);
   const [httpCampaignItems, setHttpCampaignItems] = useState<CampaignValidationItem[]>([]);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [campaignChain, setCampaignChain] = useState<CampaignViewModel[]>([]);
+  const chainTriggerRef = useRef(false);
 
   // Use centralized loading state instead of local loading
   const { startLoading, stopLoading, isLoading } = useLoadingStore();
@@ -125,6 +128,13 @@ export default function CampaignDashboardPage() {
 
   const streamCleanupRef = useRef<(() => void) | null>(null);
   const isMountedRef = useRef(true);
+  const aggregatedCampaign = useMemo(() => {
+    if (!isSequenceMode) return campaign;
+    if (campaignChain.length === 0) return campaign;
+    const last = campaignChain[campaignChain.length - 1];
+    if (!last) return campaign;
+    return { ...last, selectedType: 'domain_generation' } as CampaignViewModel;
+  }, [campaign, campaignChain, isSequenceMode]);
 
   // Helper functions - moved to top for proper hoisting
   const getGlobalLeadStatusAndScore = (domainName: string, campaign: CampaignViewModel): { status: DomainActivityStatus; score?: number } => {
@@ -223,6 +233,18 @@ export default function CampaignDashboardPage() {
   useEffect(() => {
     loadCampaignData();
   }, [loadCampaignData]);
+
+  useEffect(() => {
+    if (isSequenceMode && campaign) {
+      setCampaignChain(prev => {
+        const existing = prev.find(c => c.id === campaign.id);
+        if (existing) {
+          return prev.map(c => c.id === campaign.id ? campaign : c);
+        }
+        return [...prev, campaign];
+      });
+    }
+  }, [campaign, isSequenceMode]);
 
   // Polling for non-streaming updates (e.g., overall campaign status, progress for non-DG phases)
   useEffect(() => {
@@ -466,6 +488,26 @@ export default function CampaignDashboardPage() {
         if(isMountedRef.current) setActionLoading(prev => ({...prev, [`control-${action}`]: false }));
     }
   };
+
+  useEffect(() => {
+    if (!isSequenceMode || !campaign) return;
+    if (campaign.status === 'completed' && !chainTriggerRef.current) {
+      chainTriggerRef.current = true;
+      chainCampaign(campaign.id)
+        .then(resp => {
+          chainTriggerRef.current = false;
+          if (resp.status === 'success' && resp.data) {
+            const next = transformCampaignToViewModel(resp.data);
+            setCampaign(next);
+            setCampaignChain(prev => [...prev, next]);
+            router.replace(`/campaigns/${next.id}?sequence=1`);
+          }
+        })
+        .catch(() => {
+          chainTriggerRef.current = false;
+        });
+    }
+  }, [campaign, isSequenceMode, router]);
 
 
   const handleDownloadDomains = (domainsToDownload: string[] | undefined, fileNamePrefix: string) => {
@@ -853,9 +895,25 @@ export default function CampaignDashboardPage() {
       />
 
       <Card className="shadow-lg">
-        <CardHeader><CardTitle>Campaign Progress</CardTitle><CardDescription>Current status for &quot;{campaign.selectedType}&quot;.</CardDescription></CardHeader>
-        <CardContent><CampaignProgress campaign={campaign} /></CardContent>
+        <CardHeader><CardTitle>Campaign Progress</CardTitle><CardDescription>Current status for &quot;{aggregatedCampaign?.selectedType}&quot;.</CardDescription></CardHeader>
+        <CardContent><CampaignProgress campaign={aggregatedCampaign || campaign} /></CardContent>
       </Card>
+
+      {isSequenceMode && campaignChain.length > 0 && (
+        <Card className="shadow-lg">
+          <CardHeader><CardTitle>Sequence Progress</CardTitle></CardHeader>
+          <CardContent>
+            <ul className="space-y-1 text-sm">
+              {campaignChain.map(c => (
+                <li key={c.id} className="flex justify-between">
+                  <span>{phaseDisplayNames[c.campaignType as CampaignType]}</span>
+                  <span>{c.status}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="shadow-lg">
         <CardHeader><CardTitle>Campaign Actions</CardTitle></CardHeader>
