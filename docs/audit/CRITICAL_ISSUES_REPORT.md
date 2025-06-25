@@ -51,7 +51,7 @@ type Campaign struct {
 4. Update all consuming components to handle SafeBigInt
 
 **Files to Modify:**
-- [`backend/docs/swagger.yaml`](backend/docs/swagger.yaml) - Add format: int64
+- [`backend/docs/openapi.yaml`](backend/docs/openapi.yaml) - Add format: int64
 - [`src/lib/api-client/.openapi-generator-ignore`](src/lib/api-client/.openapi-generator-ignore) - Exclude affected models
 - [`src/lib/api/transformers/campaign-transformers.ts`](src/lib/api/transformers/campaign-transformers.ts) - Ensure transformation
 - All campaign-related components using these fields
@@ -89,7 +89,7 @@ async listUsers(): Promise<User[]> {
 - [`backend/internal/api/user_management_handlers.go`](backend/internal/api/user_management_handlers.go) - Create new handlers
 - [`backend/cmd/apiserver/main.go`](backend/cmd/apiserver/main.go) - Add routes ~line 150
 - [`backend/internal/store/postgres/user_store.go`](backend/internal/store/postgres/user_store.go) - Add CRUD methods
-- [`backend/docs/swagger.yaml`](backend/docs/swagger.yaml) - Document endpoints
+ - [`backend/docs/openapi.yaml`](backend/docs/openapi.yaml) - Document endpoints
 
 ---
 
@@ -136,7 +136,7 @@ type DomainGenerationCampaignParams struct {
 4. Test domain generation flow end-to-end
 
 **Files to Modify:**
-- [`backend/docs/swagger.yaml`](backend/docs/swagger.yaml) - Add missing field definitions
+ - [`backend/docs/openapi.yaml`](backend/docs/openapi.yaml) - Add missing field definitions
 - [`src/lib/schemas/alignedValidationSchemas.ts`](src/lib/schemas/alignedValidationSchemas.ts) - Add validation for new fields
 - [`src/components/campaigns/CampaignFormV2.tsx`](src/components/campaigns/CampaignFormV2.tsx) - Handle new fields
 
