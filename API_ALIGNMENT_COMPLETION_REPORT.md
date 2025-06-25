@@ -64,10 +64,6 @@
    - All endpoints defined per API_SPEC.md
    - Proper security schemes
    - Comprehensive schema definitions
-
-2. `/backend/docs/swagger.yaml` → `swagger.yaml.old`
-3. `/backend/docs/docs.go` → `docs.go.old`
-
 ### Database Migration
 1. `/backend/database/migrations/007_add_archived_status.sql` (NEW)
    - Added missing `archived` status to enum

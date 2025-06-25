@@ -14,9 +14,6 @@ go get github.com/getkin/kin-openapi/openapi3
 go get github.com/getkin/kin-openapi/openapi3filter
 
 Several leftover artifacts from the prior gin‑swagger setup remain:
-
-Old Swagger files (swagger.yaml.old, swagger.json.old, docs.go.old) are still in backend/docs
-
 package.json contains a script that runs swag init and then converts the resulting Swagger spec with swagger2openapi
 
 The CI contract validation script scripts/validate-contracts.sh also calls swag init before converting to OpenAPI
