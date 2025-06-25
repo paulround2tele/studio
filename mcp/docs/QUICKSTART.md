@@ -9,11 +9,10 @@ This guide provides step-by-step instructions to get the MCP server up and runni
 
 ## 1. Build the Server
 
-Navigate to the `cmd/mcpserver` directory and build the server:
+Build the server binary from the project root:
 
 ```bash
-cd mcp/cmd/mcpserver
-go build
+go build -o bin/mcp-server ./cmd/mcp-server
 ```
 
 This will create an executable file named `mcpserver` (or `mcpserver.exe` on Windows).
@@ -27,15 +26,15 @@ The server is configured via command-line flags. You can enable potentially dang
 
 **Example:**
 ```bash
-./mcpserver --allow-terminal --allow-mutation
+./bin/mcp-server --allow-terminal --allow-mutation
 ```
 
 ## 3. Run the Server
 
-From the `mcp/cmd/mcpserver` directory, run the executable:
+Run the executable you just built:
 
 ```bash
-./mcpserver
+./bin/mcp-server
 ```
 
 You should see a log message indicating that the server has started:

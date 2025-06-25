@@ -4,12 +4,13 @@
 set -e
 
 echo "Building MCP server..."
-(cd mcp && go build -o ../mcp-server cmd/mcpserver/main.go)
+(cd mcp && go build -o bin/mcp-server cmd/mcp-server/main.go)
 echo "Build complete."
 
-echo "Starting MCP server..."
 # Read DB_URL from .db_connection file
 DB_URL=$(cat .db_connection)
 
-# Execute the server with the required flags
-./mcp-server -db-url "$DB_URL" -allow-terminal -allow-mutation
+echo "Starting MCP server..."
+./mcp/bin/mcp-server -db-url "$DB_URL" -allow-terminal -allow-mutation
+
+
