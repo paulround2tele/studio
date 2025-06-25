@@ -192,3 +192,14 @@ type ListJobsFilter struct {
 func BoolPtr(b bool) *bool {
 	return &b
 }
+
+type SecurityStore interface {
+	Transactor
+	CreateSecurityEvent(ctx context.Context, exec Querier, ev *models.SecurityEvent) error
+	GetSecurityEventByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.SecurityEvent, error)
+	DeleteSecurityEvent(ctx context.Context, exec Querier, id uuid.UUID) error
+
+	CreateAuthorizationDecision(ctx context.Context, exec Querier, d *models.AuthorizationDecision) error
+	GetAuthorizationDecisionByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.AuthorizationDecision, error)
+	DeleteAuthorizationDecision(ctx context.Context, exec Querier, id uuid.UUID) error
+}
