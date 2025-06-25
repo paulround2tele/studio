@@ -18,6 +18,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/websocket"
+	"net/url"
+	"regexp"
 	cover "golang.org/x/tools/cover"
 )
 
@@ -1156,67 +1159,80 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 
 // TraceMiddlewareFlow traces middleware execution pipeline
 func (b *Bridge) TraceMiddlewareFlow() (models.MiddlewareFlow, error) {
-	// This would typically trace actual middleware execution
-	// For now, return comprehensive middleware flow analysis
-	return models.MiddlewareFlow{
-		Pipeline: []models.MiddlewareStep{
-			{Name: "CORS", Order: 1, ExecutionTime: "0.5ms", Status: "active"},
-			{Name: "Authentication", Order: 2, ExecutionTime: "2.1ms", Status: "active"},
-			{Name: "Authorization", Order: 3, ExecutionTime: "1.3ms", Status: "active"},
-			{Name: "Rate Limiting", Order: 4, ExecutionTime: "0.8ms", Status: "active"},
-			{Name: "Logging", Order: 5, ExecutionTime: "0.2ms", Status: "active"},
-		},
-		TotalExecutionTime: "4.9ms",
-		BottleneckDetected: false,
-		Recommendations:    []string{"Consider caching auth tokens", "Optimize database queries in auth middleware"},
-	}, nil
+	mainPath := filepath.Join(b.BackendPath, "cmd", "apiserver", "main.go")
+	content, err := os.ReadFile(mainPath)
+	if err != nil {
+		return models.MiddlewareFlow{}, err
+	}
+
+	re := regexp.MustCompile(`router\.Use\(([^\)]+)\)`)
+	matches := re.FindAllStringSubmatch(string(content), -1)
+
+	var steps []models.MiddlewareStep
+	for i, m := range matches {
+		name := strings.TrimSpace(strings.TrimSuffix(m[1], "()"))
+		steps = append(steps, models.MiddlewareStep{
+			Name:   name,
+			Order:  i + 1,
+			Status: "configured",
+		})
+	}
+
+	return models.MiddlewareFlow{Pipeline: steps}, nil
 }
 
 // GetWebSocketLifecycle returns WebSocket connection lifecycle information
 func (b *Bridge) GetWebSocketLifecycle() (models.WebSocketLifecycle, error) {
-	// This would typically analyze actual WebSocket connections
-	// For now, return comprehensive lifecycle information
+	broadcaster := websocket.GetBroadcaster()
+	manager, ok := broadcaster.(*websocket.WebSocketManager)
+	if !ok {
+		return models.WebSocketLifecycle{}, fmt.Errorf("websocket manager not available")
+	}
+	active, total := manager.Stats()
 	return models.WebSocketLifecycle{
-		ConnectionStates: []models.WSConnectionState{
-			{State: "connecting", Count: 2, Duration: "1.2s"},
-			{State: "connected", Count: 15, Duration: "45.6s avg"},
-			{State: "disconnecting", Count: 1, Duration: "0.3s"},
-			{State: "disconnected", Count: 8, Duration: "N/A"},
-		},
-		Events: []models.WSEvent{
-			{Type: "connection_opened", Count: 23, LastSeen: "2025-06-24T10:30:00Z"},
-			{Type: "message_sent", Count: 156, LastSeen: "2025-06-24T10:32:15Z"},
-			{Type: "message_received", Count: 142, LastSeen: "2025-06-24T10:32:10Z"},
-			{Type: "connection_closed", Count: 19, LastSeen: "2025-06-24T10:31:45Z"},
-		},
-		ActiveConnections: 15,
-		TotalConnections:  23,
-		MessageThroughput: "12.3 msg/sec",
+		ConnectionStates:  []models.WSConnectionState{{State: "connected", Count: active, Duration: "N/A"}},
+		ActiveConnections: active,
+		TotalConnections:  total,
 	}, nil
 }
 
 // TestWebSocketFlow tests WebSocket connectivity and message flow
 func (b *Bridge) TestWebSocketFlow() (models.WebSocketTestResult, error) {
-	// This would typically perform actual WebSocket connectivity tests
-	// For now, return comprehensive test results
-	return models.WebSocketTestResult{
+	wsURL := os.Getenv("MCP_WS_TEST_URL")
+	if wsURL == "" {
+		wsURL = "ws://localhost:8080/api/v2/ws"
+	}
+
+	u, err := url.Parse(wsURL)
+	if err != nil {
+		return models.WebSocketTestResult{}, err
+	}
+
+	start := time.Now()
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	duration := time.Since(start)
+
+	result := models.WebSocketTestResult{
 		ConnectionTest: models.WSTestStep{
-			Name:     "Connection Establishment",
-			Status:   "passed",
-			Duration: "0.8s",
-			Details:  "Successfully connected to ws://localhost:8080/ws",
+			Name:     "dial",
+			Duration: duration.String(),
 		},
-		MessageTests: []models.WSTestStep{
-			{Name: "Send Text Message", Status: "passed", Duration: "0.1s", Details: "Message sent successfully"},
-			{Name: "Receive Text Message", Status: "passed", Duration: "0.2s", Details: "Message received successfully"},
-			{Name: "Send Binary Message", Status: "passed", Duration: "0.1s", Details: "Binary data sent successfully"},
-			{Name: "Ping/Pong Test", Status: "passed", Duration: "0.05s", Details: "Heartbeat mechanism working"},
-		},
-		OverallStatus:   "passed",
-		TotalDuration:   "1.25s",
-		Recommendations: []string{"Connection is stable", "Message flow is working correctly"},
-		Errors:          []string{},
-	}, nil
+		TotalDuration: duration.String(),
+	}
+
+	if err != nil {
+		result.ConnectionTest.Status = "failed"
+		result.ConnectionTest.Details = err.Error()
+		result.OverallStatus = "failed"
+		result.Errors = []string{err.Error()}
+		return result, nil
+	}
+
+	result.ConnectionTest.Status = "passed"
+	result.ConnectionTest.Details = "connected"
+	conn.Close()
+	result.OverallStatus = "passed"
+	return result, nil
 }
 
 // TODO: Add more methods for other tools as needed.
