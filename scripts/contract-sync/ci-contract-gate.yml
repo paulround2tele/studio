@@ -194,6 +194,16 @@ jobs:
             exit 1
           fi
 
+      - name: Ensure API client committed
+        if: env.VALIDATION_FAILED != 'true'
+        run: |
+          npm run api:generate
+          if ! git diff --quiet src/lib/api-client; then
+            echo "❌ API client out of date. Run 'npm run api:generate' and commit changes."
+            git status --short src/lib/api-client
+            exit 1
+          fi
+
       - name: Fail if validation failed
         if: env.VALIDATION_FAILED == 'true'
         run: |
