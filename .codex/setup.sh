@@ -13,6 +13,7 @@ sudo apt-get install -y nodejs npm golang-go
 echo "Installing and configuring PostgreSQL for tests..."
 "$(dirname "$0")/setup_db.sh"
 
+
 echo "Running npm install..."
 npm install
 
