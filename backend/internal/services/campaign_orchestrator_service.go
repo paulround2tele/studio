@@ -836,8 +836,8 @@ func (s *campaignOrchestratorServiceImpl) updateCampaignStatusInTx(ctx context.C
 	originalStatus := campaign.Status
 
 	// Validate state transition using the state machine
-	currentState := CampaignStatus(string(originalStatus))
-	newState := CampaignStatus(string(newStatus))
+	currentState := originalStatus
+	newState := newStatus
 
 	if err := s.stateMachine.ValidateTransition(currentState, newState); err != nil {
 		// Log the invalid transition attempt
