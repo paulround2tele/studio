@@ -129,7 +129,7 @@ type DomainGenerationCampaignParams struct {
 
 #### Step 3.3: Update OpenAPI Spec
 ```yaml
-# Update backend/docs/swagger.yaml
+# Update backend/docs/openapi.yaml
 DomainGenerationParams:
   required:
     - totalPossibleCombinations
