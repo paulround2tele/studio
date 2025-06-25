@@ -1,30 +1,28 @@
 package apicontracttester
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/getkin/kin-openapi/routers"
+	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
 )
 
-/*
-IMPORTANT: This package is a stub implementation for demonstration purposes.
-For a full implementation, the following external dependencies need to be installed:
-
-go get github.com/getkin/kin-openapi/openapi3
-go get github.com/getkin/kin-openapi/openapi3filter
-go get github.com/getkin/kin-openapi/routers
-go get github.com/getkin/kin-openapi/routers/gorillamux
-
-The current implementation provides basic API testing functionality without OpenAPI validation.
-*/
-
 // APIContractTester tests API endpoints against an OpenAPI specification
+// APIContractTester validates API endpoints against an OpenAPI specification
 type APIContractTester struct {
 	BaseURL string
 	client  *http.Client
+	spec    *openapi3.T
+	router  routers.Router
 }
 
 // TestResult represents the result of a single API test
@@ -59,9 +57,110 @@ func NewAPIContractTester(baseURL string) *APIContractTester {
 	}
 }
 
-// RunTests runs all API contract tests
+// loadSpec loads the OpenAPI specification and initializes the router
+func (t *APIContractTester) loadSpec() error {
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("backend/docs/openapi.yaml")
+	if err != nil {
+		return err
+	}
+	doc.Servers = openapi3.Servers{{URL: t.BaseURL}}
+	if err := doc.Validate(context.Background()); err != nil {
+		return err
+	}
+	router, err := legacyrouter.NewRouter(doc)
+	if err != nil {
+		return err
+	}
+	t.spec = doc
+	t.router = router
+	return nil
+}
+
+func exampleFromSchema(s *openapi3.Schema) interface{} {
+	if s == nil {
+		return nil
+	}
+	if s.Example != nil {
+		return s.Example
+	}
+	if len(s.Enum) > 0 {
+		return s.Enum[0]
+	}
+	switch {
+	case s.Type != nil && s.Type.Is("string"):
+		if s.Format == "uuid" {
+			return "123e4567-e89b-12d3-a456-426614174000"
+		}
+		return "string"
+	case s.Type != nil && (s.Type.Is("integer") || s.Type.Is("number")):
+		return 1
+	case s.Type != nil && s.Type.Is("boolean"):
+		return true
+	case s.Type != nil && s.Type.Is("array"):
+		if s.Items != nil {
+			return []interface{}{exampleFromSchema(s.Items.Value)}
+		}
+		return []interface{}{}
+	case s.Type != nil && s.Type.Is("object"):
+		obj := make(map[string]interface{})
+		for name, prop := range s.Properties {
+			obj[name] = exampleFromSchema(prop.Value)
+		}
+		return obj
+	default:
+		return nil
+	}
+}
+
+func (t *APIContractTester) buildRequest(path string, method string, op *openapi3.Operation, pathItem *openapi3.PathItem) (*http.Request, error) {
+	fullPath := path
+	params := append(pathItem.Parameters, op.Parameters...)
+	for _, p := range params {
+		if p.Value == nil || p.Value.In != openapi3.ParameterInPath {
+			continue
+		}
+		val := exampleFromSchema(p.Value.Schema.Value)
+		if val == nil {
+			val = "test"
+		}
+		fullPath = strings.ReplaceAll(fullPath, "{"+p.Value.Name+"}", fmt.Sprint(val))
+	}
+
+	var body io.Reader
+	if op.RequestBody != nil {
+		for ct, mt := range op.RequestBody.Value.Content {
+			if strings.Contains(ct, "json") {
+				var v interface{}
+				if mt.Example != nil {
+					v = mt.Example
+				} else if mt.Schema != nil {
+					v = exampleFromSchema(mt.Schema.Value)
+				}
+				if v != nil {
+					b, _ := json.Marshal(v)
+					body = bytes.NewReader(b)
+				}
+				break
+			}
+		}
+	}
+
+	req, err := http.NewRequest(strings.ToUpper(method), t.BaseURL+fullPath, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	return req, nil
+}
+
+// RunTests runs all API contract tests by iterating through the OpenAPI spec
 func (t *APIContractTester) RunTests() (*TestResults, error) {
-	// Initialize results
+	if err := t.loadSpec(); err != nil {
+		return nil, err
+	}
+
 	results := &TestResults{
 		Success:    true,
 		TotalTests: 0,
@@ -69,108 +168,81 @@ func (t *APIContractTester) RunTests() (*TestResults, error) {
 		SpecErrors: []string{},
 	}
 
-	// In the stub implementation, we'll just test a few common endpoints
-	endpoints := []struct {
-		path   string
-		method string
-	}{
-		{"/health", "GET"},
-		{"/api/v2/v2/campaigns", "GET"},
-		{"/api/v2/personas/dns", "GET"},
-		{"/api/v2/personas/http", "GET"},
-	}
-
+	ctx := context.Background()
 	totalResponseTime := time.Duration(0)
 
-	for _, endpoint := range endpoints {
-		// Create test result
-		testResult := TestResult{
-			Endpoint: endpoint.path,
-			Method:   endpoint.method,
-			Success:  true,
-			Expected: 200, // Default expected status code
-		}
+	for path, pathItem := range t.spec.Paths.Map() {
+		for method, op := range pathItem.Operations() {
+			tr := TestResult{
+				Endpoint: path,
+				Method:   strings.ToUpper(method),
+				Success:  true,
+				Expected: 200,
+			}
 
-		// Create request
-		url := t.BaseURL + endpoint.path
-		req, err := http.NewRequest(endpoint.method, url, nil)
-		if err != nil {
-			testResult.Error = fmt.Sprintf("Failed to create request: %v", err)
-			testResult.Success = false
-			results.Results = append(results.Results, testResult)
-			results.Success = false
-			results.FailedTests++
-			results.TotalTests++
-			continue
-		}
+			req, err := t.buildRequest(path, method, op, pathItem)
+			if err != nil {
+				tr.Error = fmt.Sprintf("failed to build request: %v", err)
+				tr.Success = false
+				results.Success = false
+				results.FailedTests++
+				results.TotalTests++
+				results.Results = append(results.Results, tr)
+				continue
+			}
 
-		// Add headers
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Accept", "application/json")
-		// Add API key authentication for /api/v2/* endpoints
-		if strings.HasPrefix(endpoint.path, "/api/v2/") {
-			req.Header.Set("Authorization", "Bearer 641f018600f939b24bb496ea87e6bb2edf1922457a058d5a3aa27a00c7073147")
-		}
+			start := time.Now()
+			resp, err := t.client.Do(req)
+			tr.ResponseTime = time.Since(start)
+			totalResponseTime += tr.ResponseTime
+			if err != nil {
+				tr.Error = fmt.Sprintf("request failed: %v", err)
+				tr.Success = false
+				results.Success = false
+				results.FailedTests++
+				results.TotalTests++
+				results.Results = append(results.Results, tr)
+				continue
+			}
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			tr.StatusCode = resp.StatusCode
 
-		// Execute request
-		startTime := time.Now()
-		resp, err := t.client.Do(req)
-		responseTime := time.Since(startTime)
-		testResult.ResponseTime = responseTime
-		totalResponseTime += responseTime
+			route, params, err := t.router.FindRoute(req)
+			if err != nil {
+				results.SpecErrors = append(results.SpecErrors, fmt.Sprintf("%s %s: %v", method, path, err))
+				tr.Success = false
+			}
 
-		if err != nil {
-			testResult.Error = fmt.Sprintf("Request failed: %v", err)
-			testResult.Success = false
-			results.Results = append(results.Results, testResult)
-			results.Success = false
-			results.FailedTests++
-			results.TotalTests++
-			continue
-		}
-		defer resp.Body.Close()
+			input := &openapi3filter.ResponseValidationInput{
+				RequestValidationInput: &openapi3filter.RequestValidationInput{
+					Request:    req,
+					PathParams: params,
+					Route:      route,
+				},
+				Status: resp.StatusCode,
+				Header: resp.Header,
+				Body:   io.NopCloser(bytes.NewReader(bodyBytes)),
+			}
+			if err := openapi3filter.ValidateResponse(ctx, input); err != nil {
+				tr.Error = err.Error()
+				tr.Success = false
+			}
 
-		// Check status code
-		testResult.StatusCode = resp.StatusCode
-		if resp.StatusCode != testResult.Expected {
-			testResult.Error = fmt.Sprintf("Unexpected status code: got %d, expected %d", resp.StatusCode, testResult.Expected)
-			testResult.Success = false
-			results.Success = false
-		}
-
-		// Read response body
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			testResult.Error = fmt.Sprintf("Failed to read response body: %v", err)
-			testResult.Success = false
-			results.Success = false
-		}
-
-		// Basic JSON validation
-		if testResult.Success && len(body) > 0 {
-			var jsonData interface{}
-			if err := json.Unmarshal(body, &jsonData); err != nil {
-				testResult.Error = fmt.Sprintf("Invalid JSON response: %v", err)
-				testResult.Success = false
+			if tr.Success {
+				results.PassedTests++
+			} else {
+				results.FailedTests++
 				results.Success = false
 			}
+			results.TotalTests++
+			results.Results = append(results.Results, tr)
 		}
-
-		// Update results
-		if testResult.Success {
-			results.PassedTests++
-		} else {
-			results.FailedTests++
-		}
-		results.TotalTests++
-		results.Results = append(results.Results, testResult)
 	}
 
-	// Calculate average response time
 	if results.TotalTests > 0 {
 		results.AverageResponseTime = totalResponseTime / time.Duration(results.TotalTests)
 	}
-
 	return results, nil
 }
 
@@ -242,16 +314,8 @@ func (t *APIContractTester) GenerateReport(results *TestResults) string {
 		}
 	}
 
-	// Add note about stub implementation
 	report.WriteString("## Note\n\n")
-	report.WriteString("This is a stub implementation for demonstration purposes. ")
-	report.WriteString("For a full implementation with OpenAPI validation, install the required dependencies:\n\n")
-	report.WriteString("```\n")
-	report.WriteString("go get github.com/getkin/kin-openapi/openapi3\n")
-	report.WriteString("go get github.com/getkin/kin-openapi/openapi3filter\n")
-	report.WriteString("go get github.com/getkin/kin-openapi/routers\n")
-	report.WriteString("go get github.com/getkin/kin-openapi/routers/gorillamux\n")
-	report.WriteString("```\n")
+	report.WriteString("Responses were validated against the OpenAPI specification using kin-openapi.\n")
 
 	return report.String()
 }
@@ -288,5 +352,5 @@ func (t *APIContractTester) PrintSummary(results *TestResults) {
 		}
 	}
 
-	fmt.Println("\nNote: This is a stub implementation. Install required dependencies for full functionality.")
+	fmt.Println("\nResponses validated against the OpenAPI specification.")
 }
