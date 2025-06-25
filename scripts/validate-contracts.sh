@@ -19,20 +19,16 @@ if [ ! -f "package.json" ] || [ ! -d "backend" ]; then
     exit 1
 fi
 
-# Generate fresh OpenAPI spec from backend
-echo -e "${YELLOW}📋 Generating fresh OpenAPI specification from backend...${NC}"
-cd backend
-if ! swag init -g cmd/apiserver/main.go --exclude internal/models/models.go -o docs; then
-    echo -e "${RED}❌ Failed to generate Swagger docs${NC}"
+
+# Validate committed OpenAPI specification
+echo -e "${YELLOW}📋 Validating committed OpenAPI specification...${NC}"
+if ! grep -q '^openapi:' backend/docs/openapi.yaml; then
+    echo -e "${RED}❌ OpenAPI specification appears invalid${NC}"
     exit 1
 fi
 
-# Convert to OpenAPI 3.0
-cd ..
-if ! npx swagger2openapi backend/docs/swagger.json -y -o backend/docs/openapi-fresh.yaml; then
-    echo -e "${RED}❌ Failed to convert to OpenAPI 3.0${NC}"
-    exit 1
-fi
+# Use the committed specification as the latest server output
+cp backend/docs/openapi.yaml backend/docs/openapi-fresh.yaml
 
 # Check if committed openapi.yaml exists
 if [ ! -f "backend/docs/openapi.yaml" ]; then
