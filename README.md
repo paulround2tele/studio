@@ -24,6 +24,15 @@ DomainFlow has successfully completed **Phase 2c Performance Monitoring & Optimi
 - ✅ **Caching Implementation** - 78% cache hit ratio for optimal performance
 - ✅ **Resource Utilization Monitoring** - Automated bottleneck detection and alerting
 
+## About DomainFlow
+
+DomainFlow provides a unified workflow for generating domain names and validating
+them through DNS and HTTP keyword checks. Users can start a **Domain Generation**
+campaign and automatically chain into the next phases using the "Launch full
+sequence" option in the campaign form. Developers can access the same workflow
+through the `/start` and `/chain` API endpoints to integrate DomainFlow into
+external systems.
+
 ## 📋 Architecture Overview
 
 ### Frontend (Next.js 15.3.3 + TypeScript)
@@ -49,6 +58,7 @@ DomainFlow has successfully completed **Phase 2c Performance Monitoring & Optimi
 - ⚡ **Performance Monitoring**: Real-time metrics, query optimization, resource monitoring
 - 🛡️ **Type Safety**: SafeBigInt for int64 fields, UUID branded types
 - 📊 **Campaign Management**: Domain generation, DNS validation, HTTP keyword analysis
+- 🔗 **Chained Campaigns**: Launch the full Domain Generation → DNS Validation → HTTP Keyword Validation sequence from a single form
 - 🎯 **Admin Controls**: User management with complete CRUD operations
 - 📱 **Responsive UI**: Modern interface with SafeBigInt display components
 - 🔄 **Closed-Loop Architecture**: Maintains sequential campaign pipeline integrity
