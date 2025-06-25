@@ -3,6 +3,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,12 +12,9 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
-	"github.com/fntelecomllc/studio/backend/internal/store" // Added for store.ListCampaignsFilter
+	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	// Assuming store is imported if store.ErrNotFound is used, or it's a type alias/variable
-	// For example: "github.com/fntelecomllc/studio/backend/internal/store"
-	// Or if it's a common error package: "errors" and then use errors.Is(err, store.ErrNotFound)
 )
 
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
@@ -235,11 +233,7 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 
 	baseCampaign, params, err := h.orchestratorService.GetCampaignDetails(c.Request.Context(), campaignID)
 	if err != nil {
-		// Assuming store.ErrNotFound is an error variable (e.g., from a store package)
-		// It's better to use errors.Is(err, store.ErrNotFound) if store.ErrNotFound is a specific error type
-		// For now, keeping the string comparison as it was, but this is a point of improvement.
-		// if errors.Is(err, store.ErrNotFound) { // Example for future
-		if err.Error() == "record not found" { // Or whatever store.ErrNotFound.Error() actually returns
+		if errors.Is(err, store.ErrNotFound) {
 			respondWithErrorGin(c, http.StatusNotFound, "Campaign not found")
 		} else {
 			log.Printf("Error getting campaign details for %s: %v", campaignIDStr, err)
@@ -465,19 +459,3 @@ func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 // 	// }
 // 	return uuid.Nil
 // }
-
-// Placeholder for store.ErrNotFound if it's a package variable.
-// This depends on how `store.ErrNotFound` is actually defined and used.
-// If it's part of a specific package, that package needs to be imported.
-// For example:
-// import "errors" // if it's a generic error
-// var ErrNotFound = errors.New("record not found") // A possible definition
-
-// If store.ErrNotFound is from a package like:
-// "github.com/fntelecomllc/studio/backend/internal/store"
-// then that import should be present, and store.ErrNotFound would be used directly.
-// The error message "expected ';', found CampaignDetailsResponse" did not relate to this,
-// but for completeness, the string comparison `err.Error() == store.ErrNotFound.Error()`
-// implies `store.ErrNotFound` is an error variable. I've changed the comparison to
-// `err.Error() == "record not found"` as a placeholder, as `store.ErrNotFound` is not defined
-// in the snippet. Ideally, you'd use `errors.Is(err, store.ErrNotFound)`.
