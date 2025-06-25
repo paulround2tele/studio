@@ -1,6 +1,11 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // Table represents a database table.
 type Table struct {
@@ -554,7 +559,21 @@ type WebSocketTestResult struct {
 
 // LintDiagnostics represents lint and build diagnostics
 type LintDiagnostics struct {
-	Linter string `json:"linter"`
-	Issues []string `json:"issues"`
+	Linter        string   `json:"linter"`
+	Issues        []string `json:"issues"`
 	CompileErrors []string `json:"compileErrors"`
+}
+
+// PipelineStep represents a single step in a campaign pipeline
+type PipelineStep struct {
+	Name       string    `json:"name"`
+	Status     string    `json:"status"`
+	StartedAt  time.Time `json:"startedAt"`
+	FinishedAt time.Time `json:"finishedAt"`
+}
+
+// CampaignPipeline visualizes the steps of a campaign
+type CampaignPipeline struct {
+	CampaignID uuid.UUID      `json:"campaignId"`
+	Steps      []PipelineStep `json:"steps"`
 }
