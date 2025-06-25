@@ -307,21 +307,21 @@ components:
         - updatedAt
         
   ErrorResponse:
-      type: object
-      properties:
-        code:
-          type: integer
-          example: 400
-        message:
-          type: string
-          example: "Error message description"
-        status:
-          type: string
-          example: "error"
-      required:
-        - code
-        - message
-        - status
+    type: object
+    properties:
+      code:
+        type: integer
+        example: 400
+      message:
+        type: string
+        example: "Error message description"
+      status:
+        type: string
+        example: "error"
+    required:
+      - code
+      - message
+      - status
 
     PersonaResponse:
       type: object
@@ -402,6 +402,42 @@ components:
         - isEnabled
         - createdAt
         - updatedAt
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
 
 security:
   - SessionAuth: []
@@ -1205,6 +1241,19 @@ paths:
         '200':
           description: Cancelled
 
+  /api/v2/campaigns/{campaignId}/chain:
+    post:
+      tags:
+        - Campaigns
+      summary: Trigger chained phase
+      description: |
+        Manually trigger the next campaign in the automatic phase chain.
+        Domain generation campaigns chain into DNS validation and HTTP keyword
+        validation campaigns in sequence.
+      responses:
+        '200':
+          description: Next phase queued
+
   /api/v2/campaigns/{campaignId}/results/generated-domains:
     get:
       tags:
@@ -1261,40 +1310,3 @@ paths:
       responses:
         '200':
           description: OK
-
-components:
-  responses:
-    BadRequest:
-      description: Bad request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-            
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-            
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-            
-    NotFound:
-      description: Not found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-            
-    InternalServerError:
-      description: Internal server error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
