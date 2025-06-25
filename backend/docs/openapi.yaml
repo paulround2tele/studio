@@ -306,7 +306,7 @@ components:
         - createdAt
         - updatedAt
         
-    ErrorResponse:
+  ErrorResponse:
       type: object
       properties:
         code:
@@ -322,6 +322,86 @@ components:
         - code
         - message
         - status
+
+    PersonaResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        personaType:
+          $ref: '#/components/schemas/PersonaTypeEnum'
+        description:
+          type: string
+          nullable: true
+        configDetails:
+          type: object
+        isEnabled:
+          type: boolean
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+        - id
+        - name
+        - personaType
+        - isEnabled
+        - createdAt
+        - updatedAt
+
+    ProxyResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        protocol:
+          $ref: '#/components/schemas/ProxyProtocolEnum'
+          nullable: true
+        address:
+          type: string
+        isEnabled:
+          type: boolean
+        isHealthy:
+          type: boolean
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+        - id
+        - name
+        - address
+        - isEnabled
+        - isHealthy
+        - createdAt
+        - updatedAt
+
+    KeywordSetResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        isEnabled:
+          type: boolean
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+        - id
+        - name
+        - isEnabled
+        - createdAt
+        - updatedAt
 
 security:
   - SessionAuth: []
@@ -551,6 +631,636 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
+  # Admin user management
+  /api/v2/admin/users:
+    get:
+      tags:
+        - Admin
+      summary: List users
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserAPI'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Admin
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAPI'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/admin/users/{userId}:
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Admin
+      summary: Get user
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAPI'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Admin
+      summary: Update user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAPI'
+    delete:
+      tags:
+        - Admin
+      summary: Delete user
+      responses:
+        '204':
+          description: Deleted
+
+  # Persona routes
+  /api/v2/personas:
+    get:
+      tags:
+        - Personas
+      summary: List personas
+      responses:
+        '200':
+          description: List of personas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaResponse'
+    post:
+      tags:
+        - Personas
+      summary: Create persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Persona created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaResponse'
+
+  /api/v2/personas/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Personas
+      summary: Get persona
+      responses:
+        '200':
+          description: Persona details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaResponse'
+    put:
+      tags:
+        - Personas
+      summary: Update persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaResponse'
+    delete:
+      tags:
+        - Personas
+      summary: Delete persona
+      responses:
+        '204':
+          description: Deleted
+
+    post:
+      operationId: testPersona
+      tags:
+        - Personas
+      summary: Test persona
+      responses:
+        '200':
+          description: Test results
+
+  /api/v2/proxies:
+    get:
+      tags:
+        - Proxies
+      summary: List proxies
+      responses:
+        '200':
+          description: List of proxies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyResponse'
+    post:
+      tags:
+        - Proxies
+      summary: Add proxy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyResponse'
+
+  /api/v2/proxies/status:
+    get:
+      tags:
+        - Proxies
+      summary: Proxy statuses
+      responses:
+        '200':
+          description: Status list
+
+  /api/v2/proxies/{proxyId}:
+    parameters:
+      - in: path
+        name: proxyId
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Proxies
+      summary: Update proxy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyResponse'
+    delete:
+      tags:
+        - Proxies
+      summary: Delete proxy
+      responses:
+        '204':
+          description: Deleted
+    post:
+      operationId: testProxy
+      tags:
+        - Proxies
+      summary: Test proxy
+      responses:
+        '200':
+          description: Test results
+
+  /api/v2/proxies/{proxyId}/health-check:
+    post:
+      tags:
+        - Proxies
+      summary: Force single proxy health check
+      responses:
+        '200':
+          description: Health check triggered
+
+  /api/v2/proxies/health-check:
+    post:
+      tags:
+        - Proxies
+      summary: Force all proxies health check
+      responses:
+        '200':
+          description: Health check triggered
+
+  /api/v2/config/dns:
+    get:
+      tags:
+        - Config
+      summary: Get DNS config
+      responses:
+        '200':
+          description: Config
+    post:
+      tags:
+        - Config
+      summary: Update DNS config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+
+  /api/v2/config/http:
+    get:
+      tags:
+        - Config
+      summary: Get HTTP config
+      responses:
+        '200':
+          description: Config
+    post:
+      tags:
+        - Config
+      summary: Update HTTP config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+
+  /api/v2/config/logging:
+    get:
+      tags:
+        - Config
+      summary: Get logging config
+      responses:
+        '200':
+          description: Config
+    post:
+      tags:
+        - Config
+      summary: Update logging config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+
+  /api/v2/config/server:
+    get:
+      tags:
+        - Config
+      summary: Get server config
+      responses:
+        '200':
+          description: Config
+    put:
+      tags:
+        - Config
+      summary: Update server config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+
+  /api/v2/keywords/sets:
+    get:
+      tags:
+        - Keywords
+      summary: List keyword sets
+      responses:
+        '200':
+          description: List of sets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeywordSetResponse'
+    post:
+      tags:
+        - Keywords
+      summary: Create keyword set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeywordSetResponse'
+
+  /api/v2/keywords/sets/{setId}:
+    parameters:
+      - in: path
+        name: setId
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Keywords
+      summary: Get keyword set
+      responses:
+        '200':
+          description: Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeywordSetResponse'
+    put:
+      tags:
+        - Keywords
+      summary: Update keyword set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeywordSetResponse'
+    delete:
+      tags:
+        - Keywords
+      summary: Delete keyword set
+      responses:
+        '204':
+          description: Deleted
+
+  /api/v2/extract/keywords:
+    post:
+      tags:
+        - Keywords
+      summary: Batch extract keywords
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Extraction results
+
+  /api/v2/extract/keywords/stream:
+    get:
+      tags:
+        - Keywords
+      summary: Stream extract keywords
+      responses:
+        '200':
+          description: Stream started
+
+  /api/v2/broadcast-test:
+    get:
+      tags:
+        - WebSocket
+      summary: Test WebSocket broadcast
+      responses:
+        '200':
+          description: Broadcast initiated
+
+  /api/v2/campaigns:
+    post:
+      tags:
+        - Campaigns
+      summary: Create campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignAPI'
+    get:
+      tags:
+        - Campaigns
+      summary: List campaigns
+      responses:
+        '200':
+          description: Campaign list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignAPI'
+
+  /api/v2/campaigns/{campaignId}:
+    parameters:
+      - in: path
+        name: campaignId
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Campaigns
+      summary: Get campaign details
+      responses:
+        '200':
+          description: Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignAPI'
+    delete:
+      tags:
+        - Campaigns
+      summary: Delete campaign
+      responses:
+        '204':
+          description: Deleted
+
+  /api/v2/campaigns/{campaignId}/start:
+    post:
+      tags:
+        - Campaigns
+      summary: Start campaign
+      responses:
+        '200':
+          description: Started
+
+  /api/v2/campaigns/{campaignId}/pause:
+    post:
+      tags:
+        - Campaigns
+      summary: Pause campaign
+      responses:
+        '200':
+          description: Paused
+
+  /api/v2/campaigns/{campaignId}/resume:
+    post:
+      tags:
+        - Campaigns
+      summary: Resume campaign
+      responses:
+        '200':
+          description: Resumed
+
+  /api/v2/campaigns/{campaignId}/cancel:
+    post:
+      tags:
+        - Campaigns
+      summary: Cancel campaign
+      responses:
+        '200':
+          description: Cancelled
+
+  /api/v2/campaigns/{campaignId}/results/generated-domains:
+    get:
+      tags:
+        - Campaigns
+      summary: Generated domains
+      responses:
+        '200':
+          description: Domain list
+
+  /api/v2/campaigns/{campaignId}/results/dns-validation:
+    get:
+      tags:
+        - Campaigns
+      summary: DNS validation results
+      responses:
+        '200':
+          description: Result list
+
+  /api/v2/campaigns/{campaignId}/results/http-keyword:
+    get:
+      tags:
+        - Campaigns
+      summary: HTTP keyword results
+      responses:
+        '200':
+          description: Result list
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: OK
+
+  /health/ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness check
+      security: []
+      responses:
+        '200':
+          description: OK
+
+  /health/live:
+    get:
+      tags:
+        - Health
+      summary: Liveness check
+      security: []
+      responses:
+        '200':
+          description: OK
 
 components:
   responses:

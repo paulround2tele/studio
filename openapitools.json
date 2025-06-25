@@ -5,7 +5,7 @@
     "version": "7.13.0",
     "generators": {
       "typescript-api": {
-        "inputSpec": "./backend/docs/openapi.json",
+        "inputSpec": "./backend/docs/openapi.yaml",
         "generatorName": "typescript-axios",
         "output": "./src/lib/api-client",
         "additionalProperties": {
