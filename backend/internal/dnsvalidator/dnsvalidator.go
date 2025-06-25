@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/miekg/dns"
 )
 
@@ -95,7 +96,7 @@ func New(cfg config.DNSValidatorConfig) *DNSValidator {
 		}
 	}
 
-	if cfg.ResolverStrategy == "sequential_failover" && len(cfg.ResolversPreferredOrder) > 0 {
+	if cfg.ResolverStrategy == constants.DNSStrategySequentialFailover && len(cfg.ResolversPreferredOrder) > 0 {
 		var preferredActive []ResolverClient
 		for _, preferredAddr := range cfg.ResolversPreferredOrder {
 			found := false
@@ -120,7 +121,7 @@ func New(cfg config.DNSValidatorConfig) *DNSValidator {
 		validator.activeResolvers = allConfiguredResolvers
 	}
 
-	if cfg.ResolverStrategy == "weighted_rotation" && len(cfg.ResolversWeighted) > 0 {
+	if cfg.ResolverStrategy == constants.DNSStrategyWeightedRotation && len(cfg.ResolversWeighted) > 0 {
 		var tempWeighted []ResolverClient
 		for addr, weight := range cfg.ResolversWeighted {
 			if weight <= 0 {
@@ -218,7 +219,7 @@ func (dv *DNSValidator) ValidateSingleDomain(domain string, ctx context.Context)
 			default:
 			}
 			result := dv.performSingleDomainAttempt(domain, ctx)
-			if result.Status == "Resolved" || result.Status == "Not Found" || !isPotentiallyRetryableError(result.Error) || ctx.Err() != nil {
+			if result.Status == constants.DNSStatusResolved || result.Status == constants.DNSStatusNotFound || !isPotentiallyRetryableError(result.Error) || ctx.Err() != nil {
 				return result
 			}
 			dv.mu.Lock()
@@ -388,13 +389,13 @@ func (dv *DNSValidator) performSingleDomainAttempt(domain string, ctx context.Co
 			result.Status = "Cancelled"
 		} else if dnsErr, ok := establishedError.(*net.DNSError); ok {
 			if dnsErr.IsNotFound {
-				result.Status = "Not Found"
+				result.Status = constants.DNSStatusNotFound
 			}
 			if dnsErr.IsTimeout { // Timeout can override "Not Found"
 				result.Status = "Timeout"
 			}
 		} else if isNXDOMAIN(establishedError) {
-			result.Status = "Not Found"
+			result.Status = constants.DNSStatusNotFound
 		} else if isTimeout(establishedError) {
 			result.Status = "Timeout"
 		}

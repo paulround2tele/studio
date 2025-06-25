@@ -918,8 +918,7 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		s.optimizeMemoryUsage(nil, campaignID) // Post-generation cleanup
 	}
 
-	// Update numToGenerateInBatch to reflect actual processed amount
-	numToGenerateInBatch = int64(len(generatedDomainsSlice))
+	// Domain generation complete, continue with processing
 	if genErr != nil {
 		opErr = fmt.Errorf("error during domain batch generation for campaign %s: %w. Campaign marked failed", campaignID, genErr)
 		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)

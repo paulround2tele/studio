@@ -7,32 +7,33 @@ const (
 	TestResultSkip = "skip"
 )
 
-// HTTP protocol constants
+// DNS resolver strategy constants
 const (
-	ProtocolHTTP  = "http"
-	ProtocolHTTPS = "https"
+	DNSStrategySequentialFailover = "sequential_failover"
+	DNSStrategyWeightedRotation   = "weighted_rotation"
+	DNSStrategyRandomRotation     = "random_rotation"
 )
 
 // DNS validation status constants
 const (
 	DNSStatusNotFound = "Not Found"
+	DNSStatusResolved = "Resolved"
 )
 
-// DNS resolver strategy constants
+// Go type constants
 const (
-	ResolverStrategySequentialFailover = "sequential_failover"
-	ResolverStrategyWeightedRotation   = "weighted_rotation"
+	GoTypeString   = "string"
+	GoTypeInt      = "int"
+	GoTypeInt64    = "int64"
+	GoTypeFloat64  = "float64"
+	GoTypeTimeTime = "time.Time"
+	GoTypeUUID     = "uuid.UUID"
 )
 
-// Type constants
+// HTTP protocol constants
 const (
-	TypeString  = "string"
-	TypeInt     = "int"
-	TypeInt64   = "int64"
-	TypeFloat64 = "float64"
-	TypeBool    = "bool"
-	TypeTime    = "time.Time"
-	TypeUUID    = "uuid.UUID"
+	ProtocolHTTP  = "http"
+	ProtocolHTTPS = "https"
 )
 
 // HTTP method constants

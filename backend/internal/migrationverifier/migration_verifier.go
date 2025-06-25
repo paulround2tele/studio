@@ -77,10 +77,7 @@ func (v *MigrationVerifier) VerifyMigrations() (*VerificationResult, error) {
 	}
 
 	// 5. Check for conflicting migrations (different content for same version)
-	conflictingMigrations, err := v.findConflictingMigrations(exists, migrationFiles)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find conflicting migrations: %w", err)
-	}
+	conflictingMigrations := v.findConflictingMigrations(exists, migrationFiles)
 	if len(conflictingMigrations) > 0 {
 		result.Success = false
 		result.ConflictingMigrations = conflictingMigrations
@@ -93,10 +90,7 @@ func (v *MigrationVerifier) VerifyMigrations() (*VerificationResult, error) {
 	// 7. Verify pending migrations can be applied
 	if len(pendingMigrations) > 0 {
 		// Create a temporary database to test migrations
-		tempDB, cleanup, err := v.createTempDatabase(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create temporary database: %w", err)
-		}
+		tempDB, cleanup := v.createTempDatabase(ctx)
 		defer cleanup()
 
 		// Apply all migrations that are already applied in the main database
@@ -198,9 +192,9 @@ func (v *MigrationVerifier) findMissingMigrations(appliedMigrations []string, mi
 }
 
 // findConflictingMigrations finds migrations with different content than what was applied
-func (v *MigrationVerifier) findConflictingMigrations(tableExists bool, _ map[string]string) ([]string, error) {
+func (v *MigrationVerifier) findConflictingMigrations(tableExists bool, _ map[string]string) []string {
 	if !tableExists {
-		return []string{}, nil
+		return []string{}
 	}
 
 	// This is a simplified implementation. In a real system, you would need to:
@@ -208,7 +202,7 @@ func (v *MigrationVerifier) findConflictingMigrations(tableExists bool, _ map[st
 	// 2. Compare the hash of the file with the stored hash
 	// 3. Use a database context to query the schema_migrations table
 	// For this example, we'll just return an empty list
-	return []string{}, nil
+	return []string{}
 }
 
 // findPendingMigrations finds migrations that are in files but not applied to the database
@@ -233,7 +227,7 @@ func (v *MigrationVerifier) findPendingMigrations(appliedMigrations []string, mi
 }
 
 // createTempDatabase creates a temporary database for testing migrations
-func (v *MigrationVerifier) createTempDatabase(_ context.Context) (*sqlx.DB, func(), error) {
+func (v *MigrationVerifier) createTempDatabase(_ context.Context) (*sqlx.DB, func()) {
 	// In a real implementation, this would create a temporary database
 	// For this example, we'll just return the same database
 	// In a production system, you would:
@@ -245,7 +239,7 @@ func (v *MigrationVerifier) createTempDatabase(_ context.Context) (*sqlx.DB, fun
 		// In a real implementation, this would drop the temporary database
 	}
 
-	return v.db, cleanup, nil
+	return v.db, cleanup
 }
 
 // applyMigrationsToTempDB applies existing migrations to the temporary database

@@ -195,7 +195,7 @@ func (c *KeywordRuleConverter) ModelSetToConfig(modelSet models.KeywordSet) (*co
 
 // BatchConfigToModel converts multiple config rules to model rules
 func (c *KeywordRuleConverter) BatchConfigToModel(configRules []config.KeywordRule, keywordSetID uuid.UUID) ([]models.KeywordRule, error) {
-	var modelRules []models.KeywordRule
+	modelRules := make([]models.KeywordRule, 0, len(configRules))
 	for i, configRule := range configRules {
 		modelRule, err := c.ConfigToModel(configRule, keywordSetID)
 		if err != nil {
@@ -208,7 +208,7 @@ func (c *KeywordRuleConverter) BatchConfigToModel(configRules []config.KeywordRu
 
 // BatchModelToConfig converts multiple model rules to config rules
 func (c *KeywordRuleConverter) BatchModelToConfig(modelRules []models.KeywordRule) ([]config.KeywordRule, error) {
-	var configRules []config.KeywordRule
+	configRules := make([]config.KeywordRule, 0, len(modelRules))
 	for i, modelRule := range modelRules {
 		configRule, err := c.ModelToConfig(modelRule)
 		if err != nil {

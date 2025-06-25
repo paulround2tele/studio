@@ -3,6 +3,7 @@ package domainexpert
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"strings"
 )
@@ -89,6 +90,7 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 		// The prompt said: "Total combinations must not exceed int64 range"
 		// If totalCombinations itself must fit int64, then: if dg.totalCombinations > int64(math.MaxInt64)
 		// For now, we use int64 internally for generation logic.
+		log.Printf("Warning: Large combination count %d with variable length %d may cause performance issues", dg.totalCombinations, variableLength)
 	}
 
 	return dg, nil

@@ -323,7 +323,7 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to %s campaign: %v", operation, err))
 		return
 	}
-	
+
 	var message string
 	switch operation {
 	case "pausing":
@@ -337,7 +337,7 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 	default:
 		message = fmt.Sprintf("Campaign %s completed", operation)
 	}
-	
+
 	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": message})
 }
 

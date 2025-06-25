@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/google/uuid"
@@ -50,7 +51,7 @@ func newDNSResolverState(cfg models.DNSConfigDetails) *dnsResolverState {
 	}
 
 	switch strings.ToLower(cfg.ResolverStrategy) {
-	case "sequential_failover":
+	case constants.DNSStrategySequentialFailover:
 		if len(cfg.ResolversPreferredOrder) > 0 {
 			var preferred []string
 			mainResolverMap := make(map[string]bool)

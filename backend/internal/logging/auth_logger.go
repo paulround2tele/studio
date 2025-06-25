@@ -37,24 +37,26 @@ const (
 
 // AuthLogEntry represents a structured log entry for authentication operations
 type AuthLogEntry struct {
-	Timestamp    time.Time              `json:"timestamp"`
-	Level        LogLevel               `json:"level"`
-	Category     LogCategory            `json:"category"`
-	Operation    string                 `json:"operation"`
-	UserID       *uuid.UUID             `json:"userId,omitempty"`
-	SessionID    *string                `json:"sessionId,omitempty"`
-	IPAddress    string                 `json:"ipAddress,omitempty"`
-	UserAgent    string                 `json:"userAgent,omitempty"`
-	RequestID    string                 `json:"requestId,omitempty"`
-	Duration     *time.Duration         `json:"durationMs,omitempty"`
-	Success      *bool                  `json:"success,omitempty"`
-	ErrorCode    string                 `json:"errorCode,omitempty"`
-	ErrorMessage string                 `json:"errorMessage,omitempty"`
-	Details      map[string]interface{} `json:"details,omitempty"`
-	StackTrace   string                 `json:"stackTrace,omitempty"`
-	File         string                 `json:"file,omitempty"`
-	Line         int                    `json:"line,omitempty"`
-	Function     string                 `json:"function,omitempty"`
+	Timestamp          time.Time              `json:"timestamp"`
+	Level              LogLevel               `json:"level"`
+	Category           LogCategory            `json:"category"`
+	Operation          string                 `json:"operation"`
+	UserID             *uuid.UUID             `json:"userId,omitempty"`
+	SessionID          *string                `json:"sessionId,omitempty"`
+	IPAddress          string                 `json:"ipAddress,omitempty"`
+	UserAgent          string                 `json:"userAgent,omitempty"`
+	RequestID          string                 `json:"requestId,omitempty"`
+	Duration           *time.Duration         `json:"durationMs,omitempty"`
+	Success            *bool                  `json:"success,omitempty"`
+	ErrorCode          string                 `json:"errorCode,omitempty"`
+	ErrorMessage       string                 `json:"errorMessage,omitempty"`
+	Details            map[string]interface{} `json:"details,omitempty"`
+	StackTrace         string                 `json:"stackTrace,omitempty"`
+	File               string                 `json:"file,omitempty"`
+	Line               int                    `json:"line,omitempty"`
+	Function           string                 `json:"function,omitempty"`
+	PerformanceMetrics *PerformanceMetrics    `json:"performanceMetrics,omitempty"`
+	SecurityMetrics    *SecurityMetrics       `json:"securityMetrics,omitempty"`
 }
 
 // DatabaseOperationMetrics represents database operation metrics
@@ -350,23 +352,25 @@ func (l *AuthLogger) log(
 	}
 
 	entry := AuthLogEntry{
-		Timestamp:    time.Now().UTC(),
-		Level:        level,
-		Category:     category,
-		Operation:    operation,
-		UserID:       userID,
-		SessionID:    sessionID,
-		IPAddress:    ipAddress,
-		UserAgent:    userAgent,
-		RequestID:    requestID,
-		Duration:     duration,
-		Success:      success,
-		ErrorCode:    errorCode,
-		ErrorMessage: errorMessage,
-		Details:      details,
-		File:         file,
-		Line:         line,
-		Function:     function,
+		Timestamp:          time.Now().UTC(),
+		Level:              level,
+		Category:           category,
+		Operation:          operation,
+		UserID:             userID,
+		SessionID:          sessionID,
+		IPAddress:          ipAddress,
+		UserAgent:          userAgent,
+		RequestID:          requestID,
+		Duration:           duration,
+		Success:            success,
+		ErrorCode:          errorCode,
+		ErrorMessage:       errorMessage,
+		Details:            details,
+		File:               file,
+		Line:               line,
+		Function:           function,
+		PerformanceMetrics: perfMetrics,
+		SecurityMetrics:    secMetrics,
 	}
 
 	// Add stack trace for errors

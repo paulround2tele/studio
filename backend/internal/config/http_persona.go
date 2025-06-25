@@ -1,11 +1,6 @@
 package config
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -115,34 +110,10 @@ func (hvc *HTTPValidatorConfig) ToModelHTTPConfigDetails() models.HTTPConfigDeta
 
 // LoadHTTPPersonas loads HTTP persona configurations from the specified file in configDir.
 func LoadHTTPPersonas(configDir string) ([]HTTPPersona, error) {
-	filePath := filepath.Join(configDir, httpPersonasConfigFilename)
-	var personas []HTTPPersona
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			log.Printf("Config: HTTP Personas config file '%s' not found. No HTTP personas will be loaded.", filePath)
-			return personas, nil
-		}
-		return nil, fmt.Errorf("failed to read HTTP Personas config file '%s': %w", filePath, err)
-	}
-
-	if err := json.Unmarshal(data, &personas); err != nil {
-		return nil, fmt.Errorf("error unmarshalling HTTP Personas from '%s': %w", filePath, err)
-	}
-	log.Printf("Config: Loaded %d HTTP Personas from '%s'", len(personas), filePath)
-	return personas, nil
+	return loadPersonasFromFile[HTTPPersona](configDir, httpPersonasConfigFilename, "HTTP")
 }
 
 // SaveHTTPPersonas saves the HTTP personas to their configuration file.
 func SaveHTTPPersonas(personas []HTTPPersona, configDir string) error {
-	filePath := filepath.Join(configDir, httpPersonasConfigFilename)
-	data, err := json.MarshalIndent(personas, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal HTTP personas to JSON: %w", err)
-	}
-	if err := os.WriteFile(filePath, data, 0644); err != nil {
-		return fmt.Errorf("failed to write HTTP personas to file '%s': %w", filePath, err)
-	}
-	log.Printf("Config: Successfully saved %d HTTP Personas to '%s'", len(personas), filePath)
-	return nil
+	return savePersonasToFile(personas, configDir, httpPersonasConfigFilename, "HTTP")
 }

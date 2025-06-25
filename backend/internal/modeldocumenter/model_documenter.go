@@ -12,6 +12,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Constants for documentation
+const (
+	yesString = "Yes"
+	noString  = "No"
+)
+
 // ModelDocumenter generates documentation for data models
 type ModelDocumenter struct {
 	db *sqlx.DB
@@ -433,13 +439,13 @@ func (d *ModelDocumenter) generateMarkdownDocumentation(tables []TableInfo) stri
 		doc.WriteString("| Name | Type | Nullable | Primary Key | Default | Description |\n")
 		doc.WriteString("|------|------|----------|-------------|---------|-------------|\n")
 		for _, column := range table.Columns {
-			primaryKey := "No"
+			primaryKey := noString
 			if column.PrimaryKey {
-				primaryKey = "Yes"
+				primaryKey = yesString
 			}
-			nullable := "No"
+			nullable := noString
 			if column.Nullable {
-				nullable = "Yes"
+				nullable = yesString
 			}
 			doc.WriteString(fmt.Sprintf("| %s | %s | %s | %s | %s | %s |\n",
 				column.Name,
@@ -458,9 +464,9 @@ func (d *ModelDocumenter) generateMarkdownDocumentation(tables []TableInfo) stri
 			doc.WriteString("| Name | Columns | Unique |\n")
 			doc.WriteString("|------|---------|--------|\n")
 			for _, index := range table.Indexes {
-				unique := "No"
+				unique := noString
 				if index.Unique {
-					unique = "Yes"
+					unique = yesString
 				}
 				doc.WriteString(fmt.Sprintf("| %s | %s | %s |\n",
 					index.Name,

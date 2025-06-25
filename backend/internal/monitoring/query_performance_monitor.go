@@ -101,6 +101,8 @@ func (qpm *QueryPerformanceMonitor) recordQueryMetrics(ctx context.Context, metr
 
 func (qpm *QueryPerformanceMonitor) generateOptimizationSuggestions(ctx context.Context, metrics *QueryMetrics) error {
 	// This would integrate with the database optimization functions
+	// ctx is reserved for future database operations
+	_ = ctx // TODO: Use context for database calls in future implementation
 	log.Printf("Generating optimization suggestions for slow query: %s (execution time: %v)",
 		metrics.QueryType, metrics.ExecutionTime)
 	return nil

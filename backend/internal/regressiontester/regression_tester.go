@@ -165,13 +165,13 @@ func (r *RegressionTester) ParseResults(resultFiles []string) (*RegressionTestRe
 
 			// Update package counts
 			switch testResult.Status {
-			case "pass":
+			case constants.TestResultPass:
 				packageResult.PassCount++
 				results.PassedTests++
-			case "fail":
+			case constants.TestResultFail:
 				packageResult.FailCount++
 				results.FailedTests++
-			case "skip":
+			case constants.TestResultSkip:
 				packageResult.SkipCount++
 				results.SkippedTests++
 			}
