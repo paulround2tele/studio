@@ -21,6 +21,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
+	"github.com/fntelecomllc/studio/backend/pkg/architecture"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -167,6 +168,11 @@ func main() {
 		httpValSvc, kwordScannerSvc, proxyMgr, appConfig,
 	)
 	log.Println("HTTPKeywordCampaignService initialized.")
+
+	archRegistry := architecture.NewServiceRegistry(db.DB)
+	if err := services.RegisterServiceContracts(archRegistry); err != nil {
+		log.Printf("Warning: failed to register service contracts: %v", err)
+	}
 
 	campaignOrchestratorSvc := services.NewCampaignOrchestratorService(
 		db,
