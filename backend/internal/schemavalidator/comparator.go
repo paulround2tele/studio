@@ -3,6 +3,8 @@ package schemavalidator
 import (
 	"fmt"
 	"strings"
+
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 )
 
 // SchemaComparator compares database schema with Go model definitions
@@ -219,17 +221,17 @@ func (c *SchemaComparator) compareFields(tableName string, tableSchema TableSche
 			// Provide a suggested fix
 			var suggestedFix string
 			switch field.Type {
-			case "string":
+			case constants.GoTypeString:
 				suggestedFix = "sql.NullString or *string"
-			case "int":
+			case constants.GoTypeInt:
 				suggestedFix = "sql.NullInt32 or *int"
-			case "int64":
+			case constants.GoTypeInt64:
 				suggestedFix = "sql.NullInt64 or *int64"
-			case "float64":
+			case constants.GoTypeFloat64:
 				suggestedFix = "sql.NullFloat64 or *float64"
-			case "bool":
+			case constants.GoTypeBool:
 				suggestedFix = "sql.NullBool or *bool"
-			case "time.Time":
+			case constants.GoTypeTimeTime:
 				suggestedFix = "sql.NullTime or *time.Time"
 			default:
 				suggestedFix = "*" + field.Type
@@ -295,8 +297,8 @@ func (c *SchemaComparator) areTypesCompatible(expectedType, actualType string) b
 	}
 
 	// Handle UUID special case
-	if (expectedType == "uuid.UUID" || expectedType == "string") &&
-		(actualType == "uuid.UUID" || actualType == "string") {
+	if (expectedType == constants.GoTypeUUID || expectedType == constants.GoTypeString) &&
+		(actualType == constants.GoTypeUUID || actualType == constants.GoTypeString) {
 		return true
 	}
 
@@ -366,9 +368,9 @@ func (c *SchemaComparator) isCommonTypeMismatch(dbType, goType string) bool {
 	}
 
 	// Handle UUID fields
-	if dbType == "uuid" && (goType == "uuid.UUID" ||
+	if dbType == "uuid" && (goType == constants.GoTypeUUID ||
 		goType == "uuid.NullUUID" ||
-		goType == "*uuid.UUID") {
+		goType == "*"+constants.GoTypeUUID) {
 		return true
 	}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -220,31 +221,7 @@ func (s *dnsCampaignServiceImpl) validatePersonaIDs(ctx context.Context, querier
 }
 
 func (s *dnsCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
-	detailsMap := map[string]string{
-		"campaign_name": campaign.Name,
-		"description":   description,
-	}
-	detailsJSON, err := json.Marshal(detailsMap)
-	if err != nil {
-		log.Printf("Error marshalling audit log details for campaign %s, action %s: %v. Using raw description.", campaign.ID, action, err)
-		detailsJSON = json.RawMessage(fmt.Sprintf(`{"campaign_name": "%s", "description": "Details marshalling error: %s"}`, campaign.Name, description))
-	}
-
-	var auditLogUserID uuid.NullUUID
-	if campaign.UserID != nil {
-		auditLogUserID = uuid.NullUUID{UUID: *campaign.UserID, Valid: true}
-	}
-	auditLog := &models.AuditLog{
-		Timestamp:  time.Now().UTC(),
-		UserID:     auditLogUserID,
-		Action:     action,
-		EntityType: sql.NullString{String: "Campaign", Valid: true},
-		EntityID:   uuid.NullUUID{UUID: campaign.ID, Valid: true},
-		Details:    models.JSONRawMessagePtr(detailsJSON),
-	}
-	if err := s.auditLogStore.CreateAuditLog(ctx, exec, auditLog); err != nil {
-		log.Printf("Error creating audit log for campaign %s, action %s: %v", campaign.ID, action, err)
-	}
+	utils.LogCampaignAuditEvent(ctx, exec, s.auditLogStore, campaign, action, description)
 }
 
 func modelsDNStoConfigDNSJSON(details models.DNSConfigDetails) config.DNSValidatorConfigJSON {

@@ -19,6 +19,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -366,32 +367,7 @@ func (s *httpKeywordCampaignServiceImpl) validateKeywordSetIDs(ctx context.Conte
 }
 
 func (s *httpKeywordCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
-	detailsMap := map[string]string{
-		"campaign_name": campaign.Name,
-		"description":   description,
-	}
-	detailsJSON, err := json.Marshal(detailsMap)
-	if err != nil {
-		log.Printf("Error marshalling audit log details for HTTP campaign %s, action %s: %v. Using raw description.", campaign.ID, action, err)
-		detailsJSON = json.RawMessage(fmt.Sprintf(`{"campaign_name": "%s", "description": "Details marshalling error: %s"}`, campaign.Name, description))
-	}
-
-	var userIDNullUUID uuid.NullUUID
-	if campaign.UserID != nil {
-		userIDNullUUID = uuid.NullUUID{UUID: *campaign.UserID, Valid: true}
-	}
-
-	auditLog := &models.AuditLog{
-		Timestamp:  time.Now().UTC(),
-		UserID:     userIDNullUUID,
-		Action:     action,
-		EntityType: sql.NullString{String: "Campaign", Valid: true},
-		EntityID:   uuid.NullUUID{UUID: campaign.ID, Valid: true},
-		Details:    models.JSONRawMessagePtr(detailsJSON), // This was already correct
-	}
-	if err := s.auditLogStore.CreateAuditLog(ctx, exec, auditLog); err != nil {
-		log.Printf("Error creating audit log for HTTP campaign %s, action %s: %v", campaign.ID, action, err)
-	}
+	utils.LogCampaignAuditEvent(ctx, exec, s.auditLogStore, campaign, action, description)
 }
 
 func derefUUIDPtr(id *uuid.UUID) uuid.UUID {

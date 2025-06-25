@@ -26,6 +26,7 @@ const (
 	GoTypeInt      = "int"
 	GoTypeInt64    = "int64"
 	GoTypeFloat64  = "float64"
+	GoTypeBool     = "bool"
 	GoTypeTimeTime = "time.Time"
 	GoTypeUUID     = "uuid.UUID"
 )
@@ -49,8 +50,7 @@ const (
 
 // SQL query constants
 const (
-	SQLOrderByCreatedAtDesc = " ORDER BY created_at DESC"
-	SQLOrderByNameAsc       = " ORDER BY name ASC"
-	SQLLimit                = " LIMIT ?"
-	SQLOffset               = " OFFSET ?"
+	SQLOrderByCreatedDesc = " ORDER BY created_at DESC"
+	SQLOffset             = " OFFSET ?"
+	SQLLimit              = " LIMIT ?"
 )

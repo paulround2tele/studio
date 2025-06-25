@@ -66,3 +66,45 @@ func WithOptionalTransaction(ctx context.Context, db *sqlx.DB, isSQL bool, opera
 	tm := NewTransactionManager(db)
 	return tm.WithTransaction(ctx, operationName, fn)
 }
+
+// TransactionResult contains the result of executing a function within a transaction
+type TransactionResult struct {
+	Success bool
+	Error   error
+}
+
+// WithSQLTransactionIfSQL executes a function within a SQL transaction if in SQL mode
+func WithSQLTransactionIfSQL(ctx context.Context, db *sqlx.DB, isSQL bool, operationName string, fn func(store.Querier) error) error {
+	if !isSQL {
+		log.Printf("Operating in Firestore mode for %s (no service-level transaction).", operationName)
+		return fn(nil)
+	}
+
+	var opErr error
+	sqlTx, startTxErr := db.BeginTxx(ctx, nil)
+	if startTxErr != nil {
+		return fmt.Errorf("failed to begin SQL transaction for %s: %w", operationName, startTxErr)
+	}
+	log.Printf("SQL Transaction started for %s.", operationName)
+
+	defer func() {
+		if p := recover(); p != nil {
+			log.Printf("Panic recovered during SQL %s, rolling back: %v", operationName, p)
+			_ = sqlTx.Rollback()
+			panic(p)
+		} else if opErr != nil {
+			log.Printf("%s: Rolled back SQL transaction due to error: %v", operationName, opErr)
+			_ = sqlTx.Rollback()
+		} else {
+			if commitErr := sqlTx.Commit(); commitErr != nil {
+				log.Printf("%s: Failed to commit SQL transaction: %v", operationName, commitErr)
+				opErr = fmt.Errorf("failed to commit SQL transaction: %w", commitErr)
+			} else {
+				log.Printf("SQL Transaction committed for %s.", operationName)
+			}
+		}
+	}()
+
+	opErr = fn(sqlTx)
+	return opErr
+}
