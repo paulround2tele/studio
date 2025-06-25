@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PageHeader from '@/components/shared/PageHeader';
 import { Target, Loader2 } from 'lucide-react';
@@ -21,7 +22,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { CAMPAIGN_SELECTED_TYPES } from "@/lib/constants";
 import type { CampaignViewModel, CampaignSelectedType, CampaignPhase, DomainGenerationPattern, DomainSourceSelectionMode } from '@/lib/types';
-import { createCampaignUnified } from "@/lib/services/campaignService.production";
+import { createCampaignUnified, startCampaign } from "@/lib/services/campaignService.production";
 import { 
   type UnifiedCreateCampaignRequest
 } from '@/lib/schemas/unifiedCampaignSchema';
@@ -114,6 +115,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
       assignedDnsPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedDnsPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
       proxyAssignmentMode: isEditing && campaignToEdit ? (campaignToEdit.proxyAssignment?.mode as "none" | "single" | "rotate_active" || 'none') : 'none',
       assignedProxyId: isEditing && campaignToEdit ? ((campaignToEdit.proxyAssignment?.mode === 'single' && campaignToEdit.proxyAssignment.proxyId) ? campaignToEdit.proxyAssignment.proxyId : CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
+      launchSequence: false,
     },
     mode: "onChange"
   });
@@ -341,8 +343,16 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             variant: "default"
           });
           
-          // Redirect to campaign detail page
-          router.push(`/campaigns/${response.data.id}`);
+          if (data.launchSequence && data.selectedType === 'domain_generation') {
+            try {
+              await startCampaign(response.data.id);
+            } catch (e) {
+              console.error('Failed to start campaign sequence:', e);
+            }
+            router.push(`/campaigns/${response.data.id}?sequence=1`);
+          } else {
+            router.push(`/campaigns/${response.data.id}`);
+          }
           router.refresh();
         } else {
           console.error('[CampaignForm] Campaign creation failed:', response);
@@ -571,6 +581,18 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                   dnsPersonas={dnsPersonas}
                   isLoading={loadingSelectData}
                 />
+              )}
+
+              {selectedCampaignType === 'domain_generation' && (
+                <FormField control={typedControl} name="launchSequence" render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormLabel>Launch full sequence</FormLabel>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
               )}
 
               <div className="flex justify-end gap-2 pt-4">

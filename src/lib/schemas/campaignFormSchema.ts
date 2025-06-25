@@ -36,6 +36,7 @@ const baseCampaignSchema = z.object({
     .refine((val) => !val || val === CampaignFormConstants.NONE_VALUE_PLACEHOLDER || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(val), {
       message: "Invalid proxy ID format"
     }),
+  launchSequence: z.boolean().optional().default(false),
 });
 
 // Enhanced domain source schema with branded campaign ID validation
