@@ -274,13 +274,13 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 	functionStartTime := time.Now().UTC() // Use a distinct name for clarity
 	campaignID := uuid.New()
 
-	tempGenParamsForHash := models.DomainGenerationCampaignParams{
-		PatternType:    req.PatternType,
-		VariableLength: models.IntPtr(req.VariableLength),
-		CharacterSet:   models.StringPtr(req.CharacterSet),
-		ConstantString: models.StringPtr(req.ConstantString),
-		TLD:            req.TLD,
-	}
+        tempGenParamsForHash := models.DomainGenerationCampaignParams{
+                PatternType:    req.PatternType,
+                VariableLength: req.VariableLength,
+                CharacterSet:   req.CharacterSet,
+                ConstantString: models.StringPtr(req.ConstantString),
+                TLD:            req.TLD,
+        }
 
 	hashResult, hashErr := domainexpert.GenerateDomainGenerationConfigHash(tempGenParamsForHash)
 	if hashErr != nil {
@@ -436,17 +436,17 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		ProgressPercentage: models.Float64Ptr(0.0),
 	}
 
-	campaignDomainGenParams := &models.DomainGenerationCampaignParams{
-		CampaignID:                campaignID,
-		PatternType:               req.PatternType,
-		VariableLength:            models.IntPtr(req.VariableLength),
-		CharacterSet:              models.StringPtr(req.CharacterSet),
-		ConstantString:            models.StringPtr(req.ConstantString),
-		TLD:                       req.TLD,
-		NumDomainsToGenerate:      int(campaignInstanceTargetCount), // Converted int64 to int
-		TotalPossibleCombinations: totalPossibleCombinations,
-		CurrentOffset:             startingOffset,
-	}
+        campaignDomainGenParams := &models.DomainGenerationCampaignParams{
+                CampaignID:                campaignID,
+                PatternType:               req.PatternType,
+                VariableLength:            req.VariableLength,
+                CharacterSet:              req.CharacterSet,
+                ConstantString:            models.StringPtr(req.ConstantString),
+                TLD:                       req.TLD,
+                NumDomainsToGenerate:      int(campaignInstanceTargetCount), // Converted int64 to int
+                TotalPossibleCombinations: totalPossibleCombinations,
+                CurrentOffset:             startingOffset,
+        }
 	baseCampaign.DomainGenerationParams = campaignDomainGenParams
 
 	if err := s.campaignStore.CreateCampaign(ctx, querier, baseCampaign); err != nil {
@@ -717,25 +717,19 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		return true, 0, opErr
 	}
 	// Ensure genParams fields are not nil before dereferencing for NewDomainGenerator
-	var varLength int
-	if genParams.VariableLength != nil {
-		varLength = *genParams.VariableLength
-	} else {
-		// Handle error or default if VariableLength is critical and nil
-		opErr = fmt.Errorf("ProcessGenerationCampaignBatch: VariableLength is nil for campaign %s", campaignID)
-		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
-		// Optionally mark campaign as failed
-		return false, 0, opErr
-	}
+        varLength := genParams.VariableLength
+        if varLength <= 0 {
+                opErr = fmt.Errorf("ProcessGenerationCampaignBatch: invalid VariableLength for campaign %s", campaignID)
+                log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+                return false, 0, opErr
+        }
 
-	var charSet string
-	if genParams.CharacterSet != nil {
-		charSet = *genParams.CharacterSet
-	} else {
-		opErr = fmt.Errorf("ProcessGenerationCampaignBatch: CharacterSet is nil for campaign %s", campaignID)
-		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
-		return false, 0, opErr
-	}
+        charSet := genParams.CharacterSet
+        if charSet == "" {
+                opErr = fmt.Errorf("ProcessGenerationCampaignBatch: CharacterSet is empty for campaign %s", campaignID)
+                log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+                return false, 0, opErr
+        }
 
 	var constStr string
 	if genParams.ConstantString != nil {

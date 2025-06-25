@@ -4079,7 +4079,7 @@ CREATE TABLE public.domain_generation_params (
     current_offset bigint DEFAULT 0 NOT NULL,
     CONSTRAINT chk_offset_within_bounds CHECK (((current_offset >= 0) AND (current_offset <= total_possible_combinations))),
     CONSTRAINT domain_generation_params_num_domains_to_generate_check CHECK ((num_domains_to_generate > 0)),
-    CONSTRAINT domain_generation_params_pattern_type_check CHECK ((pattern_type = ANY (ARRAY['fixed'::text, 'variable'::text, 'hybrid'::text]))),
+    CONSTRAINT domain_generation_params_pattern_type_check CHECK ((pattern_type = ANY (ARRAY['prefix'::text, 'suffix'::text, 'both'::text]))),
     CONSTRAINT domain_generation_params_variable_length_check CHECK ((variable_length > 0))
 );
 

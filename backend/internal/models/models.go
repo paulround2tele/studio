@@ -258,15 +258,17 @@ type Campaign struct {
 
 // DomainGenerationCampaignParams holds parameters for a domain generation campaign
 type DomainGenerationCampaignParams struct {
-	CampaignID                uuid.UUID `db:"campaign_id" json:"-" `
-	PatternType               string    `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix suffix both"`
-	VariableLength            *int      `db:"variable_length" json:"variableLength,omitempty" validate:"omitempty,gt=0"`
-	CharacterSet              *string   `db:"character_set" json:"characterSet,omitempty" validate:"omitempty"`
-	ConstantString            *string   `db:"constant_string" json:"constantString,omitempty" validate:"omitempty"`
-	TLD                       string    `db:"tld" json:"tld" validate:"required"`
-	NumDomainsToGenerate      int       `db:"num_domains_to_generate" json:"numDomainsToGenerate" validate:"required,gt=0"`
-	TotalPossibleCombinations int64     `db:"total_possible_combinations" json:"totalPossibleCombinations" validate:"required,gt=0"`
-	CurrentOffset             int64     `db:"current_offset" json:"currentOffset" validate:"gte=0"`
+        CampaignID                uuid.UUID `db:"campaign_id" json:"-"`
+        PatternType               string    `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix suffix both"`
+        VariableLength            int       `db:"variable_length" json:"variableLength" validate:"gt=0"`
+        CharacterSet              string    `db:"character_set" json:"characterSet" validate:"required"`
+        ConstantString            *string   `db:"constant_string" json:"constantString,omitempty" validate:"omitempty"`
+        TLD                       string    `db:"tld" json:"tld" validate:"required"`
+        NumDomainsToGenerate      int       `db:"num_domains_to_generate" json:"numDomainsToGenerate" validate:"required,gt=0"`
+        TotalPossibleCombinations int64     `db:"total_possible_combinations" json:"totalPossibleCombinations" validate:"required,gt=0"`
+        CurrentOffset             int64     `db:"current_offset" json:"currentOffset" validate:"gte=0"`
+        CreatedAt                 time.Time `db:"created_at" json:"createdAt"`
+        UpdatedAt                 time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 // NormalizedDomainGenerationParams holds the core, normalized parameters for domain generation hashing and storage.
@@ -481,10 +483,9 @@ type ResourceUtilizationMetric struct {
 type DomainPatternType string
 
 const (
-	PatternTypeFixed       DomainPatternType = "fixed"
-	PatternTypeVariable    DomainPatternType = "variable"
-	PatternTypeCombination DomainPatternType = "combination"
-	PatternTypeTemplate    DomainPatternType = "template"
+        PatternTypePrefix DomainPatternType = "prefix"
+        PatternTypeSuffix DomainPatternType = "suffix"
+        PatternTypeBoth   DomainPatternType = "both"
 )
 
 // DereferenceGeneratedDomainSlice converts a slice of *GeneratedDomain to []GeneratedDomain.

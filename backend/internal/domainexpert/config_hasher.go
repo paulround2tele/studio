@@ -34,14 +34,10 @@ type GenerateDomainGenerationConfigHashResult struct { // Corrected: 'type' keyw
 // It returns the hex-encoded SHA256 hash string and the normalized parameters used for hashing.
 func GenerateDomainGenerationConfigHash(params models.DomainGenerationCampaignParams) (*GenerateDomainGenerationConfigHashResult, error) {
 	// Normalize CharacterSet: convert to lowercase and sort characters
-	var charSetValue string
-	if params.CharacterSet != nil {
-		charSetValue = *params.CharacterSet
-	} else {
-		// Decide behavior if CharacterSet is nil. For hashing, an empty string might be acceptable.
-		// If it's a required field for generation, an error should have been caught earlier.
-		slog.Warn("GenerateDomainGenerationConfigHash: params.CharacterSet is nil, using empty string for hashing.")
-	}
+    charSetValue := params.CharacterSet
+    if charSetValue == "" {
+            slog.Warn("GenerateDomainGenerationConfigHash: CharacterSet is empty, using empty string for hashing.")
+    }
 	charSet := strings.ToLower(charSetValue)
 	chars := strings.Split(charSet, "")
 	sort.Strings(chars)
@@ -61,13 +57,10 @@ func GenerateDomainGenerationConfigHash(params models.DomainGenerationCampaignPa
 	//     ConstantString string `json:"constantString"`
 	//     TLD            string `json:"tld"`
 	// }
-	var varLengthValue int
-	if params.VariableLength != nil {
-		varLengthValue = *params.VariableLength
-	} else {
-		slog.Warn("GenerateDomainGenerationConfigHash: params.VariableLength is nil, using 0 for hashing.")
-		// Or return an error: return nil, fmt.Errorf("VariableLength cannot be nil for hashing")
-	}
+    varLengthValue := params.VariableLength
+    if varLengthValue == 0 {
+            slog.Warn("GenerateDomainGenerationConfigHash: VariableLength is 0, using 0 for hashing.")
+    }
 
 	var constStrValue string
 	if params.ConstantString != nil {

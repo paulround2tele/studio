@@ -245,8 +245,8 @@ func (s *campaignStorePostgres) CreateDomainGenerationParams(ctx context.Context
 
 func (s *campaignStorePostgres) GetDomainGenerationParams(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.DomainGenerationCampaignParams, error) {
 	params := &models.DomainGenerationCampaignParams{}
-	query := `SELECT campaign_id, pattern_type, variable_length, character_set, constant_string, tld, num_domains_to_generate, total_possible_combinations, current_offset 
-			  FROM domain_generation_campaign_params WHERE campaign_id = $1`
+        query := `SELECT campaign_id, pattern_type, variable_length, character_set, constant_string, tld, num_domains_to_generate, total_possible_combinations, current_offset, created_at, updated_at
+                         FROM domain_generation_campaign_params WHERE campaign_id = $1`
 	err := exec.GetContext(ctx, params, query, campaignID)
 	if err == sql.ErrNoRows {
 		return nil, store.ErrNotFound
