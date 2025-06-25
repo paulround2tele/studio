@@ -37,9 +37,9 @@ func (s *campaignStorePostgres) BeginTxx(ctx context.Context, opts *sql.TxOption
 
 func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
 	query := `INSERT INTO campaigns (id, name, campaign_type, status, user_id, created_at, updated_at,
-							 started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message)
-			  VALUES (:id, :name, :campaign_type, :status, :user_id, :created_at, :updated_at,
-					  :started_at, :completed_at, :progress_percentage, :total_items, :processed_items, :successful_items, :failed_items, :metadata, :error_message)`
+                                                         started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status)
+                          VALUES (:id, :name, :campaign_type, :status, :user_id, :created_at, :updated_at,
+                                          :started_at, :completed_at, :progress_percentage, :total_items, :processed_items, :successful_items, :failed_items, :metadata, :error_message, :business_status)`
 	_, err := exec.NamedExecContext(ctx, query, campaign)
 	return err
 }
@@ -47,8 +47,8 @@ func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Q
 func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.Campaign, error) {
 	campaign := &models.Campaign{}
 	query := `SELECT id, name, campaign_type, status, user_id, created_at, updated_at,
-					 started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message
-			  FROM campaigns WHERE id = $1`
+                                         started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status
+                          FROM campaigns WHERE id = $1`
 	err := exec.GetContext(ctx, campaign, query, id)
 	if err == sql.ErrNoRows {
 		return nil, store.ErrNotFound
@@ -58,11 +58,12 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 
 func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
 	query := `UPDATE campaigns SET
-				name = :name, campaign_type = :campaign_type, status = :status, user_id = :user_id,
-				updated_at = :updated_at, started_at = :started_at, completed_at = :completed_at,
-				progress_percentage = :progress_percentage, total_items = :total_items,
-				processed_items = :processed_items, successful_items = :successful_items, failed_items = :failed_items, metadata = :metadata, error_message = :error_message
-			  WHERE id = :id`
+                                name = :name, campaign_type = :campaign_type, status = :status, user_id = :user_id,
+                                updated_at = :updated_at, started_at = :started_at, completed_at = :completed_at,
+                                progress_percentage = :progress_percentage, total_items = :total_items,
+                                processed_items = :processed_items, successful_items = :successful_items, failed_items = :failed_items, metadata = :metadata, error_message = :error_message,
+                                business_status = :business_status
+                          WHERE id = :id`
 	result, err := exec.NamedExecContext(ctx, query, campaign)
 	if err != nil {
 		return err
@@ -89,8 +90,8 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 
 func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Querier, filter store.ListCampaignsFilter) ([]*models.Campaign, error) {
 	baseQuery := `SELECT id, name, campaign_type, status, user_id, created_at, updated_at,
-					 started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message
-			      FROM campaigns`
+                                         started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status
+                              FROM campaigns`
 	args := []interface{}{}
 	conditions := []string{}
 

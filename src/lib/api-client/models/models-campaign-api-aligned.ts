@@ -25,6 +25,7 @@ export interface ModelsCampaignAPIAligned {
     'failedItems'?: SafeBigInt; // Changed from number to SafeBigInt
     'id'?: string;
     'lastHeartbeatAt'?: string;
+    'businessStatus'?: string;
     'metadata'?: object;
     'name'?: string;
     'processedItems'?: SafeBigInt; // Changed from number to SafeBigInt
