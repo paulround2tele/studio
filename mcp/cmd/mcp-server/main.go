@@ -6,6 +6,7 @@ import (
 	"mcp/internal/config"
 	"mcp/internal/jsonrpc"
 	"mcp/internal/server"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -67,12 +68,22 @@ func main() {
 
 // maskPassword masks the password in a database URL for logging
 func maskPassword(dbURL string) string {
-	// Simple password masking for logging
 	if len(dbURL) == 0 {
 		return ""
 	}
-	// For postgres://user:password@host:port/db, mask the password part
-	return "postgres://[user]:[password]@[host]/[database]"
+
+	p, err := url.Parse(dbURL)
+	if err != nil {
+		return ""
+	}
+
+	if p.User != nil {
+		if _, hasPwd := p.User.Password(); hasPwd {
+			p.User = url.UserPassword(p.User.Username(), "******")
+		}
+	}
+
+	return p.String()
 }
 
 // findStudioProjectRoot finds the studio project root directory
