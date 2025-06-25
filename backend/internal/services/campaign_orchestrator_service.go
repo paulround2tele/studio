@@ -13,6 +13,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/fntelecomllc/studio/backend/internal/utils"
+	"github.com/fntelecomllc/studio/backend/pkg/communication"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -33,12 +34,15 @@ type campaignOrchestratorServiceImpl struct {
 
 	// State machine for campaign status transitions
 	stateMachine *CampaignStateMachine
+
+	asyncManager *communication.AsyncPatternManager
 }
 
 func NewCampaignOrchestratorService(
 	db *sqlx.DB,
 	cs store.CampaignStore, ps store.PersonaStore, ks store.KeywordStore, as store.AuditLogStore, cjs store.CampaignJobStore,
 	dgs DomainGenerationService, dNSService DNSCampaignService, hkService HTTPKeywordCampaignService,
+	apm *communication.AsyncPatternManager,
 ) CampaignOrchestratorService {
 	return &campaignOrchestratorServiceImpl{
 		db:                 db,
@@ -52,22 +56,71 @@ func NewCampaignOrchestratorService(
 		dnsService:         dNSService,
 		httpKeywordService: hkService,
 		stateMachine:       NewCampaignStateMachine(),
+		asyncManager:       apm,
 	}
 }
 
 func (s *campaignOrchestratorServiceImpl) CreateDomainGenerationCampaign(ctx context.Context, req CreateDomainGenerationCampaignRequest) (*models.Campaign, error) {
 	log.Printf("Orchestrator: Delegating CreateDomainGenerationCampaign for Name: %s", req.Name)
-	return s.domainGenService.CreateCampaign(ctx, req)
+	camp, err := s.domainGenService.CreateCampaign(ctx, req)
+	if err == nil && s.asyncManager != nil {
+		msg := &communication.AsyncMessage{
+			ID:            uuid.New().String(),
+			CorrelationID: uuid.New().String(),
+			SourceService: "orchestrator-service",
+			TargetService: "domain-generation-service",
+			MessageType:   "campaign_created",
+			Payload:       req,
+			Pattern:       communication.PatternPubSub,
+			Timestamp:     time.Now(),
+		}
+		if perr := s.asyncManager.PublishMessage(ctx, msg); perr != nil {
+			log.Printf("async publish error: %v", perr)
+		}
+	}
+	return camp, err
 }
 
 func (s *campaignOrchestratorServiceImpl) CreateDNSValidationCampaign(ctx context.Context, req CreateDNSValidationCampaignRequest) (*models.Campaign, error) {
 	log.Printf("Orchestrator: Delegating CreateDNSValidationCampaign for Name: %s", req.Name)
-	return s.dnsService.CreateCampaign(ctx, req)
+	camp, err := s.dnsService.CreateCampaign(ctx, req)
+	if err == nil && s.asyncManager != nil {
+		msg := &communication.AsyncMessage{
+			ID:            uuid.New().String(),
+			CorrelationID: uuid.New().String(),
+			SourceService: "orchestrator-service",
+			TargetService: "dns-service",
+			MessageType:   "campaign_created",
+			Payload:       req,
+			Pattern:       communication.PatternPubSub,
+			Timestamp:     time.Now(),
+		}
+		if perr := s.asyncManager.PublishMessage(ctx, msg); perr != nil {
+			log.Printf("async publish error: %v", perr)
+		}
+	}
+	return camp, err
 }
 
 func (s *campaignOrchestratorServiceImpl) CreateHTTPKeywordCampaign(ctx context.Context, req CreateHTTPKeywordCampaignRequest) (*models.Campaign, error) {
 	log.Printf("Orchestrator: Delegating CreateHTTPKeywordCampaign for Name: %s", req.Name)
-	return s.httpKeywordService.CreateCampaign(ctx, req)
+	camp, err := s.httpKeywordService.CreateCampaign(ctx, req)
+	if err == nil && s.asyncManager != nil {
+		msg := &communication.AsyncMessage{
+			ID:            uuid.New().String(),
+			CorrelationID: uuid.New().String(),
+			SourceService: "orchestrator-service",
+			TargetService: "http-keyword-service",
+			MessageType:   "campaign_created",
+			Payload:       req,
+			Pattern:       communication.PatternPubSub,
+			Timestamp:     time.Now(),
+		}
+		if perr := s.asyncManager.PublishMessage(ctx, msg); perr != nil {
+			log.Printf("async publish error: %v", perr)
+		}
+	}
+	return camp, err
 }
 
 func (s *campaignOrchestratorServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, interface{}, error) {

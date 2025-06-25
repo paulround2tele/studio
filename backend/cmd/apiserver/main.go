@@ -21,6 +21,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
+	"github.com/fntelecomllc/studio/backend/pkg/communication"
 	"github.com/fntelecomllc/studio/backend/pkg/architecture"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -169,6 +170,10 @@ func main() {
 	)
 	log.Println("HTTPKeywordCampaignService initialized.")
 
+	mq := communication.NewSimpleQueue(100)
+	es := communication.NewInMemoryEventStore()
+	asyncMgr := communication.NewAsyncPatternManager(mq, es, nil)
+
 	archRegistry := architecture.NewServiceRegistry(db.DB)
 	if err := services.RegisterServiceContracts(archRegistry); err != nil {
 		log.Printf("Warning: failed to register service contracts: %v", err)
@@ -184,6 +189,7 @@ func main() {
 		domainGenSvc,
 		dnsCampaignSvc,
 		httpKeywordCampaignSvc,
+		asyncMgr,
 	)
 	log.Println("CampaignOrchestratorService initialized.")
 
