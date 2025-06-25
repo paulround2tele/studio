@@ -78,7 +78,7 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
          * @throws {RequiredError}
          */
         authMeGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/auth/me`;
+            const localVarPath = `/api/v2/me`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;

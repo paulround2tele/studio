@@ -77,8 +77,8 @@ else
 fi
 
 # Test mock auth endpoint
-echo -n "Testing /api/v2/auth/me... "
-response=$(curl -s "$BASE_URL/api/v2/auth/me" || echo "FAILED")
+echo -n "Testing /api/v2/me... "
+response=$(curl -s "$BASE_URL/api/v2/me" || echo "FAILED")
 if echo "$response" | grep -q "mock_mode"; then
     echo "✅ PASS"
 else
