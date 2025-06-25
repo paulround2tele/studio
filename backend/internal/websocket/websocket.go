@@ -34,6 +34,9 @@ type WebSocketManager struct {
 
 	// unregister is a channel for clients wishing to unregister.
 	unregister chan *Client
+
+	// instrumentation counters
+	totalConnections int
 }
 
 // NewWebSocketManager creates a new WebSocketManager.
@@ -53,6 +56,7 @@ func (m *WebSocketManager) Run() {
 		select {
 		case client := <-m.register:
 			m.clients[client] = true
+			m.totalConnections++
 			// TODO: Log client registration
 		case client := <-m.unregister:
 			if _, ok := m.clients[client]; ok {
@@ -139,4 +143,11 @@ func GetBroadcaster() Broadcaster {
 		return InitGlobalBroadcaster()
 	}
 	return globalBroadcaster
+}
+
+// Stats returns basic metrics about the current WebSocket manager.
+func (m *WebSocketManager) Stats() (active int, total int) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	return len(m.clients), m.totalConnections
 }

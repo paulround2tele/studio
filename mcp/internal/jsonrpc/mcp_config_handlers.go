@@ -78,7 +78,7 @@ func (s *JSONRPCServer) callGetEnvVars() (interface{}, error) {
 	}, nil
 }
 
-// callTraceMiddlewareFlow implements the trace_middleware_flow MCP tool
+// callTraceMiddlewareFlow traces the configured middleware order by inspecting the router
 func (s *JSONRPCServer) callTraceMiddlewareFlow() (interface{}, error) {
 	if s.bridge == nil {
 		return map[string]interface{}{

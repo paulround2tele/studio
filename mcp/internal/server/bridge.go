@@ -18,7 +18,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	cover "golang.org/x/tools/cover"
+	"net/url"
+	"regexp"
 )
 
 // Bridge provides a programmatic interface to the MCP server's tools.
@@ -1066,6 +1070,76 @@ func (b *Bridge) AnalyzeComplexity() ([]models.ComplexityReport, error) {
 	return reports, nil
 }
 
+// GetLintDiagnostics runs a linter and go build to collect issues and compile errors
+func (b *Bridge) GetLintDiagnostics() (models.LintDiagnostics, error) {
+	diags := models.LintDiagnostics{Issues: []string{}, CompileErrors: []string{}}
+	if b.BackendPath == "" {
+		return diags, fmt.Errorf("backend path not set")
+	}
+
+	var cmd *exec.Cmd
+	if _, err := exec.LookPath("golangci-lint"); err == nil {
+		diags.Linter = "golangci-lint"
+		cmd = exec.Command("golangci-lint", "run", "--out-format", "json", "--issues-exit-code", "0")
+	} else if _, err := exec.LookPath("staticcheck"); err == nil {
+		diags.Linter = "staticcheck"
+		cmd = exec.Command("staticcheck", "./...")
+	} else {
+		return diags, fmt.Errorf("neither golangci-lint nor staticcheck is installed")
+	}
+	cmd.Dir = b.BackendPath
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			out.Write(exitErr.Stderr)
+		} else {
+			return diags, err
+		}
+	}
+
+	if diags.Linter == "golangci-lint" {
+		type lintIssue struct {
+			FromLinter string `json:"FromLinter"`
+			Text       string `json:"Text"`
+		}
+		var report struct {
+			Issues []lintIssue `json:"Issues"`
+		}
+		if err := json.Unmarshal(out.Bytes(), &report); err == nil {
+			for _, is := range report.Issues {
+				diags.Issues = append(diags.Issues, fmt.Sprintf("%s: %s", is.FromLinter, is.Text))
+			}
+		} else {
+			for _, line := range strings.Split(strings.TrimSpace(out.String()), "\n") {
+				if strings.TrimSpace(line) != "" {
+					diags.Issues = append(diags.Issues, line)
+				}
+			}
+		}
+	} else {
+		for _, line := range strings.Split(strings.TrimSpace(out.String()), "\n") {
+			if strings.TrimSpace(line) != "" {
+				diags.Issues = append(diags.Issues, line)
+			}
+		}
+	}
+
+	buildCmd := exec.Command("go", "build", "./...")
+	buildCmd.Dir = b.BackendPath
+	var buildOut bytes.Buffer
+	buildCmd.Stderr = &buildOut
+	if err := buildCmd.Run(); err != nil {
+		for _, line := range strings.Split(strings.TrimSpace(buildOut.String()), "\n") {
+			if strings.TrimSpace(line) != "" {
+				diags.CompileErrors = append(diags.CompileErrors, line)
+			}
+		}
+	}
+
+	return diags, nil
+}
+
 // GetAPISchema returns comprehensive API schema information by analyzing actual backend implementation
 func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 	schema := models.APISchema{
@@ -1156,67 +1230,142 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 
 // TraceMiddlewareFlow traces middleware execution pipeline
 func (b *Bridge) TraceMiddlewareFlow() (models.MiddlewareFlow, error) {
-	// This would typically trace actual middleware execution
-	// For now, return comprehensive middleware flow analysis
-	return models.MiddlewareFlow{
-		Pipeline: []models.MiddlewareStep{
-			{Name: "CORS", Order: 1, ExecutionTime: "0.5ms", Status: "active"},
-			{Name: "Authentication", Order: 2, ExecutionTime: "2.1ms", Status: "active"},
-			{Name: "Authorization", Order: 3, ExecutionTime: "1.3ms", Status: "active"},
-			{Name: "Rate Limiting", Order: 4, ExecutionTime: "0.8ms", Status: "active"},
-			{Name: "Logging", Order: 5, ExecutionTime: "0.2ms", Status: "active"},
-		},
-		TotalExecutionTime: "4.9ms",
-		BottleneckDetected: false,
-		Recommendations:    []string{"Consider caching auth tokens", "Optimize database queries in auth middleware"},
-	}, nil
+	mainPath := filepath.Join(b.BackendPath, "cmd", "apiserver", "main.go")
+	content, err := os.ReadFile(mainPath)
+	if err != nil {
+		return models.MiddlewareFlow{}, err
+	}
+
+	re := regexp.MustCompile(`router\.Use\(([^\)]+)\)`)
+	matches := re.FindAllStringSubmatch(string(content), -1)
+
+	var steps []models.MiddlewareStep
+	for i, m := range matches {
+		name := strings.TrimSpace(strings.TrimSuffix(m[1], "()"))
+		steps = append(steps, models.MiddlewareStep{
+			Name:   name,
+			Order:  i + 1,
+			Status: "configured",
+		})
+	}
+
+	return models.MiddlewareFlow{Pipeline: steps}, nil
+}
+
+// GetCampaignPipeline builds a high level view of a campaign's pipeline
+func (b *Bridge) GetCampaignPipeline(campaignID uuid.UUID) (models.CampaignPipeline, error) {
+	if b.DB == nil {
+		return models.CampaignPipeline{}, fmt.Errorf("database not initialized")
+	}
+
+	query := `SELECT job_type, status, created_at, updated_at FROM campaign_jobs WHERE campaign_id = $1`
+	rows, err := b.DB.Query(query, campaignID)
+	if err != nil {
+		return models.CampaignPipeline{}, err
+	}
+	defer rows.Close()
+
+	type jobRec struct {
+		JobType   string
+		Status    string
+		CreatedAt time.Time
+		UpdatedAt time.Time
+	}
+
+	var jobs []jobRec
+	for rows.Next() {
+		var r jobRec
+		if err := rows.Scan(&r.JobType, &r.Status, &r.CreatedAt, &r.UpdatedAt); err != nil {
+			return models.CampaignPipeline{}, err
+		}
+		jobs = append(jobs, r)
+	}
+
+	order := []string{
+		string(models.CampaignTypeDomainGeneration),
+		string(models.CampaignTypeDNSValidation),
+		string(models.CampaignTypeHTTPKeywordValidation),
+	}
+
+	var steps []models.PipelineStep
+	for _, stepName := range order {
+		var latest *jobRec
+		for _, j := range jobs {
+			if j.JobType == stepName {
+				if latest == nil || j.UpdatedAt.After(latest.UpdatedAt) {
+					tmp := j
+					latest = &tmp
+				}
+			}
+		}
+
+		if latest != nil {
+			steps = append(steps, models.PipelineStep{
+				Name:       stepName,
+				Status:     latest.Status,
+				StartedAt:  latest.CreatedAt,
+				FinishedAt: latest.UpdatedAt,
+			})
+		} else {
+			steps = append(steps, models.PipelineStep{Name: stepName, Status: "pending"})
+		}
+	}
+
+	return models.CampaignPipeline{CampaignID: campaignID, Steps: steps}, nil
 }
 
 // GetWebSocketLifecycle returns WebSocket connection lifecycle information
 func (b *Bridge) GetWebSocketLifecycle() (models.WebSocketLifecycle, error) {
-	// This would typically analyze actual WebSocket connections
-	// For now, return comprehensive lifecycle information
+	broadcaster := websocket.GetBroadcaster()
+	manager, ok := broadcaster.(*websocket.WebSocketManager)
+	if !ok {
+		return models.WebSocketLifecycle{}, fmt.Errorf("websocket manager not available")
+	}
+	active, total := manager.Stats()
 	return models.WebSocketLifecycle{
-		ConnectionStates: []models.WSConnectionState{
-			{State: "connecting", Count: 2, Duration: "1.2s"},
-			{State: "connected", Count: 15, Duration: "45.6s avg"},
-			{State: "disconnecting", Count: 1, Duration: "0.3s"},
-			{State: "disconnected", Count: 8, Duration: "N/A"},
-		},
-		Events: []models.WSEvent{
-			{Type: "connection_opened", Count: 23, LastSeen: "2025-06-24T10:30:00Z"},
-			{Type: "message_sent", Count: 156, LastSeen: "2025-06-24T10:32:15Z"},
-			{Type: "message_received", Count: 142, LastSeen: "2025-06-24T10:32:10Z"},
-			{Type: "connection_closed", Count: 19, LastSeen: "2025-06-24T10:31:45Z"},
-		},
-		ActiveConnections: 15,
-		TotalConnections:  23,
-		MessageThroughput: "12.3 msg/sec",
+		ConnectionStates:  []models.WSConnectionState{{State: "connected", Count: active, Duration: "N/A"}},
+		ActiveConnections: active,
+		TotalConnections:  total,
 	}, nil
 }
 
 // TestWebSocketFlow tests WebSocket connectivity and message flow
 func (b *Bridge) TestWebSocketFlow() (models.WebSocketTestResult, error) {
-	// This would typically perform actual WebSocket connectivity tests
-	// For now, return comprehensive test results
-	return models.WebSocketTestResult{
+	wsURL := os.Getenv("MCP_WS_TEST_URL")
+	if wsURL == "" {
+		wsURL = "ws://localhost:8080/api/v2/ws"
+	}
+
+	u, err := url.Parse(wsURL)
+	if err != nil {
+		return models.WebSocketTestResult{}, err
+	}
+
+	start := time.Now()
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	duration := time.Since(start)
+
+	result := models.WebSocketTestResult{
 		ConnectionTest: models.WSTestStep{
-			Name:     "Connection Establishment",
-			Status:   "passed",
-			Duration: "0.8s",
-			Details:  "Successfully connected to ws://localhost:8080/ws",
+			Name:     "dial",
+			Duration: duration.String(),
 		},
-		MessageTests: []models.WSTestStep{
-			{Name: "Send Text Message", Status: "passed", Duration: "0.1s", Details: "Message sent successfully"},
-			{Name: "Receive Text Message", Status: "passed", Duration: "0.2s", Details: "Message received successfully"},
-			{Name: "Send Binary Message", Status: "passed", Duration: "0.1s", Details: "Binary data sent successfully"},
-			{Name: "Ping/Pong Test", Status: "passed", Duration: "0.05s", Details: "Heartbeat mechanism working"},
-		},
-		OverallStatus:   "passed",
-		TotalDuration:   "1.25s",
-		Recommendations: []string{"Connection is stable", "Message flow is working correctly"},
-		Errors:          []string{},
-	}, nil
+		TotalDuration: duration.String(),
+	}
+
+	if err != nil {
+		result.ConnectionTest.Status = "failed"
+		result.ConnectionTest.Details = err.Error()
+		result.OverallStatus = "failed"
+		result.Errors = []string{err.Error()}
+		return result, nil
+	}
+
+	result.ConnectionTest.Status = "passed"
+	result.ConnectionTest.Details = "connected"
+	conn.Close()
+	result.OverallStatus = "passed"
+	return result, nil
 }
 
 // TODO: Add more methods for other tools as needed.

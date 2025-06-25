@@ -6,6 +6,7 @@ toolchain go1.23.10
 
 require (
 	github.com/gin-gonic/gin v1.10.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/lib/pq v1.10.9
 	golang.org/x/tools v0.34.0
 )

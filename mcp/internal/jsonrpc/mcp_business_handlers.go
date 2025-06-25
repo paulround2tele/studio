@@ -2,6 +2,8 @@ package jsonrpc
 
 import (
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 // Business logic tool handlers
@@ -97,6 +99,54 @@ func (s *JSONRPCServer) callGetFeatureFlags() (interface{}, error) {
 			{
 				"type": "text",
 				"text": fmt.Sprintf("Found %d feature flags", len(flags)),
+			},
+		},
+	}, nil
+}
+
+// callGetCampaignPipeline implements the get_campaign_pipeline tool
+func (s *JSONRPCServer) callGetCampaignPipeline(args map[string]interface{}) (interface{}, error) {
+	idStr, ok := args["campaignId"].(string)
+	if !ok {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": "campaignId parameter is required",
+				},
+			},
+		}, nil
+	}
+
+	campaignID, err := uuid.Parse(idStr)
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("invalid campaignId: %v", err),
+				},
+			},
+		}, nil
+	}
+
+	pipeline, err := s.bridge.GetCampaignPipeline(campaignID)
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("Error getting campaign pipeline: %v", err),
+				},
+			},
+		}, nil
+	}
+
+	return map[string]interface{}{
+		"content": []map[string]interface{}{
+			{
+				"type": "text",
+				"text": fmt.Sprintf("Campaign pipeline has %d steps", len(pipeline.Steps)),
 			},
 		},
 	}, nil
