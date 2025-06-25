@@ -10,9 +10,11 @@ import (
 	"mcp/internal/analyzer"
 	"mcp/internal/config"
 	"mcp/internal/models"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -21,8 +23,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	cover "golang.org/x/tools/cover"
-	"net/url"
-	"regexp"
 )
 
 // Bridge provides a programmatic interface to the MCP server's tools.
@@ -1282,9 +1282,9 @@ func (b *Bridge) GetCampaignPipeline(campaignID uuid.UUID) (models.CampaignPipel
 	}
 
 	order := []string{
-		string(models.CampaignTypeDomainGeneration),
-		string(models.CampaignTypeDNSValidation),
-		string(models.CampaignTypeHTTPKeywordValidation),
+		models.CampaignTypeDomainGeneration,
+		models.CampaignTypeDNSValidation,
+		models.CampaignTypeHTTPKeywordValidation,
 	}
 
 	var steps []models.PipelineStep
@@ -1316,16 +1316,14 @@ func (b *Bridge) GetCampaignPipeline(campaignID uuid.UUID) (models.CampaignPipel
 
 // GetWebSocketLifecycle returns WebSocket connection lifecycle information
 func (b *Bridge) GetWebSocketLifecycle() (models.WebSocketLifecycle, error) {
-	broadcaster := websocket.GetBroadcaster()
-	manager, ok := broadcaster.(*websocket.WebSocketManager)
-	if !ok {
-		return models.WebSocketLifecycle{}, fmt.Errorf("websocket manager not available")
-	}
-	active, total := manager.Stats()
+	// Since the MCP server is independent, provide a default implementation
+	// In a full integration, this would connect to the backend websocket manager
 	return models.WebSocketLifecycle{
-		ConnectionStates:  []models.WSConnectionState{{State: "connected", Count: active, Duration: "N/A"}},
-		ActiveConnections: active,
-		TotalConnections:  total,
+		ConnectionStates:  []models.WSConnectionState{},
+		Events:            []models.WSEvent{},
+		ActiveConnections: 0,
+		TotalConnections:  0,
+		MessageThroughput: "N/A - MCP server standalone",
 	}, nil
 }
 

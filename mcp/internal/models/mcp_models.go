@@ -577,3 +577,10 @@ type CampaignPipeline struct {
 	CampaignID uuid.UUID      `json:"campaignId"`
 	Steps      []PipelineStep `json:"steps"`
 }
+
+// Campaign type constants for pipeline steps
+const (
+	CampaignTypeDomainGeneration        = "domain_generation"
+	CampaignTypeDNSValidation          = "dns_validation"
+	CampaignTypeHTTPKeywordValidation  = "http_keyword_validation"
+)
