@@ -14,6 +14,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -36,7 +37,7 @@ type campaignWorkerServiceImpl struct {
 	appConfig               *config.AppConfig
 	db                      *sqlx.DB
 	workerCoordinationSvc   *WorkerCoordinationService
-	txManager               *TransactionManager
+	txManager               *utils.TransactionManager
 }
 
 // NewCampaignWorkerService creates a new CampaignWorkerService.
@@ -60,11 +61,11 @@ func NewCampaignWorkerService(
 	}
 
 	var workerCoordSvc *WorkerCoordinationService
-	var txManager *TransactionManager
+	var txManager *utils.TransactionManager
 
 	if db != nil {
 		workerCoordSvc = NewWorkerCoordinationService(db, workerID)
-		txManager = NewTransactionManager(db)
+		txManager = utils.NewTransactionManager(db)
 	}
 
 	return &campaignWorkerServiceImpl{
@@ -375,50 +376,6 @@ type CampaignTransactionOptions struct {
 	RetryDelay     time.Duration
 }
 
-// TransactionManager manages database transactions
-type TransactionManager struct {
-	db *sqlx.DB
-}
-
-// NewTransactionManager creates a new TransactionManager
-func NewTransactionManager(db *sqlx.DB) *TransactionManager {
-	return &TransactionManager{db: db}
-}
-
-// BeginWithOptions starts a transaction with specific options
-func (tm *TransactionManager) BeginWithOptions(ctx context.Context, opts CampaignTransactionOptions) (*sqlx.Tx, error) {
-	txOpts := &sql.TxOptions{
-		Isolation: opts.IsolationLevel,
-		ReadOnly:  opts.ReadOnly,
-	}
-	return tm.db.BeginTxx(ctx, txOpts)
-}
-
-// SafeCampaignTransaction executes a function within a transaction with retry logic
-func (tm *TransactionManager) SafeCampaignTransaction(ctx context.Context, opts *CampaignTransactionOptions, fn func(tx *sqlx.Tx) error) error {
-	txOpts := &sql.TxOptions{}
-	if opts != nil {
-		txOpts.Isolation = opts.IsolationLevel
-		txOpts.ReadOnly = opts.ReadOnly
-	}
-
-	tx, err := tm.db.BeginTxx(ctx, txOpts)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err := tx.Rollback(); err != nil {
-			log.Printf("Error rolling back transaction in withTransaction: %v", err)
-		}
-	}()
-
-	if err := fn(tx); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
 // ConcurrentWorkerOperation executes operations with worker coordination (BF-002)
 func (s *campaignWorkerServiceImpl) ConcurrentWorkerOperation(
 	ctx context.Context,
@@ -472,16 +429,8 @@ func (s *campaignWorkerServiceImpl) ConcurrentWorkerOperation(
 
 	log.Printf("ConcurrentWorkerOperation: Acquired resource lock %s for operation '%s'", lockID, operation)
 
-	// Execute the operation with coordination
-	opts := &CampaignTransactionOptions{
-		Operation:  fmt.Sprintf("coordinated_worker_%s", operation),
-		CampaignID: campaignID.String(),
-		Timeout:    5 * time.Minute, // Extended timeout for worker operations
-		MaxRetries: 3,
-		RetryDelay: 500 * time.Millisecond,
-	}
-
-	err = s.txManager.SafeCampaignTransaction(ctx, opts, func(tx *sqlx.Tx) error {
+	// Execute the operation with coordination within a transaction
+	err = s.txManager.WithTransaction(ctx, fmt.Sprintf("coordinated_worker_%s", operation), func(exec store.Querier) error {
 		// Update worker coordination metadata
 		metadata := map[string]interface{}{
 			"operation":   operation,
@@ -492,11 +441,11 @@ func (s *campaignWorkerServiceImpl) ConcurrentWorkerOperation(
 
 		metadataJSON, _ := json.Marshal(metadata)
 		updateWorkerQuery := `
-			UPDATE worker_coordination
-			SET metadata = $1, last_heartbeat = NOW(), updated_at = NOW()
-			WHERE worker_id = $2`
+                        UPDATE worker_coordination
+                        SET metadata = $1, last_heartbeat = NOW(), updated_at = NOW()
+                        WHERE worker_id = $2`
 
-		_, err := tx.ExecContext(ctx, updateWorkerQuery, metadataJSON, s.workerID)
+		_, err := exec.ExecContext(ctx, updateWorkerQuery, metadataJSON, s.workerID)
 		if err != nil {
 			log.Printf("WARNING: Failed to update worker metadata for operation '%s': %v", operation, err)
 		}
