@@ -21,7 +21,8 @@
     "api:generate-spec": "scripts/generate-openapi.sh",
     "api:generate-client": "npx @openapitools/openapi-generator-cli generate --generator-key typescript-api",
     "api:generate": "npm run api:generate-spec && npm run api:generate-client",
-    "api:validate": "scripts/validate-contracts.sh"
+    "api:validate": "scripts/validate-contracts.sh",
+    "api:validate-spec": "scripts/validate-openapi-spec.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

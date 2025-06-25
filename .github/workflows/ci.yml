@@ -33,6 +33,9 @@ jobs:
     - name: Run tests
       run: npm test -- --coverage # Runs Jest and generates coverage report
 
+    - name: Validate OpenAPI specification
+      run: npm run api:validate-spec
+
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       # env:
