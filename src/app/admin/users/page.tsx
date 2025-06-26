@@ -21,7 +21,9 @@ import {
   UserCheck,
   UserX,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -34,6 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { lockUser, unlockUser } from '@/lib/services/adminService';
 
 export default function UserManagementPage() {
   const { 
@@ -141,6 +144,42 @@ export default function UserManagementPage() {
       setIsLoading(false);
     }
   }, [canManageUsers, deleteUser, loadUsers, currentPage, currentUser?.id]);
+
+  const handleLockUser = useCallback(async (user: User) => {
+    if (!canManageUsers) return;
+    if (!confirm(`Lock user "${user.firstName} ${user.lastName}"?`)) {
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await lockUser(user.id);
+      setSuccessMessage('User locked successfully');
+      await loadUsers(currentPage);
+    } catch (error) {
+      console.error('Lock user error:', error);
+      setErrorMessage('An unexpected error occurred while locking user');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [canManageUsers, currentPage, loadUsers]);
+
+  const handleUnlockUser = useCallback(async (user: User) => {
+    if (!canManageUsers) return;
+    if (!confirm(`Unlock user "${user.firstName} ${user.lastName}"?`)) {
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await unlockUser(user.id);
+      setSuccessMessage('User unlocked successfully');
+      await loadUsers(currentPage);
+    } catch (error) {
+      console.error('Unlock user error:', error);
+      setErrorMessage('An unexpected error occurred while unlocking user');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [canManageUsers, currentPage, loadUsers]);
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => 
@@ -370,6 +409,27 @@ export default function UserManagementPage() {
                                   <>
                                     <UserCheck className="mr-2 h-4 w-4" />
                                     Activate
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  user.isLocked
+                                    ? handleUnlockUser(user)
+                                    : handleLockUser(user)
+                                }
+                                disabled={user.id === currentUser?.id}
+                              >
+                                {user.isLocked ? (
+                                  <>
+                                    <Unlock className="mr-2 h-4 w-4" />
+                                    Unlock
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock className="mr-2 h-4 w-4" />
+                                    Lock
                                   </>
                                 )}
                               </DropdownMenuItem>
