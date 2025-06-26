@@ -307,6 +307,13 @@ type CommandResult struct {
 	Duration string `json:"duration"`
 }
 
+// PlaywrightResult represents the output of a Playwright browser run
+type PlaywrightResult struct {
+	URL        string `json:"url"`
+	HTML       string `json:"html"`
+	Screenshot string `json:"screenshot"`
+}
+
 // MCP Protocol Types
 
 // MCPRequest represents a generic MCP request
