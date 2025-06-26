@@ -26,10 +26,12 @@ export async function deleteKeywordSet(setId: string): Promise<KeywordSetDeleteR
   return apiClient.delete<null>(`/api/v2/keywords/sets/${setId}`);
 }
 
-export default {
+const keywordSetService = {
   listKeywordSets,
   getKeywordSetById,
   createKeywordSet,
   updateKeywordSet,
   deleteKeywordSet,
 };
+
+export default keywordSetService;

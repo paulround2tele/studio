@@ -6,7 +6,7 @@
  * safe integer limit (2^53).
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { createSafeBigInt, MAX_SAFE_INTEGER, toString } from '../../types/branded';
 import { transformToCampaignAPIAligned } from '../models/models-campaign-api-aligned';
 

@@ -10,16 +10,10 @@
 
 import {
   SafeBigInt,
-  UUID,
-  ISODateString,
-  Email,
-  createSafeBigInt,
   createUUID,
   createISODateString,
   createEmail,
-  tryCreateSafeBigInt,
-  transformInt64Fields,
-  prepareForSerialization
+  transformInt64Fields
 } from '../branded';
 
 import {
@@ -38,9 +32,9 @@ import {
   DNSValidationParams,
   HTTPKeywordParams,
   GeneratedDomain,
-  IPAddress,
   createIPAddress
 } from './aligned-models';
+import { CampaignProgressData } from './aligned-api-types';
 
 import {
   normalizeHTTPSourceType,
@@ -272,8 +266,8 @@ export function transformUser(raw: Record<string, unknown>): User {
     name: `${raw.firstName} ${raw.lastName}`,
     
     // Relations (if included)
-    roles: raw.roles ? (raw.roles as any[]).map(transformRole) : undefined,
-    permissions: raw.permissions ? (raw.permissions as any[]).map(transformPermission) : undefined
+    roles: raw.roles ? (raw.roles as unknown[]).map(item => transformRole(item as Record<string, unknown>)) : undefined,
+    permissions: raw.permissions ? (raw.permissions as unknown[]).map(item => transformPermission(item as Record<string, unknown>)) : undefined
   };
 }
 
@@ -289,12 +283,12 @@ export function transformPublicUser(raw: Record<string, unknown>): PublicUser {
     name: raw.name as string || `${raw.firstName} ${raw.lastName}`,
     avatarUrl: raw.avatarUrl as string | undefined,
     isActive: raw.isActive as boolean,
-    roles: raw.roles ? (raw.roles as any[]).map(transformRole) : undefined,
-    permissions: raw.permissions ? (raw.permissions as any[]).map(transformPermission) : undefined
+    roles: raw.roles ? (raw.roles as unknown[]).map(item => transformRole(item as Record<string, unknown>)) : undefined,
+    permissions: raw.permissions ? (raw.permissions as unknown[]).map(item => transformPermission(item as Record<string, unknown>)) : undefined
   };
 }
 
-function transformRole(raw: any): any {
+function transformRole(raw: Record<string, unknown>): Role {
   return {
     id: createUUID(raw.id),
     name: raw.name,
@@ -305,7 +299,7 @@ function transformRole(raw: any): any {
   };
 }
 
-function transformPermission(raw: any): any {
+function transformPermission(raw: Record<string, unknown>): Permission {
   return {
     id: createUUID(raw.id),
     resource: raw.resource,
@@ -404,7 +398,7 @@ export function transformGeneratedDomain(raw: Record<string, unknown>): Generate
 /**
  * Transform WebSocket campaign progress message
  */
-export function transformCampaignProgress(raw: Record<string, unknown>): any {
+export function transformCampaignProgress(raw: Record<string, unknown>): CampaignProgressData {
   const int64Fields = [
     'totalItems',
     'processedItems',

@@ -371,10 +371,10 @@ export class WebSocketService {
     
     // Convert SafeBigInt fields to strings for transmission
     if (serializable.validationsProcessed !== undefined && isSafeBigInt(serializable.validationsProcessed)) {
-      (serializable as any).validationsProcessed = serializable.validationsProcessed.toString();
+      (serializable as Record<string, unknown>).validationsProcessed = serializable.validationsProcessed.toString();
     }
     if (serializable.domainsGenerated !== undefined && isSafeBigInt(serializable.domainsGenerated)) {
-      (serializable as any).domainsGenerated = serializable.domainsGenerated.toString();
+      (serializable as Record<string, unknown>).domainsGenerated = serializable.domainsGenerated.toString();
     }
     
     // Handle data object

@@ -504,7 +504,7 @@ class AdminService {
 
   async listRoles(params?: { page?: number; limit?: number }): Promise<RoleListResponse> {
     try {
-      const response = await apiClient.get<{ roles: any[]; pagination: { page: number; limit: number; total: SafeBigInt; totalPages: number } }>(
+      const response = await apiClient.get<{ roles: unknown[]; pagination: { page: number; limit: number; total: SafeBigInt; totalPages: number } }>(
         `${this.basePath}/roles`,
         { params: params || { page: 1, limit: 10 } }
       );
@@ -533,7 +533,7 @@ class AdminService {
 
   async createRole(request: CreateRoleRequest): Promise<ModelsRoleAPI> {
     try {
-      const response = await apiClient.post<unknown>(`${this.basePath}/roles`, request as any);
+      const response = await apiClient.post<unknown>(`${this.basePath}/roles`, request as Record<string, unknown>);
       return this.transformRole(response.data);
     } catch (error) {
       console.error('[AdminService] Failed to create role:', error);
@@ -543,7 +543,7 @@ class AdminService {
 
   async updateRole(roleId: UUID, request: UpdateRoleRequest): Promise<ModelsRoleAPI> {
     try {
-      const response = await apiClient.put<unknown>(`${this.basePath}/roles/${roleId}`, request as any);
+      const response = await apiClient.put<unknown>(`${this.basePath}/roles/${roleId}`, request as Record<string, unknown>);
       return this.transformRole(response.data);
     } catch (error) {
       console.error('[AdminService] Failed to update role:', error);
@@ -562,7 +562,7 @@ class AdminService {
 
   async listPermissions(params?: { page?: number; limit?: number }): Promise<PermissionListResponse> {
     try {
-      const response = await apiClient.get<{ permissions: any[]; pagination: { page: number; limit: number; total: SafeBigInt; totalPages: number } }>(
+      const response = await apiClient.get<{ permissions: unknown[]; pagination: { page: number; limit: number; total: SafeBigInt; totalPages: number } }>(
         `${this.basePath}/permissions`,
         { params: params || { page: 1, limit: 10 } }
       );
@@ -591,7 +591,7 @@ class AdminService {
 
   async createPermission(request: CreatePermissionRequest): Promise<ModelsPermissionAPI> {
     try {
-      const response = await apiClient.post<unknown>(`${this.basePath}/permissions`, request as any);
+      const response = await apiClient.post<unknown>(`${this.basePath}/permissions`, request as Record<string, unknown>);
       return this.transformPermission(response.data);
     } catch (error) {
       console.error('[AdminService] Failed to create permission:', error);
@@ -601,7 +601,7 @@ class AdminService {
 
   async updatePermission(permissionId: UUID, request: UpdatePermissionRequest): Promise<ModelsPermissionAPI> {
     try {
-      const response = await apiClient.put<unknown>(`${this.basePath}/permissions/${permissionId}`, request as any);
+      const response = await apiClient.put<unknown>(`${this.basePath}/permissions/${permissionId}`, request as Record<string, unknown>);
       return this.transformPermission(response.data);
     } catch (error) {
       console.error('[AdminService] Failed to update permission:', error);
@@ -637,7 +637,7 @@ class AdminService {
     }
   }
 
-  private transformRole(raw: any): ModelsRoleAPI {
+  private transformRole(raw: Record<string, unknown>): ModelsRoleAPI {
     return {
       id: createUUID(raw.id),
       name: raw.name,
@@ -646,11 +646,11 @@ class AdminService {
       isSystemRole: raw.isSystemRole,
       createdAt: createISODateString(raw.createdAt),
       updatedAt: createISODateString(raw.updatedAt),
-      permissions: raw.permissions?.map((p: any) => this.transformPermission(p))
+      permissions: (raw.permissions as unknown[] | undefined)?.map(p => this.transformPermission(p))
     } as ModelsRoleAPI;
   }
 
-  private transformPermission(raw: any): ModelsPermissionAPI {
+  private transformPermission(raw: Record<string, unknown>): ModelsPermissionAPI {
     return {
       id: createUUID(raw.id),
       name: raw.name,
