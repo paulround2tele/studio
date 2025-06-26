@@ -49,10 +49,16 @@ export default function ProxyListItem({ proxy, onEdit, onDelete, onTest, onToggl
   return (
     <TableRow className={cn(isLoading && "opacity-50 pointer-events-none")}>
       <TableCell>
+        <div className="font-medium truncate max-w-xs" title={proxy.name}>{proxy.name}</div>
+        {proxy.description && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.description}>{proxy.description}</div>}
+      </TableCell>
+      <TableCell>
         <div className="font-medium truncate max-w-xs" title={proxy.address}>{proxy.address}</div>
+        {proxy.username && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.username}>User: {proxy.username}</div>}
         {proxy.notes && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.notes}>{proxy.notes}</div>}
       </TableCell>
       <TableCell><Badge variant="outline">{proxy.protocol}</Badge></TableCell>
+      <TableCell className="text-xs">{proxy.countryCode || '-'}</TableCell>
       <TableCell>
         <Badge variant={statusInfo.variant} className="text-xs">
           {statusInfo.icon}
