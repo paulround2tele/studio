@@ -208,7 +208,13 @@
             "notes": "Enhanced with cva-based variants (default, line, pills, ghost) and sizes (sm, default, lg) for TabsList, TabsTrigger, and TabsContent components. Added comprehensive test suite covering all variants, sizes, interactions, accessibility, controlled state, performance, and edge cases. All 27 tests pass with 100% coverage.",
             "completedDate": "2025-06-26"
           },
-          "dialog": { "status": "planned", "risk": "medium", "priority": 3 },
+          "dialog": { 
+            "status": "completed", 
+            "risk": "medium",
+            "testFile": "src/components/ui/__tests__/dialog.test.tsx",
+            "notes": "Enhanced with cva-based variants/sizes for content (sm, default, lg, xl, full), content variants (default, destructive, success, warning), overlay variants (default, light, dark, blur), footer alignment (left, center, right, between), and comprehensive accessibility features. Added comprehensive test suite with 39 tests covering all variants, interactions, accessibility, performance, and edge cases. Fixed aria-modal attribute and overlay selector issues. All tests pass with 100% coverage.",
+            "completedDate": "2025-06-26"
+          },
           "sheet": { "status": "planned", "risk": "medium", "priority": 3 },
           "tooltip": { "status": "planned", "risk": "low", "priority": 4 },
           "popover": { "status": "planned", "risk": "medium", "priority": 4 },
