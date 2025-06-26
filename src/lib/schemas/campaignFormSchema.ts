@@ -75,11 +75,21 @@ const leadGenerationSchema = z.object({
   requiresJavaScriptRendering: z.boolean().optional().default(false),
 });
 
+// Campaign tuning / worker settings schema
+const tuningSchema = z.object({
+  rotationIntervalSeconds: z.coerce.number().int().gte(0).optional(),
+  processingSpeedPerMinute: z.coerce.number().int().gte(0).optional(),
+  batchSize: z.coerce.number().int().min(1).max(10000).optional(),
+  retryAttempts: z.coerce.number().int().min(0).max(10).optional(),
+  targetHttpPorts: z.array(z.coerce.number().int().min(1).max(65535)).optional(),
+});
+
 // Combined form schema
 export const campaignFormSchema = baseCampaignSchema
   .merge(domainSourceSchema)
   .merge(domainGenerationSchema)
   .merge(leadGenerationSchema)
+  .merge(tuningSchema)
   .transform(data => {
     // Transform TLDs input to array
     if (data.tldsInput) {
