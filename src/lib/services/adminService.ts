@@ -394,6 +394,20 @@ class AdminService {
   }
 
   /**
+   * Lock user account
+   */
+  async lockUser(userId: UUID): Promise<ModelsUserAPI> {
+    return this.updateUser(userId, { isLocked: true });
+  }
+
+  /**
+   * Unlock user account (convenience)
+   */
+  async unlockUser(userId: UUID): Promise<ModelsUserAPI> {
+    return this.updateUser(userId, { isLocked: false });
+  }
+
+  /**
    * Export users to CSV
    */
   async exportUsers(filters?: {
@@ -471,6 +485,12 @@ export const resetUserPassword = (userId: UUID, temporaryPassword: string) =>
 
 export const unlockUserAccount = (userId: UUID) =>
   adminService.unlockUserAccount(userId);
+
+export const lockUser = (userId: UUID) =>
+  adminService.lockUser(userId);
+
+export const unlockUser = (userId: UUID) =>
+  adminService.unlockUser(userId);
 
 export const exportUsers = (filters?: Parameters<typeof adminService.exportUsers>[0]) =>
   adminService.exportUsers(filters);
