@@ -11,7 +11,9 @@ const tableVariants = cva(
         default: "border-collapse",
         striped: "border-collapse [&_tbody_tr:nth-child(even)]:bg-muted/30",
         bordered: "border-collapse border border-border",
-        minimal: "border-collapse"
+        minimal: "border-collapse",
+        card: "border-collapse border border-border rounded-lg overflow-hidden",
+        compact: "border-collapse text-xs"
       },
       size: {
         sm: "text-xs",
@@ -34,7 +36,9 @@ const tableHeaderVariants = cva(
         default: "",
         elevated: "bg-muted/50",
         accent: "bg-accent",
-        minimal: "border-none"
+        minimal: "border-none",
+        dark: "bg-slate-900 text-slate-50",
+        gradient: "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
       }
     },
     defaultVariants: {
@@ -51,7 +55,8 @@ const tableRowVariants = cva(
         default: "hover:bg-muted/50 data-[state=selected]:bg-muted",
         interactive: "hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer",
         static: "",
-        accent: "hover:bg-accent/50 data-[state=selected]:bg-accent"
+        accent: "hover:bg-accent/50 data-[state=selected]:bg-accent",
+        subtle: "hover:bg-muted/30 data-[state=selected]:bg-muted/60"
       },
       size: {
         sm: "h-8",
@@ -74,10 +79,16 @@ const tableCellVariants = cva(
         sm: "p-2",
         default: "p-4",
         lg: "p-6"
+      },
+      textAlign: {
+        left: "text-left",
+        center: "text-center",
+        right: "text-right"
       }
     },
     defaultVariants: {
-      size: "default"
+      size: "default",
+      textAlign: "left"
     }
   }
 )
@@ -90,13 +101,160 @@ const tableHeadVariants = cva(
         sm: "h-8 px-2 py-1",
         default: "h-12 px-4",
         lg: "h-16 px-6"
+      },
+      sortable: {
+        true: "cursor-pointer hover:text-foreground transition-colors select-none",
+        false: ""
       }
     },
     defaultVariants: {
-      size: "default"
+      size: "default",
+      sortable: false
     }
   }
 )
+
+// Simple Table Wrapper for common use cases
+interface SimpleTableProps extends TableProps {
+  headers: string[]
+  data: Record<string, any>[]
+  caption?: string
+  onRowClick?: (row: Record<string, any>, index: number) => void
+  sortable?: boolean
+  loading?: boolean
+  emptyMessage?: string
+}
+
+const SimpleTable = React.forwardRef<HTMLTableElement, SimpleTableProps>(
+  ({ 
+    headers, 
+    data, 
+    caption, 
+    onRowClick, 
+    sortable = false,
+    loading = false,
+    emptyMessage = "No data available",
+    variant = "default",
+    size = "default",
+    ...props 
+  }, ref) => {
+    const [sortColumn, setSortColumn] = React.useState<string | null>(null)
+    const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc')
+
+    const handleSort = React.useCallback((column: string) => {
+      if (!sortable) return
+      
+      if (sortColumn === column) {
+        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+      } else {
+        setSortColumn(column)
+        setSortDirection('asc')
+      }
+    }, [sortColumn, sortDirection, sortable])
+
+    const sortedData = React.useMemo(() => {
+      if (!sortColumn || !sortable) return data
+      
+      return [...data].sort((a, b) => {
+        const aValue = a[sortColumn]
+        const bValue = b[sortColumn]
+        
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+        return 0
+      })
+    }, [data, sortColumn, sortDirection, sortable])
+
+    return (
+      <Table ref={ref} variant={variant} size={size} {...props}>
+        {caption && <TableCaption>{caption}</TableCaption>}
+        <TableHeader>
+          <TableRow>
+            {headers.map((header, index) => (
+              <TableHead 
+                key={index}
+                sortable={sortable}
+                onClick={() => handleSort(header)}
+                className={sortable ? "cursor-pointer" : ""}
+                size={size}
+              >
+                <div className="flex items-center gap-2">
+                  {header}
+                  {sortable && sortColumn === header && (
+                    <span className="text-xs">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={headers.length} className="text-center p-8">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-border border-t-foreground rounded-full" />
+                  Loading...
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : sortedData.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={headers.length} className="text-center p-8 text-muted-foreground">
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            sortedData.map((row, index) => (
+              <TableRow 
+                key={index}
+                variant={onRowClick ? "interactive" : "default"}
+                onClick={() => onRowClick?.(row, index)}
+                size={size}
+              >
+                {headers.map((header, cellIndex) => (
+                  <TableCell key={cellIndex} size={size}>
+                    {row[header] ?? '-'}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    )
+  }
+)
+SimpleTable.displayName = "SimpleTable"
+
+// Table Loading Component
+const TableLoading = React.forwardRef<HTMLTableElement, { headers: string[]; rows?: number } & TableProps>(
+  ({ headers, rows = 5, ...props }, ref) => (
+    <Table ref={ref} {...props}>
+      <TableHeader>
+        <TableRow>
+          {headers.map((header, index) => (
+            <TableHead key={index}>{header}</TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: rows }, (_, rowIndex) => (
+          <TableRow key={rowIndex}>
+            {headers.map((_, cellIndex) => (
+              <TableCell key={cellIndex}>
+                <div className="h-4 bg-muted animate-pulse rounded" />
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+)
+TableLoading.displayName = "TableLoading"
 
 export interface TableProps
   extends React.HTMLAttributes<HTMLTableElement>,
@@ -175,10 +333,10 @@ export interface TableHeadProps
     VariantProps<typeof tableHeadVariants> {}
 
 const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
-  ({ className, size, ...props }, ref) => (
+  ({ className, size, sortable, ...props }, ref) => (
     <th
       ref={ref}
-      className={cn(tableHeadVariants({ size }), className)}
+      className={cn(tableHeadVariants({ size, sortable }), className)}
       {...props}
     />
   )
@@ -190,10 +348,10 @@ export interface TableCellProps
     VariantProps<typeof tableCellVariants> {}
 
 const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ className, size, ...props }, ref) => (
+  ({ className, size, textAlign, ...props }, ref) => (
     <td
       ref={ref}
-      className={cn(tableCellVariants({ size }), className)}
+      className={cn(tableCellVariants({ size, textAlign }), className)}
       {...props}
     />
   )
@@ -221,4 +379,6 @@ export {
   TableRow,
   TableCell,
   TableCaption,
+  SimpleTable,
+  TableLoading,
 }
