@@ -61,6 +61,9 @@ export interface CampaignValidationItem {
 // Proxy Protocol Enum - matches backend ProxyProtocolEnum exactly
 export type ProxyProtocol = "http" | "https" | "socks5" | "socks4";
 
+// Headless fallback policy enum - matches backend FallbackPolicy
+export type FallbackPolicy = "never" | "on_fetch_error" | "always";
+
 // Proxy Status Enum - frontend compatibility
 export type ProxyStatus = 
   | "enabled" 
@@ -195,6 +198,19 @@ export interface HTTPConfigDetails {
   maxRedirects?: number;
   rateLimitDps?: number;
   rateLimitBurst?: number;
+  // Headless browser options
+  useHeadless?: boolean;
+  fallbackPolicy?: FallbackPolicy;
+  viewportWidth?: number;
+  viewportHeight?: number;
+  headlessUserAgent?: string;
+  scriptExecution?: boolean;
+  loadImages?: boolean;
+  screenshot?: boolean;
+  domSnapshot?: boolean;
+  headlessTimeoutSeconds?: number;
+  waitDelaySeconds?: number;
+  fetchBodyForKeywords?: boolean;
   notes?: string;
 }
 
