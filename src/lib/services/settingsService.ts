@@ -17,9 +17,17 @@ export interface DNSConfig {
 
 export interface HTTPConfig {
   defaultUserAgent: string;
+  userAgents?: string[];
+  defaultHeaders?: Record<string, string>;
   requestTimeoutSeconds: number;
   maxRedirects: number;
+  followRedirects?: boolean;
+  maxDomainsPerRequest?: number;
   allowInsecureTLS: boolean;
+  maxConcurrentGoroutines?: number;
+  rateLimitDps?: number;
+  rateLimitBurst?: number;
+  maxBodyReadBytes?: number;
 }
 
 export interface LoggingConfig {

@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -16,12 +17,35 @@ import { getHTTPConfig, updateHTTPConfig } from '@/lib/services/settingsService'
 
 const schema = z.object({
   defaultUserAgent: z.string().min(1, 'User agent required'),
+  userAgents: z.string().optional(),
+  defaultHeaders: z.string().optional(),
   requestTimeoutSeconds: z.coerce.number().int().positive(),
   maxRedirects: z.coerce.number().int().positive(),
+  followRedirects: z.boolean().optional(),
+  maxDomainsPerRequest: z.coerce.number().int().positive().optional(),
   allowInsecureTLS: z.boolean().optional().default(false),
+  maxConcurrentGoroutines: z.coerce.number().int().positive().optional(),
+  rateLimitDps: z.coerce.number().optional(),
+  rateLimitBurst: z.coerce.number().optional(),
+  maxBodyReadBytes: z.coerce.number().int().positive().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
+
+function parseStringToArray(input: string | undefined): string[] {
+  if (!input) return [];
+  return input.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function parseJsonOrUndefined<T>(jsonString: string | undefined): T | undefined {
+  if (!jsonString) return undefined;
+  try {
+    const parsed = JSON.parse(jsonString);
+    return parsed as T;
+  } catch {
+    return undefined;
+  }
+}
 
 export default function HTTPSettingsPage() {
   const form = useForm<FormValues>({ resolver: zodResolver(schema) });
@@ -36,9 +60,17 @@ export default function HTTPSettingsPage() {
         const cfg = await getHTTPConfig();
         form.reset({
           defaultUserAgent: cfg.defaultUserAgent,
+          userAgents: cfg.userAgents?.join(', ') || '',
+          defaultHeaders: cfg.defaultHeaders ? JSON.stringify(cfg.defaultHeaders, null, 2) : '',
           requestTimeoutSeconds: cfg.requestTimeoutSeconds,
           maxRedirects: cfg.maxRedirects,
+          followRedirects: cfg.followRedirects,
+          maxDomainsPerRequest: cfg.maxDomainsPerRequest,
           allowInsecureTLS: cfg.allowInsecureTLS,
+          maxConcurrentGoroutines: cfg.maxConcurrentGoroutines,
+          rateLimitDps: cfg.rateLimitDps,
+          rateLimitBurst: cfg.rateLimitBurst,
+          maxBodyReadBytes: cfg.maxBodyReadBytes,
         });
       } catch (e) {
         console.error(e);
@@ -57,9 +89,17 @@ export default function HTTPSettingsPage() {
     try {
       await updateHTTPConfig({
         defaultUserAgent: data.defaultUserAgent,
+        userAgents: parseStringToArray(data.userAgents),
+        defaultHeaders: parseJsonOrUndefined<Record<string, string>>(data.defaultHeaders),
         requestTimeoutSeconds: data.requestTimeoutSeconds,
         maxRedirects: data.maxRedirects,
+        followRedirects: data.followRedirects,
+        maxDomainsPerRequest: data.maxDomainsPerRequest,
         allowInsecureTLS: data.allowInsecureTLS || false,
+        maxConcurrentGoroutines: data.maxConcurrentGoroutines,
+        rateLimitDps: data.rateLimitDps,
+        rateLimitBurst: data.rateLimitBurst,
+        maxBodyReadBytes: data.maxBodyReadBytes,
       });
       setSuccess('Configuration saved');
     } catch (e) {
@@ -98,6 +138,24 @@ export default function HTTPSettingsPage() {
                     <FormMessage />
                   </FormItem>
                 )}/>
+                <FormField name="userAgents" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>User Agents (comma separated)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="defaultHeaders" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Default Headers (JSON)</FormLabel>
+                    <FormControl>
+                      <Textarea className="font-mono" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
                 <FormField name="requestTimeoutSeconds" control={form.control} render={({ field }) => (
                   <FormItem>
                     <FormLabel>Request Timeout (s)</FormLabel>
@@ -116,12 +174,65 @@ export default function HTTPSettingsPage() {
                     <FormMessage />
                   </FormItem>
                 )}/>
+                <FormField name="followRedirects" control={form.control} render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel>Follow Redirects</FormLabel>
+                  </FormItem>
+                )}/>
+                <FormField name="maxDomainsPerRequest" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Domains Per Request</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
                 <FormField name="allowInsecureTLS" control={form.control} render={({ field }) => (
                   <FormItem className="flex items-center space-x-2">
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <FormLabel>Allow Insecure TLS</FormLabel>
+                  </FormItem>
+                )}/>
+                <FormField name="maxConcurrentGoroutines" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Concurrent Goroutines</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="rateLimitDps" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rate Limit DPS</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="rateLimitBurst" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rate Limit Burst</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="maxBodyReadBytes" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Body Read Bytes</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}/>
                 <div className="flex gap-2">
