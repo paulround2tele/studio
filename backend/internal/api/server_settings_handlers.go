@@ -293,5 +293,36 @@ func (h *APIHandler) UpdateAuthConfigGin(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to save auth configuration")
 		return
 	}
-	respondWithJSONGin(c, http.StatusOK, req)
+       respondWithJSONGin(c, http.StatusOK, req)
+}
+
+// GetProxyManagerConfigGin retrieves proxy manager settings.
+// GET /api/v2/config/proxy-manager
+func (h *APIHandler) GetProxyManagerConfigGin(c *gin.Context) {
+       h.configMutex.RLock()
+       cfgJSON := config.ConvertProxyManagerConfigToJSON(h.Config.ProxyManager)
+       h.configMutex.RUnlock()
+       respondWithJSONGin(c, http.StatusOK, cfgJSON)
+}
+
+// UpdateProxyManagerConfigGin updates proxy manager settings.
+// POST /api/v2/config/proxy-manager
+func (h *APIHandler) UpdateProxyManagerConfigGin(c *gin.Context) {
+       var req config.ProxyManagerConfigJSON
+       if err := c.ShouldBindJSON(&req); err != nil {
+               respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+               return
+       }
+       updated := config.ConvertJSONToProxyManagerConfig(req)
+       h.configMutex.Lock()
+       h.Config.ProxyManager = updated
+       h.configMutex.Unlock()
+       if h.ProxyMgr != nil {
+               h.ProxyMgr.UpdateConfig(updated)
+       }
+       if err := config.SaveAppConfig(h.Config); err != nil {
+               respondWithErrorGin(c, http.StatusInternalServerError, "Failed to save proxy manager configuration")
+               return
+       }
+       respondWithJSONGin(c, http.StatusOK, config.ConvertProxyManagerConfigToJSON(updated))
 }

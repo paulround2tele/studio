@@ -133,12 +133,16 @@ func main() {
 	campaignJobStore = pg_store.NewCampaignJobStorePostgres(db)
 	log.Println("PostgreSQL-backed stores initialized.")
 
-	var defaultProxyTimeout time.Duration = 30 * time.Second
-	if appConfig.HTTPValidator.RequestTimeoutSeconds > 0 {
-		defaultProxyTimeout = time.Duration(appConfig.HTTPValidator.RequestTimeoutSeconds) * time.Second
-	}
-	proxyMgr := proxymanager.NewProxyManager(appConfig.Proxies, defaultProxyTimeout)
-	log.Println("ProxyManager initialized.")
+       pmCfg := appConfig.ProxyManager
+       if pmCfg.TestTimeout == 0 {
+               if appConfig.HTTPValidator.RequestTimeoutSeconds > 0 {
+                       pmCfg.TestTimeout = time.Duration(appConfig.HTTPValidator.RequestTimeoutSeconds) * time.Second
+               } else {
+                       pmCfg.TestTimeout = 30 * time.Second
+               }
+       }
+       proxyMgr := proxymanager.NewProxyManager(appConfig.Proxies, pmCfg)
+       log.Println("ProxyManager initialized.")
 
 	httpValSvc := httpvalidator.NewHTTPValidator(appConfig)
 	log.Println("HTTPValidator service initialized.")
@@ -380,11 +384,13 @@ func main() {
 			configGroup.POST("/rate-limit", apiHandler.UpdateRateLimiterConfigGin)
 			configGroup.GET("/auth", apiHandler.GetAuthConfigGin)
 			configGroup.POST("/auth", apiHandler.UpdateAuthConfigGin)
-			configGroup.GET("/logging", apiHandler.GetLoggingConfigGin)
-			configGroup.POST("/logging", apiHandler.UpdateLoggingConfigGin)
-			configGroup.GET("/server", apiHandler.GetServerConfigGin)
-			configGroup.PUT("/server", apiHandler.UpdateServerConfigGin)
-		}
+                       configGroup.GET("/logging", apiHandler.GetLoggingConfigGin)
+                       configGroup.POST("/logging", apiHandler.UpdateLoggingConfigGin)
+                       configGroup.GET("/proxy-manager", apiHandler.GetProxyManagerConfigGin)
+                       configGroup.POST("/proxy-manager", apiHandler.UpdateProxyManagerConfigGin)
+                       configGroup.GET("/server", apiHandler.GetServerConfigGin)
+                       configGroup.PUT("/server", apiHandler.UpdateServerConfigGin)
+               }
 
 		// Keyword set routes with permission-based access control
 		keywordSetGroup := apiV2.Group("/keywords/sets")
