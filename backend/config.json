@@ -88,5 +88,11 @@
   "rateLimiter": {
     "maxRequests": 1000,
     "windowSeconds": 900
+  },
+  "features": {
+    "enableRealTimeUpdates": true,
+    "enableOfflineMode": false,
+    "enableAnalytics": false,
+    "enableDebugMode": false
   }
 }

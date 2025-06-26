@@ -1042,6 +1042,28 @@ paths:
         '200':
           description: Updated
 
+  /api/v2/config/features:
+    get:
+      tags:
+        - Config
+      summary: Get feature flags
+      responses:
+        '200':
+          description: Config
+    post:
+      tags:
+        - Config
+      summary: Update feature flags
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated
+
   /api/v2/keywords/sets:
     get:
       tags:

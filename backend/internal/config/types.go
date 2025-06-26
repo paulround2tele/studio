@@ -23,7 +23,15 @@ type CookieHandlingConfig struct {
 
 // LoggingConfig defines logging parameters.
 type LoggingConfig struct {
-	Level string `json:"level"`
+	Level                    string `json:"level"`
+	EnableFileLogging        bool   `json:"enableFileLogging,omitempty"`
+	LogDirectory             string `json:"logDirectory,omitempty"`
+	MaxFileSize              int    `json:"maxFileSize,omitempty"`
+	MaxBackups               int    `json:"maxBackups,omitempty"`
+	MaxAge                   int    `json:"maxAge,omitempty"`
+	EnableJSONFormat         bool   `json:"enableJSONFormat,omitempty"`
+	EnableRequestLogging     bool   `json:"enableRequestLogging,omitempty"`
+	EnablePerformanceLogging bool   `json:"enablePerformanceLogging,omitempty"`
 }
 
 // WorkerConfig defines settings for the background campaign workers.
@@ -33,6 +41,9 @@ type WorkerConfig struct {
 	ErrorRetryDelaySeconds        int `json:"errorRetryDelaySeconds,omitempty"`
 	MaxJobRetries                 int `json:"maxJobRetries,omitempty"`
 	JobProcessingTimeoutMinutes   int `json:"jobProcessingTimeoutMinutes,omitempty"`
+	BatchSize                     int `json:"batchSize,omitempty"`
+	MaxRetries                    int `json:"maxRetries,omitempty"`
+	RetryDelaySeconds             int `json:"retryDelaySeconds,omitempty"`
 	DNSSubtaskConcurrency         int `json:"dnsSubtaskConcurrency,omitempty"`         // Added
 	HTTPKeywordSubtaskConcurrency int `json:"httpKeywordSubtaskConcurrency,omitempty"` // Added
 }
@@ -41,6 +52,14 @@ type WorkerConfig struct {
 type RateLimiterConfig struct {
 	MaxRequests   int `json:"maxRequests"`
 	WindowSeconds int `json:"windowSeconds"`
+}
+
+// FeatureFlags holds feature flag settings persisted in config.json.
+type FeatureFlags struct {
+	EnableRealTimeUpdates bool `json:"enableRealTimeUpdates"`
+	EnableOfflineMode     bool `json:"enableOfflineMode"`
+	EnableAnalytics       bool `json:"enableAnalytics"`
+	EnableDebugMode       bool `json:"enableDebugMode"`
 }
 
 // ServerConfig defines server-specific settings.
@@ -126,6 +145,24 @@ type HTTPValidatorConfigJSON struct {
 	MaxBodyReadBytes        int64             `json:"maxBodyReadBytes,omitempty"`
 }
 
+// ProxyManagerConfig holds settings for proxy health checks.
+type ProxyManagerConfig struct {
+	TestTimeout                      time.Duration
+	TestURL                          string
+	InitialHealthCheckTimeout        time.Duration
+	MaxConcurrentInitialChecks       int
+	TestTimeoutSeconds               int `json:"-"`
+	InitialHealthCheckTimeoutSeconds int `json:"-"`
+}
+
+// ProxyManagerConfigJSON is the JSON representation of ProxyManagerConfig.
+type ProxyManagerConfigJSON struct {
+	TestTimeoutSeconds               int    `json:"testTimeoutSeconds"`
+	TestURL                          string `json:"testUrl"`
+	InitialHealthCheckTimeoutSeconds int    `json:"initialHealthCheckTimeoutSeconds"`
+	MaxConcurrentInitialChecks       int    `json:"maxConcurrentInitialChecks"`
+}
+
 // AppConfigJSON defines the structure of the main config.json file.
 // This struct is used to unmarshal the config.json file.
 type AppConfigJSON struct {
@@ -135,4 +172,6 @@ type AppConfigJSON struct {
 	HTTPValidator HTTPValidatorConfigJSON `json:"httpValidator"`
 	Logging       LoggingConfig           `json:"logging"`
 	RateLimiter   RateLimiterConfig       `json:"rateLimiter,omitempty"`
+	ProxyManager  ProxyManagerConfigJSON  `json:"proxyManager"`
+	Features      FeatureFlags            `json:"features"`
 }

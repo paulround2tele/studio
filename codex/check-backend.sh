@@ -43,6 +43,7 @@ echo "Running go vet..."
 go vet ./...
 
 echo "Running go tests..."
+
 set +e
 go test ./...
 TEST_STATUS=$?
@@ -52,5 +53,8 @@ if [ $TEST_STATUS -ne 0 ]; then
 else
   echo "All Go tests passed"
 fi
+
+
+go test ./...
 
 cd ..

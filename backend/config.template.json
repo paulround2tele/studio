@@ -88,5 +88,11 @@
   "rateLimiter": {
     "maxRequests": "${API_RATE_LIMIT_MAX_REQUESTS:-1000}",
     "windowSeconds": "${API_RATE_LIMIT_WINDOW:-900}"
+  },
+  "features": {
+    "enableRealTimeUpdates": true,
+    "enableOfflineMode": false,
+    "enableAnalytics": false,
+    "enableDebugMode": false
   }
 }

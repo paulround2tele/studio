@@ -32,6 +32,12 @@ const (
 	DefaultHTTPRequestTimeoutSeconds       = 15
 	DefaultHTTPMaxRedirects                = 7
 
+	// ProxyManager defaults
+	DefaultProxyTestTimeoutSeconds               = 10
+	DefaultProxyTestURL                          = "https://httpbin.org/ip"
+	DefaultProxyInitialHealthCheckTimeoutSeconds = 7
+	DefaultProxyMaxConcurrentInitialChecks       = 10
+
 	// Global API rate limiter defaults
 	DefaultAPIRateLimitWindowSeconds = 900
 	DefaultAPIRateLimitMaxRequests   = 1000
@@ -99,6 +105,18 @@ func DefaultAppConfigJSON() AppConfigJSON {
 		RateLimiter: RateLimiterConfig{
 			MaxRequests:   DefaultAPIRateLimitMaxRequests,
 			WindowSeconds: DefaultAPIRateLimitWindowSeconds,
+		},
+		ProxyManager: ProxyManagerConfigJSON{
+			TestTimeoutSeconds:               DefaultProxyTestTimeoutSeconds,
+			TestURL:                          DefaultProxyTestURL,
+			InitialHealthCheckTimeoutSeconds: DefaultProxyInitialHealthCheckTimeoutSeconds,
+			MaxConcurrentInitialChecks:       DefaultProxyMaxConcurrentInitialChecks,
+		},
+		Features: FeatureFlags{
+			EnableRealTimeUpdates: true,
+			EnableOfflineMode:     false,
+			EnableAnalytics:       false,
+			EnableDebugMode:       false,
 		},
 	}
 }

@@ -21,8 +21,8 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
-	"github.com/fntelecomllc/studio/backend/pkg/communication"
 	"github.com/fntelecomllc/studio/backend/pkg/architecture"
+	"github.com/fntelecomllc/studio/backend/pkg/communication"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -133,11 +133,15 @@ func main() {
 	campaignJobStore = pg_store.NewCampaignJobStorePostgres(db)
 	log.Println("PostgreSQL-backed stores initialized.")
 
-	var defaultProxyTimeout time.Duration = 30 * time.Second
-	if appConfig.HTTPValidator.RequestTimeoutSeconds > 0 {
-		defaultProxyTimeout = time.Duration(appConfig.HTTPValidator.RequestTimeoutSeconds) * time.Second
+	pmCfg := appConfig.ProxyManager
+	if pmCfg.TestTimeout == 0 {
+		if appConfig.HTTPValidator.RequestTimeoutSeconds > 0 {
+			pmCfg.TestTimeout = time.Duration(appConfig.HTTPValidator.RequestTimeoutSeconds) * time.Second
+		} else {
+			pmCfg.TestTimeout = 30 * time.Second
+		}
 	}
-	proxyMgr := proxymanager.NewProxyManager(appConfig.Proxies, defaultProxyTimeout)
+	proxyMgr := proxymanager.NewProxyManager(appConfig.Proxies, pmCfg)
 	log.Println("ProxyManager initialized.")
 
 	httpValSvc := httpvalidator.NewHTTPValidator(appConfig)
@@ -382,8 +386,12 @@ func main() {
 			configGroup.POST("/auth", apiHandler.UpdateAuthConfigGin)
 			configGroup.GET("/logging", apiHandler.GetLoggingConfigGin)
 			configGroup.POST("/logging", apiHandler.UpdateLoggingConfigGin)
+			configGroup.GET("/proxy-manager", apiHandler.GetProxyManagerConfigGin)
+			configGroup.POST("/proxy-manager", apiHandler.UpdateProxyManagerConfigGin)
 			configGroup.GET("/server", apiHandler.GetServerConfigGin)
 			configGroup.PUT("/server", apiHandler.UpdateServerConfigGin)
+			configGroup.GET("/features", apiHandler.GetFeatureFlagsGin)
+			configGroup.POST("/features", apiHandler.UpdateFeatureFlagsGin)
 		}
 
 		// Keyword set routes with permission-based access control
