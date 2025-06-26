@@ -54,6 +54,14 @@ type RateLimiterConfig struct {
 	WindowSeconds int `json:"windowSeconds"`
 }
 
+// FeatureFlags holds feature flag settings persisted in config.json.
+type FeatureFlags struct {
+	EnableRealTimeUpdates bool `json:"enableRealTimeUpdates"`
+	EnableOfflineMode     bool `json:"enableOfflineMode"`
+	EnableAnalytics       bool `json:"enableAnalytics"`
+	EnableDebugMode       bool `json:"enableDebugMode"`
+}
+
 // ServerConfig defines server-specific settings.
 type ServerConfig struct {
 	Port                     string          `json:"port"`
@@ -165,4 +173,5 @@ type AppConfigJSON struct {
 	Logging       LoggingConfig           `json:"logging"`
 	RateLimiter   RateLimiterConfig       `json:"rateLimiter,omitempty"`
 	ProxyManager  ProxyManagerConfigJSON  `json:"proxyManager"`
+	Features      FeatureFlags            `json:"features"`
 }
