@@ -152,7 +152,11 @@ func (h *APIHandler) UpdateHTTPConfigGin(c *gin.Context) {
 		return
 	}
 	updatedHTTPConfig := config.ConvertJSONToHTTPConfig(reqJSON)
-	// Add any necessary validation for updatedHTTPConfig fields here
+	// Basic validation for new advanced HTTP settings
+	if updatedHTTPConfig.MaxBodyReadBytes <= 0 {
+		respondWithErrorGin(c, http.StatusBadRequest, "maxBodyReadBytes must be positive")
+		return
+	}
 
 	h.configMutex.Lock()
 	h.Config.HTTPValidator = updatedHTTPConfig

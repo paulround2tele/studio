@@ -27,9 +27,29 @@ const schema = z.object({
   maxConcurrentGoroutines: z.coerce.number().int().positive(),
   rateLimitDps: z.coerce.number().nonnegative(),
   rateLimitBurst: z.coerce.number().int().nonnegative(),
+  queryDelayMinMs: z.coerce.number().int().nonnegative().optional(),
+  queryDelayMaxMs: z.coerce.number().int().nonnegative().optional(),
+  maxConcurrentGoroutines: z.coerce.number().int().positive(),
+  rateLimitDps: z.coerce.number().optional(),
+  rateLimitBurst: z.coerce.number().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
+
+function parseStringToArray(input: string | undefined): string[] {
+  if (!input) return [];
+  return input.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function parseJsonOrUndefined<T>(jsonString: string | undefined): T | undefined {
+  if (!jsonString) return undefined;
+  try {
+    const parsed = JSON.parse(jsonString);
+    return parsed as T;
+  } catch {
+    return undefined;
+  }
+}
 
 export default function DNSSettingsPage() {
   const form = useForm<FormValues>({ resolver: zodResolver(schema) });
@@ -72,7 +92,7 @@ export default function DNSSettingsPage() {
     setSuccess(null);
     try {
       await updateDNSConfig({
-        resolvers: data.resolvers.split(',').map(r => r.trim()).filter(Boolean),
+        resolvers: parseStringToArray(data.resolvers),
         queryTimeoutSeconds: data.queryTimeoutSeconds,
         maxDomainsPerRequest: data.maxDomainsPerRequest,
         resolverStrategy: data.resolverStrategy,
@@ -83,6 +103,12 @@ export default function DNSSettingsPage() {
         concurrentQueriesPerDomain: data.concurrentQueriesPerDomain,
         queryDelayMinMs: data.queryDelayMinMs,
         queryDelayMaxMs: data.queryDelayMaxMs,
+
+        resolversWeighted: parseJsonOrUndefined<Record<string, number>>(data.resolversWeighted),
+        resolversPreferredOrder: parseStringToArray(data.resolversPreferredOrder),
+        concurrentQueriesPerDomain: data.concurrentQueriesPerDomain,
+        queryDelayMinMs: data.queryDelayMinMs ?? 0,
+        queryDelayMaxMs: data.queryDelayMaxMs ?? 0,
         maxConcurrentGoroutines: data.maxConcurrentGoroutines,
         rateLimitDps: data.rateLimitDps,
         rateLimitBurst: data.rateLimitBurst,
@@ -156,6 +182,7 @@ export default function DNSSettingsPage() {
                     <FormLabel>Weighted Resolvers (JSON)</FormLabel>
                     <FormControl>
                       <Textarea {...field} className="font-mono" />
+                      <Textarea className="font-mono" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,6 +192,9 @@ export default function DNSSettingsPage() {
                     <FormLabel>Preferred Order (comma separated)</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                    <FormLabel>Preferred Resolver Order</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

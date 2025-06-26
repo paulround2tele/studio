@@ -13,13 +13,23 @@ export interface DNSConfig {
   maxConcurrentGoroutines: number;
   rateLimitDps: number;
   rateLimitBurst: number;
+  rateLimitDps?: number;
+  rateLimitBurst?: number;
 }
 
 export interface HTTPConfig {
   defaultUserAgent: string;
+  userAgents?: string[];
+  defaultHeaders?: Record<string, string>;
   requestTimeoutSeconds: number;
   maxRedirects: number;
+  followRedirects?: boolean;
+  maxDomainsPerRequest?: number;
   allowInsecureTLS: boolean;
+  maxConcurrentGoroutines?: number;
+  rateLimitDps?: number;
+  rateLimitBurst?: number;
+  maxBodyReadBytes?: number;
 }
 
 export interface LoggingConfig {
