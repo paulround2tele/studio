@@ -32,9 +32,22 @@ import {
 const schema = z.object({
   numWorkers: z.coerce.number().int().positive(),
   pollIntervalSeconds: z.coerce.number().int().positive(),
+  errorRetryDelaySeconds: z.coerce.number().int().positive().optional(),
+  maxJobRetries: z.coerce.number().int().positive().optional(),
+  jobProcessingTimeoutMinutes: z.coerce
+    .number()
+    .int()
+    .positive()
+    .optional(),
   batchSize: z.coerce.number().int().positive().optional(),
   maxRetries: z.coerce.number().int().positive().optional(),
   retryDelaySeconds: z.coerce.number().int().positive().optional(),
+  dnsSubtaskConcurrency: z.coerce.number().int().positive().optional(),
+  httpKeywordSubtaskConcurrency: z.coerce
+    .number()
+    .int()
+    .positive()
+    .optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -53,9 +66,15 @@ export default function WorkerSettingsPage() {
         form.reset({
           numWorkers: cfg.numWorkers,
           pollIntervalSeconds: cfg.pollIntervalSeconds,
+          errorRetryDelaySeconds: cfg.errorRetryDelaySeconds ?? 30,
+          maxJobRetries: cfg.maxJobRetries ?? 3,
+          jobProcessingTimeoutMinutes: cfg.jobProcessingTimeoutMinutes ?? 15,
           batchSize: cfg.batchSize,
           maxRetries: cfg.maxRetries,
           retryDelaySeconds: cfg.retryDelaySeconds,
+          dnsSubtaskConcurrency: cfg.dnsSubtaskConcurrency ?? 0,
+          httpKeywordSubtaskConcurrency:
+            cfg.httpKeywordSubtaskConcurrency ?? 0,
         });
       } catch (e) {
         console.error(e);
@@ -75,9 +94,14 @@ export default function WorkerSettingsPage() {
       await updateWorkerConfig({
         numWorkers: data.numWorkers,
         pollIntervalSeconds: data.pollIntervalSeconds,
+        errorRetryDelaySeconds: data.errorRetryDelaySeconds,
+        maxJobRetries: data.maxJobRetries,
+        jobProcessingTimeoutMinutes: data.jobProcessingTimeoutMinutes,
         batchSize: data.batchSize,
         maxRetries: data.maxRetries,
         retryDelaySeconds: data.retryDelaySeconds,
+        dnsSubtaskConcurrency: data.dnsSubtaskConcurrency,
+        httpKeywordSubtaskConcurrency: data.httpKeywordSubtaskConcurrency,
       });
       setSuccess("Configuration saved");
     } catch (e) {
@@ -152,6 +176,45 @@ export default function WorkerSettingsPage() {
                   )}
                 />
                 <FormField
+                  name="errorRetryDelaySeconds"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Error Retry Delay (s)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="maxJobRetries"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Max Job Retries</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="jobProcessingTimeoutMinutes"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Job Timeout (min)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
                   name="batchSize"
                   control={form.control}
                   render={({ field }) => (
@@ -183,6 +246,32 @@ export default function WorkerSettingsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Retry Delay (s)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="dnsSubtaskConcurrency"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>DNS Subtask Concurrency</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="httpKeywordSubtaskConcurrency"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>HTTP Keyword Subtask Concurrency</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
