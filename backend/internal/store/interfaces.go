@@ -216,3 +216,17 @@ type ArchitectureStore interface {
 	CreateCommunicationPattern(ctx context.Context, exec Querier, p *models.CommunicationPattern) error
 	CreateServiceCapacityMetric(ctx context.Context, exec Querier, m *models.ServiceCapacityMetric) error
 }
+
+// ProxyPoolStore defines operations for managing proxy pools and their memberships.
+type ProxyPoolStore interface {
+	Transactor
+	CreateProxyPool(ctx context.Context, exec Querier, pool *models.ProxyPool) error
+	GetProxyPoolByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.ProxyPool, error)
+	UpdateProxyPool(ctx context.Context, exec Querier, pool *models.ProxyPool) error
+	DeleteProxyPool(ctx context.Context, exec Querier, id uuid.UUID) error
+	ListProxyPools(ctx context.Context, exec Querier) ([]*models.ProxyPool, error)
+
+	AddProxyToPool(ctx context.Context, exec Querier, m *models.ProxyPoolMembership) error
+	RemoveProxyFromPool(ctx context.Context, exec Querier, poolID, proxyID uuid.UUID) error
+	ListProxiesForPool(ctx context.Context, exec Querier, poolID uuid.UUID) ([]*models.Proxy, error)
+}
