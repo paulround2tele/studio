@@ -174,8 +174,20 @@
             "completedDate": "2025-06-26"
           },
           "data-table": { "status": "planned", "risk": "high", "priority": 2 },
-          "alert-dialog": { "status": "planned", "risk": "medium", "priority": 2 },
-          "accordion": { "status": "planned", "risk": "medium", "priority": 2 },
+          "alert-dialog": { 
+            "status": "completed", 
+            "risk": "medium",
+            "testFile": "src/components/ui/__tests__/alert-dialog.test.tsx",
+            "notes": "Enhanced with variants, sizes, accessibility features, and comprehensive test suite with state management and callback handling.",
+            "completedDate": "2025-06-26"
+          },
+          "accordion": { 
+            "status": "completed", 
+            "risk": "medium",
+            "testFile": "src/components/ui/__tests__/accordion.test.tsx",
+            "notes": "Enhanced with variants (default, bordered, ghost, separated), sizes (sm, default, lg), accessibility features, and comprehensive test suite covering all interactions, states, and edge cases. Fixed className application and content visibility testing for Radix UI compatibility.",
+            "completedDate": "2025-06-26"
+          },
           "dropdown-menu": { "status": "planned", "risk": "medium", "priority": 3 },
           "tabs": { "status": "planned", "risk": "medium", "priority": 3 },
           "dialog": { "status": "planned", "risk": "medium", "priority": 3 },
@@ -189,10 +201,10 @@
           "testsPass": true,
           "performanceBaseline": "established",
           "accessibilityCompliance": "validated",
-          "completedComponents": 4,
+          "completedComponents": 6,
           "totalComponents": 15,
-          "completionPercentage": 26.7,
-          "coverageAverage": "95.3%"
+          "completionPercentage": 40.0,
+          "coverageAverage": "95.5%"
         }
       },
       "phase3": {
