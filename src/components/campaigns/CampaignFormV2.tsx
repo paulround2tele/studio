@@ -47,6 +47,7 @@ import DomainGenerationConfig from "./form/DomainGenerationConfig";
 import DomainSourceConfig from "./form/DomainSourceConfig";
 import KeywordConfig from "./form/KeywordConfig";
 import OperationalAssignments from "./form/OperationalAssignments";
+import CampaignTuningConfig from "./form/CampaignTuningConfig";
 
 interface CampaignFormProps {
   campaignToEdit?: CampaignViewModel;
@@ -110,6 +111,30 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
       scrapingRateLimitRequests: isEditing && campaignToEdit ? campaignToEdit.leadGenerationSpecificConfig?.scrapingRateLimit?.requests : 1,
       scrapingRateLimitPer: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.scrapingRateLimit?.per as "second" | "minute" || 'second') : 'second',
       requiresJavaScriptRendering: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.requiresJavaScriptRendering || false) : false,
+
+      rotationIntervalSeconds: isEditing && campaignToEdit ? Number(
+        campaignToEdit.dnsValidationParams?.rotationIntervalSeconds ??
+        campaignToEdit.httpKeywordValidationParams?.rotationIntervalSeconds ??
+        300
+      ) : 300,
+      processingSpeedPerMinute: isEditing && campaignToEdit ? Number(
+        campaignToEdit.dnsValidationParams?.processingSpeedPerMinute ??
+        campaignToEdit.httpKeywordValidationParams?.processingSpeedPerMinute ??
+        60
+      ) : 60,
+      batchSize: isEditing && campaignToEdit ? Number(
+        campaignToEdit.dnsValidationParams?.batchSize ??
+        campaignToEdit.httpKeywordValidationParams?.batchSize ??
+        10
+      ) : 10,
+      retryAttempts: isEditing && campaignToEdit ? Number(
+        campaignToEdit.dnsValidationParams?.retryAttempts ??
+        campaignToEdit.httpKeywordValidationParams?.retryAttempts ??
+        3
+      ) : 3,
+      targetHttpPorts: isEditing && campaignToEdit ? (
+        campaignToEdit.httpKeywordValidationParams?.targetHttpPorts ?? [80, 443]
+      ) : [80, 443],
       
       assignedHttpPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedHttpPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
       assignedDnsPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedDnsPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
@@ -250,10 +275,10 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             dnsValidationParams: {
               sourceCampaignId: data.sourceCampaignId,
               personaIds: [data.assignedDnsPersonaId],
-              rotationIntervalSeconds: 300,
-              processingSpeedPerMinute: 60,
-              batchSize: 10,
-              retryAttempts: 3,
+              rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
+              processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
+              batchSize: Number(data.batchSize),
+              retryAttempts: Number(data.retryAttempts),
             },
           };
           break;
@@ -301,14 +326,14 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               sourceCampaignId: data.sourceCampaignId,
               adHocKeywords: adHocKeywords,
               personaIds: [data.assignedHttpPersonaId],
-              proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER) 
-                ? data.assignedProxyId 
+              proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER)
+                ? data.assignedProxyId
                 : undefined,
-              rotationIntervalSeconds: 300,
-              processingSpeedPerMinute: 60,
-              batchSize: 10,
-              retryAttempts: 3,
-              targetHttpPorts: [80, 443],
+              rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
+              processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
+              batchSize: Number(data.batchSize),
+              retryAttempts: Number(data.retryAttempts),
+              targetHttpPorts: data.targetHttpPorts,
             },
           };
           break;
@@ -569,6 +594,13 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               {/* Optimized Keyword Configuration */}
               {selectedCampaignType === 'http_keyword_validation' && (
                 <KeywordConfig control={typedControl} />
+              )}
+
+              {(selectedCampaignType === 'dns_validation' || selectedCampaignType === 'http_keyword_validation') && (
+                <CampaignTuningConfig
+                  control={typedControl}
+                  showHttpPorts={selectedCampaignType === 'http_keyword_validation'}
+                />
               )}
 
               {/* Optimized Operational Assignments */}
