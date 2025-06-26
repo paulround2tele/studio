@@ -26,6 +26,9 @@ export default function SettingsHomePage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-2">
+            <Link href="/admin/settings/server">
+              <Button className="w-full">Server Settings</Button>
+            </Link>
             <Link href="/admin/settings/dns">
               <Button className="w-full">DNS Settings</Button>
             </Link>
