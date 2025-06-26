@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -18,9 +19,32 @@ const schema = z.object({
   queryTimeoutSeconds: z.coerce.number().int().positive(),
   maxDomainsPerRequest: z.coerce.number().int().positive(),
   resolverStrategy: z.string().min(1, 'Strategy is required'),
+  resolversWeighted: z.string().optional(),
+  resolversPreferredOrder: z.string().optional(),
+  concurrentQueriesPerDomain: z.coerce.number().int().positive(),
+  queryDelayMinMs: z.coerce.number().int().nonnegative().optional(),
+  queryDelayMaxMs: z.coerce.number().int().nonnegative().optional(),
+  maxConcurrentGoroutines: z.coerce.number().int().positive(),
+  rateLimitDps: z.coerce.number().optional(),
+  rateLimitBurst: z.coerce.number().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
+
+function parseStringToArray(input: string | undefined): string[] {
+  if (!input) return [];
+  return input.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function parseJsonOrUndefined<T>(jsonString: string | undefined): T | undefined {
+  if (!jsonString) return undefined;
+  try {
+    const parsed = JSON.parse(jsonString);
+    return parsed as T;
+  } catch {
+    return undefined;
+  }
+}
 
 export default function DNSSettingsPage() {
   const form = useForm<FormValues>({ resolver: zodResolver(schema) });
@@ -38,6 +62,14 @@ export default function DNSSettingsPage() {
           queryTimeoutSeconds: cfg.queryTimeoutSeconds,
           maxDomainsPerRequest: cfg.maxDomainsPerRequest,
           resolverStrategy: cfg.resolverStrategy,
+          resolversWeighted: cfg.resolversWeighted ? JSON.stringify(cfg.resolversWeighted, null, 2) : '',
+          resolversPreferredOrder: cfg.resolversPreferredOrder?.join(', ') || '',
+          concurrentQueriesPerDomain: cfg.concurrentQueriesPerDomain,
+          queryDelayMinMs: cfg.queryDelayMinMs,
+          queryDelayMaxMs: cfg.queryDelayMaxMs,
+          maxConcurrentGoroutines: cfg.maxConcurrentGoroutines,
+          rateLimitDps: cfg.rateLimitDps,
+          rateLimitBurst: cfg.rateLimitBurst,
         });
       } catch (e) {
         console.error(e);
@@ -55,10 +87,18 @@ export default function DNSSettingsPage() {
     setSuccess(null);
     try {
       await updateDNSConfig({
-        resolvers: data.resolvers.split(',').map(r => r.trim()).filter(Boolean),
+        resolvers: parseStringToArray(data.resolvers),
         queryTimeoutSeconds: data.queryTimeoutSeconds,
         maxDomainsPerRequest: data.maxDomainsPerRequest,
         resolverStrategy: data.resolverStrategy,
+        resolversWeighted: parseJsonOrUndefined<Record<string, number>>(data.resolversWeighted),
+        resolversPreferredOrder: parseStringToArray(data.resolversPreferredOrder),
+        concurrentQueriesPerDomain: data.concurrentQueriesPerDomain,
+        queryDelayMinMs: data.queryDelayMinMs ?? 0,
+        queryDelayMaxMs: data.queryDelayMaxMs ?? 0,
+        maxConcurrentGoroutines: data.maxConcurrentGoroutines,
+        rateLimitDps: data.rateLimitDps,
+        rateLimitBurst: data.rateLimitBurst,
       });
       setSuccess('Configuration saved');
     } catch (e) {
@@ -120,6 +160,78 @@ export default function DNSSettingsPage() {
                     <FormLabel>Resolver Strategy</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="resolversWeighted" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Weighted Resolvers (JSON)</FormLabel>
+                    <FormControl>
+                      <Textarea className="font-mono" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="resolversPreferredOrder" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferred Resolver Order</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="concurrentQueriesPerDomain" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Concurrent Queries Per Domain</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="queryDelayMinMs" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Query Delay Min (ms)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="queryDelayMaxMs" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Query Delay Max (ms)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="maxConcurrentGoroutines" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Concurrent Goroutines</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="rateLimitDps" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rate Limit DPS</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField name="rateLimitBurst" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rate Limit Burst</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
