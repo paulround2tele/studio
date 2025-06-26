@@ -5,6 +5,14 @@ export interface DNSConfig {
   queryTimeoutSeconds: number;
   maxDomainsPerRequest: number;
   resolverStrategy: string;
+  resolversWeighted?: Record<string, number>;
+  resolversPreferredOrder?: string[];
+  concurrentQueriesPerDomain: number;
+  queryDelayMinMs: number;
+  queryDelayMaxMs: number;
+  maxConcurrentGoroutines: number;
+  rateLimitDps: number;
+  rateLimitBurst: number;
 }
 
 export interface HTTPConfig {
