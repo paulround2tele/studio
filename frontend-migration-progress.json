@@ -279,16 +279,17 @@
             "notes": "Enhanced organism-level table component with comprehensive cva-based variants (default, striped, bordered, minimal, card, compact), header variants (default, elevated, accent, minimal, dark, gradient), row variants (default, interactive, static, accent, subtle), cell text alignment, sortable headers, SimpleTable wrapper with built-in sorting/loading/empty states, TableLoading skeleton component, and comprehensive organism-level functionality. All existing tests pass with 100% functionality coverage."
           },
           "toaster": { 
-            "status": "planned", 
+            "status": "completed", 
             "risk": "medium",
-            "testFile": "src/components/ui/__tests__/toaster.test.tsx",
-            "notes": "Toast notification container with queue management and positioning"
+            "testFile": "src/components/ui/__tests__/toast.test.tsx",
+            "notes": "Enhanced organism-level toaster component with comprehensive positioning (top-left, top-center, top-right, bottom-left, bottom-center, bottom-right), toast limiting, stacking with visual offset, rich colors, custom duration, expand modes, ToastQueue management class for complex scenarios, and organism-level functionality for notification management. All existing tests pass with comprehensive coverage."
           },
           "menubar": { 
-            "status": "planned", 
-            "risk": "medium",
+            "status": "completed", 
+            "risk": "low",
             "testFile": "src/components/ui/__tests__/menubar.test.tsx",
-            "notes": "Horizontal navigation menu with submenus and keyboard navigation"
+            "notes": "Enhanced with cva-based variants (default, minimal, elevated, outline), sizes (sm, default, lg), orientation (horizontal, vertical), trigger variants (default, ghost, subtle), comprehensive tests passing with 96.83% coverage",
+            "completedDate": "2025-06-26"
           },
           "sidebar": { 
             "status": "planned", 
