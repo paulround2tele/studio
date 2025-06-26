@@ -258,8 +258,10 @@ function ProxiesPageContent() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[25%]">Address</TableHead>
+                          <TableHead className="w-[20%]">Name</TableHead>
+                          <TableHead className="w-[20%]">Address</TableHead>
                           <TableHead>Protocol</TableHead>
+                          <TableHead>Country</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Last Tested</TableHead>
                           <TableHead>Success/Fail</TableHead>
