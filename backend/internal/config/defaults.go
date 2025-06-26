@@ -29,8 +29,14 @@ const (
 	DefaultHTTPUserAgent                   = "DomainFlowBot/1.2 (DefaultStudioAgent)"
 	DefaultMaxBodyReadBytes          int64 = 10 * 1024 * 1024 // 10MB
 	DefaultHTTPFollowRedirects             = true
-	DefaultHTTPRequestTimeoutSeconds       = 15
-	DefaultHTTPMaxRedirects                = 7
+        DefaultHTTPRequestTimeoutSeconds       = 15
+        DefaultHTTPMaxRedirects                = 7
+
+       // ProxyManager defaults
+       DefaultProxyTestTimeoutSeconds             = 10
+       DefaultProxyTestURL                        = "https://httpbin.org/ip"
+       DefaultProxyInitialHealthCheckTimeoutSeconds = 7
+       DefaultProxyMaxConcurrentInitialChecks       = 10
 
 	// Global API rate limiter defaults
 	DefaultAPIRateLimitWindowSeconds = 900
@@ -93,14 +99,20 @@ func DefaultAppConfigJSON() AppConfigJSON {
 			RateLimitBurst:          DefaultHTTPRateLimitBurst,
 			MaxBodyReadBytes:        DefaultMaxBodyReadBytes,
 		},
-		Logging: LoggingConfig{
-			Level: "INFO",
-		},
-		RateLimiter: RateLimiterConfig{
-			MaxRequests:   DefaultAPIRateLimitMaxRequests,
-			WindowSeconds: DefaultAPIRateLimitWindowSeconds,
-		},
-	}
+               Logging: LoggingConfig{
+                       Level: "INFO",
+               },
+               RateLimiter: RateLimiterConfig{
+                       MaxRequests:   DefaultAPIRateLimitMaxRequests,
+                       WindowSeconds: DefaultAPIRateLimitWindowSeconds,
+               },
+               ProxyManager: ProxyManagerConfigJSON{
+                       TestTimeoutSeconds:             DefaultProxyTestTimeoutSeconds,
+                       TestURL:                        DefaultProxyTestURL,
+                       InitialHealthCheckTimeoutSeconds: DefaultProxyInitialHealthCheckTimeoutSeconds,
+                       MaxConcurrentInitialChecks:     DefaultProxyMaxConcurrentInitialChecks,
+               },
+       }
 }
 
 // DefaultConfig initializes and returns a default AppConfig structure by converting DefaultAppConfigJSON.

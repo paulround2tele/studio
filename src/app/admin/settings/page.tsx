@@ -21,6 +21,7 @@ export default function SettingsHomePage() {
             <Link href="/admin/settings/dns"><Button className="w-full">DNS Settings</Button></Link>
             <Link href="/admin/settings/http"><Button className="w-full">HTTP Settings</Button></Link>
             <Link href="/admin/settings/logging"><Button className="w-full">Logging Settings</Button></Link>
+            <Link href="/admin/settings/proxies"><Button className="w-full">Proxy Manager Settings</Button></Link>
           </div>
         </CardContent>
       </Card>
