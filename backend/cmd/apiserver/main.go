@@ -71,6 +71,7 @@ func main() {
 	var campaignStore store.CampaignStore
 	var personaStore store.PersonaStore
 	var proxyStore store.ProxyStore
+	var proxyPoolStore store.ProxyPoolStore
 	var keywordStore store.KeywordStore
 	var auditLogStore store.AuditLogStore
 	var campaignJobStore store.CampaignJobStore
@@ -128,6 +129,7 @@ func main() {
 	campaignStore = pg_store.NewCampaignStorePostgres(db)
 	personaStore = pg_store.NewPersonaStorePostgres(db)
 	proxyStore = pg_store.NewProxyStorePostgres(db)
+	proxyPoolStore = pg_store.NewProxyPoolStorePostgres(db)
 	keywordStore = pg_store.NewKeywordStorePostgres(db)
 	auditLogStore = pg_store.NewAuditLogStorePostgres(db)
 	campaignJobStore = pg_store.NewCampaignJobStorePostgres(db)
@@ -220,6 +222,7 @@ func main() {
 		campaignStore,
 		personaStore,
 		proxyStore,
+		proxyPoolStore,
 		keywordStore,
 		auditLogStore,
 		campaignJobStore,
@@ -368,6 +371,16 @@ func main() {
 			proxyGroup.POST("/:proxyId/test", authMiddleware.RequirePermission("proxies:read"), apiHandler.TestProxyGin)
 			proxyGroup.POST("/:proxyId/health-check", authMiddleware.RequirePermission("proxies:read"), apiHandler.ForceCheckSingleProxyGin)
 			proxyGroup.POST("/health-check", authMiddleware.RequirePermission("proxies:read"), apiHandler.ForceCheckAllProxiesGin)
+		}
+
+		proxyPoolGroup := apiV2.Group("/proxy-pools")
+		{
+			proxyPoolGroup.GET("", authMiddleware.RequirePermission("proxies:read"), apiHandler.ListProxyPoolsGin)
+			proxyPoolGroup.POST("", authMiddleware.RequirePermission("proxies:create"), apiHandler.CreateProxyPoolGin)
+			proxyPoolGroup.PUT("/:poolId", authMiddleware.RequirePermission("proxies:update"), apiHandler.UpdateProxyPoolGin)
+			proxyPoolGroup.DELETE("/:poolId", authMiddleware.RequirePermission("proxies:delete"), apiHandler.DeleteProxyPoolGin)
+			proxyPoolGroup.POST("/:poolId/proxies", authMiddleware.RequirePermission("proxies:update"), apiHandler.AddProxyToPoolGin)
+			proxyPoolGroup.DELETE("/:poolId/proxies/:proxyId", authMiddleware.RequirePermission("proxies:update"), apiHandler.RemoveProxyFromPoolGin)
 		}
 
 		// Configuration routes (admin only)

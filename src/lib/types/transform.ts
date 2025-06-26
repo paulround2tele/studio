@@ -3,8 +3,15 @@
  * Part of Phase 2: Type Safety Enhancement
  */
 
-import { UUID, SafeBigInt, ISODateString, isValidUUID, createSafeBigInt, createISODateString } from './branded';
-import type { Campaign, User } from '../types';
+import {
+  UUID,
+  SafeBigInt,
+  ISODateString,
+  isValidUUID,
+  createSafeBigInt,
+  createISODateString,
+} from "./branded";
+import type { Campaign, User } from "../types";
 
 // Raw API data types (before transformation)
 export interface RawAPIData {
@@ -30,7 +37,9 @@ export class TypeTransformer {
   /**
    * Transform a raw number to SafeBigInt
    */
-  static toSafeBigInt(value: number | string | undefined | null): SafeBigInt | undefined {
+  static toSafeBigInt(
+    value: number | string | undefined | null,
+  ): SafeBigInt | undefined {
     if (value === undefined || value === null) return undefined;
     return createSafeBigInt(value);
   }
@@ -38,7 +47,9 @@ export class TypeTransformer {
   /**
    * Transform a raw date string to ISODateString
    */
-  static toISODateString(value: string | undefined | null): ISODateString | undefined {
+  static toISODateString(
+    value: string | undefined | null,
+  ): ISODateString | undefined {
     if (!value) return undefined;
     return createISODateString(value);
   }
@@ -48,7 +59,7 @@ export class TypeTransformer {
    */
   static transformUser(raw: RawAPIData): User {
     if (!raw) return raw as User;
-    
+
     return {
       ...raw,
       id: this.toUUID(raw.id as string),
@@ -73,14 +84,22 @@ export class TypeTransformer {
       updatedAt: this.toISODateString(raw.updatedAt as string),
       startedAt: this.toISODateString(raw.startedAt as string),
       completedAt: this.toISODateString(raw.completedAt as string),
-      estimatedCompletionAt: this.toISODateString(raw.estimatedCompletionAt as string),
+      estimatedCompletionAt: this.toISODateString(
+        raw.estimatedCompletionAt as string,
+      ),
       lastHeartbeatAt: this.toISODateString(raw.lastHeartbeatAt as string),
       totalItems: this.toSafeBigInt(raw.totalItems as number),
       processedItems: this.toSafeBigInt(raw.processedItems as number),
       successfulItems: this.toSafeBigInt(raw.successfulItems as number),
       failedItems: this.toSafeBigInt(raw.failedItems as number),
-      progressPercentage: raw.progressPercentage !== undefined ? Number(raw.progressPercentage) : undefined,
-      avgProcessingRate: raw.avgProcessingRate !== undefined ? Number(raw.avgProcessingRate) : undefined,
+      progressPercentage:
+        raw.progressPercentage !== undefined
+          ? Number(raw.progressPercentage)
+          : undefined,
+      avgProcessingRate:
+        raw.avgProcessingRate !== undefined
+          ? Number(raw.avgProcessingRate)
+          : undefined,
     } as Campaign;
   }
 
@@ -131,7 +150,10 @@ export class TypeTransformer {
       dnsResultId: this.toUUID(raw.dnsResultId as string),
       validatedByPersonaId: this.toUUID(raw.validatedByPersonaId as string),
       attempts: this.toSafeBigInt(raw.attempts as number),
-      httpStatusCode: raw.httpStatusCode !== undefined ? Number(raw.httpStatusCode) : undefined,
+      httpStatusCode:
+        raw.httpStatusCode !== undefined
+          ? Number(raw.httpStatusCode)
+          : undefined,
       lastCheckedAt: this.toISODateString(raw.lastCheckedAt as string),
       createdAt: this.toISODateString(raw.createdAt as string),
     };
@@ -206,7 +228,7 @@ export class TypeTransformer {
   }
 
   /**
-   * Transform a proxy object from API response to use branded types  
+   * Transform a proxy object from API response to use branded types
    */
   static transformToProxy(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
@@ -221,10 +243,38 @@ export class TypeTransformer {
     };
   }
 
+  /** Transform a proxy pool object */
+  static transformToProxyPool(raw: RawAPIData): RawAPIData {
+    if (!raw) return raw;
+    return {
+      ...raw,
+      id: this.toUUID(raw.id as string),
+      healthCheckIntervalSeconds:
+        raw.healthCheckIntervalSeconds !== undefined
+          ? Number(raw.healthCheckIntervalSeconds)
+          : undefined,
+      maxRetries:
+        raw.maxRetries !== undefined ? Number(raw.maxRetries) : undefined,
+      timeoutSeconds:
+        raw.timeoutSeconds !== undefined
+          ? Number(raw.timeoutSeconds)
+          : undefined,
+      createdAt: this.toISODateString(raw.createdAt as string),
+      updatedAt: this.toISODateString(raw.updatedAt as string),
+      proxies: this.transformArray(
+        raw.proxies as unknown[] | undefined,
+        this.transformToProxy,
+      ) as unknown as RawAPIData[],
+    };
+  }
+
   /**
    * Transform arrays of objects
    */
-  static transformArray<T>(items: unknown[] | undefined, transformer: (item: RawAPIData) => T): T[] {
+  static transformArray<T>(
+    items: unknown[] | undefined,
+    transformer: (item: RawAPIData) => T,
+  ): T[] {
     if (!Array.isArray(items)) return [];
     return items.map((item) => transformer(item as RawAPIData));
   }
@@ -233,13 +283,25 @@ export class TypeTransformer {
 /**
  * Helper functions for specific transformations
  */
-export const transformUser = TypeTransformer.transformUser.bind(TypeTransformer);
-export const transformCampaign = TypeTransformer.transformCampaign.bind(TypeTransformer);
-export const transformGeneratedDomain = TypeTransformer.transformGeneratedDomain.bind(TypeTransformer);
-export const transformDNSValidationResult = TypeTransformer.transformDNSValidationResult.bind(TypeTransformer);
-export const transformHTTPKeywordResult = TypeTransformer.transformHTTPKeywordResult.bind(TypeTransformer);
-export const transformCampaignJob = TypeTransformer.transformCampaignJob.bind(TypeTransformer);
-export const transformAuditLog = TypeTransformer.transformAuditLog.bind(TypeTransformer);
-export const transformSession = TypeTransformer.transformSession.bind(TypeTransformer);
-export const transformToPersona = TypeTransformer.transformToPersona.bind(TypeTransformer);
-export const transformToProxy = TypeTransformer.transformToProxy.bind(TypeTransformer);
+export const transformUser =
+  TypeTransformer.transformUser.bind(TypeTransformer);
+export const transformCampaign =
+  TypeTransformer.transformCampaign.bind(TypeTransformer);
+export const transformGeneratedDomain =
+  TypeTransformer.transformGeneratedDomain.bind(TypeTransformer);
+export const transformDNSValidationResult =
+  TypeTransformer.transformDNSValidationResult.bind(TypeTransformer);
+export const transformHTTPKeywordResult =
+  TypeTransformer.transformHTTPKeywordResult.bind(TypeTransformer);
+export const transformCampaignJob =
+  TypeTransformer.transformCampaignJob.bind(TypeTransformer);
+export const transformAuditLog =
+  TypeTransformer.transformAuditLog.bind(TypeTransformer);
+export const transformSession =
+  TypeTransformer.transformSession.bind(TypeTransformer);
+export const transformToPersona =
+  TypeTransformer.transformToPersona.bind(TypeTransformer);
+export const transformToProxy =
+  TypeTransformer.transformToProxy.bind(TypeTransformer);
+export const transformToProxyPool =
+  TypeTransformer.transformToProxyPool.bind(TypeTransformer);

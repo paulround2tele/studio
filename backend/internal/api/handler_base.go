@@ -21,6 +21,7 @@ type APIHandler struct {
 	CampaignStore    store.CampaignStore
 	PersonaStore     store.PersonaStore
 	ProxyStore       store.ProxyStore
+	ProxyPoolStore   store.ProxyPoolStore
 	KeywordStore     store.KeywordStore
 	AuditLogStore    store.AuditLogStore
 	CampaignJobStore store.CampaignJobStore
@@ -34,6 +35,7 @@ func NewAPIHandler(
 	campaignStore store.CampaignStore,
 	personaStore store.PersonaStore,
 	proxyStore store.ProxyStore,
+	proxyPoolStore store.ProxyPoolStore,
 	keywordStore store.KeywordStore,
 	auditLogStore store.AuditLogStore,
 	campaignJobStore store.CampaignJobStore,
@@ -45,6 +47,7 @@ func NewAPIHandler(
 		CampaignStore:    campaignStore,
 		PersonaStore:     personaStore,
 		ProxyStore:       proxyStore,
+		ProxyPoolStore:   proxyPoolStore,
 		KeywordStore:     keywordStore,
 		AuditLogStore:    auditLogStore,
 		CampaignJobStore: campaignJobStore,
