@@ -329,6 +329,9 @@ export const ROUTE_PERMISSIONS: Record<string, {
   '/personas/[id]/edit': {
     permissions: [PERMISSIONS.PERSONAS.UPDATE]
   },
+  '/admin/security': {
+    permissions: [PERMISSIONS.SECURITY.AUDIT_LOGS]
+  },
   '/proxies': {
     permissions: [PERMISSIONS.PROXIES.READ]
   }
