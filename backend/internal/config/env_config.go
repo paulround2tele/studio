@@ -122,7 +122,6 @@ func applyEnvironmentOverrides(config *AppConfig) {
 	if logLevel := os.Getenv("LOG_LEVEL"); logLevel != "" {
 		config.Logging.Level = logLevel
 	}
-	// Note: LogDirectory doesn't exist in LoggingConfig
 
 	// DNS Validator overrides
 	if rateLimitDPS := getEnvAsInt("DNS_RATE_LIMIT_DPS", 0); rateLimitDPS > 0 {
