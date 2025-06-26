@@ -63,3 +63,25 @@ scope or in violation of constraints are rejected.
 - Agents must stay within their defined scopes.
 - All edits must compile and pass existing tests relevant to the modified code.
 - Cross‑agent coordination occurs through the handoff rules above.
+
+## Codex Commands
+
+The `codex` directory contains helper scripts for validating the local environment.
+
+- **check db**: `./codex/check-db.sh` verifies PostgreSQL connectivity, ensures the `schema_migrations` table exists and can apply pending migrations when run with `--migrate`.
+- **check backend**: `./codex/check-backend.sh` runs `go fmt`, `go vet`, and `go test ./...` while loading database settings from environment variables or `backend/config.json`.
+- **check status**: `./codex/status.sh` executes database and backend checks, runs frontend tests, lists available npm scripts, and prints recent backend log lines.
+
+### Execution Capabilities (Non-Docker Setup)
+
+Codex interacts directly with the host system without Docker:
+
+- **PostgreSQL**: Connection details are read from environment variables or `backend/config.json`. `pg_isready` and `psql` are used to validate connectivity. Migrations run with `go run ./backend/cmd/migrate`.
+- **NPM**: Commands such as `npm install`, `npm run dev`, and `npm test` work locally. When the backend is unavailable, the frontend falls back to mock API handlers found under `src/mocks`.
+- **Go**: All Go tooling runs on the host. `check-backend.sh` formats, vets, and tests the backend.
+
+### Troubleshooting
+
+- Ensure PostgreSQL is running and credentials are correct if database checks fail.
+- If npm commands fail, confirm Node.js and npm are installed and try reinstalling dependencies.
+- For Go build issues run `go mod download` and verify your `GOPATH`.
