@@ -160,7 +160,6 @@
             "completedDate": "2025-06-26"
           },
           "date-picker": { "status": "planned", "risk": "high", "priority": 1 },
-          "file-upload": { "status": "planned", "risk": "medium", "priority": 1 },
           "card": { "status": "planned", "risk": "low", "priority": 2 },
           "data-table": { "status": "planned", "risk": "high", "priority": 2 },
           "alert-dialog": { "status": "planned", "risk": "medium", "priority": 2 },
@@ -179,8 +178,8 @@
           "performanceBaseline": "established",
           "accessibilityCompliance": "validated",
           "completedComponents": 2,
-          "totalComponents": 16,
-          "completionPercentage": 12.5,
+          "totalComponents": 15,
+          "completionPercentage": 13.3,
           "coverageAverage": "98.9%"
         }
       },
