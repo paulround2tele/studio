@@ -74,6 +74,12 @@ export interface ProxyManagerConfig {
   maxConcurrentInitialChecks: number;
 }
 
+export interface ServerConfig {
+  port: string;
+  streamChunkSize: number;
+  ginMode: string;
+}
+
 class SettingsService {
   private static instance: SettingsService;
   private readonly basePath = "/api/v2/config";
@@ -165,6 +171,20 @@ class SettingsService {
     );
   }
 
+  async getServerConfig(): Promise<ServerConfig> {
+    const response = await apiClient.get<ServerConfig>(
+      `${this.basePath}/server`,
+    );
+    return response.data as unknown as ServerConfig;
+  }
+
+  async updateServerConfig(cfg: Partial<ServerConfig>): Promise<void> {
+    await apiClient.put(
+      `${this.basePath}/server`,
+      cfg as unknown as Record<string, unknown>,
+    );
+  }
+
   async getFeatureFlags(): Promise<FeatureFlagsConfig> {
     const response = await apiClient.get<FeatureFlagsConfig>(
       `${this.basePath}/features`,
@@ -202,6 +222,9 @@ export const getProxyManagerConfig = () =>
   settingsService.getProxyManagerConfig();
 export const updateProxyManagerConfig = (cfg: ProxyManagerConfig) =>
   settingsService.updateProxyManagerConfig(cfg);
+export const getServerConfig = () => settingsService.getServerConfig();
+export const updateServerConfig = (cfg: Partial<ServerConfig>) =>
+  settingsService.updateServerConfig(cfg);
 export const getFeatureFlags = () => settingsService.getFeatureFlags();
 export const updateFeatureFlags = (flags: FeatureFlagsConfig) =>
   settingsService.updateFeatureFlags(flags);
