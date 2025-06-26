@@ -73,6 +73,18 @@ const httpPersonaFormSchema = z.object({
   allowInsecureTls: z.boolean(),
   requestTimeoutSec: z.number().min(1),
   maxRedirects: z.number().min(0),
+  useHeadless: z.boolean().optional(),
+  fallbackPolicy: z.enum(['never','on_fetch_error','always']).optional(),
+  viewportWidth: z.number().optional(),
+  viewportHeight: z.number().optional(),
+  headlessUserAgent: z.string().optional(),
+  scriptExecution: z.boolean().optional(),
+  loadImages: z.boolean().optional(),
+  screenshot: z.boolean().optional(),
+  domSnapshot: z.boolean().optional(),
+  headlessTimeoutSec: z.number().optional(),
+  waitDelaySec: z.number().optional(),
+  fetchBodyForKeywords: z.boolean().optional(),
   notes: z.string().optional(),
 });
 
@@ -129,6 +141,18 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           allowInsecureTls: ((persona as HttpPersona).configDetails as HTTPConfigDetails).allowInsecureTls || false,
           requestTimeoutSec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).requestTimeoutSec || ((persona as HttpPersona).configDetails as HTTPConfigDetails).requestTimeoutSeconds || 30,
           maxRedirects: ((persona as HttpPersona).configDetails as HTTPConfigDetails).maxRedirects || 5,
+          useHeadless: ((persona as HttpPersona).configDetails as HTTPConfigDetails).useHeadless ?? false,
+          fallbackPolicy: ((persona as HttpPersona).configDetails as HTTPConfigDetails).fallbackPolicy || 'never',
+          viewportWidth: ((persona as HttpPersona).configDetails as HTTPConfigDetails).viewportWidth,
+          viewportHeight: ((persona as HttpPersona).configDetails as HTTPConfigDetails).viewportHeight,
+          headlessUserAgent: ((persona as HttpPersona).configDetails as HTTPConfigDetails).headlessUserAgent || '',
+          scriptExecution: ((persona as HttpPersona).configDetails as HTTPConfigDetails).scriptExecution ?? false,
+          loadImages: ((persona as HttpPersona).configDetails as HTTPConfigDetails).loadImages ?? false,
+          screenshot: ((persona as HttpPersona).configDetails as HTTPConfigDetails).screenshot ?? false,
+          domSnapshot: ((persona as HttpPersona).configDetails as HTTPConfigDetails).domSnapshot ?? false,
+          headlessTimeoutSec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).headlessTimeoutSeconds,
+          waitDelaySec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).waitDelaySeconds,
+          fetchBodyForKeywords: ((persona as HttpPersona).configDetails as HTTPConfigDetails).fetchBodyForKeywords ?? false,
           notes: ((persona as HttpPersona).configDetails as HTTPConfigDetails).notes || "",
         }
       : {
@@ -144,6 +168,18 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           allowInsecureTls: false,
           requestTimeoutSec: 30,
           maxRedirects: 5,
+          useHeadless: false,
+          fallbackPolicy: 'never',
+          viewportWidth: undefined,
+          viewportHeight: undefined,
+          headlessUserAgent: '',
+          scriptExecution: false,
+          loadImages: false,
+          screenshot: false,
+          domSnapshot: false,
+          headlessTimeoutSec: undefined,
+          waitDelaySec: undefined,
+          fetchBodyForKeywords: false,
           notes: "",
         },
     mode: "onChange",
@@ -169,13 +205,25 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
             headers: parseJsonOrUndefined<Record<string,string>>(data.headersJson || ""),
             headerOrder: parseStringToArray(data.headerOrderInput || ""),
             tlsClientHello: parseJsonOrUndefined(data.tlsClientHelloJson || ""),
-            http2Settings: parseJsonOrUndefined(data.http2SettingsJson || ""),
-            cookieHandling: parseJsonOrUndefined(data.cookieHandlingJson || ""),
-            allowInsecureTls: data.allowInsecureTls,
-            requestTimeoutSec: data.requestTimeoutSec,
-            maxRedirects: data.maxRedirects,
-            notes: data.notes || undefined,
-          }
+          http2Settings: parseJsonOrUndefined(data.http2SettingsJson || ""),
+          cookieHandling: parseJsonOrUndefined(data.cookieHandlingJson || ""),
+          allowInsecureTls: data.allowInsecureTls,
+          requestTimeoutSec: data.requestTimeoutSec,
+          maxRedirects: data.maxRedirects,
+          useHeadless: data.useHeadless,
+          fallbackPolicy: data.fallbackPolicy,
+          viewportWidth: data.viewportWidth,
+          viewportHeight: data.viewportHeight,
+          headlessUserAgent: data.headlessUserAgent || undefined,
+          scriptExecution: data.scriptExecution,
+          loadImages: data.loadImages,
+          screenshot: data.screenshot,
+          domSnapshot: data.domSnapshot,
+          headlessTimeoutSeconds: data.headlessTimeoutSec,
+          waitDelaySeconds: data.waitDelaySec,
+          fetchBodyForKeywords: data.fetchBodyForKeywords,
+          notes: data.notes || undefined,
+        }
       };
 
       let response;
@@ -232,6 +280,113 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
             <FormField control={form.control} name="cookieHandlingJson" render={({ field }) => (<FormItem><FormLabel>Cookie Handling Config (JSON, Optional)</FormLabel><FormControl><Textarea placeholder='{ &quot;mode&quot;: &quot;session&quot; }' className="font-mono min-h-[60px]" {...field} /></FormControl><FormDescription>Define how cookies are handled (e.g., &quot;none&quot;, &quot;session&quot;, &quot;file&quot;).</FormDescription><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="requestTimeoutSec" render={({ field }) => (<FormItem><FormLabel>Request Timeout (seconds)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="maxRedirects" render={({ field }) => (<FormItem><FormLabel>Max Redirects</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="useHeadless" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Use Headless Browser</FormLabel>
+                </div>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="fallbackPolicy" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fallback Policy</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Select policy" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="never">never</SelectItem>
+                    <SelectItem value="on_fetch_error">on_fetch_error</SelectItem>
+                    <SelectItem value="always">always</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="viewportWidth" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Viewport Width</FormLabel>
+                  <FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="viewportHeight" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Viewport Height</FormLabel>
+                  <FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="headlessUserAgent" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Headless User-Agent</FormLabel>
+                <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="scriptExecution" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Enable Script Execution</FormLabel>
+                </div>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="loadImages" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Load Images</FormLabel>
+                </div>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="screenshot" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Capture Screenshot</FormLabel>
+                </div>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="domSnapshot" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Capture DOM Snapshot</FormLabel>
+                </div>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="headlessTimeoutSec" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Headless Timeout (seconds)</FormLabel>
+                <FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="waitDelaySec" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Wait Delay (seconds)</FormLabel>
+                <FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="fetchBodyForKeywords" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Fetch Body For Keywords</FormLabel>
+                </div>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
             <FormField control={form.control} name="allowInsecureTls" render={({ field }) => (<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><div className="space-y-0.5"><FormLabel>Allow Insecure TLS</FormLabel><FormDescription>Allow connections to servers with invalid/self-signed TLS certificates.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="notes" render={({ field }) => (<FormItem><FormLabel>Notes (Optional)</FormLabel><FormControl><Textarea placeholder="Internal notes about this HTTP persona." {...field} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name="tagsInput" render={({ field }) => (<FormItem><FormLabel>Tags (comma-separated - Optional)</FormLabel><FormControl><Input placeholder="e.g., stealth, primary-dns, us-region-proxy" {...field} /></FormControl><FormDescription>Help organize and filter personas. Use for grouping or classification.</FormDescription><FormMessage /></FormItem>)} />

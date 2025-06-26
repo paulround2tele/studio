@@ -46,6 +46,18 @@ export const httpPersonaConfigSchema = z.object({
   allowedStatusCodes: z.array(z.number().min(100).max(599)).optional(),
   rateLimitDps: z.number().min(0).optional(),
   rateLimitBurst: z.number().min(0).optional(),
+  useHeadless: z.boolean().optional(),
+  fallbackPolicy: z.enum(['never', 'on_fetch_error', 'always']).optional(),
+  viewportWidth: z.number().min(0).optional(),
+  viewportHeight: z.number().min(0).optional(),
+  headlessUserAgent: z.string().optional(),
+  scriptExecution: z.boolean().optional(),
+  loadImages: z.boolean().optional(),
+  screenshot: z.boolean().optional(),
+  domSnapshot: z.boolean().optional(),
+  headlessTimeoutSeconds: z.number().min(0).optional(),
+  waitDelaySeconds: z.number().min(0).optional(),
+  fetchBodyForKeywords: z.boolean().optional(),
   notes: z.string().optional(),
 });
 

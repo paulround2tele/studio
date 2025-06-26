@@ -114,6 +114,18 @@ export async function createHttpPersona(payload: CreateHttpPersonaPayload): Prom
       maxRedirects: (payload.configDetails as HttpPersonaConfig).maxRedirects,
       rateLimitDps: (payload.configDetails as HttpPersonaConfig).rateLimitDps,
       rateLimitBurst: (payload.configDetails as HttpPersonaConfig).rateLimitBurst
+      ,useHeadless: (payload.configDetails as HttpPersonaConfig).useHeadless,
+      fallbackPolicy: (payload.configDetails as HttpPersonaConfig).fallbackPolicy,
+      viewportWidth: (payload.configDetails as HttpPersonaConfig).viewportWidth,
+      viewportHeight: (payload.configDetails as HttpPersonaConfig).viewportHeight,
+      headlessUserAgent: (payload.configDetails as HttpPersonaConfig).headlessUserAgent,
+      scriptExecution: (payload.configDetails as HttpPersonaConfig).scriptExecution,
+      loadImages: (payload.configDetails as HttpPersonaConfig).loadImages,
+      screenshot: (payload.configDetails as HttpPersonaConfig).screenshot,
+      domSnapshot: (payload.configDetails as HttpPersonaConfig).domSnapshot,
+      headlessTimeoutSeconds: (payload.configDetails as HttpPersonaConfig).headlessTimeoutSeconds,
+      waitDelaySeconds: (payload.configDetails as HttpPersonaConfig).waitDelaySeconds,
+      fetchBodyForKeywords: (payload.configDetails as HttpPersonaConfig).fetchBodyForKeywords
     },
     isEnabled: payload.isEnabled ?? true
   };
@@ -172,6 +184,18 @@ export async function updateHttpPersona(personaId: string, payload: UpdateHttpPe
       maxRedirects: (payload.configDetails as HttpPersonaConfig).maxRedirects,
       rateLimitDps: (payload.configDetails as HttpPersonaConfig).rateLimitDps,
       rateLimitBurst: (payload.configDetails as HttpPersonaConfig).rateLimitBurst
+      ,useHeadless: (payload.configDetails as HttpPersonaConfig).useHeadless,
+      fallbackPolicy: (payload.configDetails as HttpPersonaConfig).fallbackPolicy,
+      viewportWidth: (payload.configDetails as HttpPersonaConfig).viewportWidth,
+      viewportHeight: (payload.configDetails as HttpPersonaConfig).viewportHeight,
+      headlessUserAgent: (payload.configDetails as HttpPersonaConfig).headlessUserAgent,
+      scriptExecution: (payload.configDetails as HttpPersonaConfig).scriptExecution,
+      loadImages: (payload.configDetails as HttpPersonaConfig).loadImages,
+      screenshot: (payload.configDetails as HttpPersonaConfig).screenshot,
+      domSnapshot: (payload.configDetails as HttpPersonaConfig).domSnapshot,
+      headlessTimeoutSeconds: (payload.configDetails as HttpPersonaConfig).headlessTimeoutSeconds,
+      waitDelaySeconds: (payload.configDetails as HttpPersonaConfig).waitDelaySeconds,
+      fetchBodyForKeywords: (payload.configDetails as HttpPersonaConfig).fetchBodyForKeywords
     };
   }
 
