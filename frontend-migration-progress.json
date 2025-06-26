@@ -173,7 +173,13 @@
             "notes": "Enhanced with variants (default, elevated, outlined, filled, ghost), sizes (compact, default, spacious), interactive states, and comprehensive accessibility features.",
             "completedDate": "2025-06-26"
           },
-          "data-table": { "status": "planned", "risk": "high", "priority": 2 },
+          "data-table": { 
+            "status": "completed", 
+            "risk": "high",
+            "testFile": "src/components/ui/__tests__/data-table.test.tsx",
+            "notes": "Created new advanced DataTable component with cva-based variants/sizes, comprehensive features (sorting, filtering, pagination, selection, search), enhanced table component with variants, and comprehensive test suites for both components. Fixed all test issues including variant/density classes, global filtering logic, and manual pagination.",
+            "completedDate": "2025-06-26"
+          },
           "alert-dialog": { 
             "status": "completed", 
             "risk": "medium",

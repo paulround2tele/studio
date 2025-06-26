@@ -16,6 +16,11 @@ global.ResizeObserver = class ResizeObserver {
 // Mock scrollIntoView for Radix UI components (standard fix for JSDOM)
 Element.prototype.scrollIntoView = jest.fn();
 
+// Mock hasPointerCapture and setPointerCapture for Radix UI Select component
+HTMLElement.prototype.hasPointerCapture = jest.fn().mockReturnValue(false);
+HTMLElement.prototype.setPointerCapture = jest.fn();
+HTMLElement.prototype.releasePointerCapture = jest.fn();
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
