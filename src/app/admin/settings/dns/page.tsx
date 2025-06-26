@@ -25,13 +25,8 @@ const schema = z.object({
   queryDelayMinMs: z.coerce.number().int().nonnegative(),
   queryDelayMaxMs: z.coerce.number().int().nonnegative(),
   maxConcurrentGoroutines: z.coerce.number().int().positive(),
-  rateLimitDps: z.coerce.number().nonnegative(),
-  rateLimitBurst: z.coerce.number().int().nonnegative(),
-  queryDelayMinMs: z.coerce.number().int().nonnegative().optional(),
-  queryDelayMaxMs: z.coerce.number().int().nonnegative().optional(),
-  maxConcurrentGoroutines: z.coerce.number().int().positive(),
-  rateLimitDps: z.coerce.number().optional(),
-  rateLimitBurst: z.coerce.number().optional(),
+  rateLimitDps: z.coerce.number().nonnegative().optional(),
+  rateLimitBurst: z.coerce.number().int().nonnegative().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -96,14 +91,6 @@ export default function DNSSettingsPage() {
         queryTimeoutSeconds: data.queryTimeoutSeconds,
         maxDomainsPerRequest: data.maxDomainsPerRequest,
         resolverStrategy: data.resolverStrategy,
-        resolversWeighted: data.resolversWeighted ? JSON.parse(data.resolversWeighted) : undefined,
-        resolversPreferredOrder: data.resolversPreferredOrder
-          ? data.resolversPreferredOrder.split(',').map(r => r.trim()).filter(Boolean)
-          : undefined,
-        concurrentQueriesPerDomain: data.concurrentQueriesPerDomain,
-        queryDelayMinMs: data.queryDelayMinMs,
-        queryDelayMaxMs: data.queryDelayMaxMs,
-
         resolversWeighted: parseJsonOrUndefined<Record<string, number>>(data.resolversWeighted),
         resolversPreferredOrder: parseStringToArray(data.resolversPreferredOrder),
         concurrentQueriesPerDomain: data.concurrentQueriesPerDomain,
@@ -181,7 +168,6 @@ export default function DNSSettingsPage() {
                   <FormItem>
                     <FormLabel>Weighted Resolvers (JSON)</FormLabel>
                     <FormControl>
-                      <Textarea {...field} className="font-mono" />
                       <Textarea className="font-mono" {...field} />
                     </FormControl>
                     <FormMessage />
@@ -192,9 +178,6 @@ export default function DNSSettingsPage() {
                     <FormLabel>Preferred Order (comma separated)</FormLabel>
                     <FormControl>
                       <Input {...field} />
-                    <FormLabel>Preferred Resolver Order</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
