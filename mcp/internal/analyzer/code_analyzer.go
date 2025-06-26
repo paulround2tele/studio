@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	playwright "github.com/playwright-community/playwright-go"
 )
 
 // GetValidationRules analyzes code for validation patterns
@@ -690,6 +692,43 @@ func RunTerminalCommand(command, workingDir string) (models.CommandResult, error
 	}
 
 	return result, err
+}
+
+// BrowseWithPlaywright uses Playwright to fetch a web page and take a screenshot
+func BrowseWithPlaywright(url string) (models.PlaywrightResult, error) {
+	pw, err := playwright.Run()
+	if err != nil {
+		return models.PlaywrightResult{}, err
+	}
+	browser, err := pw.Chromium.Launch()
+	if err != nil {
+		pw.Stop()
+		return models.PlaywrightResult{}, err
+	}
+	page, err := browser.NewPage()
+	if err != nil {
+		browser.Close()
+		pw.Stop()
+		return models.PlaywrightResult{}, err
+	}
+	if _, err := page.Goto(url); err != nil {
+		page.Close()
+		browser.Close()
+		pw.Stop()
+		return models.PlaywrightResult{}, err
+	}
+	html, _ := page.Content()
+	screenshotPath := filepath.Join(os.TempDir(), "playwright_screenshot.png")
+	if _, err := page.Screenshot(playwright.PageScreenshotOptions{Path: playwright.String(screenshotPath)}); err != nil {
+		page.Close()
+		browser.Close()
+		pw.Stop()
+		return models.PlaywrightResult{}, err
+	}
+	page.Close()
+	browser.Close()
+	pw.Stop()
+	return models.PlaywrightResult{URL: url, HTML: html, Screenshot: screenshotPath}, nil
 }
 
 // ParseApiSchema analyzes API schema from Go files

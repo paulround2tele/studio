@@ -631,6 +631,14 @@ func (b *Bridge) RunTerminalCommand(command string, workingDir string) (models.C
 	return analyzer.RunTerminalCommand(command, workingDir)
 }
 
+// BrowseWithPlaywright opens a URL using Playwright and returns page data
+func (b *Bridge) BrowseWithPlaywright(url string) (models.PlaywrightResult, error) {
+	if !config.Flags.AllowTerminal {
+		return models.PlaywrightResult{}, errors.New("terminal commands are disabled")
+	}
+	return analyzer.BrowseWithPlaywright(url)
+}
+
 // GetDatabaseStats returns database statistics
 func (b *Bridge) GetDatabaseStats() (models.DatabaseStats, error) {
 	// Get table count

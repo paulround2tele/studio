@@ -367,6 +367,20 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"required": []string{"diff"},
 			},
 		},
+		{
+			Name:        "browse_with_playwright",
+			Description: "Fetch a URL in a headless browser and capture a screenshot",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"url": map[string]interface{}{
+						"type":        "string",
+						"description": "URL to visit",
+					},
+				},
+				"required": []string{"url"},
+			},
+		},
 
 		// New Tools (6 additional to reach 34)
 		{
@@ -532,11 +546,13 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 	case "contract_drift_check":
 		return s.callCheckContractDrift()
 
-	// Interactive Tools
+		// Interactive Tools
 	case "run_terminal_command":
 		return s.callRunTerminalCommand(ctx, toolCall.Arguments)
 	case "apply_code_change":
 		return s.callApplyCodeChange(ctx, toolCall.Arguments)
+	case "browse_with_playwright":
+		return s.callBrowseWithPlaywright(ctx, toolCall.Arguments)
 
 	// New Tools
 	case "analyze_performance":

@@ -10,7 +10,7 @@ This project is a Go-based MCP (Model Context Protocol) server designed to provi
 
 ## Tool Endpoints
 
-The following tool endpoints are available (43 total):
+The following tool endpoints are available (44 total):
 
 | Category          | Endpoint                      | Description                                                                 |
 | ----------------- | ----------------------------- | --------------------------------------------------------------------------- |
@@ -57,6 +57,7 @@ The following tool endpoints are available (43 total):
 |                   | `/tools/get_lint_diagnostics`  | Runs golangci-lint or staticcheck and go build. |
 | **Interactive**   | `/tools/run_terminal_command`     | Executes a terminal command.                                                |
 |                   | `/tools/apply_code_change`        | Applies a diff to a file.                                                   |
+|                   | `/tools/browse_with_playwright`   | Opens a URL with Playwright and captures a screenshot.                      |
 
 ### Complexity Analysis
 
