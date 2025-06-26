@@ -119,9 +119,15 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-2">
-                <Button className="w-full" disabled>
-                  View Audit Logs
-                </Button>
+                {hasPermission('security:audit_logs') ? (
+                  <Link href="/admin/security">
+                    <Button className="w-full">View Audit Logs</Button>
+                  </Link>
+                ) : (
+                  <Button className="w-full" disabled>
+                    View Audit Logs
+                  </Button>
+                )}
                 <Button variant="outline" className="w-full" disabled>
                   Security Reports
                 </Button>

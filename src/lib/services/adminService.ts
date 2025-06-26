@@ -7,7 +7,9 @@
 
 import apiClient from './apiClient.production';
 import { transformUserResponse } from '@/lib/types/models-aligned';
+import { transformAuditLog } from '@/lib/types/transform';
 import { transformErrorResponse, ApiError } from '@/lib/api/transformers/error-transformers';
+import type { AuditLogEntry } from '@/lib/types';
 import { validateUserResponse, validateOrThrow } from '@/lib/validation/runtime-validators';
 import type { ModelsUserAPI, ModelsRoleAPI, ModelsPermissionAPI } from '@/lib/types/models-aligned';
 import type { UUID, SafeBigInt } from '@/lib/types/branded';
@@ -82,6 +84,16 @@ export interface RoleListResponse {
 
 export interface PermissionListResponse {
   permissions: ModelsPermissionAPI[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: SafeBigInt;
+    totalPages: number;
+  };
+}
+
+export interface AuditLogListResponse {
+  auditLogs: AuditLogEntry[];
   pagination: {
     page: number;
     limit: number;
@@ -606,6 +618,25 @@ class AdminService {
     }
   }
 
+  async listAuditLogs(params?: { page?: number; limit?: number }): Promise<AuditLogListResponse> {
+    try {
+      const response = await apiClient.get<{ auditLogs: unknown[]; pagination: { page: number; limit: number; total: SafeBigInt; totalPages: number } }>(
+        `${this.basePath}/audit`,
+        { params: params || { page: 1, limit: 50 } }
+      );
+
+      const logs = response.data?.auditLogs.map(l => transformAuditLog(l) as AuditLogEntry) || [];
+
+      return {
+        auditLogs: logs,
+        pagination: response.data?.pagination || { page: 1, limit: 50, total: 0n as SafeBigInt, totalPages: 0 }
+      };
+    } catch (error) {
+      console.error('[AdminService] Failed to list audit logs:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/audit`);
+    }
+  }
+
   private transformRole(raw: any): ModelsRoleAPI {
     return {
       id: createUUID(raw.id),
@@ -717,3 +748,7 @@ export const updatePermission = (id: UUID, request: UpdatePermissionRequest) =>
 
 export const deletePermission = (id: UUID) =>
   adminService.deletePermission(id);
+
+export const listAuditLogs = (
+  params?: Parameters<typeof adminService.listAuditLogs>[0]
+) => adminService.listAuditLogs(params);
