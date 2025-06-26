@@ -11,6 +11,8 @@ export interface DNSConfig {
   queryDelayMinMs: number;
   queryDelayMaxMs: number;
   maxConcurrentGoroutines: number;
+  rateLimitDps: number;
+  rateLimitBurst: number;
   rateLimitDps?: number;
   rateLimitBurst?: number;
 }
