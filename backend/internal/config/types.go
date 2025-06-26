@@ -126,13 +126,32 @@ type HTTPValidatorConfigJSON struct {
 	MaxBodyReadBytes        int64             `json:"maxBodyReadBytes,omitempty"`
 }
 
+// ProxyManagerConfig holds settings for proxy health checks.
+type ProxyManagerConfig struct {
+       TestTimeout                 time.Duration
+       TestURL                     string
+       InitialHealthCheckTimeout   time.Duration
+       MaxConcurrentInitialChecks  int
+       TestTimeoutSeconds          int `json:"-"`
+       InitialHealthCheckTimeoutSeconds int `json:"-"`
+}
+
+// ProxyManagerConfigJSON is the JSON representation of ProxyManagerConfig.
+type ProxyManagerConfigJSON struct {
+       TestTimeoutSeconds             int    `json:"testTimeoutSeconds"`
+       TestURL                        string `json:"testUrl"`
+       InitialHealthCheckTimeoutSeconds int  `json:"initialHealthCheckTimeoutSeconds"`
+       MaxConcurrentInitialChecks     int    `json:"maxConcurrentInitialChecks"`
+}
+
 // AppConfigJSON defines the structure of the main config.json file.
 // This struct is used to unmarshal the config.json file.
 type AppConfigJSON struct {
-	Server        ServerConfig            `json:"server"`
-	Worker        WorkerConfig            `json:"worker,omitempty"` // WorkerConfig now includes the new fields
-	DNSValidator  DNSValidatorConfigJSON  `json:"dnsValidator"`
-	HTTPValidator HTTPValidatorConfigJSON `json:"httpValidator"`
-	Logging       LoggingConfig           `json:"logging"`
-	RateLimiter   RateLimiterConfig       `json:"rateLimiter,omitempty"`
+        Server        ServerConfig            `json:"server"`
+        Worker        WorkerConfig            `json:"worker,omitempty"` // WorkerConfig now includes the new fields
+        DNSValidator  DNSValidatorConfigJSON  `json:"dnsValidator"`
+        HTTPValidator HTTPValidatorConfigJSON `json:"httpValidator"`
+        Logging       LoggingConfig           `json:"logging"`
+        RateLimiter   RateLimiterConfig       `json:"rateLimiter,omitempty"`
+       ProxyManager  ProxyManagerConfigJSON  `json:"proxyManager"`
 }

@@ -36,6 +36,13 @@ export interface LoggingConfig {
   level: string;
 }
 
+export interface ProxyManagerConfig {
+  testTimeoutSeconds: number;
+  testUrl: string;
+  initialHealthCheckTimeoutSeconds: number;
+  maxConcurrentInitialChecks: number;
+}
+
 class SettingsService {
   private static instance: SettingsService;
   private readonly basePath = '/api/v2/config';
@@ -73,6 +80,15 @@ class SettingsService {
   async updateLoggingConfig(cfg: LoggingConfig): Promise<void> {
     await apiClient.post(`${this.basePath}/logging`, cfg as unknown as Record<string, unknown>);
   }
+
+  async getProxyManagerConfig(): Promise<ProxyManagerConfig> {
+    const response = await apiClient.get<ProxyManagerConfig>(`${this.basePath}/proxy-manager`);
+    return response.data as unknown as ProxyManagerConfig;
+  }
+
+  async updateProxyManagerConfig(cfg: ProxyManagerConfig): Promise<void> {
+    await apiClient.post(`${this.basePath}/proxy-manager`, cfg as unknown as Record<string, unknown>);
+  }
 }
 
 export const settingsService = SettingsService.getInstance();
@@ -83,3 +99,5 @@ export const getHTTPConfig = () => settingsService.getHTTPConfig();
 export const updateHTTPConfig = (cfg: HTTPConfig) => settingsService.updateHTTPConfig(cfg);
 export const getLoggingConfig = () => settingsService.getLoggingConfig();
 export const updateLoggingConfig = (cfg: LoggingConfig) => settingsService.updateLoggingConfig(cfg);
+export const getProxyManagerConfig = () => settingsService.getProxyManagerConfig();
+export const updateProxyManagerConfig = (cfg: ProxyManagerConfig) => settingsService.updateProxyManagerConfig(cfg);

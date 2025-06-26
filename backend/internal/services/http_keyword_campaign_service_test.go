@@ -42,7 +42,7 @@ func (s *HTTPKeywordCampaignServiceTestSuite) SetupTest() {
 
 	httpValSvc := httpvalidator.NewHTTPValidator(s.AppConfig)
 	kwordScannerSvc := keywordscanner.NewService(s.KeywordStore)
-	proxyMgr := proxymanager.NewProxyManager(s.AppConfig.Proxies, 30*time.Second)
+       proxyMgr := proxymanager.NewProxyManager(s.AppConfig.Proxies, s.AppConfig.ProxyManager)
 
 	s.dgService = services.NewDomainGenerationServiceStable(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
 	s.dnsService = services.NewDNSCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.AuditLogStore, s.CampaignJobStore, s.AppConfig)
