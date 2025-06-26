@@ -32,10 +32,19 @@ const toastVariants = cva(
         default: "border bg-background text-foreground",
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
+        success: "border-green-500 bg-green-50 text-green-900 dark:bg-green-900/10 dark:text-green-100",
+        warning: "border-yellow-500 bg-yellow-50 text-yellow-900 dark:bg-yellow-900/10 dark:text-yellow-100",
+        info: "border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-900/10 dark:text-blue-100",
       },
+      size: {
+        sm: "p-3 pr-6 text-xs",
+        md: "p-4 pr-8 text-sm", 
+        lg: "p-6 pr-8 text-base",
+      }
     },
     defaultVariants: {
       variant: "default",
+      size: "md",
     },
   }
 )
@@ -43,14 +52,45 @@ const toastVariants = cva(
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
+    VariantProps<typeof toastVariants> & {
+      showIcon?: boolean
+      icon?: React.ReactNode
+      onClose?: () => void
+    }
+>(({ className, variant, size, showIcon = false, icon, onClose, ...props }, ref) => {
+  const renderIcon = () => {
+    if (!showIcon) return null
+    
+    if (icon) return icon
+    
+    // Default icons based on variant
+    switch (variant) {
+      case 'success':
+        return <span className="text-green-500">✓</span>
+      case 'destructive':
+        return <span className="text-red-500">✕</span>
+      case 'warning':
+        return <span className="text-yellow-500">⚠</span>
+      case 'info':
+        return <span className="text-blue-500">ℹ</span>
+      default:
+        return <span className="text-muted-foreground">•</span>
+    }
+  }
+
   return (
     <ToastPrimitives.Root
       ref={ref}
-      className={cn(toastVariants({ variant }), className)}
+      className={cn(toastVariants({ variant, size }), className)}
       {...props}
-    />
+    >
+      <div className="flex items-start space-x-3 w-full">
+        {renderIcon()}
+        <div className="flex-1 min-w-0">
+          {props.children}
+        </div>
+      </div>
+    </ToastPrimitives.Root>
   )
 })
 Toast.displayName = ToastPrimitives.Root.displayName

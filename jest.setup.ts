@@ -5,6 +5,14 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// Mock ResizeObserver for Radix UI components
+global.ResizeObserver = class ResizeObserver {
+  constructor(callback: ResizeObserverCallback) {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
