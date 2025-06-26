@@ -44,6 +44,9 @@ export default function SettingsHomePage() {
             <Link href="/admin/settings/proxies">
               <Button className="w-full">Proxy Manager Settings</Button>
             </Link>
+            <Link href="/admin/settings/features">
+              <Button className="w-full">Feature Flags</Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

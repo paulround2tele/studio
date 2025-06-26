@@ -16,11 +16,12 @@ type AppConfig struct {
 	Server         ServerConfig        `json:"server"`
 	Worker         WorkerConfig        `json:"worker"` // Added WorkerConfig
 	DNSValidator   DNSValidatorConfig  `json:"dnsValidator"`
-       HTTPValidator  HTTPValidatorConfig `json:"httpValidator"`
-       Logging        LoggingConfig       `json:"logging"`
-       RateLimiter    RateLimiterConfig   `json:"rateLimiter"`
-       ProxyManager   ProxyManagerConfig  `json:"proxyManager"`
-       DNSPersonas    []DNSPersona        `json:"dnsPersonas"`
+	HTTPValidator  HTTPValidatorConfig `json:"httpValidator"`
+	Logging        LoggingConfig       `json:"logging"`
+	RateLimiter    RateLimiterConfig   `json:"rateLimiter"`
+	ProxyManager   ProxyManagerConfig  `json:"proxyManager"`
+	Features       FeatureFlags        `json:"features"`
+	DNSPersonas    []DNSPersona        `json:"dnsPersonas"`
 	HTTPPersonas   []HTTPPersona       `json:"httpPersonas"`
 	Proxies        []ProxyConfigEntry  `json:"proxies"`
 	KeywordSets    []KeywordSet        `json:"keywordSets"`
@@ -175,9 +176,10 @@ func ConvertJSONToAppConfig(jsonCfg AppConfigJSON) *AppConfig {
 		DNSValidator:  ConvertJSONToDNSConfig(jsonCfg.DNSValidator),
 		HTTPValidator: ConvertJSONToHTTPConfig(jsonCfg.HTTPValidator),
 		Logging:       jsonCfg.Logging,
-               RateLimiter:   ConvertJSONToRateLimiterConfig(jsonCfg.RateLimiter),
-               ProxyManager:  ConvertJSONToProxyManagerConfig(jsonCfg.ProxyManager),
-       }
+		RateLimiter:   ConvertJSONToRateLimiterConfig(jsonCfg.RateLimiter),
+		ProxyManager:  ConvertJSONToProxyManagerConfig(jsonCfg.ProxyManager),
+		Features:      jsonCfg.Features,
+	}
 
 	if appCfg.Server.GinMode == "" {
 		appCfg.Server.GinMode = DefaultGinMode
@@ -203,9 +205,10 @@ func ConvertAppConfigToJSON(appCfg *AppConfig) AppConfigJSON {
 		DNSValidator:  ConvertDNSConfigToJSON(appCfg.DNSValidator),
 		HTTPValidator: ConvertHTTPConfigToJSON(appCfg.HTTPValidator),
 		Logging:       appCfg.Logging,
-               RateLimiter:   ConvertRateLimiterConfigToJSON(appCfg.RateLimiter),
-               ProxyManager:  ConvertProxyManagerConfigToJSON(appCfg.ProxyManager),
-       }
+		RateLimiter:   ConvertRateLimiterConfigToJSON(appCfg.RateLimiter),
+		ProxyManager:  ConvertProxyManagerConfigToJSON(appCfg.ProxyManager),
+		Features:      appCfg.Features,
+	}
 }
 
 // ConvertJSONToWorkerConfig applies defaults to WorkerConfig from JSON.
@@ -405,45 +408,45 @@ func ConvertHTTPConfigToJSON(cfg HTTPValidatorConfig) HTTPValidatorConfigJSON {
 
 // ConvertJSONToProxyManagerConfig applies defaults to ProxyManagerConfig from JSON.
 func ConvertJSONToProxyManagerConfig(jsonCfg ProxyManagerConfigJSON) ProxyManagerConfig {
-       cfg := ProxyManagerConfig{
-               TestTimeout:               time.Duration(jsonCfg.TestTimeoutSeconds) * time.Second,
-               TestURL:                   jsonCfg.TestURL,
-               InitialHealthCheckTimeout: time.Duration(jsonCfg.InitialHealthCheckTimeoutSeconds) * time.Second,
-               MaxConcurrentInitialChecks: jsonCfg.MaxConcurrentInitialChecks,
-               TestTimeoutSeconds:        jsonCfg.TestTimeoutSeconds,
-               InitialHealthCheckTimeoutSeconds: jsonCfg.InitialHealthCheckTimeoutSeconds,
-       }
-       if cfg.TestTimeout == 0 {
-               cfg.TestTimeout = time.Duration(DefaultProxyTestTimeoutSeconds) * time.Second
-               cfg.TestTimeoutSeconds = DefaultProxyTestTimeoutSeconds
-       }
-       if cfg.TestURL == "" {
-               cfg.TestURL = DefaultProxyTestURL
-       }
-       if cfg.InitialHealthCheckTimeout == 0 {
-               cfg.InitialHealthCheckTimeout = time.Duration(DefaultProxyInitialHealthCheckTimeoutSeconds) * time.Second
-               cfg.InitialHealthCheckTimeoutSeconds = DefaultProxyInitialHealthCheckTimeoutSeconds
-       }
-       if cfg.MaxConcurrentInitialChecks == 0 {
-               cfg.MaxConcurrentInitialChecks = DefaultProxyMaxConcurrentInitialChecks
-       }
-       return cfg
+	cfg := ProxyManagerConfig{
+		TestTimeout:                      time.Duration(jsonCfg.TestTimeoutSeconds) * time.Second,
+		TestURL:                          jsonCfg.TestURL,
+		InitialHealthCheckTimeout:        time.Duration(jsonCfg.InitialHealthCheckTimeoutSeconds) * time.Second,
+		MaxConcurrentInitialChecks:       jsonCfg.MaxConcurrentInitialChecks,
+		TestTimeoutSeconds:               jsonCfg.TestTimeoutSeconds,
+		InitialHealthCheckTimeoutSeconds: jsonCfg.InitialHealthCheckTimeoutSeconds,
+	}
+	if cfg.TestTimeout == 0 {
+		cfg.TestTimeout = time.Duration(DefaultProxyTestTimeoutSeconds) * time.Second
+		cfg.TestTimeoutSeconds = DefaultProxyTestTimeoutSeconds
+	}
+	if cfg.TestURL == "" {
+		cfg.TestURL = DefaultProxyTestURL
+	}
+	if cfg.InitialHealthCheckTimeout == 0 {
+		cfg.InitialHealthCheckTimeout = time.Duration(DefaultProxyInitialHealthCheckTimeoutSeconds) * time.Second
+		cfg.InitialHealthCheckTimeoutSeconds = DefaultProxyInitialHealthCheckTimeoutSeconds
+	}
+	if cfg.MaxConcurrentInitialChecks == 0 {
+		cfg.MaxConcurrentInitialChecks = DefaultProxyMaxConcurrentInitialChecks
+	}
+	return cfg
 }
 
 // ConvertProxyManagerConfigToJSON prepares ProxyManagerConfig for JSON.
 func ConvertProxyManagerConfigToJSON(cfg ProxyManagerConfig) ProxyManagerConfigJSON {
-       timeoutSec := cfg.TestTimeoutSeconds
-       if timeoutSec == 0 && cfg.TestTimeout > 0 {
-               timeoutSec = int(cfg.TestTimeout.Seconds())
-       }
-       initSec := cfg.InitialHealthCheckTimeoutSeconds
-       if initSec == 0 && cfg.InitialHealthCheckTimeout > 0 {
-               initSec = int(cfg.InitialHealthCheckTimeout.Seconds())
-       }
-       return ProxyManagerConfigJSON{
-               TestTimeoutSeconds:             timeoutSec,
-               TestURL:                        cfg.TestURL,
-               InitialHealthCheckTimeoutSeconds: initSec,
-               MaxConcurrentInitialChecks:     cfg.MaxConcurrentInitialChecks,
-       }
+	timeoutSec := cfg.TestTimeoutSeconds
+	if timeoutSec == 0 && cfg.TestTimeout > 0 {
+		timeoutSec = int(cfg.TestTimeout.Seconds())
+	}
+	initSec := cfg.InitialHealthCheckTimeoutSeconds
+	if initSec == 0 && cfg.InitialHealthCheckTimeout > 0 {
+		initSec = int(cfg.InitialHealthCheckTimeout.Seconds())
+	}
+	return ProxyManagerConfigJSON{
+		TestTimeoutSeconds:               timeoutSec,
+		TestURL:                          cfg.TestURL,
+		InitialHealthCheckTimeoutSeconds: initSec,
+		MaxConcurrentInitialChecks:       cfg.MaxConcurrentInitialChecks,
+	}
 }

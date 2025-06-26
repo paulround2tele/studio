@@ -31,5 +31,11 @@
     "maxDomainsPerRequest": 0,
     "allowInsecureTLS": false,
     "maxConcurrentGoroutines": 0
+  },
+  "features": {
+    "enableRealTimeUpdates": true,
+    "enableOfflineMode": false,
+    "enableAnalytics": false,
+    "enableDebugMode": false
   }
 }

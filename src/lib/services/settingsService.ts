@@ -42,6 +42,13 @@ export interface LoggingConfig {
   enablePerformanceLogging?: boolean;
 }
 
+export interface FeatureFlagsConfig {
+  enableRealTimeUpdates: boolean;
+  enableOfflineMode: boolean;
+  enableAnalytics: boolean;
+  enableDebugMode: boolean;
+}
+
 export interface WorkerConfig {
   numWorkers: number;
   pollIntervalSeconds: number;
@@ -157,6 +164,20 @@ class SettingsService {
       cfg as unknown as Record<string, unknown>,
     );
   }
+
+  async getFeatureFlags(): Promise<FeatureFlagsConfig> {
+    const response = await apiClient.get<FeatureFlagsConfig>(
+      `${this.basePath}/features`,
+    );
+    return response.data as unknown as FeatureFlagsConfig;
+  }
+
+  async updateFeatureFlags(flags: FeatureFlagsConfig): Promise<void> {
+    await apiClient.post(
+      `${this.basePath}/features`,
+      flags as unknown as Record<string, unknown>,
+    );
+  }
 }
 
 export const settingsService = SettingsService.getInstance();
@@ -181,3 +202,6 @@ export const getProxyManagerConfig = () =>
   settingsService.getProxyManagerConfig();
 export const updateProxyManagerConfig = (cfg: ProxyManagerConfig) =>
   settingsService.updateProxyManagerConfig(cfg);
+export const getFeatureFlags = () => settingsService.getFeatureFlags();
+export const updateFeatureFlags = (flags: FeatureFlagsConfig) =>
+  settingsService.updateFeatureFlags(flags);
