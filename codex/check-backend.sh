@@ -54,6 +54,7 @@ else
   echo "All Go tests passed"
 fi
 
+
 go test ./...
 
 cd ..

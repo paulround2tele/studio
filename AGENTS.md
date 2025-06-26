@@ -68,6 +68,8 @@ scope or in violation of constraints are rejected.
 
 The `codex` directory contains helper scripts for validating the local environment.
 
+For a full setup guide see `.codex/README.md` which explains how to install dependencies and start PostgreSQL.
+
 - **check db**: `./codex/check-db.sh` verifies PostgreSQL connectivity, ensures the `schema_migrations` table exists and can apply pending migrations when run with `--migrate`.
 - **check backend**: `./codex/check-backend.sh` runs `go fmt`, `go vet`, and `go test ./...` while loading database settings from environment variables or `backend/config.json`.
 - **check status**: `./codex/status.sh` executes database and backend checks, runs frontend tests, lists available npm scripts, and prints recent backend log lines.

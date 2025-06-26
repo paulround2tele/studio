@@ -60,5 +60,8 @@ fi
 if [ "$1" = "--migrate" ]; then
   DSN="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
   echo "Running migrations..."
+  (cd backend && go run ./cmd/migrate -dsn "$DSN") || \
+    echo "Migration command failed or no migrations needed"
+
   go run ./backend/cmd/migrate -dsn "$DSN"
 fi
