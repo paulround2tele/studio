@@ -13,6 +13,9 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+// Mock scrollIntoView for Radix UI components (standard fix for JSDOM)
+Element.prototype.scrollIntoView = jest.fn();
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
