@@ -31,12 +31,12 @@ CREATE TABLE IF NOT EXISTS event_projections (
     UNIQUE(projection_name, aggregate_id)
 );
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_aggregate
+CREATE INDEX IF NOT EXISTS idx_event_store_aggregate
     ON event_store(aggregate_id, stream_position);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_global_position
+CREATE INDEX IF NOT EXISTS idx_event_store_global_position
     ON event_store(global_position);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_type_time
+CREATE INDEX IF NOT EXISTS idx_event_store_type_time
     ON event_store(event_type, occurred_at DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_projections_name_aggregate
+CREATE INDEX IF NOT EXISTS idx_projections_name_aggregate
     ON event_projections(projection_name, aggregate_id);
 

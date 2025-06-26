@@ -47,13 +47,13 @@ CREATE TABLE IF NOT EXISTS architecture_refactor_log (
     implemented_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_metrics_pattern
+CREATE INDEX IF NOT EXISTS idx_service_metrics_pattern
     ON service_architecture_metrics(architecture_pattern, service_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_metrics_coupling
+CREATE INDEX IF NOT EXISTS idx_service_metrics_coupling
     ON service_architecture_metrics(coupling_score DESC) WHERE coupling_score > 50.0;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_dependencies_reliability
+CREATE INDEX IF NOT EXISTS idx_dependencies_reliability
     ON service_dependencies(reliability_score ASC) WHERE reliability_score < 95.0;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_refactor_timeline
+CREATE INDEX IF NOT EXISTS idx_refactor_timeline
     ON architecture_refactor_log(implemented_at DESC);
 
 CREATE OR REPLACE FUNCTION get_architecture_health_score()
@@ -95,9 +95,6 @@ BEGIN
         recommendations;
 END;
 $$;
-
-INSERT INTO public.schema_migrations (version, description)
-VALUES ('20250622_service_architecture_monitoring', 'Service architecture monitoring schema');
 
 COMMIT;
 

@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS communication_patterns (
     UNIQUE(source_service, target_service, protocol)
 );
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_latency
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_latency
     ON communication_patterns(avg_latency_ms DESC) WHERE avg_latency_ms > 100.0;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_errors
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_errors
     ON communication_patterns(error_rate DESC) WHERE error_rate > 1.0;

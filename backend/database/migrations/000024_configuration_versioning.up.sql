@@ -39,9 +39,6 @@ CREATE INDEX IF NOT EXISTS idx_config_locks_owner ON config_locks(owner);
 CREATE INDEX IF NOT EXISTS idx_config_versions_hash ON config_versions(config_hash);
 CREATE INDEX IF NOT EXISTS idx_config_versions_version ON config_versions(config_hash, version);
 
-INSERT INTO public.schema_migrations (version, description)
-VALUES ('20250701_configuration_versioning', 'Configuration versioning tables');
-
 COMMIT;
 
 -- Rollback procedure
