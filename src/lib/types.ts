@@ -865,6 +865,13 @@ export type ProxyUpdateResponse = ApiResponse<Proxy>;
 export type ProxyDeleteResponse = ApiResponse<null>;
 export type ProxyActionResponse = ApiResponse<Proxy>;
 
+// Keyword Set Service Responses
+export type KeywordSetListResponse = ApiResponse<KeywordSet[]>;
+export type KeywordSetDetailResponse = ApiResponse<KeywordSet>;
+export type KeywordSetCreationResponse = ApiResponse<KeywordSet>;
+export type KeywordSetUpdateResponse = ApiResponse<KeywordSet>;
+export type KeywordSetDeleteResponse = ApiResponse<null>;
+
 // Auth Service Responses
 export type UserListResponse = ApiResponse<User[]>;
 export type UserDetailResponse = ApiResponse<User>;
