@@ -884,6 +884,78 @@ export default function CampaignDashboardPage() {
     );
   };
 
+  const renderTuningSummary = () => {
+    if (campaign.campaignType !== 'dns_validation' && campaign.campaignType !== 'http_keyword_validation') {
+      return null;
+    }
+
+    const params = campaign.campaignType === 'dns_validation'
+      ? campaign.dnsValidationParams
+      : campaign.httpKeywordValidationParams;
+
+    if (!params) return null;
+
+    const rotation = params.rotationIntervalSeconds !== undefined
+      ? typeof params.rotationIntervalSeconds === 'bigint'
+        ? safeBigIntToNumber(params.rotationIntervalSeconds)
+        : params.rotationIntervalSeconds
+      : undefined;
+    const speed = params.processingSpeedPerMinute !== undefined
+      ? typeof params.processingSpeedPerMinute === 'bigint'
+        ? safeBigIntToNumber(params.processingSpeedPerMinute)
+        : params.processingSpeedPerMinute
+      : undefined;
+    const batch = params.batchSize !== undefined
+      ? typeof params.batchSize === 'bigint'
+        ? safeBigIntToNumber(params.batchSize)
+        : params.batchSize
+      : undefined;
+    const retries = params.retryAttempts !== undefined
+      ? typeof params.retryAttempts === 'bigint'
+        ? safeBigIntToNumber(params.retryAttempts)
+        : params.retryAttempts
+      : undefined;
+
+    if (rotation === undefined && speed === undefined && batch === undefined && retries === undefined) {
+      return null;
+    }
+
+    return (
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle>Tuning Parameters</CardTitle>
+          <CardDescription>Worker settings for this phase</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-1 text-sm">
+          {rotation !== undefined && (
+            <div className="flex justify-between">
+              <span>Rotation Interval</span>
+              <span>{rotation}s</span>
+            </div>
+          )}
+          {speed !== undefined && (
+            <div className="flex justify-between">
+              <span>Processing Speed / Minute</span>
+              <span>{speed}</span>
+            </div>
+          )}
+          {batch !== undefined && (
+            <div className="flex justify-between">
+              <span>Batch Size</span>
+              <span>{batch}</span>
+            </div>
+          )}
+          {retries !== undefined && (
+            <div className="flex justify-between">
+              <span>Retry Attempts</span>
+              <span>{retries}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
 
   return (
     <div className="space-y-6">
@@ -914,6 +986,8 @@ export default function CampaignDashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      {renderTuningSummary()}
 
       <Card className="shadow-lg">
         <CardHeader><CardTitle>Campaign Actions</CardTitle></CardHeader>
