@@ -13,7 +13,6 @@ import {
   UUID,
   createUUID,
   isUUID,
-  ISODateString,
   createISODateString
 } from '../branded';
 import {

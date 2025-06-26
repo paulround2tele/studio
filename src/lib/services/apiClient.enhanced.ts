@@ -187,9 +187,9 @@ class EnhancedApiClient {
               } else if (errorData.errors && Array.isArray(errorData.errors)) {
                 // Legacy array format
                 errorMessage = errorData.errors[0]?.message || errorData.errors[0]?.error || errorMessage;
-                errorDetails = errorData.errors.map((e: any) => ({
-                  field: e.field,
-                  message: e.message || e.error
+                errorDetails = errorData.errors.map((e: Record<string, unknown>) => ({
+                  field: e.field as string | undefined,
+                  message: (e.message as string | undefined) || (e.error as string)
                 }));
               }
             }
@@ -204,7 +204,7 @@ class EnhancedApiClient {
           
           // Add error details if available
           if (errorDetails.length > 0) {
-            (apiResponse as any).errors = errorDetails;
+            (apiResponse as ApiResponse<T> & { errors: typeof errorDetails }).errors = errorDetails;
           }
           
           return apiResponse;
@@ -238,7 +238,7 @@ class EnhancedApiClient {
             
             // Add transformed metadata if present
             if (transformedMetadata) {
-              (apiResponse as any).metadata = transformedMetadata;
+              (apiResponse as ApiResponse<T> & { metadata: typeof transformedMetadata }).metadata = transformedMetadata;
             }
             
             return apiResponse;

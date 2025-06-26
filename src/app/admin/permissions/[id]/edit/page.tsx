@@ -19,7 +19,6 @@ export default function EditPermissionPage() {
   const canManage = hasPermission('users:manage_permissions') || hasPermission('admin:all');
 
   const [perm, setPerm] = useState<ModelsPermissionAPI | null>(null);
-  const [name, setName] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [resource, setResource] = useState('');
   const [action, setAction] = useState('');
@@ -33,7 +32,6 @@ export default function EditPermissionPage() {
       try {
         const p = await getPermissionById(params.id as string);
         setPerm(p);
-        setName(p.name);
         setDisplayName(p.displayName);
         setResource(p.resource);
         setAction(p.action);

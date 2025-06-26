@@ -22,19 +22,19 @@ export function camelToSnake(str: string): string {
 /**
  * Transform object keys from snake_case to camelCase
  */
-export function snakeToCamelKeys<T = any>(obj: any): T {
+export function snakeToCamelKeys<T = unknown>(obj: unknown): T {
   if (obj === null || obj === undefined) {
     return obj;
   }
 
   // Handle arrays
   if (Array.isArray(obj)) {
-    return obj.map(item => snakeToCamelKeys(item)) as any;
+    return (obj as unknown[]).map(item => snakeToCamelKeys(item)) as unknown as T;
   }
 
   // Handle objects
   if (typeof obj === 'object' && obj.constructor === Object) {
-    const transformed: any = {};
+    const transformed: Record<string, unknown> = {};
     
     for (const [key, value] of Object.entries(obj)) {
       const camelKey = snakeToCamel(key);
@@ -57,19 +57,19 @@ export function snakeToCamelKeys<T = any>(obj: any): T {
 /**
  * Transform object keys from camelCase to snake_case
  */
-export function camelToSnakeKeys<T = any>(obj: any): T {
+export function camelToSnakeKeys<T = unknown>(obj: unknown): T {
   if (obj === null || obj === undefined) {
     return obj;
   }
 
   // Handle arrays
   if (Array.isArray(obj)) {
-    return obj.map(item => camelToSnakeKeys(item)) as any;
+    return (obj as unknown[]).map(item => camelToSnakeKeys(item)) as unknown as T;
   }
 
   // Handle objects
   if (typeof obj === 'object' && obj.constructor === Object) {
-    const transformed: any = {};
+    const transformed: Record<string, unknown> = {};
     
     for (const [key, value] of Object.entries(obj)) {
       const snakeKey = camelToSnake(key);
@@ -183,8 +183,8 @@ export const REVERSE_FIELD_MAPPING_OVERRIDES: Record<string, string> = Object.en
 /**
  * Transform object keys with special field mapping overrides
  */
-export function transformKeysWithOverrides<T = any>(
-  obj: any,
+export function transformKeysWithOverrides<T = unknown>(
+  obj: unknown,
   overrides: Record<string, string>,
   defaultTransform: (key: string) => string
 ): T {
@@ -194,12 +194,12 @@ export function transformKeysWithOverrides<T = any>(
 
   // Handle arrays
   if (Array.isArray(obj)) {
-    return obj.map(item => transformKeysWithOverrides(item, overrides, defaultTransform)) as any;
+    return (obj as unknown[]).map(item => transformKeysWithOverrides(item, overrides, defaultTransform)) as unknown as T;
   }
 
   // Handle objects
   if (typeof obj === 'object' && obj.constructor === Object) {
-    const transformed: any = {};
+    const transformed: Record<string, unknown> = {};
     
     for (const [key, value] of Object.entries(obj)) {
       // Use override if available, otherwise use default transform
@@ -224,7 +224,7 @@ export function transformKeysWithOverrides<T = any>(
  * Transform API response from snake_case to camelCase
  * Uses field mapping overrides for special cases
  */
-export function transformApiResponse<T = any>(response: any): T {
+export function transformApiResponse<T = unknown>(response: unknown): T {
   return transformKeysWithOverrides(response, FIELD_MAPPING_OVERRIDES, snakeToCamel);
 }
 
@@ -232,7 +232,7 @@ export function transformApiResponse<T = any>(response: any): T {
  * Transform API request from camelCase to snake_case
  * Uses reverse field mapping overrides for special cases
  */
-export function transformApiRequest<T = any>(request: any): T {
+export function transformApiRequest<T = unknown>(request: unknown): T {
   return transformKeysWithOverrides(request, REVERSE_FIELD_MAPPING_OVERRIDES, camelToSnake);
 }
 
@@ -240,12 +240,12 @@ export function transformApiRequest<T = any>(request: any): T {
  * Transform specific fields in an object
  * Useful for partial transformations or when only certain fields need conversion
  */
-export function transformSpecificFields<T extends Record<string, any>>(
+export function transformSpecificFields<T extends Record<string, unknown>>( 
   obj: T,
   fields: string[],
-  transform: (value: any) => any
+  transform: (value: unknown) => unknown
 ): T {
-  const result: any = { ...obj };
+  const result: Record<string, unknown> = { ...obj };
   
   for (const field of fields) {
     if (field in result && result[field] !== undefined) {

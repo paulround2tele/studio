@@ -168,7 +168,7 @@ class EnhancedWebSocketService {
     }
   }
 
-  send(message: WebSocketMessage | any): void {
+  send(message: WebSocketMessage | unknown): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.warn('WebSocket not connected, queueing message');
       this.messageQueue.push(message);
@@ -177,9 +177,9 @@ class EnhancedWebSocketService {
 
     try {
       // Transform message from camelCase to snake_case before sending
-      const transformedMessage = this.options.skipTransform 
-        ? message 
-        : transformApiRequest(message);
+      const transformedMessage = this.options.skipTransform
+        ? message
+        : transformApiRequest(message as Record<string, unknown>);
       
       this.ws.send(JSON.stringify(transformedMessage));
     } catch (error) {
