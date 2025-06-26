@@ -9,8 +9,9 @@ import apiClient from './apiClient.production';
 import { transformUserResponse } from '@/lib/types/models-aligned';
 import { transformErrorResponse, ApiError } from '@/lib/api/transformers/error-transformers';
 import { validateUserResponse, validateOrThrow } from '@/lib/validation/runtime-validators';
-import type { ModelsUserAPI } from '@/lib/types/models-aligned';
+import type { ModelsUserAPI, ModelsRoleAPI, ModelsPermissionAPI } from '@/lib/types/models-aligned';
 import type { UUID, SafeBigInt } from '@/lib/types/branded';
+import { createUUID, createISODateString } from '@/lib/types/branded';
 
 /**
  * User list response with pagination
@@ -67,6 +68,56 @@ export interface BulkOperationResult {
   totalProcessed: number;
   successCount: number;
   failureCount: number;
+}
+
+export interface RoleListResponse {
+  roles: ModelsRoleAPI[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: SafeBigInt;
+    totalPages: number;
+  };
+}
+
+export interface PermissionListResponse {
+  permissions: ModelsPermissionAPI[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: SafeBigInt;
+    totalPages: number;
+  };
+}
+
+export interface CreateRoleRequest {
+  name: string;
+  displayName: string;
+  description?: string;
+  permissionIds?: UUID[];
+}
+
+export interface UpdateRoleRequest {
+  name?: string;
+  displayName?: string;
+  description?: string;
+  permissionIds?: UUID[];
+}
+
+export interface CreatePermissionRequest {
+  name: string;
+  displayName: string;
+  resource: string;
+  action: string;
+  description?: string;
+}
+
+export interface UpdatePermissionRequest {
+  name?: string;
+  displayName?: string;
+  resource?: string;
+  action?: string;
+  description?: string;
 }
 
 class AdminService {
@@ -438,6 +489,148 @@ class AdminService {
       throw transformErrorResponse(error, 500, `${this.basePath}/users/export`);
     }
   }
+
+  async listRoles(params?: { page?: number; limit?: number }): Promise<RoleListResponse> {
+    try {
+      const response = await apiClient.get<{ roles: any[]; pagination: { page: number; limit: number; total: SafeBigInt; totalPages: number } }>(
+        `${this.basePath}/roles`,
+        { params: params || { page: 1, limit: 10 } }
+      );
+
+      const roles = response.data?.roles.map(r => this.transformRole(r)) || [];
+
+      return {
+        roles,
+        pagination: response.data?.pagination || { page: 1, limit: 10, total: 0n as SafeBigInt, totalPages: 0 }
+      };
+    } catch (error) {
+      console.error('[AdminService] Failed to list roles:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/roles`);
+    }
+  }
+
+  async getRoleById(roleId: UUID): Promise<ModelsRoleAPI> {
+    try {
+      const response = await apiClient.get<unknown>(`${this.basePath}/roles/${roleId}`);
+      return this.transformRole(response.data);
+    } catch (error) {
+      console.error('[AdminService] Failed to get role:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/roles/${roleId}`);
+    }
+  }
+
+  async createRole(request: CreateRoleRequest): Promise<ModelsRoleAPI> {
+    try {
+      const response = await apiClient.post<unknown>(`${this.basePath}/roles`, request as any);
+      return this.transformRole(response.data);
+    } catch (error) {
+      console.error('[AdminService] Failed to create role:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/roles`);
+    }
+  }
+
+  async updateRole(roleId: UUID, request: UpdateRoleRequest): Promise<ModelsRoleAPI> {
+    try {
+      const response = await apiClient.put<unknown>(`${this.basePath}/roles/${roleId}`, request as any);
+      return this.transformRole(response.data);
+    } catch (error) {
+      console.error('[AdminService] Failed to update role:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/roles/${roleId}`);
+    }
+  }
+
+  async deleteRole(roleId: UUID): Promise<void> {
+    try {
+      await apiClient.delete(`${this.basePath}/roles/${roleId}`);
+    } catch (error) {
+      console.error('[AdminService] Failed to delete role:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/roles/${roleId}`);
+    }
+  }
+
+  async listPermissions(params?: { page?: number; limit?: number }): Promise<PermissionListResponse> {
+    try {
+      const response = await apiClient.get<{ permissions: any[]; pagination: { page: number; limit: number; total: SafeBigInt; totalPages: number } }>(
+        `${this.basePath}/permissions`,
+        { params: params || { page: 1, limit: 10 } }
+      );
+
+      const permissions = response.data?.permissions.map(p => this.transformPermission(p)) || [];
+
+      return {
+        permissions,
+        pagination: response.data?.pagination || { page: 1, limit: 10, total: 0n as SafeBigInt, totalPages: 0 }
+      };
+    } catch (error) {
+      console.error('[AdminService] Failed to list permissions:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/permissions`);
+    }
+  }
+
+  async getPermissionById(permissionId: UUID): Promise<ModelsPermissionAPI> {
+    try {
+      const response = await apiClient.get<unknown>(`${this.basePath}/permissions/${permissionId}`);
+      return this.transformPermission(response.data);
+    } catch (error) {
+      console.error('[AdminService] Failed to get permission:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/permissions/${permissionId}`);
+    }
+  }
+
+  async createPermission(request: CreatePermissionRequest): Promise<ModelsPermissionAPI> {
+    try {
+      const response = await apiClient.post<unknown>(`${this.basePath}/permissions`, request as any);
+      return this.transformPermission(response.data);
+    } catch (error) {
+      console.error('[AdminService] Failed to create permission:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/permissions`);
+    }
+  }
+
+  async updatePermission(permissionId: UUID, request: UpdatePermissionRequest): Promise<ModelsPermissionAPI> {
+    try {
+      const response = await apiClient.put<unknown>(`${this.basePath}/permissions/${permissionId}`, request as any);
+      return this.transformPermission(response.data);
+    } catch (error) {
+      console.error('[AdminService] Failed to update permission:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/permissions/${permissionId}`);
+    }
+  }
+
+  async deletePermission(permissionId: UUID): Promise<void> {
+    try {
+      await apiClient.delete(`${this.basePath}/permissions/${permissionId}`);
+    } catch (error) {
+      console.error('[AdminService] Failed to delete permission:', error);
+      throw transformErrorResponse(error, 500, `${this.basePath}/permissions/${permissionId}`);
+    }
+  }
+
+  private transformRole(raw: any): ModelsRoleAPI {
+    return {
+      id: createUUID(raw.id),
+      name: raw.name,
+      displayName: raw.displayName,
+      description: raw.description,
+      isSystemRole: raw.isSystemRole,
+      createdAt: createISODateString(raw.createdAt),
+      updatedAt: createISODateString(raw.updatedAt),
+      permissions: raw.permissions?.map((p: any) => this.transformPermission(p))
+    } as ModelsRoleAPI;
+  }
+
+  private transformPermission(raw: any): ModelsPermissionAPI {
+    return {
+      id: createUUID(raw.id),
+      name: raw.name,
+      displayName: raw.displayName,
+      description: raw.description,
+      resource: raw.resource,
+      action: raw.action,
+      createdAt: createISODateString(raw.createdAt),
+      updatedAt: createISODateString(raw.updatedAt)
+    } as ModelsPermissionAPI;
+  }
 }
 
 // Export singleton instance
@@ -494,3 +687,33 @@ export const unlockUser = (userId: UUID) =>
 
 export const exportUsers = (filters?: Parameters<typeof adminService.exportUsers>[0]) =>
   adminService.exportUsers(filters);
+
+export const listRoles = (params?: Parameters<typeof adminService.listRoles>[0]) =>
+  adminService.listRoles(params);
+
+export const getRoleById = (roleId: UUID) =>
+  adminService.getRoleById(roleId);
+
+export const createRole = (request: CreateRoleRequest) =>
+  adminService.createRole(request);
+
+export const updateRole = (roleId: UUID, request: UpdateRoleRequest) =>
+  adminService.updateRole(roleId, request);
+
+export const deleteRole = (roleId: UUID) =>
+  adminService.deleteRole(roleId);
+
+export const listPermissions = (params?: Parameters<typeof adminService.listPermissions>[0]) =>
+  adminService.listPermissions(params);
+
+export const getPermissionById = (id: UUID) =>
+  adminService.getPermissionById(id);
+
+export const createPermission = (request: CreatePermissionRequest) =>
+  adminService.createPermission(request);
+
+export const updatePermission = (id: UUID, request: UpdatePermissionRequest) =>
+  adminService.updatePermission(id, request);
+
+export const deletePermission = (id: UUID) =>
+  adminService.deletePermission(id);

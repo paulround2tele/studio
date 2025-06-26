@@ -181,6 +181,98 @@ class AdminService {
       throw error;
     }
   }
+
+  async getRoles(params?: { page?: number; limit?: number }) {
+    try {
+      const response = await apiClient.get('/api/v2/admin/roles', { params });
+      return response;
+    } catch (error) {
+      console.error('[AdminService] Failed to get roles:', error);
+      throw error;
+    }
+  }
+
+  async getRole(roleId: string) {
+    try {
+      return await apiClient.get(`/api/v2/admin/roles/${roleId}`);
+    } catch (error) {
+      console.error('[AdminService] Failed to get role:', error);
+      throw error;
+    }
+  }
+
+  async createRole(data: Record<string, unknown>) {
+    try {
+      return await apiClient.post('/api/v2/admin/roles', data);
+    } catch (error) {
+      console.error('[AdminService] Failed to create role:', error);
+      throw error;
+    }
+  }
+
+  async updateRole(roleId: string, data: Record<string, unknown>) {
+    try {
+      return await apiClient.put(`/api/v2/admin/roles/${roleId}`, data);
+    } catch (error) {
+      console.error('[AdminService] Failed to update role:', error);
+      throw error;
+    }
+  }
+
+  async deleteRole(roleId: string) {
+    try {
+      return await apiClient.delete(`/api/v2/admin/roles/${roleId}`);
+    } catch (error) {
+      console.error('[AdminService] Failed to delete role:', error);
+      throw error;
+    }
+  }
+
+  async getPermissions(params?: { page?: number; limit?: number }) {
+    try {
+      const response = await apiClient.get('/api/v2/admin/permissions', { params });
+      return response;
+    } catch (error) {
+      console.error('[AdminService] Failed to get permissions:', error);
+      throw error;
+    }
+  }
+
+  async getPermission(permissionId: string) {
+    try {
+      return await apiClient.get(`/api/v2/admin/permissions/${permissionId}`);
+    } catch (error) {
+      console.error('[AdminService] Failed to get permission:', error);
+      throw error;
+    }
+  }
+
+  async createPermission(data: Record<string, unknown>) {
+    try {
+      return await apiClient.post('/api/v2/admin/permissions', data);
+    } catch (error) {
+      console.error('[AdminService] Failed to create permission:', error);
+      throw error;
+    }
+  }
+
+  async updatePermission(permissionId: string, data: Record<string, unknown>) {
+    try {
+      return await apiClient.put(`/api/v2/admin/permissions/${permissionId}`, data);
+    } catch (error) {
+      console.error('[AdminService] Failed to update permission:', error);
+      throw error;
+    }
+  }
+
+  async deletePermission(permissionId: string) {
+    try {
+      return await apiClient.delete(`/api/v2/admin/permissions/${permissionId}`);
+    } catch (error) {
+      console.error('[AdminService] Failed to delete permission:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance
