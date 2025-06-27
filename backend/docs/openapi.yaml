@@ -190,15 +190,22 @@ components:
     LoginRequest:
       type: object
       properties:
-        username:
+        email:
           type: string
-          example: "admin"
+          format: email
+          example: "user@example.com"
         password:
           type: string
           format: password
           example: "password123"
+        rememberMe:
+          type: boolean
+          example: false
+        captchaToken:
+          type: string
+          example: "03AF6aD..."
       required:
-        - username
+        - email
         - password
         
     LoginResponseAPI:
