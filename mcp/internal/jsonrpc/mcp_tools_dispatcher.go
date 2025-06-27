@@ -424,6 +424,35 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"required": []string{"url"},
 			},
 		},
+		{
+			Name:        "generate_ui_test_prompt_with_actions",
+			Description: "Run Playwright with scripted actions and return visual context",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"url": map[string]interface{}{
+						"type":        "string",
+						"description": "Initial URL",
+					},
+					"actions": map[string]interface{}{
+						"type":        "array",
+						"description": "List of UI actions",
+						"items": map[string]interface{}{
+							"type": "object",
+							"properties": map[string]interface{}{
+								"action":   map[string]interface{}{"type": "string"},
+								"selector": map[string]interface{}{"type": "string"},
+								"text":     map[string]interface{}{"type": "string"},
+								"url":      map[string]interface{}{"type": "string"},
+								"timeout":  map[string]interface{}{"type": "integer"},
+							},
+							"required": []string{"action"},
+						},
+					},
+				},
+				"required": []string{"url", "actions"},
+			},
+		},
 
 		// New Tools (6 additional to reach 34)
 		{
@@ -604,6 +633,8 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetUICodeMap(ctx)
 	case "get_visual_context":
 		return s.callGetVisualContext(ctx, toolCall.Arguments)
+	case "generate_ui_test_prompt_with_actions":
+		return s.callGenerateUITestPromptWithActions(ctx, toolCall.Arguments)
 
 	// New Tools
 	case "analyze_performance":
