@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,8 +30,10 @@ import (
 // It allows other Go components or extensions to interact with the server's
 // functionality directly, bypassing the HTTP layer.
 type Bridge struct {
-	DB          *sql.DB
-	BackendPath string
+	DB             *sql.DB
+	BackendPath    string
+	LastHTML       string
+	LastScreenshot string
 	// Add other common dependencies here if needed by multiple tools
 }
 
@@ -38,8 +41,10 @@ type Bridge struct {
 // It takes the necessary dependencies that the underlying tool logic requires.
 func NewBridge(db *sql.DB, backendPath string) *Bridge {
 	return &Bridge{
-		DB:          db,
-		BackendPath: backendPath,
+		DB:             db,
+		BackendPath:    backendPath,
+		LastHTML:       "",
+		LastScreenshot: "",
 	}
 }
 
@@ -636,7 +641,55 @@ func (b *Bridge) BrowseWithPlaywright(url string) (models.PlaywrightResult, erro
 	if !config.Flags.AllowTerminal {
 		return models.PlaywrightResult{}, errors.New("terminal commands are disabled")
 	}
-	return analyzer.BrowseWithPlaywright(url)
+	result, err := analyzer.BrowseWithPlaywright(url)
+	if err == nil {
+		b.LastHTML = result.HTML
+		b.LastScreenshot = result.Screenshot
+	}
+	return result, err
+}
+
+// GetLatestScreenshot returns the last Playwright screenshot
+func (b *Bridge) GetLatestScreenshot(toBase64 bool) (models.UIScreenshot, error) {
+	if b.LastScreenshot == "" {
+		return models.UIScreenshot{}, errors.New("no screenshot available")
+	}
+	if !toBase64 {
+		return models.UIScreenshot{Path: b.LastScreenshot}, nil
+	}
+	data, err := os.ReadFile(b.LastScreenshot)
+	if err != nil {
+		return models.UIScreenshot{}, err
+	}
+	encoded := base64.StdEncoding.EncodeToString(data)
+	return models.UIScreenshot{Base64: encoded, Path: b.LastScreenshot}, nil
+}
+
+// GetUIMetadata parses the last fetched HTML and returns component metadata and content
+func (b *Bridge) GetUIMetadata() ([]models.UIComponent, []models.UIContent, error) {
+	if b.LastHTML == "" {
+		return nil, nil, errors.New("no HTML captured")
+	}
+	return analyzer.ParseUI(b.LastHTML)
+}
+
+// GetUICodeMap maps components to source files
+func (b *Bridge) GetUICodeMap(comps []models.UIComponent) ([]models.CodeMap, error) {
+	return analyzer.MapComponentsToSource(b.BackendPath, comps)
+}
+
+// GetVisualContext runs Playwright and builds the prompt payload
+func (b *Bridge) GetVisualContext(url string) (models.UIPromptPayload, error) {
+	result, err := b.BrowseWithPlaywright(url)
+	if err != nil {
+		return models.UIPromptPayload{}, err
+	}
+	comps, content, err := analyzer.ParseUI(result.HTML)
+	if err != nil {
+		return models.UIPromptPayload{}, err
+	}
+	codeMap, _ := analyzer.MapComponentsToSource(b.BackendPath, comps)
+	return analyzer.BuildUIPrompt(result.Screenshot, comps, codeMap, content), nil
 }
 
 // GetDatabaseStats returns database statistics
