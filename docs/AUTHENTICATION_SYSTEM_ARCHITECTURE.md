@@ -422,7 +422,7 @@ paths:
                     type: boolean
                   user:
                     $ref: '#/components/schemas/User'
-                  requires_captcha:
+                  requiresCaptcha:
                     type: boolean
                   sessionId:
                     type: string

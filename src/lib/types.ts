@@ -611,7 +611,7 @@ export interface LoginResponse {
   success: boolean;
   user?: User;
   error?: string;
-  requires_captcha?: boolean;
+  requiresCaptcha?: boolean;
   sessionId?: string;
   expiresAt?: string;
 }
