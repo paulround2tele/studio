@@ -2,9 +2,69 @@
 
 import * as React from "react"
 import * as MenubarPrimitive from "@radix-ui/react-menubar"
+import { cva, type VariantProps } from "class-variance-authority"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+
+const menubarVariants = cva(
+  "flex items-center space-x-1 rounded-md border bg-background p-1",
+  {
+    variants: {
+      variant: {
+        default: "",
+        minimal: "border-none bg-transparent p-0 space-x-0",
+        elevated: "shadow-lg border-border/50",
+        outline: "border-2 border-border bg-transparent",
+      },
+      size: {
+        sm: "h-8 text-xs",
+        default: "h-10 text-sm",
+        lg: "h-12 text-base",
+      },
+      orientation: {
+        horizontal: "flex-row",
+        vertical: "flex-col space-x-0 space-y-1 w-fit",
+      }
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+      orientation: "horizontal",
+    },
+  }
+)
+
+const menubarTriggerVariants = cva(
+  "flex cursor-default select-none items-center rounded-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
+  {
+    variants: {
+      size: {
+        sm: "px-2 py-1 text-xs",
+        default: "px-3 py-1.5 text-sm",
+        lg: "px-4 py-2 text-base",
+      },
+      variant: {
+        default: "",
+        ghost: "hover:bg-accent/50",
+        subtle: "text-muted-foreground hover:text-foreground",
+      }
+    },
+    defaultVariants: {
+      size: "default",
+      variant: "default",
+    },
+  }
+)
+
+// Enhanced interfaces
+interface MenubarProps
+  extends React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>,
+    VariantProps<typeof menubarVariants> {}
+
+interface MenubarTriggerProps
+  extends React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Trigger>,
+    VariantProps<typeof menubarTriggerVariants> {}
 
 function MenubarMenu({
   ...props
@@ -38,14 +98,11 @@ function MenubarSub({
 
 const Menubar = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>
->(({ className, ...props }, ref) => (
+  MenubarProps
+>(({ className, variant, size, orientation, ...props }, ref) => (
   <MenubarPrimitive.Root
     ref={ref}
-    className={cn(
-      "flex h-10 items-center space-x-1 rounded-md border bg-background p-1",
-      className
-    )}
+    className={cn(menubarVariants({ variant, size, orientation }), className)}
     {...props}
   />
 ))
@@ -53,14 +110,11 @@ Menubar.displayName = MenubarPrimitive.Root.displayName
 
 const MenubarTrigger = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Trigger>
->(({ className, ...props }, ref) => (
+  MenubarTriggerProps
+>(({ className, size, variant, ...props }, ref) => (
   <MenubarPrimitive.Trigger
     ref={ref}
-    className={cn(
-      "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
-      className
-    )}
+    className={cn(menubarTriggerVariants({ size, variant }), className)}
     {...props}
   />
 ))

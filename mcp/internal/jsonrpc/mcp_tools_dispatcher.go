@@ -425,6 +425,7 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 			},
 		},
 		{
+
 			Name:        "generate_ui_test_prompt_with_actions",
 			Description: "Run Playwright with scripted actions and return visual context",
 			InputSchema: map[string]interface{}{
@@ -451,6 +452,30 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 					},
 				},
 				"required": []string{"url", "actions"},
+
+			Name:        "generate_ui_test_prompt",
+			Description: "Generate automated test prompts for UI components based on visual context and metadata",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"componentName": map[string]interface{}{
+						"type":        "string",
+						"description": "Name of the component to generate tests for",
+					},
+					"testType": map[string]interface{}{
+						"type":        "string",
+						"description": "Type of test to generate (unit, integration, e2e)",
+					},
+					"includeAccessibility": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Include accessibility testing requirements",
+					},
+					"includeInteractions": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Include interaction testing requirements",
+					},
+				},
+
 			},
 		},
 
@@ -635,6 +660,9 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetVisualContext(ctx, toolCall.Arguments)
 	case "generate_ui_test_prompt_with_actions":
 		return s.callGenerateUITestPromptWithActions(ctx, toolCall.Arguments)
+
+	case "generate_ui_test_prompt":
+		return s.callGenerateUITestPrompt(ctx, toolCall.Arguments)
 
 	// New Tools
 	case "analyze_performance":

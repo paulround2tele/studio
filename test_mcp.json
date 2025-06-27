@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"generate_ui_test_prompt","arguments":{"componentName":"LoginForm","testType":"integration","includeAccessibility":true,"includeInteractions":true}}}

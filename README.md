@@ -332,3 +332,34 @@ For technical questions or issues:
 ---
 
 **DomainFlow v3.0.0** - Production-ready domain generation and validation platform with 100% contract alignment, advanced type safety, and comprehensive performance monitoring.
+
+## Database Seeding
+
+The application includes a seeding system for creating default users and test data.
+
+### Quick Setup
+
+After setting up the database, run the seeding script:
+
+```bash
+cd backend
+./scripts/seed_default_users.sh
+```
+
+### Default Credentials
+
+The seeding creates the following test accounts:
+
+| Email | Password | Role | Purpose |
+|-------|----------|------|---------|
+| `admin@domainflow.com` | `AdminPassword123!` | admin | System administration |
+| `test@example.com` | `TestPassword123!` | user | General testing |
+| `dev@domainflow.com` | `DevPassword123!` | user | UI/automated testing |
+
+### Automated Testing
+
+For automated UI testing with Playwright, Percy, or other tools, use:
+- **Email**: `test@example.com`
+- **Password**: `TestPassword123!`
+
+See `backend/database/seeds/README.md` for detailed documentation.

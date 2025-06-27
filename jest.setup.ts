@@ -5,6 +5,22 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// Mock ResizeObserver for Radix UI components
+global.ResizeObserver = class ResizeObserver {
+  constructor(callback: ResizeObserverCallback) {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// Mock scrollIntoView for Radix UI components (standard fix for JSDOM)
+Element.prototype.scrollIntoView = jest.fn();
+
+// Mock hasPointerCapture and setPointerCapture for Radix UI Select component
+HTMLElement.prototype.hasPointerCapture = jest.fn().mockReturnValue(false);
+HTMLElement.prototype.setPointerCapture = jest.fn();
+HTMLElement.prototype.releasePointerCapture = jest.fn();
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({

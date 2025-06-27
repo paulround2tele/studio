@@ -69,7 +69,6 @@ func (u *User) PublicUser() *User {
 		IsActive:           u.IsActive,
 		IsLocked:           u.IsLocked,
 		LastLoginAt:        u.LastLoginAt,
-		LastLoginIP:        u.LastLoginIP,
 		MustChangePassword: u.MustChangePassword,
 		MFAEnabled:         u.MFAEnabled,
 		MFALastUsedAt:      u.MFALastUsedAt,
