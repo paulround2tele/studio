@@ -6,6 +6,7 @@ export * from './models-campaign-type-enum';
 export * from './models-generated-domain';
 export * from './models-login-request';
 export * from './models-login-response-api';
+export * from './models-refresh-response';
 export * from './models-user-api';
 export * from './services-create-campaign-request';
 export * from './services-dns-validation-params';

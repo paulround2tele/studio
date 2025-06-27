@@ -600,11 +600,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
-                    type: string
-                    example: "Session refreshed"
+                  expiresAt:
+                    $ref: '#/components/schemas/Timestamp'
                 required:
-                  - message
+                  - expiresAt
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
