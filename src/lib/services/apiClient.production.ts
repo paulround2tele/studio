@@ -3,8 +3,8 @@
 // Replaces apiClient.ts, secureApiClient.ts, enhancedApiClient.ts
 // Phase 2.3: Updated to handle unified error response format
 
-import type { ApiResponse } from '../types';
-import { getApiConfig } from '../config/environment';
+import type { ApiResponse } from '@/lib/types';
+import { getApiConfig } from '@/lib/config/environment';
 
 // Unified error response types matching backend
 interface UnifiedErrorResponse {

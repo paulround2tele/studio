@@ -1,10 +1,11 @@
 // src/lib/services/authService.ts
 // Simple session-based authentication service
-import { getApiBaseUrl } from '../config';
-import { logAuth } from '../utils/logger';
-import { apiClient } from '../api/client';
-import { useLoadingStore, LOADING_OPERATIONS } from '../stores/loadingStore';
-import { TypeTransformer, type RawAPIData } from '../types/transform';
+import { getApiBaseUrl } from '@/lib/config';
+import { logAuth } from '@/lib/utils/logger';
+import { apiClient } from '@/lib/api/client';
+import { ProductionApiClient } from '@/lib/services/apiClient.production';
+import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
+import { TypeTransformer, type RawAPIData } from '@/lib/types/transform';
 import type {
   User, // Use unified User interface from types.ts
   LoginResponse,
@@ -14,7 +15,7 @@ import type {
   CreateUserRequest,
   UpdateUserRequest,
   UserListResponse
-} from '../types';
+} from '@/lib/types';
 
 // Remove duplicate AuthUser interface - use User from types.ts instead
 
@@ -28,6 +29,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;  // Use unified User interface
   isLoading: boolean;
+  sessionExpiry: number | null;
   availablePermissions: string[];  // Add this field
 }
 
@@ -37,6 +39,7 @@ class AuthService {
     isAuthenticated: false,
     user: null,
     isLoading: false,
+    sessionExpiry: null,
     availablePermissions: [] // Initialize the new field
   };
   
@@ -121,11 +124,20 @@ class AuthService {
         // Fetch available permissions from backend  
         const availablePermissions = await this.fetchAvailablePermissions();
         
+        // Convert expiresAt to timestamp if provided
+        const sessionExpiry = loginResponse.data.expiresAt ? new Date(loginResponse.data.expiresAt).getTime() : null;
+        
+        // Set session expiry in API client for proactive refresh
+        if (loginResponse.data.expiresAt) {
+          const apiClient = ProductionApiClient.getInstance();
+          apiClient.setSessionExpiry(loginResponse.data.expiresAt);
+        }
+        
         // Transform raw user data to use branded types  
         const transformedUser = TypeTransformer.transformUser(loginResponse.data.user as unknown as RawAPIData);
         
         // Use the transformed user data
-        this.updateAuthState(transformedUser, null, availablePermissions);
+        this.updateAuthState(transformedUser, sessionExpiry, availablePermissions);
         
         logAuth.success('Login successful', { userId: transformedUser.id });
         loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'succeeded');
@@ -418,8 +430,15 @@ class AuthService {
       if (response.ok) {
         const data = await response.json();
         
-        if (data.success) {
-          // Session is still valid - no expiry tracking needed
+        if (data.success && data.expiresAt) {
+          // Update session expiry
+          const sessionExpiry = new Date(data.expiresAt).getTime();
+          this.authState.sessionExpiry = sessionExpiry;
+          
+          // Set session expiry in API client for proactive refresh
+          const apiClient = ProductionApiClient.getInstance();
+          apiClient.setSessionExpiry(data.expiresAt);
+          
           this.notifyListeners();
           
           logAuth.success('Session refreshed successfully');
@@ -471,6 +490,7 @@ class AuthService {
   private updateAuthState(user: User, sessionExpiry: number | null, availablePermissions?: string[]): void {
     this.authState.isAuthenticated = true;
     this.authState.user = user;
+    this.authState.sessionExpiry = sessionExpiry;
     this.authState.availablePermissions = availablePermissions || this.authState.availablePermissions;
     this.notifyListeners();
   }
@@ -478,6 +498,7 @@ class AuthService {
   private clearAuth(): void {
     this.authState.isAuthenticated = false;
     this.authState.user = null;
+    this.authState.sessionExpiry = null;
     this.authState.availablePermissions = []; // Clear availablePermissions
     this.notifyListeners();
   }
