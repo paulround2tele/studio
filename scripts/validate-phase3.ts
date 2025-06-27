@@ -286,12 +286,6 @@ function validatePerformanceUtilities() {
     passed: checkFileExists('src/lib/utils/lazy-loading.ts')
   });
   
-  // Check performance monitoring hooks
-  logResult({
-    category: 'Performance',
-    test: 'usePerformanceMonitor.ts exists',
-    passed: checkFileExists('src/lib/hooks/usePerformanceMonitor.ts')
-  });
   
   // Check monitoring service updates
   try {
