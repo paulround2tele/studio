@@ -312,6 +312,7 @@ type PlaywrightResult struct {
 	URL        string `json:"url"`
 	HTML       string `json:"html"`
 	Screenshot string `json:"screenshot"`
+	HTMLPath   string `json:"html_path,omitempty"`
 }
 
 // UIComponent represents a single UI element extracted from the DOM
@@ -339,6 +340,15 @@ type CodeMap struct {
 	Snippet   string `json:"snippet"`
 }
 
+// UIAction describes an automated browser action for Playwright
+type UIAction struct {
+	Action   string `json:"action"`
+	Selector string `json:"selector,omitempty"`
+	Text     string `json:"text,omitempty"`
+	URL      string `json:"url,omitempty"`
+	Timeout  int    `json:"timeout,omitempty"`
+}
+
 // UIScreenshot represents the screenshot location or encoded data
 type UIScreenshot struct {
 	Path   string `json:"path,omitempty"`
@@ -351,6 +361,8 @@ type UIPromptPayload struct {
 	Metadata   []UIComponent `json:"metadata"`
 	CodeMap    []CodeMap     `json:"code_connect"`
 	Content    []UIContent   `json:"content"`
+	HTML       string        `json:"html,omitempty"`
+	URL        string        `json:"url,omitempty"`
 }
 
 // MCP Protocol Types

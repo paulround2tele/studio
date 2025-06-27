@@ -8,6 +8,7 @@ The MCP server can provide Figma Dev Mode style context for UI auditing.
 - `/tools/get_ui_metadata` – parse the previously captured HTML and return UI component metadata and text content.
 - `/tools/get_ui_code_map` – map discovered components to React source files.
 - `/tools/get_visual_context` – run Playwright for a URL and return a combined payload with screenshot, metadata and code mapping.
+- `/tools/generate_ui_test_prompt_with_actions` – open a page, execute JSON-defined actions, and return visual context including final HTML and URL.
 
 ## Payload Structure
 
@@ -34,3 +35,39 @@ Invoke via JSON-RPC:
 ```
 
 Feed the JSON result into Claude Sonnet 4 along with the screenshot path to perform visual review or generate code.
+
+### With Action Sequence
+
+Input format for `generate_ui_test_prompt_with_actions`:
+
+```json
+{
+  "url": "http://localhost:3000/login",
+  "actions": [
+    {"action": "type", "selector": "#email", "text": "user@example.com"},
+    {"action": "type", "selector": "#password", "text": "secret"},
+    {"action": "click", "selector": "button[type=submit]"},
+    {"action": "waitForSelector", "selector": "#dashboard"}
+  ]
+}
+```
+
+JSON-RPC call example:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "tool": "generate_ui_test_prompt_with_actions",
+    "arguments": {"url": "http://localhost:3000/login", "actions": [...]} 
+  }
+}
+```
+
+CLI invocation:
+
+```bash
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"tool":"generate_ui_test_prompt_with_actions","arguments":{...}}}' | ./mcp-server
+```

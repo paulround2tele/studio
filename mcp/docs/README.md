@@ -62,6 +62,7 @@ The following tool endpoints are available (44 total):
 |                   | `/tools/get_ui_metadata`          | Extracts component metadata from the captured HTML.                          |
 |                   | `/tools/get_ui_code_map`          | Maps UI components to React source files.                                   |
 |                   | `/tools/get_visual_context`       | Runs Playwright and returns screenshot, metadata and code mapping.          |
+|                   | `/tools/generate_ui_test_prompt_with_actions` | Runs Playwright actions and returns visual context. |
 
 ### Complexity Analysis
 
