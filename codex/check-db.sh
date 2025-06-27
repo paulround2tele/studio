@@ -10,11 +10,11 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Load configuration from environment or fallback file
-DB_HOST=${DATABASE_HOST}
-DB_PORT=${DATABASE_PORT}
-DB_NAME=${DATABASE_NAME}
-DB_USER=${DATABASE_USER}
-DB_PASSWORD=${DATABASE_PASSWORD}
+DB_HOST="${DATABASE_HOST}"
+DB_PORT="${DATABASE_PORT}"
+DB_NAME="${DATABASE_NAME}"
+DB_USER="${DATABASE_USER}"
+DB_PASSWORD="${DATABASE_PASSWORD}"
 
 if [ -z "$DB_HOST" ] && [ -f "$CONFIG_FILE" ]; then
   DB_HOST=$(jq -r '.database.host' "$CONFIG_FILE")
@@ -39,11 +39,9 @@ if [ -z "$DB_HOST" ]; then
   exit 1
 fi
 
-echo "Checking PostgreSQL connection to $DB_HOST:$DB_PORT/$DB_NAME as $DB_USER" 
+echo "Checking PostgreSQL connection to $DB_HOST:$DB_PORT/$DB_NAME as $DB_USER"
 
-PGPASSWORD="$DB_PASSWORD" pg_isready -h "$DB_HOST" -p "$DB_PORT" -d "$DB_NAME" -U "$DB_USER"
-
-if [ $? -eq 0 ]; then
+if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c '\\q' >/dev/null 2>&1; then
   echo "✓ Database is reachable"
 else
   echo "✗ Database connection failed" >&2
@@ -60,8 +58,5 @@ fi
 if [ "$1" = "--migrate" ]; then
   DSN="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
   echo "Running migrations..."
-  (cd backend && go run ./cmd/migrate -dsn "$DSN") || \
-    echo "Migration command failed or no migrations needed"
-
-  go run ./backend/cmd/migrate -dsn "$DSN"
+  go run ./backend/cmd/migrate -dsn "$DSN" || echo "Migration command failed or no migrations needed"
 fi

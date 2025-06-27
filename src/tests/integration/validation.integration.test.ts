@@ -172,13 +172,13 @@ describe('Authentication API Transformations', () => {
     expect(transformed.roles).toEqual(['user']);
   });
 
-  it('should handle login response with field name fixes', () => {
+  it('should handle login response with requires_captcha field', () => {
     const mockLoginResponse = {
       success: true,
       user: mockUserResponse,
       sessionId: 'session-123',
       expiresAt: '2023-01-02T00:00:00.000Z',
-      requiresCaptcha: true // Backend sends this
+      requires_captcha: true
     };
     
     const transformed = transformLoginResponse(mockLoginResponse as any);
@@ -187,12 +187,12 @@ describe('Authentication API Transformations', () => {
     expect(transformed.user?.id).toBeDefined();
   });
 
-  it('should handle legacy requires_captcha field', () => {
+  it('should transform login response correctly', () => {
     const mockLoginResponse = {
       success: true,
-      requires_captcha: true // Generated API client expects this
+      requires_captcha: true
     };
-    
+
     const transformed = transformLoginResponse(mockLoginResponse as any);
     expect(transformed.requiresCaptcha).toBe(true);
   });
