@@ -84,7 +84,7 @@ Real-time communication is handled via WebSockets.
 
 -   **Endpoint**: The client connects to `wss://<host>/api/v2/ws`.
 -   **Authentication**: Uses the same session cookie as the REST API.
--   **Core Logic**: [`src/lib/services/websocketService.simple.ts`](src/lib/services/websocketService.simple.ts:1) and [`src/lib/services/websocketService.production.ts`](src/lib/services/websocketService.production.ts:1) manage the connection, subscriptions, and message handling.
+-   **Core Logic**: [`src/lib/services/websocketService.simple.ts`](src/lib/services/websocketService.simple.ts:1) manages the connection, subscriptions, and message handling.
 -   **React Hook**: [`useCampaignWebSocket`](src/lib/hooks/useWebSocket.ts:22) in `src/lib/hooks/useWebSocket.ts` provides a simple way for components to subscribe to campaign-specific messages.
 -   **Message Schema**: Incoming messages are validated against the schema in [`src/lib/schemas/websocketMessageSchema.ts`](src/lib/schemas/websocketMessageSchema.ts:1).
 
