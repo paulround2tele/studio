@@ -19,7 +19,7 @@
     "perf:budget": "node scripts/performance-budget.mjs",
     "size-limit": "size-limit",
     "api:generate-spec": "scripts/generate-openapi.sh",
-    "api:generate-client": "npx @openapitools/openapi-generator-cli generate --generator-key typescript-api",
+    "api:generate-client": "npx --yes @openapitools/openapi-generator-cli generate --generator-key typescript-api --skip-validate-spec",
     "api:generate": "npm run api:generate-spec && npm run api:generate-client",
     "api:validate": "scripts/validate-contracts.sh",
     "api:validate-spec": "scripts/validate-openapi-spec.sh",

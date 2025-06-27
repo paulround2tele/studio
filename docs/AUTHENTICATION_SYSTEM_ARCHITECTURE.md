@@ -422,6 +422,12 @@ paths:
                     type: boolean
                   user:
                     $ref: '#/components/schemas/User'
+                  requires_captcha:
+                    type: boolean
+                  sessionId:
+                    type: string
+                  expiresAt:
+                    $ref: '#/components/schemas/Timestamp'
         401:
           description: Invalid credentials
         429:

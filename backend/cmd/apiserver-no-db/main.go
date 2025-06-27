@@ -44,7 +44,8 @@ func main() {
 	log.Println("Registered ping route: /ping")
 
 	// OpenAPI specification (static file)
-	router.StaticFile("/api/openapi.yaml", "./docs/openapi.yaml")
+	// Serve OpenAPI spec from the repository path so generation works
+	router.StaticFile("/api/openapi.yaml", "backend/docs/openapi.yaml")
 	log.Println("Registered OpenAPI specification route: /api/openapi.yaml")
 
 	// Simple health check without database
@@ -70,7 +71,7 @@ func main() {
 	log.Println("Registered contract validation route: /api/v2/contract/validate")
 
 	// Mock endpoints for contract testing
-        router.GET("/api/v2/me", func(c *gin.Context) {
+	router.GET("/api/v2/me", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"user_id":   "mock-user-123",
 			"username":  "mock-user",
@@ -113,7 +114,7 @@ func main() {
 		log.Printf("  - GET /health - Health status")
 		log.Printf("  - GET /api/openapi.yaml - OpenAPI specification")
 		log.Printf("  - GET /api/v2/contract/validate - Contract validation")
-                log.Printf("  - GET /api/v2/me - Mock auth endpoint")
+		log.Printf("  - GET /api/v2/me - Mock auth endpoint")
 		log.Printf("  - GET /api/v2/campaigns - Mock campaigns endpoint")
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
