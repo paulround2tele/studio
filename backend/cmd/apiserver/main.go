@@ -293,7 +293,8 @@ func main() {
 	router.GET("/ping", api.PingHandlerGin)
 
 	// OpenAPI 3.0 specification (public)
-	router.StaticFile("/api/openapi.yaml", "./docs/openapi.yaml")
+	// Serve OpenAPI 3.0 specification from the repository path
+	router.StaticFile("/api/openapi.yaml", "backend/docs/openapi.yaml")
 	log.Println("Registered OpenAPI 3.0 specification route under /api/openapi.yaml")
 
 	// Authentication routes (public)

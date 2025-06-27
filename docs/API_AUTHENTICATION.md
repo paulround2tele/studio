@@ -69,7 +69,9 @@ Used primarily for web interface access with secure HTTP-only cookies.
     "lastLogin": "2024-01-15T10:30:00Z",
     "mustChangePassword": false
   },
-  "sessionExpiry": "2024-01-16T10:30:00Z"
+  "requires_captcha": false,
+  "sessionId": "sess_123456789",
+  "expiresAt": "2024-01-16T10:30:00Z"
 }
 ```
 
@@ -120,7 +122,7 @@ Cookie: domainflow_session=session_token_here
     "lastName": "Doe",
     "roles": ["campaign_manager"],
     "permissions": ["campaigns.create", "campaigns.read"],
-    "sessionExpiry": "2024-01-16T10:30:00Z"
+    "expiresAt": "2024-01-16T10:30:00Z"
   }
 }
 ```
