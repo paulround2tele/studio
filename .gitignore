@@ -13,8 +13,7 @@
 /dist
 /build
 
-# Local Environment Variables
-.env
+# Local Environment Variables (development only)
 .env*.local
 !.env.example
 

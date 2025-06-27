@@ -66,13 +66,13 @@ scope or in violation of constraints are rejected.
 
 ## Codex Commands
 
-The `codex` directory contains helper scripts for validating the local environment.
+The `.codex` directory contains helper scripts for validating the local environment.
 
 For a full setup guide see `.codex/README.md` which explains how to install dependencies and start PostgreSQL.
 
-- **check db**: `./codex/check-db.sh` verifies PostgreSQL connectivity, ensures the `schema_migrations` table exists and can apply pending migrations when run with `--migrate`.
-- **check backend**: `./codex/check-backend.sh` runs `go fmt`, `go vet`, and `go test ./...` while loading database settings from environment variables or `backend/config.json`.
-- **check status**: `./codex/status.sh` executes database and backend checks, runs frontend tests, lists available npm scripts, and prints recent backend log lines.
+- **check db**: `./.codex/check-db.sh` verifies PostgreSQL connectivity, ensures the `schema_migrations` table exists and can apply pending migrations when run with `--migrate`.
+- **check backend**: `./.codex/check-backend.sh` runs `go fmt`, `go vet`, and `go test ./...` while loading database settings from environment variables or `backend/config.json`.
+- **check status**: `./.codex/status.sh` executes database and backend checks, runs frontend tests, lists available npm scripts, and prints recent backend log lines.
 
 ### Execution Capabilities (Non-Docker Setup)
 
@@ -80,7 +80,7 @@ Codex interacts directly with the host system without Docker:
 
 - **PostgreSQL**: Connection details are read from environment variables or `backend/config.json`. `pg_isready` and `psql` are used to validate connectivity. Migrations run with `go run ./backend/cmd/migrate`.
 - **NPM**: Commands such as `npm install`, `npm run dev`, and `npm test` work locally. When the backend is unavailable, the frontend falls back to mock API handlers found under `src/mocks`.
-- **Go**: All Go tooling runs on the host. `check-backend.sh` formats, vets, and tests the backend.
+- **Go**: All Go tooling runs on the host. `.codex/check-backend.sh` formats, vets, and tests the backend.
 
 ### Troubleshooting
 

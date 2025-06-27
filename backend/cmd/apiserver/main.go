@@ -38,13 +38,25 @@ const (
 func main() {
 	log.Println("Starting DomainFlow API Server...")
 
-	// Load .env file from project root
-	envPath := filepath.Join("..", ".env")
-	if err := godotenv.Load(envPath); err != nil {
-		log.Printf("Warning: Could not load .env file from %s: %v", envPath, err)
+	// Load .env file from project root with multiple path attempts
+	envPaths := []string{
+		".env",                      // Current directory (when run from studio root)
+		filepath.Join("..", ".env"), // Parent directory (when run from backend dir)
+		filepath.Join(".", ".env"),  // Explicit current directory
+	}
+
+	envLoaded := false
+	for _, envPath := range envPaths {
+		if err := godotenv.Load(envPath); err == nil {
+			log.Printf("Successfully loaded environment variables from %s", envPath)
+			envLoaded = true
+			break
+		}
+	}
+
+	if !envLoaded {
+		log.Println("Warning: Could not load .env file from any expected location")
 		log.Println("Continuing with system environment variables...")
-	} else {
-		log.Printf("Successfully loaded environment variables from %s", envPath)
 	}
 
 	// Load configuration with environment variable support
