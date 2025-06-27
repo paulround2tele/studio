@@ -150,7 +150,7 @@ export function showToast({ message, type = "info", duration, action }: SimpleTo
 // Toast Queue Manager for complex scenarios
 export class ToastQueue {
   private static instance: ToastQueue
-  private queue: Array<{ id: string; props: any }> = []
+  private queue: Array<{ id: string; props: any; timestamp: number }> = []
   private maxConcurrent = 3
 
   static getInstance(): ToastQueue {
@@ -161,17 +161,13 @@ export class ToastQueue {
   }
 
   add(toast: { id: string; props: any }) {
-    this.queue.push(toast)
-    this.processQueue()
+    this.queue.push({ ...toast, timestamp: Date.now() })
+    return this.queue.length
   }
 
   remove(id: string) {
     this.queue = this.queue.filter(toast => toast.id !== id)
-  }
-
-  private processQueue() {
-    // Implementation would manage concurrent toasts
-    // This is a simplified version for demonstration
+    return this.queue.length
   }
 
   clear() {
@@ -179,6 +175,35 @@ export class ToastQueue {
   }
 
   getQueue() {
+    return [...this.queue] // Return copy to prevent external mutation
+  }
+
+  setMaxConcurrent(max: number) {
+    this.maxConcurrent = Math.max(1, max)
+  }
+
+  getMaxConcurrent() {
+    return this.maxConcurrent
+  }
+
+  // Process queue synchronously for testing purposes
+  processQueueSync() {
+    const canProcess = Math.min(this.maxConcurrent, this.queue.length)
+    
+    if (canProcess > 0) {
+      const toastsToProcess = this.queue.splice(0, canProcess)
+      return toastsToProcess
+    }
+    
+    return []
+  }
+
+  private getActiveToasts(): string[] {
+    // This would ideally get active toasts from the toast context
+    // For now, we'll simulate based on recent additions
+    const now = Date.now()
     return this.queue
+      .filter(t => now - t.timestamp < 5000) // Assume 5s default duration
+      .map(t => t.id)
   }
 }

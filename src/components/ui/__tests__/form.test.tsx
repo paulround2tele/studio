@@ -16,7 +16,7 @@ import { Input } from '../input';
 import { Button } from '../button';
 
 // Test form component for testing
-const TestForm = ({ onSubmit = jest.fn(), defaultValues = {} }) => {
+const TestForm = ({ onSubmit = jest.fn(), defaultValues = { email: '', password: '' } }) => {
   const form = useForm({ defaultValues });
 
   return (
@@ -148,7 +148,7 @@ describe('Form Component Tests', () => {
   });
 
   test('supports default values', () => {
-    render(<TestForm defaultValues={{ email: 'default@example.com' }} />);
+    render(<TestForm defaultValues={{ email: 'default@example.com', password: '' }} />);
     
     const emailInput = screen.getByTestId('email-input');
     expect(emailInput).toHaveValue('default@example.com');
