@@ -80,6 +80,43 @@ func (s *JSONRPCServer) callGetVisualContext(ctx context.Context, args map[strin
 	}, nil
 }
 
+func (s *JSONRPCServer) callGenerateUITestPromptWithActions(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+	url, ok := args["url"].(string)
+	if !ok {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": "url parameter required"}},
+		}, nil
+	}
+	rawActions, ok := args["actions"]
+	if !ok {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": "actions parameter required"}},
+		}, nil
+	}
+	data, err := json.Marshal(rawActions)
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Error: %v", err)}},
+		}, nil
+	}
+	var actions []models.UIAction
+	if err := json.Unmarshal(data, &actions); err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Error: %v", err)}},
+		}, nil
+	}
+	payload, err := s.bridge.GenerateUITestPromptWithActions(url, actions)
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Error: %v", err)}},
+		}, nil
+	}
+	b, _ := json.Marshal(payload)
+	return map[string]interface{}{
+		"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("```json\n%s\n```", string(b))}},
+	}, nil
+}
+
 func (s *JSONRPCServer) callGenerateUITestPrompt(ctx context.Context, args map[string]interface{}) (interface{}, error) {
 	componentName, _ := args["componentName"].(string)
 	testType, _ := args["testType"].(string)

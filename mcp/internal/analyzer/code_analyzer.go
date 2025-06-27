@@ -736,6 +736,85 @@ func BrowseWithPlaywright(url string) (models.PlaywrightResult, error) {
 	return models.PlaywrightResult{URL: url, HTML: html, Screenshot: screenshotPath}, nil
 }
 
+// BrowseWithPlaywrightActions opens a URL and executes a series of UI actions
+func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.PlaywrightResult, error) {
+	pw, err := playwright.Run()
+	if err != nil {
+		return models.PlaywrightResult{}, err
+	}
+	browser, err := pw.Chromium.Launch()
+	if err != nil {
+		pw.Stop()
+		return models.PlaywrightResult{}, err
+	}
+	page, err := browser.NewPage()
+	if err != nil {
+		browser.Close()
+		pw.Stop()
+		return models.PlaywrightResult{}, err
+	}
+	if _, err := page.Goto(url); err != nil {
+		page.Close()
+		browser.Close()
+		pw.Stop()
+		return models.PlaywrightResult{}, err
+	}
+	// Execute actions sequentially
+	for _, a := range actions {
+		switch strings.ToLower(a.Action) {
+		case "type":
+			if a.Selector == "" {
+				return models.PlaywrightResult{}, fmt.Errorf("type action missing selector")
+			}
+			if err := page.Type(a.Selector, a.Text); err != nil {
+				return models.PlaywrightResult{}, err
+			}
+		case "click":
+			if a.Selector == "" {
+				return models.PlaywrightResult{}, fmt.Errorf("click action missing selector")
+			}
+			if err := page.Click(a.Selector); err != nil {
+				return models.PlaywrightResult{}, err
+			}
+		case "waitforselector":
+			if a.Selector == "" {
+				return models.PlaywrightResult{}, fmt.Errorf("waitForSelector action missing selector")
+			}
+			opts := playwright.PageWaitForSelectorOptions{}
+			if a.Timeout > 0 {
+				opts.Timeout = playwright.Float(float64(a.Timeout))
+			}
+			if _, err := page.WaitForSelector(a.Selector, opts); err != nil {
+				return models.PlaywrightResult{}, err
+			}
+		case "navigate":
+			if a.URL == "" {
+				return models.PlaywrightResult{}, fmt.Errorf("navigate action missing url")
+			}
+			if _, err := page.Goto(a.URL); err != nil {
+				return models.PlaywrightResult{}, err
+			}
+		default:
+			return models.PlaywrightResult{}, fmt.Errorf("unknown action: %s", a.Action)
+		}
+	}
+	html, _ := page.Content()
+	htmlPath := filepath.Join(os.TempDir(), fmt.Sprintf("playwright_%d.html", time.Now().UnixNano()))
+	_ = os.WriteFile(htmlPath, []byte(html), 0644)
+	screenshotPath := filepath.Join(os.TempDir(), fmt.Sprintf("playwright_%d.png", time.Now().UnixNano()))
+	if _, err := page.Screenshot(playwright.PageScreenshotOptions{Path: playwright.String(screenshotPath), FullPage: playwright.Bool(true)}); err != nil {
+		page.Close()
+		browser.Close()
+		pw.Stop()
+		return models.PlaywrightResult{}, err
+	}
+	currentURL := page.URL()
+	page.Close()
+	browser.Close()
+	pw.Stop()
+	return models.PlaywrightResult{URL: currentURL, HTML: html, Screenshot: screenshotPath, HTMLPath: htmlPath}, nil
+}
+
 // ParseApiSchema analyzes API schema from Go files
 func ParseApiSchema(apiDir string) (interface{}, error) {
 	var schema struct {
