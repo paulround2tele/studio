@@ -10,7 +10,7 @@ This project is a Go-based MCP (Model Context Protocol) server designed to provi
 
 ## Tool Endpoints
 
-The following tool endpoints are available (44 total):
+The following tool endpoints are available (45 total):
 
 | Category          | Endpoint                      | Description                                                                 |
 | ----------------- | ----------------------------- | --------------------------------------------------------------------------- |
@@ -58,6 +58,11 @@ The following tool endpoints are available (44 total):
 | **Interactive**   | `/tools/run_terminal_command`     | Executes a terminal command.                                                |
 |                   | `/tools/apply_code_change`        | Applies a diff to a file.                                                   |
 |                   | `/tools/browse_with_playwright`   | Opens a URL with Playwright and captures a screenshot.                      |
+|                   | `/tools/get_latest_screenshot`    | Returns the last Playwright screenshot (path or base64).                    |
+|                   | `/tools/get_ui_metadata`          | Extracts component metadata from the captured HTML.                          |
+|                   | `/tools/get_ui_code_map`          | Maps UI components to React source files.                                   |
+|                   | `/tools/get_visual_context`       | Runs Playwright and returns screenshot, metadata and code mapping.          |
+|                   | `/tools/generate_ui_test_prompt`  | Creates a markdown prompt and screenshot for UI testing.                   |
 
 ### Complexity Analysis
 

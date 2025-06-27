@@ -381,6 +381,63 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"required": []string{"url"},
 			},
 		},
+		{
+			Name:        "get_latest_screenshot",
+			Description: "Return the most recent Playwright screenshot",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"base64": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Return base64 encoded data",
+					},
+				},
+			},
+		},
+		{
+			Name:        "get_ui_metadata",
+			Description: "Extract component metadata from the last HTML capture",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_ui_code_map",
+			Description: "Map captured components to React source files",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_visual_context",
+			Description: "Run Playwright and assemble screenshot, metadata and code mapping",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"url": map[string]interface{}{
+						"type":        "string",
+						"description": "URL to visit",
+					},
+				},
+				"required": []string{"url"},
+			},
+		},
+		{
+			Name:        "generate_ui_test_prompt",
+			Description: "Generate a UI test prompt from a local URL",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"url": map[string]interface{}{
+						"type":        "string",
+						"description": "URL to visit",
+					},
+				},
+				"required": []string{"url"},
+			},
+		},
 
 		// New Tools (6 additional to reach 34)
 		{
@@ -553,6 +610,16 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callApplyCodeChange(ctx, toolCall.Arguments)
 	case "browse_with_playwright":
 		return s.callBrowseWithPlaywright(ctx, toolCall.Arguments)
+	case "get_latest_screenshot":
+		return s.callGetLatestScreenshot(ctx, toolCall.Arguments)
+	case "get_ui_metadata":
+		return s.callGetUIMetadata(ctx)
+	case "get_ui_code_map":
+		return s.callGetUICodeMap(ctx)
+	case "get_visual_context":
+		return s.callGetVisualContext(ctx, toolCall.Arguments)
+	case "generate_ui_test_prompt":
+		return s.callGenerateUITestPrompt(ctx, toolCall.Arguments)
 
 	// New Tools
 	case "analyze_performance":
