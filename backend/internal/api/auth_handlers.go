@@ -41,7 +41,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		fmt.Printf("DEBUG: JSON binding failed: %v\n", err)
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request format")
+		fmt.Printf("DEBUG: Validation error details: %T - %v\n", err, err)
+		fmt.Printf("DEBUG: Request body raw: email='%s', password_length=%d\n", req.Email, len(req.Password))
+		respondWithErrorGin(c, http.StatusBadRequest, fmt.Sprintf("Invalid request format: %v", err))
 		return
 	}
 	fmt.Printf("DEBUG: Request parsed successfully: %s\n", req.Email)

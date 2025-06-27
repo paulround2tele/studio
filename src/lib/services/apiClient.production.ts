@@ -349,6 +349,9 @@ export const apiClient = {
   
 };
 
+// Export the ProductionApiClient class for direct usage
+export { ProductionApiClient };
+
 export default apiClient;
 
 export type DiagnosticApiClientMethods = {

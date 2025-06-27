@@ -127,11 +127,8 @@ class AuthService {
         // Convert expiresAt to timestamp if provided
         const sessionExpiry = loginResponse.data.expiresAt ? new Date(loginResponse.data.expiresAt).getTime() : null;
         
-        // Set session expiry in API client for proactive refresh
-        if (loginResponse.data.expiresAt) {
-          const apiClient = ProductionApiClient.getInstance();
-          apiClient.setSessionExpiry(loginResponse.data.expiresAt);
-        }
+        // Session expiry will be handled by the cookie expiration
+        // No need to set it explicitly in the API client
         
         // Transform raw user data to use branded types  
         const transformedUser = TypeTransformer.transformUser(loginResponse.data.user as unknown as RawAPIData);
@@ -435,9 +432,8 @@ class AuthService {
           const sessionExpiry = new Date(data.expiresAt).getTime();
           this.authState.sessionExpiry = sessionExpiry;
           
-          // Set session expiry in API client for proactive refresh
-          const apiClient = ProductionApiClient.getInstance();
-          apiClient.setSessionExpiry(data.expiresAt);
+          // Session expiry will be handled by the cookie expiration
+          // No need to set it explicitly in the API client
           
           this.notifyListeners();
           
