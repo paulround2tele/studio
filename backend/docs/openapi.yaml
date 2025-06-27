@@ -221,7 +221,7 @@ components:
           type: string
           nullable: true
           example: "Invalid credentials"
-        requiresCaptcha:
+        requires_captcha:
           type: boolean
           nullable: true
           example: false

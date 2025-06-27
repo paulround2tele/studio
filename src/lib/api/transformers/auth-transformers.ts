@@ -74,17 +74,11 @@ export function transformUserResponse(raw: ModelsUserAPI): UserAPIAligned {
  * Transform raw login response to aligned model
  */
 export function transformLoginResponse(raw: ModelsLoginResponseAPI): LoginResponseAPIAligned {
-    // Type extension to handle field name mismatch
-    const rawWithCaptcha = raw as ModelsLoginResponseAPI & {
-        requiresCaptcha?: boolean;
-        requires_captcha?: boolean
-    };
-    
     return {
         error: raw.error,
         expiresAt: raw.expiresAt ? createISODateString(raw.expiresAt) : undefined,
-        // Fix field name mismatch: backend sends requiresCaptcha, but generated model has requires_captcha
-        requiresCaptcha: rawWithCaptcha.requiresCaptcha ?? rawWithCaptcha.requires_captcha,
+        // Convert snake_case field from API to camelCase used internally
+        requiresCaptcha: (raw as ModelsLoginResponseAPI & { requires_captcha?: boolean }).requires_captcha,
         sessionId: raw.sessionId,
         success: raw.success,
         user: raw.user ? transformUserResponse(raw.user) : undefined,

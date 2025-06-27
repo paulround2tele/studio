@@ -141,18 +141,6 @@ describe('Auth Transformers', () => {
       });
     });
 
-    it('should handle requiresCaptcha field name mismatch', () => {
-      const rawWithCaptcha: any = {
-        success: false,
-        error: 'Too many attempts',
-        requiresCaptcha: true
-      };
-
-      const result = transformLoginResponse(rawWithCaptcha);
-
-      expect(result.requiresCaptcha).toBe(true);
-    });
-
     it('should handle requires_captcha snake_case field', () => {
       const rawWithSnakeCase: any = {
         success: false,
