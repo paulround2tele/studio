@@ -589,4 +589,157 @@ describe('Table Components', () => {
       expect(screen.getByText('User 99')).toBeInTheDocument()
     })
   })
+
+  describe('SimpleTable', () => {
+    const { SimpleTable } = require('../table')
+    const headers = ['Name', 'Email', 'Status']
+    const testData = [
+      { Name: 'John Doe', Email: 'john@example.com', Status: 'Active' },
+      { Name: 'Jane Smith', Email: 'jane@example.com', Status: 'Inactive' }
+    ]
+
+    it('renders SimpleTable with data', () => {
+      render(
+        <SimpleTable 
+          headers={headers}
+          data={testData}
+          caption="Test Table"
+        />
+      )
+      
+      expect(screen.getByText('Test Table')).toBeInTheDocument()
+      expect(screen.getByText('John Doe')).toBeInTheDocument()
+      expect(screen.getByText('jane@example.com')).toBeInTheDocument()
+    })
+
+    it('handles empty data with custom message', () => {
+      render(
+        <SimpleTable 
+          headers={headers}
+          data={[]}
+          emptyMessage="No users found"
+        />
+      )
+      
+      expect(screen.getByText('No users found')).toBeInTheDocument()
+    })
+
+    it('shows loading state', () => {
+      render(
+        <SimpleTable 
+          headers={headers}
+          data={[]}
+          loading={true}
+        />
+      )
+      
+      expect(screen.getByText('Loading...')).toBeInTheDocument()
+      expect(screen.getByRole('presentation')).toBeInTheDocument() // spinner
+    })
+
+    it('handles sortable functionality', async () => {
+      const user = userEvent.setup()
+      
+      render(
+        <SimpleTable 
+          headers={headers}
+          data={testData}
+          sortable={true}
+        />
+      )
+      
+      const nameHeader = screen.getByText('Name').closest('th')
+      await user.click(nameHeader!)
+      
+      // Should show sort indicator
+      expect(screen.getByText('↑')).toBeInTheDocument()
+      
+      // Click again to reverse sort
+      await user.click(nameHeader!)
+      expect(screen.getByText('↓')).toBeInTheDocument()
+    })
+
+    it('handles row click events', async () => {
+      const user = userEvent.setup()
+      const onRowClick = jest.fn()
+      
+      render(
+        <SimpleTable 
+          headers={headers}
+          data={testData}
+          onRowClick={onRowClick}
+        />
+      )
+      
+      const firstRow = screen.getByText('John Doe').closest('tr')
+      await user.click(firstRow!)
+      
+      expect(onRowClick).toHaveBeenCalledWith(testData[0], 0)
+    })
+
+    it('handles missing data values', () => {
+      const dataWithMissing = [
+        { Name: 'John Doe', Email: null, Status: 'Active' },
+        { Name: 'Jane Smith', Status: 'Inactive' } // missing Email
+      ]
+      
+      render(
+        <SimpleTable 
+          headers={headers}
+          data={dataWithMissing}
+        />
+      )
+      
+      // Should show dash for missing values
+      expect(screen.getAllByText('-')).toHaveLength(2)
+    })
+
+    it('applies different variants and sizes', () => {
+      const { rerender } = render(
+        <SimpleTable 
+          headers={headers}
+          data={testData}
+          variant="striped"
+          size="lg"
+        />
+      )
+      
+      const table = screen.getByRole('table')
+      expect(table).toHaveClass('text-base') // lg size
+      
+      rerender(
+        <SimpleTable 
+          headers={headers}
+          data={testData}
+          variant="compact"
+          size="sm"
+        />
+      )
+      
+      expect(table).toHaveClass('text-xs') // both compact variant and sm size
+    })
+  })
+
+  describe('TableLoading', () => {
+    const { TableLoading } = require('../table')
+    
+    it('renders loading skeleton with default rows', () => {
+      render(
+        <TableLoading headers={['Name', 'Email', 'Status']} />
+      )
+      
+      // Should have skeleton rows (default 5)
+      const skeletonRows = screen.getAllByRole('row').slice(1) // exclude header row
+      expect(skeletonRows).toHaveLength(5)
+    })
+
+    it('renders loading skeleton with custom row count', () => {
+      render(
+        <TableLoading headers={['Name', 'Email']} rows={3} />
+      )
+      
+      const skeletonRows = screen.getAllByRole('row').slice(1)
+      expect(skeletonRows).toHaveLength(3)
+    })
+  })
 })

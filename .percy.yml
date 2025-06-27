@@ -1,0 +1,16 @@
+# Percy Configuration
+version: 2
+discovery:
+  allowed-hostnames:
+    - localhost
+    - 127.0.0.1
+  network-idle-timeout: 750
+
+static-snapshots:
+  base-url: http://localhost:3000
+  snapshot-files: '**/*.percy.js'
+  ignore-files: '**/node_modules/**'
+
+percy:
+  parallel-nonce: ''
+  parallel-total: 1

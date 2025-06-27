@@ -1,7 +1,7 @@
 // src/lib/api/client.ts
 // Enhanced API Client for session-based authentication
-import type { ApiResponse } from '@/lib/types';
-import { getApiConfig } from '@/lib/config/environment';
+import type { ApiResponse } from '../types';
+import { getApiConfig } from '../config/environment';
 
 // Unified error response types matching backend
 interface UnifiedErrorResponse {

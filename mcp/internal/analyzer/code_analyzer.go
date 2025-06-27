@@ -711,7 +711,12 @@ func BrowseWithPlaywright(url string) (models.PlaywrightResult, error) {
 		pw.Stop()
 		return models.PlaywrightResult{}, err
 	}
-	if _, err := page.Goto(url); err != nil {
+
+	// Set page timeout to 2 minutes for dev servers
+	page.SetDefaultTimeout(120000)
+	if _, err := page.Goto(url, playwright.PageGotoOptions{
+		Timeout: playwright.Float(120000), // 2 minutes timeout for dev server
+	}); err != nil {
 		page.Close()
 		browser.Close()
 		pw.Stop()

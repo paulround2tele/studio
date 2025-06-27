@@ -505,4 +505,136 @@ describe('Form Edge Cases', () => {
       expect(screen.getByText('Password is required')).toBeInTheDocument();
     });
   });
+
+  describe('FormSection', () => {
+    const { FormSection } = require('../form');
+
+    it('renders section with title and description', () => {
+      render(
+        <FormSection title="Personal Information" description="Enter your personal details">
+          <div>Form content</div>
+        </FormSection>
+      );
+
+      expect(screen.getByText('Personal Information')).toBeInTheDocument();
+      expect(screen.getByText('Enter your personal details')).toBeInTheDocument();
+      expect(screen.getByText('Form content')).toBeInTheDocument();
+    });
+
+    it('renders section without title and description', () => {
+      render(
+        <FormSection>
+          <div>Form content only</div>
+        </FormSection>
+      );
+
+      expect(screen.getByText('Form content only')).toBeInTheDocument();
+      expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    });
+
+    it('applies custom className', () => {
+      render(
+        <FormSection className="custom-section">
+          <div>Content</div>
+        </FormSection>
+      );
+
+      expect(screen.getByRole('group')).toHaveClass('custom-section');
+    });
+  });
+
+  describe('FormActions', () => {
+    const { FormActions } = require('../form');
+
+    it('renders actions with default right alignment', () => {
+      render(
+        <FormActions>
+          <Button>Cancel</Button>
+          <Button>Submit</Button>
+        </FormActions>
+      );
+
+      const actionsContainer = screen.getByRole('generic');
+      expect(actionsContainer).toHaveClass('justify-end');
+      expect(screen.getByText('Cancel')).toBeInTheDocument();
+      expect(screen.getByText('Submit')).toBeInTheDocument();
+    });
+
+    it('applies different alignments', () => {
+      const { rerender } = render(
+        <FormActions align="left">
+          <Button>Left</Button>
+        </FormActions>
+      );
+
+      expect(screen.getByRole('generic')).toHaveClass('justify-start');
+
+      rerender(
+        <FormActions align="center">
+          <Button>Center</Button>
+        </FormActions>
+      );
+
+      expect(screen.getByRole('generic')).toHaveClass('justify-center');
+
+      rerender(
+        <FormActions align="between">
+          <Button>Between</Button>
+        </FormActions>
+      );
+
+      expect(screen.getByRole('generic')).toHaveClass('justify-between');
+    });
+  });
+
+  describe('FormGroup', () => {
+    const { FormGroup } = require('../form');
+
+    it('renders form group with legend', () => {
+      render(
+        <FormGroup legend="Contact Information">
+          <div>Group content</div>
+        </FormGroup>
+      );
+
+      expect(screen.getByText('Contact Information')).toBeInTheDocument();
+      expect(screen.getByText('Group content')).toBeInTheDocument();
+      expect(screen.getByRole('group')).toBeInTheDocument();
+    });
+
+    it('renders form group without legend', () => {
+      render(
+        <FormGroup>
+          <div>Group content only</div>
+        </FormGroup>
+      );
+
+      expect(screen.getByText('Group content only')).toBeInTheDocument();
+      expect(screen.queryByRole('legend')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('SimpleForm', () => {
+    const { SimpleForm } = require('../form');
+
+    it('renders simple form with basic functionality', () => {
+      const onSubmit = jest.fn();
+      const fields = [
+        { name: 'email', label: 'Email', type: 'email', required: true },
+        { name: 'password', label: 'Password', type: 'password', required: true }
+      ];
+
+      render(
+        <SimpleForm 
+          fields={fields}
+          onSubmit={onSubmit}
+          submitLabel="Submit"
+        />
+      );
+
+      expect(screen.getByLabelText('Email')).toBeInTheDocument();
+      expect(screen.getByLabelText('Password')).toBeInTheDocument();
+      expect(screen.getByText('Submit')).toBeInTheDocument();
+    });
+  });
 });
