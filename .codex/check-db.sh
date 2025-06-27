@@ -41,8 +41,32 @@ fi
 
 echo "Checking PostgreSQL connection to $DB_HOST:$DB_PORT/$DB_NAME as $DB_USER"
 
-if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c '\\q' >/dev/null 2>&1; then
-  echo "✓ Database is reachable"
+# First, check if we can connect to the PostgreSQL server (using postgres database)
+if ! PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "postgres" -c '\q' >/dev/null 2>&1; then
+  echo "✗ Cannot connect to PostgreSQL server at $DB_HOST:$DB_PORT as $DB_USER" >&2
+  exit 1
+fi
+
+echo "✓ PostgreSQL server is reachable"
+
+# Check if the target database exists
+DB_EXISTS=$(PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "postgres" -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME';")
+
+if [ "$DB_EXISTS" = "1" ]; then
+  echo "✓ Database '$DB_NAME' exists"
+else
+  echo "Database '$DB_NAME' does not exist. Attempting to create it..."
+  if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "postgres" -c "CREATE DATABASE \"$DB_NAME\";" >/dev/null 2>&1; then
+    echo "✓ Database '$DB_NAME' created successfully"
+  else
+    echo "✗ Failed to create database '$DB_NAME'. Check user permissions." >&2
+    exit 1
+  fi
+fi
+
+# Now test connection to the target database
+if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c '\q' >/dev/null 2>&1; then
+  echo "✓ Database '$DB_NAME' is reachable"
 else
   echo "✗ Database connection failed" >&2
   exit 1

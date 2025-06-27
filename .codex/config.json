@@ -1,4 +1,59 @@
 {
   "allowNetwork": true,
-  "setupScript": "./setup.sh"
+  "allowedDomains": ["*"],
+  "setupScript": "./setup.sh",
+  "dependencies": {
+    "system": [
+      "postgresql",
+      "postgresql-contrib",
+      "postgresql-client",
+      "nodejs",
+      "npm",
+      "golang-go",
+      "jq",
+      "curl",
+      "git",
+      "build-essential",
+      "ca-certificates"
+    ],
+    "npm": [
+      "next",
+      "@types/node",
+      "@types/react",
+      "@types/react-dom",
+      "typescript",
+      "tailwindcss",
+      "jest",
+      "playwright",
+      "@playwright/test",
+      "@openapitools/openapi-generator-cli",
+      "eslint",
+      "prettier"
+    ],
+    "go": [
+      "github.com/gin-gonic/gin",
+      "github.com/jackc/pgx/v5",
+      "github.com/golang-migrate/migrate/v4",
+      "github.com/google/uuid",
+      "golang.org/x/crypto",
+      "github.com/joho/godotenv",
+      "github.com/golang-jwt/jwt/v5"
+    ]
+  },
+  "services": {
+    "postgresql": {
+      "port": 5432,
+      "database": "domainflow_production",
+      "user": "domainflow"
+    },
+    "backend": {
+      "port": 8080,
+      "binary": "./backend/apiserver",
+      "configFile": "./backend/config.json"
+    },
+    "frontend": {
+      "port": 3000,
+      "command": "npm run dev"
+    }
+  }
 }
