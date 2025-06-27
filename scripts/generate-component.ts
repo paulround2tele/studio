@@ -176,7 +176,6 @@ class CodeGenerator {
     let imports = [`import React${isMemo ? ', { memo' : ''}${hasState ? ', { useState, useEffect }' : ''}${hasForwardRef ? ', { forwardRef }' : ''} from 'react';`];
     
     if (hasMonitoring) {
-      imports.push(`import { usePerformanceMonitor } from '@/lib/hooks/usePerformanceMonitor';`);
       imports.push(`import { errorTracker } from '@/lib/monitoring/error-tracker';`);
     }
 
@@ -201,17 +200,7 @@ export interface ${componentName}Props {
 }` : '';
 
     const componentBody = `
-${hasMonitoring ? `  const perfMonitor = usePerformanceMonitor('${componentName}');` : ''}
 ${hasState ? `  const [state, setState] = useState<any>(null);` : ''}
-
-${hasMonitoring ? `
-  useEffect(() => {
-    perfMonitor.markRender();
-    return () => {
-      perfMonitor.cleanup();
-    };
-  }, []);
-` : ''}
 
   return (
     <div
