@@ -127,11 +127,13 @@ func extractSnippet(fileContent, token string) string {
 }
 
 // BuildUIPrompt assembles the final payload
-func BuildUIPrompt(screenshot string, comps []models.UIComponent, code []models.CodeMap, content []models.UIContent) models.UIPromptPayload {
+func BuildUIPrompt(screenshot string, comps []models.UIComponent, code []models.CodeMap, content []models.UIContent, html string, url string) models.UIPromptPayload {
 	return models.UIPromptPayload{
 		Screenshot: models.UIScreenshot{Path: screenshot},
 		Metadata:   comps,
 		CodeMap:    code,
 		Content:    content,
+		HTML:       html,
+		URL:        url,
 	}
 }

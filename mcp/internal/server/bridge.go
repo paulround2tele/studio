@@ -689,7 +689,26 @@ func (b *Bridge) GetVisualContext(url string) (models.UIPromptPayload, error) {
 		return models.UIPromptPayload{}, err
 	}
 	codeMap, _ := analyzer.MapComponentsToSource(b.BackendPath, comps)
-	return analyzer.BuildUIPrompt(result.Screenshot, comps, codeMap, content), nil
+	return analyzer.BuildUIPrompt(result.Screenshot, comps, codeMap, content, result.HTML, result.URL), nil
+}
+
+// GenerateUITestPromptWithActions runs Playwright with scripted actions
+func (b *Bridge) GenerateUITestPromptWithActions(url string, actions []models.UIAction) (models.UIPromptPayload, error) {
+	if !config.Flags.AllowTerminal {
+		return models.UIPromptPayload{}, errors.New("terminal commands are disabled")
+	}
+	result, err := analyzer.BrowseWithPlaywrightActions(url, actions)
+	if err != nil {
+		return models.UIPromptPayload{}, err
+	}
+	b.LastHTML = result.HTML
+	b.LastScreenshot = result.Screenshot
+	comps, content, err := analyzer.ParseUI(result.HTML)
+	if err != nil {
+		return models.UIPromptPayload{}, err
+	}
+	codeMap, _ := analyzer.MapComponentsToSource(b.BackendPath, comps)
+	return analyzer.BuildUIPrompt(result.Screenshot, comps, codeMap, content, result.HTML, result.URL), nil
 }
 
 // GetDatabaseStats returns database statistics
