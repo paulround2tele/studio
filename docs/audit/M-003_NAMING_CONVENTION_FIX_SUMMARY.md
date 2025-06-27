@@ -86,9 +86,9 @@ const transformedData = skipTransform
   : transformApiResponse<T>(unifiedResponse.data);
 ```
 
-### 4. **Enhanced WebSocket Service** (`src/lib/services/websocketService.enhanced.ts`)
+### 4. **WebSocket Service** (`src/lib/services/websocketService.simple.ts`)
 
-Updated WebSocket service to handle transformations:
+The WebSocket service handles:
 - Incoming messages from snake_case to camelCase
 - Outgoing messages from camelCase to snake_case
 - Special handling for int64 fields in progress messages
@@ -214,15 +214,16 @@ console.log(response.data.campaignId); // Not campaign_id
 
 ### WebSocket
 ```typescript
-import { getEnhancedWebSocketService } from '@/lib/services/websocketService.enhanced';
+import { websocketService } from '@/lib/services/websocketService.simple';
 
-const ws = getEnhancedWebSocketService({
+const ws = websocketService;
+ws.connectToCampaign('campaign-id', {
   onMessage: (message) => {
     // Message automatically transformed to camelCase
     if (message.type === 'campaign_progress') {
       console.log(message.data.totalItems); // Not total_items
     }
-  }
+  },
 });
 ```
 
