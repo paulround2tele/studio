@@ -4,7 +4,7 @@
  */
 
 import type { ModelsUserAPI } from '@/lib/api-client/models/models-user-api';
-import type { ModelsLoginResponseAPI } from '@/lib/api-client/models/models-login-response-api';
+import type { LoginResponseAPI as ModelsLoginResponseAPI } from '@/lib/api-client/models/login-response-api';
 import type { UUID, ISODateString } from '@/lib/types/branded';
 import { createUUID, createISODateString } from '@/lib/types/branded';
 
@@ -33,7 +33,7 @@ export interface UserAPIAligned {
 }
 
 /**
- * Login response with fixed field naming (requiresCaptcha not requires_captcha)
+ * Login response with camelCase field naming
  */
 export interface LoginResponseAPIAligned {
     error?: string;
@@ -75,11 +75,10 @@ export function transformUserResponse(raw: ModelsUserAPI): UserAPIAligned {
  */
 export function transformLoginResponse(raw: ModelsLoginResponseAPI): LoginResponseAPIAligned {
     return {
-        error: raw.error,
+        error: raw.error ?? undefined,
         expiresAt: raw.expiresAt ? createISODateString(raw.expiresAt) : undefined,
-        // Convert snake_case field from API to camelCase used internally
-        requiresCaptcha: (raw as ModelsLoginResponseAPI & { requires_captcha?: boolean }).requires_captcha,
-        sessionId: raw.sessionId,
+        requiresCaptcha: raw.requiresCaptcha ?? undefined,
+        sessionId: raw.sessionId ?? undefined,
         success: raw.success,
         user: raw.user ? transformUserResponse(raw.user) : undefined,
     };

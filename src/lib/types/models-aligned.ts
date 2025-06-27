@@ -196,9 +196,9 @@ export interface ModelsPermissionAPI {
 export interface ModelsLoginResponseAPI {
   success?: boolean;
   user?: ModelsUserAPI;
-  error?: string;
-  requiresCaptcha?: boolean; // NOT requires_captcha
-  sessionId?: string;
+  error?: string | null;
+  requiresCaptcha?: boolean | null;
+  sessionId?: string | null;
   expiresAt?: ISODateString;
 }
 
@@ -728,8 +728,7 @@ export interface ErrorResponse {
  *
  * 4. Remove all references to 'archived' status
  *
- * 5. Fix login response handling:
- *    - Change `response.requires_captcha` to `response.requiresCaptcha`
+ * 5. Fix login response handling to use camelCase field names
  *
  * 6. Ensure HTTP source types use exact casing:
  *    - 'DomainGeneration' not 'domain_generation'

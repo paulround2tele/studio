@@ -69,7 +69,7 @@ Used primarily for web interface access with secure HTTP-only cookies.
     "lastLogin": "2024-01-15T10:30:00Z",
     "mustChangePassword": false
   },
-  "requires_captcha": false,
+  "requiresCaptcha": false,
   "sessionId": "sess_123456789",
   "expiresAt": "2024-01-16T10:30:00Z"
 }

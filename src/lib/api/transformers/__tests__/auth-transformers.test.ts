@@ -10,7 +10,7 @@ import {
   Permission
 } from '../auth-transformers';
 import { ModelsUserAPI } from '../../../api-client/models/models-user-api';
-import { ModelsLoginResponseAPI } from '../../../api-client/models/models-login-response-api';
+import { LoginResponseAPI as ModelsLoginResponseAPI } from '../../../api-client/models/login-response-api';
 
 // Mock the branded types module
 jest.mock('../../../types/branded', () => ({
@@ -141,17 +141,6 @@ describe('Auth Transformers', () => {
       });
     });
 
-    it('should handle requires_captcha snake_case field', () => {
-      const rawWithSnakeCase: any = {
-        success: false,
-        error: 'Too many attempts',
-        requires_captcha: true
-      };
-
-      const result = transformLoginResponse(rawWithSnakeCase);
-
-      expect(result.requiresCaptcha).toBe(true);
-    });
 
     it('should handle response without user', () => {
       const errorResponse: ModelsLoginResponseAPI = {

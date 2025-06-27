@@ -44,7 +44,7 @@ export interface LoginResponse {
   user: PublicUser;
   sessionId: string;
   expiresAt: ISODateString;
-  requiresCaptcha: boolean;  // NOT 'requires_captcha'!
+  requiresCaptcha: boolean;
   mfaRequired?: boolean;
 }
 

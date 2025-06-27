@@ -371,7 +371,7 @@ export interface LoginResponseSynced {
   success: boolean;                // bool   `json:"success"`
   user?: UserSecurity;             // *User  `json:"user,omitempty"`
   error?: string;                  // string `json:"error,omitempty"`
-  requiresCaptcha?: boolean;       // bool   `json:"requires_captcha,omitempty"`
+  requiresCaptcha?: boolean;       // bool   `json:"requiresCaptcha,omitempty"`
   sessionId?: string;              // string `json:"sessionId,omitempty"`
   expiresAt?: string;              // string `json:"expiresAt,omitempty"`
 }
