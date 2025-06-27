@@ -314,6 +314,45 @@ type PlaywrightResult struct {
 	Screenshot string `json:"screenshot"`
 }
 
+// UIComponent represents a single UI element extracted from the DOM
+type UIComponent struct {
+	Name    string   `json:"name,omitempty"`
+	Tag     string   `json:"tag,omitempty"`
+	ID      string   `json:"id,omitempty"`
+	Role    string   `json:"role,omitempty"`
+	Classes []string `json:"classes,omitempty"`
+	Styles  []string `json:"styles,omitempty"`
+}
+
+// UIContent holds visible text and accessibility information for a component
+type UIContent struct {
+	Component string            `json:"component"`
+	Text      string            `json:"text,omitempty"`
+	Alt       string            `json:"alt,omitempty"`
+	ARIA      map[string]string `json:"aria,omitempty"`
+}
+
+// CodeMap maps a UI component to a source file snippet
+type CodeMap struct {
+	Component string `json:"component"`
+	File      string `json:"file"`
+	Snippet   string `json:"snippet"`
+}
+
+// UIScreenshot represents the screenshot location or encoded data
+type UIScreenshot struct {
+	Path   string `json:"path,omitempty"`
+	Base64 string `json:"base64,omitempty"`
+}
+
+// UIPromptPayload aggregates visual context for LLM consumption
+type UIPromptPayload struct {
+	Screenshot UIScreenshot  `json:"screenshot"`
+	Metadata   []UIComponent `json:"metadata"`
+	CodeMap    []CodeMap     `json:"code_connect"`
+	Content    []UIContent   `json:"content"`
+}
+
 // MCP Protocol Types
 
 // MCPRequest represents a generic MCP request
