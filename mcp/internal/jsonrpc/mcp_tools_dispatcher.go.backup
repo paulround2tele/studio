@@ -22,8 +22,8 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 			},
 		},
 		{
-			Name:        "get_backend_openapi_schema",
-			Description: "Get OpenAPI schema including specifications and route definitions",
+			Name:        "get_api_schema",
+			Description: "Get API schema including OpenAPI specifications and route definitions",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
@@ -32,15 +32,15 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 
 		// Code Analysis Tools (7)
 		{
-			Name:        "get_backend_data_models",
-			Description: "Get all backend data models and their structures",
+			Name:        "get_models",
+			Description: "Get all data models and their structures",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
 			},
 		},
 		{
-			Name:        "get_backend_api_routes",
+			Name:        "get_routes",
 			Description: "Get all API routes and endpoints",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
@@ -48,24 +48,24 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 			},
 		},
 		{
-			Name:        "get_backend_api_endpoints",
-			Description: "Get all API endpoints (alias for get_backend_api_routes)",
+			Name:        "get_endpoints",
+			Description: "Get all API endpoints (alias for get_routes)",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
 			},
 		},
 		{
-			Name:        "get_backend_request_handlers",
-			Description: "Get all backend request handlers",
+			Name:        "get_handlers",
+			Description: "Get all request handlers",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
 			},
 		},
 		{
-			Name:        "get_backend_services",
-			Description: "Get all backend service definitions and interfaces",
+			Name:        "get_services",
+			Description: "Get all service definitions and interfaces",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
@@ -470,12 +470,51 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 					"includeAccessibility": map[string]interface{}{
 						"type":        "boolean",
 						"description": "Include accessibility testing requirements",
-					},
-					"includeInteractions": map[string]interface{}{
-						"type":        "boolean",
-						"description": "Include interaction testing requirements",
-					},
+					},				"includeInteractions": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Include interaction testing requirements",
 				},
+			},
+		},
+		// Frontend Tools
+		{
+			Name:        "get_frontend_routes",
+			Description: "List Next.js frontend routes",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_component_tree",
+			Description: "Get React component import tree",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_component_props_and_events",
+			Description: "Extract props and event handlers for React components",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_frontend_test_coverage",
+			Description: "Run frontend tests and return coverage",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_component_to_test_map",
+			Description: "Map components to test files",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
 			},
 		},
 
@@ -544,48 +583,6 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"properties": map[string]interface{}{},
 			},
 		},
-
-		// Frontend Tools
-		{
-			Name:        "get_nextjs_app_routes",
-			Description: "List Next.js frontend app router routes",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_react_component_tree",
-			Description: "Get React component import tree and dependencies",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_react_component_props",
-			Description: "Extract props and event handlers for React components",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_frontend_test_coverage",
-			Description: "Run frontend tests and return coverage",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_react_component_tests",
-			Description: "Map React components to their test files",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
 	}
 
 	log.Printf("Returning %d MCP tools", len(tools))
@@ -608,19 +605,19 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 	// Database Tools
 	case "get_database_schema":
 		return s.callGetDatabaseSchema()
-	case "get_backend_openapi_schema":
+	case "get_api_schema":
 		return s.callGetAPISchema()
 	case "get_database_stats":
 		return s.callGetDatabaseStats()
 
 	// Code Analysis Tools
-	case "get_backend_data_models":
+	case "get_models":
 		return s.callGetModels()
-	case "get_backend_api_routes", "get_backend_api_endpoints":
+	case "get_routes", "get_endpoints":
 		return s.callGetRoutes()
-	case "get_backend_request_handlers":
+	case "get_handlers":
 		return s.callGetHandlers()
-	case "get_backend_services":
+	case "get_services":
 		return s.callGetServices()
 	case "get_interfaces":
 		return s.callGetInterfaces()
@@ -706,6 +703,17 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 	case "generate_ui_test_prompt":
 		return s.callGenerateUITestPrompt(ctx, toolCall.Arguments)
 
+	case "get_frontend_routes":
+		return s.callGetFrontendRoutes()
+	case "get_component_tree":
+		return s.callGetComponentTree()
+	case "get_component_props_and_events":
+		return s.callGetComponentPropsAndEvents()
+	case "get_frontend_test_coverage":
+		return s.callGetFrontendTestCoverage()
+	case "get_component_to_test_map":
+		return s.callGetComponentToTestMap()
+
 	// New Tools
 	case "analyze_performance":
 		return s.callAnalyzePerformance()
@@ -721,18 +729,6 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callAnalyzeComplexity()
 	case "get_lint_diagnostics":
 		return s.callGetLintDiagnostics()
-
-	// Frontend Tools
-	case "get_nextjs_app_routes":
-		return s.callGetFrontendRoutes()
-	case "get_react_component_tree":
-		return s.callGetComponentTree()
-	case "get_react_component_props":
-		return s.callGetComponentPropsAndEvents()
-	case "get_frontend_test_coverage":
-		return s.callGetFrontendTestCoverage()
-	case "get_react_component_tests":
-		return s.callGetComponentToTestMap()
 
 	default:
 		return map[string]interface{}{
