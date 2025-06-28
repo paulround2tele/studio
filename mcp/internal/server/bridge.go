@@ -1446,4 +1446,34 @@ func (b *Bridge) TestWebSocketFlow() (models.WebSocketTestResult, error) {
 	return result, nil
 }
 
+// GetFrontendRoutes returns Next.js routes from the frontend
+func (b *Bridge) GetFrontendRoutes() ([]models.FrontendRoute, error) {
+	root := filepath.Dir(b.BackendPath)
+	return analyzer.GetFrontendRoutes(root)
+}
+
+// GetComponentTree returns a simple component tree
+func (b *Bridge) GetComponentTree() ([]models.ComponentTreeNode, error) {
+	root := filepath.Dir(b.BackendPath)
+	return analyzer.GetComponentTree(root)
+}
+
+// GetComponentPropsAndEvents extracts props and event handlers from components
+func (b *Bridge) GetComponentPropsAndEvents() ([]models.ComponentPropsAndEvents, error) {
+	root := filepath.Dir(b.BackendPath)
+	return analyzer.GetComponentPropsAndEvents(root)
+}
+
+// GetFrontendTestCoverage runs frontend tests and parses coverage
+func (b *Bridge) GetFrontendTestCoverage() (models.TestCoverage, error) {
+	root := filepath.Dir(b.BackendPath)
+	return analyzer.GetFrontendTestCoverage(root)
+}
+
+// GetComponentToTestMap links components to their test files
+func (b *Bridge) GetComponentToTestMap() ([]models.ComponentTestMap, error) {
+	root := filepath.Dir(b.BackendPath)
+	return analyzer.GetComponentToTestMap(root)
+}
+
 // TODO: Add more methods for other tools as needed.
