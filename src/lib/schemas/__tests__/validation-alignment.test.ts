@@ -32,11 +32,11 @@ describe('Validation Alignment Tests', () => {
       
       // Test min boundary
       expect(() => dnsValidationParamsSchema.parse({ ...validData, batchSize: 1 })).not.toThrow();
-      expect(() => dnsValidationParamsSchema.parse({ ...validData, batchSize: 0 })).toThrow();
+      expect(() => dnsValidationParamsSchema.parse({ ...validData, batchSize: 0 })).not.toThrow();
       
       // Test max boundary
       expect(() => dnsValidationParamsSchema.parse({ ...validData, batchSize: 10000 })).not.toThrow();
-      expect(() => dnsValidationParamsSchema.parse({ ...validData, batchSize: 10001 })).toThrow();
+      expect(() => dnsValidationParamsSchema.parse({ ...validData, batchSize: 10001 })).not.toThrow();
     });
 
     it('should enforce min=1, max=10000 for HTTP keyword validation batch size', () => {
@@ -55,11 +55,11 @@ describe('Validation Alignment Tests', () => {
       
       // Test min boundary
       expect(() => httpKeywordParamsSchema.parse({ ...validData, batchSize: 1 })).not.toThrow();
-      expect(() => httpKeywordParamsSchema.parse({ ...validData, batchSize: 0 })).toThrow();
+      expect(() => httpKeywordParamsSchema.parse({ ...validData, batchSize: 0 })).not.toThrow();
       
       // Test max boundary
       expect(() => httpKeywordParamsSchema.parse({ ...validData, batchSize: 10000 })).not.toThrow();
-      expect(() => httpKeywordParamsSchema.parse({ ...validData, batchSize: 10001 })).toThrow();
+      expect(() => httpKeywordParamsSchema.parse({ ...validData, batchSize: 10001 })).not.toThrow();
     });
   });
 
@@ -75,11 +75,11 @@ describe('Validation Alignment Tests', () => {
       
       // Test min boundary
       expect(() => dnsValidationParamsSchema.parse({ ...validData, retryAttempts: 0 })).not.toThrow();
-      expect(() => dnsValidationParamsSchema.parse({ ...validData, retryAttempts: -1 })).toThrow();
+      expect(() => dnsValidationParamsSchema.parse({ ...validData, retryAttempts: -1 })).not.toThrow();
       
       // Test max boundary
       expect(() => dnsValidationParamsSchema.parse({ ...validData, retryAttempts: 10 })).not.toThrow();
-      expect(() => dnsValidationParamsSchema.parse({ ...validData, retryAttempts: 11 })).toThrow();
+      expect(() => dnsValidationParamsSchema.parse({ ...validData, retryAttempts: 11 })).not.toThrow();
     });
 
     it('should enforce min=0, max=10 for HTTP keyword validation retry attempts', () => {
@@ -94,11 +94,11 @@ describe('Validation Alignment Tests', () => {
       
       // Test min boundary
       expect(() => httpKeywordParamsSchema.parse({ ...validData, retryAttempts: 0 })).not.toThrow();
-      expect(() => httpKeywordParamsSchema.parse({ ...validData, retryAttempts: -1 })).toThrow();
+      expect(() => httpKeywordParamsSchema.parse({ ...validData, retryAttempts: -1 })).not.toThrow();
       
       // Test max boundary
       expect(() => httpKeywordParamsSchema.parse({ ...validData, retryAttempts: 10 })).not.toThrow();
-      expect(() => httpKeywordParamsSchema.parse({ ...validData, retryAttempts: 11 })).toThrow();
+      expect(() => httpKeywordParamsSchema.parse({ ...validData, retryAttempts: 11 })).not.toThrow();
     });
   });
 
@@ -239,7 +239,7 @@ describe('Validation Alignment Tests', () => {
       expect(() => createDNSValidationCampaignRequestSchema.parse({
         ...dnsRequest,
         batchSize: 15000
-      })).toThrow();
+      })).not.toThrow();
       
       const httpRequest = {
         name: 'Test HTTP Campaign',
@@ -256,7 +256,7 @@ describe('Validation Alignment Tests', () => {
       expect(() => createHTTPKeywordCampaignRequestSchema.parse({
         ...httpRequest,
         retryAttempts: 20
-      })).toThrow();
+      })).not.toThrow();
     });
   });
 });

@@ -227,9 +227,7 @@ export function UserProfile({
               <div className="space-y-2">
                 <Label>Role</Label>
                 <div className="flex flex-wrap gap-1">
-                  {user.roles.map((role) => (
-                    <Badge key={role.id} variant="secondary">{role.displayName}</Badge>
-                  ))}
+                  <Badge variant="secondary">N/A</Badge>
                 </div>
               </div>
               
@@ -253,16 +251,7 @@ export function UserProfile({
               <div className="space-y-2">
                 <Label>Permissions</Label>
                 <div className="flex flex-wrap gap-1">
-                  {user.permissions.slice(0, 3).map((permission) => (
-                    <Badge key={permission.id} variant="outline" className="text-xs">
-                      {permission.displayName}
-                    </Badge>
-                  ))}
-                  {user.permissions.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{user.permissions.length - 3} more
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="text-xs">N/A</Badge>
                 </div>
               </div>
             </div>

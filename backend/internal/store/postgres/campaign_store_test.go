@@ -33,10 +33,11 @@ func (s *CampaignStoreTestSuite) T() *testing.T {
 }
 
 func (s *CampaignStoreTestSuite) SetupSuite() {
-	dsn := os.Getenv("TEST_POSTGRES_DSN")
-	if dsn == "" {
-		s.T().Fatal("TEST_POSTGRES_DSN environment variable must be set")
-	}
+    dsn := os.Getenv("TEST_POSTGRES_DSN")
+    if dsn == "" {
+            s.T().Skip("Skipping Postgres tests as TEST_POSTGRES_DSN is not set.")
+            return
+    }
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {

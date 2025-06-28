@@ -37,8 +37,10 @@ func TestHealthCheckHandler_HandleHealthCheck(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dsn := os.Getenv("TEST_POSTGRES_DSN")
-			require.NotEmpty(t, dsn)
+            dsn := os.Getenv("TEST_POSTGRES_DSN")
+            if dsn == "" {
+                    t.Skip("TEST_POSTGRES_DSN not set")
+            }
 			db, err := sql.Open("postgres", dsn)
 			require.NoError(t, err)
 			if tc.simulateDown {
@@ -103,8 +105,10 @@ func TestHealthCheckHandler_HandleReadinessCheck(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dsn := os.Getenv("TEST_POSTGRES_DSN")
-			require.NotEmpty(t, dsn)
+            dsn := os.Getenv("TEST_POSTGRES_DSN")
+            if dsn == "" {
+                    t.Skip("TEST_POSTGRES_DSN not set")
+            }
 			db, err := sql.Open("postgres", dsn)
 			require.NoError(t, err)
 			if tc.simulateDown {
@@ -134,8 +138,10 @@ func TestHealthCheckHandler_HandleReadinessCheck(t *testing.T) {
 }
 
 func TestHealthCheckHandler_HandleLivenessCheck(t *testing.T) {
-	dsn := os.Getenv("TEST_POSTGRES_DSN")
-	require.NotEmpty(t, dsn)
+    dsn := os.Getenv("TEST_POSTGRES_DSN")
+    if dsn == "" {
+            t.Skip("TEST_POSTGRES_DSN not set")
+    }
 	db, err := sql.Open("postgres", dsn)
 	require.NoError(t, err)
 	defer db.Close()

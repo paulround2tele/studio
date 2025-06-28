@@ -324,7 +324,7 @@ export function UserManagement({
     setUpdateForm({
       name: `${user.firstName} ${user.lastName}`,
       email: user.email,
-      roleId: user.roles?.[0]?.id || '',
+      roleId: '',
       isActive: user.isActive,
       mustChangePassword: user.mustChangePassword
     });
@@ -336,7 +336,7 @@ export function UserManagement({
     const displayName = `${user.firstName} ${user.lastName}`.trim() || user.email;
     const matchesSearch = displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || (user.roles?.[0]?.name || 'user') === roleFilter;
+    const matchesRole = roleFilter === 'all' || 'user' === roleFilter;
     const matchesStatus = statusFilter === 'all' ||
                          (statusFilter === 'active' && user.isActive) ||
                          (statusFilter === 'inactive' && !user.isActive);
@@ -631,7 +631,7 @@ export function UserManagement({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{user.roles?.[0]?.name || 'user'}</Badge>
+                      <Badge variant="secondary">user</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.isActive ? "default" : "destructive"}>

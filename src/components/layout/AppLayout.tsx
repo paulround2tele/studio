@@ -117,7 +117,7 @@ const AppSidebar = memo(() => {
           <div className="flex flex-col">
             <span className="text-sm font-medium">{user?.email}</span>
             <span className="text-xs text-muted-foreground">
-              {user?.roles.map(role => role.displayName).join(', ')}
+              {user?.firstName} {user?.lastName}
             </span>
           </div>
           <button

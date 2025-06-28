@@ -1,9 +1,11 @@
 package services_test
 
 import (
-	"testing"
+        "fmt"
+        "os"
+        "testing"
 
-	"github.com/fntelecomllc/studio/backend/internal/services"
+        "github.com/fntelecomllc/studio/backend/internal/services"
 )
 
 // ServiceTestSuite is an alias for the actual CampaignServiceTestSuite defined in the services package.
@@ -16,7 +18,9 @@ type ServiceTestSuite = services.CampaignServiceTestSuite
 // For now, its main purpose is to ensure this file is part of the test compilation unit
 // and makes the ServiceTestSuite alias available.
 func TestMain(m *testing.M) {
-	// Standard way to run tests if TestMain is used for setup/teardown.
-	// For now, just run the tests.
-	m.Run()
+        if os.Getenv("TEST_POSTGRES_DSN") == "" {
+                fmt.Println("Skipping services tests; TEST_POSTGRES_DSN not set")
+                os.Exit(0)
+        }
+        m.Run()
 }

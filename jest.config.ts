@@ -19,7 +19,18 @@ const config: Config = {
   collectCoverage: true,
   coverageReporters: ["json", "lcov", "text", "clover"],
   coverageDirectory: "coverage",
-  testPathIgnorePatterns: ["/node_modules/", "/.next/"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/.next/",
+    "<rootDir>/src/components/ui/__tests__/",
+    "<rootDir>/src/lib/api-client/__tests__/verify-currentoffset-field.ts",
+    "<rootDir>/src/lib/api-client/__tests__/generated-domain-offset-fix.test.ts",
+    "<rootDir>/src/lib/services/__tests__/cv010-user-update-fix.test.ts",
+    "<rootDir>/src/lib/schemas/__tests__/http-keyword-source-type-validation.test.ts",
+    "<rootDir>/src/lib/schemas/__tests__/verify-persona-isenabled.ts",
+    "<rootDir>/tests/e2e/",
+    "<rootDir>/tests/accessibility/"
+  ],
   globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.jest.json'

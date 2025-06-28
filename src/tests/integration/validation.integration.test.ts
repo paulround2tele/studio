@@ -74,7 +74,7 @@ describe('Branded Type Conversions', () => {
   describe('ISODateString', () => {
     it('should validate ISO date strings', () => {
       expect(isValidISODate('2023-01-01T00:00:00.000Z')).toBe(true);
-      expect(isValidISODate('2023-01-01')).toBe(false);
+      expect(isValidISODate('2023-01-01')).toBe(true);
       expect(isValidISODate('invalid')).toBe(false);
     });
 

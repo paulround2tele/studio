@@ -88,8 +88,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const state = authService.getState();
           console.log('[AuthContext] Post-initialization auth state:', {
             isAuthenticated: state.isAuthenticated,
-            hasUser: !!state.user,
-            userPermissions: state.user?.permissions?.length || 0
+            hasUser: !!state.user
           });
           
           // In session-based auth, the initialize() method already checks for active session

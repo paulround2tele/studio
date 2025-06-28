@@ -177,7 +177,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Role:</span>
-              <span>{user?.roles?.map(role => role.name).join(', ') || 'Unknown'}</span>
+              <span>N/A</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Permissions:</span>

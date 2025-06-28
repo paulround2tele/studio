@@ -338,11 +338,7 @@ export default function UserManagementPage() {
                       
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {user.roles?.map((role) => (
-                            <Badge key={role.id} variant="outline" className="text-xs">
-                              {role.name}
-                            </Badge>
-                          )) || <span className="text-muted-foreground">No roles</span>}
+                          <span className="text-muted-foreground">N/A</span>
                         </div>
                       </TableCell>
                       

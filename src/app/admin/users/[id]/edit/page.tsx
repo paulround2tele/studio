@@ -119,7 +119,7 @@ export default function EditUserPage() {
             firstName: foundUser.firstName,
             lastName: foundUser.lastName,
             email: foundUser.email,
-            roleIds: foundUser.roles?.map(role => role.id) || [],
+            roleIds: [],
             isActive: foundUser.isActive,
             mustChangePassword: foundUser.mustChangePassword
           });
@@ -201,7 +201,7 @@ export default function EditUserPage() {
       if (formData.lastName !== user?.lastName) {
         updateUserRequest.lastName = formData.lastName;
       }
-      if (formData.roleIds && JSON.stringify(formData.roleIds) !== JSON.stringify(user?.roles?.map(r => r.id))) {
+      if (formData.roleIds) {
         updateUserRequest.roleIds = formData.roleIds;
       }
       if (formData.isActive !== user?.isActive) {

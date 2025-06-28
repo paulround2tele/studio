@@ -83,9 +83,7 @@ export function validateUser(data: unknown): data is User {
     typeof user.mustChangePassword === 'boolean' &&
     typeof user.mfaEnabled === 'boolean' &&
     validateISODateTime(user.createdAt) &&
-    validateISODateTime(user.updatedAt) &&
-    Array.isArray(user.roles) &&
-    Array.isArray(user.permissions)
+    validateISODateTime(user.updatedAt)
   );
 }
 

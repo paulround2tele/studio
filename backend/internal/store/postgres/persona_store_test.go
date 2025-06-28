@@ -28,10 +28,11 @@ func clearPersonasTable(t *testing.T, db *sqlx.DB) {
 }
 
 func TestMain(m *testing.M) {
-	dsn := os.Getenv("TEST_POSTGRES_DSN")
-	if dsn == "" {
-		log.Fatal("TEST_POSTGRES_DSN environment variable must be set")
-	}
+    dsn := os.Getenv("TEST_POSTGRES_DSN")
+    if dsn == "" {
+            log.Println("Skipping Postgres tests as TEST_POSTGRES_DSN is not set")
+            os.Exit(0)
+    }
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
