@@ -3,7 +3,6 @@
 import { getApiBaseUrl } from '@/lib/config';
 import { logAuth } from '@/lib/utils/logger';
 import { apiClient } from '@/lib/api/client';
-import { ProductionApiClient } from '@/lib/services/apiClient.production';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 import { TypeTransformer, type RawAPIData } from '@/lib/types/transform';
 import type {
@@ -30,7 +29,6 @@ export interface AuthState {
   user: User | null;  // Use unified User interface
   isLoading: boolean;
   sessionExpiry: number | null;
-  availablePermissions: string[];  // Add this field
 }
 
 class AuthService {
@@ -39,8 +37,7 @@ class AuthService {
     isAuthenticated: false,
     user: null,
     isLoading: false,
-    sessionExpiry: null,
-    availablePermissions: [] // Initialize the new field
+    sessionExpiry: null
   };
   
   private listeners: ((state: AuthState) => void)[] = [];
@@ -79,11 +76,8 @@ class AuthService {
       if (response.ok) {
         const userData = await response.json();
         
-        // Fetch available permissions from backend
-        const availablePermissions = await this.fetchAvailablePermissions();
-        
         // Use the user data directly as it already matches the User interface
-        this.updateAuthState(userData, null, availablePermissions);
+        this.updateAuthState(userData, null);
         logAuth.init('Session restored successfully', { userId: userData.id });
       } else {
         logAuth.init('No active session found');
@@ -120,10 +114,7 @@ class AuthService {
         rememberMe: credentials.rememberMe
       });
 
-      if (loginResponse.status === 'success' && loginResponse.data?.success && loginResponse.data.user) {
-        // Fetch available permissions from backend  
-        const availablePermissions = await this.fetchAvailablePermissions();
-        
+      if (loginResponse.status === 'success' && loginResponse.data?.user) {
         // Convert expiresAt to timestamp if provided
         const sessionExpiry = loginResponse.data.expiresAt ? new Date(loginResponse.data.expiresAt).getTime() : null;
         
@@ -134,7 +125,7 @@ class AuthService {
         const transformedUser = TypeTransformer.transformUser(loginResponse.data.user as unknown as RawAPIData);
         
         // Use the transformed user data
-        this.updateAuthState(transformedUser, sessionExpiry, availablePermissions);
+        this.updateAuthState(transformedUser, sessionExpiry);
         
         logAuth.success('Login successful', { userId: transformedUser.id });
         loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'succeeded');
@@ -199,46 +190,6 @@ class AuthService {
     }
   }
 
-  // Fetch available permissions from backend
-  private async fetchAvailablePermissions(): Promise<string[]> {
-    try {
-      const response = await this.makeAuthenticatedRequest('/api/v2/auth/permissions');
-      
-      if (response.ok) {
-        const data = await response.json();
-        return data.permissions || [];
-      } else {
-        logAuth.warn('Failed to fetch available permissions', { status: response.status });
-        return [];
-      }
-    } catch (error) {
-      logAuth.error('Error fetching available permissions', error);
-      return [];
-    }
-  }
-
-  // Check if user has specific permission using authoritative list
-  hasPermission(permission: string): boolean {
-    if (!this.authState.isAuthenticated || !this.authState.user) {
-      return false;
-    }
-    
-    // Ensure the permission string is valid by checking against available permissions
-    if (!this.authState.availablePermissions.includes(permission)) {
-      logAuth.warn(`Unknown permission string: ${permission}`, {
-        availablePermissions: this.authState.availablePermissions
-      });
-      return false;
-    }
-    
-    return this.authState.user.permissions.some(p => p.name === permission);
-  }
-
-  // Check if user has specific role
-  hasRole(role: string): boolean {
-    return this.authState.user?.roles.some(r => r.name === role) ?? false;
-  }
-
   // Subscribe to auth state changes
   subscribe(listener: (state: AuthState) => void): () => void {
     this.listeners.push(listener);
@@ -263,11 +214,6 @@ class AuthService {
   // Get current user
   getCurrentUser(): User | null {
     return this.authState.user;
-  }
-
-  // Get available permissions list
-  getAvailablePermissions(): string[] {
-    return [...this.authState.availablePermissions];
   }
 
   // Update password
@@ -483,11 +429,10 @@ class AuthService {
   }
 
   // Private helper methods
-  private updateAuthState(user: User, sessionExpiry: number | null, availablePermissions?: string[]): void {
+  private updateAuthState(user: User, sessionExpiry: number | null): void {
     this.authState.isAuthenticated = true;
     this.authState.user = user;
     this.authState.sessionExpiry = sessionExpiry;
-    this.authState.availablePermissions = availablePermissions || this.authState.availablePermissions;
     this.notifyListeners();
   }
 
@@ -495,7 +440,6 @@ class AuthService {
     this.authState.isAuthenticated = false;
     this.authState.user = null;
     this.authState.sessionExpiry = null;
-    this.authState.availablePermissions = []; // Clear availablePermissions
     this.notifyListeners();
   }
 

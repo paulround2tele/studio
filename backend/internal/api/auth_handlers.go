@@ -83,19 +83,32 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	fmt.Printf("DEBUG: Session created successfully with ID: %s\n", sessionData.ID)
 
-	// Set session cookie
+	// Set session cookie with SameSite attribute
 	fmt.Printf("DEBUG: Setting session cookie with name: %s, value: %s\n", h.config.CookieName, sessionData.ID)
-	c.SetCookie(
+
+	// Build cookie manually to include SameSite attribute
+	cookieValue := fmt.Sprintf("%s=%s; Path=%s; Max-Age=%d; HttpOnly",
 		h.config.CookieName,
 		sessionData.ID,
-		int(time.Until(sessionData.ExpiresAt).Seconds()),
 		h.config.CookiePath,
-		h.config.CookieDomain,
-		h.config.CookieSecure,
-		h.config.CookieHttpOnly,
+		int(time.Until(sessionData.ExpiresAt).Seconds()),
 	)
-	fmt.Printf("DEBUG: Cookie set with domain: %s, path: %s, secure: %v, httpOnly: %v\n",
-		h.config.CookieDomain, h.config.CookiePath, h.config.CookieSecure, h.config.CookieHttpOnly)
+
+	// Add domain if specified
+	if h.config.CookieDomain != "" {
+		cookieValue += fmt.Sprintf("; Domain=%s", h.config.CookieDomain)
+	}
+
+	// Add Secure if enabled
+	if h.config.CookieSecure {
+		cookieValue += "; Secure"
+	}
+
+	// Add SameSite=Lax for cross-origin compatibility in development
+	cookieValue += "; SameSite=Lax"
+
+	c.Header("Set-Cookie", cookieValue)
+	fmt.Printf("DEBUG: Cookie set with value: %s\n", cookieValue)
 
 	// Update last login information
 	h.updateLastLogin(user.ID, ipAddress)
@@ -184,52 +197,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
-	// Get user roles and permissions using the same logic as sessionService
-	// Load roles
-	rolesQuery := `
-		SELECT r.name
-		FROM auth.roles r
-		JOIN auth.user_roles ur ON r.id = ur.role_id
-		WHERE ur.user_id = $1 AND (ur.expires_at IS NULL OR ur.expires_at > NOW())`
-
-	var roleNames []string
-	err = h.db.Select(&roleNames, rolesQuery, ctx.UserID)
-	if err != nil {
-		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch user roles")
-		return
-	}
-
-	// Load permissions
-	permissionsQuery := `
-		SELECT DISTINCT p.name
-		FROM auth.permissions p
-		JOIN auth.role_permissions rp ON p.id = rp.permission_id
-		JOIN auth.user_roles ur ON rp.role_id = ur.role_id
-		WHERE ur.user_id = $1 AND (ur.expires_at IS NULL OR ur.expires_at > NOW())`
-
-	var permissionNames []string
-	err = h.db.Select(&permissionNames, permissionsQuery, ctx.UserID)
-	if err != nil {
-		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch user permissions")
-		return
-	}
-
-	// Convert to Role and Permission structs (similar to how login handler works)
-	var roles []models.Role
-	for _, roleName := range roleNames {
-		roles = append(roles, models.Role{Name: roleName})
-	}
-
-	var permissions []models.Permission
-	for _, permName := range permissionNames {
-		permissions = append(permissions, models.Permission{Name: permName})
-	}
-
-	// Set roles and permissions on user object
-	user.Roles = roles
-	user.Permissions = permissions
-
-	// Return full user information (same format as login)
+	// Return simplified user information (no roles/permissions)
 	respondWithJSONGin(c, http.StatusOK, user.PublicUser())
 }
 

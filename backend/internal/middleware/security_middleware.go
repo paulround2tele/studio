@@ -124,13 +124,12 @@ func (m *SecurityMiddleware) EnhancedCORS() gin.HandlerFunc {
 		}
 
 		// Always set CORS headers for allowed origins
-		if isAllowed || origin == "" {
-			if origin != "" {
-				c.Header("Access-Control-Allow-Origin", origin)
-			} else {
-				// For requests without Origin header (like direct API calls)
-				c.Header("Access-Control-Allow-Origin", "*")
-			}
+		if isAllowed {
+			c.Header("Access-Control-Allow-Origin", origin)
+		} else if origin == "" {
+			// For requests without Origin header (like direct API calls from curl/postman)
+			// Don't set Access-Control-Allow-Origin when credentials are enabled
+			// This prevents the invalid wildcard + credentials combination
 		}
 
 		c.Header("Access-Control-Allow-Credentials", "true")

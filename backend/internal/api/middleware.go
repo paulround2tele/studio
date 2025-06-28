@@ -119,7 +119,9 @@ func GinAPIKeyAuthMiddleware(apiKey string) gin.HandlerFunc {
 	}
 }
 
+/*
 // GinCORSMiddleware provides basic CORS headers for Gin handlers.
+// DEPRECATED: Use SecurityMiddleware.EnhancedCORS() instead to avoid conflicts
 func GinCORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -134,3 +136,4 @@ func GinCORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+*/

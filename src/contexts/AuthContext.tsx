@@ -215,61 +215,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   // Simplified permission checking - wait for auth state to be ready
-  const hasPermission = useCallback((permission: string): boolean => {
+  const hasPermission = useCallback((_permission: string): boolean => {
+    // Simplified auth: no permission checking
     const authState = authService.getState();
-    
-    // ENTERPRISE AUTH FIX: Don't check permissions until user data is fully loaded
-    // This prevents race conditions where sidebar renders before permissions load
-    if (!authState.isAuthenticated || !authState.user || authState.isLoading) {
-      return false; // Fail safely until auth state is ready
-    }
-    
-    // SIMPLIFIED ENTERPRISE AUTH: Basic permission check without excessive validation
-    const result = authService.hasPermission(permission);
-    
-    // Minimal debug logging for enterprise use
-    if (!result) {
-      console.log('[Auth] Permission denied:', {
-        permission,
-        userRoles: authState.user.roles?.map(r => r.name) || [],
-        hasPermissions: (authState.user.permissions?.length || 0) > 0
-      });
-    }
-    
-    return result;
+    return authState.isAuthenticated;
   }, []);
 
-  const hasRole = useCallback((role: string): boolean => {
+  const hasRole = useCallback((_role: string): boolean => {
+    // Simplified auth: no role checking 
     const authState = authService.getState();
-    
-    // ENTERPRISE AUTH FIX: Wait for auth state to be ready
-    if (!authState.isAuthenticated || !authState.user || authState.isLoading) {
-      return false;
-    }
-    
-    return authService.hasRole(role);
+    return authState.isAuthenticated;
   }, []);
 
-  const hasAnyRole = useCallback((roles: string[]): boolean => {
+  const hasAnyRole = useCallback((_roles: string[]): boolean => {
+    // Simplified auth: no role checking
     const authState = authService.getState();
-    
-    // ENTERPRISE AUTH FIX: Wait for auth state to be ready
-    if (!authState.isAuthenticated || !authState.user || authState.isLoading) {
-      return false;
-    }
-    
-    return roles.some(role => authService.hasRole(role));
+    return authState.isAuthenticated;
   }, []);
 
-  const hasAllPermissions = useCallback((permissions: string[]): boolean => {
+  const hasAllPermissions = useCallback((_permissions: string[]): boolean => {
+    // Simplified auth: no permission checking
     const authState = authService.getState();
-    
-    // ENTERPRISE AUTH FIX: Wait for auth state to be ready
-    if (!authState.isAuthenticated || !authState.user || authState.isLoading) {
-      return false;
-    }
-    
-    return permissions.every(permission => authService.hasPermission(permission));
+    return authState.isAuthenticated;
   }, []);
 
   // In session-based auth, sessions are managed by server cookies

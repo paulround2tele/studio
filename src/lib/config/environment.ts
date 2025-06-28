@@ -205,7 +205,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
     console.warn(`Unknown environment: ${env}, falling back to development`);
     return environments.development as EnvironmentConfig;
   }
-  
+
   // Apply runtime overrides from localStorage or URL params
   return applyRuntimeOverrides(config);
 }

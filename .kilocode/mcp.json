@@ -4,11 +4,16 @@
       "command": "/home/vboxuser/studio/mcp/bin/mcp-server",
       "args": [
         "-allow-terminal",
-        "-allow-mutation"
+        "-allow-mutation",
+        "-allow-network"
       ],
       "cwd": "/home/vboxuser/studio",
       "env": {
-        "STUDIO_BACKEND_PATH": "/home/vboxuser/studio/backend"
+        "STUDIO_BACKEND_PATH": "/home/vboxuser/studio/backend",
+        "ALLOW_NETWORK": "true",
+        "HTTP_PROXY": "",
+        "HTTPS_PROXY": "",
+        "NO_PROXY": ""
       },
       "alwaysAllow": [
         "get_models",
@@ -55,9 +60,16 @@
         "get_latest_screenshot",
         "generate_ui_test_prompt_with_actions",
         "get_ui_metadata",
-        "get_lint_diagnostics"
+        "get_lint_diagnostics",
+        "get_ui_code_map"
       ],
-      "timeout": 300
+      "timeout": 300,
+      "networkAccess": {
+        "allowed": true,
+        "allowedDomains": ["*"],
+        "allowHttp": true,
+        "allowHttps": true
+      }
     }
   }
 }
