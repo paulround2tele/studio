@@ -15,4 +15,4 @@ fi
 
 # Start the backend server
 echo "Starting DomainFlow API Server..."
-exec ./backend/apiserver "$@"
+exec ./backend/bin/apiserver "$@"

@@ -75,8 +75,7 @@ func (u *User) PublicUser() *User {
 		CreatedAt:          u.CreatedAt,
 		UpdatedAt:          u.UpdatedAt,
 		Name:               fullName,
-		Roles:              u.Roles,
-		Permissions:        u.Permissions,
+		// Removed roles and permissions for simplified session-based auth
 	}
 }
 

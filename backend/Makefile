@@ -11,7 +11,7 @@ GOFLAGS = -mod=mod
 # Build the application
 build:
 	@echo "Building application..."
-	go build -o bin/studio ./cmd/apiserver
+	go build -o bin/apiserver ./cmd/apiserver
 
 # Build for production
 build-prod:

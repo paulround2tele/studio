@@ -29,7 +29,7 @@ echo
 # Check backend
 echo "🚀 Backend Status:"
 if [ -d "backend" ]; then
-  if [ -f "backend/apiserver" ]; then
+  if [ -f "backend/bin/apiserver" ]; then
     echo "✓ Backend binary exists"
   else
     echo "⚠️  Backend binary not found (run: cd backend && make build)"

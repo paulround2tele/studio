@@ -21,20 +21,18 @@
     "npm.exclude": "",
     "IDX.aI.enableCodebaseIndexing": true,
     "mcp.servers": {
-        "studio-backend-context": {
-            "enabled": true,
-            "autoReconnect": true
-        },
-        "domainflow": {
+        "studio-fullstack-analyzer": {
             "enabled": true,
             "autoReconnect": true
         }
     },
     "chat.mcp.serverSampling": {
-        "studio/.vscode/mcp.json: domainflow": {
+        "studio/.vscode/mcp.json: studio-fullstack-analyzer": {
             "allowedModels": [
+                "github.copilot-chat/claude-opus-4",
                 "github.copilot-chat/claude-sonnet-4",
-                "github.copilot-chat/claude-opus-4"
+                "github.copilot-chat/gemini-2.5-pro-preview-06-05",
+                "github.copilot-chat/gpt-4.5-preview"
             ]
         }
     }

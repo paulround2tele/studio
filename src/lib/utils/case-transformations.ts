@@ -24,7 +24,7 @@ export function camelToSnake(str: string): string {
  */
 export function snakeToCamelKeys<T = unknown>(obj: unknown): T {
   if (obj === null || obj === undefined) {
-    return obj;
+    return obj as T;
   }
 
   // Handle arrays
@@ -47,11 +47,11 @@ export function snakeToCamelKeys<T = unknown>(obj: unknown): T {
       }
     }
     
-    return transformed;
+    return transformed as T;
   }
 
   // Return primitive values as-is
-  return obj;
+  return obj as T;
 }
 
 /**
@@ -59,7 +59,7 @@ export function snakeToCamelKeys<T = unknown>(obj: unknown): T {
  */
 export function camelToSnakeKeys<T = unknown>(obj: unknown): T {
   if (obj === null || obj === undefined) {
-    return obj;
+    return obj as T;
   }
 
   // Handle arrays
@@ -82,11 +82,11 @@ export function camelToSnakeKeys<T = unknown>(obj: unknown): T {
       }
     }
     
-    return transformed;
+    return transformed as T;
   }
 
   // Return primitive values as-is
-  return obj;
+  return obj as T;
 }
 
 /**
@@ -189,7 +189,7 @@ export function transformKeysWithOverrides<T = unknown>(
   defaultTransform: (key: string) => string
 ): T {
   if (obj === null || obj === undefined) {
-    return obj;
+    return obj as T;
   }
 
   // Handle arrays
@@ -213,11 +213,11 @@ export function transformKeysWithOverrides<T = unknown>(
       }
     }
     
-    return transformed;
+    return transformed as T;
   }
 
   // Return primitive values as-is
-  return obj;
+  return obj as T;
 }
 
 /**

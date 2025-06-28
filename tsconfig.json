@@ -49,6 +49,7 @@
     "dist",
     "coverage",
     "scripts",
-    "**/__tests__/**"
+    "**/__tests__/**",
+    "src/stories/**"
   ]
 }

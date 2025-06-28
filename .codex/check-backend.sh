@@ -53,7 +53,7 @@ fi
 
 # Check if binary can be built
 echo "Testing build..."
-if go build -o /tmp/test-apiserver ./cmd/api 2>/dev/null; then
+if go build -o /tmp/test-apiserver ./cmd/apiserver 2>/dev/null; then
   echo "✓ Backend builds successfully"
   rm -f /tmp/test-apiserver
 else

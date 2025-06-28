@@ -488,7 +488,7 @@ export interface AuditLog {
 
 // ===== SESSION-BASED AUTHENTICATION TYPES =====
 
-// User - matches backend User struct exactly (PublicUser fields)
+// User - simplified for cookie-based session authentication only
 export interface User {
   id: UUID;
   email: string;
@@ -506,8 +506,7 @@ export interface User {
   mfaLastUsedAt?: ISODateString;
   createdAt: ISODateString;
   updatedAt: ISODateString;
-  roles: Role[];
-  permissions: Permission[];
+  // Removed roles and permissions - simple session-based auth only
 }
 
 // Session - matches backend Session struct exactly

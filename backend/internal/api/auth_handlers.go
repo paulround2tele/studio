@@ -447,44 +447,6 @@ func (h *AuthHandler) recordSuccessfulLogin(userID, ipAddress string) {
 	}
 }
 
-// GetPermissions returns all available permission strings in the system
-func (h *AuthHandler) GetPermissions(c *gin.Context) {
-	// Define all permission strings used throughout the application
-	// This should be the single source of truth for permission strings
-	permissions := []string{
-		// Persona permissions
-		"personas:create",
-		"personas:read",
-		"personas:update",
-		"personas:delete",
-
-		// Proxy permissions
-		"proxies:create",
-		"proxies:read",
-		"proxies:update",
-		"proxies:delete",
-
-		// Campaign permissions
-		"campaigns:create",
-		"campaigns:read",
-		"campaigns:update",
-		"campaigns:delete",
-		"campaigns:execute",
-
-		// System configuration permissions
-		"system:config",
-
-		// Admin permissions
-		"admin:users",
-		"admin:roles",
-		"admin:system",
-	}
-
-	respondWithJSONGin(c, http.StatusOK, map[string][]string{
-		"permissions": permissions,
-	})
-}
-
 // Admin User Management Endpoints
 
 // ListUsers handles GET /api/v2/admin/users

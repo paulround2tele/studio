@@ -41,31 +41,30 @@ func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestrator
 func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	// === CAMPAIGN CREATION ENDPOINTS ===
 
-	// Unified campaign creation endpoint (preferred)
-	// Supports all campaign types through discriminated union
-	group.POST("", authMiddleware.RequirePermission("campaigns:create"), h.createCampaign)
+	// Campaign creation endpoint - simplified auth (no permissions needed)
+	group.POST("", h.createCampaign)
 
-	// Campaign reading routes - require campaigns:read permission
-	group.GET("", authMiddleware.RequirePermission("campaigns:read"), h.listCampaigns)
-	group.GET("/:campaignId", authMiddleware.RequirePermission("campaigns:read"), h.getCampaignDetails)
-	// group.GET("/:campaignId/status", authMiddleware.RequirePermission("campaigns:read"), h.getCampaignStatus)
+	// Campaign reading routes - simplified auth (no permissions needed)
+	group.GET("", h.listCampaigns)
+	group.GET("/:campaignId", h.getCampaignDetails)
+	// group.GET("/:campaignId/status", h.getCampaignStatus)
 
-	// Campaign control routes - require campaigns:execute permission
-	group.POST("/:campaignId/start", authMiddleware.RequirePermission("campaigns:execute"), h.startCampaign)
-	group.POST("/:campaignId/pause", authMiddleware.RequirePermission("campaigns:execute"), h.pauseCampaign)
-	group.POST("/:campaignId/resume", authMiddleware.RequirePermission("campaigns:execute"), h.resumeCampaign)
-	group.POST("/:campaignId/cancel", authMiddleware.RequirePermission("campaigns:execute"), h.cancelCampaign)
+	// Campaign control routes - simplified auth (no permissions needed)
+	group.POST("/:campaignId/start", h.startCampaign)
+	group.POST("/:campaignId/pause", h.pauseCampaign)
+	group.POST("/:campaignId/resume", h.resumeCampaign)
+	group.POST("/:campaignId/cancel", h.cancelCampaign)
 
-	// Campaign modification routes - require campaigns:update permission
-	// group.PUT("/:campaignId", authMiddleware.RequirePermission("campaigns:update"), h.updateCampaign)
+	// Campaign modification routes - simplified auth (no permissions needed)
+	// group.PUT("/:campaignId", h.updateCampaign)
 
-	// Campaign deletion routes - require campaigns:delete permission
-	group.DELETE("/:campaignId", authMiddleware.RequirePermission("campaigns:delete"), h.deleteCampaign)
+	// Campaign deletion routes - simplified auth (no permissions needed)
+	group.DELETE("/:campaignId", h.deleteCampaign)
 
-	// Campaign results routes - require campaigns:read permission
-	group.GET("/:campaignId/results/generated-domains", authMiddleware.RequirePermission("campaigns:read"), h.getGeneratedDomains)
-	group.GET("/:campaignId/results/dns-validation", authMiddleware.RequirePermission("campaigns:read"), h.getDNSValidationResults)
-	group.GET("/:campaignId/results/http-keyword", authMiddleware.RequirePermission("campaigns:read"), h.getHTTPKeywordResults)
+	// Campaign results routes - simplified auth (no permissions needed)
+	group.GET("/:campaignId/results/generated-domains", h.getGeneratedDomains)
+	group.GET("/:campaignId/results/dns-validation", h.getDNSValidationResults)
+	group.GET("/:campaignId/results/http-keyword", h.getHTTPKeywordResults)
 }
 
 // --- Unified Campaign Creation Handler ---

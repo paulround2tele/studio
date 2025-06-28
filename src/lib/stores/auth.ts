@@ -84,33 +84,8 @@ class AuthStore {
     return authService.initialize();
   }
 
-  // Permission checking
-  hasPermission(permission: string): boolean {
-    if (!this.authState.user) return false;
-    
-    // Check if user has the permission through their roles
-    return this.authState.user.roles?.some(role =>
-      role.permissions?.some(perm => perm.name === permission)
-    ) || false;
-  }
-
-  // Role checking
-  hasRole(role: string): boolean {
-    if (!this.authState.user) return false;
-    
-    // Check if user has the specified role
-    return this.authState.user.roles?.some(userRole => userRole.name === role) || false;
-  }
-
-  // Check if user has any of the specified roles
-  hasAnyRole(roles: string[]): boolean {
-    return roles.some(role => this.hasRole(role));
-  }
-
-  // Check if user has all specified permissions
-  hasAllPermissions(permissions: string[]): boolean {
-    return permissions.every(permission => this.hasPermission(permission));
-  }
+  // Simplified authentication - no permission/role checking needed
+  // All authenticated users have the same access level
 
   // Session refresh (for session-based auth, just check current status)
   async refreshSession(): Promise<boolean> {
@@ -159,17 +134,13 @@ export interface UseAuthResult {
   isInitialized: boolean;
   sessionExpiry: number | null;
   isSessionExpiringSoon: () => boolean;
-  hasPermission: (permission: string) => boolean;
-  hasRole: (role: string) => boolean;
-  hasAnyRole: (roles: string[]) => boolean;
-  hasAllPermissions: (permissions: string[]) => boolean;
   login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   validateSession: () => Promise<boolean>;
   refreshSession: () => Promise<boolean>;
 }
 
-// Hook for using auth state in React components
+// Hook for using auth state in React components - simplified
 export function useAuth(): UseAuthResult {
   const state = authStore.getState();
   
@@ -180,10 +151,6 @@ export function useAuth(): UseAuthResult {
     isInitialized: authStore.isInitialized(),
     sessionExpiry: state.sessionExpiry,
     isSessionExpiringSoon: () => authStore.isSessionExpiringSoon(),
-    hasPermission: (permission: string) => authStore.hasPermission(permission),
-    hasRole: (role: string) => authStore.hasRole(role),
-    hasAnyRole: (roles: string[]) => authStore.hasAnyRole(roles),
-    hasAllPermissions: (permissions: string[]) => authStore.hasAllPermissions(permissions),
     login: (credentials: LoginCredentials) => authStore.login(credentials),
     logout: () => authStore.logout(),
     validateSession: () => authStore.validateSession(),
@@ -191,7 +158,7 @@ export function useAuth(): UseAuthResult {
   };
 }
 
-// Simplified auth utilities
+// Simplified auth utilities - no permission/role checking
 export function isAuthenticated(): boolean {
   return authStore.isAuthenticated();
 }
@@ -200,50 +167,16 @@ export function getCurrentUser(): User | null {
   return authStore.getUser();
 }
 
-export function hasPermission(permission: string): boolean {
-  return authStore.hasPermission(permission);
-}
-
-export function hasRole(role: string): boolean {
-  return authStore.hasRole(role);
-}
-
 export function isSessionExpiringSoon(): boolean {
   return authStore.isSessionExpiringSoon();
 }
 
-// Auth guard utilities for route protection
+// Simplified auth guard utilities for route protection
 export function requireAuth(): boolean {
   if (!authStore.isAuthenticated()) {
     // Redirect to login if not authenticated
     if (typeof window !== 'undefined') {
       window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-    }
-    return false;
-  }
-  return true;
-}
-
-export function requireRole(role: string): boolean {
-  if (!requireAuth()) return false;
-  
-  if (!authStore.hasRole(role)) {
-    // Redirect to unauthorized page or dashboard
-    if (typeof window !== 'undefined') {
-      window.location.href = '/dashboard';
-    }
-    return false;
-  }
-  return true;
-}
-
-export function requirePermission(permission: string): boolean {
-  if (!requireAuth()) return false;
-  
-  if (!authStore.hasPermission(permission)) {
-    // Redirect to unauthorized page or dashboard
-    if (typeof window !== 'undefined') {
-      window.location.href = '/dashboard';
     }
     return false;
   }
