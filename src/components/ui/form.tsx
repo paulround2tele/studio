@@ -76,17 +76,22 @@ interface FormSectionProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const FormSection = React.forwardRef<HTMLDivElement, FormSectionProps>(
   ({ className, title, description, children, ...props }, ref) => {
+    const titleId = React.useId()
+    
     return (
-      <div 
-        ref={ref} 
-        className={cn("space-y-4", className)} 
+      <div
+        ref={ref}
+        className={cn("space-y-4", className)}
         role="group"
-        aria-labelledby={title ? `${React.useId()}-title` : undefined}
+        aria-labelledby={title ? `${titleId}-title` : undefined}
         {...props}
       >
         {title && (
           <div className="space-y-1">
-            <h3 className="text-lg font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <h3
+              id={`${titleId}-title`}
+              className="text-lg font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               {title}
             </h3>
             {description && (

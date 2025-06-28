@@ -826,6 +826,7 @@ export interface CreateProxyPayload {
   protocol?: ProxyProtocol;
   username?: string;
   password?: string;
+  countryCode?: string;
   host?: string;
   port?: number;
   notes?: string;
@@ -841,6 +842,7 @@ export interface UpdateProxyPayload {
   protocol?: ProxyProtocol;
   username?: string;
   password?: string;
+  countryCode?: string;
   host?: string;
   port?: number;
   notes?: string;

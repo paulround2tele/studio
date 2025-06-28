@@ -32,6 +32,8 @@ import {
   DNSValidationParams,
   HTTPKeywordParams,
   GeneratedDomain,
+  Role,
+  Permission,
   createIPAddress
 } from './aligned-models';
 import { CampaignProgressData } from './aligned-api-types';
@@ -290,23 +292,23 @@ export function transformPublicUser(raw: Record<string, unknown>): PublicUser {
 
 function transformRole(raw: Record<string, unknown>): Role {
   return {
-    id: createUUID(raw.id),
-    name: raw.name,
-    description: raw.description,
-    permissions: raw.permissions?.map(transformPermission),
-    createdAt: createISODateString(raw.createdAt),
-    updatedAt: createISODateString(raw.updatedAt)
+    id: createUUID(raw.id as string),
+    name: raw.name as string,
+    description: raw.description as string | undefined,
+    permissions: raw.permissions ? (raw.permissions as unknown[]).map(item => transformPermission(item as Record<string, unknown>)) : undefined,
+    createdAt: createISODateString(raw.createdAt as string),
+    updatedAt: createISODateString(raw.updatedAt as string)
   };
 }
 
 function transformPermission(raw: Record<string, unknown>): Permission {
   return {
-    id: createUUID(raw.id),
-    resource: raw.resource,
-    action: raw.action,
-    description: raw.description,
-    createdAt: createISODateString(raw.createdAt),
-    updatedAt: createISODateString(raw.updatedAt)
+    id: createUUID(raw.id as string),
+    resource: raw.resource as string,
+    action: raw.action as string,
+    description: raw.description as string | undefined,
+    createdAt: createISODateString(raw.createdAt as string),
+    updatedAt: createISODateString(raw.updatedAt as string)
   };
 }
 

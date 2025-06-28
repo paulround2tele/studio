@@ -2,18 +2,48 @@ import React from "react"
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { axe, toHaveNoViolations } from "jest-axe"
-import { 
-  Popover, 
-  PopoverTrigger, 
-  PopoverContent, 
-  PopoverAnchor, 
-  PopoverArrow, 
-  PopoverClose, 
-  SimplePopover 
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverAnchor,
+  PopoverArrow,
+  PopoverClose,
+  SimplePopover
 } from "../popover"
 import { Button } from "../button"
 
 expect.extend(toHaveNoViolations)
+
+// Helper to get visible popover content (not the hidden accessibility span)
+const getVisiblePopoverContent = (text: string) => {
+  const elements = screen.getAllByText(text)
+  // Find the element that is not the hidden accessibility span
+  const visibleElement = elements.find(el => {
+    const style = el.getAttribute('style') || ''
+    return !style.includes('clip: rect(0px, 0px, 0px, 0px)')
+  })
+  
+  if (!visibleElement) {
+    throw new Error(`Could not find visible element with text "${text}". Found ${elements.length} elements total.`)
+  }
+  
+  return visibleElement
+}
+
+// Helper to get popover by role
+const getPopoverByRole = () => {
+  return screen.getByRole('dialog')
+}
+
+// Helper to wait for popover content with robust selection
+const waitForPopoverContent = async (text: string) => {
+  await waitFor(() => {
+    const visibleElement = getVisiblePopoverContent(text)
+    expect(visibleElement).toBeInTheDocument()
+  })
+  return getVisiblePopoverContent(text)
+}
 
 // Mock ResizeObserver
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
@@ -56,9 +86,7 @@ describe("Popover Component", () => {
 
       await user.click(screen.getByText("Open Popover"))
       
-      await waitFor(() => {
-        expect(screen.getByText("Popover content")).toBeInTheDocument()
-      })
+      await waitForPopoverContent("Popover content")
     })
 
     it("should hide content when trigger is clicked again", async () => {
@@ -79,9 +107,7 @@ describe("Popover Component", () => {
       
       // Open
       await user.click(trigger)
-      await waitFor(() => {
-        expect(screen.getByText("Popover content")).toBeInTheDocument()
-      })
+      await waitForPopoverContent("Popover content")
 
       // Close
       await user.click(trigger)
@@ -141,7 +167,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Default content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Default content").closest('[role="dialog"]')
         expect(content).toHaveClass("bg-popover", "text-popover-foreground")
       })
     })
@@ -163,7 +189,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Elevated content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Elevated content").closest('[role="dialog"]')
         expect(content).toHaveClass("bg-background", "text-foreground", "shadow-lg")
       })
     })
@@ -185,7 +211,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Minimal content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Minimal content").closest('[role="dialog"]')
         expect(content).toHaveClass("border-transparent", "bg-background/80", "backdrop-blur-sm")
       })
     })
@@ -207,7 +233,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Accent content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Accent content").closest('[role="dialog"]')
         expect(content).toHaveClass("border-accent", "bg-accent", "text-accent-foreground")
       })
     })
@@ -229,7 +255,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Destructive content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Destructive content").closest('[role="dialog"]')
         expect(content).toHaveClass("border-destructive/50", "bg-destructive", "text-destructive-foreground")
       })
     })
@@ -251,7 +277,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Success content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Success content").closest('[role="dialog"]')
         expect(content).toHaveClass("border-green-200", "bg-green-50", "text-green-900")
       })
     })
@@ -273,7 +299,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Warning content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Warning content").closest('[role="dialog"]')
         expect(content).toHaveClass("border-yellow-200", "bg-yellow-50", "text-yellow-900")
       })
     })
@@ -297,7 +323,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Small content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Small content").closest('[role="dialog"]')
         expect(content).toHaveClass("w-48", "p-2")
       })
     })
@@ -319,7 +345,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Default content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Default content").closest('[role="dialog"]')
         expect(content).toHaveClass("w-72", "p-4")
       })
     })
@@ -341,7 +367,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Large content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Large content").closest('[role="dialog"]')
         expect(content).toHaveClass("w-96", "p-6")
       })
     })
@@ -363,7 +389,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Extra large content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Extra large content").closest('[role="dialog"]')
         expect(content).toHaveClass("w-[480px]", "p-8")
       })
     })
@@ -385,7 +411,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Auto content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Auto content").closest('[role="dialog"]')
         expect(content).toHaveClass("w-auto", "p-4")
       })
     })
@@ -407,7 +433,7 @@ describe("Popover Component", () => {
       await user.click(screen.getByText("Open"))
       
       await waitFor(() => {
-        const content = screen.getByText("Full content").closest('[role="dialog"]')
+        const content = getVisiblePopoverContent("Full content").closest('[role="dialog"]')
         expect(content).toHaveClass("w-full", "p-4")
       })
     })

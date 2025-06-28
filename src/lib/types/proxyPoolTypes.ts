@@ -1,5 +1,5 @@
 import type { UUID, ISODateString } from "./branded";
-import type { Proxy } from "./types";
+import type { Proxy } from "./aligned/aligned-models";
 
 export interface ProxyPool {
   id: UUID;

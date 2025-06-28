@@ -50,6 +50,7 @@ const TooltipContent = React.forwardRef<
     ref={ref}
     sideOffset={sideOffset}
     className={cn(tooltipContentVariants({ variant, size }), className)}
+    data-testid="tooltip-content"
     {...props}
   />
 ))

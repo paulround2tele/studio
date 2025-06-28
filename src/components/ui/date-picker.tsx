@@ -4,6 +4,7 @@ import * as React from "react"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { cva, type VariantProps } from "class-variance-authority"
+import type { DateRange } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -44,7 +45,7 @@ const datePickerVariants = cva(
 )
 
 export interface DatePickerProps
-  extends Omit<React.ComponentProps<typeof Button>, "variant" | "size">,
+  extends Omit<React.ComponentProps<typeof Button>, "variant" | "size" | "value">,
     VariantProps<typeof datePickerVariants> {
   /** Selected date value */
   value?: Date
@@ -177,12 +178,12 @@ const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
+              {...calendarProps}
               mode="single"
               selected={value}
               onSelect={handleSelect}
               disabled={disabledMatcher}
               initialFocus
-              {...calendarProps}
             />
           </PopoverContent>
         </Popover>
@@ -250,8 +251,9 @@ const DateRangePicker = React.forwardRef<HTMLButtonElement, DateRangePickerProps
     const baseId = React.useId()
     const helperId = helperText ? `${baseId}-helper` : undefined
 
-    const handleSelect = (range: { from: Date | undefined; to: Date | undefined } | undefined) => {
-      onValueChange?.(range)
+    const handleSelect = (range: DateRange | undefined) => {
+      const normalizedRange = range ? { from: range.from, to: range.to } : undefined
+      onValueChange?.(normalizedRange)
       if (range?.from && range?.to) {
         setOpen(false)
       }
@@ -325,13 +327,13 @@ const DateRangePicker = React.forwardRef<HTMLButtonElement, DateRangePickerProps
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
+              {...calendarProps}
               mode="range"
-              selected={value}
+              selected={value as DateRange}
               onSelect={handleSelect}
               disabled={disabledMatcher}
               numberOfMonths={2}
               initialFocus
-              {...calendarProps}
             />
           </PopoverContent>
         </Popover>

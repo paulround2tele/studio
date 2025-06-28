@@ -248,7 +248,7 @@ describe('Enhanced Form Component Tests', () => {
     test('section has proper ARIA attributes', () => {
       render(<EnhancedTestForm />);
       
-      const section = screen.getByRole('group');
+      const section = screen.getByRole('group', { name: 'Account Information' });
       expect(section).toBeInTheDocument();
       expect(section).toHaveAttribute('aria-labelledby');
     });

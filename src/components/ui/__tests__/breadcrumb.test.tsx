@@ -13,6 +13,27 @@ import {
   SimpleBreadcrumb 
 } from "../breadcrumb"
 
+// Helper to get visible breadcrumb content (not the hidden accessibility span)
+const getVisibleBreadcrumbContent = (text: string) => {
+  const elements = screen.getAllByText(text)
+  // Find the element that is not the hidden accessibility span
+  const visibleElement = elements.find(el => {
+    const style = el.getAttribute('style') || ''
+    return !style.includes('clip: rect(0px, 0px, 0px, 0px)')
+  })
+  
+  if (!visibleElement) {
+    throw new Error(`Could not find visible element with text "${text}". Found ${elements.length} elements total.`)
+  }
+  
+  return visibleElement
+}
+
+// Helper to wait for breadcrumb content to appear
+const waitForBreadcrumbContent = async (text: string) => {
+  return await waitFor(() => getVisibleBreadcrumbContent(text))
+}
+
 expect.extend(toHaveNoViolations)
 
 describe("Breadcrumb Component", () => {
@@ -33,8 +54,8 @@ describe("Breadcrumb Component", () => {
       )
 
       expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toBeInTheDocument()
-      expect(screen.getByText("Home")).toBeInTheDocument()
-      expect(screen.getByText("Current Page")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Home")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Current Page")).toBeInTheDocument()
     })
 
     it("should have proper semantic structure", () => {
@@ -65,7 +86,7 @@ describe("Breadcrumb Component", () => {
       const listItems = screen.getAllByRole("listitem")
       expect(listItems).toHaveLength(3) // 3 items (separators are also li elements but counted differently)
 
-      const currentPage = screen.getByText("Current Product")
+      const currentPage = getVisibleBreadcrumbContent("Current Product")
       expect(currentPage).toHaveAttribute("aria-current", "page")
     })
   })
@@ -191,7 +212,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      const item = screen.getByText("Default Item").closest("li")
+      const item = getVisibleBreadcrumbContent("Default Item").closest("li")
       expect(item).toHaveClass("text-muted-foreground")
     })
 
@@ -206,7 +227,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      const item = screen.getByText("Link Item").closest("li")
+      const item = getVisibleBreadcrumbContent("Link Item").closest("li")
       expect(item).toHaveClass("text-primary", "underline-offset-4", "hover:underline")
     })
 
@@ -221,7 +242,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      const item = screen.getByText("Button Item").closest("li")
+      const item = getVisibleBreadcrumbContent("Button Item").closest("li")
       expect(item).toHaveClass("cursor-pointer", "rounded")
     })
 
@@ -236,7 +257,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      const item = screen.getByText("Current Item").closest("li")
+      const item = getVisibleBreadcrumbContent("Current Item").closest("li")
       expect(item).toHaveClass("text-foreground", "font-medium", "cursor-default")
     })
   })
@@ -277,7 +298,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      expect(screen.getByText("/")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("/")).toBeInTheDocument()
     })
 
     it("should render separator variants correctly", () => {
@@ -339,7 +360,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      const ellipsis = screen.getByText("More pages")
+      const ellipsis = getVisibleBreadcrumbContent("More pages")
       expect(ellipsis).toBeInTheDocument()
       expect(ellipsis).toHaveClass("sr-only")
 
@@ -361,7 +382,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      const link = screen.getByText("Home Link")
+      const link = getVisibleBreadcrumbContent("Home Link")
       expect(link).toBeInTheDocument()
       expect(link.tagName).toBe("A")
       expect(link).toHaveAttribute("href", "/home")
@@ -383,7 +404,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      await user.click(screen.getByText("Clickable Link"))
+      await user.click(getVisibleBreadcrumbContent("Clickable Link"))
       expect(handleClick).toHaveBeenCalledTimes(1)
     })
 
@@ -417,7 +438,7 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      const page = screen.getByText("Current Page")
+      const page = getVisibleBreadcrumbContent("Current Page")
       expect(page).toBeInTheDocument()
       expect(page).toHaveAttribute("role", "link")
       expect(page).toHaveAttribute("aria-disabled", "true")
@@ -435,11 +456,11 @@ describe("Breadcrumb Component", () => {
     it("should render simple breadcrumb correctly", () => {
       render(<SimpleBreadcrumb items={basicItems} />)
 
-      expect(screen.getByText("Home")).toBeInTheDocument()
-      expect(screen.getByText("Products")).toBeInTheDocument()
-      expect(screen.getByText("Current Product")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Home")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Products")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Current Product")).toBeInTheDocument()
 
-      const currentPage = screen.getByText("Current Product")
+      const currentPage = getVisibleBreadcrumbContent("Current Product")
       expect(currentPage).toHaveAttribute("aria-current", "page")
     })
 
@@ -454,7 +475,7 @@ describe("Breadcrumb Component", () => {
 
       render(<SimpleBreadcrumb items={items} />)
 
-      await user.click(screen.getByText("Home"))
+      await user.click(getVisibleBreadcrumbContent("Home"))
       expect(handleClick).toHaveBeenCalledTimes(1)
     })
 
@@ -480,9 +501,9 @@ describe("Breadcrumb Component", () => {
 
       render(<SimpleBreadcrumb items={manyItems} maxItems={3} />)
 
-      expect(screen.getByText("Home")).toBeInTheDocument()
-      expect(screen.getByText("More pages")).toBeInTheDocument()
-      expect(screen.getByText("Current Product")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Home")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("More pages")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Current Product")).toBeInTheDocument()
       
       // Should not show middle items
       expect(screen.queryByText("Category")).not.toBeInTheDocument()
@@ -497,8 +518,8 @@ describe("Breadcrumb Component", () => {
 
       render(<SimpleBreadcrumb items={items} maxItems={1} />)
 
-      expect(screen.getByText("Home")).toBeInTheDocument()
-      expect(screen.getByText("Current")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Home")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Current")).toBeInTheDocument()
     })
 
     it("should call onItemClick callback", async () => {
@@ -512,7 +533,7 @@ describe("Breadcrumb Component", () => {
         />
       )
 
-      await user.click(screen.getByText("Home"))
+      await user.click(getVisibleBreadcrumbContent("Home"))
       expect(handleItemClick).toHaveBeenCalledWith(basicItems[0], 0)
     })
 
@@ -549,7 +570,7 @@ describe("Breadcrumb Component", () => {
       const nav = screen.getByRole("navigation")
       expect(nav).toHaveAttribute("aria-label", "Breadcrumb")
 
-      const currentPage = screen.getByText("Current")
+      const currentPage = getVisibleBreadcrumbContent("Current")
       expect(currentPage).toHaveAttribute("aria-current", "page")
       expect(currentPage).toHaveAttribute("aria-disabled", "true")
 
@@ -574,8 +595,8 @@ describe("Breadcrumb Component", () => {
         </Breadcrumb>
       )
 
-      const homeLink = screen.getByText("Home")
-      const productsLink = screen.getByText("Products")
+      const homeLink = getVisibleBreadcrumbContent("Home")
+      const productsLink = getVisibleBreadcrumbContent("Products")
 
       homeLink.focus()
       expect(homeLink).toHaveFocus()
@@ -625,7 +646,7 @@ describe("Breadcrumb Component", () => {
         <SimpleBreadcrumb items={[{ label: "Only Item", current: true }]} />
       )
 
-      expect(screen.getByText("Only Item")).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent("Only Item")).toBeInTheDocument()
       expect(screen.queryByRole("presentation")).not.toBeInTheDocument()
     })
 
@@ -653,7 +674,7 @@ describe("Breadcrumb Component", () => {
         ]} />
       )
 
-      expect(screen.getByText(longLabel)).toBeInTheDocument()
+      expect(getVisibleBreadcrumbContent(longLabel)).toBeInTheDocument()
     })
   })
 

@@ -12,6 +12,31 @@ import {
 
 expect.extend(toHaveNoViolations)
 
+// Helper to get visible accordion content (not the hidden accessibility span)
+const getVisibleAccordionContent = (text: string) => {
+  const elements = screen.getAllByText(text)
+  // Find the element that is not the hidden accessibility span
+  const visibleElement = elements.find(el => {
+    const style = el.getAttribute('style') || ''
+    return !style.includes('clip: rect(0px, 0px, 0px, 0px)')
+  })
+  
+  if (!visibleElement) {
+    throw new Error(`Could not find visible element with text "${text}". Found ${elements.length} elements total.`)
+  }
+  
+  return visibleElement
+}
+
+// Helper to wait for accordion content with robust selection
+const waitForAccordionContent = async (text: string) => {
+  await waitFor(() => {
+    const visibleElement = getVisibleAccordionContent(text)
+    expect(visibleElement).toBeInTheDocument()
+  })
+  return getVisibleAccordionContent(text)
+}
+
 // Mock ResizeObserver for JSDOM
 global.ResizeObserver = class ResizeObserver {
   observe() {}
@@ -97,7 +122,7 @@ describe('Accordion', () => {
     it('renders with default value expanded', () => {
       render(<TestAccordion defaultValue="item-1" />)
       
-      const content1 = screen.getByText('Content for section 1')
+      const content1 = getVisibleAccordionContent('Content for section 1')
       expect(content1).toBeVisible()
     })
   })
@@ -163,7 +188,7 @@ describe('Accordion', () => {
       })
       
       // After expansion, content should be visible
-      const content = screen.getByText('Content for section 1')
+      const content = getVisibleAccordionContent('Content for section 1')
       expect(content).toBeVisible()
     })
 
@@ -171,7 +196,7 @@ describe('Accordion', () => {
       render(<TestAccordion defaultValue="item-1" />)
       
       const trigger = screen.getByRole('button', { name: 'Section 1' })
-      const content = screen.getByText('Content for section 1')
+      const content = getVisibleAccordionContent('Content for section 1')
       
       expect(content).toBeVisible()
       
@@ -217,7 +242,7 @@ describe('Accordion', () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true')
       })
       
-      const content = screen.getByText('Content for section 1')
+      const content = getVisibleAccordionContent('Content for section 1')
       expect(content).toBeVisible()
     })
 
@@ -240,7 +265,7 @@ describe('Accordion', () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true')
       })
       
-      const content = screen.getByText('Content for section 1')
+      const content = getVisibleAccordionContent('Content for section 1')
       expect(content).toBeVisible()
     })
   })
@@ -274,8 +299,8 @@ describe('Accordion', () => {
       })
       
       // Both contents should be visible
-      const content1 = screen.getByText('Content 1')
-      const content2 = screen.getByText('Content 2')
+      const content1 = getVisibleAccordionContent('Content 1')
+      const content2 = getVisibleAccordionContent('Content 2')
       expect(content1).toBeVisible()
       expect(content2).toBeVisible()
     })
@@ -305,7 +330,7 @@ describe('Accordion', () => {
       expect(trigger1).toHaveAttribute('aria-expanded', 'true')
       expect(trigger2).toHaveAttribute('aria-expanded', 'false')
       
-      const content1 = screen.getByText('Content 1')
+      const content1 = getVisibleAccordionContent('Content 1')
       expect(content1).toBeVisible()
       
       // Click on item-2
@@ -316,7 +341,7 @@ describe('Accordion', () => {
         expect(trigger2).toHaveAttribute('aria-expanded', 'true')
       })
       
-      const content2 = screen.getByText('Content 2')
+      const content2 = getVisibleAccordionContent('Content 2')
       expect(content2).toBeVisible()
       
       // Try to collapse item-2 (should not work)
@@ -403,7 +428,7 @@ describe('Accordion', () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true')
       })
       
-      const content = screen.getByText('Content 1')
+      const content = getVisibleAccordionContent('Content 1')
       expect(content).toBeVisible()
     })
 
@@ -591,7 +616,7 @@ describe('Accordion', () => {
       )
       
       // With default value, content should be visible and findable
-      const contentElement = screen.getByText(specialContent)
+      const contentElement = getVisibleAccordionContent(specialContent)
       expect(contentElement).toBeInTheDocument()
       expect(contentElement).toBeVisible()
     })

@@ -9,8 +9,7 @@ class AuthStore {
     isAuthenticated: false,
     user: null,
     isLoading: false,
-    sessionExpiry: null,
-    availablePermissions: []
+    sessionExpiry: null
   };
   
   private listeners: Set<(state: AuthState) => void> = new Set();
@@ -87,12 +86,20 @@ class AuthStore {
 
   // Permission checking
   hasPermission(permission: string): boolean {
-    return authService.hasPermission(permission);
+    if (!this.authState.user) return false;
+    
+    // Check if user has the permission through their roles
+    return this.authState.user.roles?.some(role =>
+      role.permissions?.some(perm => perm.name === permission)
+    ) || false;
   }
 
   // Role checking
   hasRole(role: string): boolean {
-    return authService.hasRole(role);
+    if (!this.authState.user) return false;
+    
+    // Check if user has the specified role
+    return this.authState.user.roles?.some(userRole => userRole.name === role) || false;
   }
 
   // Check if user has any of the specified roles

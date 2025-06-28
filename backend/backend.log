@@ -304,3 +304,11 @@ DEBUG: Memory lookup result: found=true
 {"timestamp":"2025-06-28T01:17:51.593029009Z","level":"INFO","category":"SESSION","operation":"session_validation_success","userId":"ad816e66-4c4e-4dd5-b2e8-febb80523f4c","sessionId":"d5b4b167c003511bf8f0df0f66ea549ae238f90d3763d8f9a82c1bc454714ed28f39760afb3216289992554466b68fb2dcc514bd39f27a505adcf66e7a7af07b","ipAddress":"::1","userAgent":"curl/8.12.1","success":true,"details":{"requires_password_change":false,"risk_score":0,"session_expiry":"2025-06-28T03:17:45.745054812Z","user_permissions_count":15,"user_roles_count":1,"validation_duration_ms":1},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":321,"function":"main.main.(*AuthMiddleware).SessionAuth.func45"}
 {"timestamp":"2025-06-28T01:17:51.593051418Z","level":"INFO","category":"MIDDLEWARE","operation":"middleware_execution","userId":"ad816e66-4c4e-4dd5-b2e8-febb80523f4c","sessionId":"d5b4b167c003511bf8f0df0f66ea549ae238f90d3763d8f9a82c1bc454714ed28f39760afb3216289992554466b68fb2dcc514bd39f27a505adcf66e7a7af07b","ipAddress":"::1","userAgent":"curl/8.12.1","requestId":"581c3878-fc7e-427c-b2ef-e23ed50c596d","durationMs":1887439,"success":true,"details":{"cookie_check_duration_ms":0,"method":"GET","middleware_name":"session_auth","path":"/api/v2/me","requires_password_change":false,"stage":"success","status_code":200,"user_permissions_count":15,"user_roles_count":1,"validation_duration_ms":1},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":346,"function":"main.main.(*AuthMiddleware).SessionAuth.func45"}
 [GIN] 2025/06/28 - 01:17:51 | 200 |    9.129095ms |             ::1 | GET      "/api/v2/me"
+2025/06/28 01:25:17 Shutting down server and workers...
+2025/06/28 01:25:17 Server and workers exited gracefully.
+2025/06/28 01:25:17 Worker [Lino-1]: Stopped.
+2025/06/28 01:25:17 Worker [Lino-0]: Stopped.
+2025/06/28 01:25:17 Worker [Lino-4]: Stopped.
+2025/06/28 01:25:17 Worker [Lino-2]: Stopped.
+2025/06/28 01:25:17 Worker [Lino-3]: Stopped.
+2025/06/28 01:25:17 CampaignWorkerService [Lino]: All workers have stopped.

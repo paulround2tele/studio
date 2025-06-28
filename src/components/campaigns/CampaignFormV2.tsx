@@ -318,12 +318,17 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             return;
           }
 
+          // Determine source campaign type
+          const sourceCampaign = sourceCampaigns.find(campaign => campaign.id === data.sourceCampaignId);
+          const sourceType = sourceCampaign?.selectedType === 'domain_generation' ? 'DomainGeneration' : 'DNSValidation';
+
           unifiedPayload = {
             campaignType: 'http_keyword_validation',
             name: data.name,
             description: data.description,
             httpKeywordParams: {
               sourceCampaignId: data.sourceCampaignId,
+              sourceType: sourceType,
               adHocKeywords: adHocKeywords,
               personaIds: [data.assignedHttpPersonaId],
               proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER)
@@ -447,7 +452,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         });
       }
     }
-  }, [toast, router, isEditing, campaignToEdit]);
+  }, [toast, router, isEditing, campaignToEdit, sourceCampaigns]);
 
   // Clear errors when form values change
   const clearFormErrors = useCallback(() => {

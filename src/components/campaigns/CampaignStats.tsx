@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 import { CampaignViewModel } from '@/lib/types';
-import { SafeBigInt } from '@/lib/types/branded';
+import { SafeBigInt, tryCreateSafeBigInt } from '@/lib/types/branded';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProgressCountDisplay, AbbreviatedNumberDisplay, ItemCountDisplay } from '@/components/ui/BigIntDisplay';
+import { CountDisplay } from '@/components/ui/bigint-display';
 import { Progress } from '@/components/ui/progress';
 import { 
   Target, 
@@ -104,12 +104,11 @@ export function CampaignStats({
             </div>
             <Progress value={stats.progressPercentage} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <ProgressCountDisplay 
-                current={stats.processedItems}
-                total={stats.totalItems}
-              />
               <span>
-                <ItemCountDisplay value={stats.remainingItems} /> remaining
+                <CountDisplay value={tryCreateSafeBigInt(stats.processedItems)} /> / <CountDisplay value={tryCreateSafeBigInt(stats.totalItems)} />
+              </span>
+              <span>
+                <CountDisplay value={tryCreateSafeBigInt(stats.remainingItems)} /> remaining
               </span>
             </div>
           </div>
@@ -122,8 +121,8 @@ export function CampaignStats({
                 Successful
               </div>
               <div className="flex items-center gap-2">
-                <AbbreviatedNumberDisplay 
-                  value={stats.successfulItems}
+                <CountDisplay
+                  value={tryCreateSafeBigInt(stats.successfulItems)}
                   className="text-lg font-semibold text-green-600"
                 />
                 <span className="text-xs text-muted-foreground">
@@ -138,8 +137,8 @@ export function CampaignStats({
                 Failed
               </div>
               <div className="flex items-center gap-2">
-                <AbbreviatedNumberDisplay 
-                  value={stats.failedItems}
+                <CountDisplay
+                  value={tryCreateSafeBigInt(stats.failedItems)}
                   className="text-lg font-semibold text-red-600"
                 />
                 <span className="text-xs text-muted-foreground">
@@ -162,8 +161,8 @@ export function CampaignStats({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <AbbreviatedNumberDisplay 
-                value={stats.totalItems}
+              <CountDisplay
+                value={tryCreateSafeBigInt(stats.totalItems)}
                 className="text-2xl font-bold"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -180,8 +179,8 @@ export function CampaignStats({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <AbbreviatedNumberDisplay 
-                value={stats.processedItems}
+              <CountDisplay
+                value={tryCreateSafeBigInt(stats.processedItems)}
                 className="text-2xl font-bold"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -234,11 +233,9 @@ export function CampaignStatsCompact({
       </div>
       
       <div className="text-right text-xs">
-        <ProgressCountDisplay 
-          current={campaign.processedItems}
-          total={campaign.totalItems}
-          className="text-xs"
-        />
+        <span className="text-xs">
+          <CountDisplay value={campaign.processedItems} /> / <CountDisplay value={campaign.totalItems} />
+        </span>
       </div>
     </div>
   );
@@ -260,7 +257,7 @@ export function CampaignStatsSummary({
     <div className={cn('grid grid-cols-3 gap-4 text-center', className)}>
       <div>
         <div className="text-lg font-semibold">
-          <AbbreviatedNumberDisplay value={campaign.totalItems} />
+          <CountDisplay value={campaign.totalItems} />
         </div>
         <div className="text-xs text-muted-foreground">Total</div>
       </div>

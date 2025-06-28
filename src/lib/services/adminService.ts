@@ -7,7 +7,7 @@
 
 import apiClient from './apiClient.production';
 import { transformUserResponse } from '@/lib/types/models-aligned';
-import { transformAuditLog } from '@/lib/types/transform';
+import { transformAuditLog, type RawAPIData } from '@/lib/types/transform';
 import { transformErrorResponse, ApiError } from '@/lib/api/transformers/error-transformers';
 import type { AuditLogEntry } from '@/lib/types';
 import { validateUserResponse, validateOrThrow } from '@/lib/validation/runtime-validators';
@@ -46,6 +46,7 @@ export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
   isActive?: boolean;
+  isLocked?: boolean;
   roleIds?: UUID[];
 }
 
@@ -509,7 +510,7 @@ class AdminService {
         { params: params || { page: 1, limit: 10 } }
       );
 
-      const roles = response.data?.roles.map(r => this.transformRole(r)) || [];
+      const roles = response.data?.roles.map(r => this.transformRole(r as Record<string, unknown>)) || [];
 
       return {
         roles,
@@ -524,7 +525,7 @@ class AdminService {
   async getRoleById(roleId: UUID): Promise<ModelsRoleAPI> {
     try {
       const response = await apiClient.get<unknown>(`${this.basePath}/roles/${roleId}`);
-      return this.transformRole(response.data);
+      return this.transformRole(response.data as Record<string, unknown>);
     } catch (error) {
       console.error('[AdminService] Failed to get role:', error);
       throw transformErrorResponse(error, 500, `${this.basePath}/roles/${roleId}`);
@@ -533,8 +534,8 @@ class AdminService {
 
   async createRole(request: CreateRoleRequest): Promise<ModelsRoleAPI> {
     try {
-      const response = await apiClient.post<unknown>(`${this.basePath}/roles`, request as Record<string, unknown>);
-      return this.transformRole(response.data);
+      const response = await apiClient.post<unknown>(`${this.basePath}/roles`, request as unknown as Record<string, unknown>);
+      return this.transformRole(response.data as Record<string, unknown>);
     } catch (error) {
       console.error('[AdminService] Failed to create role:', error);
       throw transformErrorResponse(error, 500, `${this.basePath}/roles`);
@@ -544,7 +545,7 @@ class AdminService {
   async updateRole(roleId: UUID, request: UpdateRoleRequest): Promise<ModelsRoleAPI> {
     try {
       const response = await apiClient.put<unknown>(`${this.basePath}/roles/${roleId}`, request as Record<string, unknown>);
-      return this.transformRole(response.data);
+      return this.transformRole(response.data as Record<string, unknown>);
     } catch (error) {
       console.error('[AdminService] Failed to update role:', error);
       throw transformErrorResponse(error, 500, `${this.basePath}/roles/${roleId}`);
@@ -567,7 +568,7 @@ class AdminService {
         { params: params || { page: 1, limit: 10 } }
       );
 
-      const permissions = response.data?.permissions.map(p => this.transformPermission(p)) || [];
+      const permissions = response.data?.permissions.map(p => this.transformPermission(p as Record<string, unknown>)) || [];
 
       return {
         permissions,
@@ -582,7 +583,7 @@ class AdminService {
   async getPermissionById(permissionId: UUID): Promise<ModelsPermissionAPI> {
     try {
       const response = await apiClient.get<unknown>(`${this.basePath}/permissions/${permissionId}`);
-      return this.transformPermission(response.data);
+      return this.transformPermission(response.data as Record<string, unknown>);
     } catch (error) {
       console.error('[AdminService] Failed to get permission:', error);
       throw transformErrorResponse(error, 500, `${this.basePath}/permissions/${permissionId}`);
@@ -591,8 +592,8 @@ class AdminService {
 
   async createPermission(request: CreatePermissionRequest): Promise<ModelsPermissionAPI> {
     try {
-      const response = await apiClient.post<unknown>(`${this.basePath}/permissions`, request as Record<string, unknown>);
-      return this.transformPermission(response.data);
+      const response = await apiClient.post<unknown>(`${this.basePath}/permissions`, request as unknown as Record<string, unknown>);
+      return this.transformPermission(response.data as Record<string, unknown>);
     } catch (error) {
       console.error('[AdminService] Failed to create permission:', error);
       throw transformErrorResponse(error, 500, `${this.basePath}/permissions`);
@@ -602,7 +603,7 @@ class AdminService {
   async updatePermission(permissionId: UUID, request: UpdatePermissionRequest): Promise<ModelsPermissionAPI> {
     try {
       const response = await apiClient.put<unknown>(`${this.basePath}/permissions/${permissionId}`, request as Record<string, unknown>);
-      return this.transformPermission(response.data);
+      return this.transformPermission(response.data as Record<string, unknown>);
     } catch (error) {
       console.error('[AdminService] Failed to update permission:', error);
       throw transformErrorResponse(error, 500, `${this.basePath}/permissions/${permissionId}`);
@@ -625,7 +626,7 @@ class AdminService {
         { params: params || { page: 1, limit: 50 } }
       );
 
-      const logs = response.data?.auditLogs.map(l => transformAuditLog(l) as AuditLogEntry) || [];
+      const logs = response.data?.auditLogs.map(l => transformAuditLog(l as RawAPIData) as unknown as AuditLogEntry) || [];
 
       return {
         auditLogs: logs,
@@ -639,27 +640,27 @@ class AdminService {
 
   private transformRole(raw: Record<string, unknown>): ModelsRoleAPI {
     return {
-      id: createUUID(raw.id),
+      id: createUUID(raw.id as string),
       name: raw.name,
       displayName: raw.displayName,
       description: raw.description,
       isSystemRole: raw.isSystemRole,
-      createdAt: createISODateString(raw.createdAt),
-      updatedAt: createISODateString(raw.updatedAt),
-      permissions: (raw.permissions as unknown[] | undefined)?.map(p => this.transformPermission(p))
+      createdAt: createISODateString(raw.createdAt as string),
+      updatedAt: createISODateString(raw.updatedAt as string),
+      permissions: (raw.permissions as unknown[] | undefined)?.map(p => this.transformPermission(p as Record<string, unknown>))
     } as ModelsRoleAPI;
   }
 
   private transformPermission(raw: Record<string, unknown>): ModelsPermissionAPI {
     return {
-      id: createUUID(raw.id),
+      id: createUUID(raw.id as string),
       name: raw.name,
       displayName: raw.displayName,
       description: raw.description,
       resource: raw.resource,
       action: raw.action,
-      createdAt: createISODateString(raw.createdAt),
-      updatedAt: createISODateString(raw.updatedAt)
+      createdAt: createISODateString(raw.createdAt as string),
+      updatedAt: createISODateString(raw.updatedAt as string)
     } as ModelsPermissionAPI;
   }
 }

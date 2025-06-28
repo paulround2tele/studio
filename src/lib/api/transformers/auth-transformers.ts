@@ -5,6 +5,7 @@
 
 import type { ModelsUserAPI } from '@/lib/api-client/models/models-user-api';
 import type { LoginResponseAPI as ModelsLoginResponseAPI } from '@/lib/api-client/models/login-response-api';
+import type { UserAPI } from '@/lib/api-client/models/user-api';
 import type { UUID, ISODateString } from '@/lib/types/branded';
 import { createUUID, createISODateString } from '@/lib/types/branded';
 
@@ -47,9 +48,9 @@ export interface LoginResponseAPIAligned {
 /**
  * Transform raw user API response to aligned model
  */
-export function transformUserResponse(raw: ModelsUserAPI): UserAPIAligned {
+export function transformUserResponse(raw: UserAPI): UserAPIAligned {
     return {
-        avatarUrl: raw.avatarUrl,
+        avatarUrl: raw.avatarUrl || undefined,
         createdAt: raw.createdAt ? createISODateString(raw.createdAt) : undefined,
         email: raw.email,
         emailVerified: raw.emailVerified,
@@ -58,7 +59,7 @@ export function transformUserResponse(raw: ModelsUserAPI): UserAPIAligned {
         isActive: raw.isActive,
         isLocked: raw.isLocked,
         lastLoginAt: raw.lastLoginAt ? createISODateString(raw.lastLoginAt) : undefined,
-        lastLoginIp: raw.lastLoginIp,
+        lastLoginIp: raw.lastLoginIp || undefined,
         lastName: raw.lastName,
         mfaEnabled: raw.mfaEnabled,
         mfaLastUsedAt: raw.mfaLastUsedAt ? createISODateString(raw.mfaLastUsedAt) : undefined,
@@ -88,7 +89,7 @@ export function transformLoginResponse(raw: ModelsLoginResponseAPI): LoginRespon
  * Transform array of user responses
  */
 export function transformUserArrayResponse(raw: ModelsUserAPI[]): UserAPIAligned[] {
-    return raw.map(transformUserResponse);
+    return raw.map(user => transformUserResponse(user as UserAPI));
 }
 
 /**

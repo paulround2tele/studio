@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
+import { createUUID } from '@/lib/types/branded';
 import type { ModelsPermissionAPI, ModelsRoleAPI } from '@/lib/types/models-aligned';
 import { listPermissions, getRoleById, updateRole } from '@/lib/services/adminService';
 
@@ -31,7 +32,7 @@ export default function EditRolePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const roleId = params.id as string;
+        const roleId = createUUID(params.id as string);
         const [roleRes, permRes] = await Promise.all([
           getRoleById(roleId),
           listPermissions({ page: 1, limit: 100 })
@@ -64,7 +65,11 @@ export default function EditRolePage() {
     if (!canManage || !role) return;
     setIsLoading(true);
     try {
-      await updateRole(role.id, { displayName, description, permissionIds: Array.from(selected) });
+      await updateRole(role.id, {
+        displayName,
+        description,
+        permissionIds: Array.from(selected).map(id => createUUID(id))
+      });
       setSuccessMessage('Role updated');
       setTimeout(() => router.push('/admin/roles'), 500);
     } catch (e) {

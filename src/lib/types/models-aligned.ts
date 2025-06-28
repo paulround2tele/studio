@@ -175,6 +175,7 @@ export interface ModelsRoleAPI {
   isSystemRole: boolean;
   createdAt: ISODateString;
   updatedAt: ISODateString;
+  permissions?: ModelsPermissionAPI[];
 }
 
 /**
@@ -188,6 +189,7 @@ export interface ModelsPermissionAPI {
   resource: string;
   action: string;
   createdAt: ISODateString;
+  updatedAt: ISODateString;
 }
 
 /**

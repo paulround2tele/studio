@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { getPermissionById, updatePermission } from '@/lib/services/adminService';
+import { createUUID } from '@/lib/types/branded';
 import type { ModelsPermissionAPI } from '@/lib/types/models-aligned';
 
 export default function EditPermissionPage() {
@@ -30,7 +31,7 @@ export default function EditPermissionPage() {
   useEffect(() => {
     async function load() {
       try {
-        const p = await getPermissionById(params.id as string);
+        const p = await getPermissionById(createUUID(params.id as string));
         setPerm(p);
         setDisplayName(p.displayName);
         setResource(p.resource);

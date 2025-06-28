@@ -6,14 +6,18 @@ describe('Persona isEnabled Field Tests', () => {
   describe('personaSchema validation', () => {
     test('should require isEnabled field', () => {
       const validPersona = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
         name: 'Test DNS Persona',
         personaType: 'dns' as const,
+        description: 'Test description',
         configDetails: {
           resolvers: ['8.8.8.8'],
           useSystemResolvers: false,
           queryTimeoutSeconds: 30
         },
-        isEnabled: true
+        isEnabled: true,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
       };
 
       const result = personaSchema.safeParse(validPersona);
@@ -25,13 +29,17 @@ describe('Persona isEnabled Field Tests', () => {
 
     test('should fail without isEnabled field', () => {
       const invalidPersona = {
+        id: '123e4567-e89b-12d3-a456-426614174001',
         name: 'Test DNS Persona',
         personaType: 'dns' as const,
+        description: 'Test description',
         configDetails: {
           resolvers: ['8.8.8.8'],
           useSystemResolvers: false,
           queryTimeoutSeconds: 30
-        }
+        },
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
         // missing isEnabled field
       };
 
@@ -45,17 +53,25 @@ describe('Persona isEnabled Field Tests', () => {
 
     test('should accept both true and false values for isEnabled', () => {
       const personaEnabled = {
+        id: '123e4567-e89b-12d3-a456-426614174002',
         name: 'Enabled Persona',
         personaType: 'http' as const,
+        description: 'Test enabled persona',
         configDetails: { userAgent: 'Test Agent' },
-        isEnabled: true
+        isEnabled: true,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
       };
 
       const personaDisabled = {
+        id: '123e4567-e89b-12d3-a456-426614174003',
         name: 'Disabled Persona',
         personaType: 'http' as const,
+        description: 'Test disabled persona',
         configDetails: { userAgent: 'Test Agent' },
-        isEnabled: false
+        isEnabled: false,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z'
       };
 
       const resultEnabled = personaSchema.safeParse(personaEnabled);

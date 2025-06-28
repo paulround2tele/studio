@@ -22,7 +22,7 @@ const CONFIG = {
     // Struct patterns to extract
     structPattern: /type\s+(\w+)\s+struct\s*\{([^}]+)\}/gs,
     // Field patterns with validation tags - improved to handle omitempty correctly
-    fieldPattern: /(\w+)\s+([*]?)(\w+(?:\.\w+)?)\s+`[^`]*json:"([^"]+)"[^`]*(?:binding:"([^"]+)"|validate:"([^"]+)").*?`/g
+    fieldPattern: /(\w+)\s+([*]?)(\w+(?:\.\w+)?)\s+`[^`]*json:"([^"]+)"[^`]*(?:(?:binding:"([^"]+)")|(?:validate:"([^"]+)"))?\s*.*?`/g
   }
 };
 
@@ -129,15 +129,15 @@ function goTypeToZodType(goType, isPointer) {
     const enumName = goType.replace('models.', '').replace('Enum', '');
     // Map to our predefined enum schemas
     const enumMappings = {
-      'PersonaType': 'personaTypeEnumSchema',
-      'ProxyProtocol': 'proxyProtocolEnumSchema', 
-      'CampaignType': 'campaignTypeEnumSchema',
-      'CampaignStatus': 'campaignStatusEnumSchema',
-      'CampaignJobStatus': 'jobStatusEnumSchema',
-      'ValidationStatus': 'validationStatusEnumSchema',
-      'DNSValidationStatus': 'dnsValidationStatusEnumSchema',
-      'HTTPValidationStatus': 'httpValidationStatusEnumSchema',
-      'KeywordRuleType': 'keywordRuleTypeEnumSchema'
+      'PersonaType': '_personaTypeEnumSchema',
+      'ProxyProtocol': '_proxyProtocolEnumSchema',
+      'CampaignType': '_campaignTypeEnumSchema',
+      'CampaignStatus': '_campaignStatusEnumSchema',
+      'CampaignJobStatus': '_jobStatusEnumSchema',
+      'ValidationStatus': '_validationStatusEnumSchema',
+      'DNSValidationStatus': '_dnsValidationStatusEnumSchema',
+      'HTTPValidationStatus': '_httpValidationStatusEnumSchema',
+      'KeywordRuleType': '_keywordRuleTypeEnumSchema'
     };
     return enumMappings[enumName] || `${enumName.toLowerCase()}EnumSchema`;
   }
@@ -157,9 +157,12 @@ function extractStructs(sourceCode) {
     const structName = match[1];
     const structBody = match[2];
     
-    // Skip non-request/response structs unless they have validation tags
-    if (!structName.includes('Request') && !structName.includes('Response') && 
-        !structBody.includes('binding:') && !structBody.includes('validate:')) {
+    // Include request/response structs, main model structs, and structs with validation tags
+    const isRequestResponse = structName.includes('Request') || structName.includes('Response');
+    const isMainModel = ['Persona', 'Proxy', 'KeywordSet', 'KeywordRule', 'Campaign', 'User'].includes(structName);
+    const hasValidationTags = structBody.includes('binding:') || structBody.includes('validate:');
+    
+    if (!isRequestResponse && !isMainModel && !hasValidationTags) {
       continue;
     }
     
@@ -263,7 +266,7 @@ function main() {
   const goFiles = scanGoFiles(CONFIG.inputDir);
   console.log(`📁 Found ${goFiles.length} Go files to scan\n`);
   
-  let allStructs = [];
+  let structsByFile = {};
   
   // Extract structs from each file
   for (const filePath of goFiles) {
@@ -273,14 +276,44 @@ function main() {
       
       if (structs.length > 0) {
         console.log(`📋 ${path.relative('.', filePath)}: ${structs.length} structs`);
-        allStructs = allStructs.concat(structs);
+        structsByFile[filePath] = structs;
       }
     } catch (error) {
       console.error(`❌ Error processing ${filePath}:`, error.message);
     }
   }
   
-  console.log(`\n✅ Total extracted structs: ${allStructs.length}\n`);
+  console.log(`\n✅ Total extracted structs: ${Object.values(structsByFile).flat().length}`);
+  
+  // Deduplicate structs by name, prioritizing those from models.go
+  const allStructs = [];
+  const seenStructNames = new Set();
+  
+  // First pass: Add structs from models.go files
+  for (const filePath of Object.keys(structsByFile)) {
+    if (filePath.includes('models.go')) {
+      for (const struct of structsByFile[filePath]) {
+        if (!seenStructNames.has(struct.name)) {
+          allStructs.push({ ...struct, sourceFile: filePath });
+          seenStructNames.add(struct.name);
+        }
+      }
+    }
+  }
+  
+  // Second pass: Add remaining structs from other files, skipping duplicates
+  for (const filePath of Object.keys(structsByFile)) {
+    if (!filePath.includes('models.go')) {
+      for (const struct of structsByFile[filePath]) {
+        if (!seenStructNames.has(struct.name)) {
+          allStructs.push({ ...struct, sourceFile: filePath });
+          seenStructNames.add(struct.name);
+        }
+      }
+    }
+  }
+  
+  console.log(`\n✅ After deduplication: ${allStructs.length} unique structs\n`);
   
   // Generate schemas
   let generatedContent = `// Auto-generated Zod schemas from Go validation tags
@@ -299,6 +332,17 @@ const _validationStatusEnumSchema = z.enum(['pending', 'valid', 'invalid', 'erro
 const _dnsValidationStatusEnumSchema = z.enum(['resolved', 'unresolved', 'timeout', 'error']);
 const _httpValidationStatusEnumSchema = z.enum(['success', 'failed', 'timeout', 'error']);
 const _keywordRuleTypeEnumSchema = z.enum(['string', 'regex']);
+
+// Export enum schemas for use in generated schemas
+export const personaTypeEnumSchema = _personaTypeEnumSchema;
+export const proxyProtocolEnumSchema = _proxyProtocolEnumSchema;
+export const campaignTypeEnumSchema = _campaignTypeEnumSchema;
+export const campaignStatusEnumSchema = _campaignStatusEnumSchema;
+export const jobStatusEnumSchema = _jobStatusEnumSchema;
+export const validationStatusEnumSchema = _validationStatusEnumSchema;
+export const dnsValidationStatusEnumSchema = _dnsValidationStatusEnumSchema;
+export const httpValidationStatusEnumSchema = _httpValidationStatusEnumSchema;
+export const keywordRuleTypeEnumSchema = _keywordRuleTypeEnumSchema;
 
 `;
   

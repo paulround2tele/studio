@@ -3,7 +3,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { safeBigIntToString, type SafeBigInt } from "@/lib/types/branded"
+import { toString, type SafeBigInt } from "@/lib/types/branded"
 
 const bigIntDisplayVariants = cva(
   "inline-flex items-center font-mono",
@@ -141,7 +141,7 @@ const BigIntDisplay = React.forwardRef<HTMLSpanElement, BigIntDisplayProps>(
       if (!value || !copyable) return
       
       try {
-        await navigator.clipboard.writeText(safeBigIntToString(value))
+        await navigator.clipboard.writeText(toString(value))
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       } catch (err) {
@@ -154,7 +154,7 @@ const BigIntDisplay = React.forwardRef<HTMLSpanElement, BigIntDisplayProps>(
         return fallback
       }
 
-      const stringValue = safeBigIntToString(value)
+      const stringValue = toString(value)
       const processedValue = addSign(formatNumber(abbreviateNumber(stringValue)))
       
       return (
@@ -186,7 +186,7 @@ const BigIntDisplay = React.forwardRef<HTMLSpanElement, BigIntDisplayProps>(
             handleCopy()
           }
         } : undefined}
-        aria-label={copyable ? `Copy value: ${value ? safeBigIntToString(value) : 'No value'}` : undefined}
+        aria-label={copyable ? `Copy value: ${value ? toString(value) : 'No value'}` : undefined}
         title={tooltip || (copyable && copied ? "Copied!" : copyable ? "Click to copy" : undefined)}
         {...props}
       >

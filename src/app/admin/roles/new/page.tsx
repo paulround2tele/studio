@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import type { ModelsPermissionAPI } from '@/lib/types/models-aligned';
 import { listPermissions, createRole } from '@/lib/services/adminService';
+import { createUUID } from '@/lib/types/branded';
 
 export default function NewRolePage() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function NewRolePage() {
     if (!canManage) return;
     setIsLoading(true);
     try {
-      await createRole({ name, displayName, description, permissionIds: Array.from(selected) });
+      await createRole({ name, displayName, description, permissionIds: Array.from(selected).map(id => createUUID(id)) });
       setSuccessMessage('Role created');
       setTimeout(() => router.push('/admin/roles'), 500);
     } catch (e) {
