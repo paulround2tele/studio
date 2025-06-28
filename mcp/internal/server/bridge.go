@@ -21,6 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"sort"
+
+	"gopkg.in/yaml.v3"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	cover "golang.org/x/tools/cover"
@@ -1229,17 +1233,33 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 		ValidationRules: make(map[string]interface{}),
 	}
 
+	methodsMap := make(map[string]bool)
+	endpointsMap := make(map[string]bool)
+
 	// Check for actual OpenAPI files in the backend
 	backendDocsPath := filepath.Join(b.BackendPath, "docs")
 
 	// Detect openapi.yaml
 	openapiYaml := filepath.Join(backendDocsPath, "openapi.yaml")
-	if _, err := os.Stat(openapiYaml); err == nil {
+	if data, err := os.ReadFile(openapiYaml); err == nil {
 		schema.SchemaFiles = append(schema.SchemaFiles, "docs/openapi.yaml")
 
-		content, err := os.ReadFile(openapiYaml)
-		if err == nil {
-			contentStr := string(content)
+		var spec struct {
+			OpenAPI string                            `yaml:"openapi"`
+			Paths   map[string]map[string]interface{} `yaml:"paths"`
+		}
+		if err := yaml.Unmarshal(data, &spec); err == nil {
+			if spec.OpenAPI != "" {
+				schema.OpenAPIVersion = spec.OpenAPI
+			}
+			for p, m := range spec.Paths {
+				endpointsMap[p] = true
+				for method := range m {
+					methodsMap[strings.ToUpper(method)] = true
+				}
+			}
+		} else {
+			contentStr := string(data)
 			if strings.Contains(contentStr, "openapi:") {
 				parts := strings.SplitN(contentStr, "openapi:", 2)
 				if len(parts) > 1 {
@@ -1252,16 +1272,27 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 
 	// Detect openapi.json
 	openapiJSON := filepath.Join(backendDocsPath, "openapi.json")
-	if _, err := os.Stat(openapiJSON); err == nil {
+	if data, err := os.ReadFile(openapiJSON); err == nil {
 		schema.SchemaFiles = append(schema.SchemaFiles, "docs/openapi.json")
-		if schema.OpenAPIVersion == "" {
-			content, err := os.ReadFile(openapiJSON)
-			if err == nil {
-				var js map[string]interface{}
-				if json.Unmarshal(content, &js) == nil {
-					if v, ok := js["openapi"].(string); ok {
-						schema.OpenAPIVersion = v
-					}
+		var spec struct {
+			OpenAPI string                            `json:"openapi"`
+			Paths   map[string]map[string]interface{} `json:"paths"`
+		}
+		if err := json.Unmarshal(data, &spec); err == nil {
+			if spec.OpenAPI != "" && schema.OpenAPIVersion == "" {
+				schema.OpenAPIVersion = spec.OpenAPI
+			}
+			for p, m := range spec.Paths {
+				endpointsMap[p] = true
+				for method := range m {
+					methodsMap[strings.ToUpper(method)] = true
+				}
+			}
+		} else if schema.OpenAPIVersion == "" {
+			var js map[string]interface{}
+			if json.Unmarshal(data, &js) == nil {
+				if v, ok := js["openapi"].(string); ok {
+					schema.OpenAPIVersion = v
 				}
 			}
 		}
@@ -1271,20 +1302,9 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 	mainGoPath := filepath.Join(b.BackendPath, "cmd/apiserver/main.go")
 	routes, err := analyzer.ParseGinRoutes(mainGoPath)
 	if err == nil {
-		methodsMap := make(map[string]bool)
-		endpointsMap := make(map[string]bool)
-
 		for _, route := range routes {
 			methodsMap[route.Method] = true
 			endpointsMap[route.Path] = true
-		}
-
-		// Convert maps to slices
-		for method := range methodsMap {
-			schema.Methods = append(schema.Methods, method)
-		}
-		for endpoint := range endpointsMap {
-			schema.Endpoints = append(schema.Endpoints, endpoint)
 		}
 	}
 
@@ -1304,6 +1324,17 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 			schema.OpenAPIVersion = "unknown"
 		}
 	}
+
+	// Convert maps to slices for final schema output
+	for m := range methodsMap {
+		schema.Methods = append(schema.Methods, m)
+	}
+	for e := range endpointsMap {
+		schema.Endpoints = append(schema.Endpoints, e)
+	}
+
+	sort.Strings(schema.Methods)
+	sort.Strings(schema.Endpoints)
 
 	return schema, nil
 }
