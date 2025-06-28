@@ -476,6 +476,48 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 						"description": "Include interaction testing requirements",
 					},
 				},
+
+				// Frontend Tools
+				{
+					Name:        "get_frontend_routes",
+					Description: "List Next.js frontend routes",
+					InputSchema: map[string]interface{}{
+						"type":       "object",
+						"properties": map[string]interface{}{},
+					},
+				},
+				{
+					Name:        "get_component_tree",
+					Description: "Get React component import tree",
+					InputSchema: map[string]interface{}{
+						"type":       "object",
+						"properties": map[string]interface{}{},
+					},
+				},
+				{
+					Name:        "get_component_props_and_events",
+					Description: "Extract props and event handlers for React components",
+					InputSchema: map[string]interface{}{
+						"type":       "object",
+						"properties": map[string]interface{}{},
+					},
+				},
+				{
+					Name:        "get_frontend_test_coverage",
+					Description: "Run frontend tests and return coverage",
+					InputSchema: map[string]interface{}{
+						"type":       "object",
+						"properties": map[string]interface{}{},
+					},
+				},
+				{
+					Name:        "get_component_to_test_map",
+					Description: "Map components to test files",
+					InputSchema: map[string]interface{}{
+						"type":       "object",
+						"properties": map[string]interface{}{},
+					},
+				},
 			},
 		},
 
@@ -663,6 +705,17 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 
 	case "generate_ui_test_prompt":
 		return s.callGenerateUITestPrompt(ctx, toolCall.Arguments)
+
+	case "get_frontend_routes":
+		return s.callGetFrontendRoutes()
+	case "get_component_tree":
+		return s.callGetComponentTree()
+	case "get_component_props_and_events":
+		return s.callGetComponentPropsAndEvents()
+	case "get_frontend_test_coverage":
+		return s.callGetFrontendTestCoverage()
+	case "get_component_to_test_map":
+		return s.callGetComponentToTestMap()
 
 	// New Tools
 	case "analyze_performance":

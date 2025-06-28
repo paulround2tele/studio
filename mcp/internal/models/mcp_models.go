@@ -553,6 +553,34 @@ type ComplexityReport struct {
 	Complexity int    `json:"complexity"`
 }
 
+// FrontendRoute represents a Next.js frontend route
+type FrontendRoute struct {
+	Path string `json:"path"`
+	File string `json:"file"`
+}
+
+// ComponentTreeNode represents a React component and its children
+type ComponentTreeNode struct {
+	Name     string   `json:"name"`
+	File     string   `json:"file"`
+	Children []string `json:"children,omitempty"`
+}
+
+// ComponentPropsAndEvents captures props and events for a component
+type ComponentPropsAndEvents struct {
+	Component string   `json:"component"`
+	File      string   `json:"file"`
+	Props     []string `json:"props,omitempty"`
+	Events    []string `json:"events,omitempty"`
+}
+
+// ComponentTestMap links a component to the test files that reference it
+type ComponentTestMap struct {
+	Component string   `json:"component"`
+	File      string   `json:"file"`
+	Tests     []string `json:"tests"`
+}
+
 // API Schema models
 type APISchema struct {
 	OpenAPIVersion  string                 `json:"openapi_version"`
