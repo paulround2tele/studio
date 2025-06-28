@@ -237,3 +237,68 @@ func (s *JSONRPCServer) generateTestPrompt(componentName, testType string, compo
 
 	return prompt.String()
 }
+
+// callGetFrontendRoutes implements the get_frontend_routes tool
+func (s *JSONRPCServer) callGetFrontendRoutes() (interface{}, error) {
+	routes, err := s.bridge.GetFrontendRoutes()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Error: %v", err)}},
+		}, nil
+	}
+	return map[string]interface{}{
+		"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Found %d frontend routes", len(routes))}},
+	}, nil
+}
+
+// callGetComponentTree implements the get_component_tree tool
+func (s *JSONRPCServer) callGetComponentTree() (interface{}, error) {
+	tree, err := s.bridge.GetComponentTree()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Error: %v", err)}},
+		}, nil
+	}
+	return map[string]interface{}{
+		"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Found %d components", len(tree))}},
+	}, nil
+}
+
+// callGetComponentPropsAndEvents implements the get_component_props_and_events tool
+func (s *JSONRPCServer) callGetComponentPropsAndEvents() (interface{}, error) {
+	info, err := s.bridge.GetComponentPropsAndEvents()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Error: %v", err)}},
+		}, nil
+	}
+	return map[string]interface{}{
+		"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Analyzed %d components", len(info))}},
+	}, nil
+}
+
+// callGetFrontendTestCoverage implements the get_frontend_test_coverage tool
+func (s *JSONRPCServer) callGetFrontendTestCoverage() (interface{}, error) {
+	cov, err := s.bridge.GetFrontendTestCoverage()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Error: %v", err)}},
+		}, nil
+	}
+	return map[string]interface{}{
+		"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Coverage %.2f%%", cov.OverallPercentage)}},
+	}, nil
+}
+
+// callGetComponentToTestMap implements the get_component_to_test_map tool
+func (s *JSONRPCServer) callGetComponentToTestMap() (interface{}, error) {
+	m, err := s.bridge.GetComponentToTestMap()
+	if err != nil {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Error: %v", err)}},
+		}, nil
+	}
+	return map[string]interface{}{
+		"content": []map[string]interface{}{{"type": "text", "text": fmt.Sprintf("Mapped %d components", len(m))}},
+	}, nil
+}
