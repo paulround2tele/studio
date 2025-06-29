@@ -1,42 +1,47 @@
-# DomainFlow Documentation Index
+# DomainFlow Documentation
 
-This directory contains organized documentation for the DomainFlow project.
+This directory contains essential documentation for the DomainFlow application, cleaned up and organized for the testing phase.
 
-## 📁 Directory Structure
+## � Documentation Structure
 
-### `/audit/` - Analysis and Audit Documentation
-- `API_AUDIT_PLAN.md` - Comprehensive API audit planning document
-- `API_CONTRACT_MISMATCHES.md` - Detailed analysis of API contract inconsistencies  
-- `BACKEND_API_INVENTORY.md` - Complete inventory of backend API endpoints
-- `FRONTEND_API_CONSUMPTION.md` - Frontend API usage patterns and requirements
-- `DATABASE_SCHEMA.md` - Complete database schema documentation
+### Essential Guides
+- **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** - Complete setup and installation instructions
+- **[ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md)** - Environment configuration (shared .env setup)
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Development workflows and best practices
+- **[USER_GUIDE.md](USER_GUIDE.md)** - End-user documentation and tutorials
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
 
-### `/architecture/` - System Architecture Documentation
-- `DEPLOYMENT_ARCHITECTURE_GUIDE.md` - Production deployment architecture
-- `SESSION_BASED_AUTHENTICATION_ARCHITECTURE.md` - Authentication system design
+### Security & Operations
+- **[API_AUTHENTICATION.md](API_AUTHENTICATION.md)** - Session-based authentication system
+- **[SECURITY.md](SECURITY.md)** - Security guidelines and best practices
+- **[COMPLIANCE.md](COMPLIANCE.md)** - Compliance and regulatory information
+- **[OPERATIONAL_RUNBOOK.md](OPERATIONAL_RUNBOOK.md)** - Production operations guide
+- **[DEPLOYMENT_VALIDATION_CHECKLIST.md](DEPLOYMENT_VALIDATION_CHECKLIST.md)** - Pre-deployment checks
 
-### `/implementation/` - Implementation Guides and Summaries
-- `SESSION_BASED_AUTHENTICATION_IMPLEMENTATION_GUIDE.md` - Auth implementation details
-- `ENHANCED_ERROR_HANDLING_IMPLEMENTATION.md` - Error handling system
-- `PERFORMANCE_MONITORING_FRAMEWORK_IMPLEMENTATION.md` - Performance monitoring setup
-- `COMPONENT_OPTIMIZATION_SUMMARY.md` - Component optimization results
-- `COMPREHENSIVE_PERFORMANCE_OPTIMIZATION_STRATEGY.md` - Performance strategy
+### System Design
+- **[architecture/](architecture/)** - Current system architecture documentation
+- **[design-system/](design-system/)** - UI/UX design system documentation
 
-### Root Level Documentation
-- `DEPLOYMENT_README.md` - Deployment instructions
-- `DEPLOYMENT_VALIDATION_CHECKLIST.md` - Deployment validation steps
+## 🚀 Quick Start
 
-## 📊 Current Status
+1. **Environment Setup**: [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) - Shared .env configuration
+2. **Installation**: [INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md) - Complete setup guide
+3. **Development**: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) - Development workflows
+4. **Authentication**: [API_AUTHENTICATION.md](API_AUTHENTICATION.md) - Session-based auth
+5. **Troubleshooting**: [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues
 
-**Phase 1 Complete:** ✅ Critical architectural fixes implemented
-- Database schema fixes
-- Admin user management API
-- Session refresh logic
-- Type safety improvements
+## ✅ Current System State
 
-**Next:** Phase 2 - API standardization and contract improvements
+**Post-Refactoring (June 2025):**
+- ✅ Removed role/permission-based authentication
+- ✅ Migrated to session-based authentication
+- ✅ Centralized environment configuration in shared .env
+- ✅ Cleaned up all legacy migration documentation
+- ✅ Ready for testing phase
 
-## 🔄 Maintenance
+## 📝 Documentation Standards
 
-This documentation is actively maintained and reflects the current state of the system.
-Outdated or redundant documentation has been removed as of June 18, 2025.
+- All documentation reflects the current simplified architecture
+- Environment setup is centralized and shared across teams
+- Authentication is session-based only (no roles/permissions)
+- Focus on testing and production readiness
