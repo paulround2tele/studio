@@ -42,9 +42,7 @@ type User struct {
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 
 	// Computed fields (not stored in DB)
-	Name        string       `json:"name,omitempty" db:"-"`
-	Roles       []Role       `json:"roles,omitempty" db:"-"`
-	Permissions []Permission `json:"permissions,omitempty" db:"-"`
+	Name string `json:"name,omitempty" db:"-"`
 }
 
 // PublicUser returns a user struct with sensitive fields removed
@@ -75,7 +73,7 @@ func (u *User) PublicUser() *User {
 		CreatedAt:          u.CreatedAt,
 		UpdatedAt:          u.UpdatedAt,
 		Name:               fullName,
-		// Removed roles and permissions for simplified session-based auth
+		// Simplified session-based auth - no roles or permissions
 	}
 }
 
@@ -93,46 +91,6 @@ type Session struct {
 	ExpiresAt          time.Time `json:"expiresAt" db:"expires_at"`
 	LastActivityAt     time.Time `json:"lastActivityAt" db:"last_activity_at"`
 	CreatedAt          time.Time `json:"createdAt" db:"created_at"`
-}
-
-// Role represents a user role
-type Role struct {
-	ID           uuid.UUID `json:"id" db:"id"`
-	Name         string    `json:"name" db:"name"`
-	DisplayName  string    `json:"displayName" db:"display_name"`
-	Description  *string   `json:"description" db:"description"`
-	IsSystemRole bool      `json:"isSystemRole" db:"is_system_role"`
-	CreatedAt    time.Time `json:"createdAt" db:"created_at"`
-	UpdatedAt    time.Time `json:"updatedAt" db:"updated_at"`
-
-	// Computed fields
-	Permissions []Permission `json:"permissions,omitempty" db:"-"`
-}
-
-// Permission represents a system permission
-type Permission struct {
-	ID          uuid.UUID `json:"id" db:"id"`
-	Name        string    `json:"name" db:"name"`
-	DisplayName string    `json:"displayName" db:"display_name"`
-	Description *string   `json:"description" db:"description"`
-	Resource    string    `json:"resource" db:"resource"`
-	Action      string    `json:"action" db:"action"`
-	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
-}
-
-// UserRole represents the junction between users and roles
-type UserRole struct {
-	UserID     uuid.UUID  `json:"userId" db:"user_id"`
-	RoleID     uuid.UUID  `json:"roleId" db:"role_id"`
-	AssignedBy *uuid.UUID `json:"assignedBy" db:"assigned_by"`
-	AssignedAt time.Time  `json:"assignedAt" db:"assigned_at"`
-	ExpiresAt  *time.Time `json:"expiresAt" db:"expires_at"`
-}
-
-// RolePermission represents the junction between roles and permissions
-type RolePermission struct {
-	RoleID       uuid.UUID `json:"roleId" db:"role_id"`
-	PermissionID uuid.UUID `json:"permissionId" db:"permission_id"`
 }
 
 // AuthAuditLog represents an enhanced authentication audit log entry
@@ -189,19 +147,17 @@ type ChangePasswordRequest struct {
 
 // CreateUserRequest represents a user creation request
 type CreateUserRequest struct {
-	Email     string      `json:"email" binding:"required,email"`
-	FirstName string      `json:"firstName" binding:"required"`
-	LastName  string      `json:"lastName" binding:"required"`
-	Password  string      `json:"password" binding:"required,min=12"`
-	RoleIDs   []uuid.UUID `json:"roleIds"`
+	Email     string `json:"email" binding:"required,email"`
+	FirstName string `json:"firstName" binding:"required"`
+	LastName  string `json:"lastName" binding:"required"`
+	Password  string `json:"password" binding:"required,min=12"`
 }
 
 // UpdateUserRequest represents a user update request
 type UpdateUserRequest struct {
-	FirstName string      `json:"firstName"`
-	LastName  string      `json:"lastName"`
-	IsActive  *bool       `json:"isActive"`
-	RoleIDs   []uuid.UUID `json:"roleIds"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	IsActive  *bool  `json:"isActive"`
 }
 
 // AuthResult represents a generic authentication result
@@ -219,54 +175,6 @@ type SecurityContext struct {
 	SessionExpiry          time.Time `json:"sessionExpiry"`
 	RequiresPasswordChange bool      `json:"requiresPasswordChange"`
 	RiskScore              int       `json:"riskScore"`
-	Permissions            []string  `json:"permissions"`
-	Roles                  []string  `json:"roles"`
-}
-
-// HasPermission checks if the security context has a specific permission
-func (sc *SecurityContext) HasPermission(permission string) bool {
-	for _, p := range sc.Permissions {
-		if p == permission {
-			return true
-		}
-	}
-	return false
-}
-
-// HasRole checks if the security context has a specific role
-func (sc *SecurityContext) HasRole(role string) bool {
-	for _, r := range sc.Roles {
-		if r == role {
-			return true
-		}
-	}
-	return false
-}
-
-// HasAnyRole checks if the security context has any of the specified roles
-func (sc *SecurityContext) HasAnyRole(roles []string) bool {
-	for _, role := range roles {
-		if sc.HasRole(role) {
-			return true
-		}
-	}
-	return false
-}
-
-// HasAllPermissions checks if the security context has all specified permissions
-func (sc *SecurityContext) HasAllPermissions(permissions []string) bool {
-	for _, permission := range permissions {
-		if !sc.HasPermission(permission) {
-			return false
-		}
-	}
-	return true
-}
-
-// CanAccess checks if the security context can access a resource with a specific action
-func (sc *SecurityContext) CanAccess(resource, action string) bool {
-	permission := resource + ":" + action
-	return sc.HasPermission(permission)
 }
 
 // ErrorResponse represents a standard API error response

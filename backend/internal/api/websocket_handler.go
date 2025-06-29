@@ -202,8 +202,6 @@ func (h *WebSocketHandler) HandleConnections(c *gin.Context) {
 		SessionExpiry:          time.Now().Add(24 * time.Hour), // Default 24 hour expiry
 		RequiresPasswordChange: false,                          // Default to false for websocket
 		RiskScore:              0,                              // Default risk score
-		Permissions:            sessionData.Permissions,
-		Roles:                  sessionData.Roles, // Assuming sessionData has Roles
 	}
 
 	// Create and start the client (note: client is used by being passed to the constructor)

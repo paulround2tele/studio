@@ -28,8 +28,6 @@ export interface UserAPIAligned {
     mfaLastUsedAt?: ISODateString;
     mustChangePassword?: boolean;
     name?: string;
-    permissions?: string[];
-    roles?: string[];
     updatedAt?: ISODateString;
 }
 
@@ -65,8 +63,6 @@ export function transformUserResponse(raw: UserAPI): UserAPIAligned {
         mfaLastUsedAt: raw.mfaLastUsedAt ? createISODateString(raw.mfaLastUsedAt) : undefined,
         mustChangePassword: raw.mustChangePassword,
         name: raw.name,
-        permissions: raw.permissions,
-        roles: raw.roles,
         updatedAt: raw.updatedAt ? createISODateString(raw.updatedAt) : undefined,
     };
 }
@@ -114,51 +110,7 @@ export function transformUserRequestData(data: Partial<UserAPIAligned>): Record<
     if (data.mfaLastUsedAt !== undefined) result.mfaLastUsedAt = data.mfaLastUsedAt;
     if (data.mustChangePassword !== undefined) result.mustChangePassword = data.mustChangePassword;
     if (data.name !== undefined) result.name = data.name;
-    if (data.permissions !== undefined) result.permissions = data.permissions;
-    if (data.roles !== undefined) result.roles = data.roles;
     if (data.updatedAt !== undefined) result.updatedAt = data.updatedAt;
     
     return result;
-}
-
-/**
- * Permission system helpers for consistent representation
- */
-export interface Permission {
-    name: string;
-    displayName?: string;
-    resource?: string;
-    action?: string;
-}
-
-export interface Role {
-    id: UUID;
-    name: string;
-    displayName?: string;
-    permissions?: Permission[];
-}
-
-/**
- * Convert string array permissions to permission objects (for future enhancement)
- */
-export function parsePermissions(permissions: string[]): Permission[] {
-    return permissions.map(p => {
-        const [resource, action] = p.split(':');
-        return {
-            name: p,
-            resource,
-            action,
-            displayName: p.replace(/:/g, ' ').replace(/_/g, ' ')
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ')
-        };
-    });
-}
-
-/**
- * Convert permission objects back to string array
- */
-export function serializePermissions(permissions: Permission[]): string[] {
-    return permissions.map(p => p.name);
 }

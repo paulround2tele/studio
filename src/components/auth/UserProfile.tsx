@@ -225,15 +225,6 @@ export function UserProfile({
               </div>
               
               <div className="space-y-2">
-                <Label>Role</Label>
-                <div className="flex flex-wrap gap-1">
-                  {user.roles.map((role) => (
-                    <Badge key={role.id} variant="secondary">{role.displayName}</Badge>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="space-y-2">
                 <Label>Account Status</Label>
                 <Badge variant={user.isActive ? "default" : "destructive"}>
                   {user.isActive ? 'Active' : 'Inactive'}
@@ -249,22 +240,6 @@ export function UserProfile({
                   <p className="text-sm">{formatDate(user.lastLoginAt)}</p>
                 </div>
               )}
-              
-              <div className="space-y-2">
-                <Label>Permissions</Label>
-                <div className="flex flex-wrap gap-1">
-                  {user.permissions.slice(0, 3).map((permission) => (
-                    <Badge key={permission.id} variant="outline" className="text-xs">
-                      {permission.displayName}
-                    </Badge>
-                  ))}
-                  {user.permissions.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{user.permissions.length - 3} more
-                    </Badge>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* Security Alerts */}

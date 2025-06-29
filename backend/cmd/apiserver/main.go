@@ -340,16 +340,6 @@ func main() {
 	apiV2.Use(authMiddleware.SessionAuth())
 	apiV2.Use(securityMiddleware.SessionProtection()) // Session-based protection for session-based requests
 	{
-		// Admin user management routes
-		adminRoutes := apiV2.Group("/admin")
-		{
-			adminRoutes.GET("/users", apiHandler.ListUsersGin)
-			adminRoutes.POST("/users", apiHandler.CreateUserGin)
-			adminRoutes.GET("/users/:userId", apiHandler.GetUserGin)
-			adminRoutes.PUT("/users/:userId", apiHandler.UpdateUserGin)
-			adminRoutes.DELETE("/users/:userId", apiHandler.DeleteUserGin)
-		}
-
 		// Current user routes (authenticated users)
 		apiV2.GET("/me", authHandler.Me)
 		apiV2.POST("/change-password", authHandler.ChangePassword)

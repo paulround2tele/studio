@@ -1,5 +1,6 @@
 /**
- * Enhanced permission-based component wrapper for fine-grained access control
+ * Simplified authentication-based component wrapper
+ * In simple session-based auth, we only check if user is authenticated
  */
 
 import React from 'react';
@@ -7,40 +8,32 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface WithPermissionProps {
   children: React.ReactNode;
-  required: string | string[];
-  mode?: 'any' | 'all'; // 'any' means user needs at least one permission, 'all' means user needs all permissions
+  required?: string | string[]; // Kept for backward compatibility but ignored
+  mode?: 'any' | 'all'; // Kept for backward compatibility but ignored
   fallback?: React.ReactNode;
   showFallback?: boolean;
   onPermissionDenied?: () => void;
 }
 
 /**
- * Permission-based component wrapper that conditionally renders children based on user permissions
+ * Authentication-based component wrapper that conditionally renders children based on authentication status
+ * Note: In simplified auth, all authenticated users have the same access
  */
 export function WithPermission({ 
   children, 
-  required,
-  mode = 'any',
   fallback = null,
   showFallback = true,
   onPermissionDenied
 }: WithPermissionProps) {
-  const { hasPermission, hasAllPermissions, isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Wait for auth to be ready
-  if (isLoading || !isAuthenticated) {
-    return showFallback ? fallback : null;
+  if (isLoading) {
+    return showFallback ? <div>Loading...</div> : null;
   }
 
-  // Normalize required permissions to array
-  const permissions = Array.isArray(required) ? required : [required];
-  
-  // Check permissions based on mode
-  const hasRequiredPermissions = mode === 'all' 
-    ? hasAllPermissions(permissions)
-    : permissions.some(permission => hasPermission(permission));
-
-  if (!hasRequiredPermissions) {
+  // Check authentication
+  if (!isAuthenticated) {
     // Call callback if provided
     if (onPermissionDenied) {
       onPermissionDenied();

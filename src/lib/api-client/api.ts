@@ -14,7 +14,6 @@
 
 
 
-export * from './api/admin-api';
 export * from './api/authentication-api';
 export * from './api/campaigns-api';
 export * from './api/config-api';

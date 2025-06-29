@@ -215,8 +215,6 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 			securityContext = &models.SecurityContext{
 				UserID:                 sessionData.UserID,
 				SessionID:              sessionData.ID,
-				Permissions:            sessionData.Permissions,
-				Roles:                  sessionData.Roles,
 				SessionExpiry:          sessionData.ExpiresAt,
 				RequiresPasswordChange: sessionData.RequiresPasswordChange,
 				RiskScore:              0, // Default risk score
@@ -328,8 +326,6 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 			&securityContext.SessionExpiry,
 			map[string]interface{}{
 				"validation_duration_ms":   validationDuration.Milliseconds(),
-				"user_permissions_count":   len(securityContext.Permissions),
-				"user_roles_count":         len(securityContext.Roles),
 				"requires_password_change": securityContext.RequiresPasswordChange,
 				"risk_score":               securityContext.RiskScore,
 			},
@@ -359,8 +355,6 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 				"stage":                    "success",
 				"cookie_check_duration_ms": cookieDuration.Milliseconds(),
 				"validation_duration_ms":   validationDuration.Milliseconds(),
-				"user_permissions_count":   len(securityContext.Permissions),
-				"user_roles_count":         len(securityContext.Roles),
 				"requires_password_change": securityContext.RequiresPasswordChange,
 			},
 		)
@@ -431,8 +425,6 @@ func (m *AuthMiddleware) DualAuth(apiKey string) gin.HandlerFunc {
 		securityContext := &models.SecurityContext{
 			UserID:                 sessionData.UserID,
 			SessionID:              sessionData.ID,
-			Permissions:            sessionData.Permissions,
-			Roles:                  sessionData.Roles,
 			SessionExpiry:          sessionData.ExpiresAt,
 			RequiresPasswordChange: sessionData.RequiresPasswordChange,
 			RiskScore:              0, // Default risk score
@@ -443,134 +435,6 @@ func (m *AuthMiddleware) DualAuth(apiKey string) gin.HandlerFunc {
 		c.Set("security_context", securityContext)
 		c.Set("user_id", securityContext.UserID)
 		c.Set("session_id", securityContext.SessionID)
-
-		c.Next()
-	}
-}
-
-// RequirePermission checks if the user has a specific permission
-func (m *AuthMiddleware) RequirePermission(permission string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get security context
-		securityContext, exists := c.Get("security_context")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authentication required",
-			})
-			return
-		}
-
-		ctx, ok := securityContext.(*models.SecurityContext)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Invalid security context",
-			})
-			return
-		}
-
-		// Check permission
-		if !ctx.HasPermission(permission) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Insufficient permissions",
-			})
-			return
-		}
-
-		c.Next()
-	}
-}
-
-// RequireRole checks if the user has a specific role
-func (m *AuthMiddleware) RequireRole(role string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get security context
-		securityContext, exists := c.Get("security_context")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authentication required",
-			})
-			return
-		}
-
-		ctx, ok := securityContext.(*models.SecurityContext)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Invalid security context",
-			})
-			return
-		}
-
-		// Check role
-		if !ctx.HasRole(role) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Insufficient privileges",
-			})
-			return
-		}
-
-		c.Next()
-	}
-}
-
-// RequireAnyRole checks if the user has any of the specified roles
-func (m *AuthMiddleware) RequireAnyRole(roles []string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get security context
-		securityContext, exists := c.Get("security_context")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authentication required",
-			})
-			return
-		}
-
-		ctx, ok := securityContext.(*models.SecurityContext)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Invalid security context",
-			})
-			return
-		}
-
-		// Check roles
-		if !ctx.HasAnyRole(roles) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Insufficient privileges",
-			})
-			return
-		}
-
-		c.Next()
-	}
-}
-
-// RequireResourceAccess checks if the user can access a resource with a specific action
-func (m *AuthMiddleware) RequireResourceAccess(resource, action string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get security context
-		securityContext, exists := c.Get("security_context")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authentication required",
-			})
-			return
-		}
-
-		ctx, ok := securityContext.(*models.SecurityContext)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Invalid security context",
-			})
-			return
-		}
-
-		// Check resource access
-		if !ctx.CanAccess(resource, action) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Access denied",
-			})
-			return
-		}
 
 		c.Next()
 	}

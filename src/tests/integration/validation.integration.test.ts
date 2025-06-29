@@ -157,19 +157,21 @@ describe('Authentication API Transformations', () => {
     firstName: 'John',
     lastName: 'Doe',
     isActive: true,
-    permissions: ['campaigns:read', 'campaigns:create'],
-    roles: ['user'],
+    isLocked: false,
+    emailVerified: true,
+    mfaEnabled: false,
+    mustChangePassword: false,
     createdAt: '2023-01-01T00:00:00.000Z',
     updatedAt: '2023-01-01T12:00:00.000Z'
   };
 
   it('should transform user response with branded types', () => {
-    const transformed = transformUserResponse(mockUserResponse);
+    const transformed = transformUserResponse(mockUserResponse as any);
     
     expect(transformed.id).toBeDefined();
     expect(transformed.email).toBe('test@example.com');
-    expect(transformed.permissions).toEqual(['campaigns:read', 'campaigns:create']);
-    expect(transformed.roles).toEqual(['user']);
+    expect(transformed.firstName).toBe('John');
+    expect(transformed.lastName).toBe('Doe');
   });
 
   it('should handle login response with requiresCaptcha field', () => {

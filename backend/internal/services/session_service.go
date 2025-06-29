@@ -59,8 +59,6 @@ type SessionData struct {
 	CreatedAt              time.Time
 	LastActivity           time.Time
 	ExpiresAt              time.Time
-	Permissions            []string
-	Roles                  []string
 	IsActive               bool
 	RequiresPasswordChange bool
 }
@@ -144,12 +142,6 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 		return nil, err
 	}
 
-	// Load user permissions and roles
-	permissions, roles, err := s.loadUserPermissions(userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load user permissions: %w", err)
-	}
-
 	// Create session data
 	// Note: Fingerprint fields will be populated automatically by database trigger
 	session := &SessionData{
@@ -160,8 +152,6 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 		CreatedAt:    time.Now(),
 		LastActivity: time.Now(),
 		ExpiresAt:    time.Now().Add(s.config.Duration),
-		Permissions:  permissions,
-		Roles:        roles,
 		IsActive:     true,
 	}
 
@@ -197,8 +187,6 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 		map[string]interface{}{
 			"session_duration":     s.config.Duration.String(),
 			"creation_duration_ms": duration.Milliseconds(),
-			"permissions_count":    len(permissions),
-			"roles_count":          len(roles),
 			"fingerprint":          session.Fingerprint,
 		},
 	)
@@ -401,37 +389,6 @@ func (s *SessionService) enforceSessionLimits(userID uuid.UUID) error {
 	return nil
 }
 
-func (s *SessionService) loadUserPermissions(userID uuid.UUID) ([]string, []string, error) {
-	// Load roles
-	rolesQuery := `
-		SELECT r.name
-		FROM auth.roles r
-		JOIN auth.user_roles ur ON r.id = ur.role_id
-		WHERE ur.user_id = $1 AND (ur.expires_at IS NULL OR ur.expires_at > NOW())`
-
-	var roleNames []string
-	err := s.db.Select(&roleNames, rolesQuery, userID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Load permissions
-	permissionsQuery := `
-		SELECT DISTINCT p.name
-		FROM auth.permissions p
-		JOIN auth.role_permissions rp ON p.id = rp.permission_id
-		JOIN auth.user_roles ur ON rp.role_id = ur.role_id
-		WHERE ur.user_id = $1 AND (ur.expires_at IS NULL OR ur.expires_at > NOW())`
-
-	var permissionNames []string
-	err = s.db.Select(&permissionNames, permissionsQuery, userID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return permissionNames, roleNames, nil
-}
-
 func (s *SessionService) persistSession(session *SessionData) error {
 	// Let the database trigger handle fingerprint generation automatically
 	// Only insert the essential fields and let the database populate the fingerprint fields
@@ -538,14 +495,6 @@ func (s *SessionService) loadFromDatabase(sessionID string) (*SessionData, error
 	session.Fingerprint = fingerprint.String
 	session.BrowserFingerprint = browserFingerprint.String
 	session.ScreenResolution = screenResolution.String
-
-	// Load permissions and roles
-	permissions, roles, err := s.loadUserPermissions(session.UserID)
-	if err != nil {
-		return nil, err
-	}
-	session.Permissions = permissions
-	session.Roles = roles
 
 	return &session, nil
 }

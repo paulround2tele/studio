@@ -1,6 +1,4 @@
-export * from './api-v2-admin-users-get200-response';
 export * from './api-v2-auth-logout-post200-response';
-export * from './api-v2-auth-permissions-get200-response';
 export * from './api-v2-auth-refresh-post200-response';
 export * from './api-v2-change-password-post200-response';
 export * from './api-v2-change-password-post-request';
