@@ -25,7 +25,14 @@ type ProxyPoolRequest struct {
 	TimeoutSeconds             *int    `json:"timeoutSeconds,omitempty"`
 }
 
-// ListProxyPoolsGin returns all proxy pools
+// ListProxyPoolsGin returns all proxy pools.
+// @Summary List proxy pools
+// @Description Returns all proxy pools
+// @Tags ProxyPools
+// @Produce json
+// @Success 200 {array} models.ProxyPool
+// @Failure 500 {object} map[string]string
+// @Router /proxy-pools [get]
 func (h *APIHandler) ListProxyPoolsGin(c *gin.Context) {
 	pools, err := h.ProxyPoolStore.ListProxyPools(c.Request.Context(), h.DB)
 	if err != nil {
@@ -45,7 +52,17 @@ func (h *APIHandler) ListProxyPoolsGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, pools)
 }
 
-// CreateProxyPoolGin handles creating a new proxy pool
+// CreateProxyPoolGin handles creating a new proxy pool.
+// @Summary Create proxy pool
+// @Description Creates a new proxy pool
+// @Tags ProxyPools
+// @Accept json
+// @Produce json
+// @Param pool body ProxyPoolRequest true "Proxy pool"
+// @Success 201 {object} models.ProxyPool
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /proxy-pools [post]
 func (h *APIHandler) CreateProxyPoolGin(c *gin.Context) {
 	var req ProxyPoolRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -94,7 +111,19 @@ func (h *APIHandler) CreateProxyPoolGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusCreated, pool)
 }
 
-// UpdateProxyPoolGin updates a proxy pool
+// UpdateProxyPoolGin updates a proxy pool.
+// @Summary Update proxy pool
+// @Description Updates a proxy pool by ID
+// @Tags ProxyPools
+// @Accept json
+// @Produce json
+// @Param poolId path string true "Pool ID"
+// @Param pool body ProxyPoolRequest true "Proxy pool"
+// @Success 200 {object} models.ProxyPool
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /proxy-pools/{poolId} [put]
 func (h *APIHandler) UpdateProxyPoolGin(c *gin.Context) {
 	poolID, err := uuid.Parse(c.Param("poolId"))
 	if err != nil {
@@ -166,7 +195,16 @@ func (h *APIHandler) UpdateProxyPoolGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, existing)
 }
 
-// DeleteProxyPoolGin deletes a pool
+// DeleteProxyPoolGin deletes a pool.
+// @Summary Delete proxy pool
+// @Description Deletes a proxy pool by ID
+// @Tags ProxyPools
+// @Param poolId path string true "Pool ID"
+// @Success 200 {object} map[string]bool
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /proxy-pools/{poolId} [delete]
 func (h *APIHandler) DeleteProxyPoolGin(c *gin.Context) {
 	poolID, err := uuid.Parse(c.Param("poolId"))
 	if err != nil {
@@ -184,7 +222,19 @@ func (h *APIHandler) DeleteProxyPoolGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, gin.H{"deleted": true})
 }
 
-// AddProxyToPoolGin assigns a proxy to pool
+// AddProxyToPoolGin assigns a proxy to pool.
+// @Summary Add proxy to pool
+// @Description Assigns a proxy to a pool
+// @Tags ProxyPools
+// @Accept json
+// @Produce json
+// @Param poolId path string true "Pool ID"
+// @Param proxy body models.Proxy true "Proxy"
+// @Success 200 {object} models.ProxyPoolMembership
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /proxy-pools/{poolId}/proxies [post]
 func (h *APIHandler) AddProxyToPoolGin(c *gin.Context) {
 	poolID, err := uuid.Parse(c.Param("poolId"))
 	if err != nil {
@@ -218,7 +268,17 @@ func (h *APIHandler) AddProxyToPoolGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusCreated, m)
 }
 
-// RemoveProxyFromPoolGin removes a proxy from pool
+// RemoveProxyFromPoolGin removes a proxy from pool.
+// @Summary Remove proxy from pool
+// @Description Removes a proxy from a pool
+// @Tags ProxyPools
+// @Param poolId path string true "Pool ID"
+// @Param proxyId path string true "Proxy ID"
+// @Success 200 {object} map[string]bool
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /proxy-pools/{poolId}/proxies/{proxyId} [delete]
 func (h *APIHandler) RemoveProxyFromPoolGin(c *gin.Context) {
 	poolID, err := uuid.Parse(c.Param("poolId"))
 	if err != nil {

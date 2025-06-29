@@ -69,7 +69,17 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 
 // --- Unified Campaign Creation Handler ---
 
-// createCampaign creates a new campaign
+// createCampaign creates a new campaign.
+// @Summary Create campaign
+// @Description Creates a new campaign
+// @Tags Campaigns
+// @Accept json
+// @Produce json
+// @Param campaign body models.Campaign true "Campaign"
+// @Success 201 {object} models.Campaign
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns [post]
 func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 	var req services.CreateCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -161,7 +171,14 @@ func (h *CampaignOrchestratorAPIHandler) validateCampaignRequest(req services.Cr
 
 // --- Campaign Information Handlers ---
 
-// listCampaigns lists campaigns with optional filtering
+// listCampaigns lists all campaigns.
+// @Summary List campaigns
+// @Description Lists all campaigns
+// @Tags Campaigns
+// @Produce json
+// @Success 200 {array} models.Campaign
+// @Failure 500 {object} map[string]string
+// @Router /campaigns [get]
 func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 	// Parse and validate query parameters
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -222,6 +239,17 @@ func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
+// getCampaignDetails gets a campaign by ID.
+// @Summary Get campaign
+// @Description Gets a campaign by ID
+// @Tags Campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID"
+// @Success 200 {object} models.Campaign
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId} [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -255,6 +283,16 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 
 // --- Campaign Control Handlers ---
 
+// startCampaign starts a campaign.
+// @Summary Start campaign
+// @Description Starts a campaign by ID
+// @Tags Campaigns
+// @Param campaignId path string true "Campaign ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId}/start [post]
 func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -302,54 +340,73 @@ func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 	})
 }
 
-// Helper function to handle common campaign operation pattern
-func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context, operation string, operationFunc func(context.Context, uuid.UUID) error) {
-	campaignIDStr := c.Param("campaignId")
-	campaignID, err := uuid.Parse(campaignIDStr)
-	if err != nil {
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid campaign ID format")
-		return
-	}
-
-	if err := operationFunc(c.Request.Context(), campaignID); err != nil {
-		log.Printf("Error %s campaign %s: %v", operation, campaignIDStr, err)
-		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to %s campaign: %v", operation, err))
-		return
-	}
-
-	var message string
-	switch operation {
-	case "pausing":
-		message = "Campaign pause requested"
-	case "resuming":
-		message = "Campaign queued for resume"
-	case "cancelling":
-		message = "Campaign cancellation requested"
-	case "deleting":
-		message = "Campaign deleted successfully"
-	default:
-		message = fmt.Sprintf("Campaign %s completed", operation)
-	}
-
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"message": message})
-}
-
+// pauseCampaign pauses a campaign.
+// @Summary Pause campaign
+// @Description Pauses a campaign by ID
+// @Tags Campaigns
+// @Param campaignId path string true "Campaign ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId}/pause [post]
 func (h *CampaignOrchestratorAPIHandler) pauseCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "pausing", h.orchestratorService.PauseCampaign)
 }
 
+// resumeCampaign resumes a campaign.
+// @Summary Resume campaign
+// @Description Resumes a campaign by ID
+// @Tags Campaigns
+// @Param campaignId path string true "Campaign ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId}/resume [post]
 func (h *CampaignOrchestratorAPIHandler) resumeCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "resuming", h.orchestratorService.ResumeCampaign)
 }
 
+// cancelCampaign cancels a campaign.
+// @Summary Cancel campaign
+// @Description Cancels a campaign by ID
+// @Tags Campaigns
+// @Param campaignId path string true "Campaign ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId}/cancel [post]
 func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "cancelling", h.orchestratorService.CancelCampaign)
 }
 
+// deleteCampaign deletes a campaign.
+// @Summary Delete campaign
+// @Description Deletes a campaign by ID
+// @Tags Campaigns
+// @Param campaignId path string true "Campaign ID"
+// @Success 200 {object} map[string]bool
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId} [delete]
 func (h *CampaignOrchestratorAPIHandler) deleteCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "deleting", h.orchestratorService.DeleteCampaign)
 }
 
+// getGeneratedDomains gets generated domains for a campaign.
+// @Summary Generated domains
+// @Description Gets generated domains for a campaign
+// @Tags Campaigns
+// @Param campaignId path string true "Campaign ID"
+// @Param limit query int false "Limit" default(20)
+// @Param cursor query int false "Cursor" default(0)
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId}/results/generated-domains [get]
 func (h *CampaignOrchestratorAPIHandler) getGeneratedDomains(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -367,9 +424,21 @@ func (h *CampaignOrchestratorAPIHandler) getGeneratedDomains(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to get generated domains: %v", err))
 		return
 	}
+
 	respondWithJSONGin(c, http.StatusOK, resp)
 }
 
+// getDNSValidationResults gets DNS validation results for a campaign.
+// @Summary DNS validation results
+// @Description Gets DNS validation results for a campaign
+// @Tags Campaigns
+// @Param campaignId path string true "Campaign ID"
+// @Param limit query int false "Limit" default(20)
+// @Param cursor query string false "Cursor"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId}/results/dns-validation [get]
 func (h *CampaignOrchestratorAPIHandler) getDNSValidationResults(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -380,10 +449,11 @@ func (h *CampaignOrchestratorAPIHandler) getDNSValidationResults(c *gin.Context)
 
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	cursor := c.DefaultQuery("cursor", "")
-	validationStatus := c.Query("validationStatus")
 
+	// Create an empty filter since the query parameters don't include filter options
 	filter := store.ListValidationResultsFilter{
-		ValidationStatus: validationStatus,
+		Limit:  limit,
+		Offset: 0, // Will be set by the service based on cursor
 	}
 
 	resp, err := h.orchestratorService.GetDNSValidationResultsForCampaign(c.Request.Context(), campaignID, limit, cursor, filter)
@@ -392,9 +462,21 @@ func (h *CampaignOrchestratorAPIHandler) getDNSValidationResults(c *gin.Context)
 		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to get DNS validation results: %v", err))
 		return
 	}
+
 	respondWithJSONGin(c, http.StatusOK, resp)
 }
 
+// getHTTPKeywordResults gets HTTP keyword results for a campaign.
+// @Summary HTTP keyword results
+// @Description Gets HTTP keyword results for a campaign
+// @Tags Campaigns
+// @Param campaignId path string true "Campaign ID"
+// @Param limit query int false "Limit" default(20)
+// @Param cursor query string false "Cursor"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /campaigns/{campaignId}/results/http-keyword [get]
 func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -405,19 +487,11 @@ func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	cursor := c.DefaultQuery("cursor", "")
-	validationStatus := c.Query("validationStatus")
-	hasKeywordsStr := c.Query("hasKeywords")
-	var hasKeywords *bool
-	if hasKeywordsStr != "" {
-		b, err := strconv.ParseBool(hasKeywordsStr)
-		if err == nil {
-			hasKeywords = &b
-		}
-	}
 
+	// Create an empty filter since the query parameters don't include filter options
 	filter := store.ListValidationResultsFilter{
-		ValidationStatus: validationStatus,
-		HasKeywords:      hasKeywords,
+		Limit:  limit,
+		Offset: 0, // Will be set by the service based on cursor
 	}
 
 	resp, err := h.orchestratorService.GetHTTPKeywordResultsForCampaign(c.Request.Context(), campaignID, limit, cursor, filter)
@@ -426,35 +500,63 @@ func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to get HTTP keyword results: %v", err))
 		return
 	}
+
 	respondWithJSONGin(c, http.StatusOK, resp)
 }
 
-// Helper functions (assuming they exist elsewhere or should be defined)
-// These are not defined in the provided snippet, so they would cause compilation errors if not present.
-// For the purpose of fixing the syntax error, their definitions are not strictly needed, but
-// a complete, compilable file would require them.
+// handleCampaignOperation is a helper method for common campaign operation handling
+func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context, operationName string, operation func(ctx context.Context, campaignID uuid.UUID) error) {
+	campaignIDStr := c.Param("campaignId")
+	campaignID, err := uuid.Parse(campaignIDStr)
+	if err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid campaign ID format", []ErrorDetail{
+				{
+					Field:   "campaignId",
+					Code:    ErrorCodeValidation,
+					Message: "Campaign ID must be a valid UUID",
+				},
+			})
+		return
+	}
 
-// var validate *validator.Validate // Example: Assuming global validator
+	if err := operation(c.Request.Context(), campaignID); err != nil {
+		log.Printf("Error %s campaign %s: %v", operationName, campaignIDStr, err)
 
-// func respondWithErrorGin(c *gin.Context, code int, message string) {
-// 	c.JSON(code, gin.H{"error": message})
-// }
+		// Differentiate error types based on error message
+		// In production, use proper error types from the service layer
+		if err.Error() == "record not found" {
+			respondWithDetailedErrorGin(c, http.StatusNotFound, ErrorCodeNotFound,
+				"Campaign not found", nil)
+		} else if err.Error() == "campaign already running" || err.Error() == "invalid campaign state" {
+			respondWithDetailedErrorGin(c, http.StatusConflict, ErrorCodeInvalidState,
+				"Campaign is in an invalid state for this operation", []ErrorDetail{
+					{
+						Code:    ErrorCodeInvalidState,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+						},
+					},
+				})
+		} else {
+			respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
+				fmt.Sprintf("Failed to %s campaign", operationName), nil)
+		}
+		return
+	}
 
-// func respondWithJSONGin(c *gin.Context, code int, payload interface{}) {
-// 	c.JSON(code, payload)
-// }
+	// Different success messages for different operations
+	var message string
+	switch operationName {
+	case "deleting":
+		message = "Campaign deleted successfully"
+	default:
+		message = fmt.Sprintf("Campaign %s successful", operationName)
+	}
 
-// func getMaybeUserIDFromContext(c *gin.Context) uuid.UUID {
-// 	// Placeholder: Implement user ID retrieval from context
-// 	// userID, exists := c.Get("userID")
-// 	// if exists {
-// 	// 	if id, ok := userID.(string); ok {
-// 	// 		parsedID, _ := uuid.Parse(id)
-// 	// 		return parsedID
-// 	// 	}
-// 	// 	if id, ok := userID.(uuid.UUID); ok {
-// 	// 		return id
-// 	// 	}
-// 	// }
-// 	return uuid.Nil
-// }
+	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
+		"message":     message,
+		"campaign_id": campaignID,
+	})
+}

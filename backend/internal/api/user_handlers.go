@@ -78,7 +78,14 @@ func toUserResponse(u *models.User) UserResponse {
 
 // --- Gin Handlers for User Management ---
 
-// ListUsersGin handles GET /api/v2/admin/users
+// ListUsersGin lists all users.
+// @Summary List users
+// @Description Lists all users
+// @Tags Users
+// @Produce json
+// @Success 200 {array} models.User
+// @Failure 500 {object} map[string]string
+// @Router /admin/users [get]
 func (h *APIHandler) ListUsersGin(c *gin.Context) {
 	log.Printf("[ListUsersGin] Listing users")
 
@@ -188,7 +195,17 @@ func (h *APIHandler) ListUsersGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
-// CreateUserGin handles POST /api/v2/admin/users
+// CreateUserGin creates a new user.
+// @Summary Create user
+// @Description Creates a new user
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User"
+// @Success 201 {object} models.User
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /admin/users [post]
 func (h *APIHandler) CreateUserGin(c *gin.Context) {
 	log.Printf("[CreateUserGin] Creating new user")
 
@@ -315,7 +332,17 @@ func (h *APIHandler) CreateUserGin(c *gin.Context) {
 	}
 }
 
-// GetUserGin handles GET /api/v2/admin/users/:userId
+// GetUserGin gets a user by ID.
+// @Summary Get user
+// @Description Gets a user by ID
+// @Tags Users
+// @Produce json
+// @Param userId path string true "User ID"
+// @Success 200 {object} models.User
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /admin/users/{userId} [get]
 func (h *APIHandler) GetUserGin(c *gin.Context) {
 	userIDStr := c.Param("userId")
 	userID, err := uuid.Parse(userIDStr)
@@ -380,7 +407,19 @@ func (h *APIHandler) GetUserGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, toUserResponse(&user))
 }
 
-// UpdateUserGin handles PUT /api/v2/admin/users/:userId
+// UpdateUserGin updates a user.
+// @Summary Update user
+// @Description Updates a user by ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param userId path string true "User ID"
+// @Param user body models.User true "User"
+// @Success 200 {object} models.User
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /admin/users/{userId} [put]
 func (h *APIHandler) UpdateUserGin(c *gin.Context) {
 	userIDStr := c.Param("userId")
 	userID, err := uuid.Parse(userIDStr)
@@ -574,7 +613,16 @@ func (h *APIHandler) UpdateUserGin(c *gin.Context) {
 	}
 }
 
-// DeleteUserGin handles DELETE /api/v2/admin/users/:userId
+// DeleteUserGin deletes a user.
+// @Summary Delete user
+// @Description Deletes a user by ID
+// @Tags Users
+// @Param userId path string true "User ID"
+// @Success 200 {object} map[string]bool
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /admin/users/{userId} [delete]
 func (h *APIHandler) DeleteUserGin(c *gin.Context) {
 	userIDStr := c.Param("userId")
 	userID, err := uuid.Parse(userIDStr)

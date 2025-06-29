@@ -1,3 +1,14 @@
+// @title DomainFlow API
+// @version 2.0.0
+// @description DomainFlow API for domain generation, validation, and campaign management.
+// @contact.name API Support
+// @contact.url http://www.domainflow.com/support
+// @contact.email support@domainflow.com
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+// @host localhost:8080
+// @BasePath /api/v2
+
 package main
 
 import (
@@ -353,22 +364,6 @@ func main() {
 			personaGroup.PUT("/:id", apiHandler.UpdatePersonaGin)
 			personaGroup.DELETE("/:id", apiHandler.DeletePersonaGin)
 			personaGroup.POST("/:id/test", apiHandler.TestPersonaGin)
-
-			// Type-specific endpoints (backward compatibility)
-			dnsPersonaGroup := personaGroup.Group("/dns")
-			{
-				dnsPersonaGroup.POST("", apiHandler.CreateDNSPersonaGin)
-				dnsPersonaGroup.GET("", apiHandler.ListDNSPersonasGin)
-				dnsPersonaGroup.PUT("/:personaId", apiHandler.UpdateDNSPersonaGin)
-				dnsPersonaGroup.DELETE("/:personaId", apiHandler.DeleteDNSPersonaGin)
-			}
-			httpPersonaGroup := personaGroup.Group("/http")
-			{
-				httpPersonaGroup.POST("", apiHandler.CreateHTTPPersonaGin)
-				httpPersonaGroup.GET("", apiHandler.ListHTTPPersonasGin)
-				httpPersonaGroup.PUT("/:personaId", apiHandler.UpdateHTTPPersonaGin)
-				httpPersonaGroup.DELETE("/:personaId", apiHandler.DeleteHTTPPersonaGin)
-			}
 		}
 
 		// Proxy routes (session auth only)

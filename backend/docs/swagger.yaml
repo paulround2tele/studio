@@ -1,0 +1,2303 @@
+basePath: /api/v2
+definitions:
+  api.CreateKeywordSetRequest:
+    properties:
+      description:
+        type: string
+      isEnabled:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      rules:
+        items:
+          $ref: '#/definitions/api.KeywordRuleRequest'
+        type: array
+    required:
+    - name
+    type: object
+  api.KeywordRuleRequest:
+    properties:
+      category:
+        type: string
+      contextChars:
+        minimum: 0
+        type: integer
+      isCaseSensitive:
+        type: boolean
+      pattern:
+        type: string
+      ruleType:
+        allOf:
+        - $ref: '#/definitions/models.KeywordRuleTypeEnum'
+        enum:
+        - string
+        - regex
+    required:
+    - pattern
+    - ruleType
+    type: object
+  api.KeywordSetResponse:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      isEnabled:
+        type: boolean
+      name:
+        type: string
+      ruleCount:
+        type: integer
+      rules:
+        items:
+          $ref: '#/definitions/models.KeywordRule'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  api.ProxyPoolRequest:
+    properties:
+      description:
+        type: string
+      healthCheckEnabled:
+        type: boolean
+      healthCheckIntervalSeconds:
+        type: integer
+      isEnabled:
+        type: boolean
+      maxRetries:
+        type: integer
+      name:
+        type: string
+      poolStrategy:
+        type: string
+      timeoutSeconds:
+        type: integer
+    required:
+    - name
+    type: object
+  api.UpdateKeywordSetRequest:
+    properties:
+      description:
+        type: string
+      isEnabled:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      rules:
+        items:
+          $ref: '#/definitions/api.KeywordRuleRequest'
+        type: array
+    type: object
+  config.FeatureFlags:
+    properties:
+      enableAnalytics:
+        type: boolean
+      enableDebugMode:
+        type: boolean
+      enableOfflineMode:
+        type: boolean
+      enableRealTimeUpdates:
+        type: boolean
+    type: object
+  models.Campaign:
+    properties:
+      avgProcessingRate:
+        type: number
+      businessStatus:
+        type: string
+      campaignType:
+        $ref: '#/definitions/models.CampaignTypeEnum'
+      completedAt:
+        type: string
+      createdAt:
+        type: string
+      dnsValidationParams:
+        $ref: '#/definitions/models.DNSValidationCampaignParams'
+      domainGenerationParams:
+        $ref: '#/definitions/models.DomainGenerationCampaignParams'
+      errorMessage:
+        type: string
+      estimatedCompletionAt:
+        description: Additional tracking fields
+        type: string
+      failedItems:
+        type: integer
+      httpKeywordValidationParams:
+        $ref: '#/definitions/models.HTTPKeywordCampaignParams'
+      id:
+        type: string
+      lastHeartbeatAt:
+        type: string
+      metadata:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+      processedItems:
+        minimum: 0
+        type: integer
+      progressPercentage:
+        maximum: 100
+        minimum: 0
+        type: number
+      startedAt:
+        type: string
+      status:
+        $ref: '#/definitions/models.CampaignStatusEnum'
+      successfulItems:
+        type: integer
+      totalItems:
+        minimum: 0
+        type: integer
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    required:
+    - campaignType
+    - name
+    - status
+    type: object
+  models.CampaignStatusEnum:
+    enum:
+    - pending
+    - queued
+    - running
+    - pausing
+    - paused
+    - completed
+    - failed
+    - archived
+    - cancelled
+    type: string
+    x-enum-comments:
+      CampaignStatusArchived: For long-term storage, not active
+      CampaignStatusCancelled: User initiated cancellation
+      CampaignStatusFailed: Terminal failure after retries or critical error
+      CampaignStatusPausing: User or system initiated pause
+    x-enum-varnames:
+    - CampaignStatusPending
+    - CampaignStatusQueued
+    - CampaignStatusRunning
+    - CampaignStatusPausing
+    - CampaignStatusPaused
+    - CampaignStatusCompleted
+    - CampaignStatusFailed
+    - CampaignStatusArchived
+    - CampaignStatusCancelled
+  models.CampaignTypeEnum:
+    enum:
+    - domain_generation
+    - dns_validation
+    - http_keyword_validation
+    type: string
+    x-enum-varnames:
+    - CampaignTypeDomainGeneration
+    - CampaignTypeDNSValidation
+    - CampaignTypeHTTPKeywordValidation
+  models.DNSValidationCampaignParams:
+    properties:
+      batchSize:
+        type: integer
+      metadata:
+        items:
+          type: integer
+        type: array
+      personaIds:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      processingSpeedPerMinute:
+        minimum: 0
+        type: integer
+      retryAttempts:
+        minimum: 0
+        type: integer
+      rotationIntervalSeconds:
+        minimum: 0
+        type: integer
+      sourceGenerationCampaignId:
+        type: string
+    required:
+    - personaIds
+    type: object
+  models.DomainGenerationCampaignParams:
+    properties:
+      characterSet:
+        type: string
+      constantString:
+        type: string
+      createdAt:
+        type: string
+      currentOffset:
+        minimum: 0
+        type: integer
+      numDomainsToGenerate:
+        type: integer
+      patternType:
+        enum:
+        - prefix
+        - suffix
+        - both
+        type: string
+      tld:
+        type: string
+      totalPossibleCombinations:
+        type: integer
+      updatedAt:
+        type: string
+      variableLength:
+        type: integer
+    required:
+    - characterSet
+    - numDomainsToGenerate
+    - patternType
+    - tld
+    - totalPossibleCombinations
+    type: object
+  models.HTTPKeywordCampaignParams:
+    properties:
+      adHocKeywords:
+        items:
+          type: string
+        type: array
+      batchSize:
+        type: integer
+      keywordSetIds:
+        items:
+          type: string
+        type: array
+      lastProcessedDomainName:
+        type: string
+      metadata:
+        items:
+          type: integer
+        type: array
+      personaIds:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      processingSpeedPerMinute:
+        minimum: 0
+        type: integer
+      proxyIds:
+        items:
+          type: string
+        type: array
+      proxyPoolId:
+        $ref: '#/definitions/uuid.NullUUID'
+      proxySelectionStrategy:
+        type: string
+      retryAttempts:
+        minimum: 0
+        type: integer
+      rotationIntervalSeconds:
+        minimum: 0
+        type: integer
+      sourceCampaignId:
+        type: string
+      sourceType:
+        type: string
+      targetHttpPorts:
+        items:
+          type: integer
+        type: array
+    required:
+    - personaIds
+    - sourceCampaignId
+    - sourceType
+    type: object
+  models.KeywordRule:
+    properties:
+      category:
+        $ref: '#/definitions/sql.NullString'
+      contextChars:
+        minimum: 0
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: string
+      isCaseSensitive:
+        type: boolean
+      keywordSetId:
+        type: string
+      pattern:
+        type: string
+      ruleType:
+        allOf:
+        - $ref: '#/definitions/models.KeywordRuleTypeEnum'
+        enum:
+        - string
+        - regex
+      updatedAt:
+        type: string
+    required:
+    - pattern
+    - ruleType
+    type: object
+  models.KeywordRuleTypeEnum:
+    enum:
+    - string
+    - regex
+    type: string
+    x-enum-varnames:
+    - KeywordRuleTypeString
+    - KeywordRuleTypeRegex
+  models.LoginRequest:
+    properties:
+      captchaToken:
+        type: string
+      email:
+        type: string
+      password:
+        minLength: 12
+        type: string
+      rememberMe:
+        type: boolean
+    required:
+    - email
+    - password
+    type: object
+  models.Permission:
+    properties:
+      action:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      displayName:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      resource:
+        type: string
+    type: object
+  models.Persona:
+    properties:
+      configDetails:
+        description: Matches jsonb type in database
+        items:
+          type: integer
+        type: array
+      createdAt:
+        type: string
+      description:
+        $ref: '#/definitions/sql.NullString'
+      id:
+        type: string
+      isEnabled:
+        type: boolean
+      name:
+        type: string
+      personaType:
+        allOf:
+        - $ref: '#/definitions/models.PersonaTypeEnum'
+        enum:
+        - dns
+        - http
+      updatedAt:
+        type: string
+    required:
+    - configDetails
+    - name
+    - personaType
+    type: object
+  models.PersonaTypeEnum:
+    enum:
+    - dns
+    - http
+    type: string
+    x-enum-comments:
+      PersonaTypeDNS: Lowercase to match frontend
+      PersonaTypeHTTP: Lowercase to match frontend
+    x-enum-varnames:
+    - PersonaTypeDNS
+    - PersonaTypeHTTP
+  models.Proxy:
+    properties:
+      address:
+        description: Full proxy address (e.g., 'http://user:pass@host:port')
+        type: string
+      city:
+        $ref: '#/definitions/sql.NullString'
+      countryCode:
+        $ref: '#/definitions/sql.NullString'
+      createdAt:
+        type: string
+      description:
+        $ref: '#/definitions/sql.NullString'
+      host:
+        allOf:
+        - $ref: '#/definitions/sql.NullString'
+        description: Hostname or IP
+      id:
+        type: string
+      inputPassword:
+        allOf:
+        - $ref: '#/definitions/sql.NullString'
+        description: For API input, to be hashed into PasswordHash
+      inputUsername:
+        allOf:
+        - $ref: '#/definitions/sql.NullString'
+        description: Fields for input/logic, not direct DB columns if already covered
+          by Address or PasswordHash
+      isEnabled:
+        type: boolean
+      isHealthy:
+        type: boolean
+      lastCheckedAt:
+        allOf:
+        - $ref: '#/definitions/sql.NullTime'
+        description: Timestamp of last health check
+      lastStatus:
+        allOf:
+        - $ref: '#/definitions/sql.NullString'
+        description: e.g., 'Active', 'Inactive', 'Error'
+      latencyMs:
+        allOf:
+        - $ref: '#/definitions/sql.NullInt32'
+        description: Last measured latency
+      name:
+        type: string
+      port:
+        allOf:
+        - $ref: '#/definitions/sql.NullInt32'
+        description: Port number
+      protocol:
+        $ref: '#/definitions/models.ProxyProtocolEnum'
+      provider:
+        $ref: '#/definitions/sql.NullString'
+      updatedAt:
+        type: string
+      username:
+        allOf:
+        - $ref: '#/definitions/sql.NullString'
+        description: Username for proxy auth, from DB
+    required:
+    - address
+    - name
+    type: object
+  models.ProxyPool:
+    properties:
+      createdAt:
+        type: string
+      description:
+        $ref: '#/definitions/sql.NullString'
+      healthCheckEnabled:
+        type: boolean
+      healthCheckIntervalSeconds:
+        type: integer
+      id:
+        type: string
+      isEnabled:
+        type: boolean
+      maxRetries:
+        type: integer
+      name:
+        type: string
+      poolStrategy:
+        allOf:
+        - $ref: '#/definitions/sql.NullString'
+        description: round_robin, random, weighted, failover
+      proxies:
+        description: Computed fields (not stored in DB)
+        items:
+          $ref: '#/definitions/models.Proxy'
+        type: array
+      timeoutSeconds:
+        type: integer
+      updatedAt:
+        type: string
+    required:
+    - name
+    type: object
+  models.ProxyPoolMembership:
+    properties:
+      addedAt:
+        type: string
+      isActive:
+        type: boolean
+      poolId:
+        type: string
+      proxyId:
+        type: string
+      weight:
+        type: integer
+    required:
+    - poolId
+    - proxyId
+    type: object
+  models.ProxyProtocolEnum:
+    enum:
+    - http
+    - https
+    - socks5
+    - socks4
+    type: string
+    x-enum-varnames:
+    - ProxyProtocolHTTP
+    - ProxyProtocolHTTPS
+    - ProxyProtocolSOCKS5
+    - ProxyProtocolSOCKS4
+  models.Role:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      displayName:
+        type: string
+      id:
+        type: string
+      isSystemRole:
+        type: boolean
+      name:
+        type: string
+      permissions:
+        description: Computed fields
+        items:
+          $ref: '#/definitions/models.Permission'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  models.User:
+    properties:
+      avatarUrl:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      emailVerified:
+        type: boolean
+      firstName:
+        type: string
+      id:
+        type: string
+      isActive:
+        type: boolean
+      isLocked:
+        type: boolean
+      lastLoginAt:
+        type: string
+      lastLoginIp:
+        items:
+          type: integer
+        type: array
+      lastName:
+        type: string
+      mfaEnabled:
+        description: MFA support fields
+        type: boolean
+      mfaLastUsedAt:
+        type: string
+      mustChangePassword:
+        type: boolean
+      name:
+        description: Computed fields (not stored in DB)
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/models.Permission'
+        type: array
+      roles:
+        items:
+          $ref: '#/definitions/models.Role'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  sql.NullInt32:
+    properties:
+      int32:
+        type: integer
+      valid:
+        description: Valid is true if Int32 is not NULL
+        type: boolean
+    type: object
+  sql.NullString:
+    properties:
+      string:
+        type: string
+      valid:
+        description: Valid is true if String is not NULL
+        type: boolean
+    type: object
+  sql.NullTime:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  uuid.NullUUID:
+    properties:
+      uuid:
+        type: string
+      valid:
+        description: Valid is true if UUID is not NULL
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@domainflow.com
+    name: API Support
+    url: http://www.domainflow.com/support
+  description: DomainFlow API for domain generation, validation, and campaign management.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: DomainFlow API
+  version: 2.0.0
+paths:
+  /admin/users:
+    get:
+      description: Lists all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create user
+      tags:
+      - Users
+  /admin/users/{userId}:
+    delete:
+      description: Deletes a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete user
+      tags:
+      - Users
+    get:
+      description: Gets a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Updates a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user
+      tags:
+      - Users
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and creates a session
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "423":
+          description: Locked
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User login
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      description: Invalidates the current session and clears session cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User logout
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      description: Refreshes the current session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh session
+      tags:
+      - Auth
+  /campaigns:
+    get:
+      description: Lists all campaigns
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Campaign'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List campaigns
+      tags:
+      - Campaigns
+    post:
+      consumes:
+      - application/json
+      description: Creates a new campaign
+      parameters:
+      - description: Campaign
+        in: body
+        name: campaign
+        required: true
+        schema:
+          $ref: '#/definitions/models.Campaign'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Campaign'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create campaign
+      tags:
+      - Campaigns
+  /campaigns/{campaignId}:
+    delete:
+      description: Deletes a campaign by ID
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete campaign
+      tags:
+      - Campaigns
+    get:
+      description: Gets a campaign by ID
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Campaign'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get campaign
+      tags:
+      - Campaigns
+  /campaigns/{campaignId}/cancel:
+    post:
+      description: Cancels a campaign by ID
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Cancel campaign
+      tags:
+      - Campaigns
+  /campaigns/{campaignId}/pause:
+    post:
+      description: Pauses a campaign by ID
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Pause campaign
+      tags:
+      - Campaigns
+  /campaigns/{campaignId}/resume:
+    post:
+      description: Resumes a campaign by ID
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Resume campaign
+      tags:
+      - Campaigns
+  /campaigns/{campaignId}/start:
+    post:
+      description: Starts a campaign by ID
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Start campaign
+      tags:
+      - Campaigns
+  /campaigns/{campaignId}/results/dns-validation:
+    get:
+      description: Gets DNS validation results for a campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor
+        in: query
+        name: cursor
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: DNS validation results
+      tags:
+      - Campaigns
+  /campaigns/{campaignId}/results/generated-domains:
+    get:
+      description: Gets generated domains for a campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Cursor
+        in: query
+        name: cursor
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generated domains
+      tags:
+      - Campaigns
+  /campaigns/{campaignId}/results/http-keyword:
+    get:
+      description: Gets HTTP keyword results for a campaign
+      parameters:
+      - description: Campaign ID
+        in: path
+        name: campaignId
+        required: true
+        type: string
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor
+        in: query
+        name: cursor
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: HTTP keyword results
+      tags:
+      - Campaigns
+  /change-password:
+    post:
+      consumes:
+      - application/json
+      description: Changes the password for the currently authenticated user
+      parameters:
+      - description: Password change
+        in: body
+        name: password
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Change password
+      tags:
+      - Auth
+  /config/features:
+    get:
+      description: Returns current feature flag settings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/config.FeatureFlags'
+      summary: Get feature flags
+      tags:
+      - Config
+    post:
+      consumes:
+      - application/json
+      description: Updates feature flag settings
+      parameters:
+      - description: Feature flags
+        in: body
+        name: flags
+        required: true
+        schema:
+          $ref: '#/definitions/config.FeatureFlags'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/config.FeatureFlags'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update feature flags
+      tags:
+      - Config
+  /keywords/sets:
+    get:
+      description: Lists all keyword sets
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Is enabled
+        in: query
+        name: isEnabled
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.KeywordSetResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List keyword sets
+      tags:
+      - KeywordSets
+    post:
+      consumes:
+      - application/json
+      description: Creates a new keyword set
+      parameters:
+      - description: Keyword set
+        in: body
+        name: set
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateKeywordSetRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.KeywordSetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create keyword set
+      tags:
+      - KeywordSets
+  /keywords/sets/{setId}:
+    delete:
+      description: Deletes a keyword set by ID
+      parameters:
+      - description: Set ID
+        in: path
+        name: setId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete keyword set
+      tags:
+      - KeywordSets
+    get:
+      description: Gets a keyword set by ID
+      parameters:
+      - description: Set ID
+        in: path
+        name: setId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.KeywordSetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get keyword set
+      tags:
+      - KeywordSets
+    put:
+      consumes:
+      - application/json
+      description: Updates a keyword set by ID
+      parameters:
+      - description: Set ID
+        in: path
+        name: setId
+        required: true
+        type: string
+      - description: Keyword set
+        in: body
+        name: set
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateKeywordSetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.KeywordSetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update keyword set
+      tags:
+      - KeywordSets
+  /me:
+    get:
+      description: Returns information about the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get current user
+      tags:
+      - Auth
+  /personas:
+    get:
+      description: Lists all personas
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Persona'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all personas
+      tags:
+      - Personas
+    post:
+      consumes:
+      - application/json
+      description: Creates a new persona
+      parameters:
+      - description: Persona
+        in: body
+        name: persona
+        required: true
+        schema:
+          $ref: '#/definitions/models.Persona'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Persona'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create persona
+      tags:
+      - Personas
+  /personas/{id}:
+    delete:
+      description: Deletes a persona by ID
+      parameters:
+      - description: Persona ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete persona
+      tags:
+      - Personas
+    get:
+      description: Gets a persona by ID
+      parameters:
+      - description: Persona ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Persona'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get persona
+      tags:
+      - Personas
+    put:
+      consumes:
+      - application/json
+      description: Updates a persona by ID
+      parameters:
+      - description: Persona ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Persona
+        in: body
+        name: persona
+        required: true
+        schema:
+          $ref: '#/definitions/models.Persona'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Persona'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update persona
+      tags:
+      - Personas
+  /personas/{id}/test:
+    post:
+      description: Tests a persona by ID
+      parameters:
+      - description: Persona ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Test persona
+      tags:
+      - Personas
+  /proxies:
+    get:
+      description: Lists all proxies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Proxy'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List proxies
+      tags:
+      - Proxies
+    post:
+      consumes:
+      - application/json
+      description: Adds a new proxy
+      parameters:
+      - description: Proxy
+        in: body
+        name: proxy
+        required: true
+        schema:
+          $ref: '#/definitions/models.Proxy'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Proxy'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add proxy
+      tags:
+      - Proxies
+  /proxies/{proxyId}:
+    delete:
+      description: Deletes a proxy by ID
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxyId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete proxy
+      tags:
+      - Proxies
+    put:
+      consumes:
+      - application/json
+      description: Updates a proxy by ID
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxyId
+        required: true
+        type: string
+      - description: Proxy
+        in: body
+        name: proxy
+        required: true
+        schema:
+          $ref: '#/definitions/models.Proxy'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Proxy'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update proxy
+      tags:
+      - Proxies
+  /proxies/{proxyId}/health-check:
+    post:
+      description: Forces a health check on a single proxy
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxyId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Force single proxy health check
+      tags:
+      - Proxies
+  /proxies/{proxyId}/test:
+    post:
+      description: Tests a proxy by ID
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxyId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Test proxy
+      tags:
+      - Proxies
+  /proxies/health-check:
+    post:
+      description: Forces a health check on all proxies
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Force all proxies health check
+      tags:
+      - Proxies
+  /proxies/status:
+    get:
+      description: Gets the status of all proxies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get proxy statuses
+      tags:
+      - Proxies
+  /proxy-pools:
+    get:
+      description: Returns all proxy pools
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ProxyPool'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List proxy pools
+      tags:
+      - ProxyPools
+    post:
+      consumes:
+      - application/json
+      description: Creates a new proxy pool
+      parameters:
+      - description: Proxy pool
+        in: body
+        name: pool
+        required: true
+        schema:
+          $ref: '#/definitions/api.ProxyPoolRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ProxyPool'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create proxy pool
+      tags:
+      - ProxyPools
+  /proxy-pools/{poolId}:
+    delete:
+      description: Deletes a proxy pool by ID
+      parameters:
+      - description: Pool ID
+        in: path
+        name: poolId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete proxy pool
+      tags:
+      - ProxyPools
+    put:
+      consumes:
+      - application/json
+      description: Updates a proxy pool by ID
+      parameters:
+      - description: Pool ID
+        in: path
+        name: poolId
+        required: true
+        type: string
+      - description: Proxy pool
+        in: body
+        name: pool
+        required: true
+        schema:
+          $ref: '#/definitions/api.ProxyPoolRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProxyPool'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update proxy pool
+      tags:
+      - ProxyPools
+  /proxy-pools/{poolId}/proxies:
+    post:
+      consumes:
+      - application/json
+      description: Assigns a proxy to a pool
+      parameters:
+      - description: Pool ID
+        in: path
+        name: poolId
+        required: true
+        type: string
+      - description: Proxy
+        in: body
+        name: proxy
+        required: true
+        schema:
+          $ref: '#/definitions/models.Proxy'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProxyPoolMembership'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add proxy to pool
+      tags:
+      - ProxyPools
+  /proxy-pools/{poolId}/proxies/{proxyId}:
+    delete:
+      description: Removes a proxy from a pool
+      parameters:
+      - description: Pool ID
+        in: path
+        name: poolId
+        required: true
+        type: string
+      - description: Proxy ID
+        in: path
+        name: proxyId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Remove proxy from pool
+      tags:
+      - ProxyPools
+swagger: "2.0"
