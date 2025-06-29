@@ -1241,14 +1241,40 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 
 	// Check for actual OpenAPI files in the backend
 	backendDocsPath := filepath.Join(b.BackendPath, "docs")
-	// Detect openapi.yaml
+
+	// Add debugging
+	schema.ValidationRules["debug_backend_path"] = b.BackendPath
+	schema.ValidationRules["debug_docs_path"] = backendDocsPath
+
+	// Try to find YAML spec files (openapi.yaml or swagger.yaml)
+	var yamlFile string
+	var yamlData []byte
+
+	// Check for openapi.yaml first
 	openapiYaml := filepath.Join(backendDocsPath, "openapi.yaml")
 	if data, err := os.ReadFile(openapiYaml); err == nil {
-		schema.SchemaFiles = append(schema.SchemaFiles, "docs/openapi.yaml")
+		yamlFile = "docs/openapi.yaml"
+		yamlData = data
+		schema.ValidationRules["debug_found_openapi_yaml"] = true
+	} else {
+		schema.ValidationRules["debug_openapi_yaml_error"] = err.Error()
+		// Check for swagger.yaml
+		swaggerYaml := filepath.Join(backendDocsPath, "swagger.yaml")
+		if data, err := os.ReadFile(swaggerYaml); err == nil {
+			yamlFile = "docs/swagger.yaml"
+			yamlData = data
+			schema.ValidationRules["debug_found_swagger_yaml"] = true
+		} else {
+			schema.ValidationRules["debug_swagger_yaml_error"] = err.Error()
+		}
+	}
+
+	if yamlData != nil {
+		schema.SchemaFiles = append(schema.SchemaFiles, yamlFile)
 
 		// Use a generic map to handle complex YAML structure
 		var spec map[string]interface{}
-		if err := yaml.Unmarshal(data, &spec); err == nil {
+		if err := yaml.Unmarshal(yamlData, &spec); err == nil {
 			schema.ValidationRules["yaml_parse_success"] = true
 
 			// Extract OpenAPI version
@@ -1344,7 +1370,7 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 			schema.ValidationRules["yaml_error"] = err.Error()
 
 			// Fallback to basic string parsing
-			contentStr := string(data)
+			contentStr := string(yamlData)
 			if strings.Contains(contentStr, "openapi:") {
 				parts := strings.SplitN(contentStr, "openapi:", 2)
 				if len(parts) > 1 {
@@ -1373,10 +1399,26 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 		}
 	}
 
-	// Detect openapi.json
+	// Try to find JSON spec files (openapi.json or swagger.json)
+	var jsonFile string
+	var jsonData []byte
+
+	// Check for openapi.json first
 	openapiJSON := filepath.Join(backendDocsPath, "openapi.json")
 	if data, err := os.ReadFile(openapiJSON); err == nil {
-		schema.SchemaFiles = append(schema.SchemaFiles, "docs/openapi.json")
+		jsonFile = "docs/openapi.json"
+		jsonData = data
+	} else {
+		// Check for swagger.json
+		swaggerJSON := filepath.Join(backendDocsPath, "swagger.json")
+		if data, err := os.ReadFile(swaggerJSON); err == nil {
+			jsonFile = "docs/swagger.json"
+			jsonData = data
+		}
+	}
+
+	if jsonData != nil {
+		schema.SchemaFiles = append(schema.SchemaFiles, jsonFile)
 
 		var spec struct {
 			OpenAPI string `json:"openapi"`
@@ -1404,7 +1446,7 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 			} `json:"paths"`
 		}
 
-		if err := json.Unmarshal(data, &spec); err == nil {
+		if err := json.Unmarshal(jsonData, &spec); err == nil {
 			if spec.OpenAPI != "" && schema.OpenAPIVersion == "" {
 				schema.OpenAPIVersion = spec.OpenAPI
 			}
@@ -1453,7 +1495,7 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 		} else if schema.OpenAPIVersion == "" {
 			// Fallback for basic JSON structure
 			var js map[string]interface{}
-			if json.Unmarshal(data, &js) == nil {
+			if json.Unmarshal(jsonData, &js) == nil {
 				if v, ok := js["openapi"].(string); ok {
 					schema.OpenAPIVersion = v
 				}

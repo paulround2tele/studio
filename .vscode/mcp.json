@@ -1,7 +1,7 @@
 {
   "servers": {
     "studio-fullstack-analyzer": {
-      "command": "/home/vboxuser/studio/bin/mcp-server",
+      "command": "/home/vboxuser/studio/mcp/bin/mcp-server",
       "args": [
         "-allow-terminal",
         "-allow-mutation"
