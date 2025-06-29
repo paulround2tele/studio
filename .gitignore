@@ -14,9 +14,10 @@
 /build
 
 # Local Environment Variables
-.env
+# Allow .env for shared development configuration
 .env*.local
 !.env.example
+!.env
 
 # IDE / Editor specific
 .vscode/*

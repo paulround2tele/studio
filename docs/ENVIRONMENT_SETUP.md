@@ -1,37 +1,55 @@
 # Environment Configuration Guide
 
 ## Overview
-This project uses environment-based configuration to support multiple development environments without hardcoded URLs.
+This project uses environment-based configuration to support multiple development environments. The `.env` file is shared across all development machines for consistency, while `.env.local` provides machine-specific overrides.
 
 ## Environment Files (in order of precedence)
 
-1. **`.env.local`** - Active development overrides (not committed to git)
-   - Contains: `NEXT_PUBLIC_API_URL=http://localhost:8080`
-   - Used for: Local development
+1. **`.env.local`** - Machine-specific overrides (not committed to git)
+   - Contains: Custom settings for your specific machine
+   - Used for: Overriding shared development settings
+   - Example: Different ports, custom hostnames, etc.
 
-2. **`.env.production.local`** - Production configuration (not committed to git)
+2. **`.env`** - Shared development configuration (committed to git)
+   - Contains: `NEXT_PUBLIC_API_URL=http://localhost:8080`
+   - Used for: Consistent defaults across all development machines
+   - Shared across the team for consistent development experience
+
+3. **`.env.production.local`** - Production configuration (not committed to git)
    - Contains: `NEXT_PUBLIC_API_URL=https://api.domainflow.local`
    - Used for: Production deployments
 
-3. **`.env.example`** - Template with all available options
-   - Copy to `.env.local` and customize for your environment
-
-4. **`.env.local.example`** - Minimal development template
-   - Quick start template for new developers
+4. **`.env.example`** - Template with all available options
+   - Full reference of all available environment variables
 
 ## Quick Setup
 
 For new development environments:
 
 ```bash
-# Copy the local template
+# 1. Clone the repository (includes shared .env)
+git clone <repository>
+cd domainflow
+
+# 2. Install dependencies
+npm install
+
+# 3. (Optional) Create machine-specific overrides
 cp .env.local.example .env.local
+# Edit .env.local if you need custom settings
 
-# Or copy the full template and customize
-cp .env.example .env.local
+# 4. Start development
+npm run dev
+```
 
-# Edit the URLs for your environment
-# Default: NEXT_PUBLIC_API_URL=http://localhost:8080
+## Machine-Specific Overrides
+
+If you need different settings for your specific machine, create `.env.local`:
+
+```bash
+# .env.local (not committed to git)
+NEXT_PUBLIC_API_URL=http://your-custom-host:9000
+NEXT_PUBLIC_WS_URL=ws://your-custom-host:9000/api/v2/ws
 ```
 
 ## Environment Variables
