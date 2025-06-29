@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "studio-fullstack-analyzer": {
+      "command": "/home/vboxuser/studio/bin/mcp-server",
+      "args": [
+        "-allow-terminal",
+        "-allow-mutation"
+      ],
+      "cwd": "/home/vboxuser/studio",
+      "env": {
+        "STUDIO_BACKEND_PATH": "/home/vboxuser/studio/backend"
+      }
+    }
+  }
+}
