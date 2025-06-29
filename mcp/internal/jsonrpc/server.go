@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -44,88 +42,62 @@ func NewJSONRPCServer(bridge *server.Bridge, reader io.Reader, writer io.Writer)
 		handlers: make(map[string]Handler),
 	}
 
-	// Register standard LSP methods
-	srv.registerLSPHandlers()
-	// Register MCP-specific methods
+	// Register MCP-specific methods only (not LSP)
 	srv.registerMCPHandlers()
 
 	return srv
 }
 
-// Run starts the JSON-RPC server
+// Run starts the JSON-RPC server and handles incoming messages
 func (s *JSONRPCServer) Run() error {
-	log.SetOutput(os.Stderr) // Log to stderr so it doesn't interfere with stdout JSON-RPC messages
-	log.Println("MCP JSON-RPC 2.0 server starting...")
+	log.Printf("Starting JSON-RPC server...")
 
-	for !s.shutdown {
+	// Enhanced debug logging to confirm stdin reading and message processing
+	log.Printf("DEBUG: Entering message loop, waiting for input...")
+
+	for {
 		select {
 		case <-s.ctx.Done():
-			return s.ctx.Err()
+			log.Printf("Server context cancelled, shutting down...")
+			return nil
 		default:
-			if err := s.handleMessage(); err != nil {
+			// Read and process messages
+			message, err := s.readMessage()
+			if err != nil {
 				if err == io.EOF {
-					log.Println("Client disconnected")
+					log.Printf("Client disconnected")
 					return nil
 				}
-				log.Printf("Error handling message: %v", err)
+				log.Printf("Error reading message: %v", err)
 				continue
 			}
+
+			log.Printf("DEBUG: Received message: %s", string(message))
+
+			// Process the message
+			s.processJSONMessage(message)
 		}
 	}
-	return nil
 }
 
-// handleMessage processes a single JSON-RPC message
-func (s *JSONRPCServer) handleMessage() error {
-	// Try to read a line first to see if it's a Content-Length header (LSP style)
-	// or direct JSON (MCP style)
+// readMessage reads a JSON-RPC 2.0 message from stdin
+func (s *JSONRPCServer) readMessage() ([]byte, error) {
+	// Read a single line (JSON-RPC 2.0 message)
 	line, err := s.reader.ReadString('\n')
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// Check if it's LSP-style with Content-Length header
-	if strings.HasPrefix(line, "Content-Length:") {
-		return s.handleLSPMessage(line)
+	// Log the raw line read from stdin
+	log.Printf("DEBUG: Raw input line: %s", line)
+
+	line = strings.TrimSpace(line)
+	if line == "" {
+		// Empty line, try again
+		return s.readMessage()
 	}
 
-	// Otherwise, it's direct JSON (MCP style)
-	return s.handleMCPMessage(line)
-}
-
-// handleLSPMessage handles LSP-style messages with Content-Length headers
-func (s *JSONRPCServer) handleLSPMessage(firstLine string) error {
-	lengthStr := strings.TrimSpace(strings.TrimPrefix(firstLine, "Content-Length:"))
-	contentLength, err := strconv.Atoi(lengthStr)
-	if err != nil {
-		return fmt.Errorf("invalid Content-Length: %v", err)
-	}
-
-	// Read empty line after headers
-	_, err = s.reader.ReadString('\n')
-	if err != nil {
-		return err
-	}
-
-	// Read message body
-	body := make([]byte, contentLength)
-	_, err = io.ReadFull(s.reader, body)
-	if err != nil {
-		return err
-	}
-
-	return s.processJSONMessage(body)
-}
-
-// handleMCPMessage handles direct JSON messages (MCP style)
-func (s *JSONRPCServer) handleMCPMessage(jsonLine string) error {
-	// The line already contains the JSON message
-	jsonLine = strings.TrimSpace(jsonLine)
-	if jsonLine == "" {
-		return nil // Empty line, ignore
-	}
-
-	return s.processJSONMessage([]byte(jsonLine))
+	return []byte(line), nil
 }
 
 // processJSONMessage processes the actual JSON message
@@ -137,6 +109,9 @@ func (s *JSONRPCServer) processJSONMessage(body []byte) error {
 	}
 
 	log.Printf("Received method: %s", msg.Method)
+
+	// Log the parsed JSON message
+	log.Printf("DEBUG: Parsed JSON message: %+v", msg)
 
 	// Handle the message
 	if handler, exists := s.handlers[msg.Method]; exists {

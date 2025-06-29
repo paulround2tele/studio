@@ -547,40 +547,40 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 
 		// Frontend Tools
 		{
-			Name:        "get_nextjs_app_routes",
-			Description: "List Next.js frontend app router routes",
+			Name:        "frontend_nextjs_app_routes",
+			Description: "[Frontend] List Next.js app router routes",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
 			},
 		},
 		{
-			Name:        "get_react_component_tree",
-			Description: "Get React component import tree and dependencies",
+			Name:        "frontend_react_component_tree",
+			Description: "[Frontend] Get React component import tree and dependencies",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
 			},
 		},
 		{
-			Name:        "get_react_component_props",
-			Description: "Extract props and event handlers for React components",
+			Name:        "frontend_react_component_props",
+			Description: "[Frontend] Extract props and event handlers for React components",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
 			},
 		},
 		{
-			Name:        "get_frontend_test_coverage",
-			Description: "Run frontend tests and return coverage",
+			Name:        "frontend_test_coverage",
+			Description: "[Frontend] Run frontend tests and return coverage",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
 			},
 		},
 		{
-			Name:        "get_react_component_tests",
-			Description: "Map React components to their test files",
+			Name:        "frontend_react_component_tests",
+			Description: "[Frontend] Map React components to their test files",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
@@ -723,15 +723,15 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetLintDiagnostics()
 
 	// Frontend Tools
-	case "get_nextjs_app_routes":
+	case "frontend_nextjs_app_routes":
 		return s.callGetFrontendRoutes()
-	case "get_react_component_tree":
+	case "frontend_react_component_tree":
 		return s.callGetComponentTree()
-	case "get_react_component_props":
+	case "frontend_react_component_props":
 		return s.callGetComponentPropsAndEvents()
-	case "get_frontend_test_coverage":
+	case "frontend_test_coverage":
 		return s.callGetFrontendTestCoverage()
-	case "get_react_component_tests":
+	case "frontend_react_component_tests":
 		return s.callGetComponentToTestMap()
 
 	default:

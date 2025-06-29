@@ -14,15 +14,21 @@ import (
 )
 
 func main() {
+	// Send all logs to stderr to avoid mixing with JSON-RPC protocol on stdout
+	log.SetOutput(os.Stderr)
+	log.Printf("MCP Server starting...")
+
 	// Initialize configuration from environment
 	config.Flags.AllowTerminal = true
 	config.Flags.AllowMutation = true
+	log.Printf("Configuration initialized")
 
 	// Get current working directory
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %v", err)
 	}
+	log.Printf("Current working directory: %s", cwd)
 
 	// Find project root and auto-detect database configuration
 	// The MCP server should look for the studio project root
@@ -47,23 +53,34 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
+	log.Printf("Database connection created")
 
 	// Test database connection
 	if err := db.Ping(); err != nil {
+		log.Printf("Database ping failed: %v", err)
+		log.Printf("Database URL: %s", maskPassword(dbURL))
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
+	log.Printf("Database connection successful")
+
 	// Create just the Bridge with the correct backend path
 	backendPath := filepath.Join(projectRoot, "backend")
+	log.Printf("Creating bridge with backend path: %s", backendPath)
 	bridge := server.NewBridge(db, backendPath)
+	log.Printf("Bridge created successfully")
 
 	// Create JSON-RPC server
+	log.Printf("Creating JSON-RPC server")
 	jsonrpcServer := jsonrpc.NewJSONRPCServer(bridge, os.Stdin, os.Stdout)
+	log.Printf("JSON-RPC server created")
 
 	// Start the JSON-RPC server
+	log.Printf("Starting JSON-RPC server...")
 	if err := jsonrpcServer.Run(); err != nil {
 		log.Fatalf("JSON-RPC server error: %v", err)
 	}
+	log.Printf("JSON-RPC server finished")
 }
 
 // maskPassword masks the password in a database URL for logging

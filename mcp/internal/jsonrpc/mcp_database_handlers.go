@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Database tool handlers
@@ -55,14 +56,53 @@ func (s *JSONRPCServer) callGetAPISchema() (interface{}, error) {
 		}, nil
 	}
 
+	// Format detailed analysis text
+	var analysisText strings.Builder
+	analysisText.WriteString(fmt.Sprintf("API Schema Analysis:\n"))
+	analysisText.WriteString(fmt.Sprintf("{OpenAPIVersion:%s ", schema.OpenAPIVersion))
+	analysisText.WriteString(fmt.Sprintf("Endpoints:%v ", schema.Endpoints))
+	analysisText.WriteString(fmt.Sprintf("Methods:%v ", schema.Methods))
+	analysisText.WriteString(fmt.Sprintf("SchemaFiles:%v ", schema.SchemaFiles))
+
+	// Debug: Check if ValidationRules map exists and has content
+	analysisText.WriteString(fmt.Sprintf("ValidationRulesCount:%d ", len(schema.ValidationRules)))
+	if len(schema.ValidationRules) > 0 {
+		analysisText.WriteString("ValidationRulesKeys:[")
+		for key := range schema.ValidationRules {
+			analysisText.WriteString(fmt.Sprintf("%s,", key))
+		}
+		analysisText.WriteString("] ")
+	}
+
+	// Add detailed information from ValidationRules
+	if title, ok := schema.ValidationRules["title"]; ok {
+		analysisText.WriteString(fmt.Sprintf("Title:%s ", title))
+	}
+	if version, ok := schema.ValidationRules["version"]; ok {
+		analysisText.WriteString(fmt.Sprintf("Version:%s ", version))
+	}
+	if totalPaths, ok := schema.ValidationRules["total_paths"]; ok {
+		analysisText.WriteString(fmt.Sprintf("TotalPaths:%v ", totalPaths))
+	}
+	if schemaCount, ok := schema.ValidationRules["schema_count"]; ok {
+		analysisText.WriteString(fmt.Sprintf("ComponentSchemas:%v ", schemaCount))
+	}
+	if serverCount, ok := schema.ValidationRules["server_count"]; ok {
+		analysisText.WriteString(fmt.Sprintf("Servers:%v ", serverCount))
+	}
+	if parseMethod, ok := schema.ValidationRules["parsing_method"]; ok {
+		analysisText.WriteString(fmt.Sprintf("ParsingMethod:%s ", parseMethod))
+	}
+
+	analysisText.WriteString(fmt.Sprintf("ValidationRules:%v}", schema.ValidationRules))
+
 	return map[string]interface{}{
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("API schema retrieved successfully. Found %d endpoints.", len(schema.Endpoints)),
+				"text": analysisText.String(),
 			},
 		},
-		"schema": schema,
 	}, nil
 }
 

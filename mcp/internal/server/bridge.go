@@ -1233,32 +1233,117 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 		ValidationRules: make(map[string]interface{}),
 	}
 
+	// Add initial debug marker
+	schema.ValidationRules["initialization"] = "started"
+
 	methodsMap := make(map[string]bool)
 	endpointsMap := make(map[string]bool)
 
 	// Check for actual OpenAPI files in the backend
 	backendDocsPath := filepath.Join(b.BackendPath, "docs")
-
 	// Detect openapi.yaml
 	openapiYaml := filepath.Join(backendDocsPath, "openapi.yaml")
 	if data, err := os.ReadFile(openapiYaml); err == nil {
 		schema.SchemaFiles = append(schema.SchemaFiles, "docs/openapi.yaml")
 
-		var spec struct {
-			OpenAPI string                            `yaml:"openapi"`
-			Paths   map[string]map[string]interface{} `yaml:"paths"`
-		}
+		// Use a generic map to handle complex YAML structure
+		var spec map[string]interface{}
 		if err := yaml.Unmarshal(data, &spec); err == nil {
-			if spec.OpenAPI != "" {
-				schema.OpenAPIVersion = spec.OpenAPI
+			schema.ValidationRules["yaml_parse_success"] = true
+
+			// Extract OpenAPI version
+			if openapi, ok := spec["openapi"].(string); ok {
+				schema.OpenAPIVersion = openapi
+				schema.ValidationRules["openapi_version_found"] = true
 			}
-			for p, m := range spec.Paths {
-				endpointsMap[p] = true
-				for method := range m {
-					methodsMap[strings.ToUpper(method)] = true
+
+			// Extract info section
+			if info, ok := spec["info"].(map[string]interface{}); ok {
+				schema.ValidationRules["info_section_found"] = true
+				if title, ok := info["title"].(string); ok {
+					schema.ValidationRules["title"] = title
+				}
+				if version, ok := info["version"].(string); ok {
+					schema.ValidationRules["version"] = version
+				}
+				if description, ok := info["description"].(string); ok {
+					schema.ValidationRules["description"] = description
 				}
 			}
+
+			// Extract servers
+			if servers, ok := spec["servers"].([]interface{}); ok {
+				schema.ValidationRules["server_count"] = len(servers)
+			}
+
+			// Extract components
+			if components, ok := spec["components"].(map[string]interface{}); ok {
+				schema.ValidationRules["components_found"] = true
+				if schemas, ok := components["schemas"].(map[string]interface{}); ok {
+					schema.ValidationRules["schema_count"] = len(schemas)
+				}
+				if securitySchemes, ok := components["securitySchemes"].(map[string]interface{}); ok {
+					schema.ValidationRules["security_schemes_count"] = len(securitySchemes)
+				}
+			}
+
+			// Extract paths
+			if paths, ok := spec["paths"].(map[string]interface{}); ok {
+				schema.ValidationRules["paths_section_found"] = true
+				schema.ValidationRules["total_paths"] = len(paths)
+
+				for pathStr, pathValue := range paths {
+					endpointsMap[pathStr] = true
+
+					if methods, ok := pathValue.(map[string]interface{}); ok {
+						for methodStr, methodValue := range methods {
+							methodsMap[strings.ToUpper(methodStr)] = true
+
+							// Extract operation details
+							if operation, ok := methodValue.(map[string]interface{}); ok {
+								key := fmt.Sprintf("%s_%s", strings.ToUpper(methodStr), strings.ReplaceAll(pathStr, "/", "_"))
+								opInfo := map[string]interface{}{
+									"path":   pathStr,
+									"method": strings.ToUpper(methodStr),
+								}
+
+								if summary, ok := operation["summary"].(string); ok {
+									opInfo["summary"] = summary
+								}
+								if description, ok := operation["description"].(string); ok {
+									opInfo["description"] = description
+								}
+								if tags, ok := operation["tags"].([]interface{}); ok {
+									opInfo["tags"] = tags
+								}
+								if parameters, ok := operation["parameters"].([]interface{}); ok {
+									opInfo["parameter_count"] = len(parameters)
+								}
+								if _, ok := operation["requestBody"]; ok {
+									opInfo["has_request_body"] = true
+								}
+								if responses, ok := operation["responses"].(map[string]interface{}); ok {
+									opInfo["response_count"] = len(responses)
+								}
+
+								if len(opInfo) > 2 { // More than just path and method
+									schema.ValidationRules[key] = opInfo
+								}
+							}
+						}
+					}
+				}
+			}
+
+			schema.ValidationRules["parsing_method"] = "full_yaml_parse"
+			schema.ValidationRules["debug_paths_found"] = len(endpointsMap)
+			schema.ValidationRules["debug_methods_found"] = len(methodsMap)
 		} else {
+			// YAML parsing failed - store the error and use fallback
+			schema.ValidationRules["yaml_parse_failed"] = true
+			schema.ValidationRules["yaml_error"] = err.Error()
+
+			// Fallback to basic string parsing
 			contentStr := string(data)
 			if strings.Contains(contentStr, "openapi:") {
 				parts := strings.SplitN(contentStr, "openapi:", 2)
@@ -1267,6 +1352,24 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 					schema.OpenAPIVersion = strings.TrimSpace(ver)
 				}
 			}
+
+			// Try to extract paths manually with regex
+			pathPattern := regexp.MustCompile(`^\s{2}(/[^:]*):`)
+			methodPattern := regexp.MustCompile(`^\s{4}(get|post|put|patch|delete|head|options):`)
+
+			lines := strings.Split(contentStr, "\n")
+			pathCount := 0
+			for _, line := range lines {
+				if matches := pathPattern.FindStringSubmatch(line); len(matches) > 1 {
+					endpointsMap[matches[1]] = true
+					pathCount++
+				}
+				if matches := methodPattern.FindStringSubmatch(line); len(matches) > 1 {
+					methodsMap[strings.ToUpper(matches[1])] = true
+				}
+			}
+			schema.ValidationRules["parsing_method"] = "regex_fallback"
+			schema.ValidationRules["regex_paths_found"] = pathCount
 		}
 	}
 
@@ -1274,27 +1377,88 @@ func (b *Bridge) GetAPISchema() (models.APISchema, error) {
 	openapiJSON := filepath.Join(backendDocsPath, "openapi.json")
 	if data, err := os.ReadFile(openapiJSON); err == nil {
 		schema.SchemaFiles = append(schema.SchemaFiles, "docs/openapi.json")
+
 		var spec struct {
-			OpenAPI string                            `json:"openapi"`
-			Paths   map[string]map[string]interface{} `json:"paths"`
+			OpenAPI string `json:"openapi"`
+			Info    struct {
+				Title       string `json:"title"`
+				Version     string `json:"version"`
+				Description string `json:"description"`
+			} `json:"info"`
+			Servers []struct {
+				URL         string `json:"url"`
+				Description string `json:"description"`
+			} `json:"servers"`
+			Components struct {
+				SecuritySchemes map[string]interface{} `json:"securitySchemes"`
+				Schemas         map[string]interface{} `json:"schemas"`
+			} `json:"components"`
+			Paths map[string]map[string]struct {
+				Tags        []string               `json:"tags"`
+				Summary     string                 `json:"summary"`
+				Description string                 `json:"description"`
+				Parameters  []interface{}          `json:"parameters"`
+				RequestBody interface{}            `json:"requestBody"`
+				Responses   map[string]interface{} `json:"responses"`
+				Security    []interface{}          `json:"security"`
+			} `json:"paths"`
 		}
+
 		if err := json.Unmarshal(data, &spec); err == nil {
 			if spec.OpenAPI != "" && schema.OpenAPIVersion == "" {
 				schema.OpenAPIVersion = spec.OpenAPI
 			}
-			for p, m := range spec.Paths {
-				endpointsMap[p] = true
-				for method := range m {
+
+			// Store detailed info in ValidationRules if not already set from YAML
+			if spec.Info.Title != "" && schema.ValidationRules["title"] == nil {
+				schema.ValidationRules["title"] = spec.Info.Title
+			}
+			if spec.Info.Version != "" && schema.ValidationRules["version"] == nil {
+				schema.ValidationRules["version"] = spec.Info.Version
+			}
+			if spec.Info.Description != "" && schema.ValidationRules["description"] == nil {
+				schema.ValidationRules["description"] = spec.Info.Description
+			}
+
+			// Parse paths and extract endpoint information
+			for path, methods := range spec.Paths {
+				endpointsMap[path] = true
+				for method, operation := range methods {
 					methodsMap[strings.ToUpper(method)] = true
+
+					// Store operation details if not already captured from YAML
+					key := fmt.Sprintf("%s_%s", strings.ToUpper(method), strings.ReplaceAll(path, "/", "_"))
+					if schema.ValidationRules[key] == nil && (operation.Summary != "" || operation.Description != "") {
+						opInfo := map[string]interface{}{
+							"path":   path,
+							"method": strings.ToUpper(method),
+						}
+						if operation.Summary != "" {
+							opInfo["summary"] = operation.Summary
+						}
+						if operation.Description != "" {
+							opInfo["description"] = operation.Description
+						}
+						if len(operation.Tags) > 0 {
+							opInfo["tags"] = operation.Tags
+						}
+						schema.ValidationRules[key] = opInfo
+					}
 				}
 			}
+
+			if schema.ValidationRules["parsing_method"] == nil {
+				schema.ValidationRules["parsing_method"] = "full_json_parse"
+			}
 		} else if schema.OpenAPIVersion == "" {
+			// Fallback for basic JSON structure
 			var js map[string]interface{}
 			if json.Unmarshal(data, &js) == nil {
 				if v, ok := js["openapi"].(string); ok {
 					schema.OpenAPIVersion = v
 				}
 			}
+			schema.ValidationRules["json_parse_error"] = err.Error()
 		}
 	}
 
