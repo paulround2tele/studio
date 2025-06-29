@@ -17,17 +17,24 @@ ALTER USER domainflow CREATEDB;
 EOF
 ```
 
-### 2. Apply Schema
+### 2. Apply Schema with Default Users
 
 ```bash
 # From the backend directory
+# This will create the schema AND insert default users ready for testing
 psql "postgres://domainflow:your_password@localhost:5432/domainflow_production?sslmode=disable" < database/schema.sql
 ```
 
-### 3. Optional: Load Seed Data
+**Default Users Included:**
+- **Admin**: `admin@domainflow.com` / `AdminPassword123!` - Full admin access
+- **Developer**: `dev@domainflow.com` / `DevPassword123!` - Development user  
+- **Test**: `test@example.com` / `password` - Testing purposes
+
+### 3. ~~Optional: Load Seed Data~~ (No longer needed)
 
 ```bash
-# Load basic development data (optional)
+# ✅ Default users are now included in schema.sql
+# No separate seed file execution required!
 psql "postgres://domainflow:your_password@localhost:5432/domainflow_production?sslmode=disable" < database/seed_data.sql
 ```
 
