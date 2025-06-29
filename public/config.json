@@ -1,3 +1,5 @@
 {
-  "apiBaseUrl": "http://localhost:8080"
+  "apiBaseUrl": "${NEXT_PUBLIC_API_URL:-http://localhost:8080}",
+  "wsUrl": "${NEXT_PUBLIC_WS_URL:-ws://localhost:8080/api/v2/ws}",
+  "environment": "${NODE_ENV:-development}"
 }

@@ -26,46 +26,46 @@ const navigationItems = [
     title: "Campaigns",
     url: "/campaigns",
     icon: Target,
-    permission: "campaigns:read"
+    permission: null
   },
   {
     title: "Personas",
     url: "/personas",
     icon: Users,
-    permission: "personas:read"
+    permission: null
   },
   {
     title: "Proxies",
     url: "/proxies",
     icon: Zap,
-    permission: "proxies:read"
+    permission: null
   },
   {
     title: "Keywords",
     url: "/keywords",
     icon: Database,
-    permission: "campaigns:read"
+    permission: null
   },
   {
     title: "Admin",
     url: "/admin",
     icon: Shield,
-    permission: "admin:all"
+    permission: null
   },
   {
     title: "Settings",
     url: "/settings",
     icon: Settings,
-    permission: "system:config"
+    permission: null
   }
 ];
 
 // Memoized sidebar component to prevent unnecessary re-renders
 const AppSidebar = memo(() => {
-  const { user, hasPermission, logout, isLoading, isAuthenticated, isInitialized } = useAuth();
+  const { user, logout, isLoading, isAuthenticated, isInitialized } = useAuth();
 
-  // ENTERPRISE AUTH FIX: Wait for auth to be fully ready before filtering menu items
-  // This prevents empty sidebar when permissions load after component render
+  // SIMPLIFIED AUTH: Wait for auth to be fully ready before showing menu items
+  // Show all navigation items for authenticated users
   const filteredItems = useMemo(() => {
     // Show only Dashboard while auth is loading
     if (isLoading || !isInitialized || !isAuthenticated || !user) {
@@ -73,11 +73,9 @@ const AppSidebar = memo(() => {
       return dashboardItem ? [dashboardItem] : [];
     }
     
-    return navigationItems.filter(item => {
-      if (!item.permission) return true;
-      return hasPermission(item.permission);
-    });
-  }, [hasPermission, isLoading, isInitialized, isAuthenticated, user]);
+    // Show all items for authenticated users (no permission checking)
+    return navigationItems;
+  }, [isLoading, isInitialized, isAuthenticated, user]);
 
   // Memoize logout handler to prevent re-creation on every render
   const handleLogout = useCallback(() => {

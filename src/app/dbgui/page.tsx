@@ -28,6 +28,8 @@ interface DatabaseStats {
   schemaVersion: string;
 }
 
+import { getApiBaseUrl } from '@/lib/config';
+
 export default function DatabaseGUI() {
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM auth.users LIMIT 10;');
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
@@ -54,7 +56,8 @@ export default function DatabaseGUI() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8080/api/v2/auth/login', {
+      const baseUrl = await getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/v2/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +89,8 @@ export default function DatabaseGUI() {
   // Load database statistics
   const loadDatabaseStats = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/database/stats', {
+      const baseUrl = await getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/database/stats`, {
         method: 'GET',
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
@@ -111,7 +115,8 @@ export default function DatabaseGUI() {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:8080/api/database/query', {
+      const baseUrl = await getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/database/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -56,7 +56,7 @@ export interface EnvironmentConfig {
 const environments: Record<string, EnvironmentConfig> = {
   development: {
     api: {
-      baseUrl: 'http://localhost:8080',
+      baseUrl: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080',
       timeout: 30000,
       retryAttempts: 3,
       retryDelay: 1000,
@@ -66,7 +66,7 @@ const environments: Record<string, EnvironmentConfig> = {
       sessionTimeoutMinutes: 120, // 2 hours
     },
     websocket: {
-      url: 'ws://localhost:8080/api/v2/ws',
+      url: process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || 'ws://localhost:8080/api/v2/ws',
       reconnectAttempts: 5,
       reconnectDelay: 2000,
       heartbeatInterval: 30000,

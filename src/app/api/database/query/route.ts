@@ -10,6 +10,8 @@ interface QueryResult {
   executionTime: number;
 }
 
+import { getApiBaseUrl } from '@/lib/config';
+
 export async function POST(request: NextRequest) {
   try {
     // Verify this is a legitimate request
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the backend API
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const backendUrl = await getApiBaseUrl();
     
     // Get session cookies to forward authentication
     const cookies = request.headers.get('cookie');

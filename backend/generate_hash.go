@@ -8,7 +8,7 @@ import (
 
 func main() {
 	pepper := "domainflow_secure_pepper_key_2025_production"
-	password := "TempPassword123!"
+	password := "password123"
 	pepperedPassword := password + pepper
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(pepperedPassword), 12)

@@ -124,7 +124,7 @@ type RateLimit struct {
 // LoginRequest represents a login request
 type LoginRequest struct {
 	Email        string `json:"email" binding:"required,email"`
-	Password     string `json:"password" binding:"required,min=12"`
+	Password     string `json:"password" binding:"required,min=6"`
 	RememberMe   bool   `json:"rememberMe"`
 	CaptchaToken string `json:"captchaToken"`
 }
@@ -142,7 +142,7 @@ type LoginResponse struct {
 // ChangePasswordRequest represents a password change request
 type ChangePasswordRequest struct {
 	CurrentPassword string `json:"currentPassword" binding:"required"`
-	NewPassword     string `json:"newPassword" binding:"required,min=12"`
+	NewPassword     string `json:"newPassword" binding:"required,min=6"`
 }
 
 // CreateUserRequest represents a user creation request
@@ -150,7 +150,7 @@ type CreateUserRequest struct {
 	Email     string `json:"email" binding:"required,email"`
 	FirstName string `json:"firstName" binding:"required"`
 	LastName  string `json:"lastName" binding:"required"`
-	Password  string `json:"password" binding:"required,min=12"`
+	Password  string `json:"password" binding:"required,min=6"`
 }
 
 // UpdateUserRequest represents a user update request

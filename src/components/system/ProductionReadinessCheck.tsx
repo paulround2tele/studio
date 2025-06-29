@@ -12,12 +12,16 @@ import { cn } from '@/lib/utils';
 
 // HMR SAFE: Direct fetch implementation to avoid environment.ts import chain
 const checkAPIHealth = async (): Promise<{ status: string; version?: string; message?: string }> => {
-  // HMR SAFE: Detect API URL directly, no config imports
+  // HMR SAFE: Detect API URL from environment or fallback to defaults
   let apiBaseUrl: string;
   
   if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      // Development environment
+    // Client-side: Check for environment variables first
+    const envApiUrl = (window as any).ENV?.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL;
+    if (envApiUrl) {
+      apiBaseUrl = envApiUrl;
+    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // Development environment fallback
       apiBaseUrl = 'http://localhost:8080';
     } else {
       // Production - use same host with https
@@ -26,7 +30,7 @@ const checkAPIHealth = async (): Promise<{ status: string; version?: string; mes
     }
   } else {
     // Server-side fallback
-    apiBaseUrl = 'http://localhost:8080';
+    apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080';
   }
   
   const response = await fetch(`${apiBaseUrl}/health`, {

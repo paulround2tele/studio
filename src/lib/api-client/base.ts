@@ -19,7 +19,9 @@ import type { Configuration } from './configuration';
 import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 
-export const BASE_PATH = "http://localhost:8080".replace(/\/+$/, "");
+export const BASE_PATH = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 
+                        (typeof window !== 'undefined' && (window as any).ENV?.NEXT_PUBLIC_API_URL) || 
+                        "http://localhost:8080".replace(/\/+$/, "");
 
 /**
  *
