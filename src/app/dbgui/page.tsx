@@ -12,23 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 // Only import icons that are actually used in the component
 import { Database, Server } from 'lucide-react';
+import authService from '@/lib/services/authService';
+import databaseService from '@/lib/services/databaseService';
+import type { QueryResult, DatabaseStats } from '@/lib/api/databaseApi';
 
-interface QueryResult {
-  columns: string[];
-  rows: (string | number | boolean | null)[][];
-  rowCount: number;
-  executionTime: number;
-}
-
-interface DatabaseStats {
-  totalTables: number;
-  totalUsers: number;
-  totalSessions: number;
-  databaseSize: string;
-  schemaVersion: string;
-}
-
-import { getApiBaseUrl } from '@/lib/config';
 
 export default function DatabaseGUI() {
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM auth.users LIMIT 10;');
@@ -56,21 +43,12 @@ export default function DatabaseGUI() {
     setError(null);
 
     try {
-      const baseUrl = await getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/api/v2/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: credentials.username,
-          password: credentials.password
-        }),
+      const result = await authService.login({
+        email: credentials.username,
+        password: credentials.password,
       });
 
-      if (response.ok) {
+      if (result.success) {
         setAuthSuccess(true);
         setConnectionStatus('connected');
         loadDatabaseStats();
@@ -89,19 +67,8 @@ export default function DatabaseGUI() {
   // Load database statistics
   const loadDatabaseStats = async () => {
     try {
-      const baseUrl = await getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/api/database/stats`, {
-        method: 'GET',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const stats = await response.json();
-        setDbStats(stats);
-      }
+      const stats = await databaseService.getStats();
+      setDbStats(stats);
     } catch (err) {
       console.error('Failed to load database stats:', err);
     }
@@ -115,26 +82,14 @@ export default function DatabaseGUI() {
     setError(null);
     
     try {
-      const baseUrl = await getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/api/database/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ query: sqlQuery }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        setQueryResult(result);
+      const result = await databaseService.query(sqlQuery);
+      setQueryResult(result);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
       } else {
-        setError(result.error || 'Query execution failed');
+        setError('Network error executing query');
       }
-    } catch (_err) {
-      setError('Network error executing query');
     } finally {
       setLoading(false);
     }

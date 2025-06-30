@@ -3,14 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 // This is a hidden database API endpoint for the database GUI
 // Only accessible to authenticated users with proper session
 
-interface QueryResult {
-  columns: string[];
-  rows: (string | number | boolean | null)[][];
-  rowCount: number;
-  executionTime: number;
-}
-
-import { getApiBaseUrl } from '@/lib/config';
+import databaseService from '@/lib/services/databaseService';
+import type { QueryResult } from '@/lib/api/databaseApi';
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,43 +50,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Forward the request to the backend API
-    const backendUrl = await getApiBaseUrl();
-    
-    // Get session cookies to forward authentication
-    const cookies = request.headers.get('cookie');
-    
+    const cookies = request.headers.get('cookie') || undefined;
     const startTime = Date.now();
-    
-    const response = await fetch(`${backendUrl}/api/v2/database/query`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        ...(cookies && { 'Cookie': cookies })
-      },
-      body: JSON.stringify({ query })
-    });
-
-    const executionTime = Date.now() - startTime;
-
-    if (!response.ok) {
-      const errorText = await response.text();
+    try {
+      const result = await databaseService.queryBackend(query, cookies);
+      const executionTime = Date.now() - startTime;
+      const queryResult: QueryResult = { ...result, executionTime };
+      return NextResponse.json(queryResult);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Database query failed';
       return NextResponse.json(
-        { error: errorText || 'Database query failed' },
-        { status: response.status }
+        { error: message },
+        { status: 500 }
       );
     }
-
-    const result = await response.json();
-    
-    // Add execution time to result
-    const queryResult: QueryResult = {
-      ...result,
-      executionTime
-    };
-
-    return NextResponse.json(queryResult);
 
   } catch (error) {
     console.error('Database query error:', error);

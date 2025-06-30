@@ -9,44 +9,7 @@ import { CheckCircle, XCircle, AlertCircle, RefreshCw, Loader2, Shield, Wifi, Da
 import { useAuth } from '@/contexts/AuthContext';
 import { websocketService, type WebSocketMessage } from '@/lib/services/websocketService.simple';
 import { cn } from '@/lib/utils';
-
-// HMR SAFE: Direct fetch implementation to avoid environment.ts import chain
-const checkAPIHealth = async (): Promise<{ status: string; version?: string; message?: string }> => {
-  // HMR SAFE: Detect API URL from environment or fallback to defaults
-  let apiBaseUrl: string;
-  
-  if (typeof window !== 'undefined') {
-    // Client-side: Check for environment variables first
-    const envApiUrl = (window as unknown as { ENV?: { NEXT_PUBLIC_API_URL?: string } }).ENV?.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL;
-    if (envApiUrl) {
-      apiBaseUrl = envApiUrl;
-    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      // Development environment fallback
-      apiBaseUrl = 'http://localhost:8080';
-    } else {
-      // Production - use same host with https
-      const protocol = window.location.protocol;
-      apiBaseUrl = `${protocol}//${window.location.host}`;
-    }
-  } else {
-    // Server-side fallback
-    apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080';
-  }
-  
-  const response = await fetch(`${apiBaseUrl}/health`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  }
-  
-  return response.json();
-};
+import healthService from '@/lib/services/healthService';
 
 // Centralized logging utility with timestamps
 const logWithTimestamp = (level: 'log' | 'warn' | 'error', message: string, ...args: unknown[]) => {
@@ -125,7 +88,7 @@ export default function ProductionReadinessCheck() {
 
     // 2. API Connectivity Check
     try {
-      const data = await checkAPIHealth();
+      const data = await healthService.getHealth();
       if (data.status === 'ok') {
         results.push({
           name: 'API Backend',
