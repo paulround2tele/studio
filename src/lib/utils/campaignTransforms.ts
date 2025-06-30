@@ -1,8 +1,10 @@
 // src/lib/utils/campaignTransforms.ts
 // Campaign data transformation utilities for UI compatibility (OpenAPI Migration)
 
-import type { Campaign as OpenAPICampaign } from '@/lib/services/campaignService.production';
+import type { components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType, CampaignStatus, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
+
+type OpenAPICampaign = components['schemas']['Campaign'];
 
 // Map OpenAPI Campaign status to frontend CampaignStatus
 function mapOpenAPICampaignStatus(status?: string): CampaignStatus {

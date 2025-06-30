@@ -11,7 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { createKeywordSet, type CreateKeywordSetPayload } from '@/lib/services/keywordSetService.production';
+import { apiClient, type OperationRequestBody, type ApiPaths } from '@/lib/api-client/client';
+
+type CreateKeywordSetPayload = OperationRequestBody<ApiPaths['/keywords/sets']['post']>;
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 
 export default function NewKeywordSetPage() {
@@ -28,16 +30,12 @@ export default function NewKeywordSetPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const resp = await createKeywordSet(data);
-      if (resp.status === 'success' && resp.data) {
-        setSuccessMessage('Keyword set created');
-        setTimeout(() => router.push('/keyword-sets'), 500);
-      } else {
-        setErrorMessage(resp.message || 'Failed to create keyword set');
-      }
+      await apiClient.createKeywordSet(data);
+      setSuccessMessage('Keyword set created');
+      setTimeout(() => router.push('/keyword-sets'), 500);
     } catch (e) {
       console.error(e);
-      setErrorMessage('Failed to create keyword set');
+      setErrorMessage(e instanceof Error ? e.message : 'Failed to create keyword set');
     } finally {
       setIsLoading(false);
     }

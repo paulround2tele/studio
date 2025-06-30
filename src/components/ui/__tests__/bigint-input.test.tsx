@@ -2,28 +2,26 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BigIntInput } from '../bigint-input';
-import { createSafeBigInt } from '@/lib/types/branded';
 
-// Mock the branded types module
-jest.mock('@/lib/types/branded', () => ({
-  createSafeBigInt: jest.fn((value) => {
-    if (typeof value === 'string') {
-      if (!/^-?\d+$/.test(value)) {
-        throw new Error('Invalid number format');
-      }
-      return BigInt(value) as any;
+// Helper functions for testing (replacing legacy branded types)
+const createSafeBigInt = (value: string | number | bigint) => {
+  if (typeof value === 'string') {
+    if (!/^-?\d+$/.test(value)) {
+      throw new Error('Invalid number format');
     }
-    if (typeof value === 'number') {
-      return BigInt(Math.floor(value)) as any;
-    }
-    if (typeof value === 'bigint') {
-      return value as any;
-    }
-    throw new Error('Invalid value type');
-  }),
-  safeBigIntToString: jest.fn((value) => value?.toString() || ''),
-  isSafeBigInt: jest.fn((value) => typeof value === 'bigint'),
-}));
+    return BigInt(value);
+  }
+  if (typeof value === 'number') {
+    return BigInt(Math.floor(value));
+  }
+  if (typeof value === 'bigint') {
+    return value;
+  }
+  throw new Error('Invalid value type');
+};
+
+const safeBigIntToString = (value: bigint | null | undefined) => value?.toString() || '';
+const isSafeBigInt = (value: any) => typeof value === 'bigint';
 
 describe('BigIntInput Component Tests', () => {
   test('renders with default props', () => {
@@ -63,14 +61,14 @@ describe('BigIntInput Component Tests', () => {
   });
 
   test('handles controlled value', () => {
-    const mockValue = createSafeBigInt('12345');
+    const mockValue = 12345;
     const handleChange = jest.fn();
     
     render(
-      <BigIntInput 
-        value={mockValue} 
+      <BigIntInput
+        value={mockValue}
         onChange={handleChange}
-        data-testid="bigint-input" 
+        data-testid="bigint-input"
       />
     );
     
@@ -79,12 +77,12 @@ describe('BigIntInput Component Tests', () => {
   });
 
   test('handles uncontrolled input with default value', () => {
-    const mockDefaultValue = createSafeBigInt('67890');
+    const mockDefaultValue = 67890;
     
     render(
-      <BigIntInput 
+      <BigIntInput
         defaultValue={mockDefaultValue}
-        data-testid="bigint-input" 
+        data-testid="bigint-input"
       />
     );
     
@@ -150,16 +148,16 @@ describe('BigIntInput Component Tests', () => {
   });
 
   test('validates min and max constraints', () => {
-    const min = createSafeBigInt('10');
-    const max = createSafeBigInt('100');
+    const min = 10;
+    const max = 100;
     const handleValidation = jest.fn();
     
     render(
-      <BigIntInput 
+      <BigIntInput
         min={min}
         max={max}
         onValidationChange={handleValidation}
-        data-testid="bigint-input" 
+        data-testid="bigint-input"
       />
     );
     
@@ -331,7 +329,7 @@ describe('BigIntInput Edge Cases', () => {
     
     // First add some value
     fireEvent.change(input, { target: { value: '123' } });
-    expect(handleChange).toHaveBeenCalledWith(createSafeBigInt('123'));
+    expect(handleChange).toHaveBeenCalledWith(123);
     
     // Clear the mock to isolate the empty string test
     handleChange.mockClear();

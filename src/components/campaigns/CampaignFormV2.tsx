@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type Control, type SubmitHandler } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { CAMPAIGN_SELECTED_TYPES } from "@/lib/constants";
 import type { components } from '@/lib/api-client/types';
-import { createCampaignUnified, startCampaign } from "@/lib/services/campaignService.production";
+import { apiClient } from '@/lib/api-client/client';
 
 // Import OpenAPI types to replace missing custom types
 type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
@@ -88,14 +87,71 @@ export interface CampaignViewModel extends Omit<BaseCampaign, 'dnsValidationPara
   // Flexible metadata type
   metadata?: Record<string, unknown>;
 }
-import {
-  campaignFormSchema,
-  CampaignFormConstants,
-  CampaignFormValues,
-  getDefaultSourceMode,
-  needsHttpPersona,
-  needsDnsPersona
-} from "@/lib/schemas/campaignFormSchema";
+// Constants for form handling
+const CampaignFormConstants = {
+  NONE_VALUE_PLACEHOLDER: "__none__" as const,
+  MAX_DOMAINS_LIMIT: 1000000,
+  MIN_DOMAINS_LIMIT: 1,
+  DEFAULT_BATCH_SIZE: 10,
+  DEFAULT_RETRY_ATTEMPTS: 3,
+  DEFAULT_PROCESSING_SPEED: 60,
+  DEFAULT_ROTATION_INTERVAL: 300,
+} as const;
+
+// Form values type using OpenAPI types directly
+interface CampaignFormValues {
+  name: string;
+  description?: string;
+  selectedType: CampaignSelectedType;
+  domainSourceSelectionMode: DomainSourceSelectionMode;
+  sourceCampaignId?: string;
+  sourcePhase?: CampaignPhase;
+  uploadedDomainsFile?: File | null;
+  uploadedDomainsContentCache?: string[];
+  initialDomainsToProcessCount?: number;
+  generationPattern: DomainGenerationPattern;
+  constantPart: string;
+  allowedCharSet: string;
+  tldsInput: string;
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
+  maxDomainsToGenerate?: number;
+  targetKeywordsInput?: string;
+  scrapingRateLimitRequests?: number;
+  scrapingRateLimitPer?: 'second' | 'minute';
+  requiresJavaScriptRendering?: boolean;
+  rotationIntervalSeconds: number;
+  processingSpeedPerMinute: number;
+  batchSize: number;
+  retryAttempts: number;
+  targetHttpPorts?: number[];
+  assignedHttpPersonaId?: string;
+  assignedDnsPersonaId?: string;
+  proxyAssignmentMode: 'none' | 'single' | 'rotate_active';
+  assignedProxyId?: string;
+  launchSequence?: boolean;
+}
+
+// Helper functions
+function getDefaultSourceMode(campaignType?: CampaignSelectedType | null): DomainSourceSelectionMode {
+  switch (campaignType) {
+    case 'domain_generation':
+      return 'none';
+    case 'dns_validation':
+    case 'http_keyword_validation':
+      return 'campaign_output';
+    default:
+      return 'none';
+  }
+}
+
+function needsHttpPersona(campaignType?: CampaignSelectedType | null): boolean {
+  return campaignType === 'http_keyword_validation';
+}
+
+function needsDnsPersona(campaignType?: CampaignSelectedType | null): boolean {
+  return campaignType === 'dns_validation';
+}
 import React, { useCallback, useMemo, useState } from "react";
 import { FormErrorSummary } from '@/components/ui/form-field-error';
 import { extractFieldErrors, createUserFriendlyError, type FormErrorState } from '@/lib/utils/errorHandling';
@@ -147,7 +203,6 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
   const preselectedType = !isEditing ? (searchParams.get('type') as CampaignSelectedType | null) : null;
 
   const form = useForm<CampaignFormValues>({
-    resolver: zodResolver(campaignFormSchema),
     defaultValues: {
       name: isEditing && campaignToEdit ? campaignToEdit.name : "",
       description: isEditing && campaignToEdit ? (campaignToEdit.description || "") : "",
@@ -251,10 +306,10 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           }
 
           // Parse TLDs from comma-separated input
-          const tlds = data.tldsInput ? data.tldsInput.split(',').map(tld => {
+          const tlds = data.tldsInput ? data.tldsInput.split(',').map((tld: string) => {
             const trimmed = tld.trim();
             return trimmed.startsWith('.') ? trimmed : `.${trimmed}`;
-          }).filter(tld => tld.length > 1) : ['.com'];
+          }).filter((tld: string) => tld.length > 1) : ['.com'];
 
           // Ensure numeric values are properly converted
           const variableLength = data.prefixVariableLength !== undefined ? Number(data.prefixVariableLength) : 3;
@@ -368,8 +423,8 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           }
 
           // Parse keywords from input
-          const adHocKeywords = data.targetKeywordsInput 
-            ? data.targetKeywordsInput.split(',').map(k => k.trim()).filter(k => k.length > 0) 
+          const adHocKeywords = data.targetKeywordsInput
+            ? data.targetKeywordsInput.split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0)
             : [];
 
           if (adHocKeywords.length === 0) {
@@ -426,7 +481,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         return;
       } else {
         // Use the unified endpoint for new campaign creation
-        const response = await createCampaignUnified(unifiedPayload);
+        const response = await apiClient.createCampaign(unifiedPayload);
 
         if (response.status === 'success' && response.data) {
           toast({
@@ -438,7 +493,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           if (data.launchSequence && data.selectedType === 'domain_generation') {
             try {
               if (response.data.id) {
-                await startCampaign(response.data.id);
+                await apiClient.startCampaign(response.id);
               }
             } catch (e) {
               console.error('Failed to start campaign sequence:', e);
@@ -531,7 +586,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
     const subscription = form.watch(() => {
       clearFormErrors();
     });
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe?.();
   }, [form, clearFormErrors]);
 
   // Memoized persona requirements to prevent unnecessary recalculations

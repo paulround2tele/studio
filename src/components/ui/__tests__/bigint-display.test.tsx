@@ -3,10 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BigIntDisplay, CountDisplay, CurrencyDisplay, PercentageDisplay } from '../bigint-display';
 
-// Mock the branded types module
-jest.mock('@/lib/types/branded', () => ({
-  safeBigIntToString: jest.fn((value) => value?.toString() || ''),
-}));
+// Helper function for testing (replacing legacy branded types)
+const safeBigIntToString = (value: number | null | undefined) => value?.toString() || '';
 
 // Mock clipboard API
 const mockWriteText = jest.fn();
@@ -22,7 +20,7 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('renders with default props', () => {
-    const mockValue = BigInt(12345) as any;
+    const mockValue = 12345;
     render(<BigIntDisplay value={mockValue} data-testid="bigint-display" />);
     
     const display = screen.getByTestId('bigint-display');
@@ -32,7 +30,7 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('supports different variants', () => {
-    const mockValue = BigInt(100) as any;
+    const mockValue = 100;
     const { rerender } = render(
       <BigIntDisplay value={mockValue} variant="success" data-testid="bigint-display" />
     );
@@ -54,7 +52,7 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('supports different sizes', () => {
-    const mockValue = BigInt(100) as any;
+    const mockValue = 100;
     const { rerender } = render(
       <BigIntDisplay value={mockValue} size="xs" data-testid="bigint-display" />
     );
@@ -72,7 +70,7 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('supports different weights', () => {
-    const mockValue = BigInt(100) as any;
+    const mockValue = 100;
     const { rerender } = render(
       <BigIntDisplay value={mockValue} weight="bold" data-testid="bigint-display" />
     );
@@ -112,7 +110,7 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('formats with commas by default', () => {
-    const mockValue = BigInt(1234567) as any;
+    const mockValue = 1234567;
     render(<BigIntDisplay value={mockValue} data-testid="bigint-display" />);
     
     const display = screen.getByTestId('bigint-display');
@@ -120,12 +118,12 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('disables comma formatting when requested', () => {
-    const mockValue = BigInt(1234567) as any;
+    const mockValue = 1234567;
     render(
-      <BigIntDisplay 
-        value={mockValue} 
-        formatWithCommas={false} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={mockValue}
+        formatWithCommas={false}
+        data-testid="bigint-display"
       />
     );
     
@@ -134,13 +132,13 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('supports prefix and suffix', () => {
-    const mockValue = BigInt(100) as any;
+    const mockValue = 100;
     render(
-      <BigIntDisplay 
-        value={mockValue} 
-        prefix="$" 
-        suffix=" USD" 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={mockValue}
+        prefix="$"
+        suffix=" USD"
+        data-testid="bigint-display"
       />
     );
     
@@ -150,10 +148,10 @@ describe('BigIntDisplay Component Tests', () => {
 
   test('shows sign when requested', () => {
     const { rerender } = render(
-      <BigIntDisplay 
-        value={BigInt(100) as any} 
-        showSign={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={100}
+        showSign={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -162,10 +160,10 @@ describe('BigIntDisplay Component Tests', () => {
 
     // Negative numbers should keep their sign
     rerender(
-      <BigIntDisplay 
-        value={BigInt(-100) as any} 
-        showSign={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={-100}
+        showSign={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -175,10 +173,10 @@ describe('BigIntDisplay Component Tests', () => {
 
   test('abbreviates large numbers', () => {
     const { rerender } = render(
-      <BigIntDisplay 
-        value={BigInt(1500000) as any} 
-        abbreviate={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={1500000}
+        abbreviate={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -186,10 +184,10 @@ describe('BigIntDisplay Component Tests', () => {
     expect(display).toHaveTextContent('1.5M');
 
     rerender(
-      <BigIntDisplay 
-        value={BigInt(2500000000) as any} 
-        abbreviate={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={2500000000}
+        abbreviate={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -197,10 +195,10 @@ describe('BigIntDisplay Component Tests', () => {
     expect(display).toHaveTextContent('2.5B');
 
     rerender(
-      <BigIntDisplay 
-        value={BigInt(3750000000000) as any} 
-        abbreviate={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={3750000000000}
+        abbreviate={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -209,13 +207,13 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('respects abbreviation threshold', () => {
-    const mockValue = BigInt(500000) as any; // 500K
+    const mockValue = 500000; // 500K
     render(
-      <BigIntDisplay 
-        value={mockValue} 
-        abbreviate={true} 
+      <BigIntDisplay
+        value={mockValue}
+        abbreviate={true}
         abbreviateThreshold={1000000} // 1M threshold
-        data-testid="bigint-display" 
+        data-testid="bigint-display"
       />
     );
     
@@ -224,13 +222,13 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('supports custom precision in abbreviation', () => {
-    const mockValue = BigInt(1234567) as any;
+    const mockValue = 1234567;
     render(
-      <BigIntDisplay 
-        value={mockValue} 
-        abbreviate={true} 
-        precision={2} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={mockValue}
+        abbreviate={true}
+        precision={2}
+        data-testid="bigint-display"
       />
     );
     
@@ -239,12 +237,12 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('supports copy functionality', async () => {
-    const mockValue = BigInt(12345) as any;
+    const mockValue = 12345;
     render(
-      <BigIntDisplay 
-        value={mockValue} 
-        copyable={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={mockValue}
+        copyable={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -257,12 +255,12 @@ describe('BigIntDisplay Component Tests', () => {
   });
 
   test('copy functionality with keyboard', async () => {
-    const mockValue = BigInt(12345) as any;
+    const mockValue = 12345;
     render(
-      <BigIntDisplay 
-        value={mockValue} 
-        copyable={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={mockValue}
+        copyable={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -277,16 +275,16 @@ describe('BigIntDisplay Component Tests', () => {
 
   test('forwards ref correctly', () => {
     const ref = React.createRef<HTMLSpanElement>();
-    render(<BigIntDisplay ref={ref} value={BigInt(100) as any} data-testid="bigint-display" />);
+    render(<BigIntDisplay ref={ref} value={100} data-testid="bigint-display" />);
     expect(ref.current).toBeInstanceOf(HTMLSpanElement);
   });
 
   test('applies custom className', () => {
     render(
-      <BigIntDisplay 
-        value={BigInt(100) as any} 
-        className="custom-class" 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={100}
+        className="custom-class"
+        data-testid="bigint-display"
       />
     );
     
@@ -296,10 +294,10 @@ describe('BigIntDisplay Component Tests', () => {
 
   test('supports custom tooltip', () => {
     render(
-      <BigIntDisplay 
-        value={BigInt(100) as any} 
-        tooltip="Custom tooltip" 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={100}
+        tooltip="Custom tooltip"
+        data-testid="bigint-display"
       />
     );
     
@@ -310,7 +308,7 @@ describe('BigIntDisplay Component Tests', () => {
 
 describe('CountDisplay Component Tests', () => {
   test('renders with count-specific defaults', () => {
-    const mockValue = BigInt(15000) as any;
+    const mockValue = 15000;
     render(<CountDisplay value={mockValue} data-testid="count-display" />);
     
     const display = screen.getByTestId('count-display');
@@ -320,7 +318,7 @@ describe('CountDisplay Component Tests', () => {
 
 describe('CurrencyDisplay Component Tests', () => {
   test('renders with currency prefix', () => {
-    const mockValue = BigInt(1000) as any;
+    const mockValue = 1000;
     render(<CurrencyDisplay value={mockValue} data-testid="currency-display" />);
     
     const display = screen.getByTestId('currency-display');
@@ -328,12 +326,12 @@ describe('CurrencyDisplay Component Tests', () => {
   });
 
   test('supports custom currency prefix', () => {
-    const mockValue = BigInt(1000) as any;
+    const mockValue = 1000;
     render(
-      <CurrencyDisplay 
-        value={mockValue} 
-        prefix="€" 
-        data-testid="currency-display" 
+      <CurrencyDisplay
+        value={mockValue}
+        prefix="€"
+        data-testid="currency-display"
       />
     );
     
@@ -344,7 +342,7 @@ describe('CurrencyDisplay Component Tests', () => {
 
 describe('PercentageDisplay Component Tests', () => {
   test('renders with percentage suffix', () => {
-    const mockValue = BigInt(85) as any;
+    const mockValue = 85;
     render(<PercentageDisplay value={mockValue} data-testid="percentage-display" />);
     
     const display = screen.getByTestId('percentage-display');
@@ -352,12 +350,12 @@ describe('PercentageDisplay Component Tests', () => {
   });
 
   test('supports custom suffix', () => {
-    const mockValue = BigInt(85) as any;
+    const mockValue = 85;
     render(
-      <PercentageDisplay 
-        value={mockValue} 
-        suffix=" percent" 
-        data-testid="percentage-display" 
+      <PercentageDisplay
+        value={mockValue}
+        suffix=" percent"
+        data-testid="percentage-display"
       />
     );
     
@@ -368,12 +366,12 @@ describe('PercentageDisplay Component Tests', () => {
 
 describe('BigIntDisplay Accessibility Tests', () => {
   test('has proper accessibility attributes when copyable', () => {
-    const mockValue = BigInt(12345) as any;
+    const mockValue = 12345;
     render(
-      <BigIntDisplay 
-        value={mockValue} 
-        copyable={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={mockValue}
+        copyable={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -384,12 +382,12 @@ describe('BigIntDisplay Accessibility Tests', () => {
   });
 
   test('supports keyboard interaction for copyable elements', () => {
-    const mockValue = BigInt(12345) as any;
+    const mockValue = 12345;
     render(
-      <BigIntDisplay 
-        value={mockValue} 
-        copyable={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={mockValue}
+        copyable={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -411,12 +409,12 @@ describe('BigIntDisplay Accessibility Tests', () => {
 
 describe('BigIntDisplay Edge Cases', () => {
   test('handles very large numbers', () => {
-    const largeValue = BigInt('9223372036854775807') as any; // Max int64
+    const largeValue = 9223372036854775807; // Max int64
     render(
-      <BigIntDisplay 
-        value={largeValue} 
-        abbreviate={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={largeValue}
+        abbreviate={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -426,9 +424,9 @@ describe('BigIntDisplay Edge Cases', () => {
 
   test('handles negative numbers', () => {
     const { rerender } = render(
-      <BigIntDisplay 
-        value={BigInt(-1234) as any} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={-1234}
+        data-testid="bigint-display"
       />
     );
     
@@ -437,10 +435,10 @@ describe('BigIntDisplay Edge Cases', () => {
 
     // With abbreviation
     rerender(
-      <BigIntDisplay 
-        value={BigInt(-1500000) as any} 
-        abbreviate={true} 
-        data-testid="bigint-display" 
+      <BigIntDisplay
+        value={-1500000}
+        abbreviate={true}
+        data-testid="bigint-display"
       />
     );
     
@@ -449,7 +447,7 @@ describe('BigIntDisplay Edge Cases', () => {
   });
 
   test('handles zero value', () => {
-    render(<BigIntDisplay value={BigInt(0) as any} data-testid="bigint-display" />);
+    render(<BigIntDisplay value={0} data-testid="bigint-display" />);
     
     const display = screen.getByTestId('bigint-display');
     expect(display).toHaveTextContent('0');

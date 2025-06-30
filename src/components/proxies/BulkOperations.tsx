@@ -1,5 +1,5 @@
 // src/components/proxies/BulkOperations.tsx
-// Bulk proxy operations component with branded types integration
+// Bulk proxy operations component
 
 "use client";
 

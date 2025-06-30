@@ -397,6 +397,127 @@ export class ApiClient {
       { body: data }
     );
   }
+
+  // CONFIG API METHODS - All configurations with proper typing
+  async getDNSConfig() {
+    return this.request<GetOperationResponse<ApiPaths['/api/v2/config/dns']['get']>>(
+      '/config/dns',
+      'GET'
+    );
+  }
+
+  async updateDNSConfig(data: OperationRequestBody<ApiPaths['/api/v2/config/dns']['post']>) {
+    return this.request<PostOperationResponse<ApiPaths['/api/v2/config/dns']['post']>>(
+      '/config/dns',
+      'POST',
+      { body: data }
+    );
+  }
+
+  async getHTTPConfig() {
+    return this.request<GetOperationResponse<ApiPaths['/api/v2/config/http']['get']>>(
+      '/config/http',
+      'GET'
+    );
+  }
+
+  async updateHTTPConfig(data: OperationRequestBody<ApiPaths['/api/v2/config/http']['post']>) {
+    return this.request<PostOperationResponse<ApiPaths['/api/v2/config/http']['post']>>(
+      '/config/http',
+      'POST',
+      { body: data }
+    );
+  }
+
+  async getLoggingConfig() {
+    return this.request<GetOperationResponse<ApiPaths['/api/v2/config/logging']['get']>>(
+      '/config/logging',
+      'GET'
+    );
+  }
+
+  async updateLoggingConfig(data: OperationRequestBody<ApiPaths['/api/v2/config/logging']['post']>) {
+    return this.request<PostOperationResponse<ApiPaths['/api/v2/config/logging']['post']>>(
+      '/config/logging',
+      'POST',
+      { body: data }
+    );
+  }
+
+  async getWorkerConfig() {
+    return this.request<GetOperationResponse<ApiPaths['/api/v2/config/worker']['get']>>(
+      '/config/worker',
+      'GET'
+    );
+  }
+
+  async updateWorkerConfig(data: OperationRequestBody<ApiPaths['/api/v2/config/worker']['post']>) {
+    return this.request<PostOperationResponse<ApiPaths['/api/v2/config/worker']['post']>>(
+      '/config/worker',
+      'POST',
+      { body: data }
+    );
+  }
+
+  async getRateLimiterConfig() {
+    return this.request<GetOperationResponse<ApiPaths['/api/v2/config/rate-limit']['get']>>(
+      '/config/rate-limit',
+      'GET'
+    );
+  }
+
+  async updateRateLimiterConfig(data: OperationRequestBody<ApiPaths['/api/v2/config/rate-limit']['post']>) {
+    return this.request<PostOperationResponse<ApiPaths['/api/v2/config/rate-limit']['post']>>(
+      '/config/rate-limit',
+      'POST',
+      { body: data }
+    );
+  }
+
+  async getProxyManagerConfig() {
+    return this.request<GetOperationResponse<ApiPaths['/api/v2/config/proxy-manager']['get']>>(
+      '/config/proxy-manager',
+      'GET'
+    );
+  }
+
+  async updateProxyManagerConfig(data: OperationRequestBody<ApiPaths['/api/v2/config/proxy-manager']['post']>) {
+    return this.request<PostOperationResponse<ApiPaths['/api/v2/config/proxy-manager']['post']>>(
+      '/config/proxy-manager',
+      'POST',
+      { body: data }
+    );
+  }
+
+  async getServerConfig() {
+    return this.request<GetOperationResponse<ApiPaths['/api/v2/config/server']['get']>>(
+      '/config/server',
+      'GET'
+    );
+  }
+
+  async updateServerConfig(data: OperationRequestBody<ApiPaths['/api/v2/config/server']['put']>) {
+    return this.request<PutOperationResponse<ApiPaths['/api/v2/config/server']['put']>>(
+      '/config/server',
+      'PUT',
+      { body: data }
+    );
+  }
+
+  async getAuthConfig() {
+    return this.request<GetOperationResponse<ApiPaths['/api/v2/config/auth']['get']>>(
+      '/config/auth',
+      'GET'
+    );
+  }
+
+  async updateAuthConfig(data: OperationRequestBody<ApiPaths['/api/v2/config/auth']['post']>) {
+    return this.request<PostOperationResponse<ApiPaths['/api/v2/config/auth']['post']>>(
+      '/config/auth',
+      'POST',
+      { body: data }
+    );
+  }
 }
 
 // Export a default instance

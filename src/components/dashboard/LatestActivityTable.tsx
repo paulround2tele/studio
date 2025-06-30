@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, ChevronLeft, ChevronRight, Percent } from 'lucide-react';
 import Link from 'next/link';
-import { getCampaigns } from '@/lib/services/campaignService.production'; // Updated import path
+import { apiClient } from '@/lib/api-client/client'; // Updated import path
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 

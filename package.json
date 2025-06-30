@@ -6,15 +6,14 @@
   "scripts": {
     "dev": "next dev --turbo -p 3000",
     "dev:stable": "next dev --turbo -p 3000",
-    "build": "npm run generate:schemas && next build",
-    "build:turbo": "npm run generate:schemas && next build --turbo",
+    "build": "next build",
+    "build:turbo": "next build --turbo",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "generate:schemas": "node scripts/generate-zod-schemas.js",
     "perf:audit": "node scripts/performance-audit.mjs",
     "perf:budget": "node scripts/performance-budget.mjs",
     "size-limit": "size-limit",
@@ -69,7 +68,6 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.25.57",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

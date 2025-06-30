@@ -13,11 +13,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
-import {
-  listProxyPools,
-  deleteProxyPool,
-} from "@/lib/services/proxyPoolService.production";
-import type { ProxyPool } from "@/lib/types/proxyPoolTypes";
+import { apiClient, type components } from "@/lib/api-client/client";
+
+type ProxyPool = components['schemas']['ProxyPool'];
 import {
   Dialog,
   DialogContent,
@@ -33,27 +31,11 @@ export default function ProxyPoolList() {
   const { toast } = useToast();
 
   const loadPools = async () => {
-    const resp = await listProxyPools();
-    if (resp.status === "success" && resp.data) {
-      // Convert generated types to frontend types
-      const convertedPools: ProxyPool[] = resp.data
-        .filter(pool => pool.id) // Filter out pools without id
-        .map(pool => ({
-          id: pool.id!,
-          name: pool.name || '',
-          description: pool.description || undefined,
-          isEnabled: pool.isEnabled ?? false,
-          poolStrategy: pool.poolStrategy || undefined,
-          healthCheckEnabled: pool.healthCheckEnabled ?? false,
-          healthCheckIntervalSeconds: pool.healthCheckIntervalSeconds,
-          maxRetries: pool.maxRetries,
-          timeoutSeconds: pool.timeoutSeconds,
-          createdAt: pool.createdAt || new Date().toISOString(),
-          updatedAt: pool.updatedAt || new Date().toISOString(),
-          // Omit proxies for now since table doesn't use them and they need complex conversion
-          proxies: undefined
-        }));
-      setPools(convertedPools);
+    try {
+      const pools = await apiClient.listProxyPools();
+      setPools(pools.filter(pool => pool.id) as ProxyPool[]);
+    } catch (error) {
+      console.error('Failed to load proxy pools:', error);
     }
   };
 
@@ -62,14 +44,14 @@ export default function ProxyPoolList() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    const resp = await deleteProxyPool(id);
-    if (resp.status === "success") {
+    try {
+      await apiClient.deleteProxyPool(id);
       toast({ title: "Deleted" });
       loadPools();
-    } else {
+    } catch (error) {
       toast({
         title: "Error",
-        description: resp.message,
+        description: error instanceof Error ? error.message : "Failed to delete",
         variant: "destructive",
       });
     }
@@ -123,7 +105,7 @@ export default function ProxyPoolList() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => handleDelete(p.id)}
+                      onClick={() => p.id && handleDelete(p.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

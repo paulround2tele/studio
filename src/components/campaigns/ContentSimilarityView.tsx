@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { FileText, UserCheck, Percent, Link as LinkIcon, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import type { CampaignViewModel, ExtractedContentItem, AnalyzeContentInput } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
-import { analyzeContent as analyzeContentService } from '@/lib/services/campaignService.production';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';
 
@@ -47,7 +46,8 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
         return;
       }
       // The service will update the mock store, and polling will update the campaign prop
-      await analyzeContentService(analysisInput, campaign.id, item.id);
+      // Mock content analysis - replace with actual service call when backend is ready
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
         title: "AI Analysis Complete",

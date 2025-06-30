@@ -3,13 +3,13 @@
 
 import CampaignFormV2, { type CampaignViewModel } from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
-import type { Campaign, CampaignDetailResponse } from '@/lib/types';
+import type { Campaign } from '@/lib/types';
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { getCampaignById } from '@/lib/services/campaignService.production'; 
+import { apiClient } from '@/lib/api-client/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLoadingStore } from '@/lib/stores/loadingStore';
 
@@ -38,13 +38,13 @@ function EditCampaignPageContent() {
       startLoading(loadingOperationId, "Loading campaign for editing");
       setError(null);
       try {
-        const response: CampaignDetailResponse = await getCampaignById(campaignId);
-        if (response.status === 'success' && response.data) {
-          setCampaign(response.data);
+        const response = await apiClient.getCampaignById(campaignId);
+        if (response.campaign) {
+          setCampaign(response.campaign);
         } else {
-          setError(response.message || "Campaign not found.");
+          setError("Campaign not found.");
           setCampaign(null);
-          toast({ title: "Error Loading Campaign", description: response.message || "Campaign not found.", variant: "destructive" });
+          toast({ title: "Error Loading Campaign", description: "Campaign not found.", variant: "destructive" });
         }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : "Failed to load campaign data.";

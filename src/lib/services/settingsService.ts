@@ -1,4 +1,4 @@
-import apiClient from "./apiClient.production";
+import { apiClient as openApiClient } from '@/lib/api-client/client';
 
 export interface DNSConfig {
   resolvers: string[];
@@ -92,111 +92,84 @@ class SettingsService {
   }
 
   async getDNSConfig(): Promise<DNSConfig> {
-    const response = await apiClient.get<DNSConfig>(`${this.basePath}/dns`);
-    return response.data as unknown as DNSConfig;
+    const response = await openApiClient.getDNSConfig();
+    return response as unknown as DNSConfig;
   }
 
   async updateDNSConfig(cfg: DNSConfig): Promise<void> {
-    await apiClient.post(
-      `${this.basePath}/dns`,
-      cfg as unknown as Record<string, unknown>,
-    );
+    await openApiClient.updateDNSConfig(cfg as any);
   }
 
   async getHTTPConfig(): Promise<HTTPConfig> {
-    const response = await apiClient.get<HTTPConfig>(`${this.basePath}/http`);
-    return response.data as unknown as HTTPConfig;
+    const response = await openApiClient.getHTTPConfig();
+    return response as unknown as HTTPConfig;
   }
 
   async updateHTTPConfig(cfg: HTTPConfig): Promise<void> {
-    await apiClient.post(
-      `${this.basePath}/http`,
-      cfg as unknown as Record<string, unknown>,
-    );
+    await openApiClient.updateHTTPConfig(cfg as any);
   }
 
   async getLoggingConfig(): Promise<LoggingConfig> {
-    const response = await apiClient.get<LoggingConfig>(
-      `${this.basePath}/logging`,
-    );
-    return response.data as unknown as LoggingConfig;
+    const response = await openApiClient.getLoggingConfig();
+    return response as unknown as LoggingConfig;
   }
 
   async updateLoggingConfig(cfg: LoggingConfig): Promise<void> {
-    await apiClient.post(
-      `${this.basePath}/logging`,
-      cfg as unknown as Record<string, unknown>,
-    );
+    await openApiClient.updateLoggingConfig(cfg as any);
   }
 
   async getWorkerConfig(): Promise<WorkerConfig> {
-    const response = await apiClient.get<WorkerConfig>(
-      `${this.basePath}/worker`,
-    );
-    return response.data as unknown as WorkerConfig;
+    const response = await openApiClient.getWorkerConfig();
+    return response as unknown as WorkerConfig;
   }
 
   async updateWorkerConfig(cfg: WorkerConfig): Promise<void> {
-    await apiClient.post(
-      `${this.basePath}/worker`,
-      cfg as unknown as Record<string, unknown>,
-    );
+    await openApiClient.updateWorkerConfig(cfg as any);
   }
 
   async getRateLimiterConfig(): Promise<RateLimiterConfig> {
-    const response = await apiClient.get<RateLimiterConfig>(
-      `${this.basePath}/rate-limit`,
-    );
-    return response.data as unknown as RateLimiterConfig;
+    const response = await openApiClient.getRateLimiterConfig();
+    return response as unknown as RateLimiterConfig;
   }
 
   async updateRateLimiterConfig(cfg: RateLimiterConfig): Promise<void> {
-    await apiClient.post(
-      `${this.basePath}/rate-limit`,
-      cfg as unknown as Record<string, unknown>,
-    );
+    await openApiClient.updateRateLimiterConfig(cfg as any);
   }
 
   async getProxyManagerConfig(): Promise<ProxyManagerConfig> {
-    const response = await apiClient.get<ProxyManagerConfig>(
-      `${this.basePath}/proxy-manager`,
-    );
-    return response.data as unknown as ProxyManagerConfig;
+    const response = await openApiClient.getProxyManagerConfig();
+    return response as unknown as ProxyManagerConfig;
   }
 
   async updateProxyManagerConfig(cfg: ProxyManagerConfig): Promise<void> {
-    await apiClient.post(
-      `${this.basePath}/proxy-manager`,
-      cfg as unknown as Record<string, unknown>,
-    );
+    await openApiClient.updateProxyManagerConfig(cfg as any);
   }
 
   async getServerConfig(): Promise<ServerConfig> {
-    const response = await apiClient.get<ServerConfig>(
-      `${this.basePath}/server`,
-    );
-    return response.data as unknown as ServerConfig;
+    const response = await openApiClient.getServerConfig();
+    return response as unknown as ServerConfig;
   }
 
   async updateServerConfig(cfg: Partial<ServerConfig>): Promise<void> {
-    await apiClient.put(
-      `${this.basePath}/server`,
-      cfg as unknown as Record<string, unknown>,
-    );
+    await openApiClient.updateServerConfig(cfg as any);
+  }
+
+  async getAuthConfig(): Promise<any> {
+    const response = await openApiClient.getAuthConfig();
+    return response;
+  }
+
+  async updateAuthConfig(cfg: any): Promise<void> {
+    await openApiClient.updateAuthConfig(cfg as any);
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsConfig> {
-    const response = await apiClient.get<FeatureFlagsConfig>(
-      `${this.basePath}/features`,
-    );
-    return response.data as unknown as FeatureFlagsConfig;
+    const response = await openApiClient.getFeatureFlags();
+    return response as unknown as FeatureFlagsConfig;
   }
 
   async updateFeatureFlags(flags: FeatureFlagsConfig): Promise<void> {
-    await apiClient.post(
-      `${this.basePath}/features`,
-      flags as unknown as Record<string, unknown>,
-    );
+    await openApiClient.updateFeatureFlags(flags as any);
   }
 }
 

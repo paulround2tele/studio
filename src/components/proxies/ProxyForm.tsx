@@ -22,16 +22,10 @@ import { createProxy, updateProxy } from '@/lib/services/proxyService.production
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from "lucide-react";
-import { 
-  proxyManagementSchemaWithBranded as _proxyManagementSchemaWithBranded,
-  validateAndTransformFormData as _validateAndTransformFormData,
-  extractBrandedTypeErrors as _extractBrandedTypeErrors
-} from '@/lib/schemas/brandedValidationSchemas';
-
 const PROXY_PROTOCOLS: ProxyProtocol[] = ['http', 'https', 'socks4', 'socks5'];
 const INITIAL_PROXY_STATUSES: ProxyStatus[] = ['Active', 'Disabled']; // For creating new proxy
 
-// Enhanced proxy form schema with branded types
+// Proxy form schema
 const proxyFormSchema = z.object({
   name: z.string().min(1, { message: "Name is required." }),
   description: z.string().optional(),

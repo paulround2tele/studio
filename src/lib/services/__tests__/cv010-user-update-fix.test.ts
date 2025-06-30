@@ -7,7 +7,7 @@
  */
 
 import { adminService, updateUser } from '@/lib/services/adminService';
-import apiClient from '@/lib/services/apiClient.production';
+import { apiClient } from '@/lib/api-client/client';
 import type { UpdateUserRequest } from '@/lib/services/adminService';
 
 // Mock the API client

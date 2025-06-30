@@ -17,7 +17,7 @@ import { AlertCircle, Briefcase, Dna, Network, Globe, Play, RefreshCw, CheckCirc
 import type { LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { getCampaignById, startCampaign as startCampaignPhase, pauseCampaign, resumeCampaign, cancelCampaign as stopCampaign, chainCampaign, getGeneratedDomains as getGeneratedDomainsForCampaign, getDNSValidationResults as getDnsCampaignDomains, getHTTPKeywordResults as getHttpCampaignItems } from '@/lib/services/campaignService.production';
+import { apiClient } from '@/lib/api-client/client';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import { websocketService } from '@/lib/services/websocketService.simple';
 import PhaseGateButton from '@/components/campaigns/PhaseGateButton';

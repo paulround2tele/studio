@@ -15,6 +15,9 @@ components:
             required:
                 - proxyId
             type: object
+        AuthConfig:
+            description: Authentication configuration
+            type: object
         Campaign:
             description: Campaign information
             properties:
@@ -290,6 +293,9 @@ components:
                 - name
                 - protocol
                 - address
+            type: object
+        DNSConfig:
+            description: DNS validator configuration
             type: object
         DNSValidationResult:
             description: DNS validation result information
@@ -583,6 +589,9 @@ components:
                 enabled:
                     description: Enable HTTP/2
                     type: boolean
+            type: object
+        HTTPConfig:
+            description: HTTP validator configuration
             type: object
         HTTPKeywordResult:
             description: HTTP keyword validation result information
@@ -919,6 +928,9 @@ components:
                     format: date-time
                     type: string
             type: object
+        LoggingConfig:
+            description: Logging configuration
+            type: object
         LoginRequest:
             description: Login credentials
             properties:
@@ -930,8 +942,8 @@ components:
                     format: email
                     type: string
                 password:
-                    description: User password (minimum 12 characters)
-                    minLength: 12
+                    description: User password (minimum 6 characters)
+                    minLength: 6
                     type: string
                 rememberMe:
                     description: Whether to remember the user session
@@ -1129,6 +1141,9 @@ components:
                     description: Proxy username
                     type: string
             type: object
+        ProxyManagerConfig:
+            description: Proxy manager configuration
+            type: object
         ProxyPool:
             description: Proxy pool configuration and status information
             properties:
@@ -1294,6 +1309,9 @@ components:
                     description: Whether the test was successful
                     type: boolean
             type: object
+        RateLimiterConfig:
+            description: Rate limiter configuration
+            type: object
         RefreshResponse:
             description: Session refresh response
             properties:
@@ -1304,6 +1322,9 @@ components:
                 sessionId:
                     description: New session identifier
                     type: string
+            type: object
+        ServerConfig:
+            description: Server configuration
             type: object
         StandardAPIResponse:
             description: Standard API response wrapper
@@ -1483,6 +1504,9 @@ components:
                     format: date-time
                     type: string
             type: object
+        WorkerConfig:
+            description: Worker configuration
+            type: object
     securitySchemes:
         sessionAuth:
             description: Session-based authentication using HTTP cookies
@@ -1502,6 +1526,334 @@ info:
     version: 2.0.0
 openapi: 3.0.3
 paths:
+    /api/v2/config/auth:
+        get:
+            description: Retrieves sanitized authentication configuration
+            operationId: getAuthConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AuthConfig'
+                    description: Authentication configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get authentication configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates authentication configuration
+            operationId: updateAuthConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AuthConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AuthConfig'
+                    description: Updated authentication configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update authentication configuration
+            tags:
+                - Configuration
+    /api/v2/config/dns:
+        get:
+            description: Retrieves the default DNS validator configuration
+            operationId: getDNSConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DNSConfig'
+                    description: DNS configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get DNS configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates the default DNS validator configuration
+            operationId: updateDNSConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DNSConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DNSConfig'
+                    description: Updated DNS configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update DNS configuration
+            tags:
+                - Configuration
+    /api/v2/config/http:
+        get:
+            description: Retrieves the default HTTP validator configuration
+            operationId: getHTTPConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPConfig'
+                    description: HTTP configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get HTTP configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates the default HTTP validator configuration
+            operationId: updateHTTPConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/HTTPConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPConfig'
+                    description: Updated HTTP configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update HTTP configuration
+            tags:
+                - Configuration
+    /api/v2/config/logging:
+        get:
+            description: Retrieves the current logging configuration
+            operationId: getLoggingConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LoggingConfig'
+                    description: Logging configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get logging configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates the logging configuration
+            operationId: updateLoggingConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoggingConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LoggingConfig'
+                    description: Updated logging configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update logging configuration
+            tags:
+                - Configuration
+    /api/v2/config/proxy-manager:
+        get:
+            description: Retrieves proxy manager settings
+            operationId: getProxyManagerConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyManagerConfig'
+                    description: Proxy manager configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get proxy manager configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates proxy manager settings
+            operationId: updateProxyManagerConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyManagerConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyManagerConfig'
+                    description: Updated proxy manager configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update proxy manager configuration
+            tags:
+                - Configuration
+    /api/v2/config/rate-limit:
+        get:
+            description: Retrieves global rate limiter settings
+            operationId: getRateLimiterConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RateLimiterConfig'
+                    description: Rate limiter configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get rate limiter configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates global rate limiter settings
+            operationId: updateRateLimiterConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RateLimiterConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RateLimiterConfig'
+                    description: Updated rate limiter configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update rate limiter configuration
+            tags:
+                - Configuration
+    /api/v2/config/server:
+        get:
+            description: Retrieves current server-wide configurations
+            operationId: getServerConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ServerConfig'
+                    description: Server configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get server configuration
+            tags:
+                - Configuration
+        put:
+            description: Updates server-wide configurations
+            operationId: updateServerConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ServerConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ServerConfig'
+                    description: Updated server configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update server configuration
+            tags:
+                - Configuration
+    /api/v2/config/worker:
+        get:
+            description: Retrieves the worker configuration
+            operationId: getWorkerConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/WorkerConfig'
+                    description: Worker configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get worker configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates the worker configuration
+            operationId: updateWorkerConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/WorkerConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/WorkerConfig'
+                    description: Updated worker configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update worker configuration
+            tags:
+                - Configuration
     /auth/login:
         post:
             description: Authenticates a user and creates a session

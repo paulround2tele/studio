@@ -4,7 +4,43 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CampaignFormValues } from "@/lib/schemas/campaignFormSchema";
+// Form values type using OpenAPI types directly
+type CampaignSelectedType = import('@/lib/api-client/types').components['schemas']['CreateCampaignRequest']['campaignType'];
+type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
+type CampaignPhase = "domain_generation" | "dns_validation" | "http_keyword_validation" | "completed" | "idle";
+
+interface CampaignFormValues {
+  name: string;
+  description?: string;
+  selectedType: CampaignSelectedType;
+  domainSourceSelectionMode: DomainSourceSelectionMode;
+  sourceCampaignId?: string;
+  sourcePhase?: CampaignPhase;
+  uploadedDomainsFile?: File | null;
+  uploadedDomainsContentCache?: string[];
+  initialDomainsToProcessCount?: number;
+  generationPattern: "prefix_variable" | "suffix_variable" | "both_variable" | "constant_only";
+  constantPart: string;
+  allowedCharSet: string;
+  tldsInput: string;
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
+  maxDomainsToGenerate?: number;
+  targetKeywordsInput?: string;
+  scrapingRateLimitRequests?: number;
+  scrapingRateLimitPer?: 'second' | 'minute';
+  requiresJavaScriptRendering?: boolean;
+  rotationIntervalSeconds: number;
+  processingSpeedPerMinute: number;
+  batchSize: number;
+  retryAttempts: number;
+  targetHttpPorts?: number[];
+  assignedHttpPersonaId?: string;
+  assignedDnsPersonaId?: string;
+  proxyAssignmentMode: 'none' | 'single' | 'rotate_active';
+  assignedProxyId?: string;
+  launchSequence?: boolean;
+}
 
 interface DomainGenerationConfigProps {
   control: Control<CampaignFormValues>;

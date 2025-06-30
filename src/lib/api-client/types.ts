@@ -4,6 +4,198 @@
  */
 
 export interface paths {
+    "/api/v2/config/auth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get authentication configuration
+         * @description Retrieves sanitized authentication configuration
+         */
+        get: operations["getAuthConfig"];
+        put?: never;
+        /**
+         * Update authentication configuration
+         * @description Updates authentication configuration
+         */
+        post: operations["updateAuthConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/config/dns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get DNS configuration
+         * @description Retrieves the default DNS validator configuration
+         */
+        get: operations["getDNSConfig"];
+        put?: never;
+        /**
+         * Update DNS configuration
+         * @description Updates the default DNS validator configuration
+         */
+        post: operations["updateDNSConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/config/http": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get HTTP configuration
+         * @description Retrieves the default HTTP validator configuration
+         */
+        get: operations["getHTTPConfig"];
+        put?: never;
+        /**
+         * Update HTTP configuration
+         * @description Updates the default HTTP validator configuration
+         */
+        post: operations["updateHTTPConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/config/logging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get logging configuration
+         * @description Retrieves the current logging configuration
+         */
+        get: operations["getLoggingConfig"];
+        put?: never;
+        /**
+         * Update logging configuration
+         * @description Updates the logging configuration
+         */
+        post: operations["updateLoggingConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/config/proxy-manager": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get proxy manager configuration
+         * @description Retrieves proxy manager settings
+         */
+        get: operations["getProxyManagerConfig"];
+        put?: never;
+        /**
+         * Update proxy manager configuration
+         * @description Updates proxy manager settings
+         */
+        post: operations["updateProxyManagerConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/config/rate-limit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get rate limiter configuration
+         * @description Retrieves global rate limiter settings
+         */
+        get: operations["getRateLimiterConfig"];
+        put?: never;
+        /**
+         * Update rate limiter configuration
+         * @description Updates global rate limiter settings
+         */
+        post: operations["updateRateLimiterConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/config/server": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get server configuration
+         * @description Retrieves current server-wide configurations
+         */
+        get: operations["getServerConfig"];
+        /**
+         * Update server configuration
+         * @description Updates server-wide configurations
+         */
+        put: operations["updateServerConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/config/worker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get worker configuration
+         * @description Retrieves the worker configuration
+         */
+        get: operations["getWorkerConfig"];
+        put?: never;
+        /**
+         * Update worker configuration
+         * @description Updates the worker configuration
+         */
+        post: operations["updateWorkerConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -710,6 +902,8 @@ export interface components {
             /** @description Weight for weighted pool strategies */
             weight?: number;
         };
+        /** @description Authentication configuration */
+        AuthConfig: Record<string, never>;
         /** @description Campaign information */
         Campaign: {
             /** @description Average processing rate */
@@ -894,6 +1088,8 @@ export interface components {
             /** @description Proxy username for authentication */
             username?: string;
         };
+        /** @description DNS validator configuration */
+        DNSConfig: Record<string, never>;
         /** @description DNS validation result information */
         DNSValidationResult: {
             /** @description Number of validation attempts */
@@ -1084,6 +1280,8 @@ export interface components {
             /** @description Enable HTTP/2 */
             enabled?: boolean;
         };
+        /** @description HTTP validator configuration */
+        HTTPConfig: Record<string, never>;
         /** @description HTTP keyword validation result information */
         HTTPKeywordResult: {
             /** @description Number of validation attempts */
@@ -1316,6 +1514,8 @@ export interface components {
              */
             updatedAt?: string;
         };
+        /** @description Logging configuration */
+        LoggingConfig: Record<string, never>;
         /** @description Login credentials */
         LoginRequest: {
             /** @description CAPTCHA token for bot protection */
@@ -1325,7 +1525,7 @@ export interface components {
              * @description User email address
              */
             email: string;
-            /** @description User password (minimum 12 characters) */
+            /** @description User password (minimum 6 characters) */
             password: string;
             /** @description Whether to remember the user session */
             rememberMe?: boolean;
@@ -1477,6 +1677,8 @@ export interface components {
             /** @description Proxy username */
             username?: string;
         };
+        /** @description Proxy manager configuration */
+        ProxyManagerConfig: Record<string, never>;
         /** @description Proxy pool configuration and status information */
         ProxyPool: {
             /**
@@ -1597,6 +1799,8 @@ export interface components {
             /** @description Whether the test was successful */
             success?: boolean;
         };
+        /** @description Rate limiter configuration */
+        RateLimiterConfig: Record<string, never>;
         /** @description Session refresh response */
         RefreshResponse: {
             /**
@@ -1607,6 +1811,8 @@ export interface components {
             /** @description New session identifier */
             sessionId?: string;
         };
+        /** @description Server configuration */
+        ServerConfig: Record<string, never>;
         /** @description Standard API response wrapper */
         StandardAPIResponse: {
             /** @description Response data (only present on success) */
@@ -1728,6 +1934,8 @@ export interface components {
              */
             updatedAt?: string;
         };
+        /** @description Worker configuration */
+        WorkerConfig: Record<string, never>;
     };
     responses: never;
     parameters: never;
@@ -1737,6 +1945,454 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getAuthConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authentication configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateAuthConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated authentication configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDNSConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description DNS configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DNSConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateDNSConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DNSConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated DNS configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DNSConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getHTTPConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description HTTP configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateHTTPConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HTTPConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated HTTP configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getLoggingConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Logging configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoggingConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateLoggingConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoggingConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated logging configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoggingConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getProxyManagerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proxy manager configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProxyManagerConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateProxyManagerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProxyManagerConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated proxy manager configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProxyManagerConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getRateLimiterConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rate limiter configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimiterConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateRateLimiterConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RateLimiterConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated rate limiter configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimiterConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getServerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateServerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServerConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated server configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getWorkerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Worker configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateWorkerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkerConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated worker configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerConfig"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;

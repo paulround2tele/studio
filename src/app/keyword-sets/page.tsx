@@ -8,8 +8,9 @@ import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Edit } from 'lucide-react';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
-import type { KeywordSet } from '@/lib/types';
-import { listKeywordSets } from '@/lib/services/keywordSetService.production';
+import { apiClient, type components } from '@/lib/api-client/client';
+
+type KeywordSet = components['schemas']['KeywordSetResponse'];
 
 export default function KeywordSetsPage() {
   const [sets, setSets] = useState<KeywordSet[]>([]);
@@ -19,15 +20,11 @@ export default function KeywordSetsPage() {
   const loadSets = useCallback(async () => {
     setIsLoading(true);
     try {
-      const resp = await listKeywordSets();
-      if (resp.status === 'success' && resp.data) {
-        setSets(resp.data);
-      } else {
-        setErrorMessage(resp.message || 'Failed to load keyword sets');
-      }
+      const resp = await apiClient.listKeywordSets();
+      setSets(resp);
     } catch (e) {
       console.error(e);
-      setErrorMessage('Failed to load keyword sets');
+      setErrorMessage(e instanceof Error ? e.message : 'Failed to load keyword sets');
     } finally {
       setIsLoading(false);
     }

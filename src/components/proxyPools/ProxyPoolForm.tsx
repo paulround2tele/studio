@@ -15,11 +15,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import type { ProxyPool } from "@/lib/types/proxyPoolTypes";
-import {
-  createProxyPool,
-  updateProxyPool,
-} from "@/lib/services/proxyPoolService.production";
+import { apiClient, type components } from "@/lib/api-client/client";
+
+type ProxyPool = components['schemas']['ProxyPool'];
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -58,30 +56,14 @@ export default function ProxyPoolForm({
 
   async function onSubmit(values: PoolFormValues) {
     try {
-      if (isEditing && pool) {
-        const resp = await updateProxyPool(pool.id, values);
-        if (resp.status === "success") {
-          toast({ title: "Pool updated" });
-          onSuccess();
-        } else {
-          toast({
-            title: "Error",
-            description: resp.message,
-            variant: "destructive",
-          });
-        }
+      if (isEditing && pool && pool.id) {
+        await apiClient.updateProxyPool(pool.id, values);
+        toast({ title: "Pool updated" });
+        onSuccess();
       } else {
-        const resp = await createProxyPool(values);
-        if (resp.status === "success") {
-          toast({ title: "Pool created" });
-          onSuccess();
-        } else {
-          toast({
-            title: "Error",
-            description: resp.message,
-            variant: "destructive",
-          });
-        }
+        await apiClient.createProxyPool(values);
+        toast({ title: "Pool created" });
+        onSuccess();
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed";

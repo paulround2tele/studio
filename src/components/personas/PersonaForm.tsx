@@ -24,17 +24,12 @@ type UpdatePersonaRequest = components['schemas']['UpdatePersonaRequest'];
 type HttpPersonaConfig = components['schemas']['HttpPersonaConfig'];
 type DnsPersonaConfig = components['schemas']['DnsPersonaConfig'];
 
-// Legacy compatibility types
+// Type aliases for better readability
 type Persona = PersonaResponse;
 type HttpPersona = PersonaResponse & { personaType: 'http' };
 type DnsPersona = PersonaResponse & { personaType: 'dns' };
 type HTTPConfigDetails = HttpPersonaConfig;
 type DNSConfigDetails = DnsPersonaConfig;
-import { 
-  personaManagementSchemaWithBranded as _personaManagementSchemaWithBranded,
-  validateAndTransformFormData as _validateAndTransformFormData,
-  extractBrandedTypeErrors as _extractBrandedTypeErrors
-} from '@/lib/schemas/brandedValidationSchemas';
 
 // DNS Resolver Strategy options - aligned with OpenAPI schema
 type DnsResolverStrategy = "round_robin" | "random" | "weighted" | "priority";

@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getCampaigns, deleteCampaign, pauseCampaign, resumeCampaign, cancelCampaign as stopCampaign } from '@/lib/services/campaignService.production';
+import { apiClient } from '@/lib/api-client/client';
 import { normalizeStatus, isActiveStatus } from '@/lib/utils/statusMapping';
 import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
 import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
@@ -172,7 +172,7 @@ function CampaignsPageContent() {
     
     try {
       // MEMORY LEAK FIX: Pass AbortSignal to API call (if getCampaigns supports it)
-      const response: CampaignsListResponse = await getCampaigns();
+      const response = await apiClient.listCampaigns();
       
       // MEMORY LEAK FIX: Check if request was aborted or component unmounted
       if (signal?.aborted || !isMountedRef.current) {
@@ -186,12 +186,12 @@ function CampaignsPageContent() {
           setCampaigns(transformCampaignsToViewModels(response.data));
         }
       } else {
-        console.warn('[CampaignsPage] Failed to load campaigns:', response.message);
+        console.warn('[CampaignsPage] Failed to load campaigns');
         if (isMountedRef.current) {
           setCampaigns([]);
           toast({
             title: "Error Loading Campaigns",
-            description: response.message || "Failed to load campaigns.",
+            description: "Failed to load campaigns.",
             variant: "destructive"
           });
         }
@@ -300,21 +300,12 @@ function CampaignsPageContent() {
 
     try {
       // Call deleteCampaign with just campaignId
-      const response: CampaignDeleteResponse = await deleteCampaign(campaignId);
-      if (response.status === 'success') {
-        await confirmUpdate(updateId);
-        toast({
-          title: "Campaign Deleted",
-          description: response.message || "Campaign successfully deleted."
-        });
-      } else {
-        await rollbackUpdate(updateId, response.message);
-        toast({
-          title: "Error Deleting Campaign",
-          description: response.message || "Failed to delete.",
-          variant: "destructive"
-        });
-      }
+      await apiClient.deleteCampaign(campaignId);
+      await confirmUpdate(updateId);
+      toast({
+        title: "Campaign Deleted",
+        description: "Campaign successfully deleted."
+      });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Could not delete campaign.";
       await rollbackUpdate(updateId, errorMessage);
@@ -333,11 +324,6 @@ function CampaignsPageContent() {
     const actionKey = `${action}-${campaignId}`;
     setActionLoading(prev => ({ ...prev, [actionKey]: true }));
     setGlobalLoading(`${action}_campaign_${campaignId}`, true, `${action}ing campaign`);
-
-    let apiCall: (id: string) => Promise<CampaignOperationResponse>;
-    if (action === 'pause') apiCall = pauseCampaign;
-    else if (action === 'resume') apiCall = resumeCampaign;
-    else apiCall = stopCampaign;
 
     // Apply optimistic update
     const campaign = campaigns.find(c => c.id === campaignId);
@@ -364,16 +350,20 @@ function CampaignsPageContent() {
     }
 
     try {
-      // Call the control function with just campaignId
-      const response = await apiCall(campaignId);
-      if (response.status === 'success' && response.data) {
-        await confirmUpdate(updateId, response.data);
-        toast({ title: `Campaign ${action}ed`, description: response.message });
-        setCampaigns(prev => prev.map(c => c.id === campaignId ? mergeCampaignApiUpdate(c, response.data || {}) : c));
+      // Call the appropriate API method directly
+      let response;
+      if (action === 'pause') {
+        response = await apiClient.pauseCampaign(campaignId);
+      } else if (action === 'resume') {
+        response = await apiClient.resumeCampaign(campaignId);
       } else {
-        await rollbackUpdate(updateId, response.message);
-        toast({ title: `Error ${action}ing campaign`, description: response.message, variant: "destructive"});
+        response = await apiClient.cancelCampaign(campaignId);
       }
+      
+      await confirmUpdate(updateId);
+      toast({ title: `Campaign ${action}ed`, description: `Campaign ${action}ed successfully` });
+      // Refresh campaigns to get latest state
+      loadCampaignsData(false);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : `Failed to ${action} campaign`;
       await rollbackUpdate(updateId, errorMessage);

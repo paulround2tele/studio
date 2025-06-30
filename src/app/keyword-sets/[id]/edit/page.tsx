@@ -11,11 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import {
-  getKeywordSetById,
-  updateKeywordSet,
-  type UpdateKeywordSetPayload,
-} from '@/lib/services/keywordSetService.production';
+import { apiClient, type OperationRequestBody, type ApiPaths } from '@/lib/api-client/client';
+
+type UpdateKeywordSetPayload = OperationRequestBody<ApiPaths['/keywords/sets/{setId}']['put']>;
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 
 export default function EditKeywordSetPage() {
@@ -32,19 +30,15 @@ export default function EditKeywordSetPage() {
   useEffect(() => {
     async function load() {
       try {
-        const resp = await getKeywordSetById(params.id as string);
-        if (resp.status === 'success' && resp.data) {
-          form.reset({
-            name: resp.data.name,
-            description: resp.data.description || '',
-            isEnabled: resp.data.isEnabled,
-          });
-        } else {
-          setErrorMessage(resp.message || 'Failed to load keyword set');
-        }
+        const resp = await apiClient.getKeywordSetById(params.id as string);
+        form.reset({
+          name: resp.name,
+          description: resp.description || '',
+          isEnabled: resp.isEnabled,
+        });
       } catch (e) {
         console.error(e);
-        setErrorMessage('Failed to load keyword set');
+        setErrorMessage(e instanceof Error ? e.message : 'Failed to load keyword set');
       } finally {
         setIsLoading(false);
       }
@@ -57,16 +51,12 @@ export default function EditKeywordSetPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const resp = await updateKeywordSet(params.id as string, data);
-      if (resp.status === 'success' && resp.data) {
-        setSuccessMessage('Keyword set updated');
-        setTimeout(() => router.push('/keyword-sets'), 500);
-      } else {
-        setErrorMessage(resp.message || 'Failed to update keyword set');
-      }
+      await apiClient.updateKeywordSet(params.id as string, data);
+      setSuccessMessage('Keyword set updated');
+      setTimeout(() => router.push('/keyword-sets'), 500);
     } catch (e) {
       console.error(e);
-      setErrorMessage('Failed to update keyword set');
+      setErrorMessage(e instanceof Error ? e.message : 'Failed to update keyword set');
     } finally {
       setIsLoading(false);
     }

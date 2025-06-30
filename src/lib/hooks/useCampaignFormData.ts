@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { CampaignViewModel, HttpPersona, DnsPersona } from '@/lib/types';
-import type { Campaign } from '@/lib/services/campaignService.production';
+import type { components } from '@/lib/api-client/types';
 import { getPersonas } from "@/lib/services/personaService";
-import { getCampaigns } from "@/lib/services/campaignService.production";
+import { apiClient } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
+
+type Campaign = components['schemas']['Campaign'];
 
 interface CampaignFormData {
   httpPersonas: HttpPersona[];
@@ -35,7 +37,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       const [httpResult, dnsResult, campaignsResult] = await Promise.allSettled([
         getPersonas('http'),
         getPersonas('dns'),
-        getCampaigns({ limit: 100, sortBy: 'created_at', sortOrder: 'desc' })
+        apiClient.listCampaigns()
       ]);
 
       // Process HTTP personas result
