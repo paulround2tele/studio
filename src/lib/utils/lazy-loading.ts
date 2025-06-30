@@ -5,7 +5,6 @@
  */
 
 import React, { useRef, useState, useEffect, useCallback, MutableRefObject } from 'react';
-import { monitoringService } from '@/lib/monitoring/monitoring-service';
 
 /**
  * Options for lazy loading
@@ -211,20 +210,11 @@ export function useInfiniteScroll({
         const target = entries[0];
         if (target && target.isIntersecting && !loadingRef.current) {
           loadingRef.current = true;
-          const timer = monitoringService.createTimer();
-          
+
           try {
             await loadMore();
-            monitoringService.recordCustomMetric(
-              'infinite_scroll_load',
-              timer.end(),
-              'ms'
-            );
           } catch (error) {
-            monitoringService.recordError(
-              error as Error,
-              'infinite_scroll_load_error'
-            );
+            console.error('infinite_scroll_load_error', error);
           } finally {
             loadingRef.current = false;
           }
@@ -291,13 +281,13 @@ export function useProgressiveImage({
       onLoad?.();
     };
     
-    img.onerror = () => {
-      const error = new Error(`Failed to load image: ${src}`);
-      setError(error);
-      setIsLoading(false);
-      onError?.();
-      monitoringService.recordError(error, 'progressive_image_load_error');
-    };
+      img.onerror = () => {
+        const error = new Error(`Failed to load image: ${src}`);
+        setError(error);
+        setIsLoading(false);
+        onError?.();
+        console.error('progressive_image_load_error', error);
+      };
     
     img.src = src;
     
@@ -347,7 +337,7 @@ export function useChunkLoader<T>({
     if (currentChunk >= totalChunks || isLoading) return;
     
     setIsLoading(true);
-    const timer = monitoringService.createTimer();
+    const startTime = performance.now();
     
     // Simulate async operation with delay
     if (delay > 0) {
@@ -362,16 +352,7 @@ export function useChunkLoader<T>({
     onChunkLoad?.(chunk, currentChunk);
     setCurrentChunk(prev => prev + 1);
     setIsLoading(false);
-    
-    monitoringService.recordCustomMetric(
-      'chunk_load_time',
-      timer.end(),
-      'ms',
-      { 
-        chunk_index: currentChunk.toString(),
-        chunk_size: chunk.length.toString()
-      }
-    );
+    console.log('chunk_load_time', performance.now() - startTime);
   }, [data, chunkSize, currentChunk, totalChunks, isLoading, delay, onChunkLoad]);
 
   const reset = useCallback(() => {

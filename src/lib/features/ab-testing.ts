@@ -14,7 +14,6 @@
 import React from 'react';
 import { z } from 'zod';
 import { featureFlags, UserContext } from './feature-flags';
-import { errorTracker } from '../monitoring/error-tracker';
 
 // Experiment configuration schema
 export const ExperimentSchema = z.object({
@@ -451,11 +450,7 @@ class ABTestingService {
       // This would fetch from your API
       // For now, we'll use local experiments
     } catch (error) {
-      errorTracker.trackError(error as Error, {
-        component: 'ABTestingService',
-        url: '/api/experiments',
-        metadata: { operation: 'fetchExperiments' }
-      });
+      console.error('Failed to fetch experiments', error);
     }
   }
 
@@ -489,11 +484,7 @@ class ABTestingService {
     } catch (error) {
       // Re-queue events on failure
       this.analyticsQueue.unshift(...events);
-      errorTracker.trackError(error as Error, {
-        component: 'ABTestingService',
-        url: '/api/analytics/ab-tests',
-        metadata: { operation: 'flushAnalytics' }
-      });
+      console.error('Failed to flush analytics', error);
     }
   }
 

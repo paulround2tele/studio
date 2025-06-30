@@ -11,7 +11,6 @@
  * - Local storage persistence
  */
 
-import { errorTracker } from '../monitoring/error-tracker';
 import { featureFlags } from '../features/feature-flags';
 
 export interface RateLimitConfig {
@@ -176,19 +175,13 @@ class RateLimiter {
     // Request denied - implement blocking
     state.retryCount++;
     
-    if (state.retryCount >= 3 && config.blockDurationMs) {
-      state.blockedUntil = Date.now() + config.blockDurationMs;
-      
-      // Report to error tracking
-      errorTracker.trackError(new Error('Rate limit block triggered'), {
-        url: endpoint,
-        userId: userId || 'anonymous',
-        component: 'RateLimiter',
-        metadata: {
-          retryCount: state.retryCount,
-          endpoint
-        }
-      });
+      if (state.retryCount >= 3 && config.blockDurationMs) {
+        state.blockedUntil = Date.now() + config.blockDurationMs;
+        console.warn('Rate limit block triggered', {
+          url: endpoint,
+          userId: userId || 'anonymous',
+          retryCount: state.retryCount
+        });
     }
 
     this.updateState(key, state);

@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, memo, useMemo, useCallback } from 'react';
+import React, { useEffect, memo, useMemo, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { WebSocketStatusProvider } from '@/contexts/WebSocketStatusContext';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from '@/components/ui/sidebar';
 import { Home, Target, Users, Settings, Zap, Database, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { MemoryMonitor } from '@/lib/hooks/useMemoryMonitoring';
 import { websocketService } from '@/lib/services/websocketService.simple';
 
 interface AppLayoutProps {
@@ -122,18 +121,8 @@ AppSidebar.displayName = 'AppSidebar';
 
 // Memoized main layout component for optimal performance
 const AppLayout = memo(({ children }: AppLayoutProps) => {
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
-  // Optimized mounting effect with proper cleanup
-  useEffect(() => {
-    setMounted(true);
-    
-    // Return cleanup function to handle unmounting
-    return () => {
-      setMounted(false);
-    };
-  }, []);
 
   // Optimized WebSocket cleanup with proper lifecycle management
   useEffect(() => {
@@ -162,13 +151,6 @@ const AppLayout = memo(({ children }: AppLayoutProps) => {
     <WebSocketStatusProvider>
       <SidebarProvider>
         <div className="min-h-screen bg-background flex" suppressHydrationWarning>
-          {/* Performance optimized conditional rendering - only after mount */}
-          {mounted && (
-            <>
-              <MemoryMonitor position="bottom-right" />
-            </>
-          )}
-          
           <AppSidebar />
           
           {/* Main content area with optimized structure */}

@@ -14,8 +14,7 @@ import {
   ErrorMessage,
   WebSocketMessageTypes
 } from '../types/websocket-types-fixed';
-import { performanceMonitor } from '../monitoring/performance-monitor';
-import { errorTracker } from '../monitoring/error-tracker';
+
 import { UUID } from '../types/branded';
 
 /**
@@ -75,47 +74,22 @@ export function processWebSocketMessage(
   registry: MessageHandlerRegistry,
   rawMessage: string
 ): void {
-  const startTime = performance.now();
   
   try {
     // Parse and validate message
     const message = parseWebSocketMessage(rawMessage);
     
     if (!message) {
-      errorTracker.trackError(new Error('Invalid WebSocket message format'), {
-        component: 'WebSocketMessageHandler',
-        action: 'parse',
-        metadata: { rawMessage }
-      });
+      console.error('Invalid WebSocket message format', { rawMessage });
       return;
     }
-
-    // Record message processing metrics
-    performanceMonitor.recordCustomMetric(
-      'websocket_message_received',
-      1,
-      'count',
-      { messageType: message.type }
-    );
 
     // Route to appropriate handlers
     handleTypedMessage(registry, message);
 
-    // Record processing time
-    const duration = performance.now() - startTime;
-    performanceMonitor.recordCustomMetric(
-      'websocket_message_processing_time',
-      duration,
-      'ms',
-      { messageType: message.type }
-    );
 
   } catch (error) {
-    errorTracker.trackError(error as Error, {
-      component: 'WebSocketMessageHandler',
-      action: 'process',
-      metadata: { rawMessage }
-    });
+    console.error('WebSocket message processing error', { error, rawMessage });
   }
 }
 
@@ -209,12 +183,9 @@ export function createErrorHandler(
   return (message: ErrorMessage) => {
     const { code, message: errorMessage, details, campaignId } = message.data;
     
-    // Track error
-    errorTracker.trackError(new Error(errorMessage), {
-      component: 'WebSocketHandler',
-      action: 'error',
-      metadata: { code, details, campaignId }
-    });
+
+    // Log error
+    console.error('WebSocket error', { code, details, campaignId, errorMessage });
 
     // Call custom handler if provided
     onError?.(message);
@@ -285,26 +256,17 @@ export class WebSocketStateManager {
     this.connectionState = state;
     if (error) {
       this.lastError = error;
-      errorTracker.trackError(error, {
-        component: 'WebSocketStateManager',
-        action: 'connection',
-        metadata: {
+        console.error('WebSocket connection error', {
+          error,
           state,
           reconnectAttempts: this.reconnectAttempts
-        }
-      });
+        });
     }
     
     // Notify listeners
     this.listeners.forEach(listener => listener(state));
     
-    // Record metrics
-    performanceMonitor.recordCustomMetric(
-      'websocket_connection_state',
-      1,
-      'count',
-      { state, hasError: error ? 'true' : 'false' }
-    );
+
   }
 
   incrementReconnectAttempts(): void {
