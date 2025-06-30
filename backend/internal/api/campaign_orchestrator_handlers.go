@@ -29,7 +29,7 @@ func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestrator
 }
 
 // RegisterCampaignOrchestrationRoutes registers all campaign orchestration related routes.
-// It requires a base group and auth middleware instance for permission-based access control.
+// It requires a base group and auth middleware instance for session-based access control.
 //
 // CAMPAIGN CREATION ENDPOINT:
 //
@@ -41,27 +41,27 @@ func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestrator
 func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	// === CAMPAIGN CREATION ENDPOINTS ===
 
-	// Campaign creation endpoint - simplified auth (no permissions needed)
+	// Campaign creation endpoint - session-based auth
 	group.POST("", h.createCampaign)
 
-	// Campaign reading routes - simplified auth (no permissions needed)
+	// Campaign reading routes - session-based auth
 	group.GET("", h.listCampaigns)
 	group.GET("/:campaignId", h.getCampaignDetails)
 	// group.GET("/:campaignId/status", h.getCampaignStatus)
 
-	// Campaign control routes - simplified auth (no permissions needed)
+	// Campaign control routes - session-based auth
 	group.POST("/:campaignId/start", h.startCampaign)
 	group.POST("/:campaignId/pause", h.pauseCampaign)
 	group.POST("/:campaignId/resume", h.resumeCampaign)
 	group.POST("/:campaignId/cancel", h.cancelCampaign)
 
-	// Campaign modification routes - simplified auth (no permissions needed)
+	// Campaign modification routes - session-based auth
 	// group.PUT("/:campaignId", h.updateCampaign)
 
-	// Campaign deletion routes - simplified auth (no permissions needed)
+	// Campaign deletion routes - session-based auth
 	group.DELETE("/:campaignId", h.deleteCampaign)
 
-	// Campaign results routes - simplified auth (no permissions needed)
+	// Campaign results routes - session-based auth
 	group.GET("/:campaignId/results/generated-domains", h.getGeneratedDomains)
 	group.GET("/:campaignId/results/dns-validation", h.getDNSValidationResults)
 	group.GET("/:campaignId/results/http-keyword", h.getHTTPKeywordResults)

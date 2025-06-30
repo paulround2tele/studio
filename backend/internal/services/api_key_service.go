@@ -24,17 +24,16 @@ func NewAPIKeyService(encryptionService *EncryptionService) *APIKeyService {
 
 // APIKey represents an API key with metadata
 type APIKey struct {
-	ID          uuid.UUID
-	UserID      string
-	KeyName     string
-	Key         string // The actual API key (only available on creation)
-	KeyHash     string // SHA256 hash of the key for validation
-	KeyHint     string // Last 4 characters for identification
-	Permissions map[string]interface{}
-	ExpiresAt   *time.Time
-	LastUsedAt  *time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID         uuid.UUID
+	UserID     string
+	KeyName    string
+	Key        string // The actual API key (only available on creation)
+	KeyHash    string // SHA256 hash of the key for validation
+	KeyHint    string // Last 4 characters for identification
+	ExpiresAt  *time.Time
+	LastUsedAt *time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 // GenerateAPIKey creates a new API key
@@ -56,7 +55,7 @@ func (s *APIKeyService) HashAPIKey(key string) string {
 }
 
 // CreateAPIKey creates a new API key for a user
-func (s *APIKeyService) CreateAPIKey(userID, keyName string, permissions map[string]interface{}, expiresIn *time.Duration) (*APIKey, error) {
+func (s *APIKeyService) CreateAPIKey(userID, keyName string, expiresIn *time.Duration) (*APIKey, error) {
 	// Generate the API key
 	key, err := s.GenerateAPIKey()
 	if err != nil {
@@ -72,16 +71,15 @@ func (s *APIKeyService) CreateAPIKey(userID, keyName string, permissions map[str
 
 	// Create the API key object
 	apiKey := &APIKey{
-		ID:          uuid.New(),
-		UserID:      userID,
-		KeyName:     keyName,
-		Key:         key,
-		KeyHash:     s.HashAPIKey(key),
-		KeyHint:     key[len(key)-4:], // Last 4 characters
-		Permissions: permissions,
-		ExpiresAt:   expiresAt,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:        uuid.New(),
+		UserID:    userID,
+		KeyName:   keyName,
+		Key:       key,
+		KeyHash:   s.HashAPIKey(key),
+		KeyHint:   key[len(key)-4:], // Last 4 characters
+		ExpiresAt: expiresAt,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	return apiKey, nil
@@ -94,11 +92,10 @@ func (s *APIKeyService) ValidateAPIKey(key string, storedHash string) bool {
 
 // RotateAPIKey creates a new API key to replace an existing one
 func (s *APIKeyService) RotateAPIKey(oldKey *APIKey) (*APIKey, error) {
-	// Create a new key with the same permissions and user
+	// Create a new key with the same user and expiration
 	newKey, err := s.CreateAPIKey(
 		oldKey.UserID,
 		oldKey.KeyName,
-		oldKey.Permissions,
 		nil, // Preserve the original expiration if it exists
 	)
 	if err != nil {

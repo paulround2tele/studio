@@ -24,8 +24,6 @@ type UserAPI struct {
 	CreatedAt          time.Time  `json:"createdAt"`
 	UpdatedAt          time.Time  `json:"updatedAt"`
 	Name               string     `json:"name" example:"John Doe"`
-	Roles              []string   `json:"roles" example:"user,admin"`
-	Permissions        []string   `json:"permissions" example:"campaigns:read,campaigns:create"`
 }
 
 // LoginResponseAPI represents a login response for API documentation

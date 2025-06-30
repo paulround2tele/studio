@@ -17,30 +17,677 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-DROP DATABASE IF EXISTS domainflow_production;
---
--- Name: domainflow_production; Type: DATABASE; Schema: -; Owner: domainflow
---
-
-CREATE DATABASE domainflow_production WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER = libc LOCALE = 'en_US.UTF-8';
-
-
-ALTER DATABASE domainflow_production OWNER TO domainflow;
-
-\connect domainflow_production
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
+ALTER TABLE IF EXISTS ONLY public.worker_coordination DROP CONSTRAINT IF EXISTS worker_coordination_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.security_events DROP CONSTRAINT IF EXISTS security_events_audit_log_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.proxy_pool_memberships DROP CONSTRAINT IF EXISTS proxy_pool_memberships_proxy_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.proxy_pool_memberships DROP CONSTRAINT IF EXISTS proxy_pool_memberships_pool_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.keyword_rules DROP CONSTRAINT IF EXISTS keyword_rules_keyword_set_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_results DROP CONSTRAINT IF EXISTS http_keyword_results_validated_by_persona_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_results DROP CONSTRAINT IF EXISTS http_keyword_results_used_proxy_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_results DROP CONSTRAINT IF EXISTS http_keyword_results_http_keyword_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_results DROP CONSTRAINT IF EXISTS http_keyword_results_dns_result_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_params DROP CONSTRAINT IF EXISTS http_keyword_params_source_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_params DROP CONSTRAINT IF EXISTS http_keyword_params_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_campaign_params DROP CONSTRAINT IF EXISTS http_keyword_campaign_params_source_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_campaign_params DROP CONSTRAINT IF EXISTS http_keyword_campaign_params_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.generated_domains DROP CONSTRAINT IF EXISTS generated_domains_domain_generation_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.domain_generation_params DROP CONSTRAINT IF EXISTS domain_generation_params_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.domain_generation_campaign_params DROP CONSTRAINT IF EXISTS domain_generation_campaign_params_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.domain_generation_batches DROP CONSTRAINT IF EXISTS domain_generation_batches_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.dns_validation_results DROP CONSTRAINT IF EXISTS dns_validation_results_validated_by_persona_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.dns_validation_results DROP CONSTRAINT IF EXISTS dns_validation_results_generated_domain_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.dns_validation_results DROP CONSTRAINT IF EXISTS dns_validation_results_dns_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.dns_validation_params DROP CONSTRAINT IF EXISTS dns_validation_params_source_generation_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.dns_validation_params DROP CONSTRAINT IF EXISTS dns_validation_params_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_transitions DROP CONSTRAINT IF EXISTS campaign_state_transitions_state_event_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_transitions DROP CONSTRAINT IF EXISTS campaign_state_transitions_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_snapshots DROP CONSTRAINT IF EXISTS campaign_state_snapshots_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_events DROP CONSTRAINT IF EXISTS campaign_state_events_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_jobs DROP CONSTRAINT IF EXISTS campaign_jobs_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_access_grants DROP CONSTRAINT IF EXISTS campaign_access_grants_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_access_grants DROP CONSTRAINT IF EXISTS campaign_access_grants_granted_by_fkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_access_grants DROP CONSTRAINT IF EXISTS campaign_access_grants_campaign_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.authorization_decisions DROP CONSTRAINT IF EXISTS authorization_decisions_security_event_id_fkey;
+ALTER TABLE IF EXISTS ONLY auth.user_roles DROP CONSTRAINT IF EXISTS user_roles_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY auth.user_roles DROP CONSTRAINT IF EXISTS user_roles_role_id_fkey;
+ALTER TABLE IF EXISTS ONLY auth.user_roles DROP CONSTRAINT IF EXISTS user_roles_assigned_by_fkey;
+ALTER TABLE IF EXISTS ONLY auth.sessions DROP CONSTRAINT IF EXISTS sessions_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY auth.role_permissions DROP CONSTRAINT IF EXISTS role_permissions_role_id_fkey;
+ALTER TABLE IF EXISTS ONLY auth.role_permissions DROP CONSTRAINT IF EXISTS role_permissions_permission_id_fkey;
+ALTER TABLE IF EXISTS ONLY auth.password_reset_tokens DROP CONSTRAINT IF EXISTS password_reset_tokens_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY auth.auth_audit_log DROP CONSTRAINT IF EXISTS auth_audit_log_user_id_fkey;
+DROP TRIGGER IF EXISTS trigger_update_state_event_processing ON public.campaign_state_transitions;
+DROP TRIGGER IF EXISTS trg_campaigns_numeric_safety ON public.campaigns;
+DROP TRIGGER IF EXISTS set_timestamp_proxies ON public.proxies;
+DROP TRIGGER IF EXISTS set_timestamp_personas ON public.personas;
+DROP TRIGGER IF EXISTS set_timestamp_keyword_sets ON public.keyword_sets;
+DROP TRIGGER IF EXISTS set_timestamp_campaigns ON public.campaigns;
+DROP TRIGGER IF EXISTS set_timestamp_campaign_jobs ON public.campaign_jobs;
+DROP TRIGGER IF EXISTS proxy_pools_updated_at_trigger ON public.proxy_pools;
+DROP TRIGGER IF EXISTS proxies_updated_at_trigger ON public.proxies;
+DROP TRIGGER IF EXISTS keyword_rules_updated_at_trigger ON public.keyword_rules;
+DROP TRIGGER IF EXISTS trigger_session_fingerprint ON auth.sessions;
+DROP TRIGGER IF EXISTS set_timestamp_auth_users ON auth.users;
+DROP TRIGGER IF EXISTS set_timestamp_auth_roles ON auth.roles;
+DROP INDEX IF EXISTS public.idx_worker_pool_metrics_service;
+DROP INDEX IF EXISTS public.idx_worker_pool_metrics_pool_time;
+DROP INDEX IF EXISTS public.idx_worker_pool_metrics_campaign;
+DROP INDEX IF EXISTS public.idx_worker_coordination_status;
+DROP INDEX IF EXISTS public.idx_worker_coordination_heartbeat;
+DROP INDEX IF EXISTS public.idx_worker_coordination_campaign;
+DROP INDEX IF EXISTS public.idx_versioned_configs_version;
+DROP INDEX IF EXISTS public.idx_versioned_configs_validation;
+DROP INDEX IF EXISTS public.idx_versioned_configs_updated_at;
+DROP INDEX IF EXISTS public.idx_versioned_configs_type_key;
+DROP INDEX IF EXISTS public.idx_versioned_configs_created_at;
+DROP INDEX IF EXISTS public.idx_versioned_configs_checksum;
+DROP INDEX IF EXISTS public.idx_validation_violations_user;
+DROP INDEX IF EXISTS public.idx_validation_violations_type;
+DROP INDEX IF EXISTS public.idx_validation_violations_field;
+DROP INDEX IF EXISTS public.idx_validation_violations_endpoint;
+DROP INDEX IF EXISTS public.idx_validation_violations_created;
+DROP INDEX IF EXISTS public.idx_validation_rules_method;
+DROP INDEX IF EXISTS public.idx_validation_rules_field;
+DROP INDEX IF EXISTS public.idx_validation_rules_endpoint;
+DROP INDEX IF EXISTS public.idx_system_alerts_type;
+DROP INDEX IF EXISTS public.idx_system_alerts_severity;
+DROP INDEX IF EXISTS public.idx_system_alerts_created;
+DROP INDEX IF EXISTS public.idx_suspicious_alerts_user_id;
+DROP INDEX IF EXISTS public.idx_suspicious_alerts_severity;
+DROP INDEX IF EXISTS public.idx_suspicious_alerts_pattern_name;
+DROP INDEX IF EXISTS public.idx_suspicious_alerts_endpoint;
+DROP INDEX IF EXISTS public.idx_suspicious_alerts_created_at;
+DROP INDEX IF EXISTS public.idx_state_snapshots_version;
+DROP INDEX IF EXISTS public.idx_state_snapshots_entity;
+DROP INDEX IF EXISTS public.idx_state_events_version;
+DROP INDEX IF EXISTS public.idx_state_events_correlation;
+DROP INDEX IF EXISTS public.idx_slow_query_severity;
+DROP INDEX IF EXISTS public.idx_slow_query_logged;
+DROP INDEX IF EXISTS public.idx_slow_query_hash;
+DROP INDEX IF EXISTS public.idx_slow_query_execution_time;
+DROP INDEX IF EXISTS public.idx_service_metrics_pattern;
+DROP INDEX IF EXISTS public.idx_service_metrics_coupling;
+DROP INDEX IF EXISTS public.idx_security_events_user;
+DROP INDEX IF EXISTS public.idx_security_events_type;
+DROP INDEX IF EXISTS public.idx_security_events_risk;
+DROP INDEX IF EXISTS public.idx_security_events_result;
+DROP INDEX IF EXISTS public.idx_security_events_created;
+DROP INDEX IF EXISTS public.idx_response_time_targets_service;
+DROP INDEX IF EXISTS public.idx_response_time_targets_campaign;
+DROP INDEX IF EXISTS public.idx_response_time_service;
+DROP INDEX IF EXISTS public.idx_response_time_recorded;
+DROP INDEX IF EXISTS public.idx_response_time_operation;
+DROP INDEX IF EXISTS public.idx_response_time_ms;
+DROP INDEX IF EXISTS public.idx_response_time_metrics_response_time;
+DROP INDEX IF EXISTS public.idx_response_time_metrics_endpoint;
+DROP INDEX IF EXISTS public.idx_response_time_history_service_window;
+DROP INDEX IF EXISTS public.idx_response_time_history_campaign;
+DROP INDEX IF EXISTS public.idx_response_time_endpoint;
+DROP INDEX IF EXISTS public.idx_response_time_campaign;
+DROP INDEX IF EXISTS public.idx_response_optimization_priority;
+DROP INDEX IF EXISTS public.idx_response_optimization_endpoint;
+DROP INDEX IF EXISTS public.idx_response_metrics_user_endpoint;
+DROP INDEX IF EXISTS public.idx_response_metrics_slow_requests;
+DROP INDEX IF EXISTS public.idx_response_metrics_endpoint_time;
+DROP INDEX IF EXISTS public.idx_response_metrics_campaign;
+DROP INDEX IF EXISTS public.idx_resource_utilization_type;
+DROP INDEX IF EXISTS public.idx_resource_utilization_service_time;
+DROP INDEX IF EXISTS public.idx_resource_utilization_efficiency;
+DROP INDEX IF EXISTS public.idx_resource_utilization_campaign;
+DROP INDEX IF EXISTS public.idx_resource_optimization_service_time;
+DROP INDEX IF EXISTS public.idx_resource_optimization_campaign;
+DROP INDEX IF EXISTS public.idx_resource_locks_resource;
+DROP INDEX IF EXISTS public.idx_resource_locks_holder;
+DROP INDEX IF EXISTS public.idx_resource_locks_expires;
+DROP INDEX IF EXISTS public.idx_refactor_timeline;
+DROP INDEX IF EXISTS public.idx_query_performance_type;
+DROP INDEX IF EXISTS public.idx_query_performance_service_campaign;
+DROP INDEX IF EXISTS public.idx_query_performance_performance_category;
+DROP INDEX IF EXISTS public.idx_query_performance_optimization_score;
+DROP INDEX IF EXISTS public.idx_query_performance_hash;
+DROP INDEX IF EXISTS public.idx_query_performance_execution_time;
+DROP INDEX IF EXISTS public.idx_query_performance_executed;
+DROP INDEX IF EXISTS public.idx_query_performance_campaign_id;
+DROP INDEX IF EXISTS public.idx_query_optimization_type;
+DROP INDEX IF EXISTS public.idx_query_optimization_status;
+DROP INDEX IF EXISTS public.idx_query_optimization_query_hash;
+DROP INDEX IF EXISTS public.idx_query_optimization_priority;
+DROP INDEX IF EXISTS public.idx_query_optimization_implemented;
+DROP INDEX IF EXISTS public.idx_query_optimization_hash;
+DROP INDEX IF EXISTS public.idx_proxy_pools_enabled;
+DROP INDEX IF EXISTS public.idx_proxy_pool_memberships_proxy;
+DROP INDEX IF EXISTS public.idx_proxy_pool_memberships_pool;
+DROP INDEX IF EXISTS public.idx_proxies_is_enabled;
+DROP INDEX IF EXISTS public.idx_proxies_healthy;
+DROP INDEX IF EXISTS public.idx_proxies_enabled;
+DROP INDEX IF EXISTS public.idx_projections_name_aggregate;
+DROP INDEX IF EXISTS public.idx_personas_type;
+DROP INDEX IF EXISTS public.idx_personas_is_enabled;
+DROP INDEX IF EXISTS public.idx_personas_http_config;
+DROP INDEX IF EXISTS public.idx_personas_dns_config;
+DROP INDEX IF EXISTS public.idx_personas_active;
+DROP INDEX IF EXISTS public.idx_perf_opt_type;
+DROP INDEX IF EXISTS public.idx_perf_opt_service;
+DROP INDEX IF EXISTS public.idx_perf_opt_improvement;
+DROP INDEX IF EXISTS public.idx_memory_pools_type;
+DROP INDEX IF EXISTS public.idx_memory_pools_service;
+DROP INDEX IF EXISTS public.idx_memory_pools_efficiency;
+DROP INDEX IF EXISTS public.idx_memory_optimization_service;
+DROP INDEX IF EXISTS public.idx_memory_optimization_priority;
+DROP INDEX IF EXISTS public.idx_memory_optimization_implemented;
+DROP INDEX IF EXISTS public.idx_memory_metrics_utilization;
+DROP INDEX IF EXISTS public.idx_memory_metrics_state;
+DROP INDEX IF EXISTS public.idx_memory_metrics_service_time;
+DROP INDEX IF EXISTS public.idx_memory_metrics_service_recorded;
+DROP INDEX IF EXISTS public.idx_memory_metrics_service;
+DROP INDEX IF EXISTS public.idx_memory_metrics_recorded;
+DROP INDEX IF EXISTS public.idx_memory_metrics_memory_type;
+DROP INDEX IF EXISTS public.idx_memory_metrics_efficiency;
+DROP INDEX IF EXISTS public.idx_memory_metrics_component;
+DROP INDEX IF EXISTS public.idx_memory_leak_type;
+DROP INDEX IF EXISTS public.idx_memory_leak_severity;
+DROP INDEX IF EXISTS public.idx_memory_leak_service;
+DROP INDEX IF EXISTS public.idx_memory_leak_resolved;
+DROP INDEX IF EXISTS public.idx_memory_leak_detected;
+DROP INDEX IF EXISTS public.idx_memory_allocations_type;
+DROP INDEX IF EXISTS public.idx_memory_allocations_operation;
+DROP INDEX IF EXISTS public.idx_memory_allocations_leaked;
+DROP INDEX IF EXISTS public.idx_memory_allocations_created;
+DROP INDEX IF EXISTS public.idx_memory_allocations_campaign;
+DROP INDEX IF EXISTS public.idx_keyword_rules_type;
+DROP INDEX IF EXISTS public.idx_keyword_rules_keyword_set;
+DROP INDEX IF EXISTS public.idx_index_usage_table;
+DROP INDEX IF EXISTS public.idx_index_usage_name;
+DROP INDEX IF EXISTS public.idx_index_usage_frequency;
+DROP INDEX IF EXISTS public.idx_index_usage_efficiency;
+DROP INDEX IF EXISTS public.idx_http_results_status_time;
+DROP INDEX IF EXISTS public.idx_http_results_status;
+DROP INDEX IF EXISTS public.idx_http_results_keywords;
+DROP INDEX IF EXISTS public.idx_http_results_errors;
+DROP INDEX IF EXISTS public.idx_http_results_domain_name;
+DROP INDEX IF EXISTS public.idx_http_results_campaign_id;
+DROP INDEX IF EXISTS public.idx_http_results_bulk_ops;
+DROP INDEX IF EXISTS public.idx_http_keyword_results_dns_result_id;
+DROP INDEX IF EXISTS public.idx_http_keyword_params_source_campaign_id;
+DROP INDEX IF EXISTS public.idx_http_keyword_params_campaign_id;
+DROP INDEX IF EXISTS public.idx_generated_domains_offset_index;
+DROP INDEX IF EXISTS public.idx_generated_domains_offset;
+DROP INDEX IF EXISTS public.idx_generated_domains_name;
+DROP INDEX IF EXISTS public.idx_generated_domains_keyword_search;
+DROP INDEX IF EXISTS public.idx_generated_domains_domain_name_tld;
+DROP INDEX IF EXISTS public.idx_generated_domains_campaign_id;
+DROP INDEX IF EXISTS public.idx_generated_domains_campaign_created;
+DROP INDEX IF EXISTS public.idx_event_store_type_time;
+DROP INDEX IF EXISTS public.idx_event_store_global_position;
+DROP INDEX IF EXISTS public.idx_event_store_aggregate;
+DROP INDEX IF EXISTS public.idx_domain_gen_params_campaign_id;
+DROP INDEX IF EXISTS public.idx_domain_gen_offset;
+DROP INDEX IF EXISTS public.idx_domain_config_states_version;
+DROP INDEX IF EXISTS public.idx_domain_config_states_atomic;
+DROP INDEX IF EXISTS public.idx_domain_batches_worker;
+DROP INDEX IF EXISTS public.idx_domain_batches_status;
+DROP INDEX IF EXISTS public.idx_domain_batches_campaign;
+DROP INDEX IF EXISTS public.idx_dns_validation_results_status_time;
+DROP INDEX IF EXISTS public.idx_dns_validation_results_failed;
+DROP INDEX IF EXISTS public.idx_dns_validation_results_bulk_ops;
+DROP INDEX IF EXISTS public.idx_dns_results_status;
+DROP INDEX IF EXISTS public.idx_dns_results_domain_name;
+DROP INDEX IF EXISTS public.idx_dns_results_campaign_id;
+DROP INDEX IF EXISTS public.idx_dependencies_reliability;
+DROP INDEX IF EXISTS public.idx_db_perf_metrics_type;
+DROP INDEX IF EXISTS public.idx_db_perf_metrics_time;
+DROP INDEX IF EXISTS public.idx_db_perf_metrics_recorded;
+DROP INDEX IF EXISTS public.idx_db_perf_metrics_hash;
+DROP INDEX IF EXISTS public.idx_coordination_locks_expires;
+DROP INDEX IF EXISTS public.idx_connection_pool_metrics_state;
+DROP INDEX IF EXISTS public.idx_connection_pool_metrics_recorded;
+DROP INDEX IF EXISTS public.idx_connection_pool_metrics_pool;
+DROP INDEX IF EXISTS public.idx_connection_leak_leaked;
+DROP INDEX IF EXISTS public.idx_connection_leak_connection;
+DROP INDEX IF EXISTS public.idx_connection_leak_acquired;
+DROP INDEX IF EXISTS public.idx_config_versions_version;
+DROP INDEX IF EXISTS public.idx_config_versions_hash;
+DROP INDEX IF EXISTS public.idx_config_locks_owner;
+DROP INDEX IF EXISTS public.idx_config_locks_expires;
+DROP INDEX IF EXISTS public.idx_config_locks_config_hash;
+DROP INDEX IF EXISTS public.idx_config_locks_active_unique;
+DROP INDEX IF EXISTS public.idx_config_locks_active;
+DROP INDEX IF EXISTS public.idx_communication_patterns_latency;
+DROP INDEX IF EXISTS public.idx_communication_patterns_errors;
+DROP INDEX IF EXISTS public.idx_capacity_metrics_service_time;
+DROP INDEX IF EXISTS public.idx_campaigns_user_id_status;
+DROP INDEX IF EXISTS public.idx_campaigns_user_id;
+DROP INDEX IF EXISTS public.idx_campaigns_user_active;
+DROP INDEX IF EXISTS public.idx_campaigns_type_status;
+DROP INDEX IF EXISTS public.idx_campaigns_type;
+DROP INDEX IF EXISTS public.idx_campaigns_total_items;
+DROP INDEX IF EXISTS public.idx_campaigns_status_updated;
+DROP INDEX IF EXISTS public.idx_campaigns_status_type_created;
+DROP INDEX IF EXISTS public.idx_campaigns_status_created_at;
+DROP INDEX IF EXISTS public.idx_campaigns_status;
+DROP INDEX IF EXISTS public.idx_campaigns_progress_tracking;
+DROP INDEX IF EXISTS public.idx_campaigns_processed_items;
+DROP INDEX IF EXISTS public.idx_campaigns_name_search;
+DROP INDEX IF EXISTS public.idx_campaigns_last_heartbeat;
+DROP INDEX IF EXISTS public.idx_campaigns_large_numeric_values;
+DROP INDEX IF EXISTS public.idx_campaigns_created_at;
+DROP INDEX IF EXISTS public.idx_campaigns_bulk_ops;
+DROP INDEX IF EXISTS public.idx_campaign_state_transitions_invalid;
+DROP INDEX IF EXISTS public.idx_campaign_state_transitions_campaign_time;
+DROP INDEX IF EXISTS public.idx_campaign_state_snapshots_valid;
+DROP INDEX IF EXISTS public.idx_campaign_state_snapshots_campaign_sequence;
+DROP INDEX IF EXISTS public.idx_campaign_state_events_type_campaign;
+DROP INDEX IF EXISTS public.idx_campaign_state_events_processing_status;
+DROP INDEX IF EXISTS public.idx_campaign_state_events_correlation;
+DROP INDEX IF EXISTS public.idx_campaign_state_events_campaign_sequence;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_type;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_status_scheduled_at;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_status_scheduled;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_status_next_execution;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_processing;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_completion;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_campaign_type;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_campaign_id;
+DROP INDEX IF EXISTS public.idx_campaign_jobs_bulk_update;
+DROP INDEX IF EXISTS public.idx_cache_metrics_type;
+DROP INDEX IF EXISTS public.idx_cache_metrics_service_time;
+DROP INDEX IF EXISTS public.idx_cache_metrics_recorded;
+DROP INDEX IF EXISTS public.idx_cache_metrics_operation;
+DROP INDEX IF EXISTS public.idx_cache_metrics_namespace;
+DROP INDEX IF EXISTS public.idx_cache_metrics_name;
+DROP INDEX IF EXISTS public.idx_cache_metrics_campaign;
+DROP INDEX IF EXISTS public.idx_cache_invalidation_service_time;
+DROP INDEX IF EXISTS public.idx_cache_invalidation_namespace;
+DROP INDEX IF EXISTS public.idx_cache_inv_type;
+DROP INDEX IF EXISTS public.idx_cache_inv_name;
+DROP INDEX IF EXISTS public.idx_cache_inv_at;
+DROP INDEX IF EXISTS public.idx_cache_entries_tags;
+DROP INDEX IF EXISTS public.idx_cache_entries_service;
+DROP INDEX IF EXISTS public.idx_cache_entries_namespace_key;
+DROP INDEX IF EXISTS public.idx_cache_entries_last_accessed;
+DROP INDEX IF EXISTS public.idx_cache_entries_expires;
+DROP INDEX IF EXISTS public.idx_cache_entries_campaign;
+DROP INDEX IF EXISTS public.idx_cache_config_type;
+DROP INDEX IF EXISTS public.idx_cache_config_status;
+DROP INDEX IF EXISTS public.idx_cache_config_name;
+DROP INDEX IF EXISTS public.idx_auth_decisions_user;
+DROP INDEX IF EXISTS public.idx_auth_decisions_resource;
+DROP INDEX IF EXISTS public.idx_auth_decisions_decision;
+DROP INDEX IF EXISTS public.idx_auth_decisions_created;
+DROP INDEX IF EXISTS public.idx_audit_logs_user_timestamp;
+DROP INDEX IF EXISTS public.idx_audit_logs_user_id;
+DROP INDEX IF EXISTS public.idx_audit_logs_user_action;
+DROP INDEX IF EXISTS public.idx_audit_logs_timestamp;
+DROP INDEX IF EXISTS public.idx_audit_logs_security_level;
+DROP INDEX IF EXISTS public.idx_audit_logs_permissions;
+DROP INDEX IF EXISTS public.idx_audit_logs_entity_type_id;
+DROP INDEX IF EXISTS public.idx_audit_logs_entity_timestamp;
+DROP INDEX IF EXISTS public.idx_audit_logs_entity_action_timestamp;
+DROP INDEX IF EXISTS public.idx_audit_logs_campaign;
+DROP INDEX IF EXISTS public.idx_audit_logs_authorization;
+DROP INDEX IF EXISTS public.idx_audit_logs_access_decision;
+DROP INDEX IF EXISTS public.idx_async_task_status_user;
+DROP INDEX IF EXISTS public.idx_async_task_status_type_status;
+DROP INDEX IF EXISTS public.idx_async_task_status_task_id;
+DROP INDEX IF EXISTS public.idx_access_violations_user;
+DROP INDEX IF EXISTS public.idx_access_violations_type;
+DROP INDEX IF EXISTS public.idx_access_violations_endpoint;
+DROP INDEX IF EXISTS public.idx_access_violations_created;
+DROP INDEX IF EXISTS auth.idx_user_roles_user_id;
+DROP INDEX IF EXISTS auth.idx_user_roles_role_id;
+DROP INDEX IF EXISTS auth.idx_sessions_validation;
+DROP INDEX IF EXISTS auth.idx_sessions_user_id;
+DROP INDEX IF EXISTS auth.idx_sessions_user_agent_hash;
+DROP INDEX IF EXISTS auth.idx_sessions_last_activity;
+DROP INDEX IF EXISTS auth.idx_sessions_ip_address;
+DROP INDEX IF EXISTS auth.idx_sessions_fingerprint;
+DROP INDEX IF EXISTS auth.idx_sessions_expires_at;
+DROP INDEX IF EXISTS auth.idx_sessions_active;
+DROP INDEX IF EXISTS auth.idx_role_permissions_role_id;
+DROP INDEX IF EXISTS auth.idx_role_permissions_permission_id;
+DROP INDEX IF EXISTS auth.idx_rate_limits_identifier;
+DROP INDEX IF EXISTS auth.idx_rate_limits_blocked_until;
+DROP INDEX IF EXISTS auth.idx_password_reset_user_id;
+DROP INDEX IF EXISTS auth.idx_password_reset_expires;
+DROP INDEX IF EXISTS auth.idx_auth_audit_user_id;
+DROP INDEX IF EXISTS auth.idx_auth_audit_session_fingerprint;
+DROP INDEX IF EXISTS auth.idx_auth_audit_risk_score;
+DROP INDEX IF EXISTS auth.idx_auth_audit_event_type;
+DROP INDEX IF EXISTS auth.idx_auth_audit_created_at;
+ALTER TABLE IF EXISTS ONLY public.worker_pool_metrics DROP CONSTRAINT IF EXISTS worker_pool_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.worker_coordination DROP CONSTRAINT IF EXISTS worker_coordination_pkey;
+ALTER TABLE IF EXISTS ONLY public.versioned_configs DROP CONSTRAINT IF EXISTS versioned_configs_type_key_unique;
+ALTER TABLE IF EXISTS ONLY public.versioned_configs DROP CONSTRAINT IF EXISTS versioned_configs_pkey;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_email_key;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_transitions DROP CONSTRAINT IF EXISTS uq_state_transitions_event;
+ALTER TABLE IF EXISTS ONLY public.personas DROP CONSTRAINT IF EXISTS uq_personas_name_type;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_results DROP CONSTRAINT IF EXISTS uq_http_results_campaign_domain;
+ALTER TABLE IF EXISTS ONLY public.generated_domains DROP CONSTRAINT IF EXISTS uq_generated_domains_campaign_name;
+ALTER TABLE IF EXISTS ONLY public.dns_validation_results DROP CONSTRAINT IF EXISTS uq_dns_results_campaign_domain;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_events DROP CONSTRAINT IF EXISTS uq_campaign_state_events_sequence;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_snapshots DROP CONSTRAINT IF EXISTS uq_campaign_snapshots_sequence;
+ALTER TABLE IF EXISTS ONLY public.index_usage_analytics DROP CONSTRAINT IF EXISTS unique_index_analytics;
+ALTER TABLE IF EXISTS ONLY public.resource_locks DROP CONSTRAINT IF EXISTS unique_exclusive_locks;
+ALTER TABLE IF EXISTS ONLY public.system_alerts DROP CONSTRAINT IF EXISTS system_alerts_pkey;
+ALTER TABLE IF EXISTS ONLY public.suspicious_input_patterns DROP CONSTRAINT IF EXISTS suspicious_input_patterns_pkey;
+ALTER TABLE IF EXISTS ONLY public.suspicious_input_patterns DROP CONSTRAINT IF EXISTS suspicious_input_patterns_pattern_name_key;
+ALTER TABLE IF EXISTS ONLY public.suspicious_input_alerts DROP CONSTRAINT IF EXISTS suspicious_input_alerts_pkey;
+ALTER TABLE IF EXISTS ONLY public.state_snapshots DROP CONSTRAINT IF EXISTS state_snapshots_pkey;
+ALTER TABLE IF EXISTS ONLY public.state_snapshots DROP CONSTRAINT IF EXISTS state_snapshots_entity_id_entity_type_snapshot_version_key;
+ALTER TABLE IF EXISTS ONLY public.state_events DROP CONSTRAINT IF EXISTS state_events_pkey;
+ALTER TABLE IF EXISTS ONLY public.state_coordination_locks DROP CONSTRAINT IF EXISTS state_coordination_locks_pkey;
+ALTER TABLE IF EXISTS ONLY public.slow_query_log DROP CONSTRAINT IF EXISTS slow_query_log_pkey;
+ALTER TABLE IF EXISTS ONLY public.si004_connection_pool_metrics DROP CONSTRAINT IF EXISTS si004_connection_pool_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.si004_connection_pool_alerts DROP CONSTRAINT IF EXISTS si004_connection_pool_alerts_pkey;
+ALTER TABLE IF EXISTS ONLY public.si004_connection_leak_detection DROP CONSTRAINT IF EXISTS si004_connection_leak_detection_pkey;
+ALTER TABLE IF EXISTS ONLY public.service_dependencies DROP CONSTRAINT IF EXISTS service_dependencies_source_service_target_service_dependen_key;
+ALTER TABLE IF EXISTS ONLY public.service_dependencies DROP CONSTRAINT IF EXISTS service_dependencies_pkey;
+ALTER TABLE IF EXISTS ONLY public.service_capacity_metrics DROP CONSTRAINT IF EXISTS service_capacity_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.service_architecture_metrics DROP CONSTRAINT IF EXISTS service_architecture_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.security_events DROP CONSTRAINT IF EXISTS security_events_pkey;
+ALTER TABLE IF EXISTS ONLY public.schema_migrations DROP CONSTRAINT IF EXISTS schema_migrations_pkey1;
+ALTER TABLE IF EXISTS ONLY public.schema_migrations_old DROP CONSTRAINT IF EXISTS schema_migrations_pkey;
+ALTER TABLE IF EXISTS ONLY public.response_time_targets DROP CONSTRAINT IF EXISTS response_time_targets_service_name_endpoint_pattern_campaig_key;
+ALTER TABLE IF EXISTS ONLY public.response_time_targets DROP CONSTRAINT IF EXISTS response_time_targets_pkey;
+ALTER TABLE IF EXISTS ONLY public.response_time_metrics DROP CONSTRAINT IF EXISTS response_time_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.response_time_history DROP CONSTRAINT IF EXISTS response_time_history_pkey;
+ALTER TABLE IF EXISTS ONLY public.response_optimization_recommendations DROP CONSTRAINT IF EXISTS response_optimization_recommendations_pkey;
+ALTER TABLE IF EXISTS ONLY public.resource_utilization_metrics DROP CONSTRAINT IF EXISTS resource_utilization_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.resource_optimization_actions DROP CONSTRAINT IF EXISTS resource_optimization_actions_pkey;
+ALTER TABLE IF EXISTS ONLY public.resource_locks DROP CONSTRAINT IF EXISTS resource_locks_pkey;
+ALTER TABLE IF EXISTS ONLY public.query_performance_metrics DROP CONSTRAINT IF EXISTS query_performance_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.query_optimization_recommendations DROP CONSTRAINT IF EXISTS query_optimization_recommendations_pkey;
+ALTER TABLE IF EXISTS ONLY public.proxy_pools DROP CONSTRAINT IF EXISTS proxy_pools_pkey;
+ALTER TABLE IF EXISTS ONLY public.proxy_pools DROP CONSTRAINT IF EXISTS proxy_pools_name_key;
+ALTER TABLE IF EXISTS ONLY public.proxy_pool_memberships DROP CONSTRAINT IF EXISTS proxy_pool_memberships_pkey;
+ALTER TABLE IF EXISTS ONLY public.proxies DROP CONSTRAINT IF EXISTS proxies_pkey;
+ALTER TABLE IF EXISTS ONLY public.proxies DROP CONSTRAINT IF EXISTS proxies_name_key;
+ALTER TABLE IF EXISTS ONLY public.proxies DROP CONSTRAINT IF EXISTS proxies_address_key;
+ALTER TABLE IF EXISTS ONLY public.personas DROP CONSTRAINT IF EXISTS personas_pkey;
+ALTER TABLE IF EXISTS ONLY public.performance_optimizations DROP CONSTRAINT IF EXISTS performance_optimizations_pkey;
+ALTER TABLE IF EXISTS ONLY public.performance_baselines DROP CONSTRAINT IF EXISTS performance_baselines_service_name_campaign_type_optimizati_key;
+ALTER TABLE IF EXISTS ONLY public.performance_baselines DROP CONSTRAINT IF EXISTS performance_baselines_pkey;
+ALTER TABLE IF EXISTS ONLY public.memory_pools DROP CONSTRAINT IF EXISTS memory_pools_pool_name_key;
+ALTER TABLE IF EXISTS ONLY public.memory_pools DROP CONSTRAINT IF EXISTS memory_pools_pkey;
+ALTER TABLE IF EXISTS ONLY public.memory_optimization_recommendations DROP CONSTRAINT IF EXISTS memory_optimization_recommendations_pkey;
+ALTER TABLE IF EXISTS ONLY public.memory_metrics DROP CONSTRAINT IF EXISTS memory_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.memory_leak_detection DROP CONSTRAINT IF EXISTS memory_leak_detection_pkey;
+ALTER TABLE IF EXISTS ONLY public.memory_allocations DROP CONSTRAINT IF EXISTS memory_allocations_pkey;
+ALTER TABLE IF EXISTS ONLY public.keyword_sets DROP CONSTRAINT IF EXISTS keyword_sets_pkey;
+ALTER TABLE IF EXISTS ONLY public.keyword_sets DROP CONSTRAINT IF EXISTS keyword_sets_name_key;
+ALTER TABLE IF EXISTS ONLY public.keyword_rules DROP CONSTRAINT IF EXISTS keyword_rules_pkey;
+ALTER TABLE IF EXISTS ONLY public.input_validation_violations DROP CONSTRAINT IF EXISTS input_validation_violations_pkey;
+ALTER TABLE IF EXISTS ONLY public.input_validation_rules DROP CONSTRAINT IF EXISTS input_validation_rules_pkey;
+ALTER TABLE IF EXISTS ONLY public.input_validation_rules DROP CONSTRAINT IF EXISTS input_validation_rules_endpoint_pattern_http_method_field_n_key;
+ALTER TABLE IF EXISTS ONLY public.index_usage_analytics DROP CONSTRAINT IF EXISTS index_usage_analytics_pkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_results DROP CONSTRAINT IF EXISTS http_keyword_results_pkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_params DROP CONSTRAINT IF EXISTS http_keyword_params_pkey;
+ALTER TABLE IF EXISTS ONLY public.http_keyword_campaign_params DROP CONSTRAINT IF EXISTS http_keyword_campaign_params_pkey;
+ALTER TABLE IF EXISTS ONLY public.generated_domains DROP CONSTRAINT IF EXISTS generated_domains_pkey;
+ALTER TABLE IF EXISTS ONLY public.event_store DROP CONSTRAINT IF EXISTS event_store_pkey;
+ALTER TABLE IF EXISTS ONLY public.event_store DROP CONSTRAINT IF EXISTS event_store_event_id_key;
+ALTER TABLE IF EXISTS ONLY public.event_store DROP CONSTRAINT IF EXISTS event_store_aggregate_id_stream_position_key;
+ALTER TABLE IF EXISTS ONLY public.event_projections DROP CONSTRAINT IF EXISTS event_projections_projection_name_aggregate_id_key;
+ALTER TABLE IF EXISTS ONLY public.event_projections DROP CONSTRAINT IF EXISTS event_projections_pkey;
+ALTER TABLE IF EXISTS ONLY public.enum_validation_failures DROP CONSTRAINT IF EXISTS enum_validation_failures_pkey;
+ALTER TABLE IF EXISTS ONLY public.domain_generation_params DROP CONSTRAINT IF EXISTS domain_generation_params_pkey;
+ALTER TABLE IF EXISTS ONLY public.domain_generation_config_states DROP CONSTRAINT IF EXISTS domain_generation_config_states_pkey;
+ALTER TABLE IF EXISTS ONLY public.domain_generation_campaign_params DROP CONSTRAINT IF EXISTS domain_generation_campaign_params_pkey;
+ALTER TABLE IF EXISTS ONLY public.domain_generation_batches DROP CONSTRAINT IF EXISTS domain_generation_batches_pkey;
+ALTER TABLE IF EXISTS ONLY public.domain_generation_batches DROP CONSTRAINT IF EXISTS domain_generation_batches_campaign_id_batch_number_key;
+ALTER TABLE IF EXISTS ONLY public.dns_validation_results DROP CONSTRAINT IF EXISTS dns_validation_results_pkey;
+ALTER TABLE IF EXISTS ONLY public.dns_validation_params DROP CONSTRAINT IF EXISTS dns_validation_params_pkey;
+ALTER TABLE IF EXISTS ONLY public.database_performance_metrics DROP CONSTRAINT IF EXISTS database_performance_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.connection_pool_metrics DROP CONSTRAINT IF EXISTS connection_pool_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.connection_pool_alerts DROP CONSTRAINT IF EXISTS connection_pool_alerts_pkey;
+ALTER TABLE IF EXISTS ONLY public.connection_pool_alerts DROP CONSTRAINT IF EXISTS connection_pool_alerts_alert_type_key;
+ALTER TABLE IF EXISTS ONLY public.connection_leak_detection DROP CONSTRAINT IF EXISTS connection_leak_detection_pkey;
+ALTER TABLE IF EXISTS ONLY public.config_versions DROP CONSTRAINT IF EXISTS config_versions_pkey;
+ALTER TABLE IF EXISTS ONLY public.config_versions DROP CONSTRAINT IF EXISTS config_versions_config_hash_version_key;
+ALTER TABLE IF EXISTS ONLY public.config_locks DROP CONSTRAINT IF EXISTS config_locks_pkey;
+ALTER TABLE IF EXISTS ONLY public.communication_patterns DROP CONSTRAINT IF EXISTS communication_patterns_source_service_target_service_protoc_key;
+ALTER TABLE IF EXISTS ONLY public.communication_patterns DROP CONSTRAINT IF EXISTS communication_patterns_pkey;
+ALTER TABLE IF EXISTS ONLY public.campaigns DROP CONSTRAINT IF EXISTS campaigns_pkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_transitions DROP CONSTRAINT IF EXISTS campaign_state_transitions_pkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_snapshots DROP CONSTRAINT IF EXISTS campaign_state_snapshots_pkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_state_events DROP CONSTRAINT IF EXISTS campaign_state_events_pkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_query_patterns DROP CONSTRAINT IF EXISTS campaign_query_patterns_pkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_query_patterns DROP CONSTRAINT IF EXISTS campaign_query_patterns_campaign_type_service_name_query_pa_key;
+ALTER TABLE IF EXISTS ONLY public.campaign_jobs DROP CONSTRAINT IF EXISTS campaign_jobs_pkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_access_grants DROP CONSTRAINT IF EXISTS campaign_access_grants_pkey;
+ALTER TABLE IF EXISTS ONLY public.campaign_access_grants DROP CONSTRAINT IF EXISTS campaign_access_grants_campaign_id_user_id_access_type_key;
+ALTER TABLE IF EXISTS ONLY public.cache_metrics DROP CONSTRAINT IF EXISTS cache_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.cache_invalidations DROP CONSTRAINT IF EXISTS cache_invalidations_pkey;
+ALTER TABLE IF EXISTS ONLY public.cache_invalidation_log DROP CONSTRAINT IF EXISTS cache_invalidation_log_pkey;
+ALTER TABLE IF EXISTS ONLY public.cache_entries DROP CONSTRAINT IF EXISTS cache_entries_pkey;
+ALTER TABLE IF EXISTS ONLY public.cache_entries DROP CONSTRAINT IF EXISTS cache_entries_cache_namespace_cache_key_key;
+ALTER TABLE IF EXISTS ONLY public.cache_configurations DROP CONSTRAINT IF EXISTS cache_configurations_pkey;
+ALTER TABLE IF EXISTS ONLY public.cache_configurations DROP CONSTRAINT IF EXISTS cache_configurations_cache_name_key;
+ALTER TABLE IF EXISTS ONLY public.authorization_decisions DROP CONSTRAINT IF EXISTS authorization_decisions_pkey;
+ALTER TABLE IF EXISTS ONLY public.authorization_decisions DROP CONSTRAINT IF EXISTS authorization_decisions_decision_id_key;
+ALTER TABLE IF EXISTS ONLY public.audit_logs DROP CONSTRAINT IF EXISTS audit_logs_pkey;
+ALTER TABLE IF EXISTS ONLY public.async_task_status DROP CONSTRAINT IF EXISTS async_task_status_task_id_key;
+ALTER TABLE IF EXISTS ONLY public.async_task_status DROP CONSTRAINT IF EXISTS async_task_status_pkey;
+ALTER TABLE IF EXISTS ONLY public.architecture_refactor_log DROP CONSTRAINT IF EXISTS architecture_refactor_log_pkey;
+ALTER TABLE IF EXISTS ONLY public.api_access_violations DROP CONSTRAINT IF EXISTS api_access_violations_pkey;
+ALTER TABLE IF EXISTS ONLY auth.users DROP CONSTRAINT IF EXISTS users_pkey;
+ALTER TABLE IF EXISTS ONLY auth.users DROP CONSTRAINT IF EXISTS users_email_key;
+ALTER TABLE IF EXISTS ONLY auth.user_roles DROP CONSTRAINT IF EXISTS user_roles_pkey;
+ALTER TABLE IF EXISTS ONLY auth.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
+ALTER TABLE IF EXISTS ONLY auth.roles DROP CONSTRAINT IF EXISTS roles_pkey;
+ALTER TABLE IF EXISTS ONLY auth.roles DROP CONSTRAINT IF EXISTS roles_name_key;
+ALTER TABLE IF EXISTS ONLY auth.role_permissions DROP CONSTRAINT IF EXISTS role_permissions_pkey;
+ALTER TABLE IF EXISTS ONLY auth.rate_limits DROP CONSTRAINT IF EXISTS rate_limits_pkey;
+ALTER TABLE IF EXISTS ONLY auth.rate_limits DROP CONSTRAINT IF EXISTS rate_limits_identifier_action_key;
+ALTER TABLE IF EXISTS ONLY auth.permissions DROP CONSTRAINT IF EXISTS permissions_resource_action_key;
+ALTER TABLE IF EXISTS ONLY auth.permissions DROP CONSTRAINT IF EXISTS permissions_pkey;
+ALTER TABLE IF EXISTS ONLY auth.permissions DROP CONSTRAINT IF EXISTS permissions_name_key;
+ALTER TABLE IF EXISTS ONLY auth.password_reset_tokens DROP CONSTRAINT IF EXISTS password_reset_tokens_pkey;
+ALTER TABLE IF EXISTS ONLY auth.auth_audit_log DROP CONSTRAINT IF EXISTS auth_audit_log_pkey;
+ALTER TABLE IF EXISTS public.versioned_configs ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.si004_connection_pool_metrics ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.si004_connection_pool_alerts ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.si004_connection_leak_detection ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.service_dependencies ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.service_architecture_metrics ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.event_store ALTER COLUMN global_position DROP DEFAULT;
+ALTER TABLE IF EXISTS public.event_store ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.event_projections ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.communication_patterns ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.campaign_state_events ALTER COLUMN sequence_number DROP DEFAULT;
+ALTER TABLE IF EXISTS public.architecture_refactor_log ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS auth.rate_limits ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS auth.auth_audit_log ALTER COLUMN id DROP DEFAULT;
+DROP TABLE IF EXISTS public.worker_pool_metrics;
+DROP TABLE IF EXISTS public.worker_coordination;
+DROP SEQUENCE IF EXISTS public.versioned_configs_id_seq;
+DROP TABLE IF EXISTS public.versioned_configs;
+DROP VIEW IF EXISTS public.v_enum_documentation;
+DROP TABLE IF EXISTS public.users;
+DROP TABLE IF EXISTS public.system_alerts;
+DROP TABLE IF EXISTS public.suspicious_input_patterns;
+DROP TABLE IF EXISTS public.suspicious_input_alerts;
+DROP TABLE IF EXISTS public.state_snapshots;
+DROP TABLE IF EXISTS public.state_events;
+DROP TABLE IF EXISTS public.state_coordination_locks;
+DROP TABLE IF EXISTS public.slow_query_log;
+DROP SEQUENCE IF EXISTS public.si004_connection_pool_metrics_id_seq;
+DROP TABLE IF EXISTS public.si004_connection_pool_metrics;
+DROP SEQUENCE IF EXISTS public.si004_connection_pool_alerts_id_seq;
+DROP TABLE IF EXISTS public.si004_connection_pool_alerts;
+DROP SEQUENCE IF EXISTS public.si004_connection_leak_detection_id_seq;
+DROP TABLE IF EXISTS public.si004_connection_leak_detection;
+DROP SEQUENCE IF EXISTS public.service_dependencies_id_seq;
+DROP TABLE IF EXISTS public.service_dependencies;
+DROP TABLE IF EXISTS public.service_capacity_metrics;
+DROP SEQUENCE IF EXISTS public.service_architecture_metrics_id_seq;
+DROP TABLE IF EXISTS public.service_architecture_metrics;
+DROP TABLE IF EXISTS public.security_events;
+DROP TABLE IF EXISTS public.schema_migrations_old;
+DROP TABLE IF EXISTS public.schema_migrations;
+DROP TABLE IF EXISTS public.response_time_targets;
+DROP TABLE IF EXISTS public.response_time_metrics;
+DROP TABLE IF EXISTS public.response_time_history;
+DROP TABLE IF EXISTS public.response_optimization_recommendations;
+DROP VIEW IF EXISTS public.resource_utilization_summary;
+DROP TABLE IF EXISTS public.resource_optimization_actions;
+DROP TABLE IF EXISTS public.resource_locks;
+DROP TABLE IF EXISTS public.query_optimization_recommendations;
+DROP TABLE IF EXISTS public.proxy_pools;
+DROP TABLE IF EXISTS public.proxy_pool_memberships;
+DROP VIEW IF EXISTS public.proxies_camel_view;
+DROP TABLE IF EXISTS public.proxies;
+DROP VIEW IF EXISTS public.personas_camel_view;
+DROP TABLE IF EXISTS public.personas;
+DROP TABLE IF EXISTS public.performance_optimizations;
+DROP TABLE IF EXISTS public.performance_baselines;
+DROP TABLE IF EXISTS public.memory_pools;
+DROP TABLE IF EXISTS public.memory_optimization_recommendations;
+DROP TABLE IF EXISTS public.memory_metrics;
+DROP TABLE IF EXISTS public.memory_leak_detection;
+DROP TABLE IF EXISTS public.memory_allocations;
+DROP TABLE IF EXISTS public.keyword_sets;
+DROP TABLE IF EXISTS public.keyword_rules;
+DROP TABLE IF EXISTS public.input_validation_violations;
+DROP TABLE IF EXISTS public.input_validation_rules;
+DROP TABLE IF EXISTS public.index_usage_analytics;
+DROP TABLE IF EXISTS public.http_keyword_results;
+DROP TABLE IF EXISTS public.http_keyword_params;
+DROP TABLE IF EXISTS public.http_keyword_campaign_params;
+DROP TABLE IF EXISTS public.generated_domains;
+DROP SEQUENCE IF EXISTS public.event_store_id_seq;
+DROP SEQUENCE IF EXISTS public.event_store_global_position_seq;
+DROP TABLE IF EXISTS public.event_store;
+DROP SEQUENCE IF EXISTS public.event_projections_id_seq;
+DROP TABLE IF EXISTS public.event_projections;
+DROP TABLE IF EXISTS public.enum_validation_failures;
+DROP TABLE IF EXISTS public.domain_generation_params;
+DROP TABLE IF EXISTS public.domain_generation_config_states;
+DROP TABLE IF EXISTS public.domain_generation_campaign_params;
+DROP TABLE IF EXISTS public.domain_generation_batches;
+DROP TABLE IF EXISTS public.dns_validation_results;
+DROP TABLE IF EXISTS public.dns_validation_params;
+DROP TABLE IF EXISTS public.database_performance_metrics;
+DROP TABLE IF EXISTS public.connection_pool_metrics;
+DROP TABLE IF EXISTS public.connection_pool_alerts;
+DROP TABLE IF EXISTS public.connection_leak_detection;
+DROP TABLE IF EXISTS public.config_versions;
+DROP TABLE IF EXISTS public.config_locks;
+DROP SEQUENCE IF EXISTS public.communication_patterns_id_seq;
+DROP TABLE IF EXISTS public.communication_patterns;
+DROP VIEW IF EXISTS public.campaigns_camel_view;
+DROP TABLE IF EXISTS public.campaigns;
+DROP TABLE IF EXISTS public.campaign_state_transitions;
+DROP TABLE IF EXISTS public.campaign_state_snapshots;
+DROP SEQUENCE IF EXISTS public.campaign_state_events_sequence_number_seq;
+DROP TABLE IF EXISTS public.campaign_state_events;
+DROP VIEW IF EXISTS public.campaign_resource_usage;
+DROP TABLE IF EXISTS public.resource_utilization_metrics;
+DROP VIEW IF EXISTS public.campaign_query_performance_summary;
+DROP TABLE IF EXISTS public.query_performance_metrics;
+DROP TABLE IF EXISTS public.campaign_query_patterns;
+DROP TABLE IF EXISTS public.campaign_jobs;
+DROP VIEW IF EXISTS public.campaign_cache_efficiency;
+DROP TABLE IF EXISTS public.campaign_access_grants;
+DROP VIEW IF EXISTS public.cache_performance_summary;
+DROP TABLE IF EXISTS public.cache_metrics;
+DROP TABLE IF EXISTS public.cache_invalidations;
+DROP TABLE IF EXISTS public.cache_invalidation_log;
+DROP TABLE IF EXISTS public.cache_entries;
+DROP TABLE IF EXISTS public.cache_configurations;
+DROP TABLE IF EXISTS public.authorization_decisions;
+DROP TABLE IF EXISTS public.audit_logs;
+DROP TABLE IF EXISTS public.async_task_status;
+DROP SEQUENCE IF EXISTS public.architecture_refactor_log_id_seq;
+DROP TABLE IF EXISTS public.architecture_refactor_log;
+DROP TABLE IF EXISTS public.api_access_violations;
+DROP TABLE IF EXISTS auth.users;
+DROP TABLE IF EXISTS auth.user_roles;
+DROP TABLE IF EXISTS auth.sessions;
+DROP TABLE IF EXISTS auth.roles;
+DROP TABLE IF EXISTS auth.role_permissions;
+DROP SEQUENCE IF EXISTS auth.rate_limits_id_seq;
+DROP TABLE IF EXISTS auth.rate_limits;
+DROP TABLE IF EXISTS auth.permissions;
+DROP TABLE IF EXISTS auth.password_reset_tokens;
+DROP SEQUENCE IF EXISTS auth.auth_audit_log_id_seq;
+DROP TABLE IF EXISTS auth.auth_audit_log;
+DROP FUNCTION IF EXISTS public.validate_input_field(p_endpoint_pattern character varying, p_http_method character varying, p_field_name character varying, p_field_value text, p_user_id uuid, p_session_id character varying);
+DROP FUNCTION IF EXISTS public.validate_input_field(p_endpoint_pattern text, p_http_method text, p_field_name text, p_field_value text);
+DROP FUNCTION IF EXISTS public.validate_enum_value(enum_type text, value text);
+DROP FUNCTION IF EXISTS public.validate_config_consistency(p_config_type character varying, p_config_key character varying);
+DROP FUNCTION IF EXISTS public.validate_column_naming();
+DROP FUNCTION IF EXISTS public.validate_campaign_status();
+DROP FUNCTION IF EXISTS public.validate_all_enums();
+DROP FUNCTION IF EXISTS public.update_versioned_config_atomic(p_config_type character varying, p_config_key character varying, p_config_value jsonb, p_expected_version bigint, p_checksum character varying, p_updated_by character varying, p_metadata jsonb);
+DROP FUNCTION IF EXISTS public.update_task_progress(p_task_id character varying, p_status character varying, p_progress_percentage numeric, p_processed_items integer, p_error_message text);
+DROP FUNCTION IF EXISTS public.update_state_event_processing_status();
+DROP FUNCTION IF EXISTS public.update_proxy_pools_updated_at();
+DROP FUNCTION IF EXISTS public.update_proxies_updated_at();
+DROP FUNCTION IF EXISTS public.update_keyword_rules_updated_at();
+DROP FUNCTION IF EXISTS public.trigger_set_timestamp();
+DROP FUNCTION IF EXISTS public.track_memory_allocation(p_service_name text, p_component text, p_size_bytes bigint, p_allocation_context jsonb);
+DROP FUNCTION IF EXISTS public.sync_domain_config_to_versioned();
+DROP FUNCTION IF EXISTS public.release_state_lock(p_entity_id uuid, p_lock_token uuid);
+DROP FUNCTION IF EXISTS public.release_state_lock(p_lock_key character varying);
+DROP FUNCTION IF EXISTS public.release_config_lock(p_lock_id uuid, p_owner text);
+DROP FUNCTION IF EXISTS public.record_response_time(p_endpoint character varying, p_method character varying, p_response_time_ms numeric, p_payload_size integer, p_user_id uuid, p_campaign_id uuid, p_status_code integer);
+DROP FUNCTION IF EXISTS public.record_response_time(p_service_name text, p_endpoint_path text, p_campaign_id uuid, p_response_time_ms numeric, p_metadata jsonb);
+DROP FUNCTION IF EXISTS public.record_resource_utilization(p_service_name text, p_resource_type text, p_current_usage numeric, p_max_capacity numeric, p_utilization_pct numeric, p_bottleneck_detected boolean);
+DROP FUNCTION IF EXISTS public.record_query_performance(p_query_sql text, p_query_type character varying, p_execution_time_ms numeric, p_rows_examined bigint, p_rows_returned bigint, p_query_plan jsonb);
+DROP FUNCTION IF EXISTS public.record_memory_metrics(p_service_name character varying, p_process_id character varying, p_heap_size_bytes bigint, p_heap_used_bytes bigint, p_gc_count bigint, p_gc_duration_ms bigint, p_goroutines_count integer, p_stack_size_bytes bigint);
+DROP FUNCTION IF EXISTS public.record_connection_pool_metrics(p_pool_name character varying, p_active_connections integer, p_idle_connections integer, p_max_connections integer, p_wait_count integer, p_wait_duration_ms integer, p_connection_errors integer);
+DROP FUNCTION IF EXISTS public.record_cache_operation(p_service_name text, p_cache_namespace text, p_operation_type text, p_cache_hit boolean, p_execution_time_ms numeric, p_cache_size_bytes integer);
+DROP FUNCTION IF EXISTS public.log_authorization_decision(p_user_id uuid, p_resource_type character varying, p_resource_id character varying, p_action character varying, p_decision character varying, p_policies text[], p_context jsonb, p_request_context jsonb, p_risk_score integer);
+DROP FUNCTION IF EXISTS public.log_authorization_decision(p_user_id uuid, p_resource_type character varying, p_resource_id character varying, p_action character varying, p_decision character varying, p_policies text[], p_context jsonb, p_request_context jsonb);
+DROP FUNCTION IF EXISTS public.invalidate_cache_by_pattern(p_pattern text);
+DROP FUNCTION IF EXISTS public.get_versioned_config_with_lock(p_config_type character varying, p_config_key character varying, p_for_update boolean);
+DROP FUNCTION IF EXISTS public.get_response_time_analytics(p_endpoint_filter character varying, p_hours_back integer);
+DROP FUNCTION IF EXISTS public.get_memory_pool_status(p_pool_name text);
+DROP FUNCTION IF EXISTS public.get_latest_campaign_state_snapshot(p_campaign_id uuid);
+DROP FUNCTION IF EXISTS public.get_domain_config_state_with_lock(p_config_hash text, p_lock_type text);
+DROP FUNCTION IF EXISTS public.get_config_history(p_config_type character varying, p_config_key character varying, p_limit integer);
+DROP FUNCTION IF EXISTS public.get_campaign_state_events_for_replay(p_campaign_id uuid, p_from_sequence bigint, p_to_sequence bigint, p_limit integer);
+DROP FUNCTION IF EXISTS public.get_architecture_health_score();
+DROP FUNCTION IF EXISTS public.generate_user_agent_hash(user_agent_text text);
+DROP FUNCTION IF EXISTS public.fn_validate_numeric_safety();
+DROP FUNCTION IF EXISTS public.detect_memory_leaks(p_service_name text, p_time_window interval);
+DROP FUNCTION IF EXISTS public.detect_memory_leak(p_service_name character varying, p_operation_id character varying, p_leaked_bytes bigint, p_leak_source character varying, p_stack_trace text);
+DROP FUNCTION IF EXISTS public.create_campaign_state_snapshot(p_campaign_id uuid, p_current_state text, p_state_data jsonb, p_last_event_sequence bigint, p_snapshot_metadata jsonb);
+DROP FUNCTION IF EXISTS public.create_campaign_state_event(p_campaign_id uuid, p_event_type text, p_source_state text, p_target_state text, p_reason text, p_triggered_by text, p_event_data jsonb, p_operation_context jsonb, p_correlation_id uuid);
+DROP FUNCTION IF EXISTS public.cleanup_expired_memory_metrics();
+DROP FUNCTION IF EXISTS public.cleanup_expired_config_locks();
+DROP FUNCTION IF EXISTS public.cleanup_expired_cache_entries();
+DROP FUNCTION IF EXISTS public.check_query_optimization_needed(p_query_hash character varying, p_execution_time_ms numeric, p_optimization_score numeric);
+DROP FUNCTION IF EXISTS public.check_memory_optimization_opportunities(p_service_name character varying, p_utilization_pct numeric, p_heap_used_bytes bigint);
+DROP FUNCTION IF EXISTS public.check_endpoint_authorization(p_endpoint_pattern character varying, p_http_method character varying, p_user_permissions text[], p_user_role character varying, p_is_resource_owner boolean, p_has_campaign_access boolean);
+DROP FUNCTION IF EXISTS public.check_connection_pool_alerts(p_pool_name character varying, p_utilization_pct integer, p_wait_duration_ms integer, p_connection_errors integer);
+DROP FUNCTION IF EXISTS public.calculate_efficiency_score(p_cpu_util numeric, p_memory_util numeric, p_active_workers integer, p_max_workers integer);
+DROP FUNCTION IF EXISTS public.atomic_update_domain_config_state(p_config_hash text, p_expected_version bigint, p_new_last_offset bigint, p_config_details jsonb);
+DROP FUNCTION IF EXISTS public.assign_domain_batch(p_campaign_id uuid, p_worker_id character varying, p_batch_size integer);
+DROP FUNCTION IF EXISTS public.analyze_index_usage();
+DROP FUNCTION IF EXISTS public.acquire_state_lock(p_entity_id uuid, p_entity_type character varying, p_lock_holder character varying, p_lock_duration_seconds integer);
+DROP FUNCTION IF EXISTS public.acquire_state_lock(p_lock_key character varying, p_locked_by character varying, p_timeout_seconds integer);
+DROP FUNCTION IF EXISTS public.acquire_resource_lock(p_resource_type character varying, p_resource_id character varying, p_lock_holder character varying, p_lock_mode character varying, p_timeout_seconds integer);
+DROP FUNCTION IF EXISTS public.acquire_config_lock(p_config_hash text, p_lock_type text, p_owner text, p_lock_reason text, p_expires_at timestamp with time zone);
+DROP FUNCTION IF EXISTS auth.validate_session_security(p_session_id character varying, p_client_ip inet, p_user_agent text, p_require_ip_match boolean, p_require_ua_match boolean);
+DROP FUNCTION IF EXISTS auth.update_session_fingerprint();
+DROP FUNCTION IF EXISTS auth.cleanup_expired_sessions();
+DROP TYPE IF EXISTS public.validation_status_enum;
+DROP TYPE IF EXISTS public.proxy_protocol_enum;
+DROP TYPE IF EXISTS public.persona_type_enum;
+DROP TYPE IF EXISTS public.keyword_rule_type_enum;
+DROP TYPE IF EXISTS public.http_validation_status_enum;
+DROP TYPE IF EXISTS public.dns_validation_status_enum;
+DROP TYPE IF EXISTS public.campaign_type_enum;
+DROP TYPE IF EXISTS public.campaign_status_enum;
+DROP TYPE IF EXISTS public.campaign_job_status_enum;
+DROP EXTENSION IF EXISTS "uuid-ossp";
+DROP EXTENSION IF EXISTS pgcrypto;
+-- *not* dropping schema, since initdb creates it
+DROP SCHEMA IF EXISTS consolidation;
+DROP SCHEMA IF EXISTS auth;
 --
 -- Name: auth; Type: SCHEMA; Schema: -; Owner: domainflow
 --
@@ -3300,27 +3947,6 @@ CREATE TABLE public.api_access_violations (
 ALTER TABLE public.api_access_violations OWNER TO domainflow;
 
 --
--- Name: api_endpoint_permissions; Type: TABLE; Schema: public; Owner: domainflow
---
-
-CREATE TABLE public.api_endpoint_permissions (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    endpoint_pattern character varying(255) NOT NULL,
-    http_method character varying(10) NOT NULL,
-    required_permissions text[] DEFAULT '{}'::text[] NOT NULL,
-    resource_type character varying(100),
-    minimum_role character varying(50) DEFAULT 'user'::character varying,
-    requires_ownership boolean DEFAULT false,
-    requires_campaign_access boolean DEFAULT false,
-    bypass_conditions jsonb DEFAULT '{}'::jsonb,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-
-
-ALTER TABLE public.api_endpoint_permissions OWNER TO domainflow;
-
---
 -- Name: architecture_refactor_log; Type: TABLE; Schema: public; Owner: domainflow
 --
 
@@ -3442,7 +4068,7 @@ CREATE TABLE public.authorization_decisions (
     context jsonb DEFAULT '{}'::jsonb,
     security_event_id uuid,
     created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT authorization_decisions_decision_check CHECK (((decision)::text = ANY ((ARRAY['allow'::character varying, 'deny'::character varying, 'conditional'::character varying])::text[])))
+    CONSTRAINT authorization_decisions_decision_check CHECK (((decision)::text = ANY (ARRAY[('allow'::character varying)::text, ('deny'::character varying)::text, ('conditional'::character varying)::text])))
 );
 
 
@@ -3589,7 +4215,7 @@ CREATE VIEW public.cache_performance_summary AS
         CASE
             WHEN (sum(
             CASE
-                WHEN ((operation_type)::text = ANY ((ARRAY['hit'::character varying, 'miss'::character varying])::text[])) THEN 1
+                WHEN ((operation_type)::text = ANY (ARRAY[('hit'::character varying)::text, ('miss'::character varying)::text])) THEN 1
                 ELSE 0
             END) > 0) THEN round((((sum(
             CASE
@@ -3597,7 +4223,7 @@ CREATE VIEW public.cache_performance_summary AS
                 ELSE 0
             END))::numeric / (sum(
             CASE
-                WHEN ((operation_type)::text = ANY ((ARRAY['hit'::character varying, 'miss'::character varying])::text[])) THEN 1
+                WHEN ((operation_type)::text = ANY (ARRAY[('hit'::character varying)::text, ('miss'::character varying)::text])) THEN 1
                 ELSE 0
             END))::numeric) * (100)::numeric), 2)
             ELSE (0)::numeric
@@ -3612,7 +4238,7 @@ CREATE VIEW public.cache_performance_summary AS
         CASE
             WHEN (sum(
             CASE
-                WHEN ((operation_type)::text = ANY ((ARRAY['hit'::character varying, 'miss'::character varying])::text[])) THEN 1
+                WHEN ((operation_type)::text = ANY (ARRAY[('hit'::character varying)::text, ('miss'::character varying)::text])) THEN 1
                 ELSE 0
             END) > 0) THEN round((((sum(
             CASE
@@ -3620,7 +4246,7 @@ CREATE VIEW public.cache_performance_summary AS
                 ELSE 0
             END))::numeric / (sum(
             CASE
-                WHEN ((operation_type)::text = ANY ((ARRAY['hit'::character varying, 'miss'::character varying])::text[])) THEN 1
+                WHEN ((operation_type)::text = ANY (ARRAY[('hit'::character varying)::text, ('miss'::character varying)::text])) THEN 1
                 ELSE 0
             END))::numeric) * (100)::numeric), 2)
             ELSE (0)::numeric
@@ -3669,7 +4295,7 @@ CREATE VIEW public.campaign_cache_efficiency AS
         CASE
             WHEN (sum(
             CASE
-                WHEN ((operation_type)::text = ANY ((ARRAY['hit'::character varying, 'miss'::character varying])::text[])) THEN 1
+                WHEN ((operation_type)::text = ANY (ARRAY[('hit'::character varying)::text, ('miss'::character varying)::text])) THEN 1
                 ELSE 0
             END) > 0) THEN round((((sum(
             CASE
@@ -3677,7 +4303,7 @@ CREATE VIEW public.campaign_cache_efficiency AS
                 ELSE 0
             END))::numeric / (sum(
             CASE
-                WHEN ((operation_type)::text = ANY ((ARRAY['hit'::character varying, 'miss'::character varying])::text[])) THEN 1
+                WHEN ((operation_type)::text = ANY (ARRAY[('hit'::character varying)::text, ('miss'::character varying)::text])) THEN 1
                 ELSE 0
             END))::numeric) * (100)::numeric), 2)
             ELSE (0)::numeric
@@ -3697,7 +4323,7 @@ CREATE VIEW public.campaign_cache_efficiency AS
         CASE
             WHEN (sum(
             CASE
-                WHEN ((operation_type)::text = ANY ((ARRAY['hit'::character varying, 'miss'::character varying])::text[])) THEN 1
+                WHEN ((operation_type)::text = ANY (ARRAY[('hit'::character varying)::text, ('miss'::character varying)::text])) THEN 1
                 ELSE 0
             END) > 0) THEN round((((sum(
             CASE
@@ -3705,7 +4331,7 @@ CREATE VIEW public.campaign_cache_efficiency AS
                 ELSE 0
             END))::numeric / (sum(
             CASE
-                WHEN ((operation_type)::text = ANY ((ARRAY['hit'::character varying, 'miss'::character varying])::text[])) THEN 1
+                WHEN ((operation_type)::text = ANY (ARRAY[('hit'::character varying)::text, ('miss'::character varying)::text])) THEN 1
                 ELSE 0
             END))::numeric) * (100)::numeric), 2)
             ELSE (0)::numeric
@@ -5033,21 +5659,6 @@ CREATE TABLE public.performance_optimizations (
 ALTER TABLE public.performance_optimizations OWNER TO domainflow;
 
 --
--- Name: permissions; Type: TABLE; Schema: public; Owner: domainflow
---
-
-CREATE TABLE public.permissions (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name character varying(100) NOT NULL,
-    resource character varying(100),
-    action character varying(50),
-    created_at timestamp with time zone DEFAULT now()
-);
-
-
-ALTER TABLE public.permissions OWNER TO domainflow;
-
---
 -- Name: personas; Type: TABLE; Schema: public; Owner: domainflow
 --
 
@@ -5422,32 +6033,6 @@ CREATE TABLE public.response_time_targets (
 ALTER TABLE public.response_time_targets OWNER TO domainflow;
 
 --
--- Name: role_permissions; Type: TABLE; Schema: public; Owner: domainflow
---
-
-CREATE TABLE public.role_permissions (
-    role_id uuid NOT NULL,
-    permission_id uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now()
-);
-
-
-ALTER TABLE public.role_permissions OWNER TO domainflow;
-
---
--- Name: roles; Type: TABLE; Schema: public; Owner: domainflow
---
-
-CREATE TABLE public.roles (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name character varying(100) NOT NULL,
-    created_at timestamp with time zone DEFAULT now()
-);
-
-
-ALTER TABLE public.roles OWNER TO domainflow;
-
---
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: domainflow
 --
 
@@ -5487,8 +6072,6 @@ CREATE TABLE public.security_events (
     resource_id character varying(255),
     action_attempted character varying(100) NOT NULL,
     authorization_result character varying(50) NOT NULL,
-    permissions_required text[] DEFAULT '{}'::text[],
-    permissions_granted text[] DEFAULT '{}'::text[],
     denial_reason text,
     risk_score integer DEFAULT 0,
     source_ip inet,
@@ -5652,7 +6235,7 @@ CREATE TABLE public.si004_connection_pool_alerts (
     wait_duration_ms bigint,
     open_connections integer,
     in_use_connections integer,
-    CONSTRAINT si004_connection_pool_alerts_alert_level_check CHECK (((alert_level)::text = ANY ((ARRAY['INFO'::character varying, 'WARNING'::character varying, 'CRITICAL'::character varying])::text[])))
+    CONSTRAINT si004_connection_pool_alerts_alert_level_check CHECK (((alert_level)::text = ANY (ARRAY[('INFO'::character varying)::text, ('WARNING'::character varying)::text, ('CRITICAL'::character varying)::text])))
 );
 
 
@@ -5863,20 +6446,6 @@ CREATE TABLE public.system_alerts (
 
 
 ALTER TABLE public.system_alerts OWNER TO domainflow;
-
---
--- Name: user_roles; Type: TABLE; Schema: public; Owner: domainflow
---
-
-CREATE TABLE public.user_roles (
-    user_id uuid NOT NULL,
-    role_id uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    expires_at timestamp with time zone
-);
-
-
-ALTER TABLE public.user_roles OWNER TO domainflow;
 
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: domainflow
@@ -6247,12 +6816,12 @@ COPY auth.sessions (id, user_id, ip_address, user_agent, user_agent_hash, sessio
 067f9af9f38df55055eb31ef60c48a6482a39111c65b8698e032437caedeaa5beee99fe2e51869c6103db39ba6147dac9ad9b4c941b682e5c377b485c7b5a9c3	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36	f873cb3aaeeccc99c1b70220d27bf89c734cfb356149aad1cb9e36f855bf126d	f238d12ea9c3231511776f091a7620aa6d44acfa6e08995a1268d512782acdb8	1b4145fc97cb1d67c53d03f0965ab435f649494c73488d0245e4e25d04825733	\N	f	2025-06-29 05:47:51.849037	2025-06-29 03:47:51.849037	2025-06-29 03:47:51.849037
 4a20c1a3c026383ca4ef96db387bcfde6dae6891a5b09ea723d30854f3f8eb8baf086cf3582a62a148c2701a4c26170e5d4307835d90910d722c03ae0f91c9c7	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	curl/8.12.1	6244b0b0f8bc783ee513d6e0f7de72eb0824fc62071ea908a925772caffdee3f	3db99287df9af8089aa93c0ffaa0740c4394c80ea0d353b2d778ad02477ff814	47423b4e7cac9ff4da16b3447963343d3f8e4ae00b0f385ed73ea109c1608e97	\N	f	2025-06-29 05:48:09.63977	2025-06-29 03:48:09.63977	2025-06-29 03:48:09.63977
 038175c2fed077a7b27222f44216fdc53a3dcf08bc79bd9fa3521b1aa6a23ff9c01e1b5e5d46596d2ebc7096ea0969c5ab4e27f5087955f2ea64661675eacfd7	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	node	545ea538461003efdc8c81c244531b003f6f26cfccf6c0073b3239fdedf49446	d3795cfefe99967eb94d39fd42b2d19b95b48457ebb370683b222979035cc0d1	a983fee6808d26730c4b761d7b78c670d4ea5a52a8ded9f459ba2f6d5e561081	\N	f	2025-06-29 05:50:48.344527	2025-06-29 03:50:48.344527	2025-06-29 03:50:48.344527
-8ea1ae02b5f41b71913917f51a655624c94ff61c8a0c24bba251f4e1fc6e62a7cb42166787c060634e76d234c158265a5876b35cf2bf77eb487cea84a785bdca	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36	f873cb3aaeeccc99c1b70220d27bf89c734cfb356149aad1cb9e36f855bf126d	f238d12ea9c3231511776f091a7620aa6d44acfa6e08995a1268d512782acdb8	1b4145fc97cb1d67c53d03f0965ab435f649494c73488d0245e4e25d04825733	\N	t	2025-06-29 06:04:09.450543	2025-06-29 04:04:15.009535	2025-06-29 04:04:09.450543
 405f4cf11026994dec1fc6dcc74f9051920885c85b02f63404907f48ccad7ac5ee9c85884e70e5fd42f97cf589a2154baa29022b60161aa49a6c3e638c750410	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	node	545ea538461003efdc8c81c244531b003f6f26cfccf6c0073b3239fdedf49446	d3795cfefe99967eb94d39fd42b2d19b95b48457ebb370683b222979035cc0d1	a983fee6808d26730c4b761d7b78c670d4ea5a52a8ded9f459ba2f6d5e561081	\N	f	2025-06-29 05:51:15.641657	2025-06-29 03:51:15.666688	2025-06-29 03:51:15.641657
-3fabc7f67cb418629dcc71def268a5da982f1201019d8bc3444417b651113f1ff1817b6623c7d54fa077030d13add0f0b4f33c1084f217c85e5d107628fa5475	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	curl/8.12.1	6244b0b0f8bc783ee513d6e0f7de72eb0824fc62071ea908a925772caffdee3f	3db99287df9af8089aa93c0ffaa0740c4394c80ea0d353b2d778ad02477ff814	47423b4e7cac9ff4da16b3447963343d3f8e4ae00b0f385ed73ea109c1608e97	\N	t	2025-06-29 06:06:24.109379	2025-06-29 04:06:24.109379	2025-06-29 04:06:24.109379
 08ca146538e7d386db0a9f3ae632209d45100e279285bdab03b1b2c005a5244a6e73da505e81d4810dad9180f58a919a970a29129546610f1cc6b30552d1e26b	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36	f873cb3aaeeccc99c1b70220d27bf89c734cfb356149aad1cb9e36f855bf126d	f238d12ea9c3231511776f091a7620aa6d44acfa6e08995a1268d512782acdb8	1b4145fc97cb1d67c53d03f0965ab435f649494c73488d0245e4e25d04825733	\N	f	2025-06-29 05:54:24.648289	2025-06-29 03:54:24.648289	2025-06-29 03:54:24.648289
 4a8d282de8377b343995f52cea157e35b9ed9258a3943394c25179bce46a307e0a2ee9c611f83a6ef3973a3a7457e68250cc3d514b58e0752007de7f060dec7a	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36	f873cb3aaeeccc99c1b70220d27bf89c734cfb356149aad1cb9e36f855bf126d	f238d12ea9c3231511776f091a7620aa6d44acfa6e08995a1268d512782acdb8	1b4145fc97cb1d67c53d03f0965ab435f649494c73488d0245e4e25d04825733	\N	f	2025-06-29 05:55:02.600789	2025-06-29 03:55:06.348321	2025-06-29 03:55:02.600789
 28ce61ce531bd0a8149fdf949a6c7ce46de84d0dc906416d7a518183e8d3e3a5a1c845b2597708ff2ca2772d037f340e10d31c2db6a23aa89761a017ee518dd6	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/138.0.7204.23 Safari/537.36	990e2919205ea8271f21c41a66f866ffb9560dcd0e3c2403b6417f251aa135c9	114a42dd71e7d08f63c0f376e603b1a7843c95d0b39dc7e233553bdb3417c9d7	ba3a64a9dbd1161165e86c8e4d49b3cfec4d6b9d781be1550975b1c05918a5fb	\N	f	2025-06-29 05:56:41.356248	2025-06-29 03:56:42.386936	2025-06-29 03:56:41.356248
+8ea1ae02b5f41b71913917f51a655624c94ff61c8a0c24bba251f4e1fc6e62a7cb42166787c060634e76d234c158265a5876b35cf2bf77eb487cea84a785bdca	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36	f873cb3aaeeccc99c1b70220d27bf89c734cfb356149aad1cb9e36f855bf126d	f238d12ea9c3231511776f091a7620aa6d44acfa6e08995a1268d512782acdb8	1b4145fc97cb1d67c53d03f0965ab435f649494c73488d0245e4e25d04825733	\N	f	2025-06-29 06:04:09.450543	2025-06-29 04:04:15.009535	2025-06-29 04:04:09.450543
+3fabc7f67cb418629dcc71def268a5da982f1201019d8bc3444417b651113f1ff1817b6623c7d54fa077030d13add0f0b4f33c1084f217c85e5d107628fa5475	26a0d6b7-207a-4775-98d5-2a2e9953b1b7	::1	curl/8.12.1	6244b0b0f8bc783ee513d6e0f7de72eb0824fc62071ea908a925772caffdee3f	3db99287df9af8089aa93c0ffaa0740c4394c80ea0d353b2d778ad02477ff814	47423b4e7cac9ff4da16b3447963343d3f8e4ae00b0f385ed73ea109c1608e97	\N	f	2025-06-29 06:06:24.109379	2025-06-29 04:06:24.109379	2025-06-29 04:06:24.109379
 \.
 
 
@@ -6292,49 +6861,6 @@ c028e7fd-03ad-45fd-af5f-effa36231f9d	949b1367-6790-43a5-aaa0-d1284f70e194	58f146
 63c4d569-6582-4370-90ce-bfa29994b2e8	ceffe4f8-0b91-4860-98a2-bbdb2aafbda9	c386e5b962ab0976c9759775bbb9d08f21355a6de898fdda0c2fb7c46095eea212ccb1d7a1a7b5c6725bd54130d540feca8f10c7901ed95b92069a2971b7facd	/api/campaigns/:id	DELETE	unauthorized_access	\N	\N		{"reason": "ownership_required", "request_id": "test-request-12590af0-c1ce-4b28-b6a7-05458987be29", "risk_score": 85, "campaign_id": "", "resource_type": "campaign"}	127.0.0.1		{"test": "context"}	403	2025-06-22 20:35:43.22972+00
 7e9d4c36-3f7f-499f-9882-64903eb48440	ceffe4f8-0b91-4860-98a2-bbdb2aafbda9	c386e5b962ab0976c9759775bbb9d08f21355a6de898fdda0c2fb7c46095eea212ccb1d7a1a7b5c6725bd54130d540feca8f10c7901ed95b92069a2971b7facd	/api/admin/*	GET	unauthorized_access	\N	\N		{"reason": "unknown_endpoint", "request_id": "test-request-db40aa46-be9c-405d-904d-027800086c2d", "risk_score": 80, "campaign_id": "", "resource_type": "admin"}	127.0.0.1		{"test": "context"}	403	2025-06-22 20:35:43.243251+00
 5adcfb0a-32fc-4e0e-a039-2cd691e3a82f	ceffe4f8-0b91-4860-98a2-bbdb2aafbda9	c386e5b962ab0976c9759775bbb9d08f21355a6de898fdda0c2fb7c46095eea212ccb1d7a1a7b5c6725bd54130d540feca8f10c7901ed95b92069a2971b7facd	/api/campaigns/:id	GET	unauthorized_access	\N	\N	88e75538-ebf7-428a-b189-982ae95c9152	{"reason": "campaign_access_required", "request_id": "test-request-9aeff6f0-b002-410d-9283-f2f8b00ee7d7", "risk_score": 65, "campaign_id": "88e75538-ebf7-428a-b189-982ae95c9152", "resource_type": "campaign"}	127.0.0.1		{"test": "context"}	403	2025-06-22 20:35:43.282199+00
-\.
-
-
---
--- Data for Name: api_endpoint_permissions; Type: TABLE DATA; Schema: public; Owner: domainflow
---
-
-COPY public.api_endpoint_permissions (id, endpoint_pattern, http_method, required_permissions, resource_type, minimum_role, requires_ownership, requires_campaign_access, bypass_conditions, created_at, updated_at) FROM stdin;
-7da40bff-50fe-4d48-85fc-62f5fd1769c2	/api/campaigns	GET	{campaign:list}	campaign	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-7c24f6b2-37be-4a72-9ce9-262babf649cf	/api/campaigns	POST	{campaign:create}	campaign	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-5bfb4603-3afb-474a-8101-7dc3b4d878e3	/api/campaigns/:id	GET	{campaign:read}	campaign	user	f	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-2c22b2cd-95be-4b5e-8632-f10496f9d6af	/api/campaigns/:id	PUT	{campaign:update}	campaign	user	t	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-8adb5443-250f-4a50-81ab-6ab9a5e54dec	/api/campaigns/:id	DELETE	{campaign:delete}	campaign	user	t	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-fbd8c03c-133b-435f-b48b-124088681b0d	/api/campaigns/:id/start	POST	{campaign:execute}	campaign	user	t	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-651f7cc8-11d2-4ab6-9ad0-3bf188a9d27a	/api/campaigns/:id/stop	POST	{campaign:execute}	campaign	user	t	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-3a3f32b8-090c-486c-ac98-f97d7549c062	/api/campaigns/:id/pause	POST	{campaign:execute}	campaign	user	t	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-e6a4a73b-6476-4259-8cfc-075de223d11b	/api/campaigns/:id/resume	POST	{campaign:execute}	campaign	user	t	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-54953c58-608c-4d84-b0ce-62bcff69c5bb	/api/campaigns/:id/cancel	POST	{campaign:execute}	campaign	user	t	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-7e3b2f51-0ec9-4f05-b15c-252f7420d66f	/api/campaigns/:id/status	GET	{campaign:read}	campaign	user	f	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-17ed6b39-d875-473a-9f63-c8a90ab9c286	/api/campaigns/:id/results	GET	{campaign:read}	campaign	user	f	t	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-119879a7-e00b-4c72-9922-a8ce300c02cd	/api/personas	GET	{persona:list}	persona	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-d8636cc6-9725-4a9c-ac2b-3aa19b63c7a3	/api/personas	POST	{persona:create}	persona	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-f72b7f07-9ea4-4e5b-b0e1-167d90bd9849	/api/personas/:id	GET	{persona:read}	persona	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-203ede70-95f3-47c4-bd09-4318f9317bda	/api/personas/:id	PUT	{persona:update}	persona	user	t	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-e29a6686-2615-49df-8f90-012561c6c84d	/api/personas/:id	DELETE	{persona:delete}	persona	user	t	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-33304320-7f16-4a18-b180-38befd0a3841	/api/admin/users	GET	{admin:user_management}	user	admin	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-dd336c66-ec4b-45d0-95a0-669798dcb74f	/api/admin/users	POST	{admin:user_management}	user	admin	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-3e7dc2c3-9a57-4b0c-880d-d03731e53c41	/api/admin/users/:id	GET	{admin:user_management}	user	admin	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-efdc0480-90d6-4e8c-9cad-c74943449830	/api/admin/users/:id	PUT	{admin:user_management}	user	admin	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-32a86343-6934-4a11-90a5-1e0074885c73	/api/admin/users/:id	DELETE	{admin:user_management}	user	admin	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-fceb3fad-9451-4c95-8e03-eab530621f2a	/api/admin/system/stats	GET	{admin:system_access}	system	admin	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-75df6d9d-cc01-41cc-a29d-eb83609660ce	/api/proxies	GET	{proxy:list}	proxy	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-9b254cb1-2f54-4121-9f03-629a36dbb763	/api/proxies	POST	{proxy:create}	proxy	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-6e294335-f84c-4392-a8e2-f53ed008d58b	/api/proxies/:id	GET	{proxy:read}	proxy	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-b2cd21f9-b566-438d-9a40-8d8f1f803039	/api/proxies/:id	PUT	{proxy:update}	proxy	user	t	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-8eb106bb-07c6-40a8-aa4d-184a44daa035	/api/proxies/:id	DELETE	{proxy:delete}	proxy	user	t	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-075dc336-d6ff-4518-9e75-cf14e0da1403	/api/keywords	GET	{keyword:list}	keyword	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-ef3443bc-0de0-4478-a485-5eaef2297dd4	/api/keywords	POST	{keyword:create}	keyword	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-68591823-853b-4f26-b259-5ad8bec5d8eb	/api/keywords/:id	GET	{keyword:read}	keyword	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-e7f477c6-64e7-4223-ad98-c0048cb67f27	/api/keywords/:id	PUT	{keyword:update}	keyword	user	t	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-8f12be53-2ac2-41e5-b913-19e1a02dc72b	/api/keywords/:id	DELETE	{keyword:delete}	keyword	user	t	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-c1e8c9c3-855b-4bad-919f-280d974fc8e6	/api/health	GET	{}	system	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
-5ca74810-787c-4e36-8d33-d626b6631889	/api/ping	GET	{}	system	user	f	f	{}	2025-06-22 20:18:54.965407+00	2025-06-22 20:18:54.965407+00
 \.
 
 
@@ -7649,14 +8175,6 @@ COPY public.performance_optimizations (id, optimization_type, target_service, ta
 
 
 --
--- Data for Name: permissions; Type: TABLE DATA; Schema: public; Owner: domainflow
---
-
-COPY public.permissions (id, name, resource, action, created_at) FROM stdin;
-\.
-
-
---
 -- Data for Name: personas; Type: TABLE DATA; Schema: public; Owner: domainflow
 --
 
@@ -7796,22 +8314,6 @@ COPY public.response_time_targets (id, service_name, endpoint_pattern, campaign_
 
 
 --
--- Data for Name: role_permissions; Type: TABLE DATA; Schema: public; Owner: domainflow
---
-
-COPY public.role_permissions (role_id, permission_id, created_at) FROM stdin;
-\.
-
-
---
--- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: domainflow
---
-
-COPY public.roles (id, name, created_at) FROM stdin;
-\.
-
-
---
 -- Data for Name: schema_migrations; Type: TABLE DATA; Schema: public; Owner: domainflow
 --
 
@@ -7847,7 +8349,7 @@ cv007_campaign_bigint_fix	2025-06-20 13:10:23.40532+00	\N	CV-007: Verified all c
 -- Data for Name: security_events; Type: TABLE DATA; Schema: public; Owner: domainflow
 --
 
-COPY public.security_events (id, event_type, user_id, session_id, campaign_id, resource_type, resource_id, action_attempted, authorization_result, permissions_required, permissions_granted, denial_reason, risk_score, source_ip, user_agent, request_context, audit_log_id, created_at) FROM stdin;
+COPY public.security_events (id, event_type, user_id, session_id, campaign_id, resource_type, resource_id, action_attempted, authorization_result, denial_reason, risk_score, source_ip, user_agent, request_context, audit_log_id, created_at) FROM stdin;
 \.
 
 
@@ -8988,14 +9490,6 @@ aa5efd8f-23cc-4f22-8851-b3f97045145d	memory_utilization	warning	Memory utilizati
 
 
 --
--- Data for Name: user_roles; Type: TABLE DATA; Schema: public; Owner: domainflow
---
-
-COPY public.user_roles (user_id, role_id, created_at, expires_at) FROM stdin;
-\.
-
-
---
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: domainflow
 --
 
@@ -9389,22 +9883,6 @@ ALTER TABLE ONLY auth.users
 
 ALTER TABLE ONLY public.api_access_violations
     ADD CONSTRAINT api_access_violations_pkey PRIMARY KEY (id);
-
-
---
--- Name: api_endpoint_permissions api_endpoint_permissions_endpoint_pattern_http_method_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.api_endpoint_permissions
-    ADD CONSTRAINT api_endpoint_permissions_endpoint_pattern_http_method_key UNIQUE (endpoint_pattern, http_method);
-
-
---
--- Name: api_endpoint_permissions api_endpoint_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.api_endpoint_permissions
-    ADD CONSTRAINT api_endpoint_permissions_pkey PRIMARY KEY (id);
 
 
 --
@@ -9928,22 +10406,6 @@ ALTER TABLE ONLY public.performance_optimizations
 
 
 --
--- Name: permissions permissions_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.permissions
-    ADD CONSTRAINT permissions_name_key UNIQUE (name);
-
-
---
--- Name: permissions permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.permissions
-    ADD CONSTRAINT permissions_pkey PRIMARY KEY (id);
-
-
---
 -- Name: personas personas_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
@@ -10077,30 +10539,6 @@ ALTER TABLE ONLY public.response_time_targets
 
 ALTER TABLE ONLY public.response_time_targets
     ADD CONSTRAINT response_time_targets_service_name_endpoint_pattern_campaig_key UNIQUE (service_name, endpoint_pattern, campaign_type);
-
-
---
--- Name: role_permissions role_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.role_permissions
-    ADD CONSTRAINT role_permissions_pkey PRIMARY KEY (role_id, permission_id);
-
-
---
--- Name: roles roles_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.roles
-    ADD CONSTRAINT roles_name_key UNIQUE (name);
-
-
---
--- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.roles
-    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
 
 
 --
@@ -10328,14 +10766,6 @@ ALTER TABLE ONLY public.campaign_state_transitions
 
 
 --
--- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT user_roles_pkey PRIMARY KEY (user_id, role_id);
-
-
---
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
@@ -10556,27 +10986,6 @@ CREATE INDEX idx_access_violations_type ON public.api_access_violations USING bt
 --
 
 CREATE INDEX idx_access_violations_user ON public.api_access_violations USING btree (user_id);
-
-
---
--- Name: idx_api_endpoint_permissions_method; Type: INDEX; Schema: public; Owner: domainflow
---
-
-CREATE INDEX idx_api_endpoint_permissions_method ON public.api_endpoint_permissions USING btree (http_method);
-
-
---
--- Name: idx_api_endpoint_permissions_pattern; Type: INDEX; Schema: public; Owner: domainflow
---
-
-CREATE INDEX idx_api_endpoint_permissions_pattern ON public.api_endpoint_permissions USING btree (endpoint_pattern);
-
-
---
--- Name: idx_api_endpoint_permissions_resource; Type: INDEX; Schema: public; Owner: domainflow
---
-
-CREATE INDEX idx_api_endpoint_permissions_resource ON public.api_endpoint_permissions USING btree (resource_type);
 
 
 --
@@ -12787,43 +13196,11 @@ ALTER TABLE ONLY public.proxy_pool_memberships
 
 
 --
--- Name: role_permissions role_permissions_permission_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.role_permissions
-    ADD CONSTRAINT role_permissions_permission_id_fkey FOREIGN KEY (permission_id) REFERENCES public.permissions(id) ON DELETE CASCADE;
-
-
---
--- Name: role_permissions role_permissions_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.role_permissions
-    ADD CONSTRAINT role_permissions_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE CASCADE;
-
-
---
 -- Name: security_events security_events_audit_log_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.security_events
     ADD CONSTRAINT security_events_audit_log_id_fkey FOREIGN KEY (audit_log_id) REFERENCES public.audit_logs(id);
-
-
---
--- Name: user_roles user_roles_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT user_roles_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE CASCADE;
-
-
---
--- Name: user_roles user_roles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
---
-
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --

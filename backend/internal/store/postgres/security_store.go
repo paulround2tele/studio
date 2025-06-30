@@ -23,8 +23,8 @@ func (s *securityStorePostgres) BeginTxx(ctx context.Context, opts *sql.TxOption
 }
 
 func (s *securityStorePostgres) CreateSecurityEvent(ctx context.Context, exec store.Querier, ev *models.SecurityEvent) error {
-	query := `INSERT INTO security_events (id, event_type, user_id, session_id, campaign_id, resource_type, resource_id, action_attempted, authorization_result, permissions_required, permissions_granted, denial_reason, risk_score, source_ip, user_agent, request_context, audit_log_id, created_at)
-              VALUES (:id, :event_type, :user_id, :session_id, :campaign_id, :resource_type, :resource_id, :action_attempted, :authorization_result, :permissions_required, :permissions_granted, :denial_reason, :risk_score, :source_ip, :user_agent, :request_context, :audit_log_id, :created_at)`
+	query := `INSERT INTO security_events (id, event_type, user_id, session_id, campaign_id, resource_type, resource_id, action_attempted, authorization_result, denial_reason, risk_score, source_ip, user_agent, request_context, audit_log_id, created_at)
+              VALUES (:id, :event_type, :user_id, :session_id, :campaign_id, :resource_type, :resource_id, :action_attempted, :authorization_result, :denial_reason, :risk_score, :source_ip, :user_agent, :request_context, :audit_log_id, :created_at)`
 	_, err := exec.NamedExecContext(ctx, query, ev)
 	return err
 }

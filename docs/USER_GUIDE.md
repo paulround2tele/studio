@@ -37,7 +37,7 @@ DomainFlow is a comprehensive domain analysis and campaign management platform t
 3. **Account Setup**
    - Complete your profile information
    - Set up multi-factor authentication (recommended)
-   - Review your assigned roles and permissions
+   - Review your account settings
 
 ### Interface Overview
 
@@ -586,101 +586,39 @@ Each analyzed domain includes:
 
 ## User Management
 
-*Note: User management features are available to administrators and users with appropriate permissions.*
+DomainFlow uses session-based authentication for simplified user management.
 
-### User Roles and Permissions
+### Account Management
 
-#### Role Hierarchy
-1. **Super Administrator**: Full system access
-2. **Administrator**: User and system management
-3. **Campaign Manager**: Campaign and resource management
-4. **Analyst**: Read-only access to data and reports
-5. **User**: Basic campaign creation and management
+#### User Accounts
+All users have equal access to the system once authenticated:
+- **Session-Based Access**: Simple login/logout with secure sessions
+- **Account Settings**: Update profile information and passwords
+- **Multi-Factor Authentication**: Optional MFA for enhanced security
 
-#### Permission Categories
-- **System Administration**: Server and configuration management
-- **User Management**: Create, modify, and delete user accounts
-- **Campaign Management**: Full campaign lifecycle control
-- **Resource Management**: Personas, proxies, and configurations
-- **Data Access**: View and export analysis results
-- **Audit Access**: Security logs and system events
+#### Account Security
+- **Password Management**: Change your password anytime
+- **Session Management**: Sessions automatically expire for security
+- **Login History**: Review your recent login activity
+- **Security Events**: Monitor account access
 
-### Managing User Accounts
+### Profile Management
 
-#### Creating New Users
-1. Navigate to "Users" in the admin menu
-2. Click "Add New User"
-3. Enter user information:
-   - **Email**: User's login email
-   - **First Name**: User's first name
-   - **Last Name**: User's last name
-   - **Role**: Assign appropriate role
-   - **Department**: Organizational unit (optional)
+#### Updating Your Profile
+1. Click on your profile in the top-right corner
+2. Select "Profile Settings"
+3. Update your information:
+   - **First Name**: Your first name
+   - **Last Name**: Your last name
+   - **Email**: Your login email
+4. Save changes
 
-4. Set initial password or send invitation email
-5. Configure account settings:
-   - **Account Status**: Active/Inactive
-   - **Password Policy**: Force password change on first login
-   - **MFA Requirement**: Require multi-factor authentication
-   - **Session Timeout**: Custom session duration
-
-#### Modifying User Accounts
-1. Find user in the user list
-2. Click "Edit" next to their name
-3. Modify user information:
-   - **Personal Information**: Name, email, department
-   - **Role Assignment**: Change user role
-   - **Account Status**: Enable/disable account
-   - **Security Settings**: Reset password, disable MFA
-
-#### User Account Security
-- **Password Reset**: Force password change
-- **Session Management**: View and terminate active sessions
-- **Login History**: Review login attempts and locations
-- **Security Events**: Monitor suspicious activities
-
-### Team Management
-
-#### Creating Teams
-1. Navigate to "Teams" in the admin menu
-2. Click "Create New Team"
-3. Enter team information:
-   - **Team Name**: Descriptive team name
-   - **Description**: Team purpose and responsibilities
-   - **Team Lead**: Assign team leader
-   - **Department**: Organizational association
-
-#### Team Permissions
-- **Shared Resources**: Personas and proxies accessible to team
-- **Campaign Sharing**: Campaigns visible to team members
-- **Collaboration**: Team members can collaborate on campaigns
-- **Resource Limits**: Set limits on team resource usage
-
-#### Team Analytics
-- **Team Performance**: Aggregate team statistics
-- **Resource Usage**: Monitor team resource consumption
-- **Activity Reports**: Team member activity summaries
-- **Collaboration Metrics**: Team interaction statistics
-
-### Access Control
-
-#### IP Address Restrictions
-- **Allowed IPs**: Whitelist specific IP addresses
-- **IP Ranges**: Allow access from IP ranges
-- **Geographic Restrictions**: Limit access by country
-- **VPN Detection**: Block or allow VPN connections
-
-#### Time-Based Access
-- **Business Hours**: Restrict access to business hours
-- **Timezone Settings**: Configure timezone-based restrictions
-- **Holiday Schedules**: Account for holidays and weekends
-- **Emergency Access**: Override restrictions for emergencies
-
-#### Device Management
-- **Device Registration**: Require device registration
-- **Device Limits**: Limit number of devices per user
-- **Device Tracking**: Monitor device usage patterns
-- **Remote Wipe**: Disable access from compromised devices
+#### Changing Your Password
+1. Go to Profile Settings
+2. Click "Change Password"
+3. Enter your current password
+4. Enter and confirm your new password
+5. Save changes
 
 ## Security Features
 
@@ -709,8 +647,8 @@ Each analyzed domain includes:
 #### Audit Logging
 All security-relevant events are logged:
 - **Authentication Events**: Logins, logouts, failures
-- **Authorization Events**: Permission checks, access denials
-- **Administrative Actions**: User management, configuration changes
+- **Session Events**: Session creation, expiration, termination
+- **Administrative Actions**: System configuration changes
 - **Data Access**: Campaign creation, result viewing
 - **System Events**: Service starts, stops, errors
 
@@ -757,7 +695,7 @@ All security-relevant events are logged:
 6. **Secure Your Devices**: Use device locks and encryption
 
 #### For Administrators
-1. **Regular Security Reviews**: Audit user access and permissions
+1. **Regular Security Reviews**: Audit user accounts and session activity
 2. **Monitor Security Logs**: Review audit logs regularly
 3. **Update Security Policies**: Keep policies current
 4. **Security Training**: Educate users on security practices

@@ -73,7 +73,7 @@ func (u *User) PublicUser() *User {
 		CreatedAt:          u.CreatedAt,
 		UpdatedAt:          u.UpdatedAt,
 		Name:               fullName,
-		// Simplified session-based auth - no roles or permissions
+		// Removed roles and permissions for simplified session-based auth
 	}
 }
 
@@ -124,7 +124,7 @@ type RateLimit struct {
 // LoginRequest represents a login request
 type LoginRequest struct {
 	Email        string `json:"email" binding:"required,email"`
-	Password     string `json:"password" binding:"required,min=6"`
+	Password     string `json:"password" binding:"required,min=12"`
 	RememberMe   bool   `json:"rememberMe"`
 	CaptchaToken string `json:"captchaToken"`
 }
@@ -142,7 +142,7 @@ type LoginResponse struct {
 // ChangePasswordRequest represents a password change request
 type ChangePasswordRequest struct {
 	CurrentPassword string `json:"currentPassword" binding:"required"`
-	NewPassword     string `json:"newPassword" binding:"required,min=6"`
+	NewPassword     string `json:"newPassword" binding:"required,min=12"`
 }
 
 // CreateUserRequest represents a user creation request

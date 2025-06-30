@@ -34,8 +34,6 @@ type SecurityEvent struct {
 	ResourceID          sql.NullString   `db:"resource_id" json:"resourceId,omitempty"`
 	ActionAttempted     string           `db:"action_attempted" json:"actionAttempted"`
 	AuthorizationResult string           `db:"authorization_result" json:"authorizationResult"`
-	PermissionsRequired pq.StringArray   `db:"permissions_required" json:"permissionsRequired,omitempty"`
-	PermissionsGranted  pq.StringArray   `db:"permissions_granted" json:"permissionsGranted,omitempty"`
 	DenialReason        sql.NullString   `db:"denial_reason" json:"denialReason,omitempty"`
 	RiskScore           int              `db:"risk_score" json:"riskScore"`
 	SourceIP            *net.IP          `db:"source_ip" json:"sourceIp,omitempty"`
