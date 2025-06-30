@@ -3,9 +3,18 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getProxies, testProxy, testAllProxies } from '@/lib/services/proxyService.production';
-import type { Proxy, ProxiesListResponse, ProxyActionResponse } from '@/lib/types';
-import { UUID, createUUID, safeBigIntToNumber } from '@/lib/types/branded';
+import type { Proxy as OpenAPIProxy, ProxiesListResponse } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
+
+// Extended Proxy type that includes OpenAPI fields plus frontend-specific fields
+interface ExtendedProxy extends OpenAPIProxy {
+  status?: string;
+  successCount?: number;
+  failureCount?: number;
+  lastTested?: string;
+  lastError?: string;
+}
+
 
 export interface ProxyHealthMetrics {
   totalProxies: number;
@@ -19,7 +28,7 @@ export interface ProxyHealthMetrics {
 }
 
 export interface ProxyHealthDetails {
-  id: UUID;
+  id: string;
   address: string;
   status: string;
   latencyMs: number | null;
@@ -50,7 +59,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
 
   const { toast } = useToast();
   
-  const [proxies, setProxies] = useState<Proxy[]>([]);
+  const [proxies, setProxies] = useState<ExtendedProxy[]>([]);
   const [healthMetrics, setHealthMetrics] = useState<ProxyHealthMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -60,12 +69,12 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
   /**
    * Calculate health metrics from proxy data
    */
-  const calculateHealthMetrics = useCallback((proxyData: Proxy[]): ProxyHealthMetrics => {
+  const calculateHealthMetrics = useCallback((proxyData: ExtendedProxy[]): ProxyHealthMetrics => {
     const totalProxies = proxyData.length;
-    const activeProxies = proxyData.filter(p => p.status === 'Active').length;
-    const failedProxies = proxyData.filter(p => p.status === 'Failed').length;
-    const testingProxies = proxyData.filter(p => p.status === 'Testing').length;
-    const disabledProxies = proxyData.filter(p => p.status === 'Disabled').length;
+    const activeProxies = proxyData.filter(p => p.isEnabled && p.isHealthy).length;
+    const failedProxies = proxyData.filter(p => p.isEnabled && !p.isHealthy).length;
+    const testingProxies = 0; // OpenAPI doesn't have testing status
+    const disabledProxies = proxyData.filter(p => !p.isEnabled).length;
 
     const proxiesWithLatency = proxyData.filter(p => p.latencyMs && p.latencyMs > 0);
     const averageResponseTime = proxiesWithLatency.length > 0
@@ -73,13 +82,13 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       : 0;
 
     const totalTests = proxyData.reduce((sum, p) => {
-      const successCount = p.successCount ? safeBigIntToNumber(p.successCount) : 0;
-      const failureCount = p.failureCount ? safeBigIntToNumber(p.failureCount) : 0;
+      const successCount = p.successCount || 0;
+      const failureCount = p.failureCount || 0;
       return sum + successCount + failureCount;
     }, 0);
     
     const totalSuccesses = proxyData.reduce((sum, p) => {
-      const successCount = p.successCount ? safeBigIntToNumber(p.successCount) : 0;
+      const successCount = p.successCount || 0;
       return sum + successCount;
     }, 0);
     
@@ -102,15 +111,15 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
    */
   const getProxyHealthDetails = useCallback((): ProxyHealthDetails[] => {
     return proxies.map(proxy => ({
-      id: createUUID(proxy.id),
-      address: proxy.address,
-      status: proxy.status,
+      id: proxy.id || '',
+      address: proxy.address || '',
+      status: proxy.isHealthy ? 'Active' : 'Failed',
       latencyMs: proxy.latencyMs || null,
-      lastTested: proxy.lastTested ? new Date(proxy.lastTested) : null,
-      successCount: proxy.successCount ? safeBigIntToNumber(proxy.successCount) : 0,
-      failureCount: proxy.failureCount ? safeBigIntToNumber(proxy.failureCount) : 0,
+      lastTested: proxy.lastCheckedAt ? new Date(proxy.lastCheckedAt) : null,
+      successCount: proxy.successCount || 0,
+      failureCount: proxy.failureCount || 0,
       lastError: proxy.lastError || null,
-      isHealthy: proxy.status === 'Active' && proxy.isHealthy
+      isHealthy: Boolean(proxy.isHealthy)
     }));
   }, [proxies]);
 
@@ -128,8 +137,8 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       const response: ProxiesListResponse = await getProxies();
       
       if (response.status === 'success' && response.data) {
-        setProxies(response.data);
-        const metrics = calculateHealthMetrics(response.data);
+        setProxies(response.data as ExtendedProxy[]);
+        const metrics = calculateHealthMetrics(response.data as ExtendedProxy[]);
         setHealthMetrics(metrics);
         setLastRefresh(new Date());
       } else {
@@ -161,7 +170,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     setHealthCheckInProgress(true);
     
     try {
-      const response: ProxyActionResponse = await testAllProxies();
+      const response = await testAllProxies();
       
       if (response.status === 'success') {
         toast({
@@ -196,17 +205,17 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
    */
   const testSpecificProxy = useCallback(async (proxyId: string) => {
     try {
-      const response: ProxyActionResponse = await testProxy(proxyId);
+      const response = await testProxy(proxyId);
       
       if (response.status === 'success' && response.data) {
         // Update the specific proxy in our state
-        setProxies(prev => prev.map(p => 
-          p.id === proxyId ? response.data! : p
+        setProxies(prev => prev.map(p =>
+          p.id === proxyId ? response.data as ExtendedProxy : p
         ));
         
         // Recalculate metrics
-        const updatedProxies = proxies.map(p => 
-          p.id === proxyId ? response.data! : p
+        const updatedProxies = proxies.map(p =>
+          p.id === proxyId ? response.data as ExtendedProxy : p
         );
         const metrics = calculateHealthMetrics(updatedProxies);
         setHealthMetrics(metrics);
@@ -235,8 +244,8 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     const proxy = proxies.find(p => p.id === proxyId);
     if (!proxy) return 0;
     
-    const successCount = proxy.successCount ? safeBigIntToNumber(proxy.successCount) : 0;
-    const failureCount = proxy.failureCount ? safeBigIntToNumber(proxy.failureCount) : 0;
+    const successCount = proxy.successCount || 0;
+    const failureCount = proxy.failureCount || 0;
     const totalTests = successCount + failureCount;
     
     if (totalTests === 0) return 100; // Assume 100% if no tests

@@ -70,16 +70,6 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 // --- Unified Campaign Creation Handler ---
 
 // createCampaign creates a new campaign.
-// @Summary Create campaign
-// @Description Creates a new campaign
-// @Tags Campaigns
-// @Accept json
-// @Produce json
-// @Param campaign body models.Campaign true "Campaign"
-// @Success 201 {object} models.Campaign
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns [post]
 func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 	var req services.CreateCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -172,13 +162,6 @@ func (h *CampaignOrchestratorAPIHandler) validateCampaignRequest(req services.Cr
 // --- Campaign Information Handlers ---
 
 // listCampaigns lists all campaigns.
-// @Summary List campaigns
-// @Description Lists all campaigns
-// @Tags Campaigns
-// @Produce json
-// @Success 200 {array} models.Campaign
-// @Failure 500 {object} map[string]string
-// @Router /campaigns [get]
 func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 	// Parse and validate query parameters
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -240,16 +223,6 @@ func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 }
 
 // getCampaignDetails gets a campaign by ID.
-// @Summary Get campaign
-// @Description Gets a campaign by ID
-// @Tags Campaigns
-// @Produce json
-// @Param campaignId path string true "Campaign ID"
-// @Success 200 {object} models.Campaign
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId} [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -284,15 +257,6 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 // --- Campaign Control Handlers ---
 
 // startCampaign starts a campaign.
-// @Summary Start campaign
-// @Description Starts a campaign by ID
-// @Tags Campaigns
-// @Param campaignId path string true "Campaign ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId}/start [post]
 func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -341,29 +305,11 @@ func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 }
 
 // pauseCampaign pauses a campaign.
-// @Summary Pause campaign
-// @Description Pauses a campaign by ID
-// @Tags Campaigns
-// @Param campaignId path string true "Campaign ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId}/pause [post]
 func (h *CampaignOrchestratorAPIHandler) pauseCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "pausing", h.orchestratorService.PauseCampaign)
 }
 
 // resumeCampaign resumes a campaign.
-// @Summary Resume campaign
-// @Description Resumes a campaign by ID
-// @Tags Campaigns
-// @Param campaignId path string true "Campaign ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId}/resume [post]
 func (h *CampaignOrchestratorAPIHandler) resumeCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "resuming", h.orchestratorService.ResumeCampaign)
 }
@@ -383,30 +329,11 @@ func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
 }
 
 // deleteCampaign deletes a campaign.
-// @Summary Delete campaign
-// @Description Deletes a campaign by ID
-// @Tags Campaigns
-// @Param campaignId path string true "Campaign ID"
-// @Success 200 {object} map[string]bool
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId} [delete]
 func (h *CampaignOrchestratorAPIHandler) deleteCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "deleting", h.orchestratorService.DeleteCampaign)
 }
 
 // getGeneratedDomains gets generated domains for a campaign.
-// @Summary Generated domains
-// @Description Gets generated domains for a campaign
-// @Tags Campaigns
-// @Param campaignId path string true "Campaign ID"
-// @Param limit query int false "Limit" default(20)
-// @Param cursor query int false "Cursor" default(0)
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId}/results/generated-domains [get]
 func (h *CampaignOrchestratorAPIHandler) getGeneratedDomains(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -429,16 +356,6 @@ func (h *CampaignOrchestratorAPIHandler) getGeneratedDomains(c *gin.Context) {
 }
 
 // getDNSValidationResults gets DNS validation results for a campaign.
-// @Summary DNS validation results
-// @Description Gets DNS validation results for a campaign
-// @Tags Campaigns
-// @Param campaignId path string true "Campaign ID"
-// @Param limit query int false "Limit" default(20)
-// @Param cursor query string false "Cursor"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId}/results/dns-validation [get]
 func (h *CampaignOrchestratorAPIHandler) getDNSValidationResults(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -467,16 +384,6 @@ func (h *CampaignOrchestratorAPIHandler) getDNSValidationResults(c *gin.Context)
 }
 
 // getHTTPKeywordResults gets HTTP keyword results for a campaign.
-// @Summary HTTP keyword results
-// @Description Gets HTTP keyword results for a campaign
-// @Tags Campaigns
-// @Param campaignId path string true "Campaign ID"
-// @Param limit query int false "Limit" default(20)
-// @Param cursor query string false "Cursor"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId}/results/http-keyword [get]
 func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)

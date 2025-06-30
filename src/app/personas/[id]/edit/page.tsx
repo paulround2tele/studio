@@ -2,7 +2,12 @@
 
 import PersonaForm from '@/components/personas/PersonaForm';
 import PageHeader from '@/components/shared/PageHeader';
-import type { Persona, PersonaDetailResponse } from '@/lib/types'; // PersonaDetailResponse added
+import type { components } from '@/lib/api-client/types';
+
+// Use OpenAPI types directly
+type PersonaResponse = components['schemas']['PersonaResponse'];
+type Persona = PersonaResponse;
+type PersonaDetailResponse = { status: 'success' | 'error'; data?: PersonaResponse; message?: string };
 import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
@@ -93,12 +98,23 @@ function EditPersonaPageContent() {
     );
   }
   
+  // Ensure we have a valid persona type
+  if (!persona.personaType || (persona.personaType !== 'http' && persona.personaType !== 'dns')) {
+    return (
+       <div className="text-center py-10">
+        <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+        <PageHeader title="Invalid Persona Type" description="Persona type is missing or invalid." icon={UserCog} />
+        <Button onClick={() => router.push('/personas')} className="mt-6">Back to Personas</Button>
+      </div>
+    );
+  }
+
   const IconToUse = persona.personaType === 'http' ? Globe : Wifi;
   const typeNameDisplay = persona.personaType.toUpperCase();
 
   return (
     <>
-      <PageHeader 
+      <PageHeader
         title={`Edit ${typeNameDisplay} Persona: ${persona.name}`}
         description={`Modify the details for this ${typeNameDisplay} persona.`}
         icon={IconToUse}

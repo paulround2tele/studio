@@ -1,34 +1,32 @@
 /**
  * Authentication API Response Transformers
- * Handles conversion of auth responses to use proper field names and branded types
+ * Handles conversion of auth responses to use proper field names and OpenAPI types
  */
 
 import type { ModelsUserAPI } from '@/lib/api-client/models/models-user-api';
 import type { LoginResponseAPI as ModelsLoginResponseAPI } from '@/lib/api-client/models/login-response-api';
 import type { UserAPI } from '@/lib/api-client/models/user-api';
-import type { UUID, ISODateString } from '@/lib/types/branded';
-import { createUUID, createISODateString } from '@/lib/types/branded';
 
 /**
  * User API model with properly typed fields
  */
 export interface UserAPIAligned {
     avatarUrl?: string;
-    createdAt?: ISODateString;
+    createdAt?: string;
     email?: string;
     emailVerified?: boolean;
     firstName?: string;
-    id?: UUID;
+    id?: string;
     isActive?: boolean;
     isLocked?: boolean;
-    lastLoginAt?: ISODateString;
+    lastLoginAt?: string;
     lastLoginIp?: string;
     lastName?: string;
     mfaEnabled?: boolean;
-    mfaLastUsedAt?: ISODateString;
+    mfaLastUsedAt?: string;
     mustChangePassword?: boolean;
     name?: string;
-    updatedAt?: ISODateString;
+    updatedAt?: string;
 }
 
 /**
@@ -36,7 +34,7 @@ export interface UserAPIAligned {
  */
 export interface LoginResponseAPIAligned {
     error?: string;
-    expiresAt?: ISODateString;
+    expiresAt?: string;
     requiresCaptcha?: boolean; // Fixed field name to match backend
     sessionId?: string;
     success?: boolean;
@@ -49,21 +47,21 @@ export interface LoginResponseAPIAligned {
 export function transformUserResponse(raw: UserAPI): UserAPIAligned {
     return {
         avatarUrl: raw.avatarUrl || undefined,
-        createdAt: raw.createdAt ? createISODateString(raw.createdAt) : undefined,
+        createdAt: raw.createdAt || undefined,
         email: raw.email,
         emailVerified: raw.emailVerified,
         firstName: raw.firstName,
-        id: raw.id ? createUUID(raw.id) : undefined,
+        id: raw.id || undefined,
         isActive: raw.isActive,
         isLocked: raw.isLocked,
-        lastLoginAt: raw.lastLoginAt ? createISODateString(raw.lastLoginAt) : undefined,
+        lastLoginAt: raw.lastLoginAt || undefined,
         lastLoginIp: raw.lastLoginIp || undefined,
         lastName: raw.lastName,
         mfaEnabled: raw.mfaEnabled,
-        mfaLastUsedAt: raw.mfaLastUsedAt ? createISODateString(raw.mfaLastUsedAt) : undefined,
+        mfaLastUsedAt: raw.mfaLastUsedAt || undefined,
         mustChangePassword: raw.mustChangePassword,
         name: raw.name,
-        updatedAt: raw.updatedAt ? createISODateString(raw.updatedAt) : undefined,
+        updatedAt: raw.updatedAt || undefined,
     };
 }
 
@@ -73,7 +71,7 @@ export function transformUserResponse(raw: UserAPI): UserAPIAligned {
 export function transformLoginResponse(raw: ModelsLoginResponseAPI): LoginResponseAPIAligned {
     return {
         error: raw.error ?? undefined,
-        expiresAt: raw.expiresAt ? createISODateString(raw.expiresAt) : undefined,
+        expiresAt: raw.expiresAt || undefined,
         requiresCaptcha: raw.requiresCaptcha ?? undefined,
         sessionId: raw.sessionId ?? undefined,
         success: raw.success,
@@ -94,7 +92,7 @@ export function transformUserArrayResponse(raw: ModelsUserAPI[]): UserAPIAligned
 export function transformUserRequestData(data: Partial<UserAPIAligned>): Record<string, unknown> {
     const result: Record<string, unknown> = {};
     
-    // Copy all fields, converting branded types back to primitives
+    // Copy all fields - no special handling needed since we use plain types
     if (data.avatarUrl !== undefined) result.avatarUrl = data.avatarUrl;
     if (data.createdAt !== undefined) result.createdAt = data.createdAt;
     if (data.email !== undefined) result.email = data.email;

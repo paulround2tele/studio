@@ -481,10 +481,10 @@ function CampaignsPageContent() {
             <Suspense key={campaign.id} fallback={<ComponentLoader />}>
               <CampaignListItem
                   campaign={campaign}
-                  onDeleteCampaign={() => handleDeleteCampaign(campaign.id)}
-                  onPauseCampaign={() => handleCampaignControl(campaign.id, 'pause')}
-                  onResumeCampaign={() => handleCampaignControl(campaign.id, 'resume')}
-                  onStopCampaign={() => handleCampaignControl(campaign.id, 'stop')}
+                  onDeleteCampaign={() => campaign.id && handleDeleteCampaign(campaign.id)}
+                  onPauseCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'pause')}
+                  onResumeCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'resume')}
+                  onStopCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'stop')}
                   isActionLoading={actionLoading}
               />
             </Suspense>

@@ -3,7 +3,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { createSafeBigInt, toString, isSafeBigInt, type SafeBigInt } from "@/lib/types/branded"
 
 const bigIntInputVariants = cva(
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
@@ -31,13 +30,13 @@ const bigIntInputVariants = cva(
 export interface BigIntInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type' | 'size' | 'min' | 'max' | 'defaultValue'>,
     VariantProps<typeof bigIntInputVariants> {
-  value?: SafeBigInt | null
-  defaultValue?: SafeBigInt | null
-  onChange?: (value: SafeBigInt | null) => void
+  value?: number | null
+  defaultValue?: number | null
+  onChange?: (value: number | null) => void
   onValidationChange?: (isValid: boolean, error?: string) => void
   allowNegative?: boolean
-  min?: SafeBigInt
-  max?: SafeBigInt
+  min?: number
+  max?: number
   formatDisplay?: boolean
   placeholder?: string
   errorMessage?: string
@@ -67,7 +66,7 @@ const BigIntInput = React.forwardRef<HTMLInputElement, BigIntInputProps>(
     disabled,
     ...props
   }, ref) => {
-    const [internalValue, setInternalValue] = React.useState<SafeBigInt | null>(defaultValue || null)
+    const [internalValue, setInternalValue] = React.useState<number | null>(defaultValue || null)
     const [displayValue, setDisplayValue] = React.useState<string>("")
     const [isValid, setIsValid] = React.useState<boolean>(true)
     const [validationError, setValidationError] = React.useState<string>("")
@@ -86,8 +85,8 @@ const BigIntInput = React.forwardRef<HTMLInputElement, BigIntInputProps>(
 
     // Initialize display value
     React.useEffect(() => {
-      if (currentValue) {
-        const stringValue = toString(currentValue)
+      if (currentValue !== null && currentValue !== undefined) {
+        const stringValue = currentValue.toString()
         setDisplayValue(formatDisplay ? formatNumber(stringValue) : stringValue)
       } else {
         setDisplayValue("")
@@ -109,7 +108,7 @@ const BigIntInput = React.forwardRef<HTMLInputElement, BigIntInputProps>(
       return displayValue.replace(/[,\s]/g, '')
     }
 
-    const validateValue = (stringValue: string): { isValid: boolean; error?: string; safeBigInt?: SafeBigInt } => {
+    const validateValue = (stringValue: string): { isValid: boolean; error?: string; numberValue?: number } => {
       if (stringValue === "" || stringValue === "-") {
         return { isValid: !required, error: required ? "This field is required" : undefined }
       }
@@ -125,25 +124,30 @@ const BigIntInput = React.forwardRef<HTMLInputElement, BigIntInputProps>(
       }
 
       try {
-        const safeBigInt = createSafeBigInt(stringValue)
+        const numberValue = Number(stringValue)
+
+        // Check if it's a valid number
+        if (isNaN(numberValue) || !isFinite(numberValue)) {
+          return { isValid: false, error: "Invalid number" }
+        }
 
         // Check min constraint
-        if (min && safeBigInt < min) {
-          return { 
-            isValid: false, 
-            error: `Value must be at least ${formatDisplay ? formatNumber(toString(min)) : toString(min)}` 
+        if (min !== undefined && numberValue < min) {
+          return {
+            isValid: false,
+            error: `Value must be at least ${formatDisplay ? formatNumber(min.toString()) : min.toString()}`
           }
         }
 
         // Check max constraint
-        if (max && safeBigInt > max) {
-          return { 
-            isValid: false, 
-            error: `Value must be at most ${formatDisplay ? formatNumber(toString(max)) : toString(max)}` 
+        if (max !== undefined && numberValue > max) {
+          return {
+            isValid: false,
+            error: `Value must be at most ${formatDisplay ? formatNumber(max.toString()) : max.toString()}`
           }
         }
 
-        return { isValid: true, safeBigInt }
+        return { isValid: true, numberValue }
       } catch (error) {
         return { isValid: false, error: "Number is too large or invalid" }
       }
@@ -174,10 +178,10 @@ const BigIntInput = React.forwardRef<HTMLInputElement, BigIntInputProps>(
       setValidationError(validation.error || "")
       
       // Update display value with formatting
-      if (validation.isValid && validation.safeBigInt) {
+      if (validation.isValid && validation.numberValue !== undefined) {
         setDisplayValue(formatDisplay ? formatNumber(cleanValue) : cleanValue)
         
-        const newValue = validation.safeBigInt
+        const newValue = validation.numberValue
         if (value === undefined) {
           setInternalValue(newValue)
         }
@@ -197,8 +201,8 @@ const BigIntInput = React.forwardRef<HTMLInputElement, BigIntInputProps>(
 
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
       // Re-format display value on blur if valid
-      if (isValid && currentValue) {
-        const stringValue = toString(currentValue)
+      if (isValid && currentValue !== null && currentValue !== undefined) {
+        const stringValue = currentValue.toString()
         setDisplayValue(formatDisplay ? formatNumber(stringValue) : stringValue)
       }
       props.onBlur?.(e)

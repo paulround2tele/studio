@@ -1,30 +1,16 @@
 /**
  * Aligned TypeScript Models
- * 
+ *
  * These interfaces are strictly aligned with Go backend contracts
- * All int64 fields use SafeBigInt to prevent numeric overflow
+ * All int64 fields use number (OpenAPI compatible)
  * All enums match Go values exactly (case-sensitive)
- * 
- * Generated: 2025-06-20
+ *
+ * Generated: 2025-06-30
  * Source of Truth: Go Backend (backend/internal/models/)
  */
 
-import { 
-  SafeBigInt, 
-  createSafeBigInt,
-  UUID,
-  ISODateString,
-  Email as EmailString,
-  createUUID,
-  createISODateString,
-  createEmail,
-  isValidUUID,
-  isValidISODate,
-  isValidEmail
-} from '../branded';
-
-// Re-export IP Address type
-export type IPAddress = string & { readonly __brand: 'IPAddress' };
+// Using OpenAPI compatible types instead of branded types
+export type IPAddress = string;
 
 // ============================================
 // ENUMS - Exact match with Go backend
@@ -85,31 +71,31 @@ export enum JobStatus {
 // ============================================
 
 export interface Campaign {
-  id: UUID;
+  id: string;
   name: string;
   campaignType: CampaignType;
   status: CampaignStatus;
-  userId?: UUID;
+  userId?: string;
   
-  // Int64 fields - use SafeBigInt
-  totalItems: SafeBigInt;
-  processedItems: SafeBigInt;
-  successfulItems: SafeBigInt;
-  failedItems: SafeBigInt;
+  // Int64 fields - use number (OpenAPI compatible)
+  totalItems: number;
+  processedItems: number;
+  successfulItems: number;
+  failedItems: number;
   
   progressPercentage?: number;
   metadata?: Record<string, unknown>;
   
   // Timestamps
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
-  startedAt?: ISODateString;
-  completedAt?: ISODateString;
+  createdAt: string;
+  updatedAt: string;
+  startedAt?: string;
+  completedAt?: string;
   
   // Additional fields from DB
-  estimatedCompletionAt?: ISODateString;
+  estimatedCompletionAt?: string;
   avgProcessingRate?: number;
-  lastHeartbeatAt?: ISODateString;
+  lastHeartbeatAt?: string;
   
   errorMessage?: string;
   
@@ -120,8 +106,8 @@ export interface Campaign {
 }
 
 export interface DomainGenerationParams {
-  id: UUID;
-  campaignId: UUID;
+  id: string;
+  campaignId: string;
   patternType: DomainPatternType;
   tld: string;
   constantString?: string;
@@ -129,45 +115,45 @@ export interface DomainGenerationParams {
   characterSet: string;
   numDomainsToGenerate: number;
   
-  // CRITICAL: These fields were missing in generated types
-  totalPossibleCombinations: SafeBigInt;
-  currentOffset: SafeBigInt;
+  // These fields use number (OpenAPI compatible)
+  totalPossibleCombinations: number;
+  currentOffset: number;
   
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DNSValidationParams {
-  id: UUID;
-  campaignId: UUID;
+  id: string;
+  campaignId: string;
   dnsServers: string[];
   recordTypes: string[];
   timeout: number;
   retries: number;
   batchSize: number;
-  sourceCampaignId?: UUID;
+  sourceCampaignId?: string;
   
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface HTTPKeywordParams {
-  id: UUID;
-  campaignId: UUID;
+  id: string;
+  campaignId: string;
   targetUrl: string;
-  keywordSetId?: UUID;
+  keywordSetId?: string;
   
-  // CRITICAL: These fields were missing in generated types
+  // These fields use OpenAPI types
   sourceType: HTTPSourceType;  // Required field! Uses HTTPSourceType enum (DomainGeneration or DNSValidation)
-  sourceCampaignId?: UUID;
+  sourceCampaignId?: string;
   
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface User {
-  id: UUID;
-  email: EmailString;
+  id: string;
+  email: string;
   emailVerified: boolean;
   firstName: string;
   lastName: string;
@@ -175,12 +161,12 @@ export interface User {
   isActive: boolean;
   isLocked: boolean;
   failedLoginAttempts: number;
-  lockedUntil?: ISODateString;
-  lastLoginAt?: ISODateString;
+  lockedUntil?: string;
+  lastLoginAt?: string;
   lastLoginIp?: IPAddress;
   mfaEnabled: boolean;
   mustChangePassword: boolean;
-  passwordChangedAt: ISODateString;
+  passwordChangedAt: string;
   
   // Computed fields
   name?: string;  // firstName + " " + lastName
@@ -191,8 +177,8 @@ export interface User {
 }
 
 export interface PublicUser {
-  id: UUID;
-  email: EmailString;
+  id: string;
+  email: string;
   firstName: string;
   lastName: string;
   name: string;  // Computed: firstName + " " + lastName
@@ -203,42 +189,42 @@ export interface PublicUser {
 }
 
 export interface Role {
-  id: UUID;
+  id: string;
   name: string;
   description?: string;
   permissions?: Permission[];
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Permission {
-  id: UUID;
+  id: string;
   resource: string;
   action: string;
   description?: string;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Persona {
-  id: UUID;
+  id: string;
   name: string;
   description?: string;
   personaType: PersonaType;
   configDetails: Record<string, unknown>;
   isEnabled: boolean;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
   
   // NOTE: These fields exist in frontend but NOT in backend:
   // status?: string;
-  // lastTested?: ISODateString;
+  // lastTested?: string;
   // lastError?: string;
   // tags?: string[];
 }
 
 export interface Proxy {
-  id: UUID;
+  id: string;
   name: string;
   description?: string;
   address: string;
@@ -250,44 +236,44 @@ export interface Proxy {
   isEnabled: boolean;
   isHealthy: boolean;
   lastStatus?: string;
-  lastCheckedAt?: ISODateString;
+  lastCheckedAt?: string;
   latencyMs?: number;
   city?: string;
   countryCode?: string;
   provider?: string;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GeneratedDomain {
-  id: UUID;
-  campaignId: UUID;
+  id: string;
+  campaignId: string;
   domain: string;
-  offsetIndex: SafeBigInt;  // Int64 field
-  generatedAt: ISODateString;
-  validatedAt?: ISODateString;
+  offsetIndex: number;  // Int64 field - use number (OpenAPI compatible)
+  generatedAt: string;
+  validatedAt?: string;
   isValid?: boolean;
   validationError?: string;
   metadata?: Record<string, unknown>;
 }
 
 export interface CampaignJob {
-  id: UUID;
-  campaignId: UUID;
+  id: string;
+  campaignId: string;
   jobType: string;
   status: JobStatus;
-  startOffset: SafeBigInt;  // Int64
-  endOffset: SafeBigInt;    // Int64
-  itemsInBatch: SafeBigInt; // Int64
-  successfulItems: SafeBigInt; // Int64
-  failedItems: SafeBigInt;   // Int64
-  startedAt?: ISODateString;
-  completedAt?: ISODateString;
+  startOffset: number;  // Int64 - use number (OpenAPI compatible)
+  endOffset: number;    // Int64 - use number (OpenAPI compatible)
+  itemsInBatch: number; // Int64 - use number (OpenAPI compatible)
+  successfulItems: number; // Int64 - use number (OpenAPI compatible)
+  failedItems: number;   // Int64 - use number (OpenAPI compatible)
+  startedAt?: string;
+  completedAt?: string;
   errorMessage?: string;
   retryCount: number;
   metadata?: Record<string, unknown>;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ============================================
@@ -307,13 +293,22 @@ export function createIPAddress(value: string): IPAddress {
   return value as IPAddress;
 }
 
-// Re-export branded type functions for convenience
-export {
-  createSafeBigInt,
-  createUUID,
-  createISODateString,
-  createEmail as createEmailString,
-  isValidUUID,
-  isValidISODate,
-  isValidEmail
-};
+// Helper functions for validation
+export function isValidUUID(value: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(value);
+}
+
+export function isValidISODate(value: string): boolean {
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return false;
+  }
+  const isoRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$/;
+  return isoRegex.test(value);
+}
+
+export function isValidEmail(value: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(value);
+}

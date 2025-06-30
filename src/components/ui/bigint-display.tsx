@@ -3,7 +3,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { toString, type SafeBigInt } from "@/lib/types/branded"
+// No longer using branded types - working with regular numbers
 
 const bigIntDisplayVariants = cva(
   "inline-flex items-center font-mono",
@@ -43,7 +43,7 @@ const bigIntDisplayVariants = cva(
 export interface BigIntDisplayProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof bigIntDisplayVariants> {
-  value: SafeBigInt | null | undefined
+  value: number | null | undefined
   formatWithCommas?: boolean
   prefix?: string
   suffix?: string
@@ -95,30 +95,26 @@ const BigIntDisplay = React.forwardRef<HTMLSpanElement, BigIntDisplayProps>(
     const abbreviateNumber = (numStr: string): string => {
       if (!abbreviate) return numStr
       
-      const num = BigInt(numStr)
-      const absNum = num < 0n ? -num : num
-      const isNegative = num < 0n
+      const num = Number(numStr)
+      const absNum = Math.abs(num)
+      const isNegative = num < 0
       
       const units = [
-        { value: BigInt("1000000000000000000"), symbol: "Q" }, // Quintillion
-        { value: BigInt("1000000000000000"), symbol: "P" },    // Quadrillion  
-        { value: BigInt("1000000000000"), symbol: "T" },       // Trillion
-        { value: BigInt("1000000000"), symbol: "B" },          // Billion
-        { value: BigInt("1000000"), symbol: "M" },             // Million
-        { value: BigInt("1000"), symbol: "K" },                // Thousand
+        { value: 1000000000000000000, symbol: "Q" }, // Quintillion
+        { value: 1000000000000000, symbol: "P" },    // Quadrillion
+        { value: 1000000000000, symbol: "T" },       // Trillion
+        { value: 1000000000, symbol: "B" },          // Billion
+        { value: 1000000, symbol: "M" },             // Million
+        { value: 1000, symbol: "K" },                // Thousand
       ]
       
-      if (absNum < BigInt(abbreviateThreshold)) {
+      if (absNum < abbreviateThreshold) {
         return formatNumber(numStr)
       }
       
       for (const unit of units) {
         if (absNum >= unit.value) {
-          const quotient = Number(absNum / unit.value)
-          const remainder = Number(absNum % unit.value)
-          const fractional = remainder / Number(unit.value)
-          
-          let result = quotient + fractional
+          let result = absNum / unit.value
           
           // Round to specified precision
           const multiplier = Math.pow(10, precision)
@@ -141,7 +137,7 @@ const BigIntDisplay = React.forwardRef<HTMLSpanElement, BigIntDisplayProps>(
       if (!value || !copyable) return
       
       try {
-        await navigator.clipboard.writeText(toString(value))
+        await navigator.clipboard.writeText(value.toString())
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       } catch (err) {
@@ -154,7 +150,7 @@ const BigIntDisplay = React.forwardRef<HTMLSpanElement, BigIntDisplayProps>(
         return fallback
       }
 
-      const stringValue = toString(value)
+      const stringValue = value.toString()
       const processedValue = addSign(formatNumber(abbreviateNumber(stringValue)))
       
       return (
@@ -186,7 +182,7 @@ const BigIntDisplay = React.forwardRef<HTMLSpanElement, BigIntDisplayProps>(
             handleCopy()
           }
         } : undefined}
-        aria-label={copyable ? `Copy value: ${value ? toString(value) : 'No value'}` : undefined}
+        aria-label={copyable ? `Copy value: ${value ?? 'No value'}` : undefined}
         title={tooltip || (copyable && copied ? "Copied!" : copyable ? "Click to copy" : undefined)}
         {...props}
       >

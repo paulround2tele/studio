@@ -1,31 +1,25 @@
 // src/lib/schemas/brandedValidationSchemas.ts
-// Enhanced validation schemas with branded type integration
+// Enhanced validation schemas (migrated from branded types to standard types)
 import { z } from 'zod';
-import { 
-  UUID as _UUID, 
-  createUUID, 
-  isValidUUID, 
-  SafeBigInt as _SafeBigInt,
-  createSafeBigInt,
-  ISODateString as _ISODateString,
-  createISODateString
-} from '@/lib/types/branded';
+import {
+  isValidUUID,
+  isValidISODate
+} from '@/lib/utils/validation';
 
-// Branded type validation schemas
+// Standard type validation schemas
 export const uuidSchema = z.string().refine(isValidUUID, {
   message: "Invalid UUID format"
-}).transform(createUUID);
+});
 
-export const safeBigIntSchema = z.union([
+export const numberSchema = z.union([
   z.number(),
-  z.bigint(),
-  z.string().transform(val => createSafeBigInt(val))
-]).transform(createSafeBigInt);
+  z.string().transform(val => Number(val))
+]).transform(Number);
 
 export const isoDateStringSchema = z.union([
-  z.string().datetime(),
+  z.string().refine(isValidISODate, { message: "Invalid ISO date format" }),
   z.date().transform(date => date.toISOString())
-]).transform(createISODateString);
+]);
 
 // Enhanced validation schemas from generated schemas with branded types
 export const keywordExtractionRequestItemSchemaWithBranded = z.object({
@@ -83,14 +77,14 @@ export const createUserRequestSchemaWithBranded = z.object({
 
 export type CreateUserRequestBranded = z.infer<typeof createUserRequestSchemaWithBranded>;
 
-// Campaign-specific schemas with branded types
+// Campaign-specific schemas with standard types
 export const campaignIdSchema = uuidSchema;
 export const userIdSchema = uuidSchema;
 export const personaIdSchema = uuidSchema;
 export const proxyIdSchema = uuidSchema;
 export const keywordSetIdSchema = uuidSchema;
 
-// Enhanced campaign form schema with branded types for IDs
+// Enhanced campaign form schema with standard types for IDs
 export const campaignFormSchemaWithBrandedIds = z.object({
   name: z.string().min(3, { message: "Campaign name must be at least 3 characters." }),
   description: z.string().optional(),
@@ -130,7 +124,7 @@ export const campaignFormSchemaWithBrandedIds = z.object({
 
 export type CampaignFormValuesWithBrandedIds = z.infer<typeof campaignFormSchemaWithBrandedIds>;
 
-// User management schemas with branded types
+// User management schemas with standard types
 export const adminUserManagementSchemaWithBranded = z.object({
   id: userIdSchema.optional(),
   email: z.string().email(),
@@ -143,7 +137,7 @@ export const adminUserManagementSchemaWithBranded = z.object({
 
 export type AdminUserManagementFormBranded = z.infer<typeof adminUserManagementSchemaWithBranded>;
 
-// Persona management schemas with branded types
+// Persona management schemas with standard types
 export const personaManagementSchemaWithBranded = z.object({
   id: personaIdSchema.optional(),
   name: z.string().min(1).max(255),
@@ -153,7 +147,7 @@ export const personaManagementSchemaWithBranded = z.object({
 
 export type PersonaManagementFormBranded = z.infer<typeof personaManagementSchemaWithBranded>;
 
-// Proxy management schemas with branded types
+// Proxy management schemas with standard types
 export const proxyManagementSchemaWithBranded = z.object({
   id: proxyIdSchema.optional(),
   name: z.string().min(1).max(255),
@@ -164,7 +158,7 @@ export const proxyManagementSchemaWithBranded = z.object({
 
 export type ProxyManagementFormBranded = z.infer<typeof proxyManagementSchemaWithBranded>;
 
-// Form validation utilities for branded types
+// Form validation utilities for standard types
 export const validateAndTransformFormData = <T extends Record<string, unknown>>(
   data: T,
   schema: z.ZodSchema<unknown>
@@ -180,7 +174,7 @@ export const validateAndTransformFormData = <T extends Record<string, unknown>>(
   }
 };
 
-// Type-safe form error extraction for branded types
+// Type-safe form error extraction for standard types
 export const extractBrandedTypeErrors = (error: z.ZodError): Record<string, string> => {
   const errors: Record<string, string> = {};
   

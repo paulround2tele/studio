@@ -3,7 +3,6 @@
 // Handles conversion between simple WebSocket messages and legacy message formats
 
 import type { WebSocketMessage, CampaignProgressMessage } from '@/lib/services/websocketService.simple';
-import { createUUID, UUID } from '@/lib/types/branded';
 
 /**
  * Converts WebSocket message to legacy format for backward compatibility
@@ -26,7 +25,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
       const progressData = extractProgressData(message.data);
       return {
         type: 'progress',
-        campaignId: message.campaignId || createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
         data: {
           progress: progressData.progressPercentage,
           phase: progressData.phase,
@@ -41,7 +40,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'unknown';
       return {
         type: 'domain_generated',
-        campaignId: message.campaignId || createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
         data: {
           domains: [domain],
         },
@@ -55,7 +54,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'unknown';
       return {
         type: 'validation_complete',
-        campaignId: message.campaignId || createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
         data: {
           validationResults: [message.data],
         },
@@ -66,7 +65,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
       const phaseData = extractProgressData(message.data);
       return {
         type: 'phase_complete',
-        campaignId: message.campaignId || createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
         data: {
           phase: phaseData.phase,
           status: 'completed',
@@ -80,7 +79,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'completed';
       return {
         type: 'phase_complete',
-        campaignId: message.campaignId || createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
         data: {
           status: finalStatus,
         },
@@ -93,7 +92,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'Unknown error';
       return {
         type: 'error',
-        campaignId: message.campaignId || createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
         data: {
           error: errorMessage,
         },
@@ -103,7 +102,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
     case 'connection_ack':
       return {
         type: 'subscription_confirmed',
-        campaignId: createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: '00000000-0000-0000-0000-000000000000',
         data: {},
         message: 'Connection acknowledged',
       };
@@ -115,7 +114,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'System notification';
       return {
         type: 'system_notification',
-        campaignId: createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: '00000000-0000-0000-0000-000000000000',
         data: {},
         message: notificationMessage,
       };
@@ -124,7 +123,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
       console.warn('Unknown WebSocket message type:', message.type);
       return {
         type: 'subscription_confirmed',
-        campaignId: createUUID('00000000-0000-0000-0000-000000000000'),
+        campaignId: '00000000-0000-0000-0000-000000000000',
         data: {},
         message: 'Unknown message type',
       };
@@ -141,7 +140,7 @@ export function adaptWebSocketMessage(message: WebSocketMessage): CampaignProgre
 /**
  * Type guard to check if a message has campaign-specific data
  */
-export function isMessageForCampaign(message: WebSocketMessage, campaignId: UUID): boolean {
+export function isMessageForCampaign(message: WebSocketMessage, campaignId: string): boolean {
   if (message.campaignId) {
     return message.campaignId === campaignId;
   }
@@ -157,7 +156,7 @@ export function isMessageForCampaign(message: WebSocketMessage, campaignId: UUID
 /**
  * Extract campaign ID from various message formats
  */
-export function extractCampaignId(message: WebSocketMessage): UUID | null {
+export function extractCampaignId(message: WebSocketMessage): string | null {
   if (message.campaignId) {
     return message.campaignId;
   }

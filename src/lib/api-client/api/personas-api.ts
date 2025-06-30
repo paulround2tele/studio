@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * DomainFlow API
- * DomainFlow API for domain generation, validation, and campaign management.  This API provides comprehensive functionality for: - Entity management (Personas, Proxies, Keyword Sets) - Configuration management - Ad-hoc keyword extraction - V2 Stateful Campaign Management system - Real-time communication via WebSockets - Comprehensive authentication  **Authentication:** The API uses session-based authentication with HTTP-only cookies:  1. **Session-Based Authentication**: Secure HTTP-only cookie-based sessions with session fingerprinting    - Login via `POST /api/v2/auth/login`    - Session cookies: httpOnly, secure, sameSite=strict    - X-Requested-With header required for CSRF protection on state-changing operations    - Automatic session cleanup and concurrent session management  All RESTful API endpoints under `/api/v2` (excluding `GET /ping`) require valid session authentication.  For WebSocket connections, authentication is provided via session cookies (automatically included by browser). 
+ * DomainFlow API for domain generation, validation, and campaign management.
  *
  * The version of the OpenAPI document: 2.0.0
  * Contact: support@domainflow.com
@@ -22,7 +22,7 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { PersonaResponse } from '../models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsPersona } from '../models';
 /**
  * PersonasApi - axios parameter creator
  * @export
@@ -30,13 +30,13 @@ import type { PersonaResponse } from '../models';
 export const PersonasApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
-         * @summary List personas
+         * Lists all personas
+         * @summary List all personas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2PersonasGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/personas`;
+        personasGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/personas`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -47,8 +47,6 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
 
 
     
@@ -62,16 +60,16 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         /**
-         * 
+         * Deletes a persona by ID
          * @summary Delete persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2PersonasIdDelete: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        personasIdDelete: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
-            assertParamExists('apiV2PersonasIdDelete', 'id', id)
-            const localVarPath = `/api/v2/personas/{id}`
+            assertParamExists('personasIdDelete', 'id', id)
+            const localVarPath = `/personas/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -84,8 +82,6 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -98,16 +94,16 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         /**
-         * 
+         * Gets a persona by ID
          * @summary Get persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2PersonasIdGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        personasIdGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
-            assertParamExists('apiV2PersonasIdGet', 'id', id)
-            const localVarPath = `/api/v2/personas/{id}`
+            assertParamExists('personasIdGet', 'id', id)
+            const localVarPath = `/personas/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -120,8 +116,6 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -134,19 +128,19 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         /**
-         * 
+         * Updates a persona by ID
          * @summary Update persona
-         * @param {string} id 
-         * @param {object} body 
+         * @param {string} id Persona ID
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2PersonasIdPut: async (id: string, body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        personasIdPut: async (id: string, githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
-            assertParamExists('apiV2PersonasIdPut', 'id', id)
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2PersonasIdPut', 'body', body)
-            const localVarPath = `/api/v2/personas/{id}`
+            assertParamExists('personasIdPut', 'id', id)
+            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsPersona' is not null or undefined
+            assertParamExists('personasIdPut', 'githubComFntelecomllcStudioBackendInternalModelsPersona', githubComFntelecomllcStudioBackendInternalModelsPersona)
+            const localVarPath = `/personas/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -159,8 +153,6 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -168,7 +160,7 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsPersona, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -176,54 +168,16 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             };
         },
         /**
-         * 
-         * @summary Create persona
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2PersonasPost: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2PersonasPost', 'body', body)
-            const localVarPath = `/api/v2/personas`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
+         * Tests a persona by ID
          * @summary Test persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        testPersona: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        personasIdTestPost: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
-            assertParamExists('testPersona', 'id', id)
-            const localVarPath = `/api/v2/personas/{id}`
+            assertParamExists('personasIdTestPost', 'id', id)
+            const localVarPath = `/personas/{id}/test`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -236,13 +190,47 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Creates a new persona
+         * @summary Create persona
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        personasPost: async (githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsPersona' is not null or undefined
+            assertParamExists('personasPost', 'githubComFntelecomllcStudioBackendInternalModelsPersona', githubComFntelecomllcStudioBackendInternalModelsPersona)
+            const localVarPath = `/personas`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsPersona, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -260,81 +248,81 @@ export const PersonasApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = PersonasApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
-         * @summary List personas
+         * Lists all personas
+         * @summary List all personas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2PersonasGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<PersonaResponse>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2PersonasGet(options);
+        async personasGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsPersona>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.personasGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PersonasApi.apiV2PersonasGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Deletes a persona by ID
          * @summary Delete persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2PersonasIdDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2PersonasIdDelete(id, options);
+        async personasIdDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: boolean; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.personasIdDelete(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PersonasApi.apiV2PersonasIdDelete']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasIdDelete']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Gets a persona by ID
          * @summary Get persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2PersonasIdGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2PersonasIdGet(id, options);
+        async personasIdGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.personasIdGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PersonasApi.apiV2PersonasIdGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasIdGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Updates a persona by ID
          * @summary Update persona
-         * @param {string} id 
-         * @param {object} body 
+         * @param {string} id Persona ID
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2PersonasIdPut(id: string, body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2PersonasIdPut(id, body, options);
+        async personasIdPut(id: string, githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.personasIdPut(id, githubComFntelecomllcStudioBackendInternalModelsPersona, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PersonasApi.apiV2PersonasIdPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
-         * @summary Create persona
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2PersonasPost(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2PersonasPost(body, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PersonasApi.apiV2PersonasPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
+         * Tests a persona by ID
          * @summary Test persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async testPersona(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.testPersona(id, options);
+        async personasIdTestPost(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.personasIdTestPost(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PersonasApi.testPersona']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasIdTestPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Creates a new persona
+         * @summary Create persona
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async personasPost(githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.personasPost(githubComFntelecomllcStudioBackendInternalModelsPersona, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -348,64 +336,64 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
     const localVarFp = PersonasApiFp(configuration)
     return {
         /**
-         * 
-         * @summary List personas
+         * Lists all personas
+         * @summary List all personas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2PersonasGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<PersonaResponse>> {
-            return localVarFp.apiV2PersonasGet(options).then((request) => request(axios, basePath));
+        personasGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsPersona>> {
+            return localVarFp.personasGet(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Deletes a persona by ID
          * @summary Delete persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2PersonasIdDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2PersonasIdDelete(id, options).then((request) => request(axios, basePath));
+        personasIdDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: boolean; }> {
+            return localVarFp.personasIdDelete(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Gets a persona by ID
          * @summary Get persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2PersonasIdGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
-            return localVarFp.apiV2PersonasIdGet(id, options).then((request) => request(axios, basePath));
+        personasIdGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona> {
+            return localVarFp.personasIdGet(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Updates a persona by ID
          * @summary Update persona
-         * @param {string} id 
-         * @param {object} body 
+         * @param {string} id Persona ID
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2PersonasIdPut(id: string, body: object, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
-            return localVarFp.apiV2PersonasIdPut(id, body, options).then((request) => request(axios, basePath));
+        personasIdPut(id: string, githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona> {
+            return localVarFp.personasIdPut(id, githubComFntelecomllcStudioBackendInternalModelsPersona, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
-         * @summary Create persona
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2PersonasPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
-            return localVarFp.apiV2PersonasPost(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
+         * Tests a persona by ID
          * @summary Test persona
-         * @param {string} id 
+         * @param {string} id Persona ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        testPersona(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.testPersona(id, options).then((request) => request(axios, basePath));
+        personasIdTestPost(id: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+            return localVarFp.personasIdTestPost(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Creates a new persona
+         * @summary Create persona
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        personasPost(githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona> {
+            return localVarFp.personasPost(githubComFntelecomllcStudioBackendInternalModelsPersona, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -417,64 +405,64 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
  */
 export interface PersonasApiInterface {
     /**
-     * 
-     * @summary List personas
+     * Lists all personas
+     * @summary List all personas
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    apiV2PersonasGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<PersonaResponse>>;
+    personasGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsPersona>>;
 
     /**
-     * 
+     * Deletes a persona by ID
      * @summary Delete persona
-     * @param {string} id 
+     * @param {string} id Persona ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    apiV2PersonasIdDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+    personasIdDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: boolean; }>;
 
     /**
-     * 
+     * Gets a persona by ID
      * @summary Get persona
-     * @param {string} id 
+     * @param {string} id Persona ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    apiV2PersonasIdGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
+    personasIdGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona>;
 
     /**
-     * 
+     * Updates a persona by ID
      * @summary Update persona
-     * @param {string} id 
-     * @param {object} body 
+     * @param {string} id Persona ID
+     * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    apiV2PersonasIdPut(id: string, body: object, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
+    personasIdPut(id: string, githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona>;
 
     /**
-     * 
-     * @summary Create persona
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof PersonasApiInterface
-     */
-    apiV2PersonasPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
-
-    /**
-     * 
+     * Tests a persona by ID
      * @summary Test persona
-     * @param {string} id 
+     * @param {string} id Persona ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    testPersona(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+    personasIdTestPost(id: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }>;
+
+    /**
+     * Creates a new persona
+     * @summary Create persona
+     * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    personasPost(githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsPersona>;
 
 }
 
@@ -486,75 +474,75 @@ export interface PersonasApiInterface {
  */
 export class PersonasApi extends BaseAPI implements PersonasApiInterface {
     /**
-     * 
-     * @summary List personas
+     * Lists all personas
+     * @summary List all personas
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApi
      */
-    public apiV2PersonasGet(options?: RawAxiosRequestConfig) {
-        return PersonasApiFp(this.configuration).apiV2PersonasGet(options).then((request) => request(this.axios, this.basePath));
+    public personasGet(options?: RawAxiosRequestConfig) {
+        return PersonasApiFp(this.configuration).personasGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Deletes a persona by ID
      * @summary Delete persona
-     * @param {string} id 
+     * @param {string} id Persona ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApi
      */
-    public apiV2PersonasIdDelete(id: string, options?: RawAxiosRequestConfig) {
-        return PersonasApiFp(this.configuration).apiV2PersonasIdDelete(id, options).then((request) => request(this.axios, this.basePath));
+    public personasIdDelete(id: string, options?: RawAxiosRequestConfig) {
+        return PersonasApiFp(this.configuration).personasIdDelete(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Gets a persona by ID
      * @summary Get persona
-     * @param {string} id 
+     * @param {string} id Persona ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApi
      */
-    public apiV2PersonasIdGet(id: string, options?: RawAxiosRequestConfig) {
-        return PersonasApiFp(this.configuration).apiV2PersonasIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    public personasIdGet(id: string, options?: RawAxiosRequestConfig) {
+        return PersonasApiFp(this.configuration).personasIdGet(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Updates a persona by ID
      * @summary Update persona
-     * @param {string} id 
-     * @param {object} body 
+     * @param {string} id Persona ID
+     * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApi
      */
-    public apiV2PersonasIdPut(id: string, body: object, options?: RawAxiosRequestConfig) {
-        return PersonasApiFp(this.configuration).apiV2PersonasIdPut(id, body, options).then((request) => request(this.axios, this.basePath));
+    public personasIdPut(id: string, githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options?: RawAxiosRequestConfig) {
+        return PersonasApiFp(this.configuration).personasIdPut(id, githubComFntelecomllcStudioBackendInternalModelsPersona, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
-     * @summary Create persona
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof PersonasApi
-     */
-    public apiV2PersonasPost(body: object, options?: RawAxiosRequestConfig) {
-        return PersonasApiFp(this.configuration).apiV2PersonasPost(body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
+     * Tests a persona by ID
      * @summary Test persona
-     * @param {string} id 
+     * @param {string} id Persona ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApi
      */
-    public testPersona(id: string, options?: RawAxiosRequestConfig) {
-        return PersonasApiFp(this.configuration).testPersona(id, options).then((request) => request(this.axios, this.basePath));
+    public personasIdTestPost(id: string, options?: RawAxiosRequestConfig) {
+        return PersonasApiFp(this.configuration).personasIdTestPost(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Creates a new persona
+     * @summary Create persona
+     * @param {GithubComFntelecomllcStudioBackendInternalModelsPersona} githubComFntelecomllcStudioBackendInternalModelsPersona Persona
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApi
+     */
+    public personasPost(githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona, options?: RawAxiosRequestConfig) {
+        return PersonasApiFp(this.configuration).personasPost(githubComFntelecomllcStudioBackendInternalModelsPersona, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

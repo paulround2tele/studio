@@ -1,7 +1,7 @@
 
 "use client";
 
-import CampaignFormV2 from '@/components/campaigns/CampaignFormV2';
+import CampaignFormV2, { type CampaignViewModel } from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
 import type { Campaign, CampaignDetailResponse } from '@/lib/types';
 import { FilePenLine, AlertCircle } from 'lucide-react';
@@ -90,7 +90,7 @@ function EditCampaignPageContent() {
         description={`Modify the details for campaign "${campaign.name}".`}
         icon={FilePenLine}
       />
-      <CampaignFormV2 campaignToEdit={campaign} isEditing={true} />
+      <CampaignFormV2 campaignToEdit={campaign as CampaignViewModel} isEditing={true} />
     </>
   );
 }

@@ -1,0 +1,3633 @@
+components:
+    schemas:
+        AddProxyToPoolRequest:
+            description: Request to add a proxy to a pool
+            properties:
+                proxyId:
+                    description: Proxy ID to add to the pool
+                    format: uuid
+                    type: string
+                weight:
+                    description: Weight for weighted pool strategies
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+            required:
+                - proxyId
+            type: object
+        Campaign:
+            description: Campaign information
+            properties:
+                avgProcessingRate:
+                    description: Average processing rate
+                    type: number
+                campaignType:
+                    description: Type of campaign
+                    enum:
+                        - domain_generation
+                        - dns_validation
+                        - http_keyword_validation
+                    type: string
+                completedAt:
+                    description: Campaign completion timestamp
+                    format: date-time
+                    type: string
+                createdAt:
+                    description: Campaign creation timestamp
+                    format: date-time
+                    type: string
+                errorMessage:
+                    description: Error message if campaign failed
+                    type: string
+                estimatedCompletionAt:
+                    description: Estimated completion timestamp
+                    format: date-time
+                    type: string
+                failedItems:
+                    description: Number of failed items
+                    minimum: 0
+                    type: integer
+                id:
+                    description: Campaign unique identifier
+                    format: uuid
+                    type: string
+                lastHeartbeatAt:
+                    description: Last heartbeat timestamp
+                    format: date-time
+                    type: string
+                metadata:
+                    description: Additional campaign metadata
+                    type: object
+                name:
+                    description: Campaign name
+                    type: string
+                processedItems:
+                    description: Number of items processed
+                    minimum: 0
+                    type: integer
+                progressPercentage:
+                    description: Campaign progress percentage
+                    maximum: 100
+                    minimum: 0
+                    type: number
+                startedAt:
+                    description: Campaign start timestamp
+                    format: date-time
+                    type: string
+                status:
+                    description: Campaign status
+                    enum:
+                        - pending
+                        - queued
+                        - running
+                        - pausing
+                        - paused
+                        - completed
+                        - failed
+                        - archived
+                        - cancelled
+                    type: string
+                successfulItems:
+                    description: Number of successfully processed items
+                    minimum: 0
+                    type: integer
+                totalItems:
+                    description: Total number of items to process
+                    minimum: 0
+                    type: integer
+                updatedAt:
+                    description: Campaign last update timestamp
+                    format: date-time
+                    type: string
+                userId:
+                    description: User ID who created the campaign
+                    format: uuid
+                    type: string
+            type: object
+        CampaignDetailsResponse:
+            description: Campaign details with type-specific parameters
+            properties:
+                campaign:
+                    oneOf:
+                        - $ref: '#/components/schemas/Campaign'
+                params:
+                    description: Type-specific campaign parameters
+                    type: object
+            type: object
+        CampaignListResponse:
+            description: Response for campaign list with pagination metadata
+            properties:
+                data:
+                    items:
+                        $ref: '#/components/schemas/Campaign'
+                    type: array
+                metadata:
+                    oneOf:
+                        - $ref: '#/components/schemas/PaginationMetadata'
+                status:
+                    enum:
+                        - success
+                    type: string
+            type: object
+        CampaignOperationResponse:
+            description: Response for campaign operations
+            properties:
+                campaign_id:
+                    description: Campaign ID
+                    format: uuid
+                    type: string
+                message:
+                    description: Operation result message
+                    type: string
+            type: object
+        ChangePasswordRequest:
+            description: Password change request
+            properties:
+                currentPassword:
+                    description: Current password
+                    type: string
+                newPassword:
+                    description: New password (minimum 12 characters)
+                    minLength: 12
+                    type: string
+            required:
+                - currentPassword
+                - newPassword
+            type: object
+        CookieHandling:
+            description: Cookie handling configuration
+            properties:
+                mode:
+                    description: Cookie handling mode
+                    enum:
+                        - preserve
+                        - ignore
+                        - custom
+                    type: string
+            type: object
+        CreateCampaignRequest:
+            description: Request to create a new campaign
+            properties:
+                campaignType:
+                    description: Type of campaign to create
+                    enum:
+                        - domain_generation
+                        - dns_validation
+                        - http_keyword_validation
+                    type: string
+                description:
+                    description: Campaign description
+                    type: string
+                dnsValidationParams:
+                    oneOf:
+                        - $ref: '#/components/schemas/DnsValidationParams'
+                domainGenerationParams:
+                    oneOf:
+                        - $ref: '#/components/schemas/DomainGenerationParams'
+                httpKeywordParams:
+                    oneOf:
+                        - $ref: '#/components/schemas/HttpKeywordParams'
+                name:
+                    description: Campaign name
+                    type: string
+                userId:
+                    description: User ID creating the campaign
+                    format: uuid
+                    type: string
+            required:
+                - campaignType
+                - name
+            type: object
+        CreateKeywordSetRequest:
+            description: Request to create a new keyword set
+            properties:
+                description:
+                    description: Keyword set description
+                    type: string
+                isEnabled:
+                    default: true
+                    description: Whether the keyword set is enabled
+                    type: boolean
+                name:
+                    description: Keyword set name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+                rules:
+                    description: List of keyword rules to include in the set
+                    items:
+                        $ref: '#/components/schemas/KeywordRuleRequest'
+                    type: array
+            required:
+                - name
+            type: object
+        CreatePersonaRequest:
+            description: Request to create a new persona
+            properties:
+                configDetails:
+                    description: Type-specific configuration details
+                    oneOf:
+                        - $ref: '#/components/schemas/HttpPersonaConfig'
+                        - $ref: '#/components/schemas/DnsPersonaConfig'
+                description:
+                    description: Persona description
+                    type: string
+                isEnabled:
+                    default: false
+                    description: Whether the persona is enabled
+                    type: boolean
+                name:
+                    description: Persona name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+                personaType:
+                    description: Type of persona
+                    enum:
+                        - dns
+                        - http
+                    type: string
+            required:
+                - name
+                - personaType
+                - configDetails
+            type: object
+        CreateProxyRequest:
+            description: Request to create a new proxy
+            properties:
+                address:
+                    description: Proxy address (host:port)
+                    type: string
+                countryCode:
+                    description: Country code for the proxy location
+                    type: string
+                description:
+                    description: Proxy description
+                    type: string
+                isEnabled:
+                    description: Whether the proxy is enabled
+                    type: boolean
+                name:
+                    description: Proxy name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+                password:
+                    description: Proxy password for authentication
+                    type: string
+                protocol:
+                    description: Proxy protocol
+                    enum:
+                        - http
+                        - https
+                        - socks5
+                        - socks4
+                    type: string
+                username:
+                    description: Proxy username for authentication
+                    type: string
+            required:
+                - name
+                - protocol
+                - address
+            type: object
+        DNSValidationResult:
+            description: DNS validation result information
+            properties:
+                attempts:
+                    description: Number of validation attempts
+                    type: integer
+                businessStatus:
+                    description: Business status
+                    type: string
+                createdAt:
+                    description: Record creation timestamp
+                    format: date-time
+                    type: string
+                dnsCampaignId:
+                    description: DNS campaign ID
+                    format: uuid
+                    type: string
+                dnsRecords:
+                    description: DNS records found
+                    type: object
+                domainName:
+                    description: Domain name validated
+                    type: string
+                generatedDomainId:
+                    description: Generated domain ID
+                    format: uuid
+                    type: string
+                id:
+                    description: Result unique identifier
+                    format: uuid
+                    type: string
+                lastCheckedAt:
+                    description: Last validation timestamp
+                    format: date-time
+                    type: string
+                validatedByPersonaId:
+                    description: Persona used for validation
+                    format: uuid
+                    type: string
+                validationStatus:
+                    description: Validation status
+                    enum:
+                        - pending
+                        - valid
+                        - invalid
+                        - error
+                        - skipped
+                    type: string
+            type: object
+        DNSValidationResultsResponse:
+            description: Response for DNS validation results
+            properties:
+                data:
+                    items:
+                        $ref: '#/components/schemas/DNSValidationResult'
+                    type: array
+                nextCursor:
+                    description: Next cursor for pagination
+                    type: string
+                totalCount:
+                    description: Total number of DNS validation results
+                    type: integer
+            type: object
+        DnsPersonaConfig:
+            description: DNS persona configuration details
+            properties:
+                concurrentQueriesPerDomain:
+                    description: Concurrent queries per domain
+                    maximum: 10
+                    minimum: 1
+                    type: integer
+                maxConcurrentGoroutines:
+                    description: Maximum concurrent goroutines
+                    maximum: 1000
+                    minimum: 1
+                    type: integer
+                maxDomainsPerRequest:
+                    description: Maximum domains per request
+                    maximum: 1000
+                    minimum: 1
+                    type: integer
+                queryDelayMaxMs:
+                    description: Maximum query delay in milliseconds
+                    maximum: 10000
+                    minimum: 0
+                    type: integer
+                queryDelayMinMs:
+                    description: Minimum query delay in milliseconds
+                    maximum: 5000
+                    minimum: 0
+                    type: integer
+                queryTimeoutSeconds:
+                    description: DNS query timeout in seconds
+                    maximum: 60
+                    minimum: 1
+                    type: integer
+                rateLimitBurst:
+                    description: Rate limit burst capacity
+                    minimum: 1
+                    type: integer
+                rateLimitDps:
+                    description: Rate limit in queries per second
+                    minimum: 0
+                    type: number
+                resolverStrategy:
+                    description: Strategy for selecting DNS resolvers
+                    enum:
+                        - round_robin
+                        - random
+                        - weighted
+                        - priority
+                    type: string
+                resolvers:
+                    description: DNS resolver IP addresses
+                    items:
+                        format: ipv4
+                        type: string
+                    minItems: 1
+                    type: array
+                resolversPreferredOrder:
+                    description: Preferred order of resolvers
+                    items:
+                        type: string
+                    type: array
+                resolversWeighted:
+                    additionalProperties:
+                        type: number
+                    description: Weighted resolver configuration
+                    type: object
+                useSystemResolvers:
+                    description: Use system DNS resolvers
+                    type: boolean
+            required:
+                - resolvers
+                - queryTimeoutSeconds
+                - maxDomainsPerRequest
+                - resolverStrategy
+            type: object
+        DnsValidationParams:
+            description: Parameters for DNS validation campaigns
+            properties:
+                batchSize:
+                    description: Batch size for processing
+                    minimum: 1
+                    type: integer
+                personaIds:
+                    description: DNS personas to use for validation
+                    items:
+                        format: uuid
+                        type: string
+                    minItems: 1
+                    type: array
+                processingSpeedPerMinute:
+                    description: Processing speed per minute
+                    minimum: 0
+                    type: integer
+                retryAttempts:
+                    description: Number of retry attempts
+                    minimum: 0
+                    type: integer
+                rotationIntervalSeconds:
+                    description: Persona rotation interval in seconds
+                    minimum: 0
+                    type: integer
+                sourceCampaignId:
+                    description: Source domain generation campaign ID
+                    format: uuid
+                    type: string
+            required:
+                - sourceCampaignId
+                - personaIds
+            type: object
+        DomainGenerationParams:
+            description: Parameters for domain generation campaigns
+            properties:
+                characterSet:
+                    description: Character set for generation
+                    type: string
+                constantString:
+                    description: Constant string portion
+                    type: string
+                numDomainsToGenerate:
+                    description: Number of domains to generate
+                    minimum: 0
+                    type: integer
+                patternType:
+                    description: Pattern type for domain generation
+                    enum:
+                        - prefix
+                        - suffix
+                        - both
+                    type: string
+                tld:
+                    description: Top-level domain
+                    type: string
+                variableLength:
+                    description: Length of variable portion
+                    minimum: 1
+                    type: integer
+            required:
+                - patternType
+                - variableLength
+                - characterSet
+                - constantString
+                - tld
+            type: object
+        ErrorResponse:
+            properties:
+                error:
+                    description: Error message
+                    type: string
+            type: object
+        FeatureFlags:
+            description: Feature flag settings
+            properties:
+                enableAnalytics:
+                    description: Enable analytics feature
+                    type: boolean
+                enableDebugMode:
+                    description: Enable debug mode feature
+                    type: boolean
+                enableOfflineMode:
+                    description: Enable offline mode feature
+                    type: boolean
+                enableRealTimeUpdates:
+                    description: Enable real-time updates feature
+                    type: boolean
+            type: object
+        ForceCheckProxiesRequest:
+            description: Request to force health check on specific proxies
+            properties:
+                ids:
+                    description: List of proxy IDs to check (empty for all)
+                    items:
+                        type: string
+                    type: array
+            type: object
+        GeneratedDomain:
+            description: Generated domain information
+            properties:
+                createdAt:
+                    description: Record creation timestamp
+                    format: date-time
+                    type: string
+                domainName:
+                    description: Generated domain name
+                    type: string
+                generatedAt:
+                    description: Domain generation timestamp
+                    format: date-time
+                    type: string
+                generationCampaignId:
+                    description: Generation campaign ID
+                    format: uuid
+                    type: string
+                id:
+                    description: Domain unique identifier
+                    format: uuid
+                    type: string
+                offsetIndex:
+                    description: Offset index in generation space
+                    type: integer
+                sourceKeyword:
+                    description: Source keyword used for generation
+                    type: string
+                sourcePattern:
+                    description: Source pattern used for generation
+                    type: string
+                tld:
+                    description: Top-level domain
+                    type: string
+            type: object
+        GeneratedDomainsResponse:
+            description: Response for generated domains
+            properties:
+                data:
+                    items:
+                        $ref: '#/components/schemas/GeneratedDomain'
+                    type: array
+                nextCursor:
+                    description: Next cursor for pagination
+                    type: integer
+                totalCount:
+                    description: Total number of generated domains
+                    type: integer
+            type: object
+        HTTP2SettingsConfig:
+            description: HTTP/2 settings configuration
+            properties:
+                enabled:
+                    description: Enable HTTP/2
+                    type: boolean
+            type: object
+        HTTPKeywordResult:
+            description: HTTP keyword validation result information
+            properties:
+                attempts:
+                    description: Number of validation attempts
+                    type: integer
+                contentHash:
+                    description: Content hash for deduplication
+                    type: string
+                createdAt:
+                    description: Record creation timestamp
+                    format: date-time
+                    type: string
+                dnsResultId:
+                    description: Associated DNS result ID
+                    format: uuid
+                    type: string
+                domainName:
+                    description: Domain name validated
+                    type: string
+                extractedContentSnippet:
+                    description: Content snippet extracted
+                    type: string
+                foundAdHocKeywords:
+                    description: Ad-hoc keywords found
+                    items:
+                        type: string
+                    type: array
+                foundKeywordsFromSets:
+                    description: Keywords found from keyword sets
+                    type: object
+                httpKeywordCampaignId:
+                    description: HTTP keyword campaign ID
+                    format: uuid
+                    type: string
+                httpStatusCode:
+                    description: HTTP status code received
+                    type: integer
+                id:
+                    description: Result unique identifier
+                    format: uuid
+                    type: string
+                lastCheckedAt:
+                    description: Last validation timestamp
+                    format: date-time
+                    type: string
+                pageTitle:
+                    description: Page title extracted
+                    type: string
+                responseHeaders:
+                    description: HTTP response headers
+                    type: object
+                usedProxyId:
+                    description: Proxy used for validation
+                    format: uuid
+                    type: string
+                validatedByPersonaId:
+                    description: Persona used for validation
+                    format: uuid
+                    type: string
+                validationStatus:
+                    description: Validation status
+                    enum:
+                        - pending
+                        - valid
+                        - invalid
+                        - error
+                        - skipped
+                    type: string
+            type: object
+        HTTPKeywordResultsResponse:
+            description: Response for HTTP keyword validation results
+            properties:
+                data:
+                    items:
+                        $ref: '#/components/schemas/HTTPKeywordResult'
+                    type: array
+                nextCursor:
+                    description: Next cursor for pagination
+                    type: string
+                totalCount:
+                    description: Total number of HTTP keyword results
+                    type: integer
+            type: object
+        HttpKeywordParams:
+            description: Parameters for HTTP keyword validation campaigns
+            properties:
+                adHocKeywords:
+                    description: Ad-hoc keywords for validation
+                    items:
+                        minLength: 1
+                        type: string
+                    type: array
+                batchSize:
+                    description: Batch size for processing
+                    minimum: 1
+                    type: integer
+                keywordSetIds:
+                    description: Keyword set IDs to use for validation
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                personaIds:
+                    description: HTTP personas to use for validation
+                    items:
+                        format: uuid
+                        type: string
+                    minItems: 1
+                    type: array
+                processingSpeedPerMinute:
+                    description: Processing speed per minute
+                    minimum: 0
+                    type: integer
+                proxyPoolId:
+                    description: Proxy pool ID for requests
+                    format: uuid
+                    type: string
+                proxySelectionStrategy:
+                    description: Strategy for proxy selection
+                    type: string
+                retryAttempts:
+                    description: Number of retry attempts
+                    minimum: 0
+                    type: integer
+                rotationIntervalSeconds:
+                    description: Persona rotation interval in seconds
+                    minimum: 0
+                    type: integer
+                sourceCampaignId:
+                    description: Source DNS validation campaign ID
+                    format: uuid
+                    type: string
+                targetHttpPorts:
+                    description: Target HTTP ports for validation
+                    items:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                    type: array
+            required:
+                - sourceCampaignId
+                - personaIds
+            type: object
+        HttpPersonaConfig:
+            description: HTTP persona configuration details
+            properties:
+                allowInsecureTls:
+                    description: Allow insecure TLS connections
+                    type: boolean
+                cookieHandling:
+                    oneOf:
+                        - $ref: '#/components/schemas/CookieHandling'
+                domSnapshot:
+                    description: Capture DOM snapshots in headless browser
+                    type: boolean
+                fetchBodyForKeywords:
+                    description: Fetch response body for keyword scanning
+                    type: boolean
+                headerOrder:
+                    description: Order of HTTP headers
+                    items:
+                        type: string
+                    type: array
+                headers:
+                    additionalProperties:
+                        type: string
+                    description: Custom HTTP headers
+                    type: object
+                headlessTimeoutSeconds:
+                    description: Headless browser timeout in seconds
+                    maximum: 300
+                    minimum: 1
+                    type: integer
+                headlessUserAgent:
+                    description: User agent for headless browser
+                    type: string
+                http2Settings:
+                    oneOf:
+                        - $ref: '#/components/schemas/HTTP2SettingsConfig'
+                loadImages:
+                    description: Load images in headless browser
+                    type: boolean
+                maxRedirects:
+                    description: Maximum number of redirects to follow
+                    maximum: 20
+                    minimum: 0
+                    type: integer
+                rateLimitBurst:
+                    description: Rate limit burst capacity
+                    minimum: 1
+                    type: integer
+                rateLimitDps:
+                    description: Rate limit in requests per second
+                    minimum: 0
+                    type: number
+                requestTimeoutSec:
+                    description: Request timeout in seconds
+                    maximum: 300
+                    minimum: 1
+                    type: integer
+                screenshot:
+                    description: Take screenshots in headless browser
+                    type: boolean
+                scriptExecution:
+                    description: Enable JavaScript execution in headless browser
+                    type: boolean
+                tlsClientHello:
+                    oneOf:
+                        - $ref: '#/components/schemas/TLSClientHello'
+                useHeadless:
+                    description: Use headless browser for requests
+                    type: boolean
+                userAgent:
+                    description: User agent string for HTTP requests
+                    type: string
+                viewportHeight:
+                    description: Viewport height for headless browser
+                    maximum: 4096
+                    minimum: 240
+                    type: integer
+                viewportWidth:
+                    description: Viewport width for headless browser
+                    maximum: 4096
+                    minimum: 320
+                    type: integer
+                waitDelaySeconds:
+                    description: Wait delay before capturing content
+                    maximum: 60
+                    minimum: 0
+                    type: integer
+            required:
+                - userAgent
+            type: object
+        KeywordRule:
+            description: Keyword rule information
+            properties:
+                category:
+                    description: Category for organizing related rules
+                    type: string
+                contextChars:
+                    description: Number of context characters to include around matches
+                    type: integer
+                createdAt:
+                    description: Rule creation timestamp
+                    format: date-time
+                    type: string
+                id:
+                    description: Rule unique identifier
+                    format: uuid
+                    type: string
+                isCaseSensitive:
+                    description: Whether pattern matching is case sensitive
+                    type: boolean
+                keywordSetId:
+                    description: Parent keyword set ID
+                    format: uuid
+                    type: string
+                pattern:
+                    description: Pattern to match against content
+                    type: string
+                ruleType:
+                    description: Type of rule pattern matching
+                    enum:
+                        - string
+                        - regex
+                    type: string
+                updatedAt:
+                    description: Rule last update timestamp
+                    format: date-time
+                    type: string
+            type: object
+        KeywordRuleRequest:
+            description: Request to create or update a keyword rule
+            properties:
+                category:
+                    description: Category for organizing related rules
+                    type: string
+                contextChars:
+                    default: 0
+                    description: Number of context characters to include around matches
+                    minimum: 0
+                    type: integer
+                isCaseSensitive:
+                    default: false
+                    description: Whether pattern matching is case sensitive
+                    type: boolean
+                pattern:
+                    description: Pattern to match against content
+                    minLength: 1
+                    type: string
+                ruleType:
+                    description: Type of rule pattern matching
+                    enum:
+                        - string
+                        - regex
+                    type: string
+            required:
+                - pattern
+                - ruleType
+            type: object
+        KeywordSetResponse:
+            description: Keyword set information with rules
+            properties:
+                createdAt:
+                    description: Keyword set creation timestamp
+                    format: date-time
+                    type: string
+                description:
+                    description: Keyword set description
+                    type: string
+                id:
+                    description: Keyword set unique identifier
+                    format: uuid
+                    type: string
+                isEnabled:
+                    description: Whether the keyword set is enabled
+                    type: boolean
+                name:
+                    description: Keyword set name
+                    type: string
+                ruleCount:
+                    description: Number of rules in the set
+                    minimum: 0
+                    type: integer
+                rules:
+                    description: List of keyword rules in the set
+                    items:
+                        $ref: '#/components/schemas/KeywordRule'
+                    type: array
+                updatedAt:
+                    description: Keyword set last update timestamp
+                    format: date-time
+                    type: string
+            type: object
+        LoginRequest:
+            description: Login credentials
+            properties:
+                captchaToken:
+                    description: CAPTCHA token for bot protection
+                    type: string
+                email:
+                    description: User email address
+                    format: email
+                    type: string
+                password:
+                    description: User password (minimum 6 characters)
+                    minLength: 6
+                    type: string
+                rememberMe:
+                    description: Whether to remember the user session
+                    type: boolean
+            required:
+                - email
+                - password
+            type: object
+        LoginResponse:
+            description: Login response
+            properties:
+                expiresAt:
+                    description: Session expiration time
+                    format: date-time
+                    type: string
+                sessionId:
+                    description: Session identifier
+                    type: string
+                user:
+                    oneOf:
+                        - $ref: '#/components/schemas/User'
+            type: object
+        PageInfo:
+            description: Page information for pagination
+            properties:
+                count:
+                    description: Total number of items
+                    type: integer
+                current:
+                    description: Current page number
+                    type: integer
+                pageSize:
+                    description: Number of items per page
+                    type: integer
+                total:
+                    description: Total number of pages
+                    type: integer
+            type: object
+        PaginationMetadata:
+            description: Pagination metadata
+            properties:
+                page:
+                    oneOf:
+                        - $ref: '#/components/schemas/PageInfo'
+            type: object
+        PersonaListResponse:
+            description: Response for persona list
+            properties:
+                data:
+                    items:
+                        $ref: '#/components/schemas/PersonaResponse'
+                    type: array
+                message:
+                    description: Response message
+                    type: string
+                status:
+                    enum:
+                        - success
+                    type: string
+            type: object
+        PersonaResponse:
+            description: Persona response with structured configuration
+            properties:
+                configDetails:
+                    description: Type-specific configuration details
+                    oneOf:
+                        - $ref: '#/components/schemas/HttpPersonaConfig'
+                        - $ref: '#/components/schemas/DnsPersonaConfig'
+                createdAt:
+                    description: Persona creation timestamp
+                    format: date-time
+                    type: string
+                description:
+                    description: Persona description
+                    type: string
+                id:
+                    description: Persona unique identifier
+                    format: uuid
+                    type: string
+                isEnabled:
+                    description: Whether the persona is enabled
+                    type: boolean
+                name:
+                    description: Persona name
+                    type: string
+                personaType:
+                    description: Type of persona
+                    enum:
+                        - dns
+                        - http
+                    type: string
+                updatedAt:
+                    description: Persona last update timestamp
+                    format: date-time
+                    type: string
+            type: object
+        PersonaTestResult:
+            description: Result of persona test operation
+            properties:
+                data:
+                    properties:
+                        message:
+                            description: Test result message
+                            type: string
+                        personaId:
+                            description: Persona ID that was tested
+                            format: uuid
+                            type: string
+                        personaType:
+                            description: Type of persona tested
+                            enum:
+                                - dns
+                                - http
+                            type: string
+                        status:
+                            description: Test result status
+                            type: string
+                        testedAt:
+                            description: Test execution timestamp
+                            format: date-time
+                            type: string
+                    type: object
+                message:
+                    description: Response message
+                    type: string
+                status:
+                    enum:
+                        - success
+                    type: string
+            type: object
+        Proxy:
+            description: Proxy configuration and status information
+            properties:
+                address:
+                    description: Proxy address
+                    type: string
+                city:
+                    description: Proxy city location
+                    type: string
+                countryCode:
+                    description: Proxy country code
+                    type: string
+                createdAt:
+                    description: Proxy creation timestamp
+                    format: date-time
+                    type: string
+                description:
+                    description: Proxy description
+                    type: string
+                host:
+                    description: Proxy hostname or IP
+                    type: string
+                id:
+                    description: Proxy unique identifier
+                    format: uuid
+                    type: string
+                isEnabled:
+                    description: Whether the proxy is enabled
+                    type: boolean
+                isHealthy:
+                    description: Whether the proxy is healthy
+                    type: boolean
+                lastCheckedAt:
+                    description: Last health check timestamp
+                    format: date-time
+                    type: string
+                lastStatus:
+                    description: Last status message
+                    type: string
+                latencyMs:
+                    description: Last measured latency in milliseconds
+                    type: integer
+                name:
+                    description: Proxy name
+                    type: string
+                port:
+                    description: Proxy port number
+                    type: integer
+                protocol:
+                    description: Proxy protocol
+                    enum:
+                        - http
+                        - https
+                        - socks5
+                        - socks4
+                    type: string
+                provider:
+                    description: Proxy provider
+                    type: string
+                updatedAt:
+                    description: Proxy last update timestamp
+                    format: date-time
+                    type: string
+                username:
+                    description: Proxy username
+                    type: string
+            type: object
+        ProxyPool:
+            description: Proxy pool configuration and status information
+            properties:
+                createdAt:
+                    description: Pool creation timestamp
+                    format: date-time
+                    type: string
+                description:
+                    description: Proxy pool description
+                    type: string
+                healthCheckEnabled:
+                    description: Whether health checks are enabled
+                    type: boolean
+                healthCheckIntervalSeconds:
+                    description: Health check interval in seconds
+                    type: integer
+                id:
+                    description: Proxy pool unique identifier
+                    format: uuid
+                    type: string
+                isEnabled:
+                    description: Whether the proxy pool is enabled
+                    type: boolean
+                maxRetries:
+                    description: Maximum retry attempts
+                    type: integer
+                name:
+                    description: Proxy pool name
+                    type: string
+                poolStrategy:
+                    description: Pool selection strategy
+                    type: string
+                proxies:
+                    description: List of proxies in the pool
+                    items:
+                        $ref: '#/components/schemas/Proxy'
+                    type: array
+                timeoutSeconds:
+                    description: Timeout in seconds
+                    type: integer
+                updatedAt:
+                    description: Pool last update timestamp
+                    format: date-time
+                    type: string
+            type: object
+        ProxyPoolMembership:
+            description: Proxy pool membership information
+            properties:
+                addedAt:
+                    description: Timestamp when proxy was added to pool
+                    format: date-time
+                    type: string
+                isActive:
+                    description: Whether the membership is active
+                    type: boolean
+                poolId:
+                    description: Pool ID
+                    format: uuid
+                    type: string
+                proxyId:
+                    description: Proxy ID
+                    format: uuid
+                    type: string
+                weight:
+                    description: Weight for proxy selection
+                    type: integer
+            type: object
+        ProxyPoolRequest:
+            description: Request to create or update a proxy pool
+            properties:
+                description:
+                    description: Proxy pool description
+                    type: string
+                healthCheckEnabled:
+                    description: Whether health checks are enabled for the pool
+                    type: boolean
+                healthCheckIntervalSeconds:
+                    description: Health check interval in seconds
+                    maximum: 3600
+                    minimum: 1
+                    type: integer
+                isEnabled:
+                    description: Whether the proxy pool is enabled
+                    type: boolean
+                maxRetries:
+                    description: Maximum retry attempts for proxy requests
+                    maximum: 10
+                    minimum: 0
+                    type: integer
+                name:
+                    description: Proxy pool name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+                poolStrategy:
+                    description: Pool selection strategy (e.g., round_robin, random, weighted)
+                    type: string
+                timeoutSeconds:
+                    description: Timeout for proxy requests in seconds
+                    maximum: 300
+                    minimum: 1
+                    type: integer
+            required:
+                - name
+            type: object
+        ProxyStatus:
+            description: Proxy status information
+            properties:
+                address:
+                    description: Proxy address
+                    type: string
+                consecutiveFailures:
+                    description: Number of consecutive failures
+                    type: integer
+                description:
+                    description: Proxy description
+                    type: string
+                id:
+                    description: Proxy ID
+                    type: string
+                isHealthy:
+                    description: Whether the proxy is healthy
+                    type: boolean
+                lastFailure:
+                    description: Last failure timestamp
+                    format: date-time
+                    type: string
+                name:
+                    description: Proxy name
+                    type: string
+                password:
+                    description: Proxy password (may be masked)
+                    type: string
+                protocol:
+                    description: Proxy protocol
+                    type: string
+                userEnabled:
+                    description: Whether the proxy is enabled by user
+                    type: boolean
+                username:
+                    description: Proxy username
+                    type: string
+            type: object
+        ProxyTestResult:
+            description: Result of proxy test operation
+            properties:
+                durationMs:
+                    description: Test duration in milliseconds
+                    type: integer
+                error:
+                    description: Error message if test failed
+                    type: string
+                proxyId:
+                    description: Proxy ID that was tested
+                    type: string
+                returnedIp:
+                    description: IP address returned by the proxy test
+                    type: string
+                statusCode:
+                    description: HTTP status code from test request
+                    type: integer
+                success:
+                    description: Whether the test was successful
+                    type: boolean
+            type: object
+        RefreshResponse:
+            description: Session refresh response
+            properties:
+                expiresAt:
+                    description: New session expiration time
+                    format: date-time
+                    type: string
+                sessionId:
+                    description: New session identifier
+                    type: string
+            type: object
+        StandardAPIResponse:
+            description: Standard API response wrapper
+            properties:
+                data:
+                    description: Response data (only present on success)
+                error:
+                    description: Error details (only present on error)
+                    type: string
+                message:
+                    description: Human-readable message
+                    type: string
+                status:
+                    description: Status of the response
+                    enum:
+                        - success
+                        - error
+                    type: string
+            required:
+                - status
+                - message
+            type: object
+        TLSClientHello:
+            description: TLS ClientHello configuration
+            properties:
+                cipherSuites:
+                    description: Supported cipher suites
+                    items:
+                        type: string
+                    type: array
+                curvePreferences:
+                    description: Supported curve preferences
+                    items:
+                        type: string
+                    type: array
+                ja3:
+                    description: JA3 fingerprint
+                    type: string
+                maxVersion:
+                    description: Maximum TLS version
+                    enum:
+                        - TLS10
+                        - TLS11
+                        - TLS12
+                        - TLS13
+                    type: string
+                minVersion:
+                    description: Minimum TLS version
+                    enum:
+                        - TLS10
+                        - TLS11
+                        - TLS12
+                        - TLS13
+                    type: string
+            type: object
+        UUID:
+            format: uuid
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+            type: string
+        UpdateKeywordSetRequest:
+            description: Request to update an existing keyword set
+            properties:
+                description:
+                    description: Keyword set description
+                    type: string
+                isEnabled:
+                    description: Whether the keyword set is enabled
+                    type: boolean
+                name:
+                    description: Keyword set name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+                rules:
+                    description: List of keyword rules (replaces all existing rules)
+                    items:
+                        $ref: '#/components/schemas/KeywordRuleRequest'
+                    type: array
+            type: object
+        UpdatePersonaRequest:
+            description: Request to update an existing persona
+            properties:
+                configDetails:
+                    description: Type-specific configuration details
+                    oneOf:
+                        - $ref: '#/components/schemas/HttpPersonaConfig'
+                        - $ref: '#/components/schemas/DnsPersonaConfig'
+                description:
+                    description: Persona description
+                    type: string
+                isEnabled:
+                    description: Whether the persona is enabled
+                    type: boolean
+                name:
+                    description: Persona name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+            type: object
+        UpdateProxyRequest:
+            description: Request to update an existing proxy
+            properties:
+                address:
+                    description: Proxy address (host:port)
+                    type: string
+                countryCode:
+                    description: Country code for the proxy location
+                    type: string
+                description:
+                    description: Proxy description
+                    type: string
+                isEnabled:
+                    description: Whether the proxy is enabled
+                    type: boolean
+                name:
+                    description: Proxy name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+                password:
+                    description: Proxy password for authentication
+                    type: string
+                protocol:
+                    description: Proxy protocol
+                    enum:
+                        - http
+                        - https
+                        - socks5
+                        - socks4
+                    type: string
+                username:
+                    description: Proxy username for authentication
+                    type: string
+            type: object
+        User:
+            description: User information
+            properties:
+                createdAt:
+                    description: Account creation timestamp
+                    format: date-time
+                    type: string
+                email:
+                    description: User email address
+                    format: email
+                    type: string
+                emailVerified:
+                    description: Whether the user email is verified
+                    type: boolean
+                firstName:
+                    description: User first name
+                    type: string
+                id:
+                    description: User unique identifier
+                    format: uuid
+                    type: string
+                isActive:
+                    description: Whether the user account is active
+                    type: boolean
+                isLocked:
+                    description: Whether the user account is locked
+                    type: boolean
+                lastLoginAt:
+                    description: Last login timestamp
+                    format: date-time
+                    type: string
+                lastName:
+                    description: User last name
+                    type: string
+                mfaEnabled:
+                    description: Whether multi-factor authentication is enabled
+                    type: boolean
+                mustChangePassword:
+                    description: Whether the user must change their password
+                    type: boolean
+                updatedAt:
+                    description: Account last update timestamp
+                    format: date-time
+                    type: string
+            type: object
+    securitySchemes:
+        sessionAuth:
+            description: Session-based authentication using HTTP cookies
+            in: cookie
+            name: session
+            type: apiKey
+info:
+    contact:
+        email: support@domainflow.com
+        name: API Support
+        url: http://www.domainflow.com/support
+    description: DomainFlow API for domain generation, validation, and campaign management.
+    license:
+        name: MIT
+        url: https://opensource.org/licenses/MIT
+    title: DomainFlow API
+    version: 2.0.0
+openapi: 3.0.3
+paths:
+    /auth/login:
+        post:
+            description: Authenticates a user and creates a session
+            operationId: login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoginRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LoginResponse'
+                    description: Login successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: User login
+            tags:
+                - Auth
+    /auth/logout:
+        post:
+            description: Invalidates the current session and clears session cookie
+            operationId: logout
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StandardAPIResponse'
+                    description: Logout successful
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: User logout
+            tags:
+                - Auth
+    /auth/refresh:
+        post:
+            description: Refreshes the current session
+            operationId: refreshSession
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RefreshResponse'
+                    description: Session refreshed successfully
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Refresh session
+            tags:
+                - Auth
+    /campaigns:
+        get:
+            description: Lists all campaigns with pagination and filtering support
+            operationId: listCampaigns
+            parameters:
+                - description: Maximum number of campaigns to return (1-100)
+                  in: query
+                  name: limit
+                  schema:
+                    default: 20
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                - description: Number of campaigns to skip for pagination
+                  in: query
+                  name: offset
+                  schema:
+                    default: 0
+                    minimum: 0
+                    type: integer
+                - description: Filter campaigns by status
+                  in: query
+                  name: status
+                  schema:
+                    enum:
+                        - pending
+                        - queued
+                        - running
+                        - pausing
+                        - paused
+                        - completed
+                        - failed
+                        - archived
+                        - cancelled
+                    type: string
+                - description: Filter campaigns by type
+                  in: query
+                  name: type
+                  schema:
+                    enum:
+                        - domain_generation
+                        - dns_validation
+                        - http_keyword_validation
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignListResponse'
+                    description: Campaigns retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: List campaigns
+            tags:
+                - Campaigns
+        post:
+            description: Creates a new campaign using unified endpoint supporting all campaign types
+            operationId: createCampaign
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateCampaignRequest'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Campaign'
+                    description: Campaign created successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Create campaign
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}:
+        delete:
+            description: Permanently deletes a campaign and all its associated data
+            operationId: deleteCampaign
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignOperationResponse'
+                    description: Campaign deleted successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign is in an invalid state for this operation
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Delete campaign
+            tags:
+                - Campaigns
+        get:
+            description: Gets detailed information about a campaign including type-specific parameters
+            operationId: getCampaignDetails
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignDetailsResponse'
+                    description: Campaign details retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get campaign details
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}/cancel:
+        post:
+            description: Cancels a campaign, setting it to cancelled status
+            operationId: cancelCampaign
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignOperationResponse'
+                    description: Campaign cancelled successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign is in an invalid state for this operation
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Cancel campaign
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}/pause:
+        post:
+            description: Pauses a running or queued campaign
+            operationId: pauseCampaign
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignOperationResponse'
+                    description: Campaign paused successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign is in an invalid state for this operation
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Pause campaign
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}/results/dns-validation:
+        get:
+            description: Gets DNS validation results for a DNS validation campaign
+            operationId: getDNSValidationResults
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+                - description: Maximum number of results to return
+                  in: query
+                  name: limit
+                  schema:
+                    default: 20
+                    minimum: 1
+                    type: integer
+                - description: Cursor for pagination
+                  in: query
+                  name: cursor
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DNSValidationResultsResponse'
+                    description: DNS validation results retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get DNS validation results
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}/results/generated-domains:
+        get:
+            description: Gets generated domains for a domain generation campaign
+            operationId: getGeneratedDomains
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+                - description: Maximum number of domains to return
+                  in: query
+                  name: limit
+                  schema:
+                    default: 20
+                    minimum: 1
+                    type: integer
+                - description: Cursor for pagination (offset index)
+                  in: query
+                  name: cursor
+                  schema:
+                    default: 0
+                    minimum: 0
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GeneratedDomainsResponse'
+                    description: Generated domains retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get generated domains
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}/results/http-keyword:
+        get:
+            description: Gets HTTP keyword validation results for an HTTP keyword validation campaign
+            operationId: getHTTPKeywordResults
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+                - description: Maximum number of results to return
+                  in: query
+                  name: limit
+                  schema:
+                    default: 20
+                    minimum: 1
+                    type: integer
+                - description: Cursor for pagination
+                  in: query
+                  name: cursor
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPKeywordResultsResponse'
+                    description: HTTP keyword results retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get HTTP keyword results
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}/resume:
+        post:
+            description: Resumes a paused campaign by queuing it for execution
+            operationId: resumeCampaign
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignOperationResponse'
+                    description: Campaign resumed successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign is in an invalid state for this operation
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Resume campaign
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}/start:
+        post:
+            description: Starts a campaign by transitioning it from pending to queued status
+            operationId: startCampaign
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignOperationResponse'
+                    description: Campaign queued for start
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign is in an invalid state for this operation
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Start campaign
+            tags:
+                - Campaigns
+    /change-password:
+        post:
+            description: Changes the password for the currently authenticated user
+            operationId: changePassword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ChangePasswordRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StandardAPIResponse'
+                    description: Password changed successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Change password
+            tags:
+                - Auth
+    /config/features:
+        get:
+            description: Returns current feature flag settings
+            operationId: getFeatureFlags
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/FeatureFlags'
+                    description: Feature flags retrieved successfully
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get feature flags
+            tags:
+                - Config
+        post:
+            description: Updates feature flag settings
+            operationId: updateFeatureFlags
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/FeatureFlags'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/FeatureFlags'
+                    description: Feature flags updated successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update feature flags
+            tags:
+                - Config
+    /keywords/sets:
+        get:
+            description: Lists all keyword sets with optional filtering and pagination
+            operationId: listKeywordSets
+            parameters:
+                - description: Maximum number of keyword sets to return
+                  in: query
+                  name: limit
+                  schema:
+                    default: 20
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                - description: Number of keyword sets to skip for pagination
+                  in: query
+                  name: offset
+                  schema:
+                    default: 0
+                    minimum: 0
+                    type: integer
+                - description: Filter keyword sets by enabled status
+                  in: query
+                  name: isEnabled
+                  schema:
+                    type: boolean
+                - description: Include keyword rules in the response
+                  in: query
+                  name: includeRules
+                  schema:
+                    default: false
+                    type: boolean
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/KeywordSetResponse'
+                                type: array
+                    description: Keyword sets retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: List keyword sets
+            tags:
+                - KeywordSets
+        post:
+            description: Creates a new keyword set with optional rules
+            operationId: createKeywordSet
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateKeywordSetRequest'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/KeywordSetResponse'
+                    description: Keyword set created successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Keyword set with name already exists
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Create keyword set
+            tags:
+                - KeywordSets
+    /keywords/sets/{setId}:
+        delete:
+            description: Deletes a keyword set by ID including all its rules
+            operationId: deleteKeywordSet
+            parameters:
+                - description: Keyword set ID
+                  in: path
+                  name: setId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "204":
+                    description: Keyword set deleted successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Keyword set not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Delete keyword set
+            tags:
+                - KeywordSets
+        get:
+            description: Gets a keyword set by ID including its rules
+            operationId: getKeywordSet
+            parameters:
+                - description: Keyword set ID
+                  in: path
+                  name: setId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/KeywordSetResponse'
+                    description: Keyword set retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Keyword set not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get keyword set
+            tags:
+                - KeywordSets
+        put:
+            description: Updates a keyword set by ID including its rules
+            operationId: updateKeywordSet
+            parameters:
+                - description: Keyword set ID
+                  in: path
+                  name: setId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateKeywordSetRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/KeywordSetResponse'
+                    description: Keyword set updated successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Keyword set not found
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Keyword set name already exists
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update keyword set
+            tags:
+                - KeywordSets
+    /me:
+        get:
+            description: Returns information about the currently authenticated user
+            operationId: getCurrentUser
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+                    description: Current user information
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get current user
+            tags:
+                - Auth
+    /personas:
+        get:
+            description: Lists all personas with optional filtering by type and enabled status
+            operationId: listPersonas
+            parameters:
+                - description: Maximum number of personas to return
+                  in: query
+                  name: limit
+                  schema:
+                    default: 20
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                - description: Number of personas to skip for pagination
+                  in: query
+                  name: offset
+                  schema:
+                    default: 0
+                    minimum: 0
+                    type: integer
+                - description: Filter personas by type
+                  in: query
+                  name: personaType
+                  schema:
+                    enum:
+                        - dns
+                        - http
+                    type: string
+                - description: Filter personas by enabled status
+                  in: query
+                  name: isEnabled
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PersonaListResponse'
+                    description: Personas retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: List personas
+            tags:
+                - Personas
+        post:
+            description: Creates a new persona with structured configuration
+            operationId: createPersona
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreatePersonaRequest'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PersonaResponse'
+                    description: Persona created successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Persona with name and type already exists
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Create persona
+            tags:
+                - Personas
+    /personas/{id}:
+        delete:
+            description: Deletes a persona by ID
+            operationId: deletePersona
+            parameters:
+                - description: Persona ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StandardAPIResponse'
+                    description: Persona deleted successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Persona not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Delete persona
+            tags:
+                - Personas
+        get:
+            description: Gets a persona by ID regardless of type
+            operationId: getPersonaById
+            parameters:
+                - description: Persona ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PersonaResponse'
+                    description: Persona retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Persona not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get persona by ID
+            tags:
+                - Personas
+        put:
+            description: Updates a persona by ID with structured configuration
+            operationId: updatePersona
+            parameters:
+                - description: Persona ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdatePersonaRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PersonaResponse'
+                    description: Persona updated successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Persona not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update persona
+            tags:
+                - Personas
+    /personas/{id}/test:
+        post:
+            description: Tests a persona by ID
+            operationId: testPersona
+            parameters:
+                - description: Persona ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PersonaTestResult'
+                    description: Persona test completed successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Persona not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Test persona
+            tags:
+                - Personas
+    /personas/dns/{id}:
+        get:
+            description: Gets a DNS persona by ID with typed configuration
+            operationId: getDnsPersonaById
+            parameters:
+                - description: Persona ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PersonaResponse'
+                    description: DNS persona retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Persona not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get DNS persona by ID
+            tags:
+                - Personas
+    /personas/http/{id}:
+        get:
+            description: Gets an HTTP persona by ID with typed configuration
+            operationId: getHttpPersonaById
+            parameters:
+                - description: Persona ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PersonaResponse'
+                    description: HTTP persona retrieved successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Persona not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get HTTP persona by ID
+            tags:
+                - Personas
+    /proxies:
+        get:
+            description: Lists all proxies with optional filtering
+            operationId: listProxies
+            parameters:
+                - description: Number of items to return
+                  in: query
+                  name: limit
+                  schema:
+                    default: 100
+                    type: integer
+                - description: Number of items to skip
+                  in: query
+                  name: offset
+                  schema:
+                    default: 0
+                    type: integer
+                - description: Filter by proxy protocol
+                  in: query
+                  name: protocol
+                  schema:
+                    enum:
+                        - http
+                        - https
+                        - socks5
+                        - socks4
+                    type: string
+                - description: Filter by enabled status
+                  in: query
+                  name: isEnabled
+                  schema:
+                    type: boolean
+                - description: Filter by health status
+                  in: query
+                  name: isHealthy
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/Proxy'
+                                type: array
+                    description: Proxies retrieved successfully
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: List proxies
+            tags:
+                - Proxies
+        post:
+            description: Adds a new proxy
+            operationId: createProxy
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateProxyRequest'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Proxy'
+                    description: Proxy created successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: Add proxy
+            tags:
+                - Proxies
+    /proxies/{proxyId}:
+        delete:
+            description: Deletes a proxy by ID
+            operationId: deleteProxy
+            parameters:
+                - description: Proxy ID
+                  in: path
+                  name: proxyId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "204":
+                    description: Proxy deleted successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Proxy not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: Delete proxy
+            tags:
+                - Proxies
+        put:
+            description: Updates a proxy by ID
+            operationId: updateProxy
+            parameters:
+                - description: Proxy ID
+                  in: path
+                  name: proxyId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateProxyRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Proxy'
+                    description: Proxy updated successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Proxy not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: Update proxy
+            tags:
+                - Proxies
+    /proxies/{proxyId}/health-check:
+        post:
+            description: Forces a health check on a single proxy
+            operationId: forceCheckSingleProxy
+            parameters:
+                - description: Proxy ID
+                  in: path
+                  name: proxyId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyStatus'
+                    description: Health check completed
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Proxy not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: Force single proxy health check
+            tags:
+                - Proxies
+    /proxies/{proxyId}/test:
+        post:
+            description: Tests a proxy by ID
+            operationId: testProxy
+            parameters:
+                - description: Proxy ID
+                  in: path
+                  name: proxyId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyTestResult'
+                    description: Proxy test completed
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Proxy not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: Test proxy
+            tags:
+                - Proxies
+    /proxies/health-check:
+        post:
+            description: Forces a health check on all proxies
+            operationId: forceCheckAllProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ForceCheckProxiesRequest'
+            responses:
+                "202":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message:
+                                        description: Status message
+                                        type: string
+                                type: object
+                    description: Health check process initiated
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: Force all proxies health check
+            tags:
+                - Proxies
+    /proxies/status:
+        get:
+            description: Gets the status of all proxies
+            operationId: getProxyStatuses
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/ProxyStatus'
+                                type: array
+                    description: Proxy statuses retrieved successfully
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            summary: Get proxy statuses
+            tags:
+                - Proxies
+    /proxy-pools:
+        get:
+            description: Returns all proxy pools
+            operationId: listProxyPools
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/ProxyPool'
+                                type: array
+                    description: Proxy pools retrieved successfully
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: List proxy pools
+            tags:
+                - ProxyPools
+        post:
+            description: Creates a new proxy pool
+            operationId: createProxyPool
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyPoolRequest'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyPool'
+                    description: Proxy pool created successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Create proxy pool
+            tags:
+                - ProxyPools
+    /proxy-pools/{poolId}:
+        delete:
+            description: Deletes a proxy pool by ID
+            operationId: deleteProxyPool
+            parameters:
+                - description: Pool ID
+                  in: path
+                  name: poolId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    deleted:
+                                        description: Deletion status
+                                        type: boolean
+                                type: object
+                    description: Proxy pool deleted successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Proxy pool not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Delete proxy pool
+            tags:
+                - ProxyPools
+        put:
+            description: Updates a proxy pool by ID
+            operationId: updateProxyPool
+            parameters:
+                - description: Pool ID
+                  in: path
+                  name: poolId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyPoolRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyPool'
+                    description: Proxy pool updated successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Proxy pool not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update proxy pool
+            tags:
+                - ProxyPools
+    /proxy-pools/{poolId}/proxies:
+        post:
+            description: Assigns a proxy to a pool
+            operationId: addProxyToPool
+            parameters:
+                - description: Pool ID
+                  in: path
+                  name: poolId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AddProxyToPoolRequest'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyPoolMembership'
+                    description: Proxy added to pool successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Proxy pool not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Add proxy to pool
+            tags:
+                - ProxyPools
+    /proxy-pools/{poolId}/proxies/{proxyId}:
+        delete:
+            description: Removes a proxy from a pool
+            operationId: removeProxyFromPool
+            parameters:
+                - description: Pool ID
+                  in: path
+                  name: poolId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+                - description: Proxy ID
+                  in: path
+                  name: proxyId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    removed:
+                                        description: Removal status
+                                        type: boolean
+                                type: object
+                    description: Proxy removed from pool successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Proxy pool not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Remove proxy from pool
+            tags:
+                - ProxyPools
+servers:
+    - description: Development server
+      url: http://localhost:8080/api/v2

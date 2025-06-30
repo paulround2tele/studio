@@ -107,9 +107,13 @@ func validateCommonFields(data interface{}) error {
 		return nil // Not a JSON object, skip validation
 	}
 
-	// Validate UUID fields
+	// Validate UUID fields (excluding sessionId which is a hash, not UUID)
 	for key, value := range dataMap {
-		if strings.Contains(strings.ToLower(key), "id") || strings.HasSuffix(strings.ToLower(key), "_id") {
+		lowerKey := strings.ToLower(key)
+		isIdField := strings.Contains(lowerKey, "id") || strings.HasSuffix(lowerKey, "_id")
+		isSessionId := lowerKey == "sessionid"
+		
+		if isIdField && !isSessionId {
 			if strValue, ok := value.(string); ok {
 				if !isValidUUID(strValue) {
 					return fmt.Errorf("field '%s' must be a valid UUID", key)

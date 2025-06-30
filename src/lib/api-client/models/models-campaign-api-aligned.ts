@@ -2,16 +2,15 @@
 /* eslint-disable */
 /**
  * DomainFlow API - ALIGNED VERSION
- * This file contains properly aligned types with SafeBigInt for int64 fields
+ * This file contains properly aligned types with OpenAPI compatible number types for int64 fields
  */
 
 import type { ModelsCampaignStatusEnum } from './models-campaign-status-enum';
 import type { ModelsCampaignTypeEnum } from './models-campaign-type-enum';
-import type { SafeBigInt } from '../../types/branded';
-import { createSafeBigInt } from '../../types/branded';
+// Using OpenAPI compatible types instead of branded types
 
 /**
- * Aligned Campaign API model with SafeBigInt for int64 fields
+ * Aligned Campaign API model with OpenAPI compatible types
  * @export
  * @interface ModelsCampaignAPIAligned
  */
@@ -22,31 +21,31 @@ export interface ModelsCampaignAPIAligned {
     'createdAt'?: string;
     'errorMessage'?: string;
     'estimatedCompletionAt'?: string;
-    'failedItems'?: SafeBigInt; // Changed from number to SafeBigInt
+    'failedItems'?: number; // OpenAPI compatible
     'id'?: string;
     'lastHeartbeatAt'?: string;
     'businessStatus'?: string;
     'metadata'?: object;
     'name'?: string;
-    'processedItems'?: SafeBigInt; // Changed from number to SafeBigInt
+    'processedItems'?: number; // OpenAPI compatible
     'progressPercentage'?: number;
     'startedAt'?: string;
     'status'?: ModelsCampaignStatusEnum;
-    'successfulItems'?: SafeBigInt; // Changed from number to SafeBigInt
-    'totalItems'?: SafeBigInt; // Changed from number to SafeBigInt
+    'successfulItems'?: number; // OpenAPI compatible
+    'totalItems'?: number; // OpenAPI compatible
     'updatedAt'?: string;
     'userId'?: string;
 }
 
 /**
- * Transform raw API response to aligned model with SafeBigInt conversion
+ * Transform raw API response to aligned model with OpenAPI compatible number conversion
  */
 export function transformToCampaignAPIAligned(raw: any): ModelsCampaignAPIAligned {
     return {
         ...raw,
-        failedItems: raw.failedItems != null ? createSafeBigInt(raw.failedItems) : undefined,
-        processedItems: raw.processedItems != null ? createSafeBigInt(raw.processedItems) : undefined,
-        successfulItems: raw.successfulItems != null ? createSafeBigInt(raw.successfulItems) : undefined,
-        totalItems: raw.totalItems != null ? createSafeBigInt(raw.totalItems) : undefined,
+        failedItems: raw.failedItems != null ? Number(raw.failedItems) : undefined,
+        processedItems: raw.processedItems != null ? Number(raw.processedItems) : undefined,
+        successfulItems: raw.successfulItems != null ? Number(raw.successfulItems) : undefined,
+        totalItems: raw.totalItems != null ? Number(raw.totalItems) : undefined,
     };
 }

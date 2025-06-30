@@ -12,28 +12,28 @@
  * Do not edit the class manually.
  */
 
-import { SafeBigInt } from '../../types/branded';
+// Using OpenAPI compatible types instead of branded types
 
 /**
- * 
+ *
  * @export
  * @interface ServicesDomainGenerationParams
  */
 export interface ServicesDomainGenerationParams {
     /**
-     * 
+     *
      * @type {string}
      * @memberof ServicesDomainGenerationParams
      */
     'characterSet': string;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ServicesDomainGenerationParams
      */
     'constantString': string;
     /**
-     * 
+     *
      * @type {number}
      * @memberof ServicesDomainGenerationParams
      */
@@ -45,27 +45,25 @@ export interface ServicesDomainGenerationParams {
      */
     'patternType': ServicesDomainGenerationParamsPatternTypeEnum;
     /**
-     * CRITICAL FIX H-003: Use SafeBigInt for int64 field
-     * Backend uses uint64 which can exceed JavaScript's safe integer limit
-     * @type {SafeBigInt}
+     * OpenAPI compatible: Use number for int64 field
+     * @type {number}
      * @memberof ServicesDomainGenerationParams
      */
-    'totalPossibleCombinations'?: SafeBigInt;
+    'totalPossibleCombinations'?: number;
     /**
-     * CRITICAL FIX H-003: Use SafeBigInt for int64 field
-     * Backend uses int64 which can exceed JavaScript's safe integer limit
-     * @type {SafeBigInt}
+     * OpenAPI compatible: Use number for int64 field
+     * @type {number}
      * @memberof ServicesDomainGenerationParams
      */
-    'currentOffset'?: SafeBigInt;
+    'currentOffset'?: number;
     /**
-     * 
+     *
      * @type {string}
      * @memberof ServicesDomainGenerationParams
      */
     'tld': string;
     /**
-     * 
+     *
      * @type {number}
      * @memberof ServicesDomainGenerationParams
      */

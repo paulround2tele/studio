@@ -11,7 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Campaign, CampaignViewModel, CampaignStatus, StartCampaignPhasePayload, CampaignDomainDetail, DomainActivityStatus, CampaignValidationItem, GeneratedDomain, CampaignType } from '@/lib/types';
-import { safeBigIntToNumber } from '@/lib/types/branded';
 import { CAMPAIGN_PHASES_ORDERED, getFirstPhase } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Briefcase, Dna, Network, Globe, Play, RefreshCw, CheckCircle, Download, PauseCircle, PlayCircle, StopCircle, HelpCircle, Search, ShieldQuestion, ExternalLink, XCircle, Clock, Loader2, ChevronLeft, ChevronRight, Percent } from 'lucide-react';
@@ -211,7 +210,7 @@ export default function CampaignDashboardPage() {
                 if(campaignDetailsResponse.data.status === 'completed') {
                     const genDomainsResp = await getGeneratedDomainsForCampaign(campaignId, { limit: 1000, cursor: 0 }); // Fetch a large batch
                     if (genDomainsResp.status === 'success' && genDomainsResp.data) {
-                       if(isMountedRef.current) setGeneratedDomains(genDomainsResp.data);
+                       if(isMountedRef.current) setGeneratedDomains(genDomainsResp.data as GeneratedDomain[]);
                     }
                 }
               }
@@ -263,24 +262,24 @@ export default function CampaignDashboardPage() {
       if (!isMountedRef.current) return;
       try {
         if (campaign.campaignType === 'dns_validation') {
-          const dnsItemsResponse = await getDnsCampaignDomains(campaign.id, { limit: pageSize, cursor: String((currentPage - 1) * pageSize) });
+          const dnsItemsResponse = await getDnsCampaignDomains(campaign.id!, { limit: pageSize, cursor: String((currentPage - 1) * pageSize) });
           if (dnsItemsResponse.status === 'success' && dnsItemsResponse.data) {
-           if(isMountedRef.current) setDnsCampaignItems(dnsItemsResponse.data);
+           if(isMountedRef.current) setDnsCampaignItems(dnsItemsResponse.data as CampaignValidationItem[]);
           } else {
             toast({ title: "Error Loading DNS Items", description: dnsItemsResponse.message, variant: "destructive" });
           }
         } else if (campaign.campaignType === 'http_keyword_validation') {
-          const httpItemsResponse = await getHttpCampaignItems(campaign.id, { limit: pageSize, cursor: String((currentPage - 1) * pageSize) });
+          const httpItemsResponse = await getHttpCampaignItems(campaign.id!, { limit: pageSize, cursor: String((currentPage - 1) * pageSize) });
           if (httpItemsResponse.status === 'success' && httpItemsResponse.data) {
-            if(isMountedRef.current) setHttpCampaignItems(httpItemsResponse.data);
+            if(isMountedRef.current) setHttpCampaignItems(httpItemsResponse.data as CampaignValidationItem[]);
           } else {
             toast({ title: "Error Loading HTTP Items", description: httpItemsResponse.message, variant: "destructive" });
           }
         } else if (campaign.campaignType === 'domain_generation' && campaign.status !== 'running') {
             // Fetch initial/all generated domains if not streaming
-            const genDomainsResp = await getGeneratedDomainsForCampaign(campaign.id, { limit: pageSize, cursor: (currentPage -1) * pageSize });
+            const genDomainsResp = await getGeneratedDomainsForCampaign(campaign.id!, { limit: pageSize, cursor: (currentPage -1) * pageSize });
             if(genDomainsResp.status === 'success' && genDomainsResp.data) {
-                if(isMountedRef.current) setGeneratedDomains(genDomainsResp.data);
+                if(isMountedRef.current) setGeneratedDomains(genDomainsResp.data as GeneratedDomain[]);
             } else {
                  toast({ title: "Error Loading Generated Domains", description: genDomainsResp.message, variant: "destructive" });
             }
@@ -414,6 +413,7 @@ export default function CampaignDashboardPage() {
     setActionLoading(prev => ({...prev, [`phase-${payload.phaseToStart}`]: true }));
     try {
       // The campaignService.startCampaignPhase now uses the V2 /start endpoint
+      if (!campaign.id) return;
       const response = await startCampaignPhase(campaign.id);
       if (response.status === 'success' && response.data) {
         if(isMountedRef.current) {
@@ -446,12 +446,12 @@ export default function CampaignDashboardPage() {
     setActionLoading(prev => ({ ...prev, [actionKey]: true }));
 
     const payload: StartCampaignPhasePayload = {
-      campaignId: campaign.id,
+      campaignId: campaign.id || '',
       phaseToStart,
       // Note: V2 API /start endpoint just needs campaignId
       // Domain source and other configs are stored in campaign already
       domainSource: campaign.dnsValidationParams?.sourceGenerationCampaignId ? "campaign_output" : undefined,
-      numberOfDomainsToProcess: campaign.totalItems ? safeBigIntToNumber(campaign.totalItems) : undefined
+      numberOfDomainsToProcess: campaign.totalItems ? Number(campaign.totalItems) : undefined
     };
     
     // Use the simplified V2 API call
@@ -466,10 +466,13 @@ export default function CampaignDashboardPage() {
         let response: { status: string; data?: Partial<Campaign>; message?: string };
         
         if (action === 'pause') {
+            if (!campaign.id) return;
             response = await pauseCampaign(campaign.id);
         } else if (action === 'resume') {
+            if (!campaign.id) return;
             response = await resumeCampaign(campaign.id);
         } else if (action === 'stop') {
+            if (!campaign.id) return;
             response = await stopCampaign(campaign.id); // Mapped to /cancel
         } else {
             throw new Error(`Unknown action: ${action}`);
@@ -493,19 +496,21 @@ export default function CampaignDashboardPage() {
     if (!isSequenceMode || !campaign) return;
     if (campaign.status === 'completed' && !chainTriggerRef.current) {
       chainTriggerRef.current = true;
-      chainCampaign(campaign.id)
-        .then(resp => {
-          chainTriggerRef.current = false;
-          if (resp.status === 'success' && resp.data) {
-            const next = transformCampaignToViewModel(resp.data);
-            setCampaign(next);
-            setCampaignChain(prev => [...prev, next]);
-            router.replace(`/campaigns/${next.id}?sequence=1`);
-          }
-        })
-        .catch(() => {
-          chainTriggerRef.current = false;
-        });
+      if (campaign.id) {
+        void chainCampaign(campaign.id)
+          .then(resp => {
+            chainTriggerRef.current = false;
+            if (resp.status === 'success' && resp.data) {
+              const next = transformCampaignToViewModel(resp.data);
+              setCampaign(next);
+              setCampaignChain(prev => [...prev, next]);
+              router.replace(`/campaigns/${next.id}?sequence=1`);
+            }
+          })
+          .catch(() => {
+            chainTriggerRef.current = false;
+          });
+      }
     }
   }, [campaign, isSequenceMode, router]);
 
@@ -520,7 +525,7 @@ export default function CampaignDashboardPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${fileNamePrefix}_${campaign?.name.replace(/\s+/g, '_') || 'campaign'}_${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `${fileNamePrefix}_${(campaign?.name || 'campaign').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -897,22 +902,22 @@ export default function CampaignDashboardPage() {
 
     const rotation = params.rotationIntervalSeconds !== undefined
       ? typeof params.rotationIntervalSeconds === 'bigint'
-        ? safeBigIntToNumber(params.rotationIntervalSeconds)
+        ? Number(params.rotationIntervalSeconds)
         : params.rotationIntervalSeconds
       : undefined;
     const speed = params.processingSpeedPerMinute !== undefined
       ? typeof params.processingSpeedPerMinute === 'bigint'
-        ? safeBigIntToNumber(params.processingSpeedPerMinute)
+        ? Number(params.processingSpeedPerMinute)
         : params.processingSpeedPerMinute
       : undefined;
     const batch = params.batchSize !== undefined
       ? typeof params.batchSize === 'bigint'
-        ? safeBigIntToNumber(params.batchSize)
+        ? Number(params.batchSize)
         : params.batchSize
       : undefined;
     const retries = params.retryAttempts !== undefined
       ? typeof params.retryAttempts === 'bigint'
-        ? safeBigIntToNumber(params.retryAttempts)
+        ? Number(params.retryAttempts)
         : params.retryAttempts
       : undefined;
 
@@ -960,7 +965,7 @@ export default function CampaignDashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={campaign.name}
+        title={campaign.name || 'Campaign'}
         description={`Dashboard for ${campaign.campaignType} campaign.`}
         icon={Briefcase}
         actionButtons={<Button variant="outline" onClick={() => loadCampaignData(true)} disabled={loading || Object.values(actionLoading).some(v=>v)}><RefreshCw className={cn("mr-2 h-4 w-4", (loading || Object.values(actionLoading).some(v=>v)) && "animate-spin")}/> Refresh</Button>}

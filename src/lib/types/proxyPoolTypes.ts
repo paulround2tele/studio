@@ -1,8 +1,7 @@
-import type { UUID, ISODateString } from "./branded";
 import type { Proxy } from "./aligned/aligned-models";
 
 export interface ProxyPool {
-  id: UUID;
+  id: string;
   name: string;
   description?: string;
   isEnabled: boolean;
@@ -11,15 +10,15 @@ export interface ProxyPool {
   healthCheckIntervalSeconds?: number;
   maxRetries?: number;
   timeoutSeconds?: number;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
   proxies?: Proxy[];
 }
 
 export interface ProxyPoolMembership {
-  poolId: UUID;
-  proxyId: UUID;
+  poolId: string;
+  proxyId: string;
   weight?: number;
   isActive: boolean;
-  addedAt: ISODateString;
+  addedAt: string;
 }

@@ -122,7 +122,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
   
   // Memoize display phases calculation to prevent recalculation on every render
   const displayPhases = useMemo(() => {
-    const orderedPhases = (CAMPAIGN_PHASES_ORDERED[selectedType] || []) as CampaignPhase[];
+    const orderedPhases = (selectedType && CAMPAIGN_PHASES_ORDERED[selectedType] ? CAMPAIGN_PHASES_ORDERED[selectedType] : []) as CampaignPhase[];
     return campaign.currentPhase === "Idle" ?
       ["Idle" as CampaignPhase, ...orderedPhases] :
       orderedPhases;
@@ -130,7 +130,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
   
   // Memoize operational phases for the selected type
   const operationalPhasesForType = useMemo(() => {
-    return (CAMPAIGN_PHASES_ORDERED[selectedType] || []) as CampaignPhase[];
+    return (selectedType && CAMPAIGN_PHASES_ORDERED[selectedType] ? CAMPAIGN_PHASES_ORDERED[selectedType] : []) as CampaignPhase[];
   }, [selectedType]);
 
   // Memoize current operational phase calculations

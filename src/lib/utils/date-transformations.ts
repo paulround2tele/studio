@@ -3,8 +3,6 @@
  * Handles timezone-aware date transformations between backend and frontend
  */
 
-import { ISODateString, createISODateString } from '@/lib/types/branded';
-
 /**
  * Timezone constants
  */
@@ -45,7 +43,7 @@ export const DATE_FORMATS = {
  */
 export function transformBackendTimestamp(
   timestamp: unknown
-): ISODateString | undefined {
+): string | undefined {
   if (!timestamp) return undefined;
   
   try {
@@ -72,7 +70,7 @@ export function transformBackendTimestamp(
       return undefined;
     }
     
-    return createISODateString(date.toISOString());
+    return date.toISOString();
   } catch (error) {
     console.error('Error transforming timestamp:', error, timestamp);
     return undefined;
@@ -83,7 +81,7 @@ export function transformBackendTimestamp(
  * Format ISO date string for display with timezone handling
  */
 export function formatISODate(
-  isoDate: ISODateString | undefined,
+  isoDate: string | undefined,
   format: keyof typeof DATE_FORMATS = 'SHORT',
   timezone: string = TIMEZONES.LOCAL
 ): string {
@@ -112,7 +110,7 @@ export function formatISODate(
  * Get relative time string (e.g., "2 hours ago", "in 3 days")
  */
 export function getRelativeTime(
-  isoDate: ISODateString | undefined
+  isoDate: string | undefined
 ): string {
   if (!isoDate) return '';
   
@@ -147,7 +145,7 @@ export function getRelativeTime(
  */
 export function toUTCISOString(
   date: Date | string | undefined
-): ISODateString | undefined {
+): string | undefined {
   if (!date) return undefined;
   
   try {
@@ -155,7 +153,7 @@ export function toUTCISOString(
     if (isNaN(dateObj.getTime())) {
       return undefined;
     }
-    return createISODateString(dateObj.toISOString());
+    return dateObj.toISOString();
   } catch (error) {
     console.error('Error converting to UTC ISO string:', error, date);
     return undefined;
@@ -166,7 +164,7 @@ export function toUTCISOString(
  * Parse ISO string to Date object with validation
  */
 export function parseISODate(
-  isoDate: ISODateString | undefined
+  isoDate: string | undefined
 ): Date | undefined {
   if (!isoDate) return undefined;
   
@@ -186,9 +184,9 @@ export function parseISODate(
  * Check if a date is within a specific range
  */
 export function isDateInRange(
-  date: ISODateString | undefined,
-  startDate: ISODateString | undefined,
-  endDate: ISODateString | undefined
+  date: string | undefined,
+  startDate: string | undefined,
+  endDate: string | undefined
 ): boolean {
   if (!date) return false;
   
@@ -208,10 +206,10 @@ export function isDateInRange(
  * Add time to an ISO date string
  */
 export function addTime(
-  isoDate: ISODateString,
+  isoDate: string,
   amount: number,
   unit: 'seconds' | 'minutes' | 'hours' | 'days'
-): ISODateString {
+): string {
   const date = new Date(isoDate);
   
   switch (unit) {
@@ -229,15 +227,15 @@ export function addTime(
       break;
   }
   
-  return createISODateString(date.toISOString());
+  return date.toISOString();
 }
 
 /**
  * Calculate duration between two dates
  */
 export function calculateDuration(
-  startDate: ISODateString | undefined,
-  endDate: ISODateString | undefined
+  startDate: string | undefined,
+  endDate: string | undefined
 ): { days: number; hours: number; minutes: number; seconds: number } | undefined {
   if (!startDate || !endDate) return undefined;
   

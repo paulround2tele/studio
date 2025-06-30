@@ -55,6 +55,7 @@ const formatDate = (dateString: string): string => {
 // Memoized progress calculation function
 const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
   const selectedType = campaign.selectedType || campaign.campaignType;
+  if (!selectedType) return 0;
   const phasesForType = CAMPAIGN_PHASES_ORDERED[selectedType];
   if (!phasesForType || phasesForType.length === 0) return 0;
 
@@ -100,7 +101,7 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
   // Memoize expensive calculations to prevent recalculation on every render
   const overallProgress = useMemo(() => getOverallCampaignProgress(campaign), [campaign]);
   const statusInfo = useMemo(() => getStatusBadgeInfo(campaign), [campaign]);
-  const formattedDate = useMemo(() => formatDate(campaign.createdAt), [campaign.createdAt]);
+  const formattedDate = useMemo(() => formatDate(campaign.createdAt || ''), [campaign.createdAt]);
 
   // Memoize loading states to prevent object recreation
   const loadingStates = useMemo(() => ({
@@ -117,19 +118,19 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
 
   // Memoize action handlers to prevent re-creation on every render
   const handleDeleteCampaign = useCallback(() => {
-    onDeleteCampaign(campaign.id);
+    if (campaign.id) onDeleteCampaign(campaign.id);
   }, [onDeleteCampaign, campaign.id]);
 
   const handlePauseCampaign = useCallback(() => {
-    onPauseCampaign?.(campaign.id);
+    if (campaign.id) onPauseCampaign?.(campaign.id);
   }, [onPauseCampaign, campaign.id]);
 
   const handleResumeCampaign = useCallback(() => {
-    onResumeCampaign?.(campaign.id);
+    if (campaign.id) onResumeCampaign?.(campaign.id);
   }, [onResumeCampaign, campaign.id]);
 
   const handleStopCampaign = useCallback(() => {
-    onStopCampaign?.(campaign.id);
+    if (campaign.id) onStopCampaign?.(campaign.id);
   }, [onStopCampaign, campaign.id]);
 
   // Memoize conditional rendering flags

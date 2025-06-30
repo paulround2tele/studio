@@ -169,7 +169,7 @@ type Persona struct {
 	Name          string          `db:"name" json:"name" validate:"required"`
 	PersonaType   PersonaTypeEnum `db:"persona_type" json:"personaType" validate:"required,oneof=dns http"`
 	Description   sql.NullString  `db:"description" json:"description,omitempty"`
-	ConfigDetails json.RawMessage `db:"config_details" json:"configDetails" validate:"required"` // Matches jsonb type in database
+	ConfigDetails json.RawMessage `db:"config_details" json:"configDetails" validate:"required"` // Keep as RawMessage for DB compatibility
 	IsEnabled     bool            `db:"is_enabled" json:"isEnabled"`
 	CreatedAt     time.Time       `db:"created_at" json:"createdAt"`
 	UpdatedAt     time.Time       `db:"updated_at" json:"updatedAt"`
@@ -258,17 +258,17 @@ type Campaign struct {
 
 // DomainGenerationCampaignParams holds parameters for a domain generation campaign
 type DomainGenerationCampaignParams struct {
-        CampaignID                uuid.UUID `db:"campaign_id" json:"-"`
-        PatternType               string    `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix suffix both"`
-        VariableLength            int       `db:"variable_length" json:"variableLength" validate:"gt=0"`
-        CharacterSet              string    `db:"character_set" json:"characterSet" validate:"required"`
-        ConstantString            *string   `db:"constant_string" json:"constantString,omitempty" validate:"omitempty"`
-        TLD                       string    `db:"tld" json:"tld" validate:"required"`
-        NumDomainsToGenerate      int       `db:"num_domains_to_generate" json:"numDomainsToGenerate" validate:"required,gt=0"`
-        TotalPossibleCombinations int64     `db:"total_possible_combinations" json:"totalPossibleCombinations" validate:"required,gt=0"`
-        CurrentOffset             int64     `db:"current_offset" json:"currentOffset" validate:"gte=0"`
-        CreatedAt                 time.Time `db:"created_at" json:"createdAt"`
-        UpdatedAt                 time.Time `db:"updated_at" json:"updatedAt"`
+	CampaignID                uuid.UUID `db:"campaign_id" json:"-"`
+	PatternType               string    `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix suffix both"`
+	VariableLength            int       `db:"variable_length" json:"variableLength" validate:"gt=0"`
+	CharacterSet              string    `db:"character_set" json:"characterSet" validate:"required"`
+	ConstantString            *string   `db:"constant_string" json:"constantString,omitempty" validate:"omitempty"`
+	TLD                       string    `db:"tld" json:"tld" validate:"required"`
+	NumDomainsToGenerate      int       `db:"num_domains_to_generate" json:"numDomainsToGenerate" validate:"required,gt=0"`
+	TotalPossibleCombinations int64     `db:"total_possible_combinations" json:"totalPossibleCombinations" validate:"required,gt=0"`
+	CurrentOffset             int64     `db:"current_offset" json:"currentOffset" validate:"gte=0"`
+	CreatedAt                 time.Time `db:"created_at" json:"createdAt"`
+	UpdatedAt                 time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 // NormalizedDomainGenerationParams holds the core, normalized parameters for domain generation hashing and storage.
@@ -483,9 +483,9 @@ type ResourceUtilizationMetric struct {
 type DomainPatternType string
 
 const (
-        PatternTypePrefix DomainPatternType = "prefix"
-        PatternTypeSuffix DomainPatternType = "suffix"
-        PatternTypeBoth   DomainPatternType = "both"
+	PatternTypePrefix DomainPatternType = "prefix"
+	PatternTypeSuffix DomainPatternType = "suffix"
+	PatternTypeBoth   DomainPatternType = "both"
 )
 
 // DereferenceGeneratedDomainSlice converts a slice of *GeneratedDomain to []GeneratedDomain.

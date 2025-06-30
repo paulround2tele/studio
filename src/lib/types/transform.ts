@@ -1,97 +1,84 @@
 /**
- * Type transformation utilities for converting between raw API data and branded types
- * Part of Phase 2: Type Safety Enhancement
+ * Type transformation utilities for OpenAPI data (Legacy - No longer needed)
+ * Since we now use OpenAPI types directly, these transforms are pass-through
  */
 
-import {
-  UUID,
-  SafeBigInt,
-  ISODateString,
-  isValidUUID,
-  createSafeBigInt,
-  createISODateString,
-} from "./branded";
 import type { Campaign, User } from "../types";
 
-// Raw API data types (before transformation)
+// Raw API data types (OpenAPI responses)
 export interface RawAPIData {
   [key: string]: unknown;
 }
 
 /**
- * Transform raw API response data to use branded types
+ * Legacy transform utilities - now pass-through since we use OpenAPI types directly
  */
 export class TypeTransformer {
   /**
-   * Transform a raw ID string to branded UUID
+   * Pass-through for string IDs (no longer branded)
    */
-  static toUUID(value: string | undefined | null): UUID | undefined {
-    if (!value) return undefined;
-    if (!isValidUUID(value)) {
-      console.warn(`Invalid UUID format: ${value}`);
-      return undefined;
-    }
-    return value as UUID;
+  static toUUID(value: string | undefined | null): string | undefined {
+    return value || undefined;
   }
 
   /**
-   * Transform a raw number to SafeBigInt
+   * Pass-through for numbers (OpenAPI compatible)
    */
-  static toSafeBigInt(
+  static toNumber(
     value: number | string | undefined | null,
-  ): SafeBigInt | undefined {
+  ): number | undefined {
     if (value === undefined || value === null) return undefined;
-    return createSafeBigInt(value);
+    return typeof value === 'string' ? Number(value) : value;
   }
 
+  // Backward compatibility alias (to be removed later)
+  static toSafeBigInt = this.toNumber;
+
   /**
-   * Transform a raw date string to ISODateString
+   * Pass-through for date strings (no longer branded)
    */
   static toISODateString(
     value: string | undefined | null,
-  ): ISODateString | undefined {
-    if (!value) return undefined;
-    return createISODateString(value);
+  ): string | undefined {
+    return value || undefined;
   }
 
   /**
-   * Transform a user object from API response to use branded types
+   * Pass-through for user object (OpenAPI types)
    */
   static transformUser(raw: RawAPIData): User {
     if (!raw) return raw as User;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
-      updatedAt: this.toISODateString(raw.updatedAt as string),
-      lastLoginAt: this.toISODateString(raw.lastLoginAt as string),
-      mfaLastUsedAt: this.toISODateString(raw.mfaLastUsedAt as string),
+      id: raw.id as string,
+      createdAt: raw.createdAt as string,
+      updatedAt: raw.updatedAt as string,
+      lastLoginAt: raw.lastLoginAt as string,
+      mfaLastUsedAt: raw.mfaLastUsedAt as string,
     } as User;
   }
 
   /**
-   * Transform a campaign object from API response to use branded types
+   * Pass-through for campaign object (OpenAPI types)
    */
   static transformCampaign(raw: RawAPIData): Campaign {
     if (!raw) return raw as Campaign;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      userId: this.toUUID(raw.userId as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
-      updatedAt: this.toISODateString(raw.updatedAt as string),
-      startedAt: this.toISODateString(raw.startedAt as string),
-      completedAt: this.toISODateString(raw.completedAt as string),
-      estimatedCompletionAt: this.toISODateString(
-        raw.estimatedCompletionAt as string,
-      ),
-      lastHeartbeatAt: this.toISODateString(raw.lastHeartbeatAt as string),
-      totalItems: this.toSafeBigInt(raw.totalItems as number),
-      processedItems: this.toSafeBigInt(raw.processedItems as number),
-      successfulItems: this.toSafeBigInt(raw.successfulItems as number),
-      failedItems: this.toSafeBigInt(raw.failedItems as number),
+      id: raw.id as string,
+      userId: raw.userId as string,
+      createdAt: raw.createdAt as string,
+      updatedAt: raw.updatedAt as string,
+      startedAt: raw.startedAt as string,
+      completedAt: raw.completedAt as string,
+      estimatedCompletionAt: raw.estimatedCompletionAt as string,
+      lastHeartbeatAt: raw.lastHeartbeatAt as string,
+      totalItems: typeof raw.totalItems === 'number' ? raw.totalItems : undefined,
+      processedItems: typeof raw.processedItems === 'number' ? raw.processedItems : undefined,
+      successfulItems: typeof raw.successfulItems === 'number' ? raw.successfulItems : undefined,
+      failedItems: typeof raw.failedItems === 'number' ? raw.failedItems : undefined,
       progressPercentage:
         raw.progressPercentage !== undefined
           ? Number(raw.progressPercentage)
@@ -104,151 +91,151 @@ export class TypeTransformer {
   }
 
   /**
-   * Transform a generated domain object from API response to use branded types
+   * Pass-through for generated domain object (OpenAPI types)
    */
   static transformGeneratedDomain(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      generationCampaignId: this.toUUID(raw.generationCampaignId as string),
-      offsetIndex: this.toSafeBigInt(raw.offsetIndex as number),
-      generatedAt: this.toISODateString(raw.generatedAt as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
+      id: raw.id as string,
+      generationCampaignId: raw.generationCampaignId as string,
+      offsetIndex: typeof raw.offsetIndex === 'number' ? raw.offsetIndex : undefined,
+      generatedAt: raw.generatedAt as string,
+      createdAt: raw.createdAt as string,
     };
   }
 
   /**
-   * Transform a DNS validation result object from API response to use branded types
+   * Pass-through for DNS validation result object (OpenAPI types)
    */
   static transformDNSValidationResult(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      dnsCampaignId: this.toUUID(raw.dnsCampaignId as string),
-      generatedDomainId: this.toUUID(raw.generatedDomainId as string),
-      validatedByPersonaId: this.toUUID(raw.validatedByPersonaId as string),
-      attempts: this.toSafeBigInt(raw.attempts as number),
-      lastCheckedAt: this.toISODateString(raw.lastCheckedAt as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
+      id: raw.id as string,
+      dnsCampaignId: raw.dnsCampaignId as string,
+      generatedDomainId: raw.generatedDomainId as string,
+      validatedByPersonaId: raw.validatedByPersonaId as string,
+      attempts: typeof raw.attempts === 'number' ? raw.attempts : undefined,
+      lastCheckedAt: raw.lastCheckedAt as string,
+      createdAt: raw.createdAt as string,
     };
   }
 
   /**
-   * Transform an HTTP keyword result object from API response to use branded types
+   * Pass-through for HTTP keyword result object (OpenAPI types)
    */
   static transformHTTPKeywordResult(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      httpKeywordCampaignId: this.toUUID(raw.httpKeywordCampaignId as string),
-      dnsResultId: this.toUUID(raw.dnsResultId as string),
-      validatedByPersonaId: this.toUUID(raw.validatedByPersonaId as string),
-      attempts: this.toSafeBigInt(raw.attempts as number),
+      id: raw.id as string,
+      httpKeywordCampaignId: raw.httpKeywordCampaignId as string,
+      dnsResultId: raw.dnsResultId as string,
+      validatedByPersonaId: raw.validatedByPersonaId as string,
+      attempts: typeof raw.attempts === 'number' ? raw.attempts : undefined,
       httpStatusCode:
         raw.httpStatusCode !== undefined
           ? Number(raw.httpStatusCode)
           : undefined,
-      lastCheckedAt: this.toISODateString(raw.lastCheckedAt as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
+      lastCheckedAt: raw.lastCheckedAt as string,
+      createdAt: raw.createdAt as string,
     };
   }
 
   /**
-   * Transform a campaign job object from API response to use branded types
+   * Pass-through for campaign job object (OpenAPI types)
    */
   static transformCampaignJob(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      campaignId: this.toUUID(raw.campaignId as string),
-      batchSize: this.toSafeBigInt(raw.batchSize as number),
-      processedCount: this.toSafeBigInt(raw.processedCount as number),
-      scheduledAt: this.toISODateString(raw.scheduledAt as string),
-      startedAt: this.toISODateString(raw.startedAt as string),
-      completedAt: this.toISODateString(raw.completedAt as string),
-      lastHeartbeatAt: this.toISODateString(raw.lastHeartbeatAt as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
-      updatedAt: this.toISODateString(raw.updatedAt as string),
+      id: raw.id as string,
+      campaignId: raw.campaignId as string,
+      batchSize: typeof raw.batchSize === 'number' ? raw.batchSize : undefined,
+      processedCount: typeof raw.processedCount === 'number' ? raw.processedCount : undefined,
+      scheduledAt: raw.scheduledAt as string,
+      startedAt: raw.startedAt as string,
+      completedAt: raw.completedAt as string,
+      lastHeartbeatAt: raw.lastHeartbeatAt as string,
+      createdAt: raw.createdAt as string,
+      updatedAt: raw.updatedAt as string,
     };
   }
 
   /**
-   * Transform an audit log object from API response to use branded types
+   * Pass-through for audit log object (OpenAPI types)
    */
   static transformAuditLog(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      userId: this.toUUID(raw.userId as string),
-      entityId: this.toUUID(raw.entityId as string),
-      timestamp: this.toISODateString(raw.timestamp as string),
+      id: raw.id as string,
+      userId: raw.userId as string,
+      entityId: raw.entityId as string,
+      timestamp: raw.timestamp as string,
     };
   }
 
   /**
-   * Transform a session object from API response to use branded types
+   * Pass-through for session object (OpenAPI types)
    */
   static transformSession(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      userId: this.toUUID(raw.userId as string),
-      expiresAt: this.toISODateString(raw.expiresAt as string),
-      lastActivityAt: this.toISODateString(raw.lastActivityAt as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
-      updatedAt: this.toISODateString(raw.updatedAt as string),
+      id: raw.id as string,
+      userId: raw.userId as string,
+      expiresAt: raw.expiresAt as string,
+      lastActivityAt: raw.lastActivityAt as string,
+      createdAt: raw.createdAt as string,
+      updatedAt: raw.updatedAt as string,
     };
   }
 
   /**
-   * Transform a persona object from API response to use branded types
+   * Pass-through for persona object (OpenAPI types)
    */
   static transformToPersona(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
-      lastTested: this.toISODateString(raw.lastTested as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
-      updatedAt: this.toISODateString(raw.updatedAt as string),
+      id: raw.id as string,
+      lastTested: raw.lastTested as string,
+      createdAt: raw.createdAt as string,
+      updatedAt: raw.updatedAt as string,
     };
   }
 
   /**
-   * Transform a proxy object from API response to use branded types
+   * Pass-through for proxy object (OpenAPI types)
    */
   static transformToProxy(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
 
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
+      id: raw.id as string,
       port: raw.port !== undefined ? Number(raw.port) : undefined,
-      lastTested: this.toISODateString(raw.lastTested as string),
-      createdAt: this.toISODateString(raw.createdAt as string),
-      updatedAt: this.toISODateString(raw.updatedAt as string),
+      lastTested: raw.lastTested as string,
+      createdAt: raw.createdAt as string,
+      updatedAt: raw.updatedAt as string,
     };
   }
 
-  /** Transform a proxy pool object */
+  /** Pass-through for proxy pool object (OpenAPI types) */
   static transformToProxyPool(raw: RawAPIData): RawAPIData {
     if (!raw) return raw;
     return {
       ...raw,
-      id: this.toUUID(raw.id as string),
+      id: raw.id as string,
       healthCheckIntervalSeconds:
         raw.healthCheckIntervalSeconds !== undefined
           ? Number(raw.healthCheckIntervalSeconds)
@@ -259,8 +246,8 @@ export class TypeTransformer {
         raw.timeoutSeconds !== undefined
           ? Number(raw.timeoutSeconds)
           : undefined,
-      createdAt: this.toISODateString(raw.createdAt as string),
-      updatedAt: this.toISODateString(raw.updatedAt as string),
+      createdAt: raw.createdAt as string,
+      updatedAt: raw.updatedAt as string,
       proxies: this.transformArray(
         raw.proxies as unknown[] | undefined,
         this.transformToProxy,

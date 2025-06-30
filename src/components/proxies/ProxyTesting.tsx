@@ -31,11 +31,10 @@ import {
   Activity,
   Loader2
 } from 'lucide-react';
-import type { Proxy, ProxyActionResponse } from '@/lib/types';
+import type { Proxy } from '@/lib/types';
 import { testProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';
-import { safeBigIntToNumber } from '@/lib/types/branded';
 
 export interface ProxyTestingProps {
   proxies: Proxy[];
@@ -88,7 +87,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
    */
   const handleStartTesting = useCallback(async () => {
     const proxiesToTest = selectedProxyIds.size > 0 
-      ? proxies.filter(p => selectedProxyIds.has(p.id))
+      ? proxies.filter(p => p.id && selectedProxyIds.has(p.id))
       : proxies;
 
     if (proxiesToTest.length === 0) {
@@ -169,11 +168,12 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
     const startTime = Date.now();
     
     try {
-      const response: ProxyActionResponse = await testProxy(proxy.id);
+      if (!proxy.id) return;
+      const response = await testProxy(proxy.id);
       const responseTime = Date.now() - startTime;
       
       const result: TestResult = {
-        proxyId: proxy.id,
+        proxyId: proxy.id || '',
         success: response.status === 'success',
         responseTime,
         error: response.status !== 'success' ? response.message : undefined,
@@ -195,7 +195,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
 
     } catch (error) {
       const result: TestResult = {
-        proxyId: proxy.id,
+        proxyId: proxy.id || '',
         success: false,
         responseTime: null,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -254,7 +254,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
     if (selectedProxyIds.size === proxies.length) {
       setSelectedProxyIds(new Set());
     } else {
-      setSelectedProxyIds(new Set(proxies.map(p => p.id)));
+      setSelectedProxyIds(new Set(proxies.map(p => p.id).filter((id): id is string => !!id)));
     }
   }, [selectedProxyIds.size, proxies]);
 
@@ -540,9 +540,9 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
                 <div
                   key={proxy.id}
                   className={`flex items-center space-x-2 p-2 rounded border cursor-pointer hover:bg-muted/50 ${
-                    selectedProxyIds.has(proxy.id) ? 'bg-primary/10 border-primary' : ''
+                    (proxy.id && selectedProxyIds.has(proxy.id)) ? 'bg-primary/10 border-primary' : ''
                   }`}
-                  onClick={() => toggleProxySelection(proxy.id)}
+                  onClick={() => proxy.id && toggleProxySelection(proxy.id)}
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{proxy.address}</p>
@@ -559,7 +559,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
                       </Badge>
                       {proxy.successCount && proxy.failureCount && (
                         <span className="text-xs text-muted-foreground">
-                          {safeBigIntToNumber(proxy.successCount)}/{safeBigIntToNumber(proxy.failureCount)}
+                          {Number(proxy.successCount)}/{Number(proxy.failureCount)}
                         </span>
                       )}
                     </div>

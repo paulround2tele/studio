@@ -180,6 +180,7 @@ const CampaignProgressMonitor = memo(({
     
     if (shouldConnect && user) {
       // Use the websocketService
+      if (!campaignKey.id) return;
       cleanupRef.current = websocketService.connectToCampaign(
         campaignKey.id,
         (standardMessage: WebSocketMessage) => {

@@ -52,8 +52,8 @@ const OperationalAssignments = memo<OperationalAssignmentsProps>(({
                 </FormControl>
                 <SelectContent>
                   <SelectItem value={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}>None (Default)</SelectItem>
-                  {httpPersonas.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  {httpPersonas.filter(p => p.id).map(p => (
+                    <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>
                   ))}
                   {httpPersonas.length === 0 && (
                     <SelectItem value="no-active-http-for-form" disabled>No active HTTP personas.</SelectItem>
@@ -83,8 +83,8 @@ const OperationalAssignments = memo<OperationalAssignmentsProps>(({
                 </FormControl>
                 <SelectContent>
                   <SelectItem value={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}>None (Default)</SelectItem>
-                  {dnsPersonas.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  {dnsPersonas.filter(p => p.id).map(p => (
+                    <SelectItem key={p.id} value={p.id!}>{p.name}</SelectItem>
                   ))}
                   {dnsPersonas.length === 0 && (
                     <SelectItem value="no-active-dns-for-form" disabled>No active DNS personas.</SelectItem>

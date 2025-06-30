@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * DomainFlow API
- * DomainFlow API for domain generation, validation, and campaign management.  This API provides comprehensive functionality for: - Entity management (Personas, Proxies, Keyword Sets) - Configuration management - Ad-hoc keyword extraction - V2 Stateful Campaign Management system - Real-time communication via WebSockets - Comprehensive authentication  **Authentication:** The API uses session-based authentication with HTTP-only cookies:  1. **Session-Based Authentication**: Secure HTTP-only cookie-based sessions with session fingerprinting    - Login via `POST /api/v2/auth/login`    - Session cookies: httpOnly, secure, sameSite=strict    - X-Requested-With header required for CSRF protection on state-changing operations    - Automatic session cleanup and concurrent session management  All RESTful API endpoints under `/api/v2` (excluding `GET /ping`) require valid session authentication.  For WebSocket connections, authentication is provided via session cookies (automatically included by browser). 
+ * DomainFlow API for domain generation, validation, and campaign management.
  *
  * The version of the OpenAPI document: 2.0.0
  * Contact: support@domainflow.com
@@ -22,7 +22,7 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { ProxyResponse } from '../models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsProxy } from '../models';
 /**
  * ProxiesApi - axios parameter creator
  * @export
@@ -30,13 +30,13 @@ import type { ProxyResponse } from '../models';
 export const ProxiesApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
+         * Lists all proxies
          * @summary List proxies
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/proxies`;
+        proxiesGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/proxies`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -48,8 +48,6 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -62,13 +60,13 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
+         * Forces a health check on all proxies
          * @summary Force all proxies health check
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesHealthCheckPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/proxies/health-check`;
+        proxiesHealthCheckPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/proxies/health-check`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -79,8 +77,6 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
 
 
     
@@ -94,16 +90,16 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
+         * Adds a new proxy
          * @summary Add proxy
-         * @param {object} body 
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesPost: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2ProxiesPost', 'body', body)
-            const localVarPath = `/api/v2/proxies`;
+        proxiesPost: async (githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsProxy' is not null or undefined
+            assertParamExists('proxiesPost', 'githubComFntelecomllcStudioBackendInternalModelsProxy', githubComFntelecomllcStudioBackendInternalModelsProxy)
+            const localVarPath = `/proxies`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -114,8 +110,6 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
 
 
     
@@ -124,7 +118,7 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsProxy, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -132,16 +126,16 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
+         * Deletes a proxy by ID
          * @summary Delete proxy
-         * @param {string} proxyId 
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesProxyIdDelete: async (proxyId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        proxiesProxyIdDelete: async (proxyId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'proxyId' is not null or undefined
-            assertParamExists('apiV2ProxiesProxyIdDelete', 'proxyId', proxyId)
-            const localVarPath = `/api/v2/proxies/{proxyId}`
+            assertParamExists('proxiesProxyIdDelete', 'proxyId', proxyId)
+            const localVarPath = `/proxies/{proxyId}`
                 .replace(`{${"proxyId"}}`, encodeURIComponent(String(proxyId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -154,8 +148,6 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -168,13 +160,17 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
+         * Forces a health check on a single proxy
          * @summary Force single proxy health check
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesProxyIdHealthCheckPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/proxies/{proxyId}/health-check`;
+        proxiesProxyIdHealthCheckPost: async (proxyId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'proxyId' is not null or undefined
+            assertParamExists('proxiesProxyIdHealthCheckPost', 'proxyId', proxyId)
+            const localVarPath = `/proxies/{proxyId}/health-check`
+                .replace(`{${"proxyId"}}`, encodeURIComponent(String(proxyId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -186,8 +182,6 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -200,19 +194,19 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
+         * Updates a proxy by ID
          * @summary Update proxy
-         * @param {string} proxyId 
-         * @param {object} body 
+         * @param {string} proxyId Proxy ID
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesProxyIdPut: async (proxyId: string, body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        proxiesProxyIdPut: async (proxyId: string, githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'proxyId' is not null or undefined
-            assertParamExists('apiV2ProxiesProxyIdPut', 'proxyId', proxyId)
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2ProxiesProxyIdPut', 'body', body)
-            const localVarPath = `/api/v2/proxies/{proxyId}`
+            assertParamExists('proxiesProxyIdPut', 'proxyId', proxyId)
+            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsProxy' is not null or undefined
+            assertParamExists('proxiesProxyIdPut', 'githubComFntelecomllcStudioBackendInternalModelsProxy', githubComFntelecomllcStudioBackendInternalModelsProxy)
+            const localVarPath = `/proxies/{proxyId}`
                 .replace(`{${"proxyId"}}`, encodeURIComponent(String(proxyId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -225,8 +219,6 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -234,7 +226,7 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsProxy, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -242,48 +234,16 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
-         * @summary Proxy statuses
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ProxiesStatusGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/proxies/status`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
+         * Tests a proxy by ID
          * @summary Test proxy
-         * @param {string} proxyId 
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        testProxy: async (proxyId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        proxiesProxyIdTestPost: async (proxyId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'proxyId' is not null or undefined
-            assertParamExists('testProxy', 'proxyId', proxyId)
-            const localVarPath = `/api/v2/proxies/{proxyId}`
+            assertParamExists('proxiesProxyIdTestPost', 'proxyId', proxyId)
+            const localVarPath = `/proxies/{proxyId}/test`
                 .replace(`{${"proxyId"}}`, encodeURIComponent(String(proxyId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -296,7 +256,35 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Gets the status of all proxies
+         * @summary Get proxy statuses
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        proxiesStatusGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/proxies/status`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
 
 
     
@@ -320,104 +308,105 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = ProxiesApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
+         * Lists all proxies
          * @summary List proxies
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2ProxiesGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ProxyResponse>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ProxiesGet(options);
+        async proxiesGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxy>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.apiV2ProxiesGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Forces a health check on all proxies
          * @summary Force all proxies health check
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2ProxiesHealthCheckPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ProxiesHealthCheckPost(options);
+        async proxiesHealthCheckPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: string; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesHealthCheckPost(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.apiV2ProxiesHealthCheckPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesHealthCheckPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Adds a new proxy
          * @summary Add proxy
-         * @param {object} body 
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2ProxiesPost(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxyResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ProxiesPost(body, options);
+        async proxiesPost(githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesPost(githubComFntelecomllcStudioBackendInternalModelsProxy, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.apiV2ProxiesPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Deletes a proxy by ID
          * @summary Delete proxy
-         * @param {string} proxyId 
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2ProxiesProxyIdDelete(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ProxiesProxyIdDelete(proxyId, options);
+        async proxiesProxyIdDelete(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: boolean; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesProxyIdDelete(proxyId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.apiV2ProxiesProxyIdDelete']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesProxyIdDelete']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Forces a health check on a single proxy
          * @summary Force single proxy health check
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2ProxiesProxyIdHealthCheckPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ProxiesProxyIdHealthCheckPost(options);
+        async proxiesProxyIdHealthCheckPost(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: string; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesProxyIdHealthCheckPost(proxyId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.apiV2ProxiesProxyIdHealthCheckPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesProxyIdHealthCheckPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Updates a proxy by ID
          * @summary Update proxy
-         * @param {string} proxyId 
-         * @param {object} body 
+         * @param {string} proxyId Proxy ID
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2ProxiesProxyIdPut(proxyId: string, body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxyResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ProxiesProxyIdPut(proxyId, body, options);
+        async proxiesProxyIdPut(proxyId: string, githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesProxyIdPut(proxyId, githubComFntelecomllcStudioBackendInternalModelsProxy, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.apiV2ProxiesProxyIdPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesProxyIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
-         * @summary Proxy statuses
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ProxiesStatusGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ProxiesStatusGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.apiV2ProxiesStatusGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
+         * Tests a proxy by ID
          * @summary Test proxy
-         * @param {string} proxyId 
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async testProxy(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.testProxy(proxyId, options);
+        async proxiesProxyIdTestPost(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesProxyIdTestPost(proxyId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.testProxy']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesProxyIdTestPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Gets the status of all proxies
+         * @summary Get proxy statuses
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async proxiesStatusGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesStatusGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesStatusGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -431,81 +420,82 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
     const localVarFp = ProxiesApiFp(configuration)
     return {
         /**
-         * 
+         * Lists all proxies
          * @summary List proxies
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<ProxyResponse>> {
-            return localVarFp.apiV2ProxiesGet(options).then((request) => request(axios, basePath));
+        proxiesGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxy>> {
+            return localVarFp.proxiesGet(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Forces a health check on all proxies
          * @summary Force all proxies health check
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesHealthCheckPost(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ProxiesHealthCheckPost(options).then((request) => request(axios, basePath));
+        proxiesHealthCheckPost(options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: string; }> {
+            return localVarFp.proxiesHealthCheckPost(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Adds a new proxy
          * @summary Add proxy
-         * @param {object} body 
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<ProxyResponse> {
-            return localVarFp.apiV2ProxiesPost(body, options).then((request) => request(axios, basePath));
+        proxiesPost(githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy> {
+            return localVarFp.proxiesPost(githubComFntelecomllcStudioBackendInternalModelsProxy, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Deletes a proxy by ID
          * @summary Delete proxy
-         * @param {string} proxyId 
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesProxyIdDelete(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ProxiesProxyIdDelete(proxyId, options).then((request) => request(axios, basePath));
+        proxiesProxyIdDelete(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: boolean; }> {
+            return localVarFp.proxiesProxyIdDelete(proxyId, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Forces a health check on a single proxy
          * @summary Force single proxy health check
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesProxyIdHealthCheckPost(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ProxiesProxyIdHealthCheckPost(options).then((request) => request(axios, basePath));
+        proxiesProxyIdHealthCheckPost(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: string; }> {
+            return localVarFp.proxiesProxyIdHealthCheckPost(proxyId, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Updates a proxy by ID
          * @summary Update proxy
-         * @param {string} proxyId 
-         * @param {object} body 
+         * @param {string} proxyId Proxy ID
+         * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ProxiesProxyIdPut(proxyId: string, body: object, options?: RawAxiosRequestConfig): AxiosPromise<ProxyResponse> {
-            return localVarFp.apiV2ProxiesProxyIdPut(proxyId, body, options).then((request) => request(axios, basePath));
+        proxiesProxyIdPut(proxyId: string, githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy> {
+            return localVarFp.proxiesProxyIdPut(proxyId, githubComFntelecomllcStudioBackendInternalModelsProxy, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
-         * @summary Proxy statuses
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ProxiesStatusGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ProxiesStatusGet(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
+         * Tests a proxy by ID
          * @summary Test proxy
-         * @param {string} proxyId 
+         * @param {string} proxyId Proxy ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        testProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.testProxy(proxyId, options).then((request) => request(axios, basePath));
+        proxiesProxyIdTestPost(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+            return localVarFp.proxiesProxyIdTestPost(proxyId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Gets the status of all proxies
+         * @summary Get proxy statuses
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        proxiesStatusGet(options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+            return localVarFp.proxiesStatusGet(options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -517,81 +507,82 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
  */
 export interface ProxiesApiInterface {
     /**
-     * 
+     * Lists all proxies
      * @summary List proxies
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    apiV2ProxiesGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<ProxyResponse>>;
+    proxiesGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxy>>;
 
     /**
-     * 
+     * Forces a health check on all proxies
      * @summary Force all proxies health check
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    apiV2ProxiesHealthCheckPost(options?: RawAxiosRequestConfig): AxiosPromise<void>;
+    proxiesHealthCheckPost(options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: string; }>;
 
     /**
-     * 
+     * Adds a new proxy
      * @summary Add proxy
-     * @param {object} body 
+     * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    apiV2ProxiesPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<ProxyResponse>;
+    proxiesPost(githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy>;
 
     /**
-     * 
+     * Deletes a proxy by ID
      * @summary Delete proxy
-     * @param {string} proxyId 
+     * @param {string} proxyId Proxy ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    apiV2ProxiesProxyIdDelete(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+    proxiesProxyIdDelete(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: boolean; }>;
 
     /**
-     * 
+     * Forces a health check on a single proxy
      * @summary Force single proxy health check
+     * @param {string} proxyId Proxy ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    apiV2ProxiesProxyIdHealthCheckPost(options?: RawAxiosRequestConfig): AxiosPromise<void>;
+    proxiesProxyIdHealthCheckPost(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: string; }>;
 
     /**
-     * 
+     * Updates a proxy by ID
      * @summary Update proxy
-     * @param {string} proxyId 
-     * @param {object} body 
+     * @param {string} proxyId Proxy ID
+     * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    apiV2ProxiesProxyIdPut(proxyId: string, body: object, options?: RawAxiosRequestConfig): AxiosPromise<ProxyResponse>;
+    proxiesProxyIdPut(proxyId: string, githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy>;
 
     /**
-     * 
-     * @summary Proxy statuses
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ProxiesApiInterface
-     */
-    apiV2ProxiesStatusGet(options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
+     * Tests a proxy by ID
      * @summary Test proxy
-     * @param {string} proxyId 
+     * @param {string} proxyId Proxy ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    testProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+    proxiesProxyIdTestPost(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }>;
+
+    /**
+     * Gets the status of all proxies
+     * @summary Get proxy statuses
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    proxiesStatusGet(options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }>;
 
 }
 
@@ -603,96 +594,97 @@ export interface ProxiesApiInterface {
  */
 export class ProxiesApi extends BaseAPI implements ProxiesApiInterface {
     /**
-     * 
+     * Lists all proxies
      * @summary List proxies
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public apiV2ProxiesGet(options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).apiV2ProxiesGet(options).then((request) => request(this.axios, this.basePath));
+    public proxiesGet(options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Forces a health check on all proxies
      * @summary Force all proxies health check
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public apiV2ProxiesHealthCheckPost(options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).apiV2ProxiesHealthCheckPost(options).then((request) => request(this.axios, this.basePath));
+    public proxiesHealthCheckPost(options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesHealthCheckPost(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Adds a new proxy
      * @summary Add proxy
-     * @param {object} body 
+     * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public apiV2ProxiesPost(body: object, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).apiV2ProxiesPost(body, options).then((request) => request(this.axios, this.basePath));
+    public proxiesPost(githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesPost(githubComFntelecomllcStudioBackendInternalModelsProxy, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Deletes a proxy by ID
      * @summary Delete proxy
-     * @param {string} proxyId 
+     * @param {string} proxyId Proxy ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public apiV2ProxiesProxyIdDelete(proxyId: string, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).apiV2ProxiesProxyIdDelete(proxyId, options).then((request) => request(this.axios, this.basePath));
+    public proxiesProxyIdDelete(proxyId: string, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesProxyIdDelete(proxyId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Forces a health check on a single proxy
      * @summary Force single proxy health check
+     * @param {string} proxyId Proxy ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public apiV2ProxiesProxyIdHealthCheckPost(options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).apiV2ProxiesProxyIdHealthCheckPost(options).then((request) => request(this.axios, this.basePath));
+    public proxiesProxyIdHealthCheckPost(proxyId: string, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesProxyIdHealthCheckPost(proxyId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Updates a proxy by ID
      * @summary Update proxy
-     * @param {string} proxyId 
-     * @param {object} body 
+     * @param {string} proxyId Proxy ID
+     * @param {GithubComFntelecomllcStudioBackendInternalModelsProxy} githubComFntelecomllcStudioBackendInternalModelsProxy Proxy
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public apiV2ProxiesProxyIdPut(proxyId: string, body: object, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).apiV2ProxiesProxyIdPut(proxyId, body, options).then((request) => request(this.axios, this.basePath));
+    public proxiesProxyIdPut(proxyId: string, githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesProxyIdPut(proxyId, githubComFntelecomllcStudioBackendInternalModelsProxy, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
-     * @summary Proxy statuses
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ProxiesApi
-     */
-    public apiV2ProxiesStatusGet(options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).apiV2ProxiesStatusGet(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
+     * Tests a proxy by ID
      * @summary Test proxy
-     * @param {string} proxyId 
+     * @param {string} proxyId Proxy ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public testProxy(proxyId: string, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).testProxy(proxyId, options).then((request) => request(this.axios, this.basePath));
+    public proxiesProxyIdTestPost(proxyId: string, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesProxyIdTestPost(proxyId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Gets the status of all proxies
+     * @summary Get proxy statuses
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApi
+     */
+    public proxiesStatusGet(options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesStatusGet(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

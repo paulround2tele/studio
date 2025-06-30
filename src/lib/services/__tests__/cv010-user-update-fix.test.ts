@@ -8,7 +8,6 @@
 
 import { adminService, updateUser } from '@/lib/services/adminService';
 import apiClient from '@/lib/services/apiClient.production';
-import type { UUID } from '@/lib/types/branded';
 import type { UpdateUserRequest } from '@/lib/services/adminService';
 
 // Mock the API client
@@ -19,7 +18,7 @@ jest.mock('@/lib/services/apiClient.production', () => ({
 }));
 
 describe('CV-010: User Update Endpoint Integration', () => {
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -31,7 +30,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
       firstName: 'Updated',
       lastName: 'User',
       isActive: true,
-      roleIds: ['456e7890-e89b-12d3-a456-426614174001' as UUID],
+      roleIds: ['456e7890-e89b-12d3-a456-426614174001'],
     };
 
     const mockResponse = {
@@ -106,8 +105,8 @@ describe('CV-010: User Update Endpoint Integration', () => {
     // Arrange
     const roleUpdate: UpdateUserRequest = {
       roleIds: [
-        '111e4567-e89b-12d3-a456-426614174001' as UUID,
-        '222e4567-e89b-12d3-a456-426614174002' as UUID,
+        '111e4567-e89b-12d3-a456-426614174001',
+        '222e4567-e89b-12d3-a456-426614174002',
       ],
     };
 
@@ -166,7 +165,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
 
     // Act & Assert
     await expect(
-      adminService.updateUser('999e4567-e89b-12d3-a456-426614174999' as UUID, updateRequest)
+      adminService.updateUser('999e4567-e89b-12d3-a456-426614174999', updateRequest)
     ).rejects.toThrow();
   });
 
@@ -208,14 +207,14 @@ describe('CV-010: User Update Endpoint Integration', () => {
 });
 
 describe('CV-010: Endpoint Contract Alignment', () => {
-  const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   it('should send request in the format expected by backend', async () => {
     // The backend expects UpdateUserRequest format
     const request: UpdateUserRequest = {
       firstName: 'John',
       lastName: 'Doe',
       isActive: true,
-      roleIds: ['123e4567-e89b-12d3-a456-426614174001' as UUID],
+      roleIds: ['123e4567-e89b-12d3-a456-426614174001'],
     };
 
     (apiClient.put as jest.Mock).mockResolvedValueOnce({ data: {} });

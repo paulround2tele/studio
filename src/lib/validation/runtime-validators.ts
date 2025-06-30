@@ -3,15 +3,8 @@
  * Prevents data corruption and ensures type safety at runtime
  */
 
-import { 
-  UUID, 
-  SafeBigInt, 
-  Email, 
-  URL as BrandedURL,
-  createSafeBigInt,
-  createUUID,
-  createEmail,
-  createURL,
+// Using OpenAPI compatible validation without branded types
+import {
   isValidUUID,
   isValidEmail,
   isValidURL
@@ -86,7 +79,7 @@ export function isDefined<T>(value: T | undefined | null): value is T {
 // BRANDED TYPE VALIDATORS
 // ============================================================================
 
-export function validateUUID(value: unknown): ValidationResult<UUID> {
+export function validateUUID(value: unknown): ValidationResult<string> {
   if (!isString(value)) {
     return {
       isValid: false,
@@ -103,32 +96,38 @@ export function validateUUID(value: unknown): ValidationResult<UUID> {
 
   return {
     isValid: true,
-    data: createUUID(value),
+    data: value,
     errors: []
   };
 }
 
-export function validateSafeBigInt(value: unknown): ValidationResult<SafeBigInt> {
+export function validateNumber(value: unknown): ValidationResult<number> {
   try {
-    const safeBigInt = createSafeBigInt(value as string | number | bigint);
+    const numValue = Number(value);
+    if (isNaN(numValue)) {
+      throw new Error('Invalid number');
+    }
     return {
       isValid: true,
-      data: safeBigInt,
+      data: numValue,
       errors: []
     };
   } catch (error) {
     return {
       isValid: false,
-      errors: [{ 
-        field: 'bigint', 
-        message: error instanceof Error ? error.message : 'Invalid BigInt value',
-        value 
+      errors: [{
+        field: 'number',
+        message: error instanceof Error ? error.message : 'Invalid number value',
+        value
       }]
     };
   }
 }
 
-export function validateEmail(value: unknown): ValidationResult<Email> {
+// Backward compatibility alias (to be removed later)
+export const validateSafeBigInt = validateNumber;
+
+export function validateEmail(value: unknown): ValidationResult<string> {
   if (!isString(value)) {
     return {
       isValid: false,
@@ -145,12 +144,12 @@ export function validateEmail(value: unknown): ValidationResult<Email> {
 
   return {
     isValid: true,
-    data: createEmail(value),
+    data: value,
     errors: []
   };
 }
 
-export function validateURL(value: unknown): ValidationResult<BrandedURL> {
+export function validateURL(value: unknown): ValidationResult<string> {
   if (!isString(value)) {
     return {
       isValid: false,
@@ -167,7 +166,7 @@ export function validateURL(value: unknown): ValidationResult<BrandedURL> {
 
   return {
     isValid: true,
-    data: createURL(value),
+    data: value,
     errors: []
   };
 }

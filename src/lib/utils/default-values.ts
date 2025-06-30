@@ -4,16 +4,13 @@
  * Ensures alignment with backend initialization patterns
  */
 
-import { createSafeBigInt } from '@/lib/types/branded';
-import type { SafeBigInt, UUID, ISODateString } from '@/lib/types/branded';
-
 /**
  * Default value constants aligned with backend
  */
 export const DEFAULT_VALUES = {
   // Numeric defaults
-  ZERO: createSafeBigInt(0),
-  ONE: createSafeBigInt(1),
+  ZERO: 0,
+  ONE: 1,
   ZERO_NUMBER: 0,
   
   // String defaults
@@ -32,10 +29,10 @@ export const DEFAULT_VALUES = {
   // Null handling - prefer undefined over null for optional fields
   OPTIONAL_STRING: undefined as string | undefined,
   OPTIONAL_NUMBER: undefined as number | undefined,
-  OPTIONAL_BIGINT: undefined as SafeBigInt | undefined,
+  OPTIONAL_BIGINT: undefined as number | undefined,
   OPTIONAL_BOOLEAN: undefined as boolean | undefined,
-  OPTIONAL_UUID: undefined as UUID | undefined,
-  OPTIONAL_DATE: undefined as ISODateString | undefined,
+  OPTIONAL_UUID: undefined as string | undefined,
+  OPTIONAL_DATE: undefined as string | undefined,
 } as const;
 
 /**
@@ -79,19 +76,14 @@ export function normalizeBoolean(
 }
 
 /**
- * Normalize numeric values with SafeBigInt handling
+ * Normalize numeric values - simplified for OpenAPI compatibility
  */
 export function normalizeNumeric(
   value: number | string | bigint | null | undefined,
-  defaultValue: number = 0,
-  useSafeBigInt: boolean = false
-): number | SafeBigInt | undefined {
+  defaultValue: number = 0
+): number | undefined {
   if (value === null || value === undefined) {
-    return useSafeBigInt ? createSafeBigInt(defaultValue) : defaultValue;
-  }
-  
-  if (useSafeBigInt) {
-    return createSafeBigInt(value);
+    return defaultValue;
   }
   
   return typeof value === 'number' ? value : Number(value);

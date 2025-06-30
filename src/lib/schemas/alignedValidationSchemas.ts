@@ -5,8 +5,8 @@
 
 import { z } from 'zod';
 import { 
-  uuidSchema, 
-  safeBigIntSchema
+  uuidSchema,
+  numberSchema
 } from './brandedValidationSchemas';
 
 // ============================================================================
@@ -136,8 +136,8 @@ export const domainGenerationParamsSchema = z.object({
   constantString: z.string().optional(),
   tld: z.string().min(1, 'TLD is required'),
   numDomainsToGenerate: z.number().int().positive('Must be a positive number'),
-  totalPossibleCombinations: safeBigIntSchema,
-  currentOffset: safeBigIntSchema.optional()
+  totalPossibleCombinations: numberSchema,
+  currentOffset: numberSchema.optional()
 });
 
 export const dnsValidationParamsSchema = z.object({

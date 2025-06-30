@@ -1,69 +1,25 @@
 # CampaignsApi
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiV2CampaignsCampaignIdCancelPost**](#apiv2campaignscampaignidcancelpost) | **POST** /api/v2/campaigns/{campaignId}/cancel | Cancel campaign|
-|[**apiV2CampaignsCampaignIdChainPost**](#apiv2campaignscampaignidchainpost) | **POST** /api/v2/campaigns/{campaignId}/chain | Trigger chained phase|
-|[**apiV2CampaignsCampaignIdDelete**](#apiv2campaignscampaigniddelete) | **DELETE** /api/v2/campaigns/{campaignId} | Delete campaign|
-|[**apiV2CampaignsCampaignIdGet**](#apiv2campaignscampaignidget) | **GET** /api/v2/campaigns/{campaignId} | Get campaign details|
-|[**apiV2CampaignsCampaignIdPausePost**](#apiv2campaignscampaignidpausepost) | **POST** /api/v2/campaigns/{campaignId}/pause | Pause campaign|
-|[**apiV2CampaignsCampaignIdResultsDnsValidationGet**](#apiv2campaignscampaignidresultsdnsvalidationget) | **GET** /api/v2/campaigns/{campaignId}/results/dns-validation | DNS validation results|
-|[**apiV2CampaignsCampaignIdResultsGeneratedDomainsGet**](#apiv2campaignscampaignidresultsgenerateddomainsget) | **GET** /api/v2/campaigns/{campaignId}/results/generated-domains | Generated domains|
-|[**apiV2CampaignsCampaignIdResultsHttpKeywordGet**](#apiv2campaignscampaignidresultshttpkeywordget) | **GET** /api/v2/campaigns/{campaignId}/results/http-keyword | HTTP keyword results|
-|[**apiV2CampaignsCampaignIdResumePost**](#apiv2campaignscampaignidresumepost) | **POST** /api/v2/campaigns/{campaignId}/resume | Resume campaign|
-|[**apiV2CampaignsCampaignIdStartPost**](#apiv2campaignscampaignidstartpost) | **POST** /api/v2/campaigns/{campaignId}/start | Start campaign|
-|[**apiV2CampaignsGet**](#apiv2campaignsget) | **GET** /api/v2/campaigns | List campaigns|
-|[**apiV2CampaignsPost**](#apiv2campaignspost) | **POST** /api/v2/campaigns | Create campaign|
+|[**campaignsCampaignIdCancelPost**](#campaignscampaignidcancelpost) | **POST** /campaigns/{campaignId}/cancel | Cancel campaign|
+|[**campaignsCampaignIdDelete**](#campaignscampaigniddelete) | **DELETE** /campaigns/{campaignId} | Delete campaign|
+|[**campaignsCampaignIdGet**](#campaignscampaignidget) | **GET** /campaigns/{campaignId} | Get campaign|
+|[**campaignsCampaignIdPausePost**](#campaignscampaignidpausepost) | **POST** /campaigns/{campaignId}/pause | Pause campaign|
+|[**campaignsCampaignIdResultsDnsValidationGet**](#campaignscampaignidresultsdnsvalidationget) | **GET** /campaigns/{campaignId}/results/dns-validation | DNS validation results|
+|[**campaignsCampaignIdResultsGeneratedDomainsGet**](#campaignscampaignidresultsgenerateddomainsget) | **GET** /campaigns/{campaignId}/results/generated-domains | Generated domains|
+|[**campaignsCampaignIdResultsHttpKeywordGet**](#campaignscampaignidresultshttpkeywordget) | **GET** /campaigns/{campaignId}/results/http-keyword | HTTP keyword results|
+|[**campaignsCampaignIdResumePost**](#campaignscampaignidresumepost) | **POST** /campaigns/{campaignId}/resume | Resume campaign|
+|[**campaignsCampaignIdStartPost**](#campaignscampaignidstartpost) | **POST** /campaigns/{campaignId}/start | Start campaign|
+|[**campaignsGet**](#campaignsget) | **GET** /campaigns | List campaigns|
+|[**campaignsPost**](#campaignspost) | **POST** /campaigns | Create campaign|
 
-# **apiV2CampaignsCampaignIdCancelPost**
-> apiV2CampaignsCampaignIdCancelPost()
+# **campaignsCampaignIdCancelPost**
+> { [key: string]: string; } campaignsCampaignIdCancelPost()
 
-
-### Example
-
-```typescript
-import {
-    CampaignsApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new CampaignsApi(configuration);
-
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdCancelPost();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Cancelled |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2CampaignsCampaignIdChainPost**
-> apiV2CampaignsCampaignIdChainPost()
-
-Manually trigger the next campaign in the automatic phase chain. Domain generation campaigns chain into DNS validation and HTTP keyword validation campaigns in sequence. 
+Cancels a campaign by ID
 
 ### Example
 
@@ -76,52 +32,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdChainPost();
-```
+let campaignId: string; //Campaign ID (default to undefined)
 
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Next phase queued |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2CampaignsCampaignIdDelete**
-> apiV2CampaignsCampaignIdDelete()
-
-
-### Example
-
-```typescript
-import {
-    CampaignsApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new CampaignsApi(configuration);
-
-let campaignId: string; // (default to undefined)
-
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdDelete(
+const { status, data } = await apiInstance.campaignsCampaignIdCancelPost(
     campaignId
 );
 ```
@@ -130,33 +43,37 @@ const { status, data } = await apiInstance.apiV2CampaignsCampaignIdDelete(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **campaignId** | [**string**] |  | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: string; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | Deleted |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsCampaignIdGet**
-> CampaignAPI apiV2CampaignsCampaignIdGet()
+# **campaignsCampaignIdDelete**
+> { [key: string]: boolean; } campaignsCampaignIdDelete()
 
+Deletes a campaign by ID
 
 ### Example
 
@@ -169,9 +86,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let campaignId: string; // (default to undefined)
+let campaignId: string; //Campaign ID (default to undefined)
 
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdGet(
+const { status, data } = await apiInstance.campaignsCampaignIdDelete(
     campaignId
 );
 ```
@@ -180,16 +97,70 @@ const { status, data } = await apiInstance.apiV2CampaignsCampaignIdGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **campaignId** | [**string**] |  | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
 
 
 ### Return type
 
-**CampaignAPI**
+**{ [key: string]: boolean; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsCampaignIdGet**
+> GithubComFntelecomllcStudioBackendInternalModelsCampaign campaignsCampaignIdGet()
+
+Gets a campaign by ID
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from '@domainflow/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; //Campaign ID (default to undefined)
+
+const { status, data } = await apiInstance.campaignsCampaignIdGet(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
+
+
+### Return type
+
+**GithubComFntelecomllcStudioBackendInternalModelsCampaign**
+
+### Authorization
+
+No authorization required
 
 ### HTTP request headers
 
@@ -200,13 +171,17 @@ const { status, data } = await apiInstance.apiV2CampaignsCampaignIdGet(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Details |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsCampaignIdPausePost**
-> apiV2CampaignsCampaignIdPausePost()
+# **campaignsCampaignIdPausePost**
+> { [key: string]: string; } campaignsCampaignIdPausePost()
 
+Pauses a campaign by ID
 
 ### Example
 
@@ -219,37 +194,48 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdPausePost();
+let campaignId: string; //Campaign ID (default to undefined)
+
+const { status, data } = await apiInstance.campaignsCampaignIdPausePost(
+    campaignId
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: string; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Paused |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsCampaignIdResultsDnsValidationGet**
-> apiV2CampaignsCampaignIdResultsDnsValidationGet()
+# **campaignsCampaignIdResultsDnsValidationGet**
+> { [key: string]: any; } campaignsCampaignIdResultsDnsValidationGet()
 
+Gets DNS validation results for a campaign
 
 ### Example
 
@@ -262,37 +248,53 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdResultsDnsValidationGet();
+let campaignId: string; //Campaign ID (default to undefined)
+let limit: number; //Limit (optional) (default to 20)
+let cursor: string; //Cursor (optional) (default to undefined)
+
+const { status, data } = await apiInstance.campaignsCampaignIdResultsDnsValidationGet(
+    campaignId,
+    limit,
+    cursor
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
+| **limit** | [**number**] | Limit | (optional) defaults to 20|
+| **cursor** | [**string**] | Cursor | (optional) defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: any; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Result list |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsCampaignIdResultsGeneratedDomainsGet**
-> apiV2CampaignsCampaignIdResultsGeneratedDomainsGet()
+# **campaignsCampaignIdResultsGeneratedDomainsGet**
+> { [key: string]: any; } campaignsCampaignIdResultsGeneratedDomainsGet()
 
+Gets generated domains for a campaign
 
 ### Example
 
@@ -305,37 +307,53 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdResultsGeneratedDomainsGet();
+let campaignId: string; //Campaign ID (default to undefined)
+let limit: number; //Limit (optional) (default to 20)
+let cursor: number; //Cursor (optional) (default to 0)
+
+const { status, data } = await apiInstance.campaignsCampaignIdResultsGeneratedDomainsGet(
+    campaignId,
+    limit,
+    cursor
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
+| **limit** | [**number**] | Limit | (optional) defaults to 20|
+| **cursor** | [**number**] | Cursor | (optional) defaults to 0|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: any; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Domain list |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsCampaignIdResultsHttpKeywordGet**
-> apiV2CampaignsCampaignIdResultsHttpKeywordGet()
+# **campaignsCampaignIdResultsHttpKeywordGet**
+> { [key: string]: any; } campaignsCampaignIdResultsHttpKeywordGet()
 
+Gets HTTP keyword results for a campaign
 
 ### Example
 
@@ -348,37 +366,53 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdResultsHttpKeywordGet();
+let campaignId: string; //Campaign ID (default to undefined)
+let limit: number; //Limit (optional) (default to 20)
+let cursor: string; //Cursor (optional) (default to undefined)
+
+const { status, data } = await apiInstance.campaignsCampaignIdResultsHttpKeywordGet(
+    campaignId,
+    limit,
+    cursor
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
+| **limit** | [**number**] | Limit | (optional) defaults to 20|
+| **cursor** | [**string**] | Cursor | (optional) defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: any; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Result list |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsCampaignIdResumePost**
-> apiV2CampaignsCampaignIdResumePost()
+# **campaignsCampaignIdResumePost**
+> { [key: string]: string; } campaignsCampaignIdResumePost()
 
+Resumes a campaign by ID
 
 ### Example
 
@@ -391,37 +425,48 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdResumePost();
+let campaignId: string; //Campaign ID (default to undefined)
+
+const { status, data } = await apiInstance.campaignsCampaignIdResumePost(
+    campaignId
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: string; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Resumed |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsCampaignIdStartPost**
-> apiV2CampaignsCampaignIdStartPost()
+# **campaignsCampaignIdStartPost**
+> { [key: string]: string; } campaignsCampaignIdStartPost()
 
+Starts a campaign by ID
 
 ### Example
 
@@ -434,37 +479,48 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.apiV2CampaignsCampaignIdStartPost();
+let campaignId: string; //Campaign ID (default to undefined)
+
+const { status, data } = await apiInstance.campaignsCampaignIdStartPost(
+    campaignId
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: string; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Started |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsGet**
-> Array<CampaignAPI> apiV2CampaignsGet()
+# **campaignsGet**
+> Array<GithubComFntelecomllcStudioBackendInternalModelsCampaign> campaignsGet()
 
+Lists all campaigns
 
 ### Example
 
@@ -477,7 +533,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.apiV2CampaignsGet();
+const { status, data } = await apiInstance.campaignsGet();
 ```
 
 ### Parameters
@@ -486,11 +542,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**Array<CampaignAPI>**
+**Array<GithubComFntelecomllcStudioBackendInternalModelsCampaign>**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -501,29 +557,32 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Campaign list |  -  |
+|**200** | OK |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2CampaignsPost**
-> CampaignAPI apiV2CampaignsPost(body)
+# **campaignsPost**
+> GithubComFntelecomllcStudioBackendInternalModelsCampaign campaignsPost(githubComFntelecomllcStudioBackendInternalModelsCampaign)
 
+Creates a new campaign
 
 ### Example
 
 ```typescript
 import {
     CampaignsApi,
-    Configuration
+    Configuration,
+    GithubComFntelecomllcStudioBackendInternalModelsCampaign
 } from '@domainflow/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let body: object; //
+let githubComFntelecomllcStudioBackendInternalModelsCampaign: GithubComFntelecomllcStudioBackendInternalModelsCampaign; //Campaign
 
-const { status, data } = await apiInstance.apiV2CampaignsPost(
-    body
+const { status, data } = await apiInstance.campaignsPost(
+    githubComFntelecomllcStudioBackendInternalModelsCampaign
 );
 ```
 
@@ -531,16 +590,16 @@ const { status, data } = await apiInstance.apiV2CampaignsPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
+| **githubComFntelecomllcStudioBackendInternalModelsCampaign** | **GithubComFntelecomllcStudioBackendInternalModelsCampaign**| Campaign | |
 
 
 ### Return type
 
-**CampaignAPI**
+**GithubComFntelecomllcStudioBackendInternalModelsCampaign**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -551,7 +610,9 @@ const { status, data } = await apiInstance.apiV2CampaignsPost(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Campaign created |  -  |
+|**201** | Created |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

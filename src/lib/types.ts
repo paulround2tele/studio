@@ -1,8 +1,8 @@
 // Unified type definitions for frontend/backend alignment
-import { UUID, SafeBigInt, ISODateString } from './types/branded';
+// MIGRATED TO OPENAPI TYPES - No more branded types, using OpenAPI types directly
 
-// src/lib/types.ts - Complete Frontend Type Synchronization with Backend Go Structs
-// Perfect alignment with backend/internal/models/models.go and auth_models.go
+// src/lib/types.ts - Complete Frontend Type Synchronization with OpenAPI Schemas
+// Perfect alignment with OpenAPI generated types in src/lib/api-client/types.ts
 
 // ===== BACKEND ENUM SYNCHRONIZATION =====
 
@@ -214,139 +214,141 @@ export interface HTTPConfigDetails {
   notes?: string;
 }
 
-// Persona - matches backend Persona struct exactly
+// Persona - matches OpenAPI PersonaResponse exactly (all fields optional)
 export interface Persona {
-  id: UUID;
-  name: string;
-  personaType: PersonaType;
+  id?: string;
+  name?: string;
+  personaType?: PersonaType;
   description?: string;
   tags?: string[];
-  configDetails: DNSConfigDetails | HTTPConfigDetails; // Raw JSON config
-  isEnabled: boolean;
-  status: string;
-  lastTested?: ISODateString;
+  configDetails?: DNSConfigDetails | HTTPConfigDetails; // Raw JSON config
+  isEnabled?: boolean;
+  status?: string;
+  lastTested?: string;
   lastError?: string;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// Proxy - matches backend Proxy struct exactly (without sensitive fields)
+// Proxy - matches OpenAPI Proxy exactly (all fields optional)
 export interface Proxy {
-  id: UUID;
-  name: string;
+  id?: string;
+  name?: string;
   description?: string;
-  address: string;
+  address?: string;
   protocol?: ProxyProtocol;
   username?: string;
   host?: string;
   port?: number;
   notes?: string;
-  status: string;
-  isEnabled: boolean;
-  isHealthy: boolean;
+  status?: string;
+  isEnabled?: boolean;
+  isHealthy?: boolean;
   lastStatus?: string;
-  lastCheckedAt?: ISODateString;
-  lastTested?: ISODateString;
+  lastCheckedAt?: string;
+  lastTested?: string;
   lastError?: string;
-  successCount?: SafeBigInt;
-  failureCount?: SafeBigInt;
+  successCount?: number;
+  failureCount?: number;
   latencyMs?: number;
   city?: string;
   countryCode?: string;
   provider?: string;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// Keyword Set - matches backend KeywordSet exactly
+// Keyword Set - matches OpenAPI KeywordSetResponse exactly (all fields optional)
 export interface KeywordSet {
-  id: UUID;
-  name: string;
+  id?: string;
+  name?: string;
   description?: string;
-  isEnabled: boolean;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  isEnabled?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
   rules?: KeywordRule[];
+  ruleCount?: number;
 }
 
-// Keyword Rule - matches backend KeywordRule exactly
+// Keyword Rule - matches OpenAPI KeywordRule exactly (all fields optional)
 export interface KeywordRule {
-  id: UUID;
-  keywordSetId?: UUID;
-  pattern: string;
-  ruleType: KeywordRuleType;
-  isCaseSensitive: boolean;
+  id?: string;
+  keywordSetId?: string;
+  pattern?: string;
+  ruleType?: KeywordRuleType;
+  isCaseSensitive?: boolean;
   category?: string;
-  contextChars?: SafeBigInt;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  contextChars?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// Domain Generation Campaign Params - matches backend DomainGenerationCampaignParams exactly
+// Domain Generation Campaign Params - matches OpenAPI DomainGenerationParams exactly
 export interface DomainGenerationCampaignParams {
   patternType: string;
-  variableLength?: SafeBigInt;
+  variableLength?: number;
   characterSet?: string;
   constantString?: string;
   tld: string;
-  numDomainsToGenerate: SafeBigInt;
-  totalPossibleCombinations: SafeBigInt;
-  currentOffset: SafeBigInt;
+  numDomainsToGenerate?: number;
+  totalPossibleCombinations?: number;
+  currentOffset?: number;
 }
 
-// DNS Validation Campaign Params - matches backend DNSValidationCampaignParams exactly
+// DNS Validation Campaign Params - matches OpenAPI DnsValidationParams exactly
 export interface DNSValidationCampaignParams {
-  sourceGenerationCampaignId?: UUID;
-  personaIds: UUID[];
-  rotationIntervalSeconds?: SafeBigInt;
-  processingSpeedPerMinute?: SafeBigInt;
+  sourceGenerationCampaignId?: string;
+  personaIds: string[];
+  rotationIntervalSeconds?: number;
+  processingSpeedPerMinute?: number;
   batchSize?: number;
   retryAttempts?: number;
   metadata?: Record<string, unknown>;
+  sourceCampaignId?: string; // OpenAPI uses this field name
 }
 
-// HTTP Keyword Campaign Params - matches backend HTTPKeywordCampaignParams exactly
+// HTTP Keyword Campaign Params - matches OpenAPI HttpKeywordParams exactly
 export interface HTTPKeywordCampaignParams {
-  sourceCampaignId: UUID;
-  keywordSetIds?: UUID[];
+  sourceCampaignId: string;
+  keywordSetIds?: string[];
   adHocKeywords?: string[];
-  personaIds: UUID[];
-  proxyPoolId?: UUID;
+  personaIds: string[];
+  proxyPoolId?: string;
   proxySelectionStrategy?: string;
-  rotationIntervalSeconds?: SafeBigInt;
-  processingSpeedPerMinute?: SafeBigInt;
-  batchSize?: SafeBigInt;
-  retryAttempts?: SafeBigInt;
+  rotationIntervalSeconds?: number;
+  processingSpeedPerMinute?: number;
+  batchSize?: number;
+  retryAttempts?: number;
   targetHttpPorts?: number[];
   lastProcessedDomainName?: string;
-  sourceType: HTTPKeywordSourceType;
-  proxyIds?: UUID[];
+  sourceType?: HTTPKeywordSourceType;
+  proxyIds?: string[];
   metadata?: Record<string, unknown>;
 }
 
-// Campaign - Core API interface matching backend Campaign struct exactly
+// Campaign - Core API interface matching OpenAPI Campaign exactly (all fields optional)
 export interface Campaign {
-  id: UUID;
-  name: string;
-  campaignType: CampaignType;
-  status: CampaignStatus;
-  userId?: UUID;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
-  startedAt?: ISODateString;
-  completedAt?: ISODateString;
+  id?: string;
+  name?: string;
+  campaignType?: CampaignType;
+  status?: CampaignStatus;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  startedAt?: string;
+  completedAt?: string;
   progressPercentage?: number;
-  totalItems?: SafeBigInt;
-  processedItems?: SafeBigInt;
-  successfulItems?: SafeBigInt;
-  failedItems?: SafeBigInt;
+  totalItems?: number;
+  processedItems?: number;
+  successfulItems?: number;
+  failedItems?: number;
   errorMessage?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, never>;
   
-  // Additional tracking fields (from backend)
-  estimatedCompletionAt?: ISODateString;
+  // Additional tracking fields (from OpenAPI)
+  estimatedCompletionAt?: string;
   avgProcessingRate?: number;
-  lastHeartbeatAt?: ISODateString;
+  lastHeartbeatAt?: string;
   
   // Campaign parameter details
   domainGenerationParams?: DomainGenerationCampaignParams;
@@ -403,40 +405,41 @@ export interface CampaignViewModel extends Campaign {
   };
 }
 
-// Generated Domain - matches backend GeneratedDomain exactly
+// Generated Domain - matches OpenAPI GeneratedDomain exactly
 export interface GeneratedDomainBackend {
-  id: UUID;
-  generationCampaignId: UUID;
+  id: string;
+  generationCampaignId: string;
   domainName: string;
-  offsetIndex: SafeBigInt;
-  generatedAt: ISODateString;
+  offsetIndex: number;
+  generatedAt: string;
   sourceKeyword?: string;
   sourcePattern?: string;
   tld?: string;
-  createdAt: ISODateString;
+  createdAt: string;
 }
 
 export type GeneratedDomain = GeneratedDomainBackend;
 
-// DNS Validation Result - matches backend DNSValidationResult exactly
+// DNS Validation Result - matches OpenAPI DNSValidationResult exactly
 export interface DNSValidationResult {
-  id: UUID;
-  dnsCampaignId: UUID;
-  generatedDomainId?: UUID;
+  id: string;
+  dnsCampaignId: string;
+  generatedDomainId?: string;
   domainName: string;
   validationStatus: string;
   dnsRecords?: Record<string, unknown>;
-  validatedByPersonaId?: UUID;
-  attempts: SafeBigInt | null;
-  lastCheckedAt?: ISODateString;
-  createdAt: ISODateString;
+  validatedByPersonaId?: string;
+  attempts?: number;
+  lastCheckedAt?: string;
+  createdAt: string;
+  businessStatus?: string;
 }
 
-// HTTP Keyword Result - matches backend HTTPKeywordResult exactly
+// HTTP Keyword Result - matches OpenAPI HTTPKeywordResult exactly
 export interface HTTPKeywordResult {
-  id: UUID;
-  httpKeywordCampaignId: UUID;
-  dnsResultId?: UUID;
+  id: string;
+  httpKeywordCampaignId: string;
+  dnsResultId?: string;
   domainName: string;
   validationStatus: string;
   httpStatusCode?: number;
@@ -446,41 +449,41 @@ export interface HTTPKeywordResult {
   foundKeywordsFromSets?: Record<string, unknown>;
   foundAdHocKeywords?: string[];
   contentHash?: string;
-  validatedByPersonaId?: UUID;
-  usedProxyId?: UUID;
-  attempts: SafeBigInt | null;
-  lastCheckedAt?: ISODateString;
-  createdAt: ISODateString;
+  validatedByPersonaId?: string;
+  usedProxyId?: string;
+  attempts?: number;
+  lastCheckedAt?: string;
+  createdAt: string;
 }
 
-// Campaign Job - matches backend CampaignJob exactly
+// Campaign Job - matches backend CampaignJob exactly (keeping as legacy interface)
 export interface CampaignJob {
-  id: UUID;
-  campaignId: UUID;
+  id: string;
+  campaignId: string;
   jobType: CampaignType;
   status: CampaignJobStatus;
-  scheduledAt: ISODateString;
+  scheduledAt: string;
   jobPayload?: Record<string, unknown>;
-  attempts: SafeBigInt;
-  maxAttempts: SafeBigInt;
+  attempts: number;
+  maxAttempts: number;
   lastError?: string;
-  lastAttemptedAt?: ISODateString;
-  processingServerId?: UUID;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
-  nextExecutionAt?: ISODateString;
-  lockedAt?: ISODateString;
-  lockedBy?: UUID;
+  lastAttemptedAt?: string;
+  processingServerId?: string;
+  createdAt: string;
+  updatedAt: string;
+  nextExecutionAt?: string;
+  lockedAt?: string;
+  lockedBy?: string;
 }
 
-// Audit Log - matches backend AuditLog exactly
+// Audit Log - matches backend AuditLog exactly (keeping as legacy interface)
 export interface AuditLog {
-  id: UUID;
-  timestamp: ISODateString;
-  userId?: UUID;
+  id: string;
+  timestamp: string;
+  userId?: string;
   action: string;
   entityType?: string;
-  entityId?: UUID;
+  entityId?: string;
   details?: Record<string, unknown>;
   clientIp?: string;
   userAgent?: string;
@@ -488,9 +491,9 @@ export interface AuditLog {
 
 // ===== SESSION-BASED AUTHENTICATION TYPES =====
 
-// User - simplified for cookie-based session authentication only
+// User - matches OpenAPI User exactly
 export interface User {
-  id: UUID;
+  id: string;
   email: string;
   emailVerified: boolean;
   firstName: string;
@@ -499,20 +502,20 @@ export interface User {
   avatarUrl?: string;
   isActive: boolean;
   isLocked: boolean;
-  lastLoginAt?: ISODateString;
+  lastLoginAt?: string;
   lastLoginIp?: string;
   mustChangePassword: boolean;
   mfaEnabled: boolean;
-  mfaLastUsedAt?: ISODateString;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  mfaLastUsedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   // Removed roles and permissions - simple session-based auth only
 }
 
-// Session - matches backend Session struct exactly
+// Session - matches backend Session struct exactly (legacy interface)
 export interface Session {
-  id: UUID;
-  userId: UUID;
+  id: string;
+  userId: string;
   ipAddress?: string;
   userAgent?: string;
   userAgentHash?: string;
@@ -520,48 +523,48 @@ export interface Session {
   browserFingerprint?: string;
   screenResolution?: string;
   isActive: boolean;
-  expiresAt: ISODateString;
-  lastActivityAt: ISODateString;
-  createdAt: ISODateString;
+  expiresAt: string;
+  lastActivityAt: string;
+  createdAt: string;
 }
 
-// Role - matches backend Role struct exactly
+// Role - matches backend Role struct exactly (legacy interface)
 export interface Role {
-  id: UUID;
+  id: string;
   name: string;
   displayName: string;
   description?: string;
   isSystemRole: boolean;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
   permissions?: Permission[];
 }
 
-// Permission - matches backend Permission struct exactly
+// Permission - matches backend Permission struct exactly (legacy interface)
 export interface Permission {
-  id: UUID;
+  id: string;
   name: string;
   displayName: string;
   description?: string;
   resource: string;
   action: string;
-  createdAt: ISODateString;
+  createdAt: string;
 }
 
-// User Role - matches backend UserRole exactly
+// User Role - matches backend UserRole exactly (legacy interface)
 export interface UserRole {
-  userId: UUID;
-  roleId: UUID;
-  assignedBy?: UUID;
-  assignedAt: ISODateString;
-  expiresAt?: ISODateString;
+  userId: string;
+  roleId: string;
+  assignedBy?: string;
+  assignedAt: string;
+  expiresAt?: string;
 }
 
-// Auth Audit Log - matches backend AuthAuditLog exactly
+// Auth Audit Log - matches backend AuthAuditLog exactly (legacy interface)
 export interface AuthAuditLog {
-  id: SafeBigInt;
-  userId?: UUID;
-  sessionId?: UUID;
+  id: number;
+  userId?: string;
+  sessionId?: string;
   eventType: string;
   eventStatus: string;
   ipAddress?: string;
@@ -570,25 +573,25 @@ export interface AuthAuditLog {
   securityFlags?: string;
   details?: string;
   riskScore: number;
-  createdAt: ISODateString;
+  createdAt: string;
 }
 
-// Rate Limit - matches backend RateLimit exactly
+// Rate Limit - matches backend RateLimit exactly (legacy interface)
 export interface RateLimit {
-  id: SafeBigInt;
+  id: number;
   identifier: string;
   action: string;
-  attempts: SafeBigInt;
-  windowStart: ISODateString;
-  blockedUntil?: ISODateString;
+  attempts: number;
+  windowStart: string;
+  blockedUntil?: string;
 }
 
-// Security Context - matches backend SecurityContext exactly
+// Security Context - matches backend SecurityContext exactly (legacy interface)
 export interface SecurityContext {
-  userId: UUID;
-  sessionId: UUID;
-  lastActivity: ISODateString;
-  sessionExpiry: ISODateString;
+  userId: string;
+  sessionId: string;
+  lastActivity: string;
+  sessionExpiry: string;
   requiresPasswordChange: boolean;
   riskScore: number;
   permissions: string[];
@@ -921,7 +924,7 @@ export interface Lead {
 
 // Start Campaign Phase Payload
 export interface StartCampaignPhasePayload {
-  campaignId: UUID;
+  campaignId: string;
   phaseToStart: CampaignType; // Use CampaignType since this represents workflow phases
   domainSource?: DomainSource;
   numberOfDomainsToProcess?: number;

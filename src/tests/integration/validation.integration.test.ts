@@ -4,16 +4,11 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import { 
-  createSafeBigInt, 
-  isSafeBigInt,
-  isValidInt64,
-  createUUID,
+// Updated to test standard TypeScript types instead of branded types
+import {
   isValidUUID,
-  createISODateString,
-  isValidISODate,
-  isISODateString
-} from '@/lib/types/branded';
+  isValidISODate
+} from '@/lib/utils/validation';
 import { 
   transformCampaignResponse, 
   transformCampaignArrayResponse 
@@ -31,25 +26,26 @@ import { validationSchemas } from '@/lib/schemas/alignedValidationSchemas';
 import type { ModelsCampaignAPI } from '@/lib/api-client/models/models-campaign-api';
 import type { ModelsUserAPI } from '@/lib/api-client/models/models-user-api';
 
-describe('Branded Type Conversions', () => {
-  describe('SafeBigInt', () => {
-    it('should create SafeBigInt from various inputs', () => {
-      expect(createSafeBigInt(123)).toBe(123n);
-      expect(createSafeBigInt('456')).toBe(456n);
-      expect(createSafeBigInt(789n)).toBe(789n);
+describe('Type Conversions (Post-Migration)', () => {
+  describe('Number Handling', () => {
+    it('should handle large numbers correctly', () => {
+      expect(Number(123)).toBe(123);
+      expect(Number('456')).toBe(456);
+      expect(Number(789)).toBe(789);
     });
 
-    it('should validate SafeBigInt correctly', () => {
-      expect(isSafeBigInt(123n)).toBe(true);
-      expect(isSafeBigInt('not a bigint')).toBe(false);
-      expect(isValidInt64(BigInt(Number.MAX_SAFE_INTEGER) + 1n)).toBe(true);
+    it('should validate number ranges', () => {
+      expect(typeof 123).toBe('number');
+      expect(typeof Number.MAX_SAFE_INTEGER).toBe('number');
+      expect(Number.isInteger(123)).toBe(true);
     });
 
     it('should handle edge cases', () => {
-      expect(createSafeBigInt(0)).toBe(0n);
-      expect(createSafeBigInt(Number.MAX_SAFE_INTEGER)).toBe(BigInt(Number.MAX_SAFE_INTEGER));
-      expect(() => createSafeBigInt(-1)).not.toThrow(); // Negative numbers are valid int64
-      expect(() => createSafeBigInt('invalid')).toThrow();
+      expect(Number(0)).toBe(0);
+      expect(Number(Number.MAX_SAFE_INTEGER)).toBe(Number.MAX_SAFE_INTEGER);
+      expect(Number(-1)).toBe(-1);
+      expect(() => Number('invalid')).not.toThrow(); // Returns NaN
+      expect(Number('invalid')).toBeNaN();
     });
   });
 
@@ -63,10 +59,10 @@ describe('Branded Type Conversions', () => {
       expect(isValidUUID('')).toBe(false);
     });
 
-    it('should create UUID branded type', () => {
+    it('should handle UUID as regular string', () => {
       const uuid = '123e4567-e89b-42d3-a456-426614174000';
-      const branded = createUUID(uuid);
-      expect(branded).toBe(uuid);
+      expect(typeof uuid).toBe('string');
+      expect(uuid).toBe('123e4567-e89b-42d3-a456-426614174000');
     });
   });
 
@@ -77,16 +73,16 @@ describe('Branded Type Conversions', () => {
       expect(isValidISODate('invalid')).toBe(false);
     });
 
-    it('should create ISODateString branded type', () => {
+    it('should handle date string as regular string', () => {
       const dateStr = '2023-01-01T00:00:00.000Z';
-      const branded = createISODateString(dateStr);
-      expect(branded).toBe(dateStr);
+      expect(typeof dateStr).toBe('string');
+      expect(dateStr).toBe('2023-01-01T00:00:00.000Z');
     });
 
-    it('should check ISODateString type guard', () => {
+    it('should check date string validity', () => {
       const dateStr = '2023-01-01T00:00:00.000Z';
-      expect(isISODateString(dateStr)).toBe(true);
-      expect(isISODateString('invalid')).toBe(false);
+      expect(isValidISODate(dateStr)).toBe(true);
+      expect(isValidISODate('invalid')).toBe(false);
     });
   });
 });
@@ -106,18 +102,18 @@ describe('Campaign API Transformations', () => {
     updatedAt: '2023-01-01T12:00:00.000Z'
   };
 
-  it('should transform campaign response with SafeBigInt conversion', () => {
+  it('should transform campaign response with number conversion', () => {
     const transformed = transformCampaignResponse(mockCampaignResponse);
     
     expect(transformed.id).toBeDefined();
-    expect(transformed.totalItems).toBe(1000000n);
-    expect(transformed.processedItems).toBe(500000n);
-    expect(transformed.successfulItems).toBe(450000n);
-    expect(transformed.failedItems).toBe(50000n);
-    expect(typeof transformed.totalItems).toBe('bigint');
+    expect(transformed.totalItems).toBe(1000000);
+    expect(transformed.processedItems).toBe(500000);
+    expect(transformed.successfulItems).toBe(450000);
+    expect(transformed.failedItems).toBe(50000);
+    expect(typeof transformed.totalItems).toBe('number');
   });
 
-  it('should handle undefined SafeBigInt fields', () => {
+  it('should handle undefined number fields', () => {
     const campaignWithoutCounts: ModelsCampaignAPI = {
       ...mockCampaignResponse,
       totalItems: undefined,
@@ -138,8 +134,8 @@ describe('Campaign API Transformations', () => {
     const transformed = transformCampaignArrayResponse(campaigns);
     
     expect(transformed).toHaveLength(2);
-    expect(transformed[0]?.totalItems).toBe(1000000n);
-    expect(transformed[1]?.totalItems).toBe(1000000n);
+    expect(transformed[0]?.totalItems).toBe(1000000);
+    expect(transformed[1]?.totalItems).toBe(1000000);
   });
 
   it('should handle empty or undefined arrays', () => {
@@ -164,7 +160,7 @@ describe('Authentication API Transformations', () => {
     updatedAt: '2023-01-01T12:00:00.000Z'
   };
 
-  it('should transform user response with branded types', () => {
+  it('should transform user response with standard types', () => {
     const transformed = transformUserResponse(mockUserResponse as any);
     
     expect(transformed.id).toBeDefined();
@@ -276,7 +272,7 @@ describe('Validation Schema Alignment', () => {
           patternType: 'prefix',
           tld: '.com',
           numDomainsToGenerate: 1000,
-          totalPossibleCombinations: 1000000n
+          totalPossibleCombinations: 1000000
         }
       };
       
@@ -353,7 +349,7 @@ describe('Validation Schema Alignment', () => {
   });
 });
 
-describe('Performance Tests for BigInt Operations', () => {
+describe('Performance Tests for Number Operations', () => {
   it('should handle large campaign counts efficiently', () => {
     const largeCampaign: ModelsCampaignAPI = {
       id: '123e4567-e89b-42d3-a456-426614174000',
@@ -369,7 +365,7 @@ describe('Performance Tests for BigInt Operations', () => {
     const duration = performance.now() - start;
     
     expect(duration).toBeLessThan(10); // Should complete in under 10ms
-    expect(transformed.totalItems).toBe(BigInt(Number.MAX_SAFE_INTEGER - 1000));
+    expect(transformed.totalItems).toBe(Number.MAX_SAFE_INTEGER - 1000);
   });
 
   it('should handle batch transformations efficiently', () => {

@@ -95,7 +95,7 @@ export default function ProxyListItem({ proxy, onEdit, onDelete, onTest, onToggl
               <DropdownMenuItem onClick={() => onEdit(proxy)} disabled={isLoading}>
                 <Edit3 className="mr-2 h-4 w-4" /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onTest(proxy.id)} disabled={isLoading}>
+              <DropdownMenuItem onClick={() => proxy.id && onTest(proxy.id)} disabled={isLoading || !proxy.id}>
                 <TestTubeDiagonal className="mr-2 h-4 w-4" /> Test
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(proxy)} className="text-destructive focus:text-destructive-foreground focus:bg-destructive" disabled={isLoading}>

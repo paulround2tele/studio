@@ -102,6 +102,10 @@ function ProxiesPageContent() {
     if (!proxyToDelete) return;
     setActionLoading(prev => ({ ...prev, [`delete-${proxyToDelete.id}`]: true }));
     try {
+      if (!proxyToDelete.id) {
+        toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
+        return;
+      }
       const response: ProxyDeleteResponse = await deleteProxy(proxyToDelete.id);
       if (response.status === 'success') {
         toast({ title: "Proxy Deleted", description: response.message });
@@ -122,10 +126,11 @@ function ProxiesPageContent() {
   const handleTestProxy = async (proxyId: string) => {
     setActionLoading(prev => ({ ...prev, [`test-${proxyId}`]: true }));
     try {
-      const response: ProxyActionResponse = await testProxy(proxyId);
+      const response = await testProxy(proxyId);
       if (response.status === 'success' && response.data) {
-        toast({ title: "Proxy Test Completed", description: `Status: ${response.data.lastStatus || 'Unknown'}` });
-        setProxies(prev => prev.map(p => p.id === proxyId ? response.data! : p));
+        const proxyData = response.data as Proxy;
+        toast({ title: "Proxy Test Completed", description: `Status: ${proxyData.lastStatus || 'Unknown'}` });
+        setProxies(prev => prev.map(p => p.id === proxyId ? proxyData : p));
       } else {
         toast({ title: "Proxy Test Failed", description: response.message, variant: "destructive" });
       }
@@ -141,6 +146,10 @@ function ProxiesPageContent() {
     setActionLoading(prev => ({ ...prev, [`toggle-${proxy.id}`]: true }));
     const payload: UpdateProxyPayload = { isEnabled: newStatus === 'Active' };
     try {
+      if (!proxy.id) {
+        toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
+        return;
+      }
       const response = await updateProxy(proxy.id, payload);
       if (response.status === 'success' && response.data) {
         toast({ title: `Proxy ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`, description: `Proxy ${proxy.address} is now ${newStatus.toLowerCase()}.`});
@@ -160,7 +169,7 @@ function ProxiesPageContent() {
   const handleTestAllProxies = async () => {
     setPageActionLoading("testAll");
     try {
-      const response: ProxyActionResponse = await testAllProxies();
+      const response = await testAllProxies();
       toast({ title: "Test All Proxies", description: response.message || "Testing process initiated/completed." });
       fetchProxiesData(false); // Refresh list to show updated statuses
     } catch (err: unknown) {

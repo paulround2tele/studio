@@ -1,16 +1,14 @@
 /**
  * WEBSOCKET TYPE CORRECTIONS - Aligned with Go Backend
- * 
+ *
  * CRITICAL FIX: Frontend WebSocket message structure was completely misaligned
  * with backend format, causing parsing failures for real-time updates.
- * 
+ *
  * Migration Guide:
  * 1. Replace all WebSocket message types with these corrected versions
  * 2. Remove non-existent fields (id, sequenceNumber, message, etc.)
  * 3. Update message handlers to use the correct payload structures
  */
-
-import { SafeBigInt, createSafeBigInt } from './branded';
 
 // ============================================================================
 // WEBSOCKET MESSAGE FORMAT - Matches Go Backend Exactly
@@ -60,14 +58,14 @@ export type WebSocketMessageType = typeof WebSocketMessageTypes[keyof typeof Web
 
 /**
  * Campaign progress update payload
- * CRITICAL: totalItems, processedItems, etc. are int64 and need SafeBigInt
+ * CRITICAL: totalItems, processedItems, etc. are int64 - use number (OpenAPI compatible)
  */
 export interface CampaignProgressPayload {
   campaignId: string;
-  totalItems: SafeBigInt;        // int64 from backend
-  processedItems: SafeBigInt;    // int64 from backend
-  successfulItems: SafeBigInt;   // int64 from backend
-  failedItems: SafeBigInt;       // int64 from backend
+  totalItems: number;        // int64 from backend - use number (OpenAPI compatible)
+  processedItems: number;    // int64 from backend - use number (OpenAPI compatible)
+  successfulItems: number;   // int64 from backend - use number (OpenAPI compatible)
+  failedItems: number;       // int64 from backend - use number (OpenAPI compatible)
   progressPercent: number;       // float64 - safe as number
   phase: string;
   status: string;
@@ -86,15 +84,15 @@ export interface CampaignStatusPayload {
 
 /**
  * Domain generation payload
- * CRITICAL: offset and totalGenerated are int64
+ * CRITICAL: offset and totalGenerated are int64 - use number (OpenAPI compatible)
  */
 export interface DomainGenerationPayload {
   campaignId: string;
   domainId: string;
   domain: string;
-  offset: SafeBigInt;         // int64 from backend
+  offset: number;         // int64 from backend - use number (OpenAPI compatible)
   batchSize: number;         // int32 - safe
-  totalGenerated: SafeBigInt; // int64 from backend
+  totalGenerated: number; // int64 from backend - use number (OpenAPI compatible)
 }
 
 /**
@@ -108,7 +106,7 @@ export interface DNSValidationPayload {
   dnsRecords?: Record<string, unknown>;
   attempts: number;
   processingTime: number; // milliseconds
-  totalValidated: SafeBigInt; // int64 from backend
+  totalValidated: number; // int64 from backend - use number (OpenAPI compatible)
 }
 
 /**
@@ -124,7 +122,7 @@ export interface HTTPValidationPayload {
   content?: string;
   headers?: Record<string, unknown>;
   processingTime: number; // milliseconds
-  totalValidated: SafeBigInt; // int64 from backend
+  totalValidated: number; // int64 from backend - use number (OpenAPI compatible)
 }
 
 /**
@@ -234,7 +232,7 @@ export function isWebSocketMessage(data: unknown): data is WebSocketMessage {
 
 /**
  * Parse and transform raw WebSocket message
- * Handles int64 fields that need to be converted to SafeBigInt
+ * Handles int64 fields - now using number for OpenAPI compatibility
  */
 export function parseWebSocketMessage(raw: string): TypedWebSocketMessage | null {
   try {
@@ -254,10 +252,10 @@ export function parseWebSocketMessage(raw: string): TypedWebSocketMessage | null
           type: WebSocketMessageTypes.CAMPAIGN_PROGRESS,
           data: {
             campaignId: data.campaignId,
-            totalItems: createSafeBigInt(data.totalItems as string | number),
-            processedItems: createSafeBigInt(data.processedItems as string | number),
-            successfulItems: createSafeBigInt(data.successfulItems as string | number),
-            failedItems: createSafeBigInt(data.failedItems as string | number),
+            totalItems: Number(data.totalItems),
+            processedItems: Number(data.processedItems),
+            successfulItems: Number(data.successfulItems),
+            failedItems: Number(data.failedItems),
             progressPercent: data.progressPercent,
             phase: data.phase,
             status: data.status
@@ -274,9 +272,9 @@ export function parseWebSocketMessage(raw: string): TypedWebSocketMessage | null
             campaignId: data.campaignId,
             domainId: data.domainId,
             domain: data.domain,
-            offset: createSafeBigInt(data.offset as string | number),
+            offset: Number(data.offset),
             batchSize: data.batchSize,
-            totalGenerated: createSafeBigInt(data.totalGenerated as string | number)
+            totalGenerated: Number(data.totalGenerated)
           }
         } as DomainGeneratedMessage;
       }
@@ -294,7 +292,7 @@ export function parseWebSocketMessage(raw: string): TypedWebSocketMessage | null
             dnsRecords: data.dnsRecords,
             attempts: data.attempts,
             processingTime: data.processingTime,
-            totalValidated: createSafeBigInt(data.totalValidated as string | number)
+            totalValidated: Number(data.totalValidated)
           }
         } as DNSValidationResultMessage;
       }
@@ -314,7 +312,7 @@ export function parseWebSocketMessage(raw: string): TypedWebSocketMessage | null
             content: data.content,
             headers: data.headers,
             processingTime: data.processingTime,
-            totalValidated: createSafeBigInt(data.totalValidated as string | number)
+            totalValidated: Number(data.totalValidated)
           }
         } as HTTPValidationResultMessage;
       }
@@ -435,9 +433,9 @@ export function routeWebSocketMessage(
  *    };
  *    ```
  * 
- * 4. Handle SafeBigInt fields properly:
+ * 4. Handle numeric fields properly:
  *    ```typescript
  *    const progress = message.data as CampaignProgressPayload;
- *    console.log(`Processed: ${progress.processedItems.toString()}`);
+ *    console.log(`Processed: ${progress.processedItems}`);
  *    ```
  */

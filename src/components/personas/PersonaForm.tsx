@@ -15,31 +15,34 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { createPersona, updatePersona } from "@/lib/services/personaService";
-import {
-  Persona,
-  HttpPersona,
-  ApiErrorDetail,
-  DnsPersona,
-  DnsPersonaConfig,
-  DnsResolverStrategy,
-  CreateHttpPersonaPayload,
-  CreateDnsPersonaPayload,
-  UpdateHttpPersonaPayload,
-  UpdateDnsPersonaPayload,
-  HTTPConfigDetails,
-  DNSConfigDetails
-} from "@/lib/types";
+import type { components } from '@/lib/api-client/types';
+
+// Use OpenAPI types directly
+type PersonaResponse = components['schemas']['PersonaResponse'];
+type CreatePersonaRequest = components['schemas']['CreatePersonaRequest'];
+type UpdatePersonaRequest = components['schemas']['UpdatePersonaRequest'];
+type HttpPersonaConfig = components['schemas']['HttpPersonaConfig'];
+type DnsPersonaConfig = components['schemas']['DnsPersonaConfig'];
+
+// Legacy compatibility types
+type Persona = PersonaResponse;
+type HttpPersona = PersonaResponse & { personaType: 'http' };
+type DnsPersona = PersonaResponse & { personaType: 'dns' };
+type HTTPConfigDetails = HttpPersonaConfig;
+type DNSConfigDetails = DnsPersonaConfig;
 import { 
   personaManagementSchemaWithBranded as _personaManagementSchemaWithBranded,
   validateAndTransformFormData as _validateAndTransformFormData,
   extractBrandedTypeErrors as _extractBrandedTypeErrors
 } from '@/lib/schemas/brandedValidationSchemas';
 
-// DNS Resolver Strategy options
+// DNS Resolver Strategy options - aligned with OpenAPI schema
+type DnsResolverStrategy = "round_robin" | "random" | "weighted" | "priority";
 const DNS_RESOLVER_STRATEGIES: DnsResolverStrategy[] = [
-  "random_rotation",
-  "weighted_rotation",
-  "sequential_failover"
+  "round_robin",
+  "random",
+  "weighted",
+  "priority"
 ];
 
 // Utility functions
@@ -129,9 +132,9 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
     resolver: zodResolver(httpPersonaFormSchema),
     defaultValues: persona
       ? {
-          name: persona.name,
+          name: persona.name || "",
           description: persona.description || "",
-          tagsInput: (persona as HttpPersona).tags?.join(', ') || "",
+          tagsInput: "", // Tags not in OpenAPI persona response
           userAgent: ((persona as HttpPersona).configDetails as HTTPConfigDetails).userAgent || "",
           headersJson: stringifyJsonForForm(((persona as HttpPersona).configDetails as HTTPConfigDetails).headers),
           headerOrderInput: ((persona as HttpPersona).configDetails as HTTPConfigDetails).headerOrder?.join(', ') || "",
@@ -139,10 +142,10 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           http2SettingsJson: stringifyJsonForForm(((persona as HttpPersona).configDetails as HTTPConfigDetails).http2Settings as unknown as Record<string, unknown>),
           cookieHandlingJson: stringifyJsonForForm(((persona as HttpPersona).configDetails as HTTPConfigDetails).cookieHandling as unknown as Record<string, unknown>),
           allowInsecureTls: ((persona as HttpPersona).configDetails as HTTPConfigDetails).allowInsecureTls || false,
-          requestTimeoutSec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).requestTimeoutSec || ((persona as HttpPersona).configDetails as HTTPConfigDetails).requestTimeoutSeconds || 30,
+          requestTimeoutSec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).requestTimeoutSec || 30,
           maxRedirects: ((persona as HttpPersona).configDetails as HTTPConfigDetails).maxRedirects || 5,
           useHeadless: ((persona as HttpPersona).configDetails as HTTPConfigDetails).useHeadless ?? false,
-          fallbackPolicy: ((persona as HttpPersona).configDetails as HTTPConfigDetails).fallbackPolicy || 'never',
+          fallbackPolicy: 'never', // Not in OpenAPI HTTP config
           viewportWidth: ((persona as HttpPersona).configDetails as HTTPConfigDetails).viewportWidth,
           viewportHeight: ((persona as HttpPersona).configDetails as HTTPConfigDetails).viewportHeight,
           headlessUserAgent: ((persona as HttpPersona).configDetails as HTTPConfigDetails).headlessUserAgent || '',
@@ -153,7 +156,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           headlessTimeoutSec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).headlessTimeoutSeconds,
           waitDelaySec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).waitDelaySeconds,
           fetchBodyForKeywords: ((persona as HttpPersona).configDetails as HTTPConfigDetails).fetchBodyForKeywords ?? false,
-          notes: ((persona as HttpPersona).configDetails as HTTPConfigDetails).notes || "",
+          notes: "", // Notes not in OpenAPI HTTP config
         }
       : {
           name: "",
@@ -198,39 +201,45 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
     };
 
     try {
-      const payload: CreateHttpPersonaPayload | UpdateHttpPersonaPayload = {
-          ...commonPayloadData,
-          configDetails: {
-            userAgent: data.userAgent,
-            headers: parseJsonOrUndefined<Record<string,string>>(data.headersJson || ""),
-            headerOrder: parseStringToArray(data.headerOrderInput || ""),
-            tlsClientHello: parseJsonOrUndefined(data.tlsClientHelloJson || ""),
-          http2Settings: parseJsonOrUndefined(data.http2SettingsJson || ""),
-          cookieHandling: parseJsonOrUndefined(data.cookieHandlingJson || ""),
-          allowInsecureTls: data.allowInsecureTls,
-          requestTimeoutSec: data.requestTimeoutSec,
-          maxRedirects: data.maxRedirects,
-          useHeadless: data.useHeadless,
-          fallbackPolicy: data.fallbackPolicy,
-          viewportWidth: data.viewportWidth,
-          viewportHeight: data.viewportHeight,
-          headlessUserAgent: data.headlessUserAgent || undefined,
-          scriptExecution: data.scriptExecution,
-          loadImages: data.loadImages,
-          screenshot: data.screenshot,
-          domSnapshot: data.domSnapshot,
-          headlessTimeoutSeconds: data.headlessTimeoutSec,
-          waitDelaySeconds: data.waitDelaySec,
-          fetchBodyForKeywords: data.fetchBodyForKeywords,
-          notes: data.notes || undefined,
-        }
+      const httpConfigDetails: HttpPersonaConfig = {
+        userAgent: data.userAgent,
+        headers: parseJsonOrUndefined<Record<string,string>>(data.headersJson || ""),
+        headerOrder: parseStringToArray(data.headerOrderInput || ""),
+        tlsClientHello: parseJsonOrUndefined(data.tlsClientHelloJson || ""),
+        http2Settings: parseJsonOrUndefined(data.http2SettingsJson || ""),
+        cookieHandling: parseJsonOrUndefined(data.cookieHandlingJson || ""),
+        allowInsecureTls: data.allowInsecureTls,
+        requestTimeoutSec: data.requestTimeoutSec,
+        maxRedirects: data.maxRedirects,
+        useHeadless: data.useHeadless,
+        viewportWidth: data.viewportWidth,
+        viewportHeight: data.viewportHeight,
+        headlessUserAgent: data.headlessUserAgent || undefined,
+        scriptExecution: data.scriptExecution,
+        loadImages: data.loadImages,
+        screenshot: data.screenshot,
+        domSnapshot: data.domSnapshot,
+        headlessTimeoutSeconds: data.headlessTimeoutSec,
+        waitDelaySeconds: data.waitDelaySec,
+        fetchBodyForKeywords: data.fetchBodyForKeywords,
+      };
+
+      const payload: CreatePersonaRequest = {
+        ...commonPayloadData,
+        personaType: 'http',
+        isEnabled: true,
+        configDetails: httpConfigDetails
       };
 
       let response;
-      if (isEditing && persona) {
-        response = await updatePersona(persona.id, payload, 'http');
+      if (isEditing && persona && persona.id) {
+        const updatePayload: UpdatePersonaRequest = {
+          ...commonPayloadData,
+          configDetails: httpConfigDetails
+        };
+        response = await updatePersona(persona.id, updatePayload, 'http');
       } else {
-        response = await createPersona(payload as CreateHttpPersonaPayload);
+        response = await createPersona(payload);
       }
 
       if (response.status === 'success') {
@@ -239,15 +248,6 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
         router.refresh();
       } else {
         toast({ title: "Save Failed", description: response.message || "Could not save persona.", variant: "destructive" });
-        if (response.errors) {
-            response.errors.forEach((err: ApiErrorDetail) => {
-                if (err.field) {
-                    form.setError(err.field as keyof HttpPersonaFormValues, { type: "manual", message: err.message });
-                } else {
-                     toast({ title: "Operation Failed", description: err.message, variant: "destructive"})
-                }
-            });
-        }
       }
     } catch (error: unknown) {
       console.error("Failed to save persona:", error);
@@ -417,14 +417,14 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
     resolver: zodResolver(dnsPersonaFormSchema),
     defaultValues: persona
       ? {
-          name: persona.name,
+          name: persona.name || "",
           description: persona.description || "",
-          tagsInput: (persona as DnsPersona).tags?.join(', ') || "",
+          tagsInput: "", // Tags not in OpenAPI persona response
           config_resolversInput: ((persona as DnsPersona).configDetails as DNSConfigDetails).resolvers?.join(', ') || "",
           config_useSystemResolvers: ((persona as DnsPersona).configDetails as DNSConfigDetails).useSystemResolvers || false,
           config_queryTimeoutSeconds: ((persona as DnsPersona).configDetails as DNSConfigDetails).queryTimeoutSeconds || 5,
           config_maxDomainsPerRequest: ((persona as DnsPersona).configDetails as DNSConfigDetails).maxDomainsPerRequest,
-          config_resolverStrategy: (((persona as DnsPersona).configDetails as DNSConfigDetails).resolverStrategy as DnsResolverStrategy) || "random_rotation",
+          config_resolverStrategy: (((persona as DnsPersona).configDetails as DNSConfigDetails).resolverStrategy as DnsResolverStrategy) || "round_robin",
           config_resolversWeightedJson: stringifyJsonObjectForForm(((persona as DnsPersona).configDetails as DNSConfigDetails).resolversWeighted || {}),
           config_resolversPreferredOrderInput: ((persona as DnsPersona).configDetails as DNSConfigDetails).resolversPreferredOrder?.join(', ') || "",
           config_concurrentQueriesPerDomain: ((persona as DnsPersona).configDetails as DNSConfigDetails).concurrentQueriesPerDomain || 2,
@@ -441,7 +441,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
           config_resolversInput: "8.8.8.8, 1.1.1.1",
           config_useSystemResolvers: false,
           config_queryTimeoutSeconds: 5,
-          config_resolverStrategy: "random_rotation" as DnsResolverStrategy,
+          config_resolverStrategy: "random" as DnsResolverStrategy,
           config_resolversWeightedJson: "{}",
           config_resolversPreferredOrderInput: "",
           config_concurrentQueriesPerDomain: 2,
@@ -463,7 +463,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
     };
 
     try {
-      const dnsConfig: DnsPersonaConfig = {
+      const dnsConfigDetails: DnsPersonaConfig = {
           resolvers: parseStringToArray(data.config_resolversInput || ""),
           useSystemResolvers: data.config_useSystemResolvers,
           queryTimeoutSeconds: data.config_queryTimeoutSeconds,
@@ -479,16 +479,22 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
           rateLimitBurst: data.config_rateLimitBurst || 10,
       };
 
-      const payload: CreateDnsPersonaPayload | UpdateDnsPersonaPayload = {
+      const payload: CreatePersonaRequest = {
           ...commonPayloadData,
-          configDetails: dnsConfig,
+          personaType: 'dns',
+          isEnabled: true,
+          configDetails: dnsConfigDetails,
       };
 
       let response;
-      if (isEditing && persona) {
-        response = await updatePersona(persona.id, payload, 'dns');
+      if (isEditing && persona && persona.id) {
+        const updatePayload: UpdatePersonaRequest = {
+          ...commonPayloadData,
+          configDetails: dnsConfigDetails
+        };
+        response = await updatePersona(persona.id, updatePayload, 'dns');
       } else {
-        response = await createPersona(payload as CreateDnsPersonaPayload);
+        response = await createPersona(payload);
       }
 
       if (response.status === 'success') {
@@ -497,15 +503,6 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
         router.refresh();
       } else {
         toast({ title: "Save Failed", description: response.message || "Could not save persona.", variant: "destructive" });
-        if (response.errors) {
-            response.errors.forEach((err: ApiErrorDetail) => {
-                if (err.field) {
-                    form.setError(err.field as keyof DnsPersonaFormValues, { type: "manual", message: err.message });
-                } else {
-                     toast({ title: "Operation Failed", description: err.message, variant: "destructive"})
-                }
-            });
-        }
       }
     } catch (error: unknown) {
       console.error("Failed to save persona:", error);

@@ -13,7 +13,7 @@ if [ ! -f backend/bin/apiserver ]; then
   (cd backend && make build)
 fi
 
-PORT=${OPENAPI_PORT:-8081}
+PORT=${OPENAPI_PORT:-8080}
 PORT="$PORT" backend/bin/apiserver &
 PID=$!
 

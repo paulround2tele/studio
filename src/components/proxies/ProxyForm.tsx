@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Proxy, CreateProxyPayload, UpdateProxyPayload, ProxyProtocol, ProxyStatus } from '@/lib/types';
+import type { Proxy, UpdateProxyPayload, ProxyProtocol, ProxyStatus } from '@/lib/types';
 import { createProxy, updateProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -108,10 +108,18 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           isEnabled: data.userEnabled,
           // Status is generally not updated via this form directly in edit mode
         };
+        if (!proxyToEdit.id) {
+          toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
+          return;
+        }
         response = await updateProxy(proxyToEdit.id, payload);
       } else {
-        const payload: CreateProxyPayload = {
-          name: data.name,
+        if (!data.name?.trim()) {
+          toast({ title: "Error", description: "Name is required", variant: "destructive" });
+          return;
+        }
+        const payload = {
+          name: data.name.trim(),
           description: data.description,
           address: data.address,
           protocol: data.protocol,
@@ -129,14 +137,6 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
         onSaveSuccess();
       } else {
         toast({ title: `Error ${isEditing ? "Updating" : "Creating"} Proxy`, description: response.message, variant: "destructive" });
-        if (response.errors) {
-          response.errors.forEach((err: unknown) => {
-            const error = err as { field?: string; message?: string };
-            if (error.field) {
-              form.setError(error.field as keyof ProxyFormValues, { type: "manual", message: error.message || "Validation error" });
-            }
-          });
-        }
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";

@@ -4,7 +4,6 @@ import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,15 +11,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { createKeywordSet } from '@/lib/services/keywordSetService.production';
-import { createKeywordSetRequestSchema } from '@/lib/schemas/alignedValidationSchemas';
-import type { CreateKeywordSetPayload } from '@/lib/services/keywordSetService.production';
+import { createKeywordSet, type CreateKeywordSetPayload } from '@/lib/services/keywordSetService.production';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 
 export default function NewKeywordSetPage() {
   const router = useRouter();
   const form = useForm<CreateKeywordSetPayload>({
-    resolver: zodResolver(createKeywordSetRequestSchema),
     defaultValues: { name: '', description: '', isEnabled: true },
   });
 

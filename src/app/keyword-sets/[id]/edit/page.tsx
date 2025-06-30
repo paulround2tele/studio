@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,7 +16,6 @@ import {
   updateKeywordSet,
   type UpdateKeywordSetPayload,
 } from '@/lib/services/keywordSetService.production';
-import { updateKeywordSetRequestSchema } from '@/lib/schemas/alignedValidationSchemas';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 
 export default function EditKeywordSetPage() {
@@ -28,7 +26,6 @@ export default function EditKeywordSetPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const form = useForm<UpdateKeywordSetPayload>({
-    resolver: zodResolver(updateKeywordSetRequestSchema),
     defaultValues: { name: '', description: '', isEnabled: true },
   });
 

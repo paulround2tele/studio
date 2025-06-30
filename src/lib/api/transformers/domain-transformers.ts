@@ -1,49 +1,46 @@
 /**
  * Domain API Response Transformers
- * Handles conversion of domain-related responses with SafeBigInt for offsetIndex
+ * Handles conversion of domain-related responses with number for offsetIndex (OpenAPI compatible)
  */
-
-import type { SafeBigInt, UUID, ISODateString } from '@/lib/types/branded';
-import { createSafeBigInt, createUUID, createISODateString } from '@/lib/types/branded';
 
 /**
  * Generated Domain API model with properly typed fields
  */
 export interface GeneratedDomainAligned {
-    id?: UUID;
-    generationCampaignId?: UUID;
+    id?: string;
+    generationCampaignId?: string;
     domainName?: string;
-    offsetIndex?: SafeBigInt; // int64 field that was missing
-    generatedAt?: ISODateString;
+    offsetIndex?: number; // int64 field - use number (OpenAPI compatible)
+    generatedAt?: string;
     sourceKeyword?: string;
     sourcePattern?: string;
     tld?: string;
-    createdAt?: ISODateString;
+    createdAt?: string;
 }
 
 /**
  * DNS Validation Result with aligned types
  */
 export interface DNSValidationResultAligned {
-    id?: UUID;
-    dnsCampaignId?: UUID;
-    generatedDomainId?: UUID;
+    id?: string;
+    dnsCampaignId?: string;
+    generatedDomainId?: string;
     domainName?: string;
     validationStatus?: string;
     dnsRecords?: Record<string, unknown>;
-    validatedByPersonaId?: UUID;
+    validatedByPersonaId?: string;
     attempts?: number;
-    lastCheckedAt?: ISODateString;
-    createdAt?: ISODateString;
+    lastCheckedAt?: string;
+    createdAt?: string;
 }
 
 /**
  * HTTP Keyword Result with aligned types
  */
 export interface HTTPKeywordResultAligned {
-    id?: UUID;
-    httpKeywordCampaignId?: UUID;
-    dnsResultId?: UUID;
+    id?: string;
+    httpKeywordCampaignId?: string;
+    dnsResultId?: string;
     domainName?: string;
     validationStatus?: string;
     httpStatusCode?: number;
@@ -53,11 +50,11 @@ export interface HTTPKeywordResultAligned {
     foundKeywordsFromSets?: Record<string, unknown>;
     foundAdHocKeywords?: string[];
     contentHash?: string;
-    validatedByPersonaId?: UUID;
-    usedProxyId?: UUID;
+    validatedByPersonaId?: string;
+    usedProxyId?: string;
     attempts?: number;
-    lastCheckedAt?: ISODateString;
-    createdAt?: ISODateString;
+    lastCheckedAt?: string;
+    createdAt?: string;
 }
 
 /**
@@ -71,24 +68,24 @@ export function transformGeneratedDomainResponse(raw: unknown): GeneratedDomainA
     const data = raw as Record<string, unknown>;
     
     return {
-        id: data.id ? createUUID(String(data.id)) : undefined,
+        id: data.id ? String(data.id) : undefined,
         generationCampaignId: data.generationCampaignId || data.domain_generation_campaign_id ?
-            createUUID(String(data.generationCampaignId || data.domain_generation_campaign_id)) : undefined,
+            String(data.generationCampaignId || data.domain_generation_campaign_id) : undefined,
         domainName: data.domainName || data.domain_name ? String(data.domainName || data.domain_name) : undefined,
         offsetIndex: (() => {
             const value = data.offsetIndex ?? data.offset_index;
             if (value != null && (typeof value === 'string' || typeof value === 'number' || typeof value === 'bigint')) {
-                return createSafeBigInt(value);
+                return Number(value);
             }
             return undefined;
         })(),
         generatedAt: data.generatedAt || data.generated_at ?
-            createISODateString(String(data.generatedAt || data.generated_at)) : undefined,
+            String(data.generatedAt || data.generated_at) : undefined,
         sourceKeyword: data.sourceKeyword || data.source_keyword ? String(data.sourceKeyword || data.source_keyword) : undefined,
         sourcePattern: data.sourcePattern || data.source_pattern ? String(data.sourcePattern || data.source_pattern) : undefined,
         tld: data.tld ? String(data.tld) : undefined,
         createdAt: data.createdAt || data.created_at ?
-            createISODateString(String(data.createdAt || data.created_at)) : undefined,
+            String(data.createdAt || data.created_at) : undefined,
     };
 }
 
@@ -114,21 +111,21 @@ export function transformDNSValidationResultResponse(raw: unknown): DNSValidatio
     const data = raw as Record<string, unknown>;
     
     return {
-        id: data.id ? createUUID(String(data.id)) : undefined,
+        id: data.id ? String(data.id) : undefined,
         dnsCampaignId: data.dnsCampaignId || data.dns_campaign_id ?
-            createUUID(String(data.dnsCampaignId || data.dns_campaign_id)) : undefined,
+            String(data.dnsCampaignId || data.dns_campaign_id) : undefined,
         generatedDomainId: data.generatedDomainId || data.generated_domain_id ?
-            createUUID(String(data.generatedDomainId || data.generated_domain_id)) : undefined,
+            String(data.generatedDomainId || data.generated_domain_id) : undefined,
         domainName: data.domainName || data.domain_name ? String(data.domainName || data.domain_name) : undefined,
         validationStatus: data.validationStatus || data.validation_status ? String(data.validationStatus || data.validation_status) : undefined,
         dnsRecords: (data.dnsRecords || data.dns_records) as Record<string, unknown> | undefined,
         validatedByPersonaId: data.validatedByPersonaId || data.validated_by_persona_id ?
-            createUUID(String(data.validatedByPersonaId || data.validated_by_persona_id)) : undefined,
+            String(data.validatedByPersonaId || data.validated_by_persona_id) : undefined,
         attempts: typeof data.attempts === 'number' ? data.attempts : undefined,
         lastCheckedAt: data.lastCheckedAt || data.last_checked_at ?
-            createISODateString(String(data.lastCheckedAt || data.last_checked_at)) : undefined,
+            String(data.lastCheckedAt || data.last_checked_at) : undefined,
         createdAt: data.createdAt || data.created_at ?
-            createISODateString(String(data.createdAt || data.created_at)) : undefined,
+            String(data.createdAt || data.created_at) : undefined,
     };
 }
 
@@ -154,11 +151,11 @@ export function transformHTTPKeywordResultResponse(raw: unknown): HTTPKeywordRes
     const data = raw as Record<string, unknown>;
     
     return {
-        id: data.id ? createUUID(String(data.id)) : undefined,
+        id: data.id ? String(data.id) : undefined,
         httpKeywordCampaignId: data.httpKeywordCampaignId || data.http_keyword_campaign_id ?
-            createUUID(String(data.httpKeywordCampaignId || data.http_keyword_campaign_id)) : undefined,
+            String(data.httpKeywordCampaignId || data.http_keyword_campaign_id) : undefined,
         dnsResultId: data.dnsResultId || data.dns_result_id ?
-            createUUID(String(data.dnsResultId || data.dns_result_id)) : undefined,
+            String(data.dnsResultId || data.dns_result_id) : undefined,
         domainName: data.domainName || data.domain_name ? String(data.domainName || data.domain_name) : undefined,
         validationStatus: data.validationStatus || data.validation_status ? String(data.validationStatus || data.validation_status) : undefined,
         httpStatusCode: typeof data.httpStatusCode === 'number' ? data.httpStatusCode :
@@ -172,14 +169,14 @@ export function transformHTTPKeywordResultResponse(raw: unknown): HTTPKeywordRes
             Array.isArray(data.found_ad_hoc_keywords) ? data.found_ad_hoc_keywords.map(String) : undefined,
         contentHash: data.contentHash || data.content_hash ? String(data.contentHash || data.content_hash) : undefined,
         validatedByPersonaId: data.validatedByPersonaId || data.validated_by_persona_id ?
-            createUUID(String(data.validatedByPersonaId || data.validated_by_persona_id)) : undefined,
+            String(data.validatedByPersonaId || data.validated_by_persona_id) : undefined,
         usedProxyId: data.usedProxyId || data.used_proxy_id ?
-            createUUID(String(data.usedProxyId || data.used_proxy_id)) : undefined,
+            String(data.usedProxyId || data.used_proxy_id) : undefined,
         attempts: typeof data.attempts === 'number' ? data.attempts : undefined,
         lastCheckedAt: data.lastCheckedAt || data.last_checked_at ?
-            createISODateString(String(data.lastCheckedAt || data.last_checked_at)) : undefined,
+            String(data.lastCheckedAt || data.last_checked_at) : undefined,
         createdAt: data.createdAt || data.created_at ?
-            createISODateString(String(data.createdAt || data.created_at)) : undefined,
+            String(data.createdAt || data.created_at) : undefined,
     };
 }
 
@@ -198,11 +195,11 @@ export function transformHTTPKeywordResultArrayResponse(raw: unknown[] | undefin
  * Campaign validation item (unified type for both DNS and HTTP results)
  */
 export interface CampaignValidationItemAligned {
-    id?: UUID;
-    campaignId?: UUID;
+    id?: string;
+    campaignId?: string;
     domainName?: string;
     validationStatus?: string;
-    validatedAt?: ISODateString;
+    validatedAt?: string;
     details?: Record<string, unknown>;
     attempts?: number;
 }
@@ -216,7 +213,7 @@ export function transformToValidationItem(
 ): CampaignValidationItemAligned {
     return {
         id: result.id,
-        campaignId: createUUID(campaignId),
+        campaignId: campaignId,
         domainName: result.domainName,
         validationStatus: result.validationStatus,
         validatedAt: result.lastCheckedAt || result.createdAt,

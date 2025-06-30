@@ -1,25 +1,18 @@
 /**
  * ALIGNED API MODELS - Corrected to match Go backend exactly
- * 
+ *
  * Migration Guide:
  * 1. Replace all imports from 'src/lib/api-client/models/*' with this file
- * 2. Update all usages of 'number' for int64 fields to use SafeBigInt
+ * 2. All int64 fields now use number for OpenAPI compatibility
  * 3. Ensure all API responses are transformed using the provided transformers
- * 
+ *
  * CRITICAL CHANGES:
- * - All int64 fields now use SafeBigInt instead of number
+ * - All int64 fields now use number instead of SafeBigInt (OpenAPI compatible)
  * - Field names match Go JSON tags exactly (no snake_case variants)
  * - Enums exclude 'archived' status to match backend
  */
 
-import { 
-  SafeBigInt, 
-  UUID, 
-  ISODateString,
-  createSafeBigInt,
-  createUUID,
-  createISODateString 
-} from './branded';
+// Using OpenAPI compatible types (string, number) instead of branded types
 
 // ============================================================================
 // ENUMS - Aligned with Go backend
@@ -68,47 +61,46 @@ export enum ModelsKeywordRuleTypeEnum {
  * Campaign API model aligned with Go backend
  *
  * @description Represents a campaign entity with type-safe fields matching the Go backend exactly.
- * All int64 fields from Go are represented as SafeBigInt to prevent numeric overflow.
+ * All int64 fields from Go are represented as numbers for OpenAPI compatibility.
  *
  * @example
  * ```typescript
  * const campaign: ModelsCampaignAPI = {
- *   id: createUUID('550e8400-e29b-41d4-a716-446655440000'),
+ *   id: '550e8400-e29b-41d4-a716-446655440000',
  *   name: 'DNS Validation Campaign',
  *   campaignType: ModelsCampaignTypeEnum.DnsValidation,
  *   status: ModelsCampaignStatusEnum.Running,
- *   totalItems: createSafeBigInt('1000000'),
- *   processedItems: createSafeBigInt('500000'),
+ *   totalItems: 1000000,
+ *   processedItems: 500000,
  *   progressPercentage: 50.0
  * };
  * ```
  *
  * @see transformCampaignResponse - Use this to transform API responses
- * @see SafeBigInt - For handling int64 values
  */
 export interface ModelsCampaignAPI {
-  id?: UUID;
+  id?: string;
   name?: string;
   campaignType?: ModelsCampaignTypeEnum;
   status?: ModelsCampaignStatusEnum;
-  userId?: UUID;
+  userId?: string;
   
-  // CRITICAL: These MUST be SafeBigInt, not number
-  totalItems?: SafeBigInt;
-  processedItems?: SafeBigInt;
-  successfulItems?: SafeBigInt;
-  failedItems?: SafeBigInt;
+  // OpenAPI compatible: Using number instead of SafeBigInt
+  totalItems?: number;
+  processedItems?: number;
+  successfulItems?: number;
+  failedItems?: number;
   
   progressPercentage?: number; // float64 - safe as number
   metadata?: Record<string, unknown>;
   
-  // Timestamps
-  createdAt?: ISODateString;
-  updatedAt?: ISODateString;
-  startedAt?: ISODateString;
-  completedAt?: ISODateString;
-  estimatedCompletionAt?: ISODateString;
-  lastHeartbeatAt?: ISODateString;
+  // Timestamps as strings
+  createdAt?: string;
+  updatedAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  estimatedCompletionAt?: string;
+  lastHeartbeatAt?: string;
   
   // Other fields
   errorMessage?: string;
@@ -142,7 +134,7 @@ export interface ModelsCampaignAPI {
  * @see transformUserResponse - Use this to transform API responses
  */
 export interface ModelsUserAPI {
-  id?: UUID;
+  id?: string;
   email?: string;
   emailVerified?: boolean;
   firstName?: string;
@@ -151,13 +143,13 @@ export interface ModelsUserAPI {
   avatarUrl?: string;
   isActive?: boolean;
   isLocked?: boolean;
-  lastLoginAt?: ISODateString;
+  lastLoginAt?: string;
   lastLoginIp?: string;
   mustChangePassword?: boolean;
   mfaEnabled?: boolean;
-  mfaLastUsedAt?: ISODateString;
-  createdAt?: ISODateString;
-  updatedAt?: ISODateString;
+  mfaLastUsedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
   
   // These should be full objects, not strings
   roles?: ModelsRoleAPI[];
@@ -168,13 +160,13 @@ export interface ModelsUserAPI {
  * Role API model
  */
 export interface ModelsRoleAPI {
-  id: UUID;
+  id: string;
   name: string;
   displayName: string;
   description?: string;
   isSystemRole: boolean;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
   permissions?: ModelsPermissionAPI[];
 }
 
@@ -182,14 +174,14 @@ export interface ModelsRoleAPI {
  * Permission API model
  */
 export interface ModelsPermissionAPI {
-  id: UUID;
+  id: string;
   name: string;
   displayName: string;
   description?: string;
   resource: string;
   action: string;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -201,28 +193,28 @@ export interface ModelsLoginResponseAPI {
   error?: string | null;
   requiresCaptcha?: boolean | null;
   sessionId?: string | null;
-  expiresAt?: ISODateString;
+  expiresAt?: string;
 }
 
 /**
  * Persona API model with correct field names and types
  *
  * @description Represents a persona entity for DNS or HTTP validation.
- * All fields use proper types including UUID branding for type safety.
+ * All fields use proper types for OpenAPI compatibility.
  */
 export interface ModelsPersonaAPI {
-  id: UUID;
+  id: string;
   name: string;
   personaType: 'dns' | 'http';
   description?: string;
   configDetails: Record<string, unknown>;
   isEnabled: boolean;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
   
   // Frontend-only fields (not in backend)
   status?: string;
-  lastTested?: ISODateString;
+  lastTested?: string;
   lastError?: string;
   tags?: string[];
 }
@@ -234,7 +226,7 @@ export interface ModelsPersonaAPI {
  * All fields use proper types including UUID branding for type safety.
  */
 export interface ModelsProxyAPI {
-  id: UUID;
+  id: string;
   name: string;
   description?: string;
   address: string;
@@ -245,13 +237,13 @@ export interface ModelsProxyAPI {
   isEnabled: boolean;
   isHealthy: boolean;
   lastStatus?: string;
-  lastCheckedAt?: ISODateString;
+  lastCheckedAt?: string;
   latencyMs?: number;
   city?: string;
   countryCode?: string;
   provider?: string;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -269,10 +261,10 @@ export interface ModelsLoginRequest {
 // ============================================================================
 
 /**
- * Domain Generation Parameters with correct int64 types
+ * Domain Generation Parameters with OpenAPI compatible types
  *
  * @description Parameters for configuring domain generation campaigns.
- * totalPossibleCombinations and currentOffset use SafeBigInt for int64 compatibility.
+ * totalPossibleCombinations and currentOffset use number for OpenAPI compatibility.
  *
  * @example
  * ```typescript
@@ -283,13 +275,13 @@ export interface ModelsLoginRequest {
  *   constantString: 'test',
  *   tld: 'com',
  *   numDomainsToGenerate: 1000,
- *   totalPossibleCombinations: createSafeBigInt('11881376'), // 26^5
- *   currentOffset: createSafeBigInt('0')
+ *   totalPossibleCombinations: 11881376, // 26^5
+ *   currentOffset: 0
  * };
  * ```
  *
- * @property {SafeBigInt} totalPossibleCombinations - Total number of possible domain combinations (int64)
- * @property {SafeBigInt} currentOffset - Current position in generation sequence (int64)
+ * @property {number} totalPossibleCombinations - Total number of possible domain combinations (OpenAPI compatible)
+ * @property {number} currentOffset - Current position in generation sequence (OpenAPI compatible)
  */
 export interface ServicesDomainGenerationParams {
   patternType: 'prefix' | 'suffix' | 'both';
@@ -299,17 +291,17 @@ export interface ServicesDomainGenerationParams {
   tld: string;
   numDomainsToGenerate?: number; // int32 - safe
   
-  // CRITICAL: These are int64 in backend
-  totalPossibleCombinations: SafeBigInt;
-  currentOffset: SafeBigInt;
+  // OpenAPI compatible: Using number instead of SafeBigInt
+  totalPossibleCombinations: number;
+  currentOffset: number;
 }
 
 /**
  * DNS Validation Parameters
  */
 export interface ServicesDnsValidationParams {
-  sourceGenerationCampaignId?: UUID;
-  personaIds: UUID[];
+  sourceGenerationCampaignId?: string;
+  personaIds: string[];
   rotationIntervalSeconds?: number;
   processingSpeedPerMinute?: number;
   batchSize?: number;
@@ -321,13 +313,13 @@ export interface ServicesDnsValidationParams {
  * HTTP Keyword Parameters with correct sourceType values
  */
 export interface ServicesHttpKeywordParams {
-  sourceCampaignId: UUID;
+  sourceCampaignId: string;
   sourceType: 'DomainGeneration' | 'DNSValidation'; // EXACT casing required
-  keywordSetIds?: UUID[];
+  keywordSetIds?: string[];
   adHocKeywords?: string[];
-  personaIds: UUID[];
-  proxyIds?: UUID[];
-  proxyPoolId?: UUID;
+  personaIds: string[];
+  proxyIds?: string[];
+  proxyPoolId?: string;
   proxySelectionStrategy?: string;
   rotationIntervalSeconds?: number;
   processingSpeedPerMinute?: number;
@@ -341,7 +333,7 @@ export interface ServicesHttpKeywordParams {
 /**
  * Unified campaign creation request with type safety
  */
-export type ServicesCreateCampaignRequest = 
+export type ServicesCreateCampaignRequest =
   | {
       name: string;
       campaignType: ModelsCampaignTypeEnum.DomainGeneration;
@@ -349,7 +341,7 @@ export type ServicesCreateCampaignRequest =
       dnsValidationParams?: never;
       httpKeywordParams?: never;
       description?: string;
-      userId?: UUID;
+      userId?: string;
     }
   | {
       name: string;
@@ -358,7 +350,7 @@ export type ServicesCreateCampaignRequest =
       dnsValidationParams: ServicesDnsValidationParams;
       httpKeywordParams?: never;
       description?: string;
-      userId?: UUID;
+      userId?: string;
     }
   | {
       name: string;
@@ -367,7 +359,7 @@ export type ServicesCreateCampaignRequest =
       dnsValidationParams?: never;
       httpKeywordParams: ServicesHttpKeywordParams;
       description?: string;
-      userId?: UUID;
+      userId?: string;
     };
 
 // ============================================================================
@@ -375,62 +367,62 @@ export type ServicesCreateCampaignRequest =
 // ============================================================================
 
 /**
- * Generated Domain with correct int64 type
+ * Generated Domain with OpenAPI compatible types
  *
  * @description Represents a domain generated by a domain generation campaign.
- * The offsetIndex field uses SafeBigInt as it represents an int64 value in the backend.
+ * The offsetIndex field uses number for OpenAPI compatibility.
  *
  * @example
  * ```typescript
  * const domain: ModelsGeneratedDomainAPI = {
- *   id: createUUID('...'),
- *   generationCampaignId: createUUID('...'),
+ *   id: '123e4567-e89b-12d3-a456-426614174000',
+ *   generationCampaignId: '550e8400-e29b-41d4-a716-446655440000',
  *   domainName: 'test12345.com',
- *   offsetIndex: createSafeBigInt('12345'), // Position in generation sequence
- *   generatedAt: createISODateString('2024-01-15T10:30:00Z'),
+ *   offsetIndex: 12345, // Position in generation sequence
+ *   generatedAt: '2024-01-15T10:30:00Z',
  *   sourcePattern: 'test{5}',
  *   tld: 'com',
- *   createdAt: createISODateString('2024-01-15T10:30:00Z')
+ *   createdAt: '2024-01-15T10:30:00Z'
  * };
  * ```
  *
- * @property {SafeBigInt} offsetIndex - Position in the generation sequence (int64)
+ * @property {number} offsetIndex - Position in the generation sequence (OpenAPI compatible)
  */
 export interface ModelsGeneratedDomainAPI {
-  id: UUID;
-  generationCampaignId: UUID;
+  id: string;
+  generationCampaignId: string;
   domainName: string;
-  offsetIndex: SafeBigInt; // CRITICAL: int64 field
-  generatedAt: ISODateString;
+  offsetIndex: number; // OpenAPI compatible: Using number instead of SafeBigInt
+  generatedAt: string;
   sourceKeyword?: string;
   sourcePattern?: string;
   tld?: string;
-  createdAt: ISODateString;
+  createdAt: string;
 }
 
 /**
  * DNS Validation Result
  */
 export interface ModelsDNSValidationResultAPI {
-  id: UUID;
-  dnsCampaignId: UUID;
-  generatedDomainId?: UUID;
+  id: string;
+  dnsCampaignId: string;
+  generatedDomainId?: string;
   domainName: string;
   validationStatus: 'pending' | 'resolved' | 'unresolved' | 'timeout' | 'error';
   dnsRecords?: Record<string, unknown>;
-  validatedByPersonaId?: UUID;
+  validatedByPersonaId?: string;
   attempts?: number;
-  lastCheckedAt?: ISODateString;
-  createdAt: ISODateString;
+  lastCheckedAt?: string;
+  createdAt: string;
 }
 
 /**
  * HTTP Keyword Result
  */
 export interface ModelsHTTPKeywordResultAPI {
-  id: UUID;
-  httpKeywordCampaignId: UUID;
-  dnsResultId?: UUID;
+  id: string;
+  httpKeywordCampaignId: string;
+  dnsResultId?: string;
   domainName: string;
   validationStatus: 'pending' | 'success' | 'failed' | 'timeout' | 'error';
   httpStatusCode?: number;
@@ -440,11 +432,11 @@ export interface ModelsHTTPKeywordResultAPI {
   foundKeywordsFromSets?: Record<string, unknown>;
   foundAdHocKeywords?: string[];
   contentHash?: string;
-  validatedByPersonaId?: UUID;
-  usedProxyId?: UUID;
+  validatedByPersonaId?: string;
+  usedProxyId?: string;
   attempts?: number;
-  lastCheckedAt?: ISODateString;
-  createdAt: ISODateString;
+  lastCheckedAt?: string;
+  createdAt: string;
 }
 
 // ============================================================================
@@ -455,8 +447,7 @@ export interface ModelsHTTPKeywordResultAPI {
  * Transform raw API response to type-safe model
  *
  * @description Converts raw API response data into a properly typed ModelsCampaignAPI object.
- * Handles conversion of string representations of int64 values to SafeBigInt and
- * ensures all timestamps are properly typed as ISODateString.
+ * Handles conversion of string representations of int64 values to numbers for OpenAPI compatibility.
  *
  * @param raw - Raw response data from the API
  * @returns Type-safe campaign model
@@ -472,8 +463,8 @@ export interface ModelsHTTPKeywordResultAPI {
  * };
  *
  * const campaign = transformCampaignResponse(apiResponse);
- * // campaign.totalItems is now SafeBigInt
- * // campaign.createdAt is now ISODateString
+ * // campaign.totalItems is now number
+ * // campaign.createdAt is now string
  * ```
  *
  * @throws {Error} If required fields are invalid or cannot be transformed
@@ -482,22 +473,22 @@ export function transformCampaignResponse(raw: unknown): ModelsCampaignAPI {
   const data = raw as Record<string, unknown>;
   return {
     ...data,
-    id: data.id ? createUUID(data.id as string) : undefined,
-    userId: data.userId ? createUUID(data.userId as string) : undefined,
+    id: data.id ? data.id as string : undefined,
+    userId: data.userId ? data.userId as string : undefined,
     
-    // Transform int64 fields
-    totalItems: data.totalItems != null ? createSafeBigInt(data.totalItems as string | number) : undefined,
-    processedItems: data.processedItems != null ? createSafeBigInt(data.processedItems as string | number) : undefined,
-    successfulItems: data.successfulItems != null ? createSafeBigInt(data.successfulItems as string | number) : undefined,
-    failedItems: data.failedItems != null ? createSafeBigInt(data.failedItems as string | number) : undefined,
+    // Transform int64 fields to numbers
+    totalItems: data.totalItems != null ? Number(data.totalItems) : undefined,
+    processedItems: data.processedItems != null ? Number(data.processedItems) : undefined,
+    successfulItems: data.successfulItems != null ? Number(data.successfulItems) : undefined,
+    failedItems: data.failedItems != null ? Number(data.failedItems) : undefined,
     
-    // Transform timestamps
-    createdAt: data.createdAt ? createISODateString(data.createdAt as string) : undefined,
-    updatedAt: data.updatedAt ? createISODateString(data.updatedAt as string) : undefined,
-    startedAt: data.startedAt ? createISODateString(data.startedAt as string) : undefined,
-    completedAt: data.completedAt ? createISODateString(data.completedAt as string) : undefined,
-    estimatedCompletionAt: data.estimatedCompletionAt ? createISODateString(data.estimatedCompletionAt as string) : undefined,
-    lastHeartbeatAt: data.lastHeartbeatAt ? createISODateString(data.lastHeartbeatAt as string) : undefined,
+    // Transform timestamps to strings
+    createdAt: data.createdAt ? data.createdAt as string : undefined,
+    updatedAt: data.updatedAt ? data.updatedAt as string : undefined,
+    startedAt: data.startedAt ? data.startedAt as string : undefined,
+    completedAt: data.completedAt ? data.completedAt as string : undefined,
+    estimatedCompletionAt: data.estimatedCompletionAt ? data.estimatedCompletionAt as string : undefined,
+    lastHeartbeatAt: data.lastHeartbeatAt ? data.lastHeartbeatAt as string : undefined,
     
     // Validate enums
     campaignType: data.campaignType as ModelsCampaignTypeEnum,
@@ -531,13 +522,13 @@ export function transformUserResponse(raw: unknown): ModelsUserAPI {
   const data = raw as Record<string, unknown>;
   return {
     ...data,
-    id: data.id ? createUUID(data.id as string) : undefined,
+    id: data.id ? data.id as string : undefined,
     
-    // Transform timestamps
-    createdAt: data.createdAt ? createISODateString(data.createdAt as string) : undefined,
-    updatedAt: data.updatedAt ? createISODateString(data.updatedAt as string) : undefined,
-    lastLoginAt: data.lastLoginAt ? createISODateString(data.lastLoginAt as string) : undefined,
-    mfaLastUsedAt: data.mfaLastUsedAt ? createISODateString(data.mfaLastUsedAt as string) : undefined,
+    // Transform timestamps to strings
+    createdAt: data.createdAt ? data.createdAt as string : undefined,
+    updatedAt: data.updatedAt ? data.updatedAt as string : undefined,
+    lastLoginAt: data.lastLoginAt ? data.lastLoginAt as string : undefined,
+    mfaLastUsedAt: data.mfaLastUsedAt ? data.mfaLastUsedAt as string : undefined,
     
     // Transform roles and permissions if they're strings
     roles: Array.isArray(data.roles) && data.roles.length > 0 && typeof data.roles[0] === 'string'
@@ -550,7 +541,7 @@ export function transformUserResponse(raw: unknown): ModelsUserAPI {
 }
 
 /**
- * Transform generated domain with SafeBigInt
+ * Transform generated domain with OpenAPI compatible types
  *
  * @description Converts raw API response for generated domains into type-safe model.
  * Handles both camelCase and snake_case field names for backward compatibility.
@@ -568,7 +559,7 @@ export function transformUserResponse(raw: unknown): ModelsUserAPI {
  * };
  *
  * const domain = transformGeneratedDomainResponse(apiResponse);
- * // domain.offsetIndex is now SafeBigInt
+ * // domain.offsetIndex is now number
  * // domain.domainName uses correct camelCase
  * ```
  */
@@ -576,12 +567,12 @@ export function transformGeneratedDomainResponse(raw: unknown): ModelsGeneratedD
   const data = raw as Record<string, unknown>;
   return {
     ...data,
-    id: createUUID(data.id as string),
-    generationCampaignId: createUUID((data.generationCampaignId || data.domain_generation_campaign_id) as string),
+    id: data.id as string,
+    generationCampaignId: (data.generationCampaignId || data.domain_generation_campaign_id) as string,
     domainName: data.domainName as string || data.domain_name as string,
-    offsetIndex: createSafeBigInt((data.offsetIndex || data.offset_index) as string | number),
-    generatedAt: createISODateString((data.generatedAt || data.generated_at) as string),
-    createdAt: createISODateString((data.createdAt || data.created_at) as string),
+    offsetIndex: Number(data.offsetIndex || data.offset_index),
+    generatedAt: (data.generatedAt || data.generated_at) as string,
+    createdAt: (data.createdAt || data.created_at) as string,
     sourceKeyword: data.sourceKeyword as string,
     sourcePattern: data.sourcePattern as string,
     tld: data.tld as string
@@ -589,10 +580,10 @@ export function transformGeneratedDomainResponse(raw: unknown): ModelsGeneratedD
 }
 
 /**
- * Transform persona response with proper UUID typing
+ * Transform persona response with OpenAPI compatible types
  *
  * @description Converts raw API response data into a properly typed ModelsPersonaAPI object.
- * Ensures UUID fields are properly branded for type safety.
+ * Uses standard string types for OpenAPI compatibility.
  *
  * @param raw - Raw response data from the API
  * @returns Type-safe persona model
@@ -608,35 +599,35 @@ export function transformGeneratedDomainResponse(raw: unknown): ModelsGeneratedD
  * };
  *
  * const persona = transformPersonaResponse(apiResponse);
- * // persona.id is now UUID branded type
+ * // persona.id is now string
  * ```
  */
 export function transformPersonaResponse(raw: unknown): ModelsPersonaAPI {
   const data = raw as Record<string, unknown>;
   return {
     ...data,
-    id: createUUID(data.id as string),
+    id: data.id as string,
     name: data.name as string,
     personaType: data.personaType as 'dns' | 'http',
     description: data.description as string | undefined,
     configDetails: data.configDetails as Record<string, unknown>,
     isEnabled: data.isEnabled as boolean,
-    createdAt: createISODateString(data.createdAt as string),
-    updatedAt: createISODateString(data.updatedAt as string),
+    createdAt: data.createdAt as string,
+    updatedAt: data.updatedAt as string,
     
     // Optional frontend fields
     status: data.status as string | undefined,
-    lastTested: data.lastTested ? createISODateString(data.lastTested as string) : undefined,
+    lastTested: data.lastTested ? data.lastTested as string : undefined,
     lastError: data.lastError as string | undefined,
     tags: data.tags as string[] | undefined
   };
 }
 
 /**
- * Transform proxy response with proper UUID typing
+ * Transform proxy response with OpenAPI compatible types
  *
  * @description Converts raw API response data into a properly typed ModelsProxyAPI object.
- * Ensures UUID fields are properly branded for type safety.
+ * Uses standard string types for OpenAPI compatibility.
  *
  * @param raw - Raw response data from the API
  * @returns Type-safe proxy model
@@ -653,14 +644,14 @@ export function transformPersonaResponse(raw: unknown): ModelsPersonaAPI {
  * };
  *
  * const proxy = transformProxyResponse(apiResponse);
- * // proxy.id is now UUID branded type
+ * // proxy.id is now string
  * ```
  */
 export function transformProxyResponse(raw: unknown): ModelsProxyAPI {
   const data = raw as Record<string, unknown>;
   return {
     ...data,
-    id: createUUID(data.id as string),
+    id: data.id as string,
     name: data.name as string,
     description: data.description as string | undefined,
     address: data.address as string,
@@ -671,13 +662,13 @@ export function transformProxyResponse(raw: unknown): ModelsProxyAPI {
     isEnabled: data.isEnabled as boolean,
     isHealthy: data.isHealthy as boolean,
     lastStatus: data.lastStatus as string | undefined,
-    lastCheckedAt: data.lastCheckedAt ? createISODateString(data.lastCheckedAt as string) : undefined,
+    lastCheckedAt: data.lastCheckedAt ? data.lastCheckedAt as string : undefined,
     latencyMs: data.latencyMs as number | undefined,
     city: data.city as string | undefined,
     countryCode: data.countryCode as string | undefined,
     provider: data.provider as string | undefined,
-    createdAt: createISODateString(data.createdAt as string),
-    updatedAt: createISODateString(data.updatedAt as string)
+    createdAt: data.createdAt as string,
+    updatedAt: data.updatedAt as string
   };
 }
 
@@ -722,10 +713,12 @@ export interface ErrorResponse {
  *    const proxies = proxyResponse.data.map(transformProxyResponse);
  *    ```
  *
- * 3. Update all numeric comparisons to handle SafeBigInt:
+ * 3. Update all numeric comparisons to use standard numbers:
  *    ```typescript
- *    // WRONG: if (campaign.totalItems > 1000)
- *    // RIGHT: if (campaign.totalItems && campaign.totalItems > createSafeBigInt(1000))
+ *    // Correct: All int64 fields are now numbers for OpenAPI compatibility
+ *    if (campaign.totalItems && campaign.totalItems > 1000) {
+ *      // handle logic
+ *    }
  *    ```
  *
  * 4. Remove all references to 'archived' status
@@ -736,9 +729,9 @@ export interface ErrorResponse {
  *    - 'DomainGeneration' not 'domain_generation'
  *    - 'DNSValidation' not 'dns_validation'
  *
- * 7. Use UUID branded types for all entity IDs:
+ * 7. Use standard string types for all entity IDs (OpenAPI compatible):
  *    ```typescript
- *    // WRONG: const userId: string = user.id;
- *    // RIGHT: const userId: UUID = user.id;
+ *    // Correct: All IDs are now strings for OpenAPI compatibility
+ *    const userId: string = user.id;
  *    ```
  */

@@ -1,19 +1,20 @@
 # PersonasApi
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiV2PersonasGet**](#apiv2personasget) | **GET** /api/v2/personas | List personas|
-|[**apiV2PersonasIdDelete**](#apiv2personasiddelete) | **DELETE** /api/v2/personas/{id} | Delete persona|
-|[**apiV2PersonasIdGet**](#apiv2personasidget) | **GET** /api/v2/personas/{id} | Get persona|
-|[**apiV2PersonasIdPut**](#apiv2personasidput) | **PUT** /api/v2/personas/{id} | Update persona|
-|[**apiV2PersonasPost**](#apiv2personaspost) | **POST** /api/v2/personas | Create persona|
-|[**testPersona**](#testpersona) | **POST** /api/v2/personas/{id} | Test persona|
+|[**personasGet**](#personasget) | **GET** /personas | List all personas|
+|[**personasIdDelete**](#personasiddelete) | **DELETE** /personas/{id} | Delete persona|
+|[**personasIdGet**](#personasidget) | **GET** /personas/{id} | Get persona|
+|[**personasIdPut**](#personasidput) | **PUT** /personas/{id} | Update persona|
+|[**personasIdTestPost**](#personasidtestpost) | **POST** /personas/{id}/test | Test persona|
+|[**personasPost**](#personaspost) | **POST** /personas | Create persona|
 
-# **apiV2PersonasGet**
-> Array<PersonaResponse> apiV2PersonasGet()
+# **personasGet**
+> Array<GithubComFntelecomllcStudioBackendInternalModelsPersona> personasGet()
 
+Lists all personas
 
 ### Example
 
@@ -26,7 +27,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-const { status, data } = await apiInstance.apiV2PersonasGet();
+const { status, data } = await apiInstance.personasGet();
 ```
 
 ### Parameters
@@ -35,11 +36,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**Array<PersonaResponse>**
+**Array<GithubComFntelecomllcStudioBackendInternalModelsPersona>**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -50,13 +51,15 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | List of personas |  -  |
+|**200** | OK |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2PersonasIdDelete**
-> apiV2PersonasIdDelete()
+# **personasIdDelete**
+> { [key: string]: boolean; } personasIdDelete()
 
+Deletes a persona by ID
 
 ### Example
 
@@ -69,9 +72,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-let id: string; // (default to undefined)
+let id: string; //Persona ID (default to undefined)
 
-const { status, data } = await apiInstance.apiV2PersonasIdDelete(
+const { status, data } = await apiInstance.personasIdDelete(
     id
 );
 ```
@@ -80,33 +83,37 @@ const { status, data } = await apiInstance.apiV2PersonasIdDelete(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] |  | defaults to undefined|
+| **id** | [**string**] | Persona ID | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: boolean; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | Deleted |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2PersonasIdGet**
-> PersonaResponse apiV2PersonasIdGet()
+# **personasIdGet**
+> GithubComFntelecomllcStudioBackendInternalModelsPersona personasIdGet()
 
+Gets a persona by ID
 
 ### Example
 
@@ -119,9 +126,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-let id: string; // (default to undefined)
+let id: string; //Persona ID (default to undefined)
 
-const { status, data } = await apiInstance.apiV2PersonasIdGet(
+const { status, data } = await apiInstance.personasIdGet(
     id
 );
 ```
@@ -130,16 +137,16 @@ const { status, data } = await apiInstance.apiV2PersonasIdGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] |  | defaults to undefined|
+| **id** | [**string**] | Persona ID | defaults to undefined|
 
 
 ### Return type
 
-**PersonaResponse**
+**GithubComFntelecomllcStudioBackendInternalModelsPersona**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -150,31 +157,36 @@ const { status, data } = await apiInstance.apiV2PersonasIdGet(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Persona details |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2PersonasIdPut**
-> PersonaResponse apiV2PersonasIdPut(body)
+# **personasIdPut**
+> GithubComFntelecomllcStudioBackendInternalModelsPersona personasIdPut(githubComFntelecomllcStudioBackendInternalModelsPersona)
 
+Updates a persona by ID
 
 ### Example
 
 ```typescript
 import {
     PersonasApi,
-    Configuration
+    Configuration,
+    GithubComFntelecomllcStudioBackendInternalModelsPersona
 } from '@domainflow/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-let id: string; // (default to undefined)
-let body: object; //
+let id: string; //Persona ID (default to undefined)
+let githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona; //Persona
 
-const { status, data } = await apiInstance.apiV2PersonasIdPut(
+const { status, data } = await apiInstance.personasIdPut(
     id,
-    body
+    githubComFntelecomllcStudioBackendInternalModelsPersona
 );
 ```
 
@@ -182,17 +194,17 @@ const { status, data } = await apiInstance.apiV2PersonasIdPut(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-| **id** | [**string**] |  | defaults to undefined|
+| **githubComFntelecomllcStudioBackendInternalModelsPersona** | **GithubComFntelecomllcStudioBackendInternalModelsPersona**| Persona | |
+| **id** | [**string**] | Persona ID | defaults to undefined|
 
 
 ### Return type
 
-**PersonaResponse**
+**GithubComFntelecomllcStudioBackendInternalModelsPersona**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -203,13 +215,17 @@ const { status, data } = await apiInstance.apiV2PersonasIdPut(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2PersonasPost**
-> PersonaResponse apiV2PersonasPost(body)
+# **personasIdTestPost**
+> { [key: string]: any; } personasIdTestPost()
 
+Tests a persona by ID
 
 ### Example
 
@@ -222,59 +238,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-let body: object; //
+let id: string; //Persona ID (default to undefined)
 
-const { status, data } = await apiInstance.apiV2PersonasPost(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-**PersonaResponse**
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** | Persona created |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **testPersona**
-> testPersona()
-
-
-### Example
-
-```typescript
-import {
-    PersonasApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new PersonasApi(configuration);
-
-let id: string; // (default to undefined)
-
-const { status, data } = await apiInstance.testPersona(
+const { status, data } = await apiInstance.personasIdTestPost(
     id
 );
 ```
@@ -283,27 +249,84 @@ const { status, data } = await apiInstance.testPersona(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] |  | defaults to undefined|
+| **id** | [**string**] | Persona ID | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: any; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Test results |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **personasPost**
+> GithubComFntelecomllcStudioBackendInternalModelsPersona personasPost(githubComFntelecomllcStudioBackendInternalModelsPersona)
+
+Creates a new persona
+
+### Example
+
+```typescript
+import {
+    PersonasApi,
+    Configuration,
+    GithubComFntelecomllcStudioBackendInternalModelsPersona
+} from '@domainflow/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new PersonasApi(configuration);
+
+let githubComFntelecomllcStudioBackendInternalModelsPersona: GithubComFntelecomllcStudioBackendInternalModelsPersona; //Persona
+
+const { status, data } = await apiInstance.personasPost(
+    githubComFntelecomllcStudioBackendInternalModelsPersona
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **githubComFntelecomllcStudioBackendInternalModelsPersona** | **GithubComFntelecomllcStudioBackendInternalModelsPersona**| Persona | |
+
+
+### Return type
+
+**GithubComFntelecomllcStudioBackendInternalModelsPersona**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

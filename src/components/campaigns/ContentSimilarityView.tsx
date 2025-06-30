@@ -38,8 +38,16 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
         content: item.text,
         keywords: item.text.toLowerCase().split(/\s+/).filter(kw => kw.length > 3).slice(0, 5), // Simple existing keywords
       };
+      if (!campaign.id || !item.id) {
+        toast({
+          title: "Analysis Error",
+          description: "Campaign or item ID is missing",
+          variant: "destructive"
+        });
+        return;
+      }
       // The service will update the mock store, and polling will update the campaign prop
-      await analyzeContentService(analysisInput, campaign.id, item.id); 
+      await analyzeContentService(analysisInput, campaign.id, item.id);
       
       toast({
         title: "AI Analysis Complete",

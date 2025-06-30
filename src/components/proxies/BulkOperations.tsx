@@ -70,7 +70,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
   const failedProxies = proxies.filter(p => p.status === 'Failed');
   const activeProxies = proxies.filter(p => p.status === 'Active');
 
-  const selectedProxies = proxies.filter(p => selectedProxyIds.has(p.id));
+  const selectedProxies = proxies.filter(p => p.id && selectedProxyIds.has(p.id));
   const selectedCount = selectedProxyIds.size;
   const allSelected = proxies.length > 0 && selectedProxyIds.size === proxies.length;
   const noneSelected = selectedProxyIds.size === 0;
@@ -82,7 +82,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
     if (allSelected) {
       setSelectedProxyIds(new Set());
     } else {
-      setSelectedProxyIds(new Set(proxies.map(p => p.id)));
+      setSelectedProxyIds(new Set(proxies.map(p => p.id).filter((id): id is string => !!id)));
     }
   }, [allSelected, proxies]);
 
@@ -122,7 +122,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
         break;
     }
     
-    setSelectedProxyIds(new Set(filteredProxies.map(p => p.id)));
+    setSelectedProxyIds(new Set(filteredProxies.map(p => p.id).filter((id): id is string => !!id)));
   }, [activeProxies, disabledProxies, failedProxies, enabledProxies]);
 
   /**
@@ -148,19 +148,23 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
         switch (action) {
           case 'enable':
             const enablePayload: UpdateProxyPayload = { isEnabled: true };
+            if (!proxy.id) continue;
             response = await updateProxy(proxy.id, enablePayload);
             break;
             
           case 'disable':
             const disablePayload: UpdateProxyPayload = { isEnabled: false };
+            if (!proxy.id) continue;
             response = await updateProxy(proxy.id, disablePayload);
             break;
             
           case 'test':
-            response = await testProxy(proxy.id);
+            if (!proxy.id) continue;
+            response = await testProxy(proxy.id) as ProxyActionResponse;
             break;
             
           case 'delete':
+            if (!proxy.id) continue;
             response = await deleteProxy(proxy.id);
             break;
             
@@ -404,8 +408,8 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
                     className="flex items-center space-x-2 p-2 rounded border hover:bg-muted/50"
                   >
                     <Checkbox
-                      checked={selectedProxyIds.has(proxy.id)}
-                      onCheckedChange={() => toggleProxySelection(proxy.id)}
+                      checked={proxy.id ? selectedProxyIds.has(proxy.id) : false}
+                      onCheckedChange={() => proxy.id && toggleProxySelection(proxy.id)}
                       disabled={disabled || isProcessing}
                     />
                     <div className="flex-1 min-w-0">

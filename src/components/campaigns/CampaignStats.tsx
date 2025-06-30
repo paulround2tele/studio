@@ -1,18 +1,16 @@
 /**
- * Enhanced campaign statistics component with SafeBigInt support
+ * Enhanced campaign statistics component with number support (OpenAPI compatible)
  */
 
 import React, { useMemo } from 'react';
 import { CampaignViewModel } from '@/lib/types';
-import { SafeBigInt, tryCreateSafeBigInt } from '@/lib/types/branded';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CountDisplay } from '@/components/ui/bigint-display';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Target, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
+import {
+  Target,
+  CheckCircle,
+  XCircle,
+  Clock,
   TrendingUp,
   Activity
 } from 'lucide-react';
@@ -25,18 +23,18 @@ interface CampaignStatsProps {
 }
 
 /**
- * Calculate percentage safely with SafeBigInt values
+ * Calculate percentage safely with number values
  */
 function calculatePercentage(current: unknown, total: unknown): number {
   if (!current || !total) return 0;
   
   try {
-    const currentBig = typeof current === 'bigint' ? current : BigInt(String(current));
-    const totalBig = typeof total === 'bigint' ? total : BigInt(String(total));
+    const currentNum = Number(current);
+    const totalNum = Number(total);
     
-    if (totalBig === BigInt(0)) return 0;
+    if (totalNum === 0 || isNaN(currentNum) || isNaN(totalNum)) return 0;
     
-    const percent = Number((currentBig * BigInt(100)) / totalBig);
+    const percent = (currentNum / totalNum) * 100;
     return Math.min(100, Math.max(0, percent));
   } catch {
     return 0;
@@ -64,10 +62,10 @@ export function CampaignStats({
     const remainingItems = (() => {
       if (!totalItems || !processedItems) return 0;
       try {
-        const totalBig = typeof totalItems === 'bigint' ? totalItems : BigInt(String(totalItems));
-        const processedBig = typeof processedItems === 'bigint' ? processedItems : BigInt(String(processedItems));
-        const remaining = totalBig - processedBig;
-        return remaining > BigInt(0) ? (remaining as SafeBigInt) : 0; // Cast to SafeBigInt type
+        const totalNum = Number(totalItems);
+        const processedNum = Number(processedItems);
+        const remaining = totalNum - processedNum;
+        return remaining > 0 ? remaining : 0;
       } catch {
         return 0;
       }
@@ -105,10 +103,10 @@ export function CampaignStats({
             <Progress value={stats.progressPercentage} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>
-                <CountDisplay value={tryCreateSafeBigInt(stats.processedItems)} /> / <CountDisplay value={tryCreateSafeBigInt(stats.totalItems)} />
+                {Number(stats.processedItems).toLocaleString()} / {Number(stats.totalItems).toLocaleString()}
               </span>
               <span>
-                <CountDisplay value={tryCreateSafeBigInt(stats.remainingItems)} /> remaining
+                {Number(stats.remainingItems).toLocaleString()} remaining
               </span>
             </div>
           </div>
@@ -121,10 +119,9 @@ export function CampaignStats({
                 Successful
               </div>
               <div className="flex items-center gap-2">
-                <CountDisplay
-                  value={tryCreateSafeBigInt(stats.successfulItems)}
-                  className="text-lg font-semibold text-green-600"
-                />
+                <span className="text-lg font-semibold text-green-600">
+                  {Number(stats.successfulItems).toLocaleString()}
+                </span>
                 <span className="text-xs text-muted-foreground">
                   ({stats.successRate.toFixed(1)}%)
                 </span>
@@ -137,10 +134,9 @@ export function CampaignStats({
                 Failed
               </div>
               <div className="flex items-center gap-2">
-                <CountDisplay
-                  value={tryCreateSafeBigInt(stats.failedItems)}
-                  className="text-lg font-semibold text-red-600"
-                />
+                <span className="text-lg font-semibold text-red-600">
+                  {Number(stats.failedItems).toLocaleString()}
+                </span>
                 <span className="text-xs text-muted-foreground">
                   ({stats.failureRate.toFixed(1)}%)
                 </span>
@@ -161,10 +157,9 @@ export function CampaignStats({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CountDisplay
-                value={tryCreateSafeBigInt(stats.totalItems)}
-                className="text-2xl font-bold"
-              />
+              <div className="text-2xl font-bold">
+                {Number(stats.totalItems).toLocaleString()}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Items to process
               </p>
@@ -179,10 +174,9 @@ export function CampaignStats({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CountDisplay
-                value={tryCreateSafeBigInt(stats.processedItems)}
-                className="text-2xl font-bold"
-              />
+              <div className="text-2xl font-bold">
+                {Number(stats.processedItems).toLocaleString()}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Items completed
               </p>
@@ -234,7 +228,7 @@ export function CampaignStatsCompact({
       
       <div className="text-right text-xs">
         <span className="text-xs">
-          <CountDisplay value={campaign.processedItems} /> / <CountDisplay value={campaign.totalItems} />
+          {Number(campaign.processedItems || 0).toLocaleString()} / {Number(campaign.totalItems || 0).toLocaleString()}
         </span>
       </div>
     </div>
@@ -257,7 +251,7 @@ export function CampaignStatsSummary({
     <div className={cn('grid grid-cols-3 gap-4 text-center', className)}>
       <div>
         <div className="text-lg font-semibold">
-          <CountDisplay value={campaign.totalItems} />
+          {Number(campaign.totalItems || 0).toLocaleString()}
         </div>
         <div className="text-xs text-muted-foreground">Total</div>
       </div>

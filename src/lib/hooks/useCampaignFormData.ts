@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { CampaignViewModel, HttpPersona, DnsPersona } from '@/lib/types';
+import type { Campaign } from '@/lib/services/campaignService.production';
 import { getPersonas } from "@/lib/services/personaService";
 import { getCampaigns } from "@/lib/services/campaignService.production";
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
@@ -55,15 +56,15 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
 
       // Process campaigns result
       if (campaignsResult.status === 'fulfilled' && campaignsResult.value.status === 'success' && campaignsResult.value.data) {
-        // Transform campaigns to view models first
-        const campaignViewModels = transformCampaignsToViewModels(campaignsResult.value.data);
+        // Transform OpenAPI campaigns to view models first
+        const campaignViewModels = transformCampaignsToViewModels(campaignsResult.value.data as Campaign[]);
         // Filter campaigns that can be used as source (only domain_generation and dns_validation)
         const validSourceCampaigns = campaignViewModels.filter(c =>
           c.selectedType === 'domain_generation' || c.selectedType === 'dns_validation'
         );
         setSourceCampaigns(validSourceCampaigns);
       } else {
-        console.warn('[useCampaignFormData] Failed to load campaigns:', 
+        console.warn('[useCampaignFormData] Failed to load campaigns:',
           campaignsResult.status === 'rejected' ? campaignsResult.reason : campaignsResult.value);
       }
 

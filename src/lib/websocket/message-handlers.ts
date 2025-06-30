@@ -15,13 +15,13 @@ import {
   WebSocketMessageTypes
 } from '../types/websocket-types-fixed';
 
-import { UUID } from '../types/branded';
+// Using OpenAPI compatible types instead of branded types
 
 /**
  * Message handler registry
  */
 interface MessageHandlerRegistry {
-  campaignHandlers: Map<UUID, WebSocketHandlers>;
+  campaignHandlers: Map<string, WebSocketHandlers>;
   globalHandlers: WebSocketHandlers;
 }
 
@@ -40,7 +40,7 @@ export function createMessageHandlerRegistry(): MessageHandlerRegistry {
  */
 export function registerCampaignHandlers(
   registry: MessageHandlerRegistry,
-  campaignId: UUID,
+  campaignId: string,
   handlers: Partial<WebSocketHandlers>
 ): () => void {
   registry.campaignHandlers.set(campaignId, {
@@ -118,20 +118,20 @@ function handleTypedMessage(
 /**
  * Extract campaign ID from message
  */
-function extractCampaignId(message: TypedWebSocketMessage): UUID | null {
+function extractCampaignId(message: TypedWebSocketMessage): string | null {
   switch (message.type) {
     case WebSocketMessageTypes.CAMPAIGN_PROGRESS:
     case WebSocketMessageTypes.CAMPAIGN_STATUS:
-      return (message.data as { campaignId: string }).campaignId as UUID;
+      return (message.data as { campaignId: string }).campaignId;
     
     case WebSocketMessageTypes.DOMAIN_GENERATED:
     case WebSocketMessageTypes.DNS_VALIDATION_RESULT:
     case WebSocketMessageTypes.HTTP_VALIDATION_RESULT:
-      return (message.data as { campaignId: string }).campaignId as UUID;
+      return (message.data as { campaignId: string }).campaignId;
     
     case WebSocketMessageTypes.PROXY_STATUS:
       const proxyData = message.data as { campaignId?: string };
-      return proxyData.campaignId ? proxyData.campaignId as UUID : null;
+      return proxyData.campaignId || null;
     
     default:
       return null;
@@ -142,11 +142,11 @@ function extractCampaignId(message: TypedWebSocketMessage): UUID | null {
  * Create default campaign progress handler
  */
 export function createCampaignProgressHandler(
-  onUpdate: (campaignId: UUID, progress: number, phase: string, status: string) => void
+  onUpdate: (campaignId: string, progress: number, phase: string, status: string) => void
 ): WebSocketHandlers['onCampaignProgress'] {
   return (message: CampaignProgressMessage) => {
     const { campaignId, progressPercent, phase, status } = message.data;
-    onUpdate(campaignId as UUID, progressPercent, phase, status);
+    onUpdate(campaignId, progressPercent, phase, status);
   };
 }
 
@@ -154,11 +154,11 @@ export function createCampaignProgressHandler(
  * Create default campaign status handler
  */
 export function createCampaignStatusHandler(
-  onStatusChange: (campaignId: UUID, status: string, phase?: string, error?: string) => void
+  onStatusChange: (campaignId: string, status: string, phase?: string, error?: string) => void
 ): WebSocketHandlers['onCampaignStatus'] {
   return (message: CampaignStatusMessage) => {
     const { campaignId, status, phase, errorCode } = message.data;
-    onStatusChange(campaignId as UUID, status, phase, errorCode);
+    onStatusChange(campaignId, status, phase, errorCode);
   };
 }
 

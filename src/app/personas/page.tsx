@@ -5,7 +5,30 @@ import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
-import type { Persona, HttpPersona, DnsPersona, CreateHttpPersonaPayload, CreateDnsPersonaPayload, PersonasListResponse, PersonaDeleteResponse, PersonaActionResponse, PersonaStatus } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+// Use OpenAPI types directly
+type PersonaResponse = components['schemas']['PersonaResponse'];
+type CreatePersonaRequest = components['schemas']['CreatePersonaRequest'];
+
+// Legacy compatibility types - add missing properties from old types
+interface Persona extends PersonaResponse {
+  status?: string; // Required by PersonaListItem
+  tags?: string[]; // Legacy support
+}
+
+interface HttpPersona extends Persona {
+  personaType: 'http';
+}
+
+interface DnsPersona extends Persona {
+  personaType: 'dns';
+}
+
+type CreateHttpPersonaPayload = CreatePersonaRequest & { personaType: 'http' };
+type CreateDnsPersonaPayload = CreatePersonaRequest & { personaType: 'dns' };
+type PersonaDeleteResponse = { status: 'success' | 'error'; message?: string };
+type PersonaStatus = 'active' | 'inactive' | 'error' | 'Active' | 'Disabled' | 'Testing' | 'Failed';
 import { PlusCircle, Users, Globe, Wifi, Search as SearchIcon, UploadCloud } from 'lucide-react';
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -92,10 +115,21 @@ function PersonasPageContent() {
     const operation = type === 'http' ? LOADING_OPERATIONS.FETCH_HTTP_PERSONAS : LOADING_OPERATIONS.FETCH_DNS_PERSONAS;
     if (showLoading) startLoading(operation, `Loading ${type.toUpperCase()} personas`);
     try {
-      const response: PersonasListResponse = await getPersonas(type);
+      const response = await getPersonas(type);
       if (response.status === 'success' && response.data) {
-        if (type === 'http') setHttpPersonas(response.data as HttpPersona[]);
-        else setDnsPersonas(response.data as DnsPersona[]);
+        // Handle PersonaListResponse - data is array directly from OpenAPI
+        const personasData = Array.isArray(response.data) ? response.data : [];
+        // Add missing status property for compatibility
+        const personasWithStatus = personasData.map(persona => ({
+          ...persona,
+          status: persona.isEnabled ? 'active' : 'inactive',
+          id: persona.id || '',
+          name: persona.name || '',
+          personaType: persona.personaType || type
+        }));
+        
+        if (type === 'http') setHttpPersonas(personasWithStatus as HttpPersona[]);
+        else setDnsPersonas(personasWithStatus as DnsPersona[]);
       } else {
         toast({ title: `Error Loading ${type.toUpperCase()} Personas`, description: response.message || `Failed to load ${type.toUpperCase()} personas.`, variant: "destructive"});
       }
@@ -132,9 +166,12 @@ function PersonasPageContent() {
   const handleTestPersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'test' }));
     try {
-      const response: PersonaActionResponse = await testPersona(personaId, personaType);
-      if (response.status === 'success' && response.data) {
-        toast({ title: "Persona Test Complete", description: `Test for ${response.data.name} completed.` });
+      const response = await testPersona(personaId, personaType);
+      if (response.status === 'success') {
+        // PersonaTestResult has a nested data structure
+        const testData = response.data?.data;
+        const personaName = testData?.personaId || 'Persona';
+        toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
       } else {
         toast({ title: "Persona Test Failed", description: response.message || "Could not complete persona test.", variant: "destructive"});
@@ -152,7 +189,9 @@ function PersonasPageContent() {
   const handleTogglePersonaStatus = async (personaId: string, personaType: 'http' | 'dns', newStatus: PersonaStatus) => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'toggle' }));
     try {
-      const response = await updatePersona(personaId, { status: newStatus }, personaType);
+      // Map status to isEnabled field which is what the backend accepts
+      const isEnabled = newStatus === 'active' || newStatus === 'Active';
+      const response = await updatePersona(personaId, { isEnabled }, personaType);
       if (response.status === 'success' && response.data) {
         toast({ title: `Persona Status Updated`, description: `${response.data.name} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
@@ -205,33 +244,40 @@ function PersonasPageContent() {
                 createPayload = {
                     name: validatedData.name,
                     personaType: 'http' as const,
+                    isEnabled: true,
                     description: validatedData.description,
                     configDetails: {
                         userAgent: validatedData.userAgent || "",
                         headers: validatedData.headers,
                         headerOrder: validatedData.headerOrder,
-                        tlsClientHello: validatedData.tlsClientHello ?? undefined,
-                        http2Settings: validatedData.http2Settings ? {
-                            enabled: validatedData.http2Settings.enabled || true,
-                            ...validatedData.http2Settings
-                        } : undefined,
-                        cookieHandling: validatedData.cookieHandling ?? undefined,
-                        requestTimeoutSeconds: validatedData.requestTimeoutSec,
-                        notes: validatedData.notes,
+                        allowInsecureTls: validatedData.allowInsecureTls,
+                        requestTimeoutSec: validatedData.requestTimeoutSec,
+                        maxRedirects: validatedData.maxRedirects
                     }
                 };
             } else {
                 const validatedData = validationResult.data as z.infer<typeof DnsPersonaImportSchema>;
-                 createPayload = {
+                // Map old resolver strategy values to new ones
+                const mapResolverStrategy = (oldStrategy: string): "round_robin" | "random" | "weighted" | "priority" => {
+                    switch (oldStrategy) {
+                        case "random_rotation": return "random";
+                        case "weighted_rotation": return "weighted";
+                        case "sequential_failover": return "priority";
+                        default: return "round_robin";
+                    }
+                };
+                
+                createPayload = {
                     name: validatedData.name,
                     personaType: 'dns' as const,
+                    isEnabled: true,
                     description: validatedData.description,
                     configDetails: {
                         resolvers: validatedData.config.resolvers,
                         useSystemResolvers: validatedData.config.useSystemResolvers ?? false,
                         queryTimeoutSeconds: validatedData.config.queryTimeoutSeconds,
                         maxDomainsPerRequest: validatedData.config.maxDomainsPerRequest ?? 100,
-                        resolverStrategy: validatedData.config.resolverStrategy,
+                        resolverStrategy: mapResolverStrategy(validatedData.config.resolverStrategy),
                         resolversWeighted: validatedData.config.resolversWeighted || undefined,
                         resolversPreferredOrder: validatedData.config.resolversPreferredOrder || undefined,
                         concurrentQueriesPerDomain: validatedData.config.concurrentQueriesPerDomain,
@@ -273,7 +319,7 @@ function PersonasPageContent() {
     if (!searchTerm.trim()) return personas;
     const lowerSearchTerm = searchTerm.toLowerCase();
     return personas.filter(p =>
-      p.name.toLowerCase().includes(lowerSearchTerm) ||
+      (p.name && p.name.toLowerCase().includes(lowerSearchTerm)) ||
       (p.description && p.description.toLowerCase().includes(lowerSearchTerm))
     );
   };
@@ -319,17 +365,20 @@ function PersonasPageContent() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 mt-2">
-            {personas.map(persona => (
-              <PersonaListItem
-                key={persona.id}
-                persona={persona}
-                onDelete={handleDeletePersona}
-                onTest={handleTestPersona}
-                onToggleStatus={handleTogglePersonaStatus}
-                isTesting={actionLoading[persona.id] === 'test'}
-                isTogglingStatus={actionLoading[persona.id] === 'toggle'}
-              />
-            ))}
+            {personas.map(persona => {
+              const personaId = persona.id || '';
+              return (
+                <PersonaListItem
+                  key={personaId}
+                  persona={persona as import('@/lib/types').Persona}
+                  onDelete={handleDeletePersona}
+                  onTest={handleTestPersona}
+                  onToggleStatus={handleTogglePersonaStatus}
+                  isTesting={actionLoading[personaId] === 'test'}
+                  isTogglingStatus={actionLoading[personaId] === 'toggle'}
+                />
+              );
+            })}
           </div>
         )}
       </>

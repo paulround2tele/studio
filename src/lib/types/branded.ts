@@ -165,14 +165,24 @@ export function createSafeBigInt(value: string | number | bigint): SafeBigInt {
 }
 
 /**
- * Create a SafeBigInt, returning null on failure
+ * Create a number, returning null on failure (OpenAPI compatibility)
  */
-export function tryCreateSafeBigInt(value: unknown): SafeBigInt | null {
+export function tryCreateSafeBigInt(value: unknown): number | null {
   try {
     if (value === null || value === undefined) {
       return null;
     }
-    return createSafeBigInt(value as string | number | bigint);
+    if (typeof value === 'number') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      return isNaN(parsed) ? null : parsed;
+    }
+    if (typeof value === 'bigint') {
+      return Number(value);
+    }
+    return null;
   } catch {
     return null;
   }
@@ -377,9 +387,11 @@ export class BrandedTypeError extends Error {
 export const unsafeCreateUUID = createUUID;
 
 /**
- * @deprecated Use toNumber or tryToNumber instead
+ * Simple pass-through function for OpenAPI compatibility
  */
-export const safeBigIntToNumber = toNumber;
+export function safeBigIntToNumber(value: number): number {
+  return value;
+}
 
 /**
  * @deprecated Use createISODateString(dateString) instead

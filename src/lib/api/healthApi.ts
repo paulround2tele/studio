@@ -1,27 +1,20 @@
-import { getApiBaseUrl } from '@/lib/config';
+// Health API - temporary stub for compatibility
+// TODO: Replace with OpenAPI-generated client when health domain is implemented
 
 export interface HealthResponse {
   status: string;
+  timestamp: string;
   version?: string;
   message?: string;
+  checks?: Record<string, unknown>;
 }
 
-export async function getHealth(): Promise<HealthResponse> {
-  const baseUrl = await getApiBaseUrl();
-  const response = await fetch(`${baseUrl}/health`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+// Stub implementations - these will be replaced when health domain is migrated
+const healthApi = {
+  async getHealth(): Promise<HealthResponse> {
+    // TODO: Implement actual health check API call
+    throw new Error('Health API not yet implemented in OpenAPI migration');
   }
+};
 
-  return response.json();
-}
-
-const healthApi = { getHealth };
 export default healthApi;

@@ -47,102 +47,87 @@ npm install PATH_TO_GENERATED_PACKAGE --save
 
 ### Documentation for API Endpoints
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*AdminApi* | [**apiV2AdminUsersGet**](docs/AdminApi.md#apiv2adminusersget) | **GET** /api/v2/admin/users | List users
-*AdminApi* | [**apiV2AdminUsersPost**](docs/AdminApi.md#apiv2adminuserspost) | **POST** /api/v2/admin/users | Create user
-*AdminApi* | [**apiV2AdminUsersUserIdDelete**](docs/AdminApi.md#apiv2adminusersuseriddelete) | **DELETE** /api/v2/admin/users/{userId} | Delete user
-*AdminApi* | [**apiV2AdminUsersUserIdGet**](docs/AdminApi.md#apiv2adminusersuseridget) | **GET** /api/v2/admin/users/{userId} | Get user
-*AdminApi* | [**apiV2AdminUsersUserIdPut**](docs/AdminApi.md#apiv2adminusersuseridput) | **PUT** /api/v2/admin/users/{userId} | Update user
-*AuthenticationApi* | [**apiV2AuthLoginPost**](docs/AuthenticationApi.md#apiv2authloginpost) | **POST** /api/v2/auth/login | User login
-*AuthenticationApi* | [**apiV2AuthLogoutPost**](docs/AuthenticationApi.md#apiv2authlogoutpost) | **POST** /api/v2/auth/logout | User logout
-*AuthenticationApi* | [**apiV2AuthPermissionsGet**](docs/AuthenticationApi.md#apiv2authpermissionsget) | **GET** /api/v2/auth/permissions | Get user permissions
-*AuthenticationApi* | [**apiV2AuthRefreshPost**](docs/AuthenticationApi.md#apiv2authrefreshpost) | **POST** /api/v2/auth/refresh | Refresh session
-*AuthenticationApi* | [**apiV2ChangePasswordPost**](docs/AuthenticationApi.md#apiv2changepasswordpost) | **POST** /api/v2/change-password | Change password
-*AuthenticationApi* | [**apiV2MeGet**](docs/AuthenticationApi.md#apiv2meget) | **GET** /api/v2/me | Get current user
-*CampaignsApi* | [**apiV2CampaignsCampaignIdCancelPost**](docs/CampaignsApi.md#apiv2campaignscampaignidcancelpost) | **POST** /api/v2/campaigns/{campaignId}/cancel | Cancel campaign
-*CampaignsApi* | [**apiV2CampaignsCampaignIdChainPost**](docs/CampaignsApi.md#apiv2campaignscampaignidchainpost) | **POST** /api/v2/campaigns/{campaignId}/chain | Trigger chained phase
-*CampaignsApi* | [**apiV2CampaignsCampaignIdDelete**](docs/CampaignsApi.md#apiv2campaignscampaigniddelete) | **DELETE** /api/v2/campaigns/{campaignId} | Delete campaign
-*CampaignsApi* | [**apiV2CampaignsCampaignIdGet**](docs/CampaignsApi.md#apiv2campaignscampaignidget) | **GET** /api/v2/campaigns/{campaignId} | Get campaign details
-*CampaignsApi* | [**apiV2CampaignsCampaignIdPausePost**](docs/CampaignsApi.md#apiv2campaignscampaignidpausepost) | **POST** /api/v2/campaigns/{campaignId}/pause | Pause campaign
-*CampaignsApi* | [**apiV2CampaignsCampaignIdResultsDnsValidationGet**](docs/CampaignsApi.md#apiv2campaignscampaignidresultsdnsvalidationget) | **GET** /api/v2/campaigns/{campaignId}/results/dns-validation | DNS validation results
-*CampaignsApi* | [**apiV2CampaignsCampaignIdResultsGeneratedDomainsGet**](docs/CampaignsApi.md#apiv2campaignscampaignidresultsgenerateddomainsget) | **GET** /api/v2/campaigns/{campaignId}/results/generated-domains | Generated domains
-*CampaignsApi* | [**apiV2CampaignsCampaignIdResultsHttpKeywordGet**](docs/CampaignsApi.md#apiv2campaignscampaignidresultshttpkeywordget) | **GET** /api/v2/campaigns/{campaignId}/results/http-keyword | HTTP keyword results
-*CampaignsApi* | [**apiV2CampaignsCampaignIdResumePost**](docs/CampaignsApi.md#apiv2campaignscampaignidresumepost) | **POST** /api/v2/campaigns/{campaignId}/resume | Resume campaign
-*CampaignsApi* | [**apiV2CampaignsCampaignIdStartPost**](docs/CampaignsApi.md#apiv2campaignscampaignidstartpost) | **POST** /api/v2/campaigns/{campaignId}/start | Start campaign
-*CampaignsApi* | [**apiV2CampaignsGet**](docs/CampaignsApi.md#apiv2campaignsget) | **GET** /api/v2/campaigns | List campaigns
-*CampaignsApi* | [**apiV2CampaignsPost**](docs/CampaignsApi.md#apiv2campaignspost) | **POST** /api/v2/campaigns | Create campaign
-*ConfigApi* | [**apiV2ConfigDnsGet**](docs/ConfigApi.md#apiv2configdnsget) | **GET** /api/v2/config/dns | Get DNS config
-*ConfigApi* | [**apiV2ConfigDnsPost**](docs/ConfigApi.md#apiv2configdnspost) | **POST** /api/v2/config/dns | Update DNS config
-*ConfigApi* | [**apiV2ConfigFeaturesGet**](docs/ConfigApi.md#apiv2configfeaturesget) | **GET** /api/v2/config/features | Get feature flags
-*ConfigApi* | [**apiV2ConfigFeaturesPost**](docs/ConfigApi.md#apiv2configfeaturespost) | **POST** /api/v2/config/features | Update feature flags
-*ConfigApi* | [**apiV2ConfigHttpGet**](docs/ConfigApi.md#apiv2confighttpget) | **GET** /api/v2/config/http | Get HTTP config
-*ConfigApi* | [**apiV2ConfigHttpPost**](docs/ConfigApi.md#apiv2confighttppost) | **POST** /api/v2/config/http | Update HTTP config
-*ConfigApi* | [**apiV2ConfigLoggingGet**](docs/ConfigApi.md#apiv2configloggingget) | **GET** /api/v2/config/logging | Get logging config
-*ConfigApi* | [**apiV2ConfigLoggingPost**](docs/ConfigApi.md#apiv2configloggingpost) | **POST** /api/v2/config/logging | Update logging config
-*ConfigApi* | [**apiV2ConfigServerGet**](docs/ConfigApi.md#apiv2configserverget) | **GET** /api/v2/config/server | Get server config
-*ConfigApi* | [**apiV2ConfigServerPut**](docs/ConfigApi.md#apiv2configserverput) | **PUT** /api/v2/config/server | Update server config
-*HealthApi* | [**healthGet**](docs/HealthApi.md#healthget) | **GET** /health | Health check
-*HealthApi* | [**healthLiveGet**](docs/HealthApi.md#healthliveget) | **GET** /health/live | Liveness check
-*HealthApi* | [**healthReadyGet**](docs/HealthApi.md#healthreadyget) | **GET** /health/ready | Readiness check
-*HealthApi* | [**pingGet**](docs/HealthApi.md#pingget) | **GET** /ping | Server liveness check
-*KeywordsApi* | [**apiV2ExtractKeywordsPost**](docs/KeywordsApi.md#apiv2extractkeywordspost) | **POST** /api/v2/extract/keywords | Batch extract keywords
-*KeywordsApi* | [**apiV2ExtractKeywordsStreamGet**](docs/KeywordsApi.md#apiv2extractkeywordsstreamget) | **GET** /api/v2/extract/keywords/stream | Stream extract keywords
-*KeywordsApi* | [**apiV2KeywordsSetsGet**](docs/KeywordsApi.md#apiv2keywordssetsget) | **GET** /api/v2/keywords/sets | List keyword sets
-*KeywordsApi* | [**apiV2KeywordsSetsPost**](docs/KeywordsApi.md#apiv2keywordssetspost) | **POST** /api/v2/keywords/sets | Create keyword set
-*KeywordsApi* | [**apiV2KeywordsSetsSetIdDelete**](docs/KeywordsApi.md#apiv2keywordssetssetiddelete) | **DELETE** /api/v2/keywords/sets/{setId} | Delete keyword set
-*KeywordsApi* | [**apiV2KeywordsSetsSetIdGet**](docs/KeywordsApi.md#apiv2keywordssetssetidget) | **GET** /api/v2/keywords/sets/{setId} | Get keyword set
-*KeywordsApi* | [**apiV2KeywordsSetsSetIdPut**](docs/KeywordsApi.md#apiv2keywordssetssetidput) | **PUT** /api/v2/keywords/sets/{setId} | Update keyword set
-*PersonasApi* | [**apiV2PersonasGet**](docs/PersonasApi.md#apiv2personasget) | **GET** /api/v2/personas | List personas
-*PersonasApi* | [**apiV2PersonasIdDelete**](docs/PersonasApi.md#apiv2personasiddelete) | **DELETE** /api/v2/personas/{id} | Delete persona
-*PersonasApi* | [**apiV2PersonasIdGet**](docs/PersonasApi.md#apiv2personasidget) | **GET** /api/v2/personas/{id} | Get persona
-*PersonasApi* | [**apiV2PersonasIdPut**](docs/PersonasApi.md#apiv2personasidput) | **PUT** /api/v2/personas/{id} | Update persona
-*PersonasApi* | [**apiV2PersonasPost**](docs/PersonasApi.md#apiv2personaspost) | **POST** /api/v2/personas | Create persona
-*PersonasApi* | [**testPersona**](docs/PersonasApi.md#testpersona) | **POST** /api/v2/personas/{id} | Test persona
-*ProxiesApi* | [**apiV2ProxiesGet**](docs/ProxiesApi.md#apiv2proxiesget) | **GET** /api/v2/proxies | List proxies
-*ProxiesApi* | [**apiV2ProxiesHealthCheckPost**](docs/ProxiesApi.md#apiv2proxieshealthcheckpost) | **POST** /api/v2/proxies/health-check | Force all proxies health check
-*ProxiesApi* | [**apiV2ProxiesPost**](docs/ProxiesApi.md#apiv2proxiespost) | **POST** /api/v2/proxies | Add proxy
-*ProxiesApi* | [**apiV2ProxiesProxyIdDelete**](docs/ProxiesApi.md#apiv2proxiesproxyiddelete) | **DELETE** /api/v2/proxies/{proxyId} | Delete proxy
-*ProxiesApi* | [**apiV2ProxiesProxyIdHealthCheckPost**](docs/ProxiesApi.md#apiv2proxiesproxyidhealthcheckpost) | **POST** /api/v2/proxies/{proxyId}/health-check | Force single proxy health check
-*ProxiesApi* | [**apiV2ProxiesProxyIdPut**](docs/ProxiesApi.md#apiv2proxiesproxyidput) | **PUT** /api/v2/proxies/{proxyId} | Update proxy
-*ProxiesApi* | [**apiV2ProxiesStatusGet**](docs/ProxiesApi.md#apiv2proxiesstatusget) | **GET** /api/v2/proxies/status | Proxy statuses
-*ProxiesApi* | [**testProxy**](docs/ProxiesApi.md#testproxy) | **POST** /api/v2/proxies/{proxyId} | Test proxy
-*WebSocketApi* | [**apiV2BroadcastTestGet**](docs/WebSocketApi.md#apiv2broadcasttestget) | **GET** /api/v2/broadcast-test | Test WebSocket broadcast
-*WebSocketApi* | [**apiV2WsGet**](docs/WebSocketApi.md#apiv2wsget) | **GET** /api/v2/ws | WebSocket connection
+*AuthApi* | [**authLoginPost**](docs/AuthApi.md#authloginpost) | **POST** /auth/login | User login
+*AuthApi* | [**authLogoutPost**](docs/AuthApi.md#authlogoutpost) | **POST** /auth/logout | User logout
+*AuthApi* | [**authRefreshPost**](docs/AuthApi.md#authrefreshpost) | **POST** /auth/refresh | Refresh session
+*AuthApi* | [**changePasswordPost**](docs/AuthApi.md#changepasswordpost) | **POST** /change-password | Change password
+*AuthApi* | [**meGet**](docs/AuthApi.md#meget) | **GET** /me | Get current user
+*CampaignsApi* | [**campaignsCampaignIdCancelPost**](docs/CampaignsApi.md#campaignscampaignidcancelpost) | **POST** /campaigns/{campaignId}/cancel | Cancel campaign
+*CampaignsApi* | [**campaignsCampaignIdDelete**](docs/CampaignsApi.md#campaignscampaigniddelete) | **DELETE** /campaigns/{campaignId} | Delete campaign
+*CampaignsApi* | [**campaignsCampaignIdGet**](docs/CampaignsApi.md#campaignscampaignidget) | **GET** /campaigns/{campaignId} | Get campaign
+*CampaignsApi* | [**campaignsCampaignIdPausePost**](docs/CampaignsApi.md#campaignscampaignidpausepost) | **POST** /campaigns/{campaignId}/pause | Pause campaign
+*CampaignsApi* | [**campaignsCampaignIdResultsDnsValidationGet**](docs/CampaignsApi.md#campaignscampaignidresultsdnsvalidationget) | **GET** /campaigns/{campaignId}/results/dns-validation | DNS validation results
+*CampaignsApi* | [**campaignsCampaignIdResultsGeneratedDomainsGet**](docs/CampaignsApi.md#campaignscampaignidresultsgenerateddomainsget) | **GET** /campaigns/{campaignId}/results/generated-domains | Generated domains
+*CampaignsApi* | [**campaignsCampaignIdResultsHttpKeywordGet**](docs/CampaignsApi.md#campaignscampaignidresultshttpkeywordget) | **GET** /campaigns/{campaignId}/results/http-keyword | HTTP keyword results
+*CampaignsApi* | [**campaignsCampaignIdResumePost**](docs/CampaignsApi.md#campaignscampaignidresumepost) | **POST** /campaigns/{campaignId}/resume | Resume campaign
+*CampaignsApi* | [**campaignsCampaignIdStartPost**](docs/CampaignsApi.md#campaignscampaignidstartpost) | **POST** /campaigns/{campaignId}/start | Start campaign
+*CampaignsApi* | [**campaignsGet**](docs/CampaignsApi.md#campaignsget) | **GET** /campaigns | List campaigns
+*CampaignsApi* | [**campaignsPost**](docs/CampaignsApi.md#campaignspost) | **POST** /campaigns | Create campaign
+*ConfigApi* | [**configFeaturesGet**](docs/ConfigApi.md#configfeaturesget) | **GET** /config/features | Get feature flags
+*ConfigApi* | [**configFeaturesPost**](docs/ConfigApi.md#configfeaturespost) | **POST** /config/features | Update feature flags
+*KeywordSetsApi* | [**keywordsSetsGet**](docs/KeywordSetsApi.md#keywordssetsget) | **GET** /keywords/sets | List keyword sets
+*KeywordSetsApi* | [**keywordsSetsPost**](docs/KeywordSetsApi.md#keywordssetspost) | **POST** /keywords/sets | Create keyword set
+*KeywordSetsApi* | [**keywordsSetsSetIdDelete**](docs/KeywordSetsApi.md#keywordssetssetiddelete) | **DELETE** /keywords/sets/{setId} | Delete keyword set
+*KeywordSetsApi* | [**keywordsSetsSetIdGet**](docs/KeywordSetsApi.md#keywordssetssetidget) | **GET** /keywords/sets/{setId} | Get keyword set
+*KeywordSetsApi* | [**keywordsSetsSetIdPut**](docs/KeywordSetsApi.md#keywordssetssetidput) | **PUT** /keywords/sets/{setId} | Update keyword set
+*PersonasApi* | [**personasGet**](docs/PersonasApi.md#personasget) | **GET** /personas | List all personas
+*PersonasApi* | [**personasIdDelete**](docs/PersonasApi.md#personasiddelete) | **DELETE** /personas/{id} | Delete persona
+*PersonasApi* | [**personasIdGet**](docs/PersonasApi.md#personasidget) | **GET** /personas/{id} | Get persona
+*PersonasApi* | [**personasIdPut**](docs/PersonasApi.md#personasidput) | **PUT** /personas/{id} | Update persona
+*PersonasApi* | [**personasIdTestPost**](docs/PersonasApi.md#personasidtestpost) | **POST** /personas/{id}/test | Test persona
+*PersonasApi* | [**personasPost**](docs/PersonasApi.md#personaspost) | **POST** /personas | Create persona
+*ProxiesApi* | [**proxiesGet**](docs/ProxiesApi.md#proxiesget) | **GET** /proxies | List proxies
+*ProxiesApi* | [**proxiesHealthCheckPost**](docs/ProxiesApi.md#proxieshealthcheckpost) | **POST** /proxies/health-check | Force all proxies health check
+*ProxiesApi* | [**proxiesPost**](docs/ProxiesApi.md#proxiespost) | **POST** /proxies | Add proxy
+*ProxiesApi* | [**proxiesProxyIdDelete**](docs/ProxiesApi.md#proxiesproxyiddelete) | **DELETE** /proxies/{proxyId} | Delete proxy
+*ProxiesApi* | [**proxiesProxyIdHealthCheckPost**](docs/ProxiesApi.md#proxiesproxyidhealthcheckpost) | **POST** /proxies/{proxyId}/health-check | Force single proxy health check
+*ProxiesApi* | [**proxiesProxyIdPut**](docs/ProxiesApi.md#proxiesproxyidput) | **PUT** /proxies/{proxyId} | Update proxy
+*ProxiesApi* | [**proxiesProxyIdTestPost**](docs/ProxiesApi.md#proxiesproxyidtestpost) | **POST** /proxies/{proxyId}/test | Test proxy
+*ProxiesApi* | [**proxiesStatusGet**](docs/ProxiesApi.md#proxiesstatusget) | **GET** /proxies/status | Get proxy statuses
+*ProxyPoolsApi* | [**proxyPoolsGet**](docs/ProxyPoolsApi.md#proxypoolsget) | **GET** /proxy-pools | List proxy pools
+*ProxyPoolsApi* | [**proxyPoolsPoolIdDelete**](docs/ProxyPoolsApi.md#proxypoolspooliddelete) | **DELETE** /proxy-pools/{poolId} | Delete proxy pool
+*ProxyPoolsApi* | [**proxyPoolsPoolIdProxiesPost**](docs/ProxyPoolsApi.md#proxypoolspoolidproxiespost) | **POST** /proxy-pools/{poolId}/proxies | Add proxy to pool
+*ProxyPoolsApi* | [**proxyPoolsPoolIdProxiesProxyIdDelete**](docs/ProxyPoolsApi.md#proxypoolspoolidproxiesproxyiddelete) | **DELETE** /proxy-pools/{poolId}/proxies/{proxyId} | Remove proxy from pool
+*ProxyPoolsApi* | [**proxyPoolsPoolIdPut**](docs/ProxyPoolsApi.md#proxypoolspoolidput) | **PUT** /proxy-pools/{poolId} | Update proxy pool
+*ProxyPoolsApi* | [**proxyPoolsPost**](docs/ProxyPoolsApi.md#proxypoolspost) | **POST** /proxy-pools | Create proxy pool
 
 
 ### Documentation For Models
 
- - [ApiV2AdminUsersGet200Response](docs/ApiV2AdminUsersGet200Response.md)
- - [ApiV2AuthLogoutPost200Response](docs/ApiV2AuthLogoutPost200Response.md)
- - [ApiV2AuthPermissionsGet200Response](docs/ApiV2AuthPermissionsGet200Response.md)
- - [ApiV2AuthRefreshPost200Response](docs/ApiV2AuthRefreshPost200Response.md)
- - [ApiV2ChangePasswordPost200Response](docs/ApiV2ChangePasswordPost200Response.md)
- - [ApiV2ChangePasswordPostRequest](docs/ApiV2ChangePasswordPostRequest.md)
- - [ApiV2MeGet200Response](docs/ApiV2MeGet200Response.md)
- - [CampaignAPI](docs/CampaignAPI.md)
- - [CampaignStatusEnum](docs/CampaignStatusEnum.md)
- - [CampaignTypeEnum](docs/CampaignTypeEnum.md)
- - [LoginRequest](docs/LoginRequest.md)
- - [LoginResponseAPI](docs/LoginResponseAPI.md)
- - [PersonaTypeEnum](docs/PersonaTypeEnum.md)
- - [PingGet200Response](docs/PingGet200Response.md)
- - [ProxyProtocolEnum](docs/ProxyProtocolEnum.md)
- - [UserAPI](docs/UserAPI.md)
- - [ValidationStatusEnum](docs/ValidationStatusEnum.md)
+ - [GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags](docs/GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsCampaign](docs/GithubComFntelecomllcStudioBackendInternalModelsCampaign.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsCampaignStatusEnum](docs/GithubComFntelecomllcStudioBackendInternalModelsCampaignStatusEnum.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsCampaignTypeEnum](docs/GithubComFntelecomllcStudioBackendInternalModelsCampaignTypeEnum.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsDNSValidationCampaignParams](docs/GithubComFntelecomllcStudioBackendInternalModelsDNSValidationCampaignParams.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsDomainGenerationCampaignParams](docs/GithubComFntelecomllcStudioBackendInternalModelsDomainGenerationCampaignParams.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsHTTPKeywordCampaignParams](docs/GithubComFntelecomllcStudioBackendInternalModelsHTTPKeywordCampaignParams.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsKeywordRule](docs/GithubComFntelecomllcStudioBackendInternalModelsKeywordRule.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum](docs/GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsLoginRequest](docs/GithubComFntelecomllcStudioBackendInternalModelsLoginRequest.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsPersona](docs/GithubComFntelecomllcStudioBackendInternalModelsPersona.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsPersonaTypeEnum](docs/GithubComFntelecomllcStudioBackendInternalModelsPersonaTypeEnum.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsProxy](docs/GithubComFntelecomllcStudioBackendInternalModelsProxy.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsProxyPool](docs/GithubComFntelecomllcStudioBackendInternalModelsProxyPool.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership](docs/GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsProxyProtocolEnum](docs/GithubComFntelecomllcStudioBackendInternalModelsProxyProtocolEnum.md)
+ - [GithubComFntelecomllcStudioBackendInternalModelsUser](docs/GithubComFntelecomllcStudioBackendInternalModelsUser.md)
+ - [InternalApiCreateKeywordSetRequest](docs/InternalApiCreateKeywordSetRequest.md)
+ - [InternalApiKeywordRuleRequest](docs/InternalApiKeywordRuleRequest.md)
+ - [InternalApiKeywordSetResponse](docs/InternalApiKeywordSetResponse.md)
+ - [InternalApiProxyPoolRequest](docs/InternalApiProxyPoolRequest.md)
+ - [InternalApiUpdateKeywordSetRequest](docs/InternalApiUpdateKeywordSetRequest.md)
+ - [SqlNullInt32](docs/SqlNullInt32.md)
+ - [SqlNullString](docs/SqlNullString.md)
+ - [SqlNullTime](docs/SqlNullTime.md)
+ - [UuidNullUUID](docs/UuidNullUUID.md)
 
 
 <a id="documentation-for-authorization"></a>
 ## Documentation For Authorization
 
-
-Authentication schemes defined for the API:
-<a id="SessionAuth"></a>
-### SessionAuth
-
-- **Type**: API key
-- **API key parameter name**: session_id
-- **Location**: 
+Endpoints do not require authorization.
 

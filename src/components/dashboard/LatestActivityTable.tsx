@@ -40,7 +40,7 @@ const getGlobalDomainStatusForPhase = (
   campaign: CampaignViewModel
 ): DomainActivityStatus => {
   const selectedType = campaign.selectedType || campaign.campaignType;
-  const phasesForType = CAMPAIGN_PHASES_ORDERED[selectedType];
+  const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
   if (!phasesForType || !phasesForType.includes(phase)) return 'n_a'; // Phase not applicable to this campaign type
 
   const phaseIndexInType = phasesForType.indexOf(phase);
@@ -93,7 +93,7 @@ const getGlobalLeadStatusAndScore = (
   campaign: CampaignViewModel
 ): { status: DomainActivityStatus; score?: number } => {
     const selectedType = campaign.selectedType || campaign.campaignType;
-    const phasesForType = CAMPAIGN_PHASES_ORDERED[selectedType];
+    const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
     if (!phasesForType || !phasesForType.includes('LeadGeneration')) return { status: 'n_a' };
 
     const leadGenPhaseIndex = phasesForType.indexOf('LeadGeneration');
@@ -188,19 +188,20 @@ export default function LatestActivityTable() {
       if (response.status === 'success' && Array.isArray(response.data)) {
         const campaignsArray = transformCampaignsToViewModels(response.data);
         campaignsArray.forEach(campaign => {
+          if (!campaign.id || !campaign.name || !campaign.createdAt) return;
           (campaign.domains || []).forEach(domainName => {
             const leadInfo = getGlobalLeadStatusAndScore(domainName, campaign);
             processedActivities.push({
               id: `${campaign.id}-${domainName}`, // Unique ID for the activity row
               domain: domainName,
               domainName,
-              campaignId: campaign.id,
-              campaignName: campaign.name,
+              campaignId: campaign.id!,
+              campaignName: campaign.name!,
               phase: campaign.currentPhase || 'Idle',
               status: getGlobalDomainStatusForPhase(domainName, 'DNSValidation', campaign),
-              timestamp: campaign.createdAt,
+              timestamp: campaign.createdAt!,
               activity: 'Domain processing',
-              generatedDate: campaign.createdAt, // Or a more specific date if available per domain
+              generatedDate: campaign.createdAt!, // Or a more specific date if available per domain
               dnsStatus: getGlobalDomainStatusForPhase(domainName, 'DNSValidation', campaign),
               httpStatus: getGlobalDomainStatusForPhase(domainName, 'HTTPValidation', campaign),
               leadScanStatus: leadInfo.status,

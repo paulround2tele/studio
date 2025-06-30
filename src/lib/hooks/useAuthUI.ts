@@ -22,7 +22,7 @@ export function useAuthUI() {
       
       if (result.success) {
         auth.setAuthState({
-          user: result.user,
+          user: result.user || null,
           isAuthenticated: true,
           isLoading: false,
         });

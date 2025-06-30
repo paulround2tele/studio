@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, type Control } from "react-hook-form";
+import { useForm, type Control, type SubmitHandler } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,18 +21,80 @@ import { Target, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { CAMPAIGN_SELECTED_TYPES } from "@/lib/constants";
-import type { CampaignViewModel, CampaignSelectedType, CampaignPhase, DomainGenerationPattern, DomainSourceSelectionMode } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
 import { createCampaignUnified, startCampaign } from "@/lib/services/campaignService.production";
-import { 
-  type UnifiedCreateCampaignRequest
-} from '@/lib/schemas/unifiedCampaignSchema';
-import { 
-  campaignFormSchema, 
-  CampaignFormConstants, 
-  CampaignFormValues, 
-  getDefaultSourceMode, 
-  needsHttpPersona, 
-  needsDnsPersona 
+
+// Import OpenAPI types to replace missing custom types
+type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
+type CampaignSelectedType = components['schemas']['CreateCampaignRequest']['campaignType'];
+type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable" | "constant_only";
+type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
+type CampaignPhase = "domain_generation" | "dns_validation" | "http_keyword_validation" | "completed" | "idle";
+
+// Base campaign type from OpenAPI
+type BaseCampaign = components['schemas']['Campaign'];
+type DnsValidationParams = components['schemas']['DnsValidationParams'];
+type HttpKeywordParams = components['schemas']['HttpKeywordParams'];
+type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
+
+// CampaignViewModel interface using OpenAPI base with UI extensions
+export interface CampaignViewModel extends Omit<BaseCampaign, 'dnsValidationParams' | 'httpKeywordParams' | 'domainGenerationParams' | 'failedItems' | 'processedItems' | 'successfulItems' | 'totalItems' | 'metadata'> {
+  description?: string;
+  selectedType?: CampaignSelectedType;
+  currentPhase?: CampaignPhase;
+  
+  // Flexible parameter types that can handle both OpenAPI and legacy formats
+  dnsValidationParams?: DnsValidationParams | Record<string, unknown>;
+  httpKeywordValidationParams?: HttpKeywordParams | Record<string, unknown>;
+  domainGenerationParams?: DomainGenerationParams | Record<string, unknown>;
+  
+  domainSourceConfig?: {
+    type: string;
+    sourceCampaignId?: string;
+    sourcePhase?: string;
+    uploadedDomains?: string[];
+  };
+  domainGenerationConfig?: {
+    generationPattern?: DomainGenerationPattern;
+    constantPart?: string;
+    allowedCharSet?: string;
+    tlds?: string[];
+    prefixVariableLength?: number;
+    suffixVariableLength?: number;
+    maxDomainsToGenerate?: number;
+  };
+  leadGenerationSpecificConfig?: {
+    targetKeywords?: string[];
+    scrapingRateLimit?: {
+      requests: number;
+      per: string;
+    };
+    requiresJavaScriptRendering?: boolean;
+  };
+  initialDomainsToProcessCount?: number;
+  assignedHttpPersonaId?: string;
+  assignedDnsPersonaId?: string;
+  proxyAssignment?: {
+    mode: string;
+    proxyId?: string;
+  };
+  
+  // Handle BigInt to number conversion for UI - flexible types
+  failedItems?: number | bigint;
+  processedItems?: number | bigint;
+  successfulItems?: number | bigint;
+  totalItems?: number | bigint;
+  
+  // Flexible metadata type
+  metadata?: Record<string, unknown>;
+}
+import {
+  campaignFormSchema,
+  CampaignFormConstants,
+  CampaignFormValues,
+  getDefaultSourceMode,
+  needsHttpPersona,
+  needsDnsPersona
 } from "@/lib/schemas/campaignFormSchema";
 import React, { useCallback, useMemo, useState } from "react";
 import { FormErrorSummary } from '@/components/ui/form-field-error';
@@ -133,7 +195,9 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         3
       ) : 3,
       targetHttpPorts: isEditing && campaignToEdit ? (
-        campaignToEdit.httpKeywordValidationParams?.targetHttpPorts ?? [80, 443]
+        Array.isArray(campaignToEdit.httpKeywordValidationParams?.targetHttpPorts)
+          ? campaignToEdit.httpKeywordValidationParams.targetHttpPorts
+          : [80, 443]
       ) : [80, 443],
       
       assignedHttpPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedHttpPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
@@ -146,7 +210,6 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
   });
 
   const { control, formState: { isSubmitting }, watch, setValue } = form;
-  const typedControl = control as Control<CampaignFormValues>;
   const selectedCampaignType = watch("selectedType");
 
   // Performance-optimized domain calculation with debouncing and safeguards
@@ -173,7 +236,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
       setFormMainError(null);
 
       // Build unified campaign payload based on campaign type
-      let unifiedPayload: UnifiedCreateCampaignRequest;
+      let unifiedPayload: CreateCampaignRequest;
 
       switch (data.selectedType) {
         case 'domain_generation': {
@@ -320,7 +383,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
 
           // Determine source campaign type
           const sourceCampaign = sourceCampaigns.find(campaign => campaign.id === data.sourceCampaignId);
-          const sourceType = sourceCampaign?.selectedType === 'domain_generation' ? 'DomainGeneration' : 'DNSValidation';
+          const _sourceType = sourceCampaign?.selectedType === 'domain_generation' ? 'DomainGeneration' : 'DNSValidation';
 
           unifiedPayload = {
             campaignType: 'http_keyword_validation',
@@ -328,7 +391,6 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             description: data.description,
             httpKeywordParams: {
               sourceCampaignId: data.sourceCampaignId,
-              sourceType: sourceType,
               adHocKeywords: adHocKeywords,
               personaIds: [data.assignedHttpPersonaId],
               proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER)
@@ -375,13 +437,15 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           
           if (data.launchSequence && data.selectedType === 'domain_generation') {
             try {
-              await startCampaign(response.data.id);
+              if (response.data.id) {
+                await startCampaign(response.data.id);
+              }
             } catch (e) {
               console.error('Failed to start campaign sequence:', e);
             }
-            router.push(`/campaigns/${response.data.id}?sequence=1`);
+            router.push(`/campaigns/${response.data.id || ''}`);
           } else {
-            router.push(`/campaigns/${response.data.id}`);
+            router.push(`/campaigns/${response.data.id || ''}`);
           }
           router.refresh();
         } else {
@@ -524,7 +588,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit as SubmitHandler<CampaignFormValues>)} className="space-y-8">
               {/* Form Error Summary */}
               <FormErrorSummary 
                 errors={formFieldErrors}
@@ -533,7 +597,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               />
               
               {/* Basic Campaign Information */}
-              <FormField control={typedControl} name="name" render={({ field }) => (
+              <FormField control={control as Control<CampaignFormValues>} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Campaign Name</FormLabel>
                   <FormControl>
@@ -543,7 +607,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                 </FormItem>
               )} />
               
-              <FormField control={typedControl} name="description" render={({ field }) => (
+              <FormField control={control as Control<CampaignFormValues>} name="description" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
@@ -553,7 +617,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                 </FormItem>
               )} />
               
-              <FormField control={typedControl} name="selectedType" render={({ field }) => (
+              <FormField control={control as Control<CampaignFormValues>} name="selectedType" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Campaign Type</FormLabel>
                   <Select onValueChange={(value) => {
@@ -578,7 +642,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               {/* Performance-optimized Domain Generation Configuration */}
               {selectedCampaignType === 'domain_generation' && (
                 <DomainGenerationConfig
-                  control={typedControl}
+                  control={control as Control<CampaignFormValues>}
                   totalPossible={domainCalculation.total}
                   calculationDetails={domainCalculation.details}
                   calculationWarning={domainCalculation.warning}
@@ -589,7 +653,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               {/* Optimized Domain Source Configuration */}
               {(selectedCampaignType === 'dns_validation' || selectedCampaignType === 'http_keyword_validation') && (
                 <DomainSourceConfig
-                  control={typedControl}
+                  control={control as Control<CampaignFormValues>}
                   watch={watch}
                   sourceCampaigns={sourceCampaigns}
                   isLoading={loadingSelectData}
@@ -598,12 +662,12 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
 
               {/* Optimized Keyword Configuration */}
               {selectedCampaignType === 'http_keyword_validation' && (
-                <KeywordConfig control={typedControl} />
+                <KeywordConfig control={control as Control<CampaignFormValues>} />
               )}
 
               {(selectedCampaignType === 'dns_validation' || selectedCampaignType === 'http_keyword_validation') && (
                 <CampaignTuningConfig
-                  control={typedControl}
+                  control={control as Control<CampaignFormValues>}
                   showHttpPorts={selectedCampaignType === 'http_keyword_validation'}
                 />
               )}
@@ -611,7 +675,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               {/* Optimized Operational Assignments */}
               {(needsHttp || needsDns) && (
                 <OperationalAssignments
-                  control={typedControl}
+                  control={control as Control<CampaignFormValues>}
                   needsHttp={needsHttp}
                   needsDns={needsDns}
                   httpPersonas={httpPersonas}
@@ -621,7 +685,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               )}
 
               {selectedCampaignType === 'domain_generation' && (
-                <FormField control={typedControl} name="launchSequence" render={({ field }) => (
+                <FormField control={control as Control<CampaignFormValues>} name="launchSequence" render={({ field }) => (
                   <FormItem className="flex items-center space-x-2">
                     <FormLabel>Launch full sequence</FormLabel>
                     <FormControl>

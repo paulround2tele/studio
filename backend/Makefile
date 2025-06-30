@@ -6,7 +6,7 @@ DATABASE_URL ?= postgres://postgres:123456789@localhost:5432/studio?sslmode=disa
 # Go build flags
 GOFLAGS = -mod=mod
 
-.PHONY: build test clean deps dev-tools generate-mocks help
+.PHONY: build test clean deps dev-tools generate-mocks openapi help
 
 # Build the application
 build:
@@ -56,6 +56,12 @@ generate-mocks:
 	@echo "Generating mocks..."
 	go generate ./...
 
+# Generate OpenAPI specification
+openapi:
+	@echo "Generating OpenAPI 3.0.3 specification..."
+	go run cmd/generate-openapi/main.go -output docs/openapi.yaml -format yaml
+	@echo "OpenAPI specification generated: backend/docs/openapi.yaml"
+
 # Default target
 .DEFAULT_GOAL := help
 
@@ -72,7 +78,11 @@ help:
 	@echo "  deps              - Install dependencies"
 	@echo "  dev-tools         - Install development tools"
 	@echo "  generate-mocks    - Generate mock implementations"
+	@echo "  openapi           - Generate OpenAPI 3.0.3 specification"
 	@echo "  help              - Show this help message"
+	@echo ""
+	@echo "OpenAPI workflow:"
+	@echo "  make openapi && npm run api:generate-client && npm run typecheck"
 	@echo ""
 	@echo "Database deployment (no migrations needed):"
 	@echo "  Use: psql \"connection_string\" < database/production_schema_v3.sql"

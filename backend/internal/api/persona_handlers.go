@@ -23,15 +23,15 @@ type CreatePersonaRequest struct {
 	Name          string                 `json:"name" validate:"required,min=1,max=255"`
 	PersonaType   models.PersonaTypeEnum `json:"personaType" validate:"required,oneof=dns http"`
 	Description   string                 `json:"description,omitempty"`
-	ConfigDetails json.RawMessage        `json:"configDetails" validate:"required"`
+	ConfigDetails interface{}            `json:"configDetails" validate:"required"` // Accept structured config
 	IsEnabled     *bool                  `json:"isEnabled,omitempty"`
 }
 
 type UpdatePersonaRequest struct {
-	Name          *string         `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
-	Description   *string         `json:"description,omitempty"`
-	ConfigDetails json.RawMessage `json:"configDetails,omitempty"`
-	IsEnabled     *bool           `json:"isEnabled,omitempty"`
+	Name          *string     `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
+	Description   *string     `json:"description,omitempty"`
+	ConfigDetails interface{} `json:"configDetails,omitempty"` // Accept structured config
+	IsEnabled     *bool       `json:"isEnabled,omitempty"`
 }
 
 // PersonaResponse formats a persona for API responses.
@@ -40,35 +40,77 @@ type PersonaResponse struct {
 	Name          string                 `json:"name"`
 	PersonaType   models.PersonaTypeEnum `json:"personaType"`
 	Description   string                 `json:"description,omitempty"`
-	ConfigDetails json.RawMessage        `json:"configDetails"`
+	ConfigDetails interface{}            `json:"configDetails"` // Return structured config
 	IsEnabled     bool                   `json:"isEnabled"`
 	CreatedAt     time.Time              `json:"createdAt"`
 	UpdatedAt     time.Time              `json:"updatedAt"`
 }
 
 func toPersonaResponse(p *models.Persona) PersonaResponse {
+	// Parse ConfigDetails back to structured format for API response
+	var configDetails interface{}
+	if len(p.ConfigDetails) > 0 {
+		switch p.PersonaType {
+		case models.PersonaTypeHTTP:
+			var httpConfig models.HttpPersonaConfig
+			if err := json.Unmarshal(p.ConfigDetails, &httpConfig); err == nil {
+				configDetails = httpConfig
+			} else {
+				configDetails = p.ConfigDetails
+			}
+		case models.PersonaTypeDNS:
+			var dnsConfig models.DnsPersonaConfig
+			if err := json.Unmarshal(p.ConfigDetails, &dnsConfig); err == nil {
+				configDetails = dnsConfig
+			} else {
+				configDetails = p.ConfigDetails
+			}
+		default:
+			configDetails = p.ConfigDetails
+		}
+	}
+
 	return PersonaResponse{
 		ID:            p.ID,
 		Name:          p.Name,
 		PersonaType:   p.PersonaType,
 		Description:   p.Description.String,
-		ConfigDetails: p.ConfigDetails,
+		ConfigDetails: configDetails,
 		IsEnabled:     p.IsEnabled,
 		CreatedAt:     p.CreatedAt,
 		UpdatedAt:     p.UpdatedAt,
 	}
 }
 
+// parseConfigDetails parses and validates configuration based on persona type
+func parseConfigDetails(personaType models.PersonaTypeEnum, configDetails interface{}) (interface{}, error) {
+	// Convert to JSON for parsing
+	configJSON, err := json.Marshal(configDetails)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	switch personaType {
+	case models.PersonaTypeHTTP:
+		var httpConfig models.HttpPersonaConfig
+		if err := json.Unmarshal(configJSON, &httpConfig); err != nil {
+			return nil, fmt.Errorf("invalid HTTP persona configuration: %w", err)
+		}
+		return httpConfig, nil
+	case models.PersonaTypeDNS:
+		var dnsConfig models.DnsPersonaConfig
+		if err := json.Unmarshal(configJSON, &dnsConfig); err != nil {
+			return nil, fmt.Errorf("invalid DNS persona configuration: %w", err)
+		}
+		return dnsConfig, nil
+	default:
+		return nil, fmt.Errorf("unsupported persona type: %s", personaType)
+	}
+}
+
 // --- Gin Handlers for Personas ---
 
 // ListAllPersonasGin lists all personas.
-// @Summary List all personas
-// @Description Lists all personas
-// @Tags Personas
-// @Produce json
-// @Success 200 {array} models.Persona
-// @Failure 500 {object} map[string]string
-// @Router /personas [get]
 func (h *APIHandler) ListAllPersonasGin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -92,10 +134,10 @@ func (h *APIHandler) ListAllPersonasGin(c *gin.Context) {
 		case models.PersonaTypeHTTP:
 			typeFilter = models.PersonaTypeHTTP
 		default:
-			// Invalid type, ignore filter
+			respondWithStandardError(c, http.StatusBadRequest, "Invalid personaType parameter", nil)
+			return
 		}
 	}
-	// Note: empty typeFilter ("") means all types
 
 	filter := store.ListPersonasFilter{
 		Type:      typeFilter, // empty string means all types
@@ -112,7 +154,7 @@ func (h *APIHandler) ListAllPersonasGin(c *gin.Context) {
 	personas, err := h.PersonaStore.ListPersonas(c.Request.Context(), querier, filter)
 	if err != nil {
 		log.Printf("Error listing all personas: %v", err)
-		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to list personas")
+		respondWithStandardError(c, http.StatusInternalServerError, "Failed to list personas", err)
 		return
 	}
 
@@ -121,25 +163,15 @@ func (h *APIHandler) ListAllPersonasGin(c *gin.Context) {
 		responseItems[i] = toPersonaResponse(p)
 	}
 
-	respondWithJSONGin(c, http.StatusOK, responseItems)
+	respondWithStandardSuccess(c, http.StatusOK, responseItems, "Personas retrieved successfully")
 }
 
 // CreatePersonaGin creates a new persona.
-// @Summary Create persona
-// @Description Creates a new persona
-// @Tags Personas
-// @Accept json
-// @Produce json
-// @Param persona body models.Persona true "Persona"
-// @Success 201 {object} models.Persona
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /personas [post]
 func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 	var req CreatePersonaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("[CreatePersonaGin] Error binding JSON: %v", err)
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid request payload", err)
 		return
 	}
 
@@ -148,11 +180,24 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 	case models.PersonaTypeDNS, models.PersonaTypeHTTP:
 		// Valid types
 	default:
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid personaType. Must be 'dns' or 'http'")
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid personaType. Must be 'dns' or 'http'", nil)
 		return
 	}
 
-	// This is the main handler method that handles persona creation
+	// Parse and validate configuration details
+	parsedConfig, err := parseConfigDetails(req.PersonaType, req.ConfigDetails)
+	if err != nil {
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid configuration details", err)
+		return
+	}
+
+	// Convert parsed config back to JSON for storage
+	configJSON, err := json.Marshal(parsedConfig)
+	if err != nil {
+		respondWithStandardError(c, http.StatusInternalServerError, "Failed to serialize configuration", err)
+		return
+	}
+
 	// Create the persona model from the request
 	now := time.Now()
 	persona := &models.Persona{
@@ -160,7 +205,7 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 		Name:          req.Name,
 		PersonaType:   req.PersonaType,
 		Description:   sql.NullString{String: req.Description, Valid: req.Description != ""},
-		ConfigDetails: req.ConfigDetails,
+		ConfigDetails: configJSON,
 		IsEnabled:     req.IsEnabled != nil && *req.IsEnabled, // Default to false if not specified
 		CreatedAt:     now,
 		UpdatedAt:     now,
@@ -175,35 +220,26 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 	// Create the persona
 	if err := h.PersonaStore.CreatePersona(c.Request.Context(), querier, persona); err != nil {
 		if err == store.ErrDuplicateEntry {
-			respondWithErrorGin(c, http.StatusConflict, fmt.Sprintf("Persona with name '%s' and type '%s' already exists", req.Name, req.PersonaType))
+			respondWithStandardError(c, http.StatusConflict,
+				fmt.Sprintf("Persona with name '%s' and type '%s' already exists", req.Name, req.PersonaType), err)
 		} else {
 			log.Printf("Error creating persona: %v", err)
-			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to create persona")
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to create persona", err)
 		}
 		return
 	}
 
 	log.Printf("Successfully created persona %s (%s)", persona.ID, persona.Name)
-	respondWithJSONGin(c, http.StatusCreated, toPersonaResponse(persona))
+	respondWithStandardSuccess(c, http.StatusCreated, toPersonaResponse(persona), "Persona created successfully")
 }
 
 // GetPersonaByIDGin handles GET /api/v2/personas/:id
 // Returns a specific persona by ID regardless of type
-// @Summary Get persona
-// @Description Gets a persona by ID
-// @Tags Personas
-// @Produce json
-// @Param id path string true "Persona ID"
-// @Success 200 {object} models.Persona
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /personas/{id} [get]
 func (h *APIHandler) GetPersonaByIDGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
 	personaID, err := uuid.Parse(personaIDStr)
 	if err != nil {
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid persona ID format")
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid persona ID format", err)
 		return
 	}
 
@@ -215,36 +251,94 @@ func (h *APIHandler) GetPersonaByIDGin(c *gin.Context) {
 	persona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
+			respondWithStandardError(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr), nil)
 		} else {
 			log.Printf("Error fetching persona %s: %v", personaIDStr, err)
-			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona")
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to fetch persona", err)
 		}
 		return
 	}
 
-	respondWithJSONGin(c, http.StatusOK, toPersonaResponse(persona))
+	respondWithStandardSuccess(c, http.StatusOK, toPersonaResponse(persona), "Persona retrieved successfully")
+}
+
+// GetHttpPersonaByIDGin handles GET /api/v2/personas/http/:id
+// Returns a specific HTTP persona by ID
+func (h *APIHandler) GetHttpPersonaByIDGin(c *gin.Context) {
+	personaIDStr := c.Param("id")
+	personaID, err := uuid.Parse(personaIDStr)
+	if err != nil {
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid persona ID format", err)
+		return
+	}
+
+	var querier store.Querier
+	if h.DB != nil {
+		querier = h.DB
+	}
+
+	persona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
+	if err != nil {
+		if err == store.ErrNotFound {
+			respondWithStandardError(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr), nil)
+		} else {
+			log.Printf("Error fetching persona %s: %v", personaIDStr, err)
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to fetch persona", err)
+		}
+		return
+	}
+
+	// Verify it's an HTTP persona
+	if persona.PersonaType != models.PersonaTypeHTTP {
+		respondWithStandardError(c, http.StatusBadRequest, "Persona is not an HTTP persona", nil)
+		return
+	}
+
+	respondWithStandardSuccess(c, http.StatusOK, toPersonaResponse(persona), "HTTP persona retrieved successfully")
+}
+
+// GetDnsPersonaByIDGin handles GET /api/v2/personas/dns/:id
+// Returns a specific DNS persona by ID
+func (h *APIHandler) GetDnsPersonaByIDGin(c *gin.Context) {
+	personaIDStr := c.Param("id")
+	personaID, err := uuid.Parse(personaIDStr)
+	if err != nil {
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid persona ID format", err)
+		return
+	}
+
+	var querier store.Querier
+	if h.DB != nil {
+		querier = h.DB
+	}
+
+	persona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
+	if err != nil {
+		if err == store.ErrNotFound {
+			respondWithStandardError(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr), nil)
+		} else {
+			log.Printf("Error fetching persona %s: %v", personaIDStr, err)
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to fetch persona", err)
+		}
+		return
+	}
+
+	// Verify it's a DNS persona
+	if persona.PersonaType != models.PersonaTypeDNS {
+		respondWithStandardError(c, http.StatusBadRequest, "Persona is not a DNS persona", nil)
+		return
+	}
+
+	respondWithStandardSuccess(c, http.StatusOK, toPersonaResponse(persona), "DNS persona retrieved successfully")
 }
 
 // UpdatePersonaGin handles PUT /api/v2/personas/:id
 // Updates a persona by ID, preserving its original type
-// @Summary Update persona
-// @Description Updates a persona by ID
-// @Tags Personas
-// @Accept json
-// @Produce json
-// @Param id path string true "Persona ID"
-// @Param persona body models.Persona true "Persona"
-// @Success 200 {object} models.Persona
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /personas/{id} [put]
 func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
 	personaID, err := uuid.Parse(personaIDStr)
 	if err != nil {
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid persona ID format")
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid persona ID format", err)
 		return
 	}
 
@@ -257,10 +351,10 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 	existingPersona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
+			respondWithStandardError(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr), nil)
 		} else {
 			log.Printf("Error fetching persona %s for update: %v", personaIDStr, err)
-			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona for update")
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to fetch persona for update", err)
 		}
 		return
 	}
@@ -269,7 +363,7 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 	var req UpdatePersonaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("[UpdatePersonaGin] Error binding JSON: %v", err)
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid request payload", err)
 		return
 	}
 
@@ -282,49 +376,47 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 		existingPersona.Description = sql.NullString{String: *req.Description, Valid: *req.Description != ""}
 	}
 	if req.ConfigDetails != nil {
-		existingPersona.ConfigDetails = req.ConfigDetails
+		// Parse and validate configuration details
+		parsedConfig, err := parseConfigDetails(existingPersona.PersonaType, req.ConfigDetails)
+		if err != nil {
+			respondWithStandardError(c, http.StatusBadRequest, "Invalid configuration details", err)
+			return
+		}
+		// Convert parsed config back to JSON for storage
+		configJSON, err := json.Marshal(parsedConfig)
+		if err != nil {
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to serialize configuration", err)
+			return
+		}
+		existingPersona.ConfigDetails = configJSON
 	}
 	if req.IsEnabled != nil {
 		existingPersona.IsEnabled = *req.IsEnabled
 	}
 	existingPersona.UpdatedAt = now
 
-	// Use database transaction if available
-	if h.DB != nil {
-		querier = h.DB
-	}
-
 	// Update the persona in the database
 	if err := h.PersonaStore.UpdatePersona(c.Request.Context(), querier, existingPersona); err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
+			respondWithStandardError(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr), nil)
 		} else {
 			log.Printf("Error updating persona %s: %v", personaIDStr, err)
-			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to update persona")
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to update persona", err)
 		}
 		return
 	}
 
 	log.Printf("Successfully updated persona %s (%s)", existingPersona.ID, existingPersona.Name)
-	respondWithJSONGin(c, http.StatusOK, toPersonaResponse(existingPersona))
+	respondWithStandardSuccess(c, http.StatusOK, toPersonaResponse(existingPersona), "Persona updated successfully")
 }
 
 // DeletePersonaGin handles DELETE /api/v2/personas/:id
 // Deletes a persona by ID regardless of type
-// @Summary Delete persona
-// @Description Deletes a persona by ID
-// @Tags Personas
-// @Param id path string true "Persona ID"
-// @Success 200 {object} map[string]bool
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /personas/{id} [delete]
 func (h *APIHandler) DeletePersonaGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
 	personaID, err := uuid.Parse(personaIDStr)
 	if err != nil {
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid persona ID format")
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid persona ID format", err)
 		return
 	}
 
@@ -337,49 +429,35 @@ func (h *APIHandler) DeletePersonaGin(c *gin.Context) {
 	existingPersona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
+			respondWithStandardError(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr), nil)
 		} else {
 			log.Printf("Error fetching persona %s for deletion: %v", personaIDStr, err)
-			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona for deletion")
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to fetch persona for deletion", err)
 		}
 		return
-	}
-
-	// Use database transaction if available
-	if h.DB != nil {
-		querier = h.DB
 	}
 
 	// Delete the persona from the database
 	if err := h.PersonaStore.DeletePersona(c.Request.Context(), querier, existingPersona.ID); err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
+			respondWithStandardError(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr), nil)
 		} else {
 			log.Printf("Error deleting persona %s: %v", personaIDStr, err)
-			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to delete persona")
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to delete persona", err)
 		}
 		return
 	}
 
 	log.Printf("Successfully deleted persona %s (%s)", existingPersona.ID, existingPersona.Name)
-	respondWithJSONGin(c, http.StatusOK, map[string]bool{"success": true})
+	respondWithStandardSuccess(c, http.StatusOK, nil, "Persona deleted successfully")
 }
 
 // TestPersonaGin tests a persona.
-// @Summary Test persona
-// @Description Tests a persona by ID
-// @Tags Personas
-// @Param id path string true "Persona ID"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /personas/{id}/test [post]
 func (h *APIHandler) TestPersonaGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
 	personaID, err := uuid.Parse(personaIDStr)
 	if err != nil {
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid persona ID format")
+		respondWithStandardError(c, http.StatusBadRequest, "Invalid persona ID format", err)
 		return
 	}
 
@@ -392,10 +470,10 @@ func (h *APIHandler) TestPersonaGin(c *gin.Context) {
 	persona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
+			respondWithStandardError(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr), nil)
 		} else {
 			log.Printf("Error fetching persona %s for testing: %v", personaIDStr, err)
-			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona for testing")
+			respondWithStandardError(c, http.StatusInternalServerError, "Failed to fetch persona for testing", err)
 		}
 		return
 	}
@@ -410,5 +488,5 @@ func (h *APIHandler) TestPersonaGin(c *gin.Context) {
 		"testedAt":    time.Now().UTC().Format(time.RFC3339),
 	}
 
-	respondWithJSONGin(c, http.StatusOK, testResult)
+	respondWithStandardSuccess(c, http.StatusOK, testResult, "Persona test completed successfully")
 }

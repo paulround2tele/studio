@@ -2,15 +2,14 @@
 /* eslint-disable */
 /**
  * DomainFlow API - ALIGNED VERSION
- * This file contains properly aligned types with SafeBigInt for int64 fields
+ * This file contains properly aligned types with OpenAPI compatible number types for int64 fields
  */
 
 import type { ServicesDomainGenerationParams, ServicesDomainGenerationParamsPatternTypeEnum } from './services-domain-generation-params';
-import type { SafeBigInt } from '../../types/branded';
-import { createSafeBigInt } from '../../types/branded';
+// Using OpenAPI compatible types instead of branded types
 
 /**
- * Aligned Domain Generation Params with SafeBigInt for int64 fields
+ * Aligned Domain Generation Params with OpenAPI compatible types
  * @export
  * @interface ServicesDomainGenerationParamsAligned
  */
@@ -21,18 +20,18 @@ export interface ServicesDomainGenerationParamsAligned {
     'patternType': ServicesDomainGenerationParamsPatternTypeEnum;
     'tld': string;
     'variableLength': number;
-    'totalPossibleCombinations'?: SafeBigInt; // int64 field from Go backend
-    'currentOffset'?: SafeBigInt; // int64 field from Go backend (may be added later)
+    'totalPossibleCombinations'?: number; // OpenAPI compatible
+    'currentOffset'?: number; // OpenAPI compatible
 }
 
 /**
- * Transform raw API response to aligned model with SafeBigInt conversion
+ * Transform raw API response to aligned model with number conversion
  */
 export function transformToDomainGenerationParamsAligned(raw: ServicesDomainGenerationParams & { totalPossibleCombinations?: number | string; currentOffset?: number | string }): ServicesDomainGenerationParamsAligned {
     return {
         ...raw,
-        totalPossibleCombinations: raw.totalPossibleCombinations != null ? createSafeBigInt(raw.totalPossibleCombinations) : undefined,
-        currentOffset: raw.currentOffset != null ? createSafeBigInt(raw.currentOffset) : undefined,
+        totalPossibleCombinations: raw.totalPossibleCombinations != null ? Number(raw.totalPossibleCombinations) : undefined,
+        currentOffset: raw.currentOffset != null ? Number(raw.currentOffset) : undefined,
     };
 }
 

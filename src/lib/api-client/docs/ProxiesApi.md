@@ -1,21 +1,22 @@
 # ProxiesApi
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiV2ProxiesGet**](#apiv2proxiesget) | **GET** /api/v2/proxies | List proxies|
-|[**apiV2ProxiesHealthCheckPost**](#apiv2proxieshealthcheckpost) | **POST** /api/v2/proxies/health-check | Force all proxies health check|
-|[**apiV2ProxiesPost**](#apiv2proxiespost) | **POST** /api/v2/proxies | Add proxy|
-|[**apiV2ProxiesProxyIdDelete**](#apiv2proxiesproxyiddelete) | **DELETE** /api/v2/proxies/{proxyId} | Delete proxy|
-|[**apiV2ProxiesProxyIdHealthCheckPost**](#apiv2proxiesproxyidhealthcheckpost) | **POST** /api/v2/proxies/{proxyId}/health-check | Force single proxy health check|
-|[**apiV2ProxiesProxyIdPut**](#apiv2proxiesproxyidput) | **PUT** /api/v2/proxies/{proxyId} | Update proxy|
-|[**apiV2ProxiesStatusGet**](#apiv2proxiesstatusget) | **GET** /api/v2/proxies/status | Proxy statuses|
-|[**testProxy**](#testproxy) | **POST** /api/v2/proxies/{proxyId} | Test proxy|
+|[**proxiesGet**](#proxiesget) | **GET** /proxies | List proxies|
+|[**proxiesHealthCheckPost**](#proxieshealthcheckpost) | **POST** /proxies/health-check | Force all proxies health check|
+|[**proxiesPost**](#proxiespost) | **POST** /proxies | Add proxy|
+|[**proxiesProxyIdDelete**](#proxiesproxyiddelete) | **DELETE** /proxies/{proxyId} | Delete proxy|
+|[**proxiesProxyIdHealthCheckPost**](#proxiesproxyidhealthcheckpost) | **POST** /proxies/{proxyId}/health-check | Force single proxy health check|
+|[**proxiesProxyIdPut**](#proxiesproxyidput) | **PUT** /proxies/{proxyId} | Update proxy|
+|[**proxiesProxyIdTestPost**](#proxiesproxyidtestpost) | **POST** /proxies/{proxyId}/test | Test proxy|
+|[**proxiesStatusGet**](#proxiesstatusget) | **GET** /proxies/status | Get proxy statuses|
 
-# **apiV2ProxiesGet**
-> Array<ProxyResponse> apiV2ProxiesGet()
+# **proxiesGet**
+> Array<GithubComFntelecomllcStudioBackendInternalModelsProxy> proxiesGet()
 
+Lists all proxies
 
 ### Example
 
@@ -28,7 +29,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.apiV2ProxiesGet();
+const { status, data } = await apiInstance.proxiesGet();
 ```
 
 ### Parameters
@@ -37,11 +38,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**Array<ProxyResponse>**
+**Array<GithubComFntelecomllcStudioBackendInternalModelsProxy>**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -52,13 +53,15 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | List of proxies |  -  |
+|**200** | OK |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2ProxiesHealthCheckPost**
-> apiV2ProxiesHealthCheckPost()
+# **proxiesHealthCheckPost**
+> { [key: string]: string; } proxiesHealthCheckPost()
 
+Forces a health check on all proxies
 
 ### Example
 
@@ -71,7 +74,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.apiV2ProxiesHealthCheckPost();
+const { status, data } = await apiInstance.proxiesHealthCheckPost();
 ```
 
 ### Parameters
@@ -80,44 +83,47 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: string; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Health check triggered |  -  |
+|**200** | OK |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2ProxiesPost**
-> ProxyResponse apiV2ProxiesPost(body)
+# **proxiesPost**
+> GithubComFntelecomllcStudioBackendInternalModelsProxy proxiesPost(githubComFntelecomllcStudioBackendInternalModelsProxy)
 
+Adds a new proxy
 
 ### Example
 
 ```typescript
 import {
     ProxiesApi,
-    Configuration
+    Configuration,
+    GithubComFntelecomllcStudioBackendInternalModelsProxy
 } from '@domainflow/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let body: object; //
+let githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy; //Proxy
 
-const { status, data } = await apiInstance.apiV2ProxiesPost(
-    body
+const { status, data } = await apiInstance.proxiesPost(
+    githubComFntelecomllcStudioBackendInternalModelsProxy
 );
 ```
 
@@ -125,16 +131,16 @@ const { status, data } = await apiInstance.apiV2ProxiesPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
+| **githubComFntelecomllcStudioBackendInternalModelsProxy** | **GithubComFntelecomllcStudioBackendInternalModelsProxy**| Proxy | |
 
 
 ### Return type
 
-**ProxyResponse**
+**GithubComFntelecomllcStudioBackendInternalModelsProxy**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -146,12 +152,15 @@ const { status, data } = await apiInstance.apiV2ProxiesPost(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**201** | Created |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2ProxiesProxyIdDelete**
-> apiV2ProxiesProxyIdDelete()
+# **proxiesProxyIdDelete**
+> { [key: string]: boolean; } proxiesProxyIdDelete()
 
+Deletes a proxy by ID
 
 ### Example
 
@@ -164,9 +173,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let proxyId: string; // (default to undefined)
+let proxyId: string; //Proxy ID (default to undefined)
 
-const { status, data } = await apiInstance.apiV2ProxiesProxyIdDelete(
+const { status, data } = await apiInstance.proxiesProxyIdDelete(
     proxyId
 );
 ```
@@ -175,33 +184,37 @@ const { status, data } = await apiInstance.apiV2ProxiesProxyIdDelete(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **proxyId** | [**string**] |  | defaults to undefined|
+| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: boolean; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | Deleted |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2ProxiesProxyIdHealthCheckPost**
-> apiV2ProxiesProxyIdHealthCheckPost()
+# **proxiesProxyIdHealthCheckPost**
+> { [key: string]: string; } proxiesProxyIdHealthCheckPost()
 
+Forces a health check on a single proxy
 
 ### Example
 
@@ -214,55 +227,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.apiV2ProxiesProxyIdHealthCheckPost();
-```
+let proxyId: string; //Proxy ID (default to undefined)
 
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Health check triggered |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ProxiesProxyIdPut**
-> ProxyResponse apiV2ProxiesProxyIdPut(body)
-
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-let proxyId: string; // (default to undefined)
-let body: object; //
-
-const { status, data } = await apiInstance.apiV2ProxiesProxyIdPut(
-    proxyId,
-    body
+const { status, data } = await apiInstance.proxiesProxyIdHealthCheckPost(
+    proxyId
 );
 ```
 
@@ -270,17 +238,74 @@ const { status, data } = await apiInstance.apiV2ProxiesProxyIdPut(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-| **proxyId** | [**string**] |  | defaults to undefined|
+| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
 
 
 ### Return type
 
-**ProxyResponse**
+**{ [key: string]: string; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxiesProxyIdPut**
+> GithubComFntelecomllcStudioBackendInternalModelsProxy proxiesProxyIdPut(githubComFntelecomllcStudioBackendInternalModelsProxy)
+
+Updates a proxy by ID
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration,
+    GithubComFntelecomllcStudioBackendInternalModelsProxy
+} from '@domainflow/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let proxyId: string; //Proxy ID (default to undefined)
+let githubComFntelecomllcStudioBackendInternalModelsProxy: GithubComFntelecomllcStudioBackendInternalModelsProxy; //Proxy
+
+const { status, data } = await apiInstance.proxiesProxyIdPut(
+    proxyId,
+    githubComFntelecomllcStudioBackendInternalModelsProxy
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **githubComFntelecomllcStudioBackendInternalModelsProxy** | **GithubComFntelecomllcStudioBackendInternalModelsProxy**| Proxy | |
+| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
+
+
+### Return type
+
+**GithubComFntelecomllcStudioBackendInternalModelsProxy**
+
+### Authorization
+
+No authorization required
 
 ### HTTP request headers
 
@@ -291,13 +316,17 @@ const { status, data } = await apiInstance.apiV2ProxiesProxyIdPut(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2ProxiesStatusGet**
-> apiV2ProxiesStatusGet()
+# **proxiesProxyIdTestPost**
+> { [key: string]: any; } proxiesProxyIdTestPost()
 
+Tests a proxy by ID
 
 ### Example
 
@@ -310,52 +339,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.apiV2ProxiesStatusGet();
-```
+let proxyId: string; //Proxy ID (default to undefined)
 
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Status list |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **testProxy**
-> testProxy()
-
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-let proxyId: string; // (default to undefined)
-
-const { status, data } = await apiInstance.testProxy(
+const { status, data } = await apiInstance.proxiesProxyIdTestPost(
     proxyId
 );
 ```
@@ -364,27 +350,75 @@ const { status, data } = await apiInstance.testProxy(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **proxyId** | [**string**] |  | defaults to undefined|
+| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**{ [key: string]: any; }**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: */*
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Test results |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxiesStatusGet**
+> { [key: string]: any; } proxiesStatusGet()
+
+Gets the status of all proxies
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration
+} from '@domainflow/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+const { status, data } = await apiInstance.proxiesStatusGet();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**{ [key: string]: any; }**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

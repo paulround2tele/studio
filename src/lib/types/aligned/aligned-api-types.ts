@@ -1,10 +1,10 @@
 /**
  * Aligned API Types
- * 
+ *
  * Request and response types that exactly match Go backend API contracts
  * All types use aligned models to ensure consistency
- * 
- * Generated: 2025-06-20
+ *
+ * Generated: 2025-06-30
  * Source of Truth: Go Backend API handlers
  */
 
@@ -24,12 +24,6 @@ import {
   
 } from './aligned-models';
 
-import {
-  UUID,
-  SafeBigInt,
-  ISODateString
-} from '../branded';
-
 // ============================================
 // AUTHENTICATION API TYPES
 // ============================================
@@ -43,7 +37,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   user: PublicUser;
   sessionId: string;
-  expiresAt: ISODateString;
+  expiresAt: string;
   requiresCaptcha: boolean;
   mfaRequired?: boolean;
 }
@@ -54,7 +48,7 @@ export interface RefreshRequest {
 
 export interface RefreshResponse {
   sessionId: string;
-  expiresAt: ISODateString;
+  expiresAt: string;
 }
 
 export interface LogoutRequest {
@@ -83,13 +77,13 @@ export interface ListUsersRequest {
   page?: number;
   pageSize?: number;
   search?: string;
-  roleId?: UUID;
+  roleId?: string;
   isActive?: boolean;
 }
 
 export interface ListUsersResponse {
   users: User[];
-  total: SafeBigInt;
+  total: number;
   page: number;
   pageSize: number;
 }
@@ -99,7 +93,7 @@ export interface CreateUserRequest {
   password: string;
   firstName: string;
   lastName: string;
-  roleIds?: UUID[];
+  roleIds?: string[];
   mustChangePassword?: boolean;
 }
 
@@ -112,7 +106,7 @@ export interface UpdateUserRequest {
   lastName?: string;
   email?: string;
   isActive?: boolean;
-  roleIds?: UUID[];
+  roleIds?: string[];
   mustChangePassword?: boolean;
 }
 
@@ -121,7 +115,7 @@ export interface UpdateUserResponse {
 }
 
 export interface DeleteUserRequest {
-  userId: UUID;
+  userId: string;
 }
 
 export interface DeleteUserResponse {
@@ -150,7 +144,7 @@ export interface ListCampaignsRequest {
   pageSize?: number;
   status?: CampaignStatus;
   campaignType?: CampaignType;
-  userId?: UUID;
+  userId?: string;
   search?: string;
   sortBy?: 'createdAt' | 'updatedAt' | 'name' | 'status';
   sortOrder?: 'asc' | 'desc';
@@ -158,13 +152,13 @@ export interface ListCampaignsRequest {
 
 export interface ListCampaignsResponse {
   campaigns: Campaign[];
-  total: SafeBigInt;
+  total: number;
   page: number;
   pageSize: number;
 }
 
 export interface GetCampaignRequest {
-  campaignId: UUID;
+  campaignId: string;
 }
 
 export interface GetCampaignResponse {
@@ -172,7 +166,7 @@ export interface GetCampaignResponse {
 }
 
 export interface UpdateCampaignRequest {
-  campaignId: UUID;
+  campaignId: string;
   name?: string;
   metadata?: Record<string, unknown>;
 }
@@ -182,7 +176,7 @@ export interface UpdateCampaignResponse {
 }
 
 export interface UpdateCampaignStatusRequest {
-  campaignId: UUID;
+  campaignId: string;
   status: CampaignStatus;
   reason?: string;
 }
@@ -192,7 +186,7 @@ export interface UpdateCampaignStatusResponse {
 }
 
 export interface DeleteCampaignRequest {
-  campaignId: UUID;
+  campaignId: string;
 }
 
 export interface DeleteCampaignResponse {
@@ -214,7 +208,7 @@ export interface ListPersonasRequest {
 
 export interface ListPersonasResponse {
   personas: Persona[];
-  total: SafeBigInt;
+  total: number;
   page: number;
   pageSize: number;
 }
@@ -232,7 +226,7 @@ export interface CreatePersonaResponse {
 }
 
 export interface UpdatePersonaRequest {
-  personaId: UUID;
+  personaId: string;
   personaType: PersonaType;  // Required for type-specific endpoint
   name?: string;
   description?: string;
@@ -245,7 +239,7 @@ export interface UpdatePersonaResponse {
 }
 
 export interface DeletePersonaRequest {
-  personaId: UUID;
+  personaId: string;
   personaType: PersonaType;  // Required for type-specific endpoint
 }
 
@@ -268,7 +262,7 @@ export interface ListProxiesRequest {
 
 export interface ListProxiesResponse {
   proxies: Proxy[];
-  total: SafeBigInt;
+  total: number;
   page: number;
   pageSize: number;
 }
@@ -290,7 +284,7 @@ export interface CreateProxyResponse {
 }
 
 export interface UpdateProxyRequest {
-  proxyId: UUID;
+  proxyId: string;
   name?: string;
   description?: string;
   address?: string;
@@ -307,7 +301,7 @@ export interface UpdateProxyResponse {
 }
 
 export interface DeleteProxyRequest {
-  proxyId: UUID;
+  proxyId: string;
 }
 
 export interface DeleteProxyResponse {
@@ -315,7 +309,7 @@ export interface DeleteProxyResponse {
 }
 
 export interface TestProxyRequest {
-  proxyId: UUID;
+  proxyId: string;
   targetUrl?: string;
 }
 
@@ -328,16 +322,16 @@ export interface TestProxyResponse {
 }
 
 export interface ProxyHealthCheckRequest {
-  proxyIds?: UUID[];  // If empty, check all proxies
+  proxyIds?: string[];  // If empty, check all proxies
 }
 
 export interface ProxyHealthCheckResponse {
   results: Array<{
-    proxyId: UUID;
+    proxyId: string;
     isHealthy: boolean;
     latencyMs?: number;
     error?: string;
-    checkedAt: ISODateString;
+    checkedAt: string;
   }>;
 }
 
@@ -361,7 +355,7 @@ export interface ExtractKeywordsResponse {
   metadata?: {
     title?: string;
     description?: string;
-    pageSize: SafeBigInt;
+    pageSize: number;
     extractionTime: number;
   };
 }
@@ -380,7 +374,7 @@ export interface StreamKeywordsRequest {
 // ============================================
 
 export interface ListGeneratedDomainsRequest {
-  campaignId: UUID;
+  campaignId: string;
   page?: number;
   pageSize?: number;
   isValid?: boolean;
@@ -389,24 +383,24 @@ export interface ListGeneratedDomainsRequest {
 
 export interface ListGeneratedDomainsResponse {
   domains: GeneratedDomain[];
-  total: SafeBigInt;
+  total: number;
   page: number;
   pageSize: number;
 }
 
 export interface ExportDomainsRequest {
-  campaignId: UUID;
+  campaignId: string;
   format: 'csv' | 'json' | 'txt';
   isValid?: boolean;
-  limit?: SafeBigInt;
-  offset?: SafeBigInt;
+  limit?: number;
+  offset?: number;
 }
 
 export interface ExportDomainsResponse {
   downloadUrl: string;
-  expiresAt: ISODateString;
-  totalDomains: SafeBigInt;
-  fileSize: SafeBigInt;
+  expiresAt: string;
+  totalDomains: number;
+  fileSize: number;
 }
 
 // ============================================
@@ -416,8 +410,8 @@ export interface ExportDomainsResponse {
 export interface HealthCheckResponse {
   status: 'healthy' | 'degraded' | 'unhealthy';
   version: string;
-  uptime: SafeBigInt;  // milliseconds
-  timestamp: ISODateString;
+  uptime: number;  // milliseconds
+  timestamp: string;
   checks: {
     database: boolean;
     redis?: boolean;
@@ -427,20 +421,20 @@ export interface HealthCheckResponse {
 
 export interface SystemStatsResponse {
   campaigns: {
-    total: SafeBigInt;
-    active: SafeBigInt;
-    completed: SafeBigInt;
-    failed: SafeBigInt;
+    total: number;
+    active: number;
+    completed: number;
+    failed: number;
   };
   domains: {
-    total: SafeBigInt;
-    validated: SafeBigInt;
-    invalid: SafeBigInt;
+    total: number;
+    validated: number;
+    invalid: number;
   };
   users: {
-    total: SafeBigInt;
-    active: SafeBigInt;
-    locked: SafeBigInt;
+    total: number;
+    active: number;
+    locked: number;
   };
   system: {
     cpuUsage: number;
@@ -460,7 +454,7 @@ export interface APIError {
   statusCode: number;
   details?: Record<string, unknown>;
   requestId?: string;
-  timestamp: ISODateString;
+  timestamp: string;
 }
 
 // ============================================
@@ -476,7 +470,7 @@ export interface PaginationRequest {
 
 export interface PaginationResponse<T> {
   data: T[];
-  total: SafeBigInt;
+  total: number;
   page: number;
   pageSize: number;
   totalPages: number;
@@ -512,17 +506,17 @@ export enum WebSocketMessageType {
 
 export interface WebSocketMessage<T = unknown> {
   type: WebSocketMessageType;
-  timestamp: ISODateString;
+  timestamp: string;
   data: T;
   correlationId?: string;
 }
 
 export interface CampaignProgressData {
-  campaignId: UUID;
-  totalItems: SafeBigInt;
-  processedItems: SafeBigInt;
-  successfulItems: SafeBigInt;
-  failedItems: SafeBigInt;
+  campaignId: string;
+  totalItems: number;
+  processedItems: number;
+  successfulItems: number;
+  failedItems: number;
   progressPercentage: number;
   estimatedTimeRemaining?: number;  // seconds
   currentRate?: number;  // items per second
@@ -537,9 +531,9 @@ export interface SystemNotificationData {
 }
 
 export interface ProxyStatusData {
-  proxyId: UUID;
+  proxyId: string;
   isHealthy: boolean;
   latencyMs?: number;
-  lastCheckedAt: ISODateString;
+  lastCheckedAt: string;
   error?: string;
 }

@@ -1,24 +1,87 @@
 // src/lib/utils/campaignTransforms.ts
-// Campaign data transformation utilities for UI compatibility
+// Campaign data transformation utilities for UI compatibility (OpenAPI Migration)
 
-import type { Campaign, CampaignViewModel, CampaignType, CampaignStatus, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
+import type { Campaign as OpenAPICampaign } from '@/lib/services/campaignService.production';
+import type { CampaignViewModel, CampaignType, CampaignStatus, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
+
+// Map OpenAPI Campaign status to frontend CampaignStatus
+function mapOpenAPICampaignStatus(status?: string): CampaignStatus {
+  switch (status) {
+    case 'pending':
+      return 'pending';
+    case 'queued':
+      return 'queued';
+    case 'running':
+      return 'running';
+    case 'pausing':
+      return 'pausing';
+    case 'paused':
+      return 'paused';
+    case 'completed':
+      return 'completed';
+    case 'failed':
+      return 'failed';
+    case 'cancelled':
+      return 'cancelled';
+    default:
+      return 'pending';
+  }
+}
+
+// Map OpenAPI Campaign type to frontend CampaignType
+function mapOpenAPICampaignType(type?: string): CampaignType {
+  switch (type) {
+    case 'domain_generation':
+      return 'domain_generation';
+    case 'dns_validation':
+      return 'dns_validation';
+    case 'http_keyword_validation':
+      return 'http_keyword_validation';
+    default:
+      return 'domain_generation';
+  }
+}
 
 /**
- * Transform raw Campaign API data to CampaignViewModel for UI consumption
+ * Transform OpenAPI Campaign to CampaignViewModel for UI consumption
  * Adds UI-specific computed properties and backwards compatibility fields
  */
-export function transformCampaignToViewModel(campaign: Campaign): CampaignViewModel {
+export function transformCampaignToViewModel(campaign: OpenAPICampaign): CampaignViewModel {
+  // Map OpenAPI types to frontend types
+  const campaignStatus = mapOpenAPICampaignStatus(campaign.status);
+  const campaignType = mapOpenAPICampaignType(campaign.campaignType);
+  
   // Map current backend status to UI phase and status concepts
-  const currentPhase = mapStatusToPhase(campaign.status, campaign.campaignType);
-  const phaseStatus = mapStatusToPhaseStatus(campaign.status);
+  const currentPhase = mapStatusToPhase(campaignStatus, campaignType);
+  const phaseStatus = mapStatusToPhaseStatus(campaignStatus);
   
   return {
-    ...campaign,
+    // Core fields - using OpenAPI types directly
+    id: campaign.id || '00000000-0000-0000-0000-000000000000',
+    name: campaign.name || '',
+    campaignType: campaignType,
+    status: campaignStatus,
+    userId: campaign.userId,
+    createdAt: campaign.createdAt || new Date().toISOString(),
+    updatedAt: campaign.updatedAt || new Date().toISOString(),
+    startedAt: campaign.startedAt,
+    completedAt: campaign.completedAt,
+    progressPercentage: campaign.progressPercentage || 0,
+    totalItems: campaign.totalItems,
+    processedItems: campaign.processedItems,
+    successfulItems: campaign.successfulItems,
+    failedItems: campaign.failedItems,
+    errorMessage: campaign.errorMessage,
+    metadata: {} as Record<string, never>, // OpenAPI uses empty object
+    estimatedCompletionAt: campaign.estimatedCompletionAt,
+    avgProcessingRate: campaign.avgProcessingRate,
+    lastHeartbeatAt: campaign.lastHeartbeatAt,
+    
     // UI compatibility fields
-    selectedType: campaign.campaignType,
+    selectedType: campaignType,
     currentPhase,
     phaseStatus,
-    progress: campaign.progressPercentage,
+    progress: campaign.progressPercentage || 0,
     
     // Initialize empty arrays for UI state (will be populated as needed)
     domains: [],
@@ -36,9 +99,9 @@ export function transformCampaignToViewModel(campaign: Campaign): CampaignViewMo
 }
 
 /**
- * Transform array of Campaign objects to CampaignViewModel array
+ * Transform array of OpenAPI Campaign objects to CampaignViewModel array
  */
-export function transformCampaignsToViewModels(campaigns: Campaign[]): CampaignViewModel[] {
+export function transformCampaignsToViewModels(campaigns: OpenAPICampaign[]): CampaignViewModel[] {
   return campaigns.map(transformCampaignToViewModel);
 }
 
@@ -112,50 +175,104 @@ function mapStatusToPhaseStatus(status: CampaignStatus): CampaignPhaseStatus {
  * Extract UI-specific fields from CampaignViewModel back to Campaign
  * Useful when sending data back to the API
  */
-export function extractCampaignFromViewModel(viewModel: CampaignViewModel): Campaign {
-  const {
-    // Remove UI-specific fields
-    selectedType: _selectedType,
-    currentPhase: _currentPhase,
-    phaseStatus: _phaseStatus,
-    progress: _progress,
-    domains: _domains,
-    dnsValidatedDomains: _dnsValidatedDomains,
-    httpValidatedDomains: _httpValidatedDomains,
-    extractedContent: _extractedContent,
-    leads: _leads,
-    domainSourceConfig: _domainSourceConfig,
-    description: _description,
-    ...coreFields
-  } = viewModel;
-  
-  return coreFields;
+export function extractCampaignFromViewModel(viewModel: CampaignViewModel): OpenAPICampaign {
+  return {
+    id: viewModel.id,
+    name: viewModel.name,
+    campaignType: viewModel.campaignType,
+    status: viewModel.status,
+    userId: viewModel.userId,
+    createdAt: viewModel.createdAt,
+    updatedAt: viewModel.updatedAt,
+    startedAt: viewModel.startedAt,
+    completedAt: viewModel.completedAt,
+    progressPercentage: viewModel.progressPercentage,
+    totalItems: viewModel.totalItems ? Number(viewModel.totalItems) : undefined,
+    processedItems: viewModel.processedItems ? Number(viewModel.processedItems) : undefined,
+    successfulItems: viewModel.successfulItems ? Number(viewModel.successfulItems) : undefined,
+    failedItems: viewModel.failedItems ? Number(viewModel.failedItems) : undefined,
+    errorMessage: viewModel.errorMessage,
+    metadata: viewModel.metadata as Record<string, never>,
+    estimatedCompletionAt: viewModel.estimatedCompletionAt,
+    avgProcessingRate: viewModel.avgProcessingRate,
+    lastHeartbeatAt: viewModel.lastHeartbeatAt
+  };
 }
 
 /**
  * Safely merge Campaign API updates into CampaignViewModel without overriding UI-specific fields
  * This preserves UI state while updating API data
  */
-export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: Partial<Campaign>): CampaignViewModel {
-  // Update the ViewModel with new API data while preserving UI-specific fields
-  const updatedViewModel = {
-    ...viewModel,
-    ...apiUpdate
-  };
+export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: Partial<OpenAPICampaign>): CampaignViewModel {
+  // Create a new ViewModel preserving existing UI-specific fields and updating with API data
+  const updatedViewModel: CampaignViewModel = { ...viewModel };
   
-  // Re-derive UI fields from updated API data if status changed
+  // Update core fields from API if provided (using OpenAPI types directly)
+  if (apiUpdate.name !== undefined) {
+    updatedViewModel.name = apiUpdate.name;
+  }
+  if (apiUpdate.progressPercentage !== undefined) {
+    updatedViewModel.progressPercentage = apiUpdate.progressPercentage;
+    updatedViewModel.progress = apiUpdate.progressPercentage;
+  }
+  if (apiUpdate.errorMessage !== undefined) {
+    updatedViewModel.errorMessage = apiUpdate.errorMessage;
+  }
+  if (apiUpdate.avgProcessingRate !== undefined) {
+    updatedViewModel.avgProcessingRate = apiUpdate.avgProcessingRate;
+  }
+  if (apiUpdate.metadata !== undefined) {
+    updatedViewModel.metadata = {} as Record<string, never>; // OpenAPI uses empty object
+  }
+  
+  // Update OpenAPI fields directly (no more branded types)
+  if (apiUpdate.id) {
+    updatedViewModel.id = apiUpdate.id;
+  }
+  if (apiUpdate.userId) {
+    updatedViewModel.userId = apiUpdate.userId;
+  }
+  if (apiUpdate.createdAt) {
+    updatedViewModel.createdAt = apiUpdate.createdAt;
+  }
+  if (apiUpdate.updatedAt) {
+    updatedViewModel.updatedAt = apiUpdate.updatedAt;
+  }
+  if (apiUpdate.startedAt) {
+    updatedViewModel.startedAt = apiUpdate.startedAt;
+  }
+  if (apiUpdate.completedAt) {
+    updatedViewModel.completedAt = apiUpdate.completedAt;
+  }
+  if (apiUpdate.estimatedCompletionAt) {
+    updatedViewModel.estimatedCompletionAt = apiUpdate.estimatedCompletionAt;
+  }
+  if (apiUpdate.lastHeartbeatAt) {
+    updatedViewModel.lastHeartbeatAt = apiUpdate.lastHeartbeatAt;
+  }
+  if (apiUpdate.totalItems !== undefined) {
+    updatedViewModel.totalItems = apiUpdate.totalItems;
+  }
+  if (apiUpdate.processedItems !== undefined) {
+    updatedViewModel.processedItems = apiUpdate.processedItems;
+  }
+  if (apiUpdate.successfulItems !== undefined) {
+    updatedViewModel.successfulItems = apiUpdate.successfulItems;
+  }
+  if (apiUpdate.failedItems !== undefined) {
+    updatedViewModel.failedItems = apiUpdate.failedItems;
+  }
+  
+  // Re-derive UI fields from updated API data if status or type changed
   if (apiUpdate.status || apiUpdate.campaignType) {
-    const newStatus = apiUpdate.status || viewModel.status;
-    const newType = apiUpdate.campaignType || viewModel.campaignType;
+    const newStatus = mapOpenAPICampaignStatus(apiUpdate.status) || viewModel.status;
+    const newType = mapOpenAPICampaignType(apiUpdate.campaignType) || viewModel.campaignType;
     
+    updatedViewModel.status = newStatus;
+    updatedViewModel.campaignType = newType;
     updatedViewModel.currentPhase = mapStatusToPhase(newStatus, newType);
     updatedViewModel.phaseStatus = mapStatusToPhaseStatus(newStatus);
     updatedViewModel.selectedType = newType;
-  }
-  
-  // Update progress alias
-  if (apiUpdate.progressPercentage !== undefined) {
-    updatedViewModel.progress = apiUpdate.progressPercentage;
   }
   
   return updatedViewModel;

@@ -1,23 +1,16 @@
 # ConfigApi
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiV2ConfigDnsGet**](#apiv2configdnsget) | **GET** /api/v2/config/dns | Get DNS config|
-|[**apiV2ConfigDnsPost**](#apiv2configdnspost) | **POST** /api/v2/config/dns | Update DNS config|
-|[**apiV2ConfigFeaturesGet**](#apiv2configfeaturesget) | **GET** /api/v2/config/features | Get feature flags|
-|[**apiV2ConfigFeaturesPost**](#apiv2configfeaturespost) | **POST** /api/v2/config/features | Update feature flags|
-|[**apiV2ConfigHttpGet**](#apiv2confighttpget) | **GET** /api/v2/config/http | Get HTTP config|
-|[**apiV2ConfigHttpPost**](#apiv2confighttppost) | **POST** /api/v2/config/http | Update HTTP config|
-|[**apiV2ConfigLoggingGet**](#apiv2configloggingget) | **GET** /api/v2/config/logging | Get logging config|
-|[**apiV2ConfigLoggingPost**](#apiv2configloggingpost) | **POST** /api/v2/config/logging | Update logging config|
-|[**apiV2ConfigServerGet**](#apiv2configserverget) | **GET** /api/v2/config/server | Get server config|
-|[**apiV2ConfigServerPut**](#apiv2configserverput) | **PUT** /api/v2/config/server | Update server config|
+|[**configFeaturesGet**](#configfeaturesget) | **GET** /config/features | Get feature flags|
+|[**configFeaturesPost**](#configfeaturespost) | **POST** /config/features | Update feature flags|
 
-# **apiV2ConfigDnsGet**
-> apiV2ConfigDnsGet()
+# **configFeaturesGet**
+> GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags configFeaturesGet()
 
+Returns current feature flag settings
 
 ### Example
 
@@ -30,7 +23,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ConfigApi(configuration);
 
-const { status, data } = await apiInstance.apiV2ConfigDnsGet();
+const { status, data } = await apiInstance.configFeaturesGet();
 ```
 
 ### Parameters
@@ -39,44 +32,46 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-void (empty response body)
+**GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Config |  -  |
+|**200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2ConfigDnsPost**
-> apiV2ConfigDnsPost(body)
+# **configFeaturesPost**
+> GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags configFeaturesPost(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags)
 
+Updates feature flag settings
 
 ### Example
 
 ```typescript
 import {
     ConfigApi,
-    Configuration
+    Configuration,
+    GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags
 } from '@domainflow/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigApi(configuration);
 
-let body: object; //
+let githubComFntelecomllcStudioBackendInternalConfigFeatureFlags: GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags; //Feature flags
 
-const { status, data } = await apiInstance.apiV2ConfigDnsPost(
-    body
+const { status, data } = await apiInstance.configFeaturesPost(
+    githubComFntelecomllcStudioBackendInternalConfigFeatureFlags
 );
 ```
 
@@ -84,399 +79,29 @@ const { status, data } = await apiInstance.apiV2ConfigDnsPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
+| **githubComFntelecomllcStudioBackendInternalConfigFeatureFlags** | **GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags**| Feature flags | |
 
 
 ### Return type
 
-void (empty response body)
+**GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+No authorization required
 
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ConfigFeaturesGet**
-> apiV2ConfigFeaturesGet()
-
-
-### Example
-
-```typescript
-import {
-    ConfigApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ConfigApi(configuration);
-
-const { status, data } = await apiInstance.apiV2ConfigFeaturesGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Config |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ConfigFeaturesPost**
-> apiV2ConfigFeaturesPost(body)
-
-
-### Example
-
-```typescript
-import {
-    ConfigApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ConfigApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.apiV2ConfigFeaturesPost(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Updated |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ConfigHttpGet**
-> apiV2ConfigHttpGet()
-
-
-### Example
-
-```typescript
-import {
-    ConfigApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ConfigApi(configuration);
-
-const { status, data } = await apiInstance.apiV2ConfigHttpGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Config |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ConfigHttpPost**
-> apiV2ConfigHttpPost(body)
-
-
-### Example
-
-```typescript
-import {
-    ConfigApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ConfigApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.apiV2ConfigHttpPost(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Updated |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ConfigLoggingGet**
-> apiV2ConfigLoggingGet()
-
-
-### Example
-
-```typescript
-import {
-    ConfigApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ConfigApi(configuration);
-
-const { status, data } = await apiInstance.apiV2ConfigLoggingGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Config |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ConfigLoggingPost**
-> apiV2ConfigLoggingPost(body)
-
-
-### Example
-
-```typescript
-import {
-    ConfigApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ConfigApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.apiV2ConfigLoggingPost(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Updated |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ConfigServerGet**
-> apiV2ConfigServerGet()
-
-
-### Example
-
-```typescript
-import {
-    ConfigApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ConfigApi(configuration);
-
-const { status, data } = await apiInstance.apiV2ConfigServerGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Config |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ConfigServerPut**
-> apiV2ConfigServerPut(body)
-
-
-### Example
-
-```typescript
-import {
-    ConfigApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ConfigApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.apiV2ConfigServerPut(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Updated |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

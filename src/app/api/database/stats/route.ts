@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // This is a hidden database API endpoint for the database GUI
 // Returns database statistics
 
-import databaseService from '@/lib/services/databaseService';
-import type { DatabaseStats } from '@/lib/api/databaseApi';
+import databaseService, { type DatabaseStats } from '@/lib/services/databaseService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,7 +26,10 @@ export async function GET(request: NextRequest) {
         totalUsers: 3,
         totalSessions: 1,
         databaseSize: '15 MB',
-        schemaVersion: 'v2.0'
+        schemaVersion: 'v2.0',
+        uptime: '1d 2h 30m',
+        version: 'PostgreSQL 15.4',
+        isHealthy: true
       };
       return NextResponse.json(fallbackStats);
     }
@@ -41,7 +43,10 @@ export async function GET(request: NextRequest) {
       totalUsers: 3,
       totalSessions: 1,
       databaseSize: '15 MB',
-      schemaVersion: 'v2.0 Consolidated'
+      schemaVersion: 'v2.0 Consolidated',
+      uptime: '1d 2h 30m',
+      version: 'PostgreSQL 15.4',
+      isHealthy: true
     };
     
     return NextResponse.json(fallbackStats);

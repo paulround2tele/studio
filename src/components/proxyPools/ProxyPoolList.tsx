@@ -34,7 +34,27 @@ export default function ProxyPoolList() {
 
   const loadPools = async () => {
     const resp = await listProxyPools();
-    if (resp.status === "success" && resp.data) setPools(resp.data);
+    if (resp.status === "success" && resp.data) {
+      // Convert generated types to frontend types
+      const convertedPools: ProxyPool[] = resp.data
+        .filter(pool => pool.id) // Filter out pools without id
+        .map(pool => ({
+          id: pool.id!,
+          name: pool.name || '',
+          description: pool.description || undefined,
+          isEnabled: pool.isEnabled ?? false,
+          poolStrategy: pool.poolStrategy || undefined,
+          healthCheckEnabled: pool.healthCheckEnabled ?? false,
+          healthCheckIntervalSeconds: pool.healthCheckIntervalSeconds,
+          maxRetries: pool.maxRetries,
+          timeoutSeconds: pool.timeoutSeconds,
+          createdAt: pool.createdAt || new Date().toISOString(),
+          updatedAt: pool.updatedAt || new Date().toISOString(),
+          // Omit proxies for now since table doesn't use them and they need complex conversion
+          proxies: undefined
+        }));
+      setPools(convertedPools);
+    }
   };
 
   useEffect(() => {

@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * DomainFlow API
- * DomainFlow API for domain generation, validation, and campaign management.  This API provides comprehensive functionality for: - Entity management (Personas, Proxies, Keyword Sets) - Configuration management - Ad-hoc keyword extraction - V2 Stateful Campaign Management system - Real-time communication via WebSockets - Comprehensive authentication  **Authentication:** The API uses session-based authentication with HTTP-only cookies:  1. **Session-Based Authentication**: Secure HTTP-only cookie-based sessions with session fingerprinting    - Login via `POST /api/v2/auth/login`    - Session cookies: httpOnly, secure, sameSite=strict    - X-Requested-With header required for CSRF protection on state-changing operations    - Automatic session cleanup and concurrent session management  All RESTful API endpoints under `/api/v2` (excluding `GET /ping`) require valid session authentication.  For WebSocket connections, authentication is provided via session cookies (automatically included by browser). 
+ * DomainFlow API for domain generation, validation, and campaign management.
  *
  * The version of the OpenAPI document: 2.0.0
  * Contact: support@domainflow.com
@@ -21,6 +21,8 @@ import globalAxios from 'axios';
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
+// @ts-ignore
+import type { GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags } from '../models';
 /**
  * ConfigApi - axios parameter creator
  * @export
@@ -28,83 +30,13 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 export const ConfigApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * 
-         * @summary Get DNS config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigDnsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/dns`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Update DNS config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigDnsPost: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2ConfigDnsPost', 'body', body)
-            const localVarPath = `/api/v2/config/dns`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
+         * Returns current feature flag settings
          * @summary Get feature flags
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ConfigFeaturesGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/features`;
+        configFeaturesGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/config/features`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -115,8 +47,6 @@ export const ConfigApiAxiosParamCreator = function (configuration?: Configuratio
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
 
 
     
@@ -130,16 +60,16 @@ export const ConfigApiAxiosParamCreator = function (configuration?: Configuratio
             };
         },
         /**
-         * 
+         * Updates feature flag settings
          * @summary Update feature flags
-         * @param {object} body 
+         * @param {GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags} githubComFntelecomllcStudioBackendInternalConfigFeatureFlags Feature flags
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ConfigFeaturesPost: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2ConfigFeaturesPost', 'body', body)
-            const localVarPath = `/api/v2/config/features`;
+        configFeaturesPost: async (githubComFntelecomllcStudioBackendInternalConfigFeatureFlags: GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'githubComFntelecomllcStudioBackendInternalConfigFeatureFlags' is not null or undefined
+            assertParamExists('configFeaturesPost', 'githubComFntelecomllcStudioBackendInternalConfigFeatureFlags', githubComFntelecomllcStudioBackendInternalConfigFeatureFlags)
+            const localVarPath = `/config/features`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -151,8 +81,6 @@ export const ConfigApiAxiosParamCreator = function (configuration?: Configuratio
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication SessionAuth required
-
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -160,217 +88,7 @@ export const ConfigApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Get HTTP config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigHttpGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/http`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Update HTTP config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigHttpPost: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2ConfigHttpPost', 'body', body)
-            const localVarPath = `/api/v2/config/http`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Get logging config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigLoggingGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/logging`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Update logging config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigLoggingPost: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2ConfigLoggingPost', 'body', body)
-            const localVarPath = `/api/v2/config/logging`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Get server config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigServerGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/server`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary Update server config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigServerPut: async (body: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('apiV2ConfigServerPut', 'body', body)
-            const localVarPath = `/api/v2/config/server`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication SessionAuth required
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -388,128 +106,28 @@ export const ConfigApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = ConfigApiAxiosParamCreator(configuration)
     return {
         /**
-         * 
-         * @summary Get DNS config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ConfigDnsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigDnsGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigDnsGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Update DNS config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ConfigDnsPost(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigDnsPost(body, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigDnsPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
+         * Returns current feature flag settings
          * @summary Get feature flags
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2ConfigFeaturesGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigFeaturesGet(options);
+        async configFeaturesGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configFeaturesGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigFeaturesGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ConfigApi.configFeaturesGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Updates feature flag settings
          * @summary Update feature flags
-         * @param {object} body 
+         * @param {GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags} githubComFntelecomllcStudioBackendInternalConfigFeatureFlags Feature flags
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2ConfigFeaturesPost(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigFeaturesPost(body, options);
+        async configFeaturesPost(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags: GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configFeaturesPost(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigFeaturesPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Get HTTP config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ConfigHttpGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigHttpGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigHttpGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Update HTTP config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ConfigHttpPost(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigHttpPost(body, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigHttpPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Get logging config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ConfigLoggingGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigLoggingGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigLoggingGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Update logging config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ConfigLoggingPost(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigLoggingPost(body, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigLoggingPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Get server config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ConfigServerGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigServerGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigServerGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary Update server config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiV2ConfigServerPut(body: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2ConfigServerPut(body, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ConfigApi.apiV2ConfigServerPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ConfigApi.configFeaturesPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -523,99 +141,23 @@ export const ConfigApiFactory = function (configuration?: Configuration, basePat
     const localVarFp = ConfigApiFp(configuration)
     return {
         /**
-         * 
-         * @summary Get DNS config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigDnsGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigDnsGet(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Update DNS config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigDnsPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigDnsPost(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
+         * Returns current feature flag settings
          * @summary Get feature flags
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ConfigFeaturesGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigFeaturesGet(options).then((request) => request(axios, basePath));
+        configFeaturesGet(options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags> {
+            return localVarFp.configFeaturesGet(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Updates feature flag settings
          * @summary Update feature flags
-         * @param {object} body 
+         * @param {GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags} githubComFntelecomllcStudioBackendInternalConfigFeatureFlags Feature flags
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2ConfigFeaturesPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigFeaturesPost(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Get HTTP config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigHttpGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigHttpGet(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Update HTTP config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigHttpPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigHttpPost(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Get logging config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigLoggingGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigLoggingGet(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Update logging config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigLoggingPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigLoggingPost(body, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Get server config
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigServerGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigServerGet(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary Update server config
-         * @param {object} body 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiV2ConfigServerPut(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.apiV2ConfigServerPut(body, options).then((request) => request(axios, basePath));
+        configFeaturesPost(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags: GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags> {
+            return localVarFp.configFeaturesPost(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -627,99 +169,23 @@ export const ConfigApiFactory = function (configuration?: Configuration, basePat
  */
 export interface ConfigApiInterface {
     /**
-     * 
-     * @summary Get DNS config
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApiInterface
-     */
-    apiV2ConfigDnsGet(options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
-     * @summary Update DNS config
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApiInterface
-     */
-    apiV2ConfigDnsPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
+     * Returns current feature flag settings
      * @summary Get feature flags
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ConfigApiInterface
      */
-    apiV2ConfigFeaturesGet(options?: RawAxiosRequestConfig): AxiosPromise<void>;
+    configFeaturesGet(options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags>;
 
     /**
-     * 
+     * Updates feature flag settings
      * @summary Update feature flags
-     * @param {object} body 
+     * @param {GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags} githubComFntelecomllcStudioBackendInternalConfigFeatureFlags Feature flags
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ConfigApiInterface
      */
-    apiV2ConfigFeaturesPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
-     * @summary Get HTTP config
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApiInterface
-     */
-    apiV2ConfigHttpGet(options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
-     * @summary Update HTTP config
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApiInterface
-     */
-    apiV2ConfigHttpPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
-     * @summary Get logging config
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApiInterface
-     */
-    apiV2ConfigLoggingGet(options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
-     * @summary Update logging config
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApiInterface
-     */
-    apiV2ConfigLoggingPost(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
-     * @summary Get server config
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApiInterface
-     */
-    apiV2ConfigServerGet(options?: RawAxiosRequestConfig): AxiosPromise<void>;
-
-    /**
-     * 
-     * @summary Update server config
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApiInterface
-     */
-    apiV2ConfigServerPut(body: object, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+    configFeaturesPost(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags: GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags>;
 
 }
 
@@ -731,118 +197,26 @@ export interface ConfigApiInterface {
  */
 export class ConfigApi extends BaseAPI implements ConfigApiInterface {
     /**
-     * 
-     * @summary Get DNS config
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApi
-     */
-    public apiV2ConfigDnsGet(options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigDnsGet(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Update DNS config
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApi
-     */
-    public apiV2ConfigDnsPost(body: object, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigDnsPost(body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
+     * Returns current feature flag settings
      * @summary Get feature flags
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ConfigApi
      */
-    public apiV2ConfigFeaturesGet(options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigFeaturesGet(options).then((request) => request(this.axios, this.basePath));
+    public configFeaturesGet(options?: RawAxiosRequestConfig) {
+        return ConfigApiFp(this.configuration).configFeaturesGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
+     * Updates feature flag settings
      * @summary Update feature flags
-     * @param {object} body 
+     * @param {GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags} githubComFntelecomllcStudioBackendInternalConfigFeatureFlags Feature flags
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ConfigApi
      */
-    public apiV2ConfigFeaturesPost(body: object, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigFeaturesPost(body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Get HTTP config
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApi
-     */
-    public apiV2ConfigHttpGet(options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigHttpGet(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Update HTTP config
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApi
-     */
-    public apiV2ConfigHttpPost(body: object, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigHttpPost(body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Get logging config
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApi
-     */
-    public apiV2ConfigLoggingGet(options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigLoggingGet(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Update logging config
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApi
-     */
-    public apiV2ConfigLoggingPost(body: object, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigLoggingPost(body, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Get server config
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApi
-     */
-    public apiV2ConfigServerGet(options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigServerGet(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary Update server config
-     * @param {object} body 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ConfigApi
-     */
-    public apiV2ConfigServerPut(body: object, options?: RawAxiosRequestConfig) {
-        return ConfigApiFp(this.configuration).apiV2ConfigServerPut(body, options).then((request) => request(this.axios, this.basePath));
+    public configFeaturesPost(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags: GithubComFntelecomllcStudioBackendInternalConfigFeatureFlags, options?: RawAxiosRequestConfig) {
+        return ConfigApiFp(this.configuration).configFeaturesPost(githubComFntelecomllcStudioBackendInternalConfigFeatureFlags, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -9,12 +9,6 @@ import (
 )
 
 // GetFeatureFlagsGin returns current feature flag settings.
-// @Summary Get feature flags
-// @Description Returns current feature flag settings
-// @Tags Config
-// @Produce json
-// @Success 200 {object} config.FeatureFlags
-// @Router /config/features [get]
 func (h *APIHandler) GetFeatureFlagsGin(c *gin.Context) {
 	h.configMutex.RLock()
 	flags := h.Config.Features
@@ -23,16 +17,6 @@ func (h *APIHandler) GetFeatureFlagsGin(c *gin.Context) {
 }
 
 // UpdateFeatureFlagsGin updates feature flag settings.
-// @Summary Update feature flags
-// @Description Updates feature flag settings
-// @Tags Config
-// @Accept json
-// @Produce json
-// @Param flags body config.FeatureFlags true "Feature flags"
-// @Success 200 {object} config.FeatureFlags
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /config/features [post]
 func (h *APIHandler) UpdateFeatureFlagsGin(c *gin.Context) {
 	var req config.FeatureFlags
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -1,57 +1,55 @@
 // Enhanced WebSocket Service - Real-time updates implementation
 // Handles campaign progress, proxy status, and system notifications
 
-import { UUID, ISODateString, SafeBigInt, createSafeBigInt, isSafeBigInt } from '@/lib/types/branded';
-
 export interface WebSocketMessage {
-  id?: UUID;
-  timestamp?: ISODateString;
+  id?: string;
+  timestamp?: string;
   type: string;
   data: Record<string, unknown>;
   message?: string;
-  campaignId?: UUID;
+  campaignId?: string;
   phase?: string;
   status?: string;
   progress?: number;
   sequenceNumber?: number;
   
   // Real-time update specific fields
-  proxyId?: UUID;
+  proxyId?: string;
   proxyStatus?: string;
-  personaId?: UUID;
+  personaId?: string;
   personaStatus?: string;
-  validationsProcessed?: SafeBigInt;  // CRITICAL FIX: Use SafeBigInt for int64
-  domainsGenerated?: SafeBigInt;      // CRITICAL FIX: Use SafeBigInt for int64
+  validationsProcessed?: number;  // Use number for OpenAPI compatibility
+  domainsGenerated?: number;      // Use number for OpenAPI compatibility
   estimatedTimeRemaining?: string;
   error?: string;
 }
 
 export interface CampaignProgressMessage extends WebSocketMessage {
   type: 'campaign_progress' | 'progress' | 'domain_generated' | 'domain_generation_progress' | 'validation_progress' | 'phase_complete' | 'error' | 'subscription_confirmed' | 'validation_complete' | 'system_notification';
-  campaignId?: UUID;
+  campaignId?: string;
   data: {
-    campaignId?: UUID;
+    campaignId?: string;
     progress?: number;
     phase?: string;
     status?: string;
     domains?: string[];
     validationResults?: Record<string, unknown>[];
     error?: string;
-    domainsGenerated?: SafeBigInt;      // CRITICAL FIX: Use SafeBigInt for int64
-    validationsProcessed?: SafeBigInt;   // CRITICAL FIX: Use SafeBigInt for int64
-    totalItems?: SafeBigInt;             // CRITICAL FIX: Use SafeBigInt for int64
-    processedItems?: SafeBigInt;         // CRITICAL FIX: Use SafeBigInt for int64
-    successfulItems?: SafeBigInt;        // CRITICAL FIX: Use SafeBigInt for int64
-    failedItems?: SafeBigInt;            // CRITICAL FIX: Use SafeBigInt for int64
+    domainsGenerated?: number;      // Use number for OpenAPI compatibility
+    validationsProcessed?: number;   // Use number for OpenAPI compatibility
+    totalItems?: number;             // Use number for OpenAPI compatibility
+    processedItems?: number;         // Use number for OpenAPI compatibility
+    successfulItems?: number;        // Use number for OpenAPI compatibility
+    failedItems?: number;            // Use number for OpenAPI compatibility
     [key: string]: unknown;
   };
 }
 
 export interface ProxyStatusMessage extends WebSocketMessage {
   type: 'proxy_status_update';
-  proxyId: UUID;
+  proxyId: string;
   proxyStatus: string;
-  campaignId?: UUID;
+  campaignId?: string;
 }
 
 export interface SystemNotificationMessage extends WebSocketMessage {
@@ -174,18 +172,18 @@ export class WebSocketService {
   }
 
   /**
-   * CRITICAL FIX CV-009: Parse and transform WebSocket messages to handle int64 fields
-   * Converts numeric fields that represent int64 values to SafeBigInt
+   * Parse and transform WebSocket messages - simplified for OpenAPI compatibility
+   * Converts numeric fields to numbers (no longer using SafeBigInt)
    */
   private parseAndTransformMessage(rawData: string): WebSocketMessage {
     const parsed = JSON.parse(rawData);
     
-    // Transform int64 fields to SafeBigInt
+    // Transform int64 fields to numbers
     if (parsed.validationsProcessed !== undefined) {
-      parsed.validationsProcessed = createSafeBigInt(parsed.validationsProcessed);
+      parsed.validationsProcessed = Number(parsed.validationsProcessed);
     }
     if (parsed.domainsGenerated !== undefined) {
-      parsed.domainsGenerated = createSafeBigInt(parsed.domainsGenerated);
+      parsed.domainsGenerated = Number(parsed.domainsGenerated);
     }
     
     // Transform data object fields if present
@@ -204,7 +202,7 @@ export class WebSocketService {
       
       int64Fields.forEach(field => {
         if (data[field] !== undefined) {
-          data[field] = createSafeBigInt(data[field] as string | number);
+          data[field] = Number(data[field]);
         }
       });
     }
@@ -364,33 +362,11 @@ export class WebSocketService {
   }
 
   /**
-   * CRITICAL FIX CV-009: Serialize SafeBigInt fields before sending
+   * Serialize message for transmission - simplified for OpenAPI compatibility
    */
   private serializeMessage(message: WebSocketMessage): string {
-    const serializable = { ...message };
-    
-    // Convert SafeBigInt fields to strings for transmission
-    if (serializable.validationsProcessed !== undefined && isSafeBigInt(serializable.validationsProcessed)) {
-      (serializable as Record<string, unknown>).validationsProcessed = serializable.validationsProcessed.toString();
-    }
-    if (serializable.domainsGenerated !== undefined && isSafeBigInt(serializable.domainsGenerated)) {
-      (serializable as Record<string, unknown>).domainsGenerated = serializable.domainsGenerated.toString();
-    }
-    
-    // Handle data object
-    if (serializable.data && typeof serializable.data === 'object') {
-      const data = { ...serializable.data };
-      
-      Object.keys(data).forEach(key => {
-        if (data[key] !== undefined && isSafeBigInt(data[key])) {
-          data[key] = (data[key] as SafeBigInt).toString();
-        }
-      });
-      
-      serializable.data = data;
-    }
-    
-    return JSON.stringify(serializable);
+    // No special serialization needed since we're using plain numbers
+    return JSON.stringify(message);
   }
 
   send(message: WebSocketMessage): void {
@@ -413,7 +389,7 @@ export class WebSocketService {
       try {
         const messageWithCampaign = {
           ...message,
-          campaignId: campaignId as UUID
+          campaignId: campaignId
         };
         const serialized = this.serializeMessage(messageWithCampaign);
         this.ws.send(serialized);

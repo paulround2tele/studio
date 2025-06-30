@@ -55,7 +55,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
   const statusInfo = getStatusBadgeInfo(persona.status as PersonaStatus);
 
   const handleDelete = () => {
-    onDelete(persona.id, persona.personaType);
+    if (persona.id && persona.personaType) onDelete(persona.id, persona.personaType);
   };
 
   const handleExport = () => {
@@ -76,7 +76,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${persona.name.replace(/\s+/g, '_')}_persona.json`;
+      a.download = `${(persona.name || 'persona').replace(/\s+/g, '_')}_persona.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -194,16 +194,16 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
                 <FilePenLine className="mr-2 h-4 w-4" /> Edit
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onTest(persona.id, persona.personaType)} disabled={isActionDisabled || persona.status === 'Testing'}>
+            <DropdownMenuItem onClick={() => persona.id && persona.personaType && onTest(persona.id, persona.personaType)} disabled={isActionDisabled || persona.status === 'Testing' || !persona.id || !persona.personaType}>
               {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TestTubeDiagonal className="mr-2 h-4 w-4" />} Test Persona
             </DropdownMenuItem>
             {persona.status !== 'Disabled' && (
-                <DropdownMenuItem onClick={() => onToggleStatus(persona.id, persona.personaType, 'Disabled')} disabled={isActionDisabled || persona.status === 'Testing'}>
+                <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType, 'Disabled')} disabled={isActionDisabled || persona.status === 'Testing' || !persona.id || !persona.personaType}>
                    {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PowerOff className="mr-2 h-4 w-4" />} Disable Persona
                 </DropdownMenuItem>
             )}
             {persona.status === 'Disabled' && (
-                 <DropdownMenuItem onClick={() => onToggleStatus(persona.id, persona.personaType, 'Active')} disabled={isActionDisabled}>
+                 <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType, 'Active')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
                     {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Power className="mr-2 h-4 w-4" />} Enable Persona
                 </DropdownMenuItem>
             )}

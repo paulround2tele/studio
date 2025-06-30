@@ -70,16 +70,6 @@ func toKeywordSetResponse(ks *models.KeywordSet, rules []models.KeywordRule) Key
 // --- Gin Handlers for KeywordSets ---
 
 // CreateKeywordSetGin creates a new keyword set.
-// @Summary Create keyword set
-// @Description Creates a new keyword set
-// @Tags KeywordSets
-// @Accept json
-// @Produce json
-// @Param set body CreateKeywordSetRequest true "Keyword set"
-// @Success 201 {object} KeywordSetResponse
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /keywords/sets [post]
 func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 	var req CreateKeywordSetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -229,16 +219,6 @@ func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 }
 
 // ListKeywordSetsGin lists keyword sets.
-// @Summary List keyword sets
-// @Description Lists all keyword sets
-// @Tags KeywordSets
-// @Produce json
-// @Param limit query int false "Limit"
-// @Param offset query int false "Offset"
-// @Param isEnabled query bool false "Is enabled"
-// @Success 200 {array} KeywordSetResponse
-// @Failure 500 {object} map[string]string
-// @Router /keywords/sets [get]
 func (h *APIHandler) ListKeywordSetsGin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -285,16 +265,6 @@ func (h *APIHandler) ListKeywordSetsGin(c *gin.Context) {
 }
 
 // GetKeywordSetGin gets a keyword set by ID.
-// @Summary Get keyword set
-// @Description Gets a keyword set by ID
-// @Tags KeywordSets
-// @Produce json
-// @Param setId path string true "Set ID"
-// @Success 200 {object} KeywordSetResponse
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /keywords/sets/{setId} [get]
 func (h *APIHandler) GetKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, err := uuid.Parse(setIDStr)
@@ -325,18 +295,6 @@ func (h *APIHandler) GetKeywordSetGin(c *gin.Context) {
 }
 
 // UpdateKeywordSetGin updates a keyword set.
-// @Summary Update keyword set
-// @Description Updates a keyword set by ID
-// @Tags KeywordSets
-// @Accept json
-// @Produce json
-// @Param setId path string true "Set ID"
-// @Param set body UpdateKeywordSetRequest true "Keyword set"
-// @Success 200 {object} KeywordSetResponse
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /keywords/sets/{setId} [put]
 func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, errParam := uuid.Parse(setIDStr)
@@ -502,15 +460,6 @@ func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 }
 
 // DeleteKeywordSetGin deletes a keyword set.
-// @Summary Delete keyword set
-// @Description Deletes a keyword set by ID
-// @Tags KeywordSets
-// @Param setId path string true "Set ID"
-// @Success 200 {object} map[string]bool
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /keywords/sets/{setId} [delete]
 func (h *APIHandler) DeleteKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, errParam := uuid.Parse(setIDStr)

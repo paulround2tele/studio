@@ -66,6 +66,12 @@ export function LoginForm({
     setIsLoading(true);
     setError(null);
 
+    // DIAGNOSTIC LOGGING
+    console.log('LOGIN DIAGNOSTIC - Form submission started');
+    console.log('LOGIN DIAGNOSTIC - Email:', formData.email);
+    console.log('LOGIN DIAGNOSTIC - Password length:', formData.password.length);
+    console.log('LOGIN DIAGNOSTIC - Remember me:', formData.rememberMe);
+
     try {
       const result = await login({
         email: formData.email,
@@ -73,11 +79,20 @@ export function LoginForm({
         rememberMe: formData.rememberMe
       });
 
+      console.log('LOGIN DIAGNOSTIC - Login result:', {
+        success: result.success,
+        error: result.error,
+        hasUser: !!result.user
+      });
+
       if (!result.success) {
+        console.log('LOGIN DIAGNOSTIC - Login failed with error:', result.error);
         setError(result.error || 'Login failed. Please try again.');
+      } else {
+        console.log('LOGIN DIAGNOSTIC - Login succeeded, user:', result.user);
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('LOGIN DIAGNOSTIC - Exception during login:', error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
