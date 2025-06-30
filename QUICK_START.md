@@ -87,27 +87,24 @@ The deployment script will:
 - ✅ Start frontend server on port 3000
 - ✅ Run database migrations automatically
 
-## Step 5: Access with Default Admin User
+## Step 5: Create Your User Account
 
-After deployment, a default admin user is automatically created during database migration:
+After deployment, you can create a user account:
 
-**Default Admin Credentials:**
-- **Email**: `admin@domainflow.local`
-- **Password**: `TempPassword123!`
-
-> ⚠️ **Security Note**: Change this password immediately after first login. The system will prompt you to change the password on first use.
-
-**Alternative: Create Custom Admin User**
-
-If you prefer to create your own admin user instead:
-
+**Option 1: Use the debug tool**
 ```bash
-# Use the debug tool to create a custom admin user
+# Use the debug tool to create a user account
 cd backend
 ./debug_auth_service
 
-# Follow the prompts to create your admin account
+# Follow the prompts to create your account
 ```
+
+**Option 2: Register via frontend**
+- Navigate to http://localhost:3000
+- Click "Sign Up" and create your account
+
+> 💡 **Note**: DomainFlow uses simple session-based authentication. All authenticated users have the same access level.
 
 ## Step 6: Access DomainFlow
 
@@ -118,7 +115,7 @@ Open your browser and navigate to:
 
 ## Step 7: Login & Explore
 
-1. **Login** with your admin credentials
+1. **Login** with your credentials
 2. **Create a Campaign** to test domain analysis
 3. **Configure Personas** for DNS/HTTP analysis
 4. **Monitor Real-time Progress** via WebSocket updates
@@ -129,7 +126,6 @@ Open your browser and navigate to:
 
 - **Create Campaigns**: Domain analysis with keyword generation
 - **Configure Analysis**: Set up DNS and HTTP personas  
-- **Manage Users**: Add team members with role-based access
 - **Monitor Progress**: Real-time updates and progress tracking
 - **View Results**: Comprehensive domain analysis results
 

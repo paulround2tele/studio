@@ -32,15 +32,15 @@ createdb domainflow_dev
 # Deploy schema
 psql domainflow_dev < backend/database/schema.sql
 
-# Create test user
+# Create test user (session-based authentication)
 psql domainflow_dev -c "
-INSERT INTO users (id, username, email, password_hash, role, is_active) 
+INSERT INTO auth.users (id, email, password_hash, first_name, last_name, is_active) 
 VALUES (
   gen_random_uuid(), 
-  'admin', 
-  'admin@domainflow.local', 
+  'test@domainflow.local', 
   '\$2a\$12\$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYb0sUXM1p8z1pe', 
-  'admin', 
+  'Test', 
+  'User',
   true
 );
 "

@@ -328,6 +328,97 @@ BEGIN
 
 
 --
+-- Name: validate_session_security(character varying, inet, text, boolean, boolean); Type: FUNCTION; Schema: auth; Owner: -
+--
+
+CREATE FUNCTION auth.validate_session_security(p_session_id character varying, p_client_ip inet, p_user_agent text, p_require_ip_match boolean DEFAULT false, p_require_ua_match boolean DEFAULT false) RETURNS TABLE(is_valid boolean, user_id uuid, security_flags jsonb, permissions text[], roles text[])
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    session_record RECORD;
+    current_fingerprint VARCHAR(255);
+    security_issues JSONB := '{}'::jsonb;
+BEGIN
+    -- Get session record with user permissions and roles
+    SELECT s.*, array_agg(DISTINCT p.name) as user_permissions, array_agg(DISTINCT r.name) as user_roles
+    INTO session_record
+    FROM auth.sessions s
+    JOIN auth.users u ON s.user_id = u.id
+    LEFT JOIN auth.user_roles ur ON u.id = ur.user_id
+    LEFT JOIN auth.roles r ON ur.role_id = r.id
+    LEFT JOIN auth.role_permissions rp ON r.id = rp.role_id
+    LEFT JOIN auth.permissions p ON rp.permission_id = p.id
+    WHERE s.id = p_session_id
+    AND s.is_active = TRUE
+    AND s.expires_at > NOW()
+    AND u.is_active = TRUE
+    AND u.is_locked = FALSE
+    GROUP BY s.id, s.user_id, s.ip_address, s.user_agent, s.session_fingerprint,
+             s.browser_fingerprint, s.user_agent_hash, s.is_active, s.expires_at,
+             s.last_activity_at, s.created_at, s.screen_resolution;
+    
+    -- Check if session exists and is valid
+    IF NOT FOUND THEN
+        RETURN QUERY SELECT FALSE, NULL::UUID, '{"error": "session_not_found"}'::jsonb, NULL::TEXT[], NULL::TEXT[];
+        RETURN;
+    END IF;
+    
+    -- Generate current fingerprint for comparison
+    IF p_client_ip IS NOT NULL AND p_user_agent IS NOT NULL THEN
+        current_fingerprint := encode(
+            digest(
+                COALESCE(host(p_client_ip), '') || '|' ||
+                COALESCE(p_user_agent, ''),
+                'sha256'
+            ),
+            'hex'
+        );
+    END IF;
+    
+    -- Security validations
+    IF p_require_ip_match AND session_record.ip_address != p_client_ip THEN
+        security_issues := security_issues || '{"ip_mismatch": true}'::jsonb;
+    END IF;
+    
+    IF p_require_ua_match AND session_record.user_agent_hash != generate_user_agent_hash(p_user_agent) THEN
+        security_issues := security_issues || '{"user_agent_mismatch": true}'::jsonb;
+    END IF;
+    
+    -- Check for session fingerprint changes
+    IF session_record.session_fingerprint IS NOT NULL AND current_fingerprint IS NOT NULL
+       AND session_record.session_fingerprint != current_fingerprint THEN
+        security_issues := security_issues || '{"fingerprint_mismatch": true}'::jsonb;
+    END IF;
+    
+    -- Check for idle timeout (30 minutes default)
+    IF session_record.last_activity_at < (NOW() - INTERVAL '30 minutes') THEN
+        security_issues := security_issues || '{"idle_timeout": true}'::jsonb;
+    END IF;
+    
+    -- Return validation result
+    IF jsonb_object_keys(security_issues) IS NOT NULL THEN
+        RETURN QUERY SELECT FALSE, session_record.user_id, security_issues, NULL::TEXT[], NULL::TEXT[];
+    ELSE
+        RETURN QUERY SELECT TRUE, session_record.user_id, '{}'::jsonb,
+                           session_record.user_permissions, session_record.user_roles;
+    END IF;
+    
+    -- Update last activity
+    UPDATE auth.sessions
+    SET last_activity_at = NOW()
+    WHERE id = p_session_id;
+   END;
+   $$;
+
+
+--
+-- Name: FUNCTION validate_session_security(p_session_id character varying, p_client_ip inet, p_user_agent text, p_require_ip_match boolean, p_require_ua_match boolean); Type: COMMENT; Schema: auth; Owner: -
+--
+
+COMMENT ON FUNCTION auth.validate_session_security(p_session_id character varying, p_client_ip inet, p_user_agent text, p_require_ip_match boolean, p_require_ua_match boolean) IS 'Validates session security with optional IP and user agent matching';
+
+
+--
 -- Name: acquire_config_lock(text, text, text, text, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -728,6 +819,93 @@ BEGIN
             NOW()
         );
     END IF;
+END;
+$$;
+
+
+--
+-- Name: check_endpoint_authorization(character varying, character varying, text[], character varying, boolean, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_endpoint_authorization(p_endpoint_pattern character varying, p_http_method character varying, p_user_permissions text[], p_user_role character varying, p_is_resource_owner boolean DEFAULT false, p_has_campaign_access boolean DEFAULT false) RETURNS jsonb
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    endpoint_config RECORD;
+    authorization_result JSONB;
+    missing_permissions TEXT[] := '{}'::TEXT[];
+    has_required_permissions BOOLEAN := true;
+    perm TEXT;
+BEGIN
+    -- Get endpoint configuration
+    SELECT * INTO endpoint_config
+    FROM api_endpoint_permissions
+    WHERE endpoint_pattern = p_endpoint_pattern 
+      AND http_method = p_http_method;
+    
+    IF NOT FOUND THEN
+        -- Default deny for unknown endpoints
+        RETURN jsonb_build_object(
+            'authorized', false,
+            'reason', 'unknown_endpoint',
+            'endpoint_pattern', p_endpoint_pattern,
+            'http_method', p_http_method
+        );
+    END IF;
+    
+    -- Check role requirement
+    IF endpoint_config.minimum_role = 'admin' AND p_user_role != 'admin' THEN
+        RETURN jsonb_build_object(
+            'authorized', false,
+            'reason', 'insufficient_role',
+            'required_role', endpoint_config.minimum_role,
+            'user_role', p_user_role
+        );
+    END IF;
+    
+    -- Check ownership requirement
+    IF endpoint_config.requires_ownership AND NOT p_is_resource_owner THEN
+        RETURN jsonb_build_object(
+            'authorized', false,
+            'reason', 'ownership_required',
+            'resource_type', endpoint_config.resource_type
+        );
+    END IF;
+    
+    -- Check campaign access requirement
+    IF endpoint_config.requires_campaign_access AND NOT p_has_campaign_access THEN
+        RETURN jsonb_build_object(
+            'authorized', false,
+            'reason', 'campaign_access_required',
+            'resource_type', endpoint_config.resource_type
+        );
+    END IF;
+    
+    -- Check required permissions
+    FOREACH perm IN ARRAY endpoint_config.required_permissions
+    LOOP
+        IF NOT (perm = ANY(p_user_permissions)) THEN
+            missing_permissions := array_append(missing_permissions, perm);
+            has_required_permissions := false;
+        END IF;
+    END LOOP;
+    
+    IF NOT has_required_permissions THEN
+        RETURN jsonb_build_object(
+            'authorized', false,
+            'reason', 'missing_permissions',
+            'required_permissions', endpoint_config.required_permissions,
+            'missing_permissions', missing_permissions,
+            'user_permissions', p_user_permissions
+        );
+    END IF;
+    
+    -- Authorization successful
+    RETURN jsonb_build_object(
+        'authorized', true,
+        'required_permissions', endpoint_config.required_permissions,
+        'resource_type', endpoint_config.resource_type
+    );
 END;
 $$;
 
@@ -2681,6 +2859,28 @@ CREATE TABLE auth.password_reset_tokens (
 
 
 --
+-- Name: permissions; Type: TABLE; Schema: auth; Owner: -
+--
+
+CREATE TABLE auth.permissions (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name character varying(100) NOT NULL,
+    display_name character varying(150) NOT NULL,
+    description text,
+    resource character varying(50) NOT NULL,
+    action character varying(20) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE permissions; Type: COMMENT; Schema: auth; Owner: -
+--
+
+COMMENT ON TABLE auth.permissions IS 'System permissions covering all major resources: campaigns, personas, proxies, system, users, reports';
+
+
+--
 -- Name: rate_limits; Type: TABLE; Schema: auth; Owner: -
 --
 
@@ -2711,6 +2911,38 @@ CREATE SEQUENCE auth.rate_limits_id_seq
 --
 
 ALTER SEQUENCE auth.rate_limits_id_seq OWNED BY auth.rate_limits.id;
+
+
+--
+-- Name: role_permissions; Type: TABLE; Schema: auth; Owner: -
+--
+
+CREATE TABLE auth.role_permissions (
+    role_id uuid NOT NULL,
+    permission_id uuid NOT NULL
+);
+
+
+--
+-- Name: roles; Type: TABLE; Schema: auth; Owner: -
+--
+
+CREATE TABLE auth.roles (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name character varying(50) NOT NULL,
+    display_name character varying(100) NOT NULL,
+    description text,
+    is_system_role boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE roles; Type: COMMENT; Schema: auth; Owner: -
+--
+
+COMMENT ON TABLE auth.roles IS 'System roles with default setup: super_admin (full access), admin (administrative), user (standard), viewer (read-only)';
 
 
 --
@@ -2759,6 +2991,19 @@ COMMENT ON COLUMN auth.sessions.browser_fingerprint IS 'SHA-256 hash of user age
 --
 
 COMMENT ON COLUMN auth.sessions.screen_resolution IS 'Screen resolution for enhanced browser fingerprinting';
+
+
+--
+-- Name: user_roles; Type: TABLE; Schema: auth; Owner: -
+--
+
+CREATE TABLE auth.user_roles (
+    user_id uuid NOT NULL,
+    role_id uuid NOT NULL,
+    assigned_by uuid,
+    assigned_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    expires_at timestamp without time zone
+);
 
 
 --
@@ -5411,6 +5656,30 @@ ALTER TABLE ONLY auth.password_reset_tokens
 
 
 --
+-- Name: permissions permissions_name_key; Type: CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.permissions
+    ADD CONSTRAINT permissions_name_key UNIQUE (name);
+
+
+--
+-- Name: permissions permissions_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.permissions
+    ADD CONSTRAINT permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: permissions permissions_resource_action_key; Type: CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.permissions
+    ADD CONSTRAINT permissions_resource_action_key UNIQUE (resource, action);
+
+
+--
 -- Name: rate_limits rate_limits_identifier_action_key; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
@@ -5427,11 +5696,43 @@ ALTER TABLE ONLY auth.rate_limits
 
 
 --
+-- Name: role_permissions role_permissions_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.role_permissions
+    ADD CONSTRAINT role_permissions_pkey PRIMARY KEY (role_id, permission_id);
+
+
+--
+-- Name: roles roles_name_key; Type: CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.roles
+    ADD CONSTRAINT roles_name_key UNIQUE (name);
+
+
+--
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.roles
+    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
 --
 
 ALTER TABLE ONLY auth.sessions
     ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.user_roles
+    ADD CONSTRAINT user_roles_pkey PRIMARY KEY (user_id, role_id);
 
 
 --
@@ -6450,6 +6751,20 @@ CREATE INDEX idx_rate_limits_identifier ON auth.rate_limits USING btree (identif
 
 
 --
+-- Name: idx_role_permissions_permission_id; Type: INDEX; Schema: auth; Owner: -
+--
+
+CREATE INDEX idx_role_permissions_permission_id ON auth.role_permissions USING btree (permission_id);
+
+
+--
+-- Name: idx_role_permissions_role_id; Type: INDEX; Schema: auth; Owner: -
+--
+
+CREATE INDEX idx_role_permissions_role_id ON auth.role_permissions USING btree (role_id);
+
+
+--
 -- Name: idx_sessions_active; Type: INDEX; Schema: auth; Owner: -
 --
 
@@ -6503,6 +6818,20 @@ CREATE INDEX idx_sessions_user_id ON auth.sessions USING btree (user_id);
 --
 
 CREATE INDEX idx_sessions_validation ON auth.sessions USING btree (id, is_active, expires_at, user_id);
+
+
+--
+-- Name: idx_user_roles_role_id; Type: INDEX; Schema: auth; Owner: -
+--
+
+CREATE INDEX idx_user_roles_role_id ON auth.user_roles USING btree (role_id);
+
+
+--
+-- Name: idx_user_roles_user_id; Type: INDEX; Schema: auth; Owner: -
+--
+
+CREATE INDEX idx_user_roles_user_id ON auth.user_roles USING btree (user_id);
 
 
 --
@@ -8354,6 +8683,13 @@ CREATE INDEX idx_worker_pool_metrics_service ON public.worker_pool_metrics USING
 
 
 --
+-- Name: roles set_timestamp_auth_roles; Type: TRIGGER; Schema: auth; Owner: -
+--
+
+CREATE TRIGGER set_timestamp_auth_roles BEFORE UPDATE ON auth.roles FOR EACH ROW EXECUTE FUNCTION public.trigger_set_timestamp();
+
+
+--
 -- Name: users set_timestamp_auth_users; Type: TRIGGER; Schema: auth; Owner: -
 --
 
@@ -8454,11 +8790,51 @@ ALTER TABLE ONLY auth.password_reset_tokens
 
 
 --
+-- Name: role_permissions role_permissions_permission_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.role_permissions
+    ADD CONSTRAINT role_permissions_permission_id_fkey FOREIGN KEY (permission_id) REFERENCES auth.permissions(id) ON DELETE CASCADE;
+
+
+--
+-- Name: role_permissions role_permissions_role_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.role_permissions
+    ADD CONSTRAINT role_permissions_role_id_fkey FOREIGN KEY (role_id) REFERENCES auth.roles(id) ON DELETE CASCADE;
+
+
+--
 -- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
 --
 
 ALTER TABLE ONLY auth.sessions
     ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_roles user_roles_assigned_by_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.user_roles
+    ADD CONSTRAINT user_roles_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES auth.users(id);
+
+
+--
+-- Name: user_roles user_roles_role_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.user_roles
+    ADD CONSTRAINT user_roles_role_id_fkey FOREIGN KEY (role_id) REFERENCES auth.roles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_roles user_roles_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
+--
+
+ALTER TABLE ONLY auth.user_roles
+    ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 
 --

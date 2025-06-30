@@ -129,11 +129,11 @@ class ApiErrorBoundary extends Component<Props, State> {
         'Verify authentication tokens are being sent correctly'
       ];
     } else if (status === 403) {
-      type = 'Permission Denied';
+      type = 'Access Denied';
       suggestions = [
-        'Check if you have the required permissions',
-        'Contact an administrator for access',
-        'Verify your user role allows this action'
+        'Log in again to refresh your session',
+        'Check if your session has expired',
+        'Contact support if the issue persists'
       ];
     } else if (status && status >= 500) {
       type = 'Server Error';

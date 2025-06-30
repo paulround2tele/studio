@@ -69,8 +69,6 @@ const SAMPLE_DATA = {
     id: '550e8400-e29b-41d4-a716-446655440001',
     email: 'user@example.com',
     name: 'Test User',
-    role: 'USER' as const,
-    permissions: ['campaigns:read', 'campaigns:write'],
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
     last_login: '2024-01-01T00:00:00Z',

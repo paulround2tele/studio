@@ -19,38 +19,32 @@ const navigationItems = [
   {
     title: "Dashboard",
     url: "/dashboard",
-    icon: Home,
-    permission: null
+    icon: Home
   },
   {
     title: "Campaigns",
     url: "/campaigns",
-    icon: Target,
-    permission: null
+    icon: Target
   },
   {
     title: "Personas",
     url: "/personas",
-    icon: Users,
-    permission: null
+    icon: Users
   },
   {
     title: "Proxies",
     url: "/proxies",
-    icon: Zap,
-    permission: null
+    icon: Zap
   },
   {
     title: "Keywords",
     url: "/keywords",
-    icon: Database,
-    permission: null
+    icon: Database
   },
   {
     title: "Settings",
     url: "/settings",
-    icon: Settings,
-    permission: null
+    icon: Settings
   }
 ];
 
@@ -67,7 +61,7 @@ const AppSidebar = memo(() => {
       return dashboardItem ? [dashboardItem] : [];
     }
     
-    // Show all items for authenticated users (no permission checking)
+    // Show all items for authenticated users
     return navigationItems;
   }, [isLoading, isInitialized, isAuthenticated, user]);
 
