@@ -12,10 +12,9 @@
 8. [API Development](#api-development)
 9. [Testing Guidelines](#testing-guidelines)
 10. [Security Development](#security-development)
-11. [Performance Monitoring](#performance-monitoring)
-12. [Deployment & DevOps](#deployment--devops)
-13. [Contributing Guidelines](#contributing-guidelines)
-14. [Troubleshooting Development Issues](#troubleshooting-development-issues)
+11. [Deployment & DevOps](#deployment--devops)
+12. [Contributing Guidelines](#contributing-guidelines)
+13. [Troubleshooting Development Issues](#troubleshooting-development-issues)
 
 ## Development Environment Setup
 
@@ -313,7 +312,7 @@ DomainFlow has successfully completed **Phase 2a Foundation**, **Phase 2b Securi
 
 #### **Implementation Documentation**
 - 📄 [Phase 2a & 2b Verification Report](./PHASE_2A_2B_VERIFICATION_REPORT.md) - Complete verification of foundation and security implementations
-- 📄 [Phase 2c Implementation Summary](./PHASE_2C_IMPLEMENTATION_SUMMARY.md) - Performance monitoring implementation details
+- 📄 [Phase 2c Implementation Summary](./PHASE_2C_IMPLEMENTATION_SUMMARY.md) - Performance optimization implementation details
 - 📄 [Phase 2 Integration Summary](./PHASE_2_INTEGRATION_SUMMARY.md) - Cross-phase integration verification
 - 📄 [Tactical Plans Directory](./tactical_plans/README.md) - Individual implementation specifications
 
@@ -339,7 +338,7 @@ func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID string,
 - Always use `SafeCampaignTransaction` for campaign operations
 - Set appropriate timeouts for long-running operations
 - Use retry logic for transient failures
-- Log transaction metrics for performance monitoring
+- Log transaction metrics for performance analysis
 
 #### **State Management (SI-002)**
 ```go
@@ -466,27 +465,6 @@ func (h *CampaignHandler) CreateCampaign(c *gin.Context) {
 }
 ```
 
-### **Phase 2c Performance - Developer Guide**
-
-#### **Query Performance Monitoring (PF-001)**
-```go
-// Use QueryPerformanceMonitor for all database operations
-func (s *DomainService) GetDomainsByStatus(ctx context.Context, status string) ([]Domain, error) {
-    startTime := time.Now()
-    
-    domains, err := s.store.GetDomainsByStatus(ctx, status)
-    
-    // Record performance metrics
-    s.performanceMonitor.RecordQuery(ctx, QueryMetrics{
-        QueryType:       "domain_lookup",
-        ExecutionTime:   time.Since(startTime),
-        RowsAffected:    len(domains),
-        QueryHash:       generateQueryHash("GetDomainsByStatus", status),
-    })
-    
-    return domains, err
-}
-```
 
 #### **Response Time Optimization (PF-002)**
 ```go
@@ -552,7 +530,7 @@ func TestCampaignOperationWithAllPhases(t *testing.T) {
     authService := NewAuthService(testDB)
     userID := createTestUser(t)
     
-    // Phase 2c: Performance monitoring
+    // Phase 2c: Performance metrics
     perfMonitor := NewQueryPerformanceMonitor(testDB, nil)
     
     // Test the integrated operation
@@ -569,35 +547,3 @@ func TestCampaignOperationWithAllPhases(t *testing.T) {
         UserID:      userID,
     })
     
-    assert.NoError(t, err)
-    
-    // Verify Phase 2a: Transaction completed
-    // Verify Phase 2b: Authorization logged
-    // Verify Phase 2c: Performance recorded
-}
-```
-
-#### **Monitoring Integration**
-All developers should integrate monitoring into their code:
-
-```go
-// Standard monitoring pattern for new features
-func (s *Service) NewFeature(ctx context.Context, req Request) error {
-    // Phase 2c: Start monitoring
-    start := time.Now()
-    defer func() {
-        s.monitor.RecordOperation("new_feature", time.Since(start))
-    }()
-    
-    // Phase 2b: Check authorization
-    if err := s.auth.ValidateAccess(ctx, req.UserID, "new_feature", req.ResourceID); err != nil {
-        return fmt.Errorf("authorization failed: %w", err)
-    }
-    
-    // Phase 2a: Execute in transaction
-    return s.txManager.SafeTransaction(ctx, func(tx *sqlx.Tx) error {
-        // Business logic implementation
-        return s.store.ExecuteNewFeature(ctx, tx, req)
-    })
-}
-```
