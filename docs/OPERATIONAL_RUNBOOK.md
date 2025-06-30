@@ -8,10 +8,9 @@ This runbook provides comprehensive procedures for daily operations, maintenance
 2. [Weekly Operations](#weekly-operations)
 3. [Monthly Operations](#monthly-operations)
 4. [Emergency Procedures](#emergency-procedures)
-5. [Monitoring and Alerting](#monitoring-and-alerting)
-6. [Backup and Recovery](#backup-and-recovery)
-7. [Performance Tuning](#performance-tuning)
-8. [Security Operations](#security-operations)
+5. [Backup and Recovery](#backup-and-recovery)
+6. [Performance Tuning](#performance-tuning)
+7. [Security Operations](#security-operations)
 
 ## Daily Operations
 
@@ -42,8 +41,7 @@ These tasks run automatically via cron:
 
 - **2:00 AM**: Daily database backup
 - **3:00 AM**: Daily application backup
-- **Every 5 minutes**: Health monitoring
-- **Every 15 minutes**: Performance metrics collection
+- **Every 5 minutes**: Health checks
 
 ### Manual Daily Checks
 
@@ -55,9 +53,6 @@ curl -s http://localhost/health
 
 # Test backend API
 curl -s http://localhost:8080/ping
-
-# Check response times
-curl -w "@/opt/domainflow/monitoring/curl-format.txt" -s -o /dev/null http://localhost/
 ```
 
 #### 2. Database Health
@@ -118,9 +113,6 @@ sudo -u postgres psql domainflow_production -c "SELECT schemaname, tablename, at
 #### 3. Log Analysis
 
 ```bash
-# Generate weekly log analysis report
-sudo /opt/domainflow/monitoring/scripts/analyze-logs.sh
-
 # Review nginx access patterns
 sudo /opt/domainflow/scripts/ops/analyze-access-logs.sh
 ```
@@ -135,15 +127,6 @@ sudo /opt/domainflow/scripts/ops/verify-backups.sh
 sudo /opt/domainflow/scripts/ops/test-backup-restore.sh
 ```
 
-#### 5. Performance Review
-
-```bash
-# Generate performance report
-sudo /opt/domainflow/monitoring/scripts/generate-performance-report.sh
-
-# Review resource usage trends
-sudo /opt/domainflow/monitoring/scripts/resource-trend-analysis.sh
-```
 
 ## Monthly Operations
 
@@ -299,54 +282,6 @@ sudo systemctl daemon-reload
 sudo systemctl restart domainflow.target nginx
 ```
 
-## Monitoring and Alerting
-
-### Key Metrics to Monitor
-
-#### System Metrics
-- CPU usage (alert if > 80%)
-- Memory usage (alert if > 85%)
-- Disk usage (alert if > 90%)
-- Load average
-- Network connectivity
-
-#### Application Metrics
-- HTTP response times
-- Error rates
-- Database connections
-- Service availability
-
-#### Security Metrics
-- Failed login attempts
-- Firewall blocks
-- SSL certificate expiration
-- Security scan results
-
-### Alert Thresholds
-
-```bash
-# Configure alert thresholds in monitoring script
-sudo nano /opt/domainflow/monitoring/scripts/alert-manager.sh
-
-# Key thresholds:
-ALERT_THRESHOLD_CPU=80
-ALERT_THRESHOLD_MEMORY=85
-ALERT_THRESHOLD_DISK=90
-ALERT_THRESHOLD_RESPONSE_TIME=5
-```
-
-### Monitoring Commands
-
-```bash
-# Real-time monitoring
-sudo watch -n 5 '/opt/domainflow/scripts/ops/health-check.sh --quiet'
-
-# Performance monitoring
-sudo /opt/domainflow/monitoring/scripts/performance-monitor.sh
-
-# Generate monitoring report
-sudo /opt/domainflow/monitoring/scripts/generate-monitoring-report.sh
-```
 
 ## Backup and Recovery
 
@@ -403,15 +338,6 @@ sudo /opt/domainflow/scripts/ops/optimize-database.sh
 sudo -u postgres psql domainflow_production -c "ANALYZE;"
 ```
 
-### Application Performance
-
-```bash
-# Monitor application performance
-sudo /opt/domainflow/monitoring/scripts/app-performance-monitor.sh
-
-# Check memory usage by service
-sudo systemctl status domainflow-backend domainflow-frontend --no-pager | grep -E "(Memory|CPU)"
-```
 
 ### System Performance
 

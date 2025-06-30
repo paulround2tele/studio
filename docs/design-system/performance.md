@@ -2,7 +2,7 @@
 
 ## Overview
 
-The DomainFlow Design System is optimized for performance while maintaining rich functionality and accessibility. This guide covers performance optimization strategies, monitoring techniques, and best practices for building fast, responsive applications.
+The DomainFlow Design System is optimized for performance while maintaining rich functionality and accessibility. This guide covers optimization strategies and best practices for building fast, responsive applications.
 
 ## Core Performance Principles
 
@@ -698,27 +698,6 @@ function UserList() {
 }
 ```
 
-## Performance Monitoring
-
-### Core Web Vitals
-
-Monitor key performance metrics:
-
-```tsx
-// ✅ Good: Performance monitoring
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals'
-
-function reportWebVitals() {
-  getCLS(console.log)
-  getFID(console.log)
-  getFCP(console.log)
-  getLCP(console.log)
-  getTTFB(console.log)
-}
-
-// In your app initialization
-reportWebVitals()
-```
 
 ### Bundle Analysis
 
@@ -769,13 +748,6 @@ test('large table renders within performance budget', () => {
 - [ ] Optimize re-renders with React DevTools Profiler
 - [ ] Use Web Workers for heavy computations
 
-### Monitoring
-- [ ] Set up Core Web Vitals monitoring
-- [ ] Track bundle size changes
-- [ ] Monitor runtime performance
-- [ ] Set up error tracking
-- [ ] Monitor API response times
-- [ ] Track user interaction metrics
 
 ## Common Performance Anti-Patterns
 
