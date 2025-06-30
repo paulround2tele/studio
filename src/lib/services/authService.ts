@@ -408,6 +408,11 @@ class AuthService {
 
   // Make authenticated request helper
   private async makeAuthenticatedRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
+    // Ensure we're on the client side
+    if (typeof window === 'undefined') {
+      throw new Error('makeAuthenticatedRequest can only be called on the client side');
+    }
+
     const baseUrl = await getApiBaseUrl();
     const url = `${baseUrl}${endpoint}`;
 
@@ -416,6 +421,7 @@ class AuthService {
       credentials: 'include', // Always include session cookie
       headers: {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
         ...options.headers,
       },
     });

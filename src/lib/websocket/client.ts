@@ -7,7 +7,6 @@ import {
   getWebSocketPerformanceConfig,
   webSocketReconnectionConfig 
 } from '@/lib/config/websocket';
-import { authService } from '@/lib/services/authService';
 
 export interface WebSocketMessage {
   type: string;
@@ -84,11 +83,6 @@ class SessionWebSocketClient {
     
     // Initialize event handler sets
     this.initializeEventHandlers();
-    
-    // Listen for auth state changes
-    authService.on('logged_out', () => {
-      this.handleSessionExpired();
-    });
   }
 
   private initializeEventHandlers(): void {
@@ -178,12 +172,7 @@ class SessionWebSocketClient {
   }
 
   private validateSessionForConnection(): boolean {
-    // Check if user is authenticated
-    if (!authService.getState().isAuthenticated) {
-      return false;
-    }
-    
-    // Check if session cookie exists
+    // Check if session cookie exists - session authentication is handled by cookies
     return webSocketAuthUtils.isSessionValidForWebSocket();
   }
 
@@ -253,8 +242,9 @@ class SessionWebSocketClient {
 
   private async validateSession(): Promise<void> {
     try {
-      // For session-based auth, we just check if user is authenticated
-      if (!authService.isAuthenticated()) {
+      // For session-based auth, validation is handled by the server via cookies
+      // We just check if the websocket connection is still valid
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
         this.handleSessionExpired();
         return;
       }

@@ -57,10 +57,10 @@ export default function StrictProtectedRoute({
   children,
   allowUnauthenticated = false
 }: StrictProtectedRouteProps) {
-  const { isAuthenticated, isLoading, isInitialized } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Show loading while auth is initializing
-  if (!isInitialized || isLoading) {
+  // Show loading while auth is checking
+  if (isLoading) {
     return <LoadingScreen />;
   }
 

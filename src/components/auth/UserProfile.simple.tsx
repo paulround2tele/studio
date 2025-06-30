@@ -18,7 +18,7 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ 
-  onProfileUpdated: _onProfileUpdated,
+  onProfileUpdated,
   showPasswordChange = true 
 }: UserProfileProps) {
   const { user, logout } = useAuth();
@@ -66,7 +66,7 @@ export function UserProfile({
         newPassword: '',
         confirmPassword: ''
       });
-    } catch (_error) {
+    } catch (error) {
       setMessage({ type: 'error', text: 'An error occurred while changing password' });
     } finally {
       setIsLoading(false);

@@ -85,8 +85,7 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const {
     isAuthenticated,
-    isLoading,
-    isInitialized
+    isLoading
   } = useAuth();
   
   const router = useRouter();
@@ -95,14 +94,14 @@ export function ProtectedRoute({
 
   // Handle redirect after authentication check
   useEffect(() => {
-    if (!isLoading && isInitialized && shouldRedirect && redirectTo) {
+    if (!isLoading && shouldRedirect && redirectTo) {
       const currentPath = encodeURIComponent(pathname);
       router.push(`${redirectTo}?redirect=${currentPath}`);
     }
-  }, [isLoading, isInitialized, shouldRedirect, redirectTo, router, pathname]);
+  }, [isLoading, shouldRedirect, redirectTo, router, pathname]);
 
-  // Show loading while auth is initializing
-  if (!isInitialized || isLoading) {
+  // Show loading while auth is loading
+  if (isLoading) {
     return <LoadingScreen />;
   }
 

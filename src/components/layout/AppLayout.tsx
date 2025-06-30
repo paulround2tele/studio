@@ -50,20 +50,19 @@ const navigationItems = [
 
 // Memoized sidebar component to prevent unnecessary re-renders
 const AppSidebar = memo(() => {
-  const { user, logout, isLoading, isAuthenticated, isInitialized } = useAuth();
+  const { user, logout, isLoading, isAuthenticated } = useAuth();
 
-  // SIMPLIFIED AUTH: Wait for auth to be fully ready before showing menu items
   // Show all navigation items for authenticated users
   const filteredItems = useMemo(() => {
     // Show only Dashboard while auth is loading
-    if (isLoading || !isInitialized || !isAuthenticated || !user) {
+    if (isLoading || !isAuthenticated || !user) {
       const dashboardItem = navigationItems.find(item => item.title === "Dashboard");
       return dashboardItem ? [dashboardItem] : [];
     }
     
     // Show all items for authenticated users
     return navigationItems;
-  }, [isLoading, isInitialized, isAuthenticated, user]);
+  }, [isLoading, isAuthenticated, user]);
 
   // Memoize logout handler to prevent re-creation on every render
   const handleLogout = useCallback(() => {
@@ -134,48 +133,10 @@ const AppLayout = memo(({ children }: AppLayoutProps) => {
     return () => {
       setMounted(false);
     };
-  }, []); // Empty dependency array - only runs once on mount/unmount
-
-  // Optimized auth service initialization with proper error handling and cleanup
-  useEffect(() => {
-    let isActive = true; // Flag to prevent state updates if component unmounts
-    
-    console.log('[AppLayout] 🚀 Initializing auth service...');
-    
-    const initializeAuthService = async () => {
-      try {
-        const { authService } = await import('@/lib/services/authService');
-        
-        // Only proceed if component is still mounted
-        if (isActive) {
-          await authService.initialize();
-          console.log('[AppLayout] ✅ Auth service initialization complete');
-        }
-      } catch (error) {
-        if (isActive) {
-          console.error('[AppLayout] ❌ Auth service initialization failed:', error);
-        }
-      }
-    };
-
-    initializeAuthService();
-
-    // Cleanup function to prevent memory leaks
-    return () => {
-      isActive = false;
-    };
-  }, []); // Empty dependency array - only runs once on mount
+  }, []);
 
   // Optimized WebSocket cleanup with proper lifecycle management
   useEffect(() => {
-    // Setup function (if needed in the future)
-    const setupWebSocketServices = () => {
-      // WebSocket services are already initialized elsewhere
-      // This effect is primarily for cleanup
-    };
-
-    setupWebSocketServices();
-
     // Cleanup function for WebSocket services
     return () => {
       console.log('[AppLayout] Cleaning up global WebSocket services');
@@ -185,7 +146,7 @@ const AppLayout = memo(({ children }: AppLayoutProps) => {
         console.error('[AppLayout] Error during WebSocket cleanup:', error);
       }
     };
-  }, []); // Empty dependency array - cleanup only on unmount
+  }, []);
 
   // SECURITY: Isolated routes that should bypass the main app layout
   const isolatedRoutes = ['/dbgui'];
