@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User } from '@/lib/types';
-import { AuthenticationApi } from '@/lib/api-client/api/authentication-api';
-import { Configuration } from '@/lib/api-client/configuration';
+import { authService } from '@/lib/services/authService';
 
 interface AuthState {
   user: User | null;
@@ -29,9 +28,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading: true
   });
 
-  // Initialize API client
-  const authApi = new AuthenticationApi(new Configuration());
-
   // Check for existing session on mount
   useEffect(() => {
     checkSession();
@@ -39,11 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkSession = async () => {
     try {
-      const response = await authApi.apiV2MeGet();
-      
-      if (response.status === 200 && response.data) {
+      const user = await authService.getCurrentUser();
+
+      if (user) {
         setAuthState({
-          user: response.data as unknown as User,
+          user,
           isAuthenticated: true,
           isLoading: false
         });
@@ -66,14 +62,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (credentials: { email: string; password: string; rememberMe?: boolean }) => {
     try {
-      const response = await authApi.apiV2AuthLoginPost({
-        email: credentials.email,
-        password: credentials.password
-      });
+      const result = await authService.login(credentials);
 
-      if (response.status === 200 && response.data?.user) {
+      if (result.success && result.user) {
         setAuthState({
-          user: response.data.user as unknown as User,
+          user: result.user,
           isAuthenticated: true,
           isLoading: false
         });
@@ -81,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         return { 
           success: false, 
-          error: 'Login failed' 
+          error: result.error || 'Login failed' 
         };
       }
     } catch (error) {
@@ -91,11 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         error: 'Network error. Please try again.' 
       };
     }
-  }, [authApi]);
+  }, []);
 
   const logout = useCallback(async () => {
     try {
-      await authApi.apiV2AuthLogoutPost();
+      await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -105,16 +98,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading: false
       });
     }
-  }, [authApi]);
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    return await authService.changePassword(currentPassword, newPassword);
+  }, []);
 
   const value: AuthContextType = {
     ...authState,
     login,
     logout,
     isInitialized: !authState.isLoading,
-    // Simple implementations for compatibility
-    changePassword: async () => ({ success: false, error: 'Password change not implemented in simple auth' }),
-    validatePassword: async () => ({ isValid: true })
+    changePassword,
+    validatePassword: async () => ({ isValid: true }) // Simple placeholder
   };
 
   return (
