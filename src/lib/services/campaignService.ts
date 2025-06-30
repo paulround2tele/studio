@@ -8,7 +8,6 @@ import { campaignService as productionCampaignService } from './campaignService.
 import type { UUID } from '@/lib/types/branded';
 import type { Campaign, CampaignOperationResponse } from '@/lib/types';
 import { transformErrorResponse } from '@/lib/api/transformers/error-transformers';
-import { performanceMonitor } from '@/lib/monitoring/performance-monitor';
 
 /**
  * Bulk operation request for campaigns
@@ -109,13 +108,7 @@ class EnhancedCampaignService {
     const successful: Array<{ campaignId: UUID; campaign?: Campaign }> = [];
     const failed: Array<{ campaignId: UUID; error: string }> = [];
 
-    // Record bulk operation start
-    performanceMonitor.recordCustomMetric(
-      'campaign_bulk_operation_start',
-      campaignIds.length,
-      'count',
-      { operation }
-    );
+
 
     // Process in parallel with concurrency limit
     const concurrencyLimit = 5;
@@ -124,7 +117,6 @@ class EnhancedCampaignService {
     for (const chunk of chunks) {
       await Promise.all(
         chunk.map(async (campaignId) => {
-          const operationStartTime = performance.now();
           
           try {
             const result = await operationFn(campaignId);
@@ -133,13 +125,6 @@ class EnhancedCampaignService {
               campaign: result?.data || undefined
             });
 
-            // Record individual operation success
-            performanceMonitor.recordCustomMetric(
-              'campaign_bulk_operation_item',
-              performance.now() - operationStartTime,
-              'ms',
-              { operation, status: 'success' }
-            );
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             failed.push({
@@ -147,32 +132,12 @@ class EnhancedCampaignService {
               error: errorMessage
             });
 
-            // Record individual operation failure
-            performanceMonitor.recordCustomMetric(
-              'campaign_bulk_operation_item',
-              performance.now() - operationStartTime,
-              'ms',
-              { operation, status: 'failure', error: errorMessage }
-            );
           }
         })
       );
     }
 
     const duration = performance.now() - startTime;
-
-    // Record bulk operation completion
-    performanceMonitor.recordCustomMetric(
-      'campaign_bulk_operation_complete',
-      duration,
-      'ms',
-      {
-        operation,
-        total: campaignIds.length.toString(),
-        successful: successful.length.toString(),
-        failed: failed.length.toString()
-      }
-    );
 
     return {
       successful,
