@@ -8,18 +8,18 @@ set -e
 echo "🔍 API Contract Validation (No Database Required)"
 echo "================================================="
 
-# Start the no-db server in background
-echo "Starting no-database server..."
+# Start the server in background
+echo "Starting server..."
 cd "$(dirname "$0")"
 
 # Build if needed
-if [ ! -f bin/apiserver-no-db ]; then
-    echo "Building no-database server..."
-    make build-no-db
+if [ ! -f bin/apiserver ]; then
+    echo "Building server..."
+    make build
 fi
 
 # Start server in background
-PORT=8080 ./bin/apiserver-no-db &
+PORT=8080 ./bin/apiserver &
 SERVER_PID=$!
 
 # Wait for server to start

@@ -9,12 +9,12 @@ ROOT_DIR="$SCRIPT_DIR/.."
 cd "$ROOT_DIR"
 
 # Build server if needed
-if [ ! -f backend/bin/apiserver-no-db ]; then
-  (cd backend && make build-no-db)
+if [ ! -f backend/bin/apiserver ]; then
+  (cd backend && make build)
 fi
 
 PORT=${OPENAPI_PORT:-8081}
-PORT="$PORT" backend/bin/apiserver-no-db &
+PORT="$PORT" backend/bin/apiserver &
 PID=$!
 
 cleanup() {

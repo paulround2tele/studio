@@ -18,27 +18,10 @@ build-prod:
 	@echo "Building for production..."
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/domainflow-apiserver ./cmd/apiserver
 
-# Build the no-database version for contract validation
-build-no-db:
-	@echo "Building no-database version..."
-	go build -o bin/apiserver-no-db ./cmd/apiserver-no-db
-
 # Run the application
 run:
 	@echo "Running application..."
 	go run ./cmd/apiserver
-
-# Run the no-database server for contract validation and testing
-run-no-db: build-no-db
-	@echo "Starting no-database server..."
-	@echo "Available at: http://localhost:8080"
-	@echo "Useful endpoints:"
-	@echo "  - http://localhost:8080/ping"
-	@echo "  - http://localhost:8080/health"
-	@echo "  - http://localhost:8080/api/openapi.yaml"
-	@echo "  - http://localhost:8080/api/v2/contract/validate"
-	@echo "Press Ctrl+C to stop"
-	./bin/apiserver-no-db
 
 # Run tests
 test:
