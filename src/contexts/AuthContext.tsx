@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User } from '@/lib/types';
+import { AuthenticationApi } from '@/lib/api-client/api/authentication-api';
+import { Configuration } from '@/lib/api-client/configuration';
 
 interface AuthState {
   user: User | null;
@@ -27,6 +29,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading: true
   });
 
+  // Initialize API client
+  const authApi = new AuthenticationApi(new Configuration());
+
   // Check for existing session on mount
   useEffect(() => {
     checkSession();
@@ -34,14 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkSession = async () => {
     try {
-      const response = await fetch('/api/v2/me', {
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
+      const response = await authApi.apiV2MeGet();
+      
+      if (response.status === 200 && response.data) {
         setAuthState({
-          user: userData,
+          user: response.data as unknown as User,
           isAuthenticated: true,
           isLoading: false
         });
@@ -64,20 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (credentials: { email: string; password: string; rememberMe?: boolean }) => {
     try {
-      const response = await fetch('/api/v2/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-        credentials: 'include'
+      const response = await authApi.apiV2AuthLoginPost({
+        email: credentials.email,
+        password: credentials.password
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.user) {
+      if (response.status === 200 && response.data?.user) {
         setAuthState({
-          user: data.user,
+          user: response.data.user as unknown as User,
           isAuthenticated: true,
           isLoading: false
         });
@@ -85,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         return { 
           success: false, 
-          error: data.error || 'Login failed' 
+          error: 'Login failed' 
         };
       }
     } catch (error) {
@@ -95,14 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         error: 'Network error. Please try again.' 
       };
     }
-  }, []);
+  }, [authApi]);
 
   const logout = useCallback(async () => {
     try {
-      await fetch('/api/v2/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
+      await authApi.apiV2AuthLogoutPost();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -112,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading: false
       });
     }
-  }, []);
+  }, [authApi]);
 
   const value: AuthContextType = {
     ...authState,

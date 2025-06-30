@@ -1,6 +1,5 @@
 // src/lib/services/authService.ts
 // Simple session-based authentication service
-import { getApiBaseUrl } from '@/lib/config';
 import { logAuth } from '@/lib/utils/logger';
 import { apiClient } from '@/lib/api/client';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
@@ -71,14 +70,12 @@ class AuthService {
 
     try {
       // Check if we have an active session by calling the /me endpoint
-      const response = await this.makeAuthenticatedRequest('/api/v2/me');
+      const response = await apiClient.get('/me');
       
-      if (response.ok) {
-        const userData = await response.json();
-        
+      if (response.status === 'success' && response.data) {
         // Use the user data directly as it already matches the User interface
-        this.updateAuthState(userData, null);
-        logAuth.init('Session restored successfully', { userId: userData.id });
+        this.updateAuthState(response.data as User, null);
+        logAuth.init('Session restored successfully', { userId: (response.data as User).id });
       } else {
         logAuth.init('No active session found');
         this.clearAuth();
@@ -168,18 +165,14 @@ class AuthService {
     loadingStore.startLoading(LOADING_OPERATIONS.LOGOUT, 'Signing out...');
 
     try {
-      const baseUrl = await getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/api/v2/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      const response = await apiClient.post('/auth/logout');
 
-      if (response.ok) {
+      if (response.status === 'success') {
         logAuth.success('Logout successful');
         loadingStore.stopLoading(LOADING_OPERATIONS.LOGOUT, 'succeeded');
       } else {
-        logAuth.warn('Logout request failed', { status: response.status });
-        loadingStore.stopLoading(LOADING_OPERATIONS.LOGOUT, 'failed', `Logout failed with status: ${response.status}`);
+        logAuth.warn('Logout request failed', { errors: response.errors });
+        loadingStore.stopLoading(LOADING_OPERATIONS.LOGOUT, 'failed', response.message || 'Logout failed');
       }
     } catch (error) {
       logAuth.error('Logout error', { error: error instanceof Error ? error.message : 'Unknown error' });
@@ -360,20 +353,12 @@ class AuthService {
     loadingStore.startLoading(LOADING_OPERATIONS.SESSION_REFRESH, 'Refreshing session...');
 
     try {
-      const baseUrl = await getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/api/v2/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      });
+      const response = await apiClient.post('/auth/refresh');
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 'success') {
+        const data = response.data as any;
         
-        if (data.success && data.expiresAt) {
+        if (data && data.expiresAt) {
           // Update session expiry
           const sessionExpiry = new Date(data.expiresAt).getTime();
           this.authState.sessionExpiry = sessionExpiry;
@@ -387,14 +372,14 @@ class AuthService {
           loadingStore.stopLoading(LOADING_OPERATIONS.SESSION_REFRESH, 'succeeded');
           return { success: true };
         } else {
-          const errorMsg = data.message || 'Session refresh failed';
+          const errorMsg = response.message || 'Session refresh failed';
           logAuth.warn('Session refresh failed', { error: errorMsg });
           loadingStore.stopLoading(LOADING_OPERATIONS.SESSION_REFRESH, 'failed', errorMsg);
           return { success: false, error: errorMsg };
         }
       } else {
-        const errorMsg = `Session refresh failed with status: ${response.status}`;
-        logAuth.warn('Session refresh failed', { status: response.status });
+        const errorMsg = response.message || 'Session refresh failed';
+        logAuth.warn('Session refresh failed', { errors: response.errors });
         loadingStore.stopLoading(LOADING_OPERATIONS.SESSION_REFRESH, 'failed', errorMsg);
         return { success: false, error: errorMsg };
       }
@@ -404,34 +389,6 @@ class AuthService {
       loadingStore.stopLoading(LOADING_OPERATIONS.SESSION_REFRESH, 'failed', errorMsg);
       return { success: false, error: errorMsg };
     }
-  }
-
-  // Make authenticated request helper
-  private async makeAuthenticatedRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    // Ensure we're on the client side
-    if (typeof window === 'undefined') {
-      throw new Error('makeAuthenticatedRequest can only be called on the client side');
-    }
-
-    const baseUrl = await getApiBaseUrl();
-    const url = `${baseUrl}${endpoint}`;
-
-    const response = await fetch(url, {
-      ...options,
-      credentials: 'include', // Always include session cookie
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        ...options.headers,
-      },
-    });
-
-    // If we get a 401, clear auth state
-    if (response.status === 401) {
-      this.clearAuth();
-    }
-
-    return response;
   }
 
   // Private helper methods

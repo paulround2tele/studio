@@ -65,32 +65,19 @@ async function fetchAppConfig(): Promise<AppConfig> {
 
 /**
  * Retrieves the API base URL.
- * Now uses the new environment configuration system with legacy fallback
+ * Uses the environment configuration system
  * @returns {Promise<string>} The determined API base URL.
  */
 export async function getApiBaseUrl(): Promise<string> {
-  try {
-    // Use new environment configuration system
-    const apiConfig = getApiConfig();
-    return apiConfig.baseUrl;
-  } catch (error) {
-    console.warn('Failed to get API URL from environment config, falling back to legacy method:', error);
-    
-    // Fallback to legacy method
-    const config = await fetchAppConfig();
-    return config.apiBaseUrl;
-  }
+  const apiConfig = getApiConfig();
+  return apiConfig.baseUrl;
 }
 
 /**
  * Sets or clears the API base URL override in localStorage.
- * Now delegates to the new environment configuration system
+ * Uses the environment configuration system
  * @param {string | null} url The URL to set, or null to remove the override.
  */
 export function setApiBaseUrlOverride(url: string | null): void {
-  // Use new environment configuration system
   setEnvApiOverride(url);
-  
-  // Also clear legacy cache
-  loadedConfig = null;
 }
