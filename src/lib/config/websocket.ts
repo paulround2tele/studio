@@ -75,32 +75,6 @@ export function getWebSocketPerformanceConfig(): WebSocketConfig {
   return developmentWebSocketConfig;
 }
 
-/**
- * WebSocket performance monitoring configuration
- */
-export const webSocketMonitoringConfig = {
-  // Enable performance monitoring
-  enableMonitoring: process.env.NODE_ENV === 'production',
-  
-  // Metrics collection interval (milliseconds)
-  metricsInterval: 60000, // 1 minute
-  
-  // Performance alert thresholds
-  alertThresholds: {
-    errorRate: 5, // Percentage
-    averageLatency: 2000, // Milliseconds
-    memoryUsage: 20 * 1024 * 1024, // 20MB
-    staleConnections: 3
-  },
-  
-  // Export metrics to external systems
-  exportMetrics: false,
-  exportInterval: 300000, // 5 minutes
-  
-  // Log performance warnings
-  logWarnings: true,
-  logLevel: 'warn' as const
-};
 
 /**
  * WebSocket reconnection configuration
