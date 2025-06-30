@@ -49,38 +49,6 @@ func (m *MemoryPoolManager) PutDomainBatch(batch *DomainBatch) {
 	}
 }
 
-type ResourceUtilizationMonitor struct {
-	db *sqlx.DB
-}
-
-func (r *ResourceUtilizationMonitor) GetCurrentCPUUtilization() float64 {
-	// Return a mock CPU utilization percentage
-	return 50.0
-}
-
-func (r *ResourceUtilizationMonitor) GetCurrentMemoryUtilization() float64 {
-	// Return a mock memory utilization percentage
-	return 60.0
-}
-
-func (r *ResourceUtilizationMonitor) GetCurrentResourceMetric() models.ResourceUtilizationMetric {
-	return models.ResourceUtilizationMetric{
-		ID:                 uuid.New(),
-		ServiceName:        "domain_generation",
-		ResourceType:       "cpu",
-		CurrentUsage:       r.GetCurrentCPUUtilization(),
-		MaxCapacity:        100.0,
-		UtilizationPct:     r.GetCurrentCPUUtilization(),
-		EfficiencyScore:    100.0 - r.GetCurrentCPUUtilization(),
-		BottleneckDetected: r.IsResourceUnderPressure(),
-		RecordedAt:         time.Now(),
-	}
-}
-
-func (r *ResourceUtilizationMonitor) IsResourceUnderPressure() bool {
-	return r.GetCurrentCPUUtilization() > 80.0 || r.GetCurrentMemoryUtilization() > 80.0
-}
-
 type EfficientWorkerPool struct {
 	config interface{}
 	db     *sqlx.DB
@@ -120,10 +88,6 @@ func DefaultMemoryPoolConfig() interface{} {
 // Stub monitoring package functions
 func newMemoryMonitor(db *sqlx.DB, config interface{}, defaultConfig interface{}) interface{} {
 	return struct{}{}
-}
-
-func newResourceUtilizationMonitor(db *sqlx.DB, service string, interval time.Duration) *ResourceUtilizationMonitor {
-	return &ResourceUtilizationMonitor{db: db}
 }
 
 // Stub workers package
@@ -181,7 +145,6 @@ type domainGenerationServiceImpl struct {
 	// SI-005: Memory management integration
 	memoryPoolManager *MemoryPoolManager
 	// PF-003: CPU optimization features
-	resourceMonitor       *ResourceUtilizationMonitor
 	workerPool            *EfficientWorkerPool
 	cpuOptimizationConfig *CPUOptimizationConfig
 }
@@ -235,9 +198,6 @@ func NewDomainGenerationService(db *sqlx.DB, cs store.CampaignStore, cjs store.C
 	memoryMonitor := newMemoryMonitor(db, nil, struct{}{})
 	memoryPoolManager := NewMemoryPoolManager(DefaultMemoryPoolConfig(), memoryMonitor)
 
-	// Initialize resource monitor
-	resourceMonitor := newResourceUtilizationMonitor(db, "domain-generation-service", cpuConfig.ResourceMonitoringInterval)
-
 	// Initialize efficient worker pool
 	workerPool := newEfficientWorkerPool(WorkerPoolConfig{
 		MinWorkers: cpuConfig.MinWorkers,
@@ -256,7 +216,6 @@ func NewDomainGenerationService(db *sqlx.DB, cs store.CampaignStore, cjs store.C
 		txManager:                 txManager,
 		memoryPoolManager:         memoryPoolManager,
 		cpuOptimizationConfig:     cpuConfig,
-		resourceMonitor:           resourceMonitor,
 		workerPool:                workerPool,
 	}
 }
@@ -274,13 +233,13 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 	functionStartTime := time.Now().UTC() // Use a distinct name for clarity
 	campaignID := uuid.New()
 
-        tempGenParamsForHash := models.DomainGenerationCampaignParams{
-                PatternType:    req.PatternType,
-                VariableLength: req.VariableLength,
-                CharacterSet:   req.CharacterSet,
-                ConstantString: models.StringPtr(req.ConstantString),
-                TLD:            req.TLD,
-        }
+	tempGenParamsForHash := models.DomainGenerationCampaignParams{
+		PatternType:    req.PatternType,
+		VariableLength: req.VariableLength,
+		CharacterSet:   req.CharacterSet,
+		ConstantString: models.StringPtr(req.ConstantString),
+		TLD:            req.TLD,
+	}
 
 	hashResult, hashErr := domainexpert.GenerateDomainGenerationConfigHash(tempGenParamsForHash)
 	if hashErr != nil {
@@ -436,17 +395,17 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		ProgressPercentage: models.Float64Ptr(0.0),
 	}
 
-        campaignDomainGenParams := &models.DomainGenerationCampaignParams{
-                CampaignID:                campaignID,
-                PatternType:               req.PatternType,
-                VariableLength:            req.VariableLength,
-                CharacterSet:              req.CharacterSet,
-                ConstantString:            models.StringPtr(req.ConstantString),
-                TLD:                       req.TLD,
-                NumDomainsToGenerate:      int(campaignInstanceTargetCount), // Converted int64 to int
-                TotalPossibleCombinations: totalPossibleCombinations,
-                CurrentOffset:             startingOffset,
-        }
+	campaignDomainGenParams := &models.DomainGenerationCampaignParams{
+		CampaignID:                campaignID,
+		PatternType:               req.PatternType,
+		VariableLength:            req.VariableLength,
+		CharacterSet:              req.CharacterSet,
+		ConstantString:            models.StringPtr(req.ConstantString),
+		TLD:                       req.TLD,
+		NumDomainsToGenerate:      int(campaignInstanceTargetCount), // Converted int64 to int
+		TotalPossibleCombinations: totalPossibleCombinations,
+		CurrentOffset:             startingOffset,
+	}
 	baseCampaign.DomainGenerationParams = campaignDomainGenParams
 
 	if err := s.campaignStore.CreateCampaign(ctx, querier, baseCampaign); err != nil {
@@ -717,19 +676,19 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		return true, 0, opErr
 	}
 	// Ensure genParams fields are not nil before dereferencing for NewDomainGenerator
-        varLength := genParams.VariableLength
-        if varLength <= 0 {
-                opErr = fmt.Errorf("ProcessGenerationCampaignBatch: invalid VariableLength for campaign %s", campaignID)
-                log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
-                return false, 0, opErr
-        }
+	varLength := genParams.VariableLength
+	if varLength <= 0 {
+		opErr = fmt.Errorf("ProcessGenerationCampaignBatch: invalid VariableLength for campaign %s", campaignID)
+		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+		return false, 0, opErr
+	}
 
-        charSet := genParams.CharacterSet
-        if charSet == "" {
-                opErr = fmt.Errorf("ProcessGenerationCampaignBatch: CharacterSet is empty for campaign %s", campaignID)
-                log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
-                return false, 0, opErr
-        }
+	charSet := genParams.CharacterSet
+	if charSet == "" {
+		opErr = fmt.Errorf("ProcessGenerationCampaignBatch: CharacterSet is empty for campaign %s", campaignID)
+		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+		return false, 0, opErr
+	}
 
 	var constStr string
 	if genParams.ConstantString != nil {
@@ -857,13 +816,10 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		return done, 0, opErr
 	}
 
-	// PF-003: CPU optimization - monitor resource utilization and adjust batch processing
+	// PF-003: CPU optimization - adjust batch processing using basic metrics
 	// Build on SI-005 memory management patterns
-	cpuUtilization := s.resourceMonitor.GetCurrentCPUUtilization()
-	memUtilization := s.resourceMonitor.GetCurrentMemoryUtilization()
-
-	// Start comprehensive resource monitoring for this campaign
-	s.monitorResourceEfficiency(ctx, campaignID)
+	cpuUtilization := 0.0
+	memUtilization := 0.0
 
 	// Scale worker pool based on current CPU load (integrates with worker coordination)
 	s.scaleWorkerPool(cpuUtilization)
@@ -1152,26 +1108,6 @@ func (s *domainGenerationServiceImpl) scaleWorkerPool(cpuUtilization float64) {
 	} else if cpuUtilization < 70.0 && queueSize > currentWorkers*2 {
 		log.Printf("Low CPU utilization (%.2f%%) with high queue pressure (%d tasks) - worker pool will auto-scale up",
 			cpuUtilization, queueSize)
-	}
-}
-
-// monitorResourceEfficiency provides comprehensive resource monitoring
-// This builds on all previous optimization patterns: PF-001, PF-002, SI-005
-func (s *domainGenerationServiceImpl) monitorResourceEfficiency(ctx context.Context, campaignID uuid.UUID) {
-	if s.resourceMonitor == nil {
-		return
-	}
-
-	// Get current resource metrics
-	cpuMetric := s.resourceMonitor.GetCurrentResourceMetric()
-
-	log.Printf("Resource efficiency for campaign %s - CPU: %.2f%% (efficiency: %.2f)",
-		campaignID, cpuMetric.UtilizationPct, cpuMetric.EfficiencyScore)
-
-	// Trigger alerts if resources are under pressure
-	if s.resourceMonitor.IsResourceUnderPressure() {
-		log.Printf("WARNING: Resources under pressure for campaign %s - CPU: %.2f%%, Memory: %.2f%%",
-			campaignID, s.resourceMonitor.GetCurrentCPUUtilization(), s.resourceMonitor.GetCurrentMemoryUtilization())
 	}
 }
 
