@@ -3,15 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 // This is a hidden database API endpoint for the database GUI
 // Returns database statistics
 
-interface DatabaseStats {
-  totalTables: number;
-  totalUsers: number;
-  totalSessions: number;
-  databaseSize: string;
-  schemaVersion: string;
-}
-
-import { getApiBaseUrl } from '@/lib/config';
+import databaseService from '@/lib/services/databaseService';
+import type { DatabaseStats } from '@/lib/api/databaseApi';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,34 +17,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Forward the request to the backend API
-    const backendUrl = await getApiBaseUrl();
-    
-    // Get session cookies to forward authentication
-    const cookies = request.headers.get('cookie');
-    
-    const response = await fetch(`${backendUrl}/api/v2/database/stats`, {
-      method: 'GET',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        ...(cookies && { 'Cookie': cookies })
-      }
-    });
-
-    if (!response.ok) {
-      // If backend doesn't support this endpoint yet, return mock data
-      const mockStats: DatabaseStats = {
+    const cookies = request.headers.get('cookie') || undefined;
+    try {
+      const stats = await databaseService.getStatsBackend(cookies);
+      return NextResponse.json(stats);
+    } catch (_err) {
+      const fallbackStats: DatabaseStats = {
         totalTables: 23,
         totalUsers: 3,
         totalSessions: 1,
         databaseSize: '15 MB',
         schemaVersion: 'v2.0'
       };
-      return NextResponse.json(mockStats);
+      return NextResponse.json(fallbackStats);
     }
-
-    const stats = await response.json();
-    return NextResponse.json(stats);
 
   } catch (error) {
     console.error('Database stats error:', error);
