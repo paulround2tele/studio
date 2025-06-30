@@ -8,6 +8,7 @@ import { campaignService as productionCampaignService } from './campaignService.
 import type { UUID } from '@/lib/types/branded';
 import type { Campaign, CampaignOperationResponse } from '@/lib/types';
 import { transformErrorResponse } from '@/lib/api/transformers/error-transformers';
+import campaignApi from '@/lib/api/campaignApi';
 
 /**
  * Bulk operation request for campaigns
@@ -263,26 +264,7 @@ class EnhancedCampaignService {
     endDate?: string;
   }): Promise<Blob> {
     try {
-      // Build query parameters
-      const params = new URLSearchParams();
-      if (filters?.type) params.append('type', filters.type);
-      if (filters?.status) params.append('status', filters.status);
-      if (filters?.startDate) params.append('startDate', filters.startDate);
-      if (filters?.endDate) params.append('endDate', filters.endDate);
-
-      const response = await fetch(`/api/v2/campaigns/export?${params}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Export failed: ${response.statusText}`);
-      }
-
-      return await response.blob();
+      return await campaignApi.exportCampaigns(filters);
     } catch (error) {
       console.error('[CampaignService] Failed to export campaigns:', error);
       throw transformErrorResponse(error, 500, '/api/v2/campaigns/export');
@@ -320,3 +302,4 @@ export const getCampaignsByStatus = (status: string | string[], options?: Parame
 
 export const exportCampaigns = (filters?: Parameters<typeof enhancedCampaignService.exportCampaigns>[0]) =>
   enhancedCampaignService.exportCampaigns(filters);
+
