@@ -322,7 +322,6 @@ export default function ${pageName}Page() {
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { errorTracker } from '@/lib/monitoring/error-tracker';
-import { performanceMonitor } from '@/lib/monitoring/performance-monitor';
 import { rateLimiter } from '@/lib/security/rate-limiter';
 
 // Request/Response schemas
@@ -362,7 +361,6 @@ export async function GET(request: NextRequest) {
     };
 
     // Track performance
-    performanceMonitor.measureApiCall('/api/${routeName}', Date.now() - startTime);
 
     return NextResponse.json({
       success: true,
@@ -409,7 +407,6 @@ export async function POST(request: NextRequest) {
     };
 
     // Track performance
-    performanceMonitor.measureApiCall('/api/${routeName}', Date.now() - startTime);
 
     return NextResponse.json({
       success: true,
@@ -460,7 +457,6 @@ export async function POST(request: NextRequest) {
 
 import { z } from 'zod';
 import { errorTracker } from '@/lib/monitoring/error-tracker';
-import { performanceMonitor } from '@/lib/monitoring/performance-monitor';
 import { apiClient } from '@/lib/services/apiClient.production';
 
 // Data schemas
@@ -508,7 +504,6 @@ class ${serviceName}Service {
       this.setCache(cacheKey, data);
       
       // Track performance
-      performanceMonitor.measureApiCall('get_all_${this.camelCase(config.name)}s', Date.now() - startTime);
       
       return data;
     } catch (error) {
@@ -538,7 +533,6 @@ class ${serviceName}Service {
       this.setCache(cacheKey, data);
       
       // Track performance
-      performanceMonitor.measureApiCall('get_${this.camelCase(config.name)}_by_id', Date.now() - startTime);
       
       return data;
     } catch (error) {
@@ -570,7 +564,6 @@ class ${serviceName}Service {
       this.clearCache();
       
       // Track performance
-      performanceMonitor.measureApiCall('create_${this.camelCase(config.name)}', Date.now() - startTime);
       
       return created;
     } catch (error) {
@@ -598,7 +591,6 @@ class ${serviceName}Service {
       this.cache.delete('all_${this.camelCase(config.name)}s');
       
       // Track performance
-      performanceMonitor.measureApiCall('update_${this.camelCase(config.name)}', Date.now() - startTime);
       
       return updated;
     } catch (error) {
@@ -626,7 +618,6 @@ class ${serviceName}Service {
       this.cache.delete('all_${this.camelCase(config.name)}s');
       
       // Track performance
-      performanceMonitor.measureApiCall('delete_${this.camelCase(config.name)}', Date.now() - startTime);
     } catch (error) {
       errorTracker.trackError(error as Error, {
         component: '${serviceName}Service',
