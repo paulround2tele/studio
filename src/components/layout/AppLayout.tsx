@@ -4,7 +4,7 @@ import React, { useEffect, useState, memo, useMemo, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { WebSocketStatusProvider } from '@/contexts/WebSocketStatusContext';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from '@/components/ui/sidebar';
-import { Home, Target, Users, Settings, Zap, Database, Shield, LogOut } from 'lucide-react';
+import { Home, Target, Users, Settings, Zap, Database, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { MemoryMonitor } from '@/lib/hooks/useMemoryMonitoring';
@@ -47,12 +47,6 @@ const navigationItems = [
     permission: null
   },
   {
-    title: "Admin",
-    url: "/admin",
-    icon: Shield,
-    permission: null
-  },
-  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
@@ -86,7 +80,7 @@ const AppSidebar = memo(() => {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <Shield className="w-6 h-6 text-primary" />
+          <Zap className="w-6 h-6 text-primary" />
           <h2 className="text-lg font-semibold">DomainFlow</h2>
         </div>
       </SidebarHeader>

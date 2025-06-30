@@ -7,16 +7,11 @@ import { authService, type AuthState, type LoginCredentials } from '@/lib/servic
 // HMR SAFE: Local feature flags implementation to avoid environment.ts import chain
 const getFeatureFlags = () => ({
   enableDebugMode: process.env.NODE_ENV === 'development',
-  enableSessionValidation: true,
-  enablePermissionCaching: true
+  enableSessionValidation: true
 });
 import type {
   AuthResponse,
-  CreateUserRequest,
-  UpdateUserRequest,
-  UserListResponse,
-  PasswordValidationResult,
-  User
+  PasswordValidationResult
 } from '@/lib/types';
 
 interface AuthContextType extends AuthState {
@@ -29,17 +24,8 @@ interface AuthContextType extends AuthState {
   refreshSession: () => Promise<boolean>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<AuthResponse<void>>;
   validatePassword: (password: string) => Promise<PasswordValidationResult>;
-  hasPermission: (permission: string) => boolean;
-  hasRole: (role: string) => boolean;
-  hasAnyRole: (roles: string[]) => boolean;
-  hasAllPermissions: (permissions: string[]) => boolean;
   isSessionExpiringSoon: () => boolean;
   isInitialized: boolean;
-  // User management (admin only)
-  getUsers: (page?: number, limit?: number) => Promise<AuthResponse<UserListResponse>>;
-  createUser: (userData: CreateUserRequest) => Promise<AuthResponse<User>>;
-  updateUser: (userId: string, userData: UpdateUserRequest) => Promise<AuthResponse<User>>;
-  deleteUser: (userId: string) => Promise<AuthResponse<void>>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -213,78 +199,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return await authService.validatePassword(password);
   }, []);
 
-  // Simplified permission checking - wait for auth state to be ready
-  const hasPermission = useCallback((_permission: string): boolean => {
-    // Simplified auth: no permission checking
-    const authState = authService.getState();
-    return authState.isAuthenticated;
-  }, []);
-
-  const hasRole = useCallback((_role: string): boolean => {
-    // Simplified auth: no role checking 
-    const authState = authService.getState();
-    return authState.isAuthenticated;
-  }, []);
-
-  const hasAnyRole = useCallback((_roles: string[]): boolean => {
-    // Simplified auth: no role checking
-    const authState = authService.getState();
-    return authState.isAuthenticated;
-  }, []);
-
-  const hasAllPermissions = useCallback((_permissions: string[]): boolean => {
-    // Simplified auth: no permission checking
-    const authState = authService.getState();
-    return authState.isAuthenticated;
-  }, []);
-
-  // In session-based auth, sessions are managed by server cookies
-  // No need to check expiration client-side
+  // Session expiry check - sessions are managed automatically by server cookies
   const isSessionExpiringSoon = useCallback((): boolean => {
     return false; // Sessions are managed automatically
   }, []);
 
 
-
-  // User management functions (admin only)
-  const getUsers = useCallback(async (page?: number, limit?: number): Promise<AuthResponse<UserListResponse>> => {
-    const result = await authService.getUsers(page, limit);
-    
-    return {
-      success: result.status === 'success',
-      data: result,
-      error: result.status === 'error' ? { code: 'GET_USERS_ERROR', message: result.message || 'Failed to get users' } : undefined
-    };
-  }, []);
-
-  const createUser = useCallback(async (userData: CreateUserRequest): Promise<AuthResponse<User>> => {
-    const result = await authService.createUser(userData);
-    
-    return {
-      success: result.success,
-      data: result.user,
-      error: result.error ? { code: 'CREATE_USER_ERROR', message: result.error } : undefined
-    };
-  }, []);
-
-  const updateUser = useCallback(async (userId: string, userData: UpdateUserRequest): Promise<AuthResponse<User>> => {
-    const result = await authService.updateUser(userId, userData);
-    
-    return {
-      success: result.success,
-      data: result.user,
-      error: result.error ? { code: 'UPDATE_USER_ERROR', message: result.error } : undefined
-    };
-  }, []);
-
-  const deleteUser = useCallback(async (userId: string): Promise<AuthResponse<void>> => {
-    const result = await authService.deleteUser(userId);
-    
-    return {
-      success: result.success,
-      error: result.error ? { code: 'DELETE_USER_ERROR', message: result.error } : undefined
-    };
-  }, []);
 
   // PERFORMANCE OPTIMIZATION: Memoize context value to prevent cascade re-renders
   // This is critical for app-wide performance as AuthContext is consumed by many components
@@ -295,16 +215,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refreshSession,
     changePassword,
     validatePassword,
-    hasPermission,
-    hasRole,
-    hasAnyRole,
-    hasAllPermissions,
     isSessionExpiringSoon,
-    isInitialized,
-    getUsers,
-    createUser,
-    updateUser,
-    deleteUser
+    isInitialized
   }), [
     // AuthState dependencies - these are the core state values that should trigger re-renders
     authState,
@@ -315,15 +227,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refreshSession,
     changePassword,
     validatePassword,
-    hasPermission,
-    hasRole,
-    hasAnyRole,
-    hasAllPermissions,
-    isSessionExpiringSoon,
-    getUsers,
-    createUser,
-    updateUser,
-    deleteUser
+    isSessionExpiringSoon
   ]);
 
   return (
@@ -340,125 +244,6 @@ export function useAuth(): AuthContextType {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
-
-// Higher-order component for protected routes
-interface ProtectedRouteProps {
-  children: ReactNode;
-  requiredPermissions?: string[];
-  requiredRoles?: string[];
-  requireAnyRole?: boolean; // If true, user needs ANY of the required roles, otherwise ALL
-  fallback?: ReactNode;
-  redirectTo?: string;
-}
-
-export function ProtectedRoute({
-  children,
-  requiredPermissions = [],
-  requiredRoles = [],
-  requireAnyRole = false,
-  fallback = <div>Access denied. You don&apos;t have permission to view this content.</div>,
-  redirectTo
-}: ProtectedRouteProps) {
-  const { isAuthenticated, hasRole, hasAnyRole, hasAllPermissions, isLoading, isInitialized } = useAuth();
-
-  // Show loading while auth is initializing
-  if (!isInitialized || isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    if (redirectTo && typeof window !== 'undefined') {
-      window.location.href = redirectTo;
-      return null;
-    }
-    return <div>Please log in to access this content.</div>;
-  }
-
-  // Check permissions
-  if (requiredPermissions.length > 0 && !hasAllPermissions(requiredPermissions)) {
-    return <>{fallback}</>;
-  }
-
-  // Check roles
-  if (requiredRoles.length > 0) {
-    const hasRequiredRoles = requireAnyRole 
-      ? hasAnyRole(requiredRoles)
-      : requiredRoles.every(role => hasRole(role));
-    
-    if (!hasRequiredRoles) {
-      return <>{fallback}</>;
-    }
-  }
-
-  return <>{children}</>;
-}
-
-// Hook for conditional rendering based on permissions
-export function usePermissions() {
-  const { hasPermission, hasRole, hasAnyRole, hasAllPermissions } = useAuth();
-
-  const canAccess = useCallback((config: {
-    permissions?: string[];
-    roles?: string[];
-    requireAnyRole?: boolean;
-  }) => {
-    const { permissions = [], roles = [], requireAnyRole = false } = config;
-
-    // Check permissions
-    if (permissions.length > 0 && !hasAllPermissions(permissions)) {
-      return false;
-    }
-
-    // Check roles
-    if (roles.length > 0) {
-      const hasRequiredRoles = requireAnyRole 
-        ? hasAnyRole(roles)
-        : roles.every(role => hasRole(role));
-      
-      if (!hasRequiredRoles) {
-        return false;
-      }
-    }
-
-    return true;
-  }, [hasRole, hasAnyRole, hasAllPermissions]);
-
-  return {
-    hasPermission,
-    hasRole,
-    hasAnyRole,
-    hasAllPermissions,
-    canAccess
-  };
-}
-
-// Component for conditional rendering
-interface ConditionalRenderProps {
-  children: ReactNode;
-  permissions?: string[];
-  roles?: string[];
-  requireAnyRole?: boolean;
-  fallback?: ReactNode;
-}
-
-export function ConditionalRender({
-  children,
-  permissions = [],
-  roles = [],
-  requireAnyRole = false,
-  fallback = null
-}: ConditionalRenderProps) {
-  const { canAccess } = usePermissions();
-
-  const hasAccess = canAccess({
-    permissions,
-    roles,
-    requireAnyRole
-  });
-
-  return hasAccess ? <>{children}</> : <>{fallback}</>;
 }
 
 export default AuthContext;

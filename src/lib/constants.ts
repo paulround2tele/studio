@@ -157,50 +157,6 @@ export const DEFAULT_CONFIG = {
   },
 } as const;
 
-// ===== PERMISSION CONSTANTS =====
-export const PERMISSIONS = {
-  // Campaign permissions
-  CAMPAIGNS_READ: "campaigns:read",
-  CAMPAIGNS_WRITE: "campaigns:write",
-  CAMPAIGNS_DELETE: "campaigns:delete",
-  CAMPAIGNS_EXECUTE: "campaigns:execute",
-
-  // Persona permissions
-  PERSONAS_READ: "personas:read",
-  PERSONAS_WRITE: "personas:write",
-  PERSONAS_DELETE: "personas:delete",
-  PERSONAS_TEST: "personas:test",
-
-  // Proxy permissions
-  PROXIES_READ: "proxies:read",
-  PROXIES_WRITE: "proxies:write",
-  PROXIES_DELETE: "proxies:delete",
-  PROXIES_TEST: "proxies:test",
-
-  // User management permissions
-  USERS_READ: "users:read",
-  USERS_WRITE: "users:write",
-  USERS_DELETE: "users:delete",
-  USERS_MANAGE_ROLES: "users:manage_roles",
-
-  // System permissions
-  SYSTEM_READ: "system:read",
-  SYSTEM_WRITE: "system:write",
-  SYSTEM_ADMIN: "system:admin",
-
-  // Audit permissions
-  AUDIT_READ: "audit:read",
-  AUDIT_WRITE: "audit:write",
-} as const;
-
-// ===== ROLE CONSTANTS =====
-export const ROLES = {
-  ADMIN: "admin",
-  USER: "user",
-  VIEWER: "viewer",
-  OPERATOR: "operator",
-} as const;
-
 // ===== SESSION CONSTANTS =====
 export const SESSION_CONFIG = {
   DEFAULT_TIMEOUT_MINUTES: 30,
@@ -252,10 +208,6 @@ export const ERROR_CODES = {
   ACCOUNT_LOCKED: "ACCOUNT_LOCKED",
   ACCOUNT_DISABLED: "ACCOUNT_DISABLED",
   RATE_LIMITED: "RATE_LIMITED",
-
-  // Authorization errors
-  INSUFFICIENT_PERMISSIONS: "INSUFFICIENT_PERMISSIONS",
-  ROLE_REQUIRED: "ROLE_REQUIRED",
 
   // Validation errors
   VALIDATION_FAILED: "VALIDATION_FAILED",
@@ -391,34 +343,6 @@ export const getDisplayName = (
     default:
       return value;
   }
-};
-
-export const hasPermission = (
-  userPermissions: string[],
-  requiredPermission: string,
-): boolean => {
-  return (
-    userPermissions.includes(requiredPermission) ||
-    userPermissions.includes(PERMISSIONS.SYSTEM_ADMIN)
-  );
-};
-
-export const hasAnyPermission = (
-  userPermissions: string[],
-  requiredPermissions: string[],
-): boolean => {
-  return requiredPermissions.some((permission) =>
-    hasPermission(userPermissions, permission),
-  );
-};
-
-export const hasAllPermissions = (
-  userPermissions: string[],
-  requiredPermissions: string[],
-): boolean => {
-  return requiredPermissions.every((permission) =>
-    hasPermission(userPermissions, permission),
-  );
 };
 
 // ===== LEGACY CAMPAIGN PHASE ORDERING =====

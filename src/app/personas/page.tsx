@@ -378,7 +378,6 @@ function PersonasPageContent() {
 export default function PersonasPage() {
   return (
     <StrictProtectedRoute
-      requiredPermissions={['personas:read']}
       redirectTo="/login"
     >
       <PersonasPageContent />

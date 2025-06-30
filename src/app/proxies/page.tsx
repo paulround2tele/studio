@@ -342,7 +342,6 @@ function ProxiesPageContent() {
 export default function ProxiesPage() {
   return (
     <StrictProtectedRoute
-      requiredPermissions={['proxies:read']}
       redirectTo="/login"
     >
       <ProxiesPageContent />

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
-import { ConditionalAccess } from '@/components/auth/ProtectedRoute';
 import type { CampaignViewModel, CampaignsListResponse, CampaignDeleteResponse, CampaignOperationResponse } from '@/lib/types';
 import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react';
@@ -18,7 +17,6 @@ import { normalizeStatus, isActiveStatus } from '@/lib/utils/statusMapping';
 import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
 import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 import { useOptimisticUpdate, useLoadingState, useStateSubscription } from '@/lib/state/stateManager';
 import { transformCampaignsToViewModels, mergeCampaignApiUpdate } from '@/lib/utils/campaignTransforms';
 
@@ -41,7 +39,6 @@ function CampaignsPageContent() {
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   
   const { toast } = useToast();
-  const { hasPermission } = useAuth();
   const { applyUpdate, confirmUpdate, rollbackUpdate } = useOptimisticUpdate();
   const { setLoading: setGlobalLoading, isLoading: isGlobalLoading } = useLoadingState();
 
@@ -279,15 +276,6 @@ function CampaignsPageContent() {
 
 
   const handleDeleteCampaign = async (campaignId: string) => {
-    if (!hasPermission('campaigns:delete')) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to delete campaigns.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setActionLoading(prev => ({ ...prev, [`delete-${campaignId}`]: true }));
     setGlobalLoading(`delete_campaign_${campaignId}`, true, 'Deleting campaign');
 
@@ -342,16 +330,6 @@ function CampaignsPageContent() {
   };
 
   const handleCampaignControl = async (campaignId: string, action: 'pause' | 'resume' | 'stop') => {
-    const requiredPermission = `campaigns:${action}`;
-    if (!hasPermission(requiredPermission)) {
-      toast({
-        title: "Permission Denied",
-        description: `You don't have permission to ${action} campaigns.`,
-        variant: "destructive"
-      });
-      return;
-    }
-
     const actionKey = `${action}-${campaignId}`;
     setActionLoading(prev => ({ ...prev, [actionKey]: true }));
     setGlobalLoading(`${action}_campaign_${campaignId}`, true, `${action}ing campaign`);
@@ -445,14 +423,12 @@ function CampaignsPageContent() {
                 </Badge>
               )}
             </div>
-            <ConditionalAccess requiredPermissions={['campaigns:create']}>
-              <Button asChild>
-                <Link href="/campaigns/new">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Create New Campaign
-                </Link>
-              </Button>
-            </ConditionalAccess>
+            <Button asChild>
+              <Link href="/campaigns/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create New Campaign
+              </Link>
+            </Button>
           </div>
         }
       />
@@ -542,7 +518,6 @@ function CampaignsPageContent() {
 export default function CampaignsPage() {
  return (
    <StrictProtectedRoute
-     requiredPermissions={['campaigns:read']}
      redirectTo="/login"
    >
      <CampaignsPageContent />

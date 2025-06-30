@@ -129,10 +129,6 @@ class GlobalErrorBoundary extends Component<Props, State> {
       return 'Authentication error. Please log in again.';
     }
     
-    if (error.message.includes('Permission')) {
-      return 'You do not have permission to perform this action.';
-    }
-    
     // Generic fallback
     return 'An unexpected error occurred. Our team has been notified.';
   };

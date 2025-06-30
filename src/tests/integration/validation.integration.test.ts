@@ -25,8 +25,7 @@ import {
 import {
   transformErrorResponse,
   isValidationError,
-  isAuthError,
-  isPermissionError
+  isAuthError
 } from '@/lib/api/transformers/error-transformers';
 import { validationSchemas } from '@/lib/schemas/alignedValidationSchemas';
 import type { ModelsCampaignAPI } from '@/lib/api-client/models/models-campaign-api';
@@ -225,11 +224,9 @@ describe('Error Response Transformations', () => {
   it('should identify error types correctly', () => {
     const validationError = transformErrorResponse({ message: 'Validation failed' }, 422);
     const authError = transformErrorResponse({ message: 'Unauthorized' }, 401);
-    const permissionError = transformErrorResponse({ message: 'Forbidden' }, 403);
     
     expect(isValidationError(validationError)).toBe(true);
     expect(isAuthError(authError)).toBe(true);
-    expect(isPermissionError(permissionError)).toBe(true);
   });
 
   it('should handle string errors', () => {

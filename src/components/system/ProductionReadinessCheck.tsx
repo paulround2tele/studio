@@ -17,7 +17,7 @@ const checkAPIHealth = async (): Promise<{ status: string; version?: string; mes
   
   if (typeof window !== 'undefined') {
     // Client-side: Check for environment variables first
-    const envApiUrl = (window as any).ENV?.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL;
+    const envApiUrl = (window as unknown as { ENV?: { NEXT_PUBLIC_API_URL?: string } }).ENV?.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL;
     if (envApiUrl) {
       apiBaseUrl = envApiUrl;
     } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
