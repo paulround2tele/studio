@@ -13,6 +13,7 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   login: (credentials: { email: string; password: string; rememberMe?: boolean }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  setAuthState: (state: AuthState) => void;
   // Compatibility properties for existing code
   isInitialized: boolean;
   changePassword?: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
@@ -100,6 +101,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const setAuthStateExternal = useCallback((state: AuthState) => {
+    setAuthState(state);
+  }, []);
+
   const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
     return await authService.changePassword(currentPassword, newPassword);
   }, []);
@@ -108,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ...authState,
     login,
     logout,
+    setAuthState: setAuthStateExternal,
     isInitialized: !authState.isLoading,
     changePassword,
     validatePassword: async () => ({ isValid: true }) // Simple placeholder

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthUI } from '@/lib/hooks/useAuthUI';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,7 +31,7 @@ export function LoginForm({
   title = 'Welcome back to DomainFlow',
   description = 'Sign in to your account to continue'
 }: LoginFormProps) {
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuthUI();
   const router = useRouter();
   const searchParams = useSearchParams();
   

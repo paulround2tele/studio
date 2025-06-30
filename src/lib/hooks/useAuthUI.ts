@@ -3,6 +3,7 @@
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 import { logAuth } from '@/lib/utils/logger';
 import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/lib/services/authService';
 
 /**
  * Hook that wraps auth operations with UI logic
@@ -17,9 +18,14 @@ export function useAuthUI() {
     loadingStore.startLoading(LOADING_OPERATIONS.LOGIN, 'Signing in...');
 
     try {
-      const result = await auth.login(credentials);
+      const result = await authService.login(credentials);
       
       if (result.success) {
+        auth.setAuthState({
+          user: result.user,
+          isAuthenticated: true,
+          isLoading: false,
+        });
         logAuth.success('Login successful');
         loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'succeeded');
       } else {
@@ -41,7 +47,8 @@ export function useAuthUI() {
     loadingStore.startLoading(LOADING_OPERATIONS.LOGOUT, 'Signing out...');
 
     try {
-      await auth.logout();
+      await authService.logout();
+      auth.setAuthState({ user: null, isAuthenticated: false, isLoading: false });
       logAuth.success('Logout successful');
       loadingStore.stopLoading(LOADING_OPERATIONS.LOGOUT, 'succeeded');
     } catch (error) {
