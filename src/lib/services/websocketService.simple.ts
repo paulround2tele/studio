@@ -292,7 +292,7 @@ class WebSocketService {
   }
 
   /**
-   * Handle connection error
+   * Handle connection error - distinguish between retryable connection issues and true errors
    */
   private handleError(connectionKey: string, error: Event): void {
     // More graceful error logging - don't log full error objects for common WebSocket issues
@@ -302,18 +302,37 @@ class WebSocketService {
       timeStamp: error.timeStamp
     };
     
-    // Use warn level instead of error for WebSocket connection issues
-    logger.warn('WEBSOCKET', `Connection error: ${connectionKey}`, errorDetails);
-
-    // Update status
-    const status = this.connectionStatuses.get(connectionKey);
-    if (status) {
-      status.lastError = `Connection error: ${error.type}`;
+    // Classify error types - only escalate true application errors
+    const isConnectionError = error.type === 'error' && error.target?.constructor?.name === 'WebSocket';
+    
+    if (isConnectionError) {
+      // This is a normal connection failure (network issues, server down, etc.)
+      // Log at debug level and don't escalate to application layer
+      logger.debug('WEBSOCKET', `Connection attempt failed: ${connectionKey} (will retry)`, errorDetails);
+      
+      // Update status but don't call error handler for connection attempts
+      const status = this.connectionStatuses.get(connectionKey);
+      if (status) {
+        status.lastError = `Connection attempt failed: ${error.type}`;
+      }
+      
+      // Don't call onError handler for normal connection failures - they will be retried
+      // The application should only be notified of true errors, not connection attempts
+      
+    } else {
+      // This is an actual application error that should be escalated
+      logger.warn('WEBSOCKET', `Application error: ${connectionKey}`, errorDetails);
+      
+      // Update status
+      const status = this.connectionStatuses.get(connectionKey);
+      if (status) {
+        status.lastError = `Application error: ${error.type}`;
+      }
+      
+      // Call error handler for true application errors
+      const handlers = this.eventHandlers.get(connectionKey);
+      handlers?.onError?.(error);
     }
-
-    // Call error handler
-    const handlers = this.eventHandlers.get(connectionKey);
-    handlers?.onError?.(error);
   }
 
   /**

@@ -210,7 +210,28 @@ function CampaignsPageContent() {
             }
           },
           (error) => {
-            console.error('[CampaignsPage] WebSocket error - setting connected to false:', serializeError(error));
+            // ENHANCED DIAGNOSTIC: Classify WebSocket error types
+            const isEvent = error instanceof Event;
+            const isNetworkError = error instanceof Error && (
+              error.message.includes('Failed to connect') ||
+              error.message.includes('Connection timeout') ||
+              error.message.includes('Network error')
+            );
+            
+            // Only log as error if it's a true application error, not a connection attempt
+            if (isEvent) {
+              console.warn('[CampaignsPage] WebSocket connection event (normal):', {
+                type: error.type,
+                target: error.target?.constructor?.name,
+                timeStamp: error.timeStamp,
+                isTrusted: error.isTrusted
+              });
+            } else if (isNetworkError) {
+              console.warn('[CampaignsPage] WebSocket network issue (will retry):', error.message);
+            } else {
+              console.error('[CampaignsPage] WebSocket application error:', serializeError(error));
+            }
+            
             if (isMountedRef.current) {
               setWsConnected(false);
             }
