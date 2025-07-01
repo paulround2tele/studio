@@ -67,8 +67,8 @@ class ContentSecurityPolicy {
    */
   private getDefaultDirectives(): CSPDirectives {
     const isDevelopment = process.env.NODE_ENV === 'development';
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080';
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || 'ws://localhost:8080';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || '';
 
     const directives: CSPDirectives = {
       'default-src': ["'self'"],

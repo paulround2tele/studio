@@ -291,12 +291,14 @@ export const validateConfig = (config: Partial<AppConfig>): config is AppConfig 
 // Export default configuration schema for validation
 export const DEFAULT_CONFIG_SCHEMA: AppConfig = {
   api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || '',
     timeout: 30000,
     retryAttempts: 3,
   },
   websocket: {
-    url: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/api/v2/ws',
+    url: process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ?
+      `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v2/ws` :
+      '/api/v2/ws'),
     reconnectInterval: 5000,
     maxReconnectAttempts: 10,
   },

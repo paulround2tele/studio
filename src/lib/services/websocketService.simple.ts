@@ -26,7 +26,9 @@ interface WebSocketConfig {
  * Default configuration from environment variables
  */
 const DEFAULT_CONFIG: WebSocketConfig = {
-  url: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/api/v2/ws',
+  url: process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ?
+    `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v2/ws` :
+    '/api/v2/ws'),
   // RATE LIMIT FIX: Increased base reconnect interval from 5s to 10s
   reconnectInterval: parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || '10000'),
   maxReconnectAttempts: parseInt(process.env.NEXT_PUBLIC_WS_MAX_RECONNECTS || '5'),

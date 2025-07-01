@@ -56,7 +56,7 @@ export interface EnvironmentConfig {
 const environments: Record<string, EnvironmentConfig> = {
   development: {
     api: {
-      baseUrl: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8080',
+      baseUrl: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '',
       timeout: 30000,
       retryAttempts: 3,
       retryDelay: 1000,
@@ -66,7 +66,9 @@ const environments: Record<string, EnvironmentConfig> = {
       sessionTimeoutMinutes: 120, // 2 hours
     },
     websocket: {
-      url: process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || 'ws://localhost:8080/api/v2/ws',
+      url: process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || (typeof window !== 'undefined' ?
+        `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v2/ws` :
+        '/api/v2/ws'),
       reconnectAttempts: 5,
       reconnectDelay: 2000,
       heartbeatInterval: 30000,
@@ -219,6 +221,13 @@ function applyRuntimeOverrides(config: EnvironmentConfig): EnvironmentConfig {
   const overriddenConfig = { ...config };
   
   try {
+    // Clear any problematic localStorage entries first
+    clearProblematicOverrides();
+    
+    // Environment detection for production safeguards
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
     // URL parameter overrides
     const urlParams = new URLSearchParams(window.location.search);
     
@@ -236,11 +245,24 @@ function applyRuntimeOverrides(config: EnvironmentConfig): EnvironmentConfig {
       console.info('Debug mode enabled via URL param');
     }
     
-    // localStorage overrides
+    // localStorage overrides with localhost protection
     const storedApiUrl = localStorage.getItem('apiBaseUrlOverride');
-    if (storedApiUrl && !apiOverride) {
+    const isLocalhostUrl = storedApiUrl?.includes('localhost') || storedApiUrl?.includes('127.0.0.1');
+    
+    // Clear localStorage if it contains localhost URLs
+    if (isLocalhostUrl) {
+      localStorage.removeItem('apiBaseUrlOverride');
+      console.warn('Cleared localhost URL from localStorage override');
+    }
+    
+    // Only allow localStorage override in development and reject localhost URLs
+    if (storedApiUrl && !apiOverride && isDevelopment && !isLocalhostUrl) {
       overriddenConfig.api.baseUrl = storedApiUrl;
       console.info(`API base URL overridden via localStorage: ${storedApiUrl}`);
+    } else if (storedApiUrl && !apiOverride && isProduction) {
+      console.warn('Ignoring localStorage API override in production environment');
+    } else if (isLocalhostUrl) {
+      console.warn('Rejecting localhost URL from localStorage override');
     }
     
     const storedDebugMode = localStorage.getItem('debugModeOverride');
@@ -249,11 +271,39 @@ function applyRuntimeOverrides(config: EnvironmentConfig): EnvironmentConfig {
       console.info('Debug mode enabled via localStorage');
     }
     
+    // Add diagnostic logging
+    console.log('API URL resolution:', {
+      envUrl: process.env.NEXT_PUBLIC_API_URL,
+      storedOverride: storedApiUrl,
+      isLocalhost: isLocalhostUrl,
+      finalUrl: overriddenConfig.api.baseUrl,
+      environment: isProduction ? 'production' : isDevelopment ? 'development' : 'unknown'
+    });
+    
   } catch (error) {
     console.warn('Failed to apply runtime overrides:', error);
   }
   
   return overriddenConfig;
+}
+
+// Clear any problematic localStorage entries
+function clearProblematicOverrides(): void {
+  try {
+    const storedApiUrl = localStorage.getItem('apiBaseUrlOverride');
+    if (storedApiUrl?.includes('localhost') || storedApiUrl?.includes('127.0.0.1')) {
+      localStorage.removeItem('apiBaseUrlOverride');
+      console.warn('Cleared localhost URL from apiBaseUrlOverride');
+    }
+    
+    const storedWsUrl = localStorage.getItem('wsUrlOverride');
+    if (storedWsUrl?.includes('localhost') || storedWsUrl?.includes('127.0.0.1')) {
+      localStorage.removeItem('wsUrlOverride');
+      console.warn('Cleared localhost URL from wsUrlOverride');
+    }
+  } catch (error) {
+    console.warn('Failed to clear problematic localStorage overrides:', error);
+  }
 }
 
 // Utility functions for specific configuration access

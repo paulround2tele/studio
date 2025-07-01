@@ -120,8 +120,8 @@ export class ApiClient {
   private config: RequestConfig;
 
   constructor(baseUrl?: string) {
-    // Use environment variable for backend URL, fallback to provided baseUrl or default
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2';
+    // Use environment variable for backend URL, fallback to relative URL for production
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api/v2';
     this.baseUrl = baseUrl || backendUrl;
     
     // RATE LIMIT FIX: Enhanced configuration with proper rate limiting
@@ -131,7 +131,23 @@ export class ApiClient {
       retryDelay: parseInt(process.env.NEXT_PUBLIC_API_RETRY_DELAY || '2000'), // Increased base delay
     };
     
-    // Debug logging for API client initialization
+    // Enhanced debug logging for API client initialization
+    console.log('API Client Configuration:', {
+      providedBaseUrl: baseUrl,
+      envApiUrl: process.env.NEXT_PUBLIC_API_URL,
+      finalBaseUrl: this.baseUrl,
+      isLocalhost: this.baseUrl?.includes('localhost'),
+      environment: process.env.NODE_ENV
+    });
+    
+    // Warning for localhost URLs in production
+    if (this.baseUrl?.includes('localhost')) {
+      console.warn('WARNING: API Client is using localhost URL - this will break in production!');
+      console.warn(`  Current baseUrl: ${this.baseUrl}`);
+      console.warn('  This suggests localStorage override issue or misconfiguration');
+    }
+    
+    // Debug logging for API client initialization (legacy format for compatibility)
     console.log('API_CLIENT_DEBUG - Initialized:');
     console.log(`  Backend URL: ${backendUrl}`);
     console.log(`  Base URL: ${this.baseUrl}`);

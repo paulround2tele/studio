@@ -475,7 +475,7 @@ class AuthLogger {
       }
 
       // Use the backend API URL instead of frontend API route
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${backendUrl}/logs/auth`, {
         method: 'POST',
         headers: {
