@@ -224,7 +224,7 @@ function CampaignsPageContent() {
         setGlobalLoading('campaigns_load', false);
       }
     }
-  }, [toast, isGlobalLoading, setGlobalLoading]); // Fixed: Added missing dependencies
+  }, [toast, setGlobalLoading]); // INFINITE LOOP FIX: Remove isGlobalLoading dependency as it's stable
 
 
   useEffect(() => {
@@ -263,7 +263,7 @@ function CampaignsPageContent() {
         abortControllerRef.current = null;
       }
     };
-  }, [loadCampaignsData]);
+  }, []); // INFINITE LOOP FIX: Remove loadCampaignsData dependency to prevent re-creation
 
   // MEMORY LEAK FIX: Cleanup on unmount
   useEffect(() => {

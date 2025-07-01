@@ -11,11 +11,58 @@ import { websocketService, type WebSocketMessage } from '@/lib/services/websocke
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
 
-// Centralized logging utility with timestamps
+// Centralized logging utility with timestamps and proper error serialization
 const logWithTimestamp = (level: 'log' | 'warn' | 'error', message: string, ...args: unknown[]) => {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] [ProductionReadinessCheck] ${message}`;
-  console[level](logMessage, ...args);
+  
+  // Serialize args for meaningful logging
+  const serializedArgs = args.map(arg => {
+    if (arg === null || arg === undefined) {
+      return String(arg);
+    }
+
+    // Handle Error instances - extract non-enumerable properties
+    if (arg instanceof Error) {
+      return {
+        name: arg.name,
+        message: arg.message,
+        stack: arg.stack,
+        ...(('cause' in arg && arg.cause !== undefined) ? { cause: arg.cause } : {}),
+        ...Object.fromEntries(Object.entries(arg))
+      };
+    }
+
+    // Handle Event instances - extract relevant non-enumerable properties
+    if (arg instanceof Event) {
+      return {
+        type: arg.type,
+        isTrusted: arg.isTrusted,
+        timeStamp: arg.timeStamp,
+        target: arg.target?.constructor?.name || 'Unknown',
+        ...(arg.currentTarget ? { currentTarget: arg.currentTarget.constructor?.name || 'Unknown' } : {}),
+        ...Object.fromEntries(Object.entries(arg))
+      };
+    }
+
+    // Handle generic objects with circular reference protection
+    try {
+      const seen = new WeakSet();
+      return JSON.parse(JSON.stringify(arg, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return '[Circular Reference]';
+          }
+          seen.add(value);
+        }
+        return value;
+      }));
+    } catch {
+      return `[Object: ${arg.constructor?.name || 'Unknown'}]`;
+    }
+  });
+  
+  console[level](logMessage, ...serializedArgs);
 };
 
 interface SystemCheck {
@@ -157,6 +204,7 @@ export default function ProductionReadinessCheck() {
           },
           (error: Event | Error) => {
             const testDuration = Date.now() - testStartTime;
+            
             logWithTimestamp('error', '❌ WebSocket test ERROR after', testDuration + 'ms:', error);
             connectionError = error instanceof Error ? error.message : 'Unknown error';
             

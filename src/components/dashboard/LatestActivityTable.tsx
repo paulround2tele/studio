@@ -185,6 +185,7 @@ export default function LatestActivityTable() {
       const response = await getCampaigns();
       const processedActivities: LatestDomainActivity[] = [];
 
+      // Handle the nested response structure: { success: true, data: { success: true, data: [...] } }
       if (response && response.data && Array.isArray(response.data)) {
         const campaignsArray = transformCampaignsToViewModels(response.data);
         campaignsArray.forEach(campaign => {
@@ -211,7 +212,62 @@ export default function LatestActivityTable() {
           });
         });
       } else {
-        console.error("Failed to load campaigns for activity table:", response);
+        // Serialize the response for meaningful logging
+        const serializeResponse = (obj: unknown): string => {
+          if (obj === null || obj === undefined) {
+            return String(obj);
+          }
+
+          // Handle Error instances
+          if (obj instanceof Error) {
+            return JSON.stringify({
+              name: obj.name,
+              message: obj.message,
+              stack: obj.stack,
+              ...(('cause' in obj && obj.cause !== undefined) ? { cause: obj.cause } : {}),
+              ...Object.fromEntries(Object.entries(obj))
+            }, null, 2);
+          }
+
+          // Handle generic objects with circular reference protection
+          try {
+            const seen = new WeakSet();
+            const result = JSON.stringify(obj, (key, value) => {
+              if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) {
+                  return '[Circular Reference]';
+                }
+                seen.add(value);
+              }
+              return value;
+            }, 2);
+            
+            // If JSON.stringify returns '{}' for an object, try to extract some properties manually
+            if (result === '{}' && typeof obj === 'object' && obj !== null) {
+              const keys = Object.getOwnPropertyNames(obj);
+              if (keys.length > 0) {
+                const extractedProps: Record<string, unknown> = {};
+                keys.slice(0, 10).forEach(key => { // Limit to first 10 properties
+                  try {
+                    const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+                    if (descriptor) {
+                      extractedProps[key] = descriptor.value;
+                    }
+                  } catch {
+                    extractedProps[key] = '[Unable to access]';
+                  }
+                });
+                return JSON.stringify(extractedProps, null, 2);
+              }
+            }
+            
+            return result;
+          } catch (error) {
+            return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
+          }
+        };
+
+        console.error("Failed to load campaigns for activity table:", serializeResponse(response));
         // setAllActivityData([]); // Keep existing data on error if not showLoadingSpinner?
       }
 

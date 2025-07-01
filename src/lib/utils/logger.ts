@@ -3,6 +3,126 @@
 // NO HARDCODING - All logging behavior configurable via environment
 
 /**
+ * Serialize Error, Event, and generic objects for meaningful logging
+ * Handles non-enumerable properties and circular references safely
+ */
+function serializeError(obj: unknown): string {
+  if (obj === null || obj === undefined) {
+    return String(obj);
+  }
+
+  // Handle Error instances - extract non-enumerable properties
+  if (obj instanceof Error) {
+    const errorData: Record<string, unknown> = {
+      name: obj.name,
+      message: obj.message,
+      stack: obj.stack,
+    };
+    
+    // Include cause if available (modern Error objects)
+    if ('cause' in obj && obj.cause !== undefined) {
+      errorData.cause = obj.cause;
+    }
+    
+    // Include any custom enumerable properties
+    for (const [key, value] of Object.entries(obj)) {
+      if (!(key in errorData)) {
+        errorData[key] = value;
+      }
+    }
+    
+    return JSON.stringify(errorData, null, 2);
+  }
+
+  // Handle Event instances - extract relevant non-enumerable properties
+  if (obj instanceof Event) {
+    const eventData: Record<string, unknown> = {
+      type: obj.type,
+      isTrusted: obj.isTrusted,
+      timeStamp: obj.timeStamp,
+    };
+    
+    // Add target information if available
+    if (obj.target) {
+      eventData.target = obj.target.constructor?.name || 'Unknown';
+    }
+    
+    // Add currentTarget information if available
+    if (obj.currentTarget) {
+      eventData.currentTarget = obj.currentTarget.constructor?.name || 'Unknown';
+    }
+    
+    // Include any custom enumerable properties
+    for (const [key, value] of Object.entries(obj)) {
+      if (!(key in eventData)) {
+        eventData[key] = value;
+      }
+    }
+    
+    return JSON.stringify(eventData, null, 2);
+  }
+
+  // Handle WebSocket-specific events
+  if (typeof obj === 'object' && obj !== null && 'type' in obj) {
+    const eventObj = obj as any;
+    if (eventObj.type === 'error' || eventObj.type === 'close') {
+      const wsEventData: Record<string, unknown> = {
+        type: eventObj.type,
+        isTrusted: eventObj.isTrusted,
+        timeStamp: eventObj.timeStamp,
+      };
+      
+      // For close events, include code and reason
+      if (eventObj.type === 'close') {
+        wsEventData.code = eventObj.code;
+        wsEventData.reason = eventObj.reason;
+        wsEventData.wasClean = eventObj.wasClean;
+      }
+      
+      return JSON.stringify(wsEventData, null, 2);
+    }
+  }
+
+  // Handle generic objects with circular reference protection
+  try {
+    const seen = new WeakSet();
+    const result = JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular Reference]';
+        }
+        seen.add(value);
+      }
+      return value;
+    }, 2);
+    
+    // If JSON.stringify returns '{}' for an object, try to extract some properties manually
+    if (result === '{}' && typeof obj === 'object' && obj !== null) {
+      const keys = Object.getOwnPropertyNames(obj);
+      if (keys.length > 0) {
+        const extractedProps: Record<string, unknown> = {};
+        keys.slice(0, 10).forEach(key => { // Limit to first 10 properties
+          try {
+            const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+            if (descriptor) {
+              extractedProps[key] = descriptor.value;
+            }
+          } catch {
+            extractedProps[key] = '[Unable to access]';
+          }
+        });
+        return JSON.stringify(extractedProps, null, 2);
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    // Fallback for objects that can't be serialized
+    return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
+  }
+}
+
+/**
  * Environment-aware logging configuration
  * Adapts logging behavior based on environment settings
  */
@@ -158,7 +278,7 @@ class Logger {
     const timestamp = new Date().toISOString();
     const sessionPart = this.sessionId ? ` [${this.sessionId.slice(-8)}]` : '';
     const userPart = this.userId ? ` [user:${this.userId}]` : '';
-    const dataPart = data ? ` ${JSON.stringify(data)}` : '';
+    const dataPart = data ? ` ${serializeError(data)}` : '';
     
     return `[${timestamp}]${sessionPart}${userPart} [${level.toUpperCase()}] [${category}] ${message}${dataPart}`;
   }
@@ -196,7 +316,13 @@ class Logger {
           console.warn(formattedMessage);
           break;
         case 'error':
-          console.error(formattedMessage, error || '');
+          // Use serialized error for meaningful logging
+          if (error) {
+            const serializedError = serializeError(error);
+            console.error(formattedMessage, '\n' + serializedError);
+          } else {
+            console.error(formattedMessage);
+          }
           break;
         default:
           console.log(formattedMessage);
@@ -328,6 +454,9 @@ export type { LoggerConfig, LogEntry };
 
 // Export logger class for testing
 export { Logger };
+
+// Export error serialization utility for use in other modules
+export { serializeError };
 
 // Performance monitoring helpers
 export const performance = {

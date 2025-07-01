@@ -18,7 +18,6 @@ import Link from 'next/link';
 interface LoginFormData {
   email: string;
   password: string;
-  rememberMe: boolean;
 }
 
 interface LoginFormProps {
@@ -40,8 +39,7 @@ export function LoginForm({
   
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
-    password: '',
-    rememberMe: false
+    password: ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,15 +74,13 @@ export function LoginForm({
 
     logger.debug('LOGIN_FORM', 'Form submission started', {
       email: formData.email,
-      passwordLength: formData.password.length,
-      rememberMe: formData.rememberMe
+      passwordLength: formData.password.length
     });
 
     try {
       const result = await login({
         email: formData.email,
-        password: formData.password,
-        rememberMe: formData.rememberMe
+        password: formData.password
       });
 
       logger.debug('LOGIN_FORM', 'Login result received', {
@@ -186,18 +182,6 @@ export function LoginForm({
               </div>
             </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                checked={formData.rememberMe}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, rememberMe: !!checked }))}
-                disabled={isSubmitting || isLoginLoading}
-              />
-              <Label htmlFor="rememberMe" className="text-sm">
-                Remember me
-              </Label>
-            </div>
 
             {/* Error Display */}
             {error && (

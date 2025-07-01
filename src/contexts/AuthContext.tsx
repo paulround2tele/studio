@@ -15,7 +15,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  login: (credentials: { email: string; password: string; rememberMe?: boolean }) => Promise<{ success: boolean; error?: string }>;
+  login: (credentials: { email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   setAuthState: (state: AuthState) => void;
   // Compatibility properties for existing code
@@ -156,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []); // Empty dependency array - only run once on mount
 
-  const login = useCallback(async (credentials: { email: string; password: string; rememberMe?: boolean }) => {
+  const login = useCallback(async (credentials: { email: string; password: string }) => {
     logger.info('AUTH_CONTEXT', 'Login attempt started', { email: credentials.email });
     
     try {

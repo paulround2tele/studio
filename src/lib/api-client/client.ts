@@ -1,5 +1,89 @@
 import type { paths, components } from './types';
 
+// Local error serialization utility
+const serializeError = (obj: unknown): string => {
+  if (obj === null || obj === undefined) {
+    return String(obj);
+  }
+
+  // Handle Error instances - extract non-enumerable properties
+  if (obj instanceof Error) {
+    const errorData: Record<string, unknown> = {
+      name: obj.name,
+      message: obj.message,
+      stack: obj.stack,
+    };
+    
+    // Include cause if available (modern Error objects)
+    if ('cause' in obj && obj.cause !== undefined) {
+      errorData.cause = obj.cause;
+    }
+    
+    // Include any custom enumerable properties
+    for (const [key, value] of Object.entries(obj)) {
+      if (!(key in errorData)) {
+        errorData[key] = value;
+      }
+    }
+    
+    return JSON.stringify(errorData, null, 2);
+  }
+
+  // Handle Event instances - extract relevant non-enumerable properties
+  if (obj instanceof Event) {
+    const eventData: Record<string, unknown> = {
+      type: obj.type,
+      isTrusted: obj.isTrusted,
+      timeStamp: obj.timeStamp,
+    };
+    
+    // Add target information if available
+    if (obj.target) {
+      eventData.target = obj.target.constructor?.name || 'Unknown';
+    }
+    
+    return JSON.stringify(eventData, null, 2);
+  }
+
+  // Handle generic objects with circular reference protection
+  try {
+    const seen = new WeakSet();
+    const result = JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular Reference]';
+        }
+        seen.add(value);
+      }
+      return value;
+    }, 2);
+    
+    // If JSON.stringify returns '{}' for an object, try to extract some properties manually
+    if (result === '{}' && typeof obj === 'object' && obj !== null) {
+      const keys = Object.getOwnPropertyNames(obj);
+      if (keys.length > 0) {
+        const extractedProps: Record<string, unknown> = {};
+        keys.slice(0, 10).forEach(key => { // Limit to first 10 properties
+          try {
+            const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+            if (descriptor) {
+              extractedProps[key] = descriptor.value;
+            }
+          } catch {
+            extractedProps[key] = '[Unable to access]';
+          }
+        });
+        return JSON.stringify(extractedProps, null, 2);
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    // Fallback for objects that can't be serialized
+    return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
+  }
+};
+
 // Type-safe API client using openapi-typescript generated types
 type ApiPaths = paths;
 
@@ -48,12 +132,11 @@ export class ApiClient {
     };
     
     // Debug logging for API client initialization
-    console.log('API_CLIENT_DEBUG - Initialized with:', {
-      backendUrl,
-      baseUrl: this.baseUrl,
-      envVar: process.env.NEXT_PUBLIC_API_URL,
-      config: this.config
-    });
+    console.log('API_CLIENT_DEBUG - Initialized:');
+    console.log(`  Backend URL: ${backendUrl}`);
+    console.log(`  Base URL: ${this.baseUrl}`);
+    console.log(`  Environment Variable: ${process.env.NEXT_PUBLIC_API_URL}`);
+    console.log('  Config:', this.config);
   }
 
   // Enhanced request method with retry logic and better error handling
@@ -82,14 +165,9 @@ export class ApiClient {
     // Retry logic with exponential backoff
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
-        console.log('API_CLIENT_DEBUG - Making request attempt:', {
-          attempt,
-          method,
-          url: url.toString(),
-          baseUrl: this.baseUrl,
-          path,
-          hasBody: !!options?.body
-        });
+        console.log('API_CLIENT_DEBUG - Making request attempt:');
+        console.log(`  Attempt: ${attempt}, Method: ${method}, URL: ${url.toString()}`);
+        console.log(`  BaseURL: ${this.baseUrl}, Path: ${path}, HasBody: ${!!options?.body}`);
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
@@ -98,6 +176,7 @@ export class ApiClient {
           method,
           headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest', // Required for session-based CSRF protection
             ...options?.headers,
           },
           body: options?.body ? JSON.stringify(options.body) : undefined,
@@ -107,13 +186,9 @@ export class ApiClient {
 
         clearTimeout(timeoutId);
 
-        console.log('API_CLIENT_DEBUG - Response received:', {
-          attempt,
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          url: response.url
-        });
+        console.log('API_CLIENT_DEBUG - Response received:');
+        console.log(`  Attempt: ${attempt}, Status: ${response.status} ${response.statusText}`);
+        console.log(`  OK: ${response.ok}, URL: ${response.url}`);
 
         if (!response.ok) {
           let errorData;
@@ -128,7 +203,20 @@ export class ApiClient {
             };
           }
           
-          const error = new Error(errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+          // Ensure error message is always a string to prevent "[object Object]"
+          const rawMessage = errorData.message || errorData.error;
+          let errorMessage: string;
+          
+          if (typeof rawMessage === 'string') {
+            errorMessage = rawMessage;
+          } else if (rawMessage && typeof rawMessage === 'object') {
+            // Use our serialization utility for objects
+            errorMessage = serializeError(rawMessage);
+          } else {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+          
+          const error = new Error(errorMessage);
           
           // RATE LIMIT FIX: Special handling for 429 Too Many Requests
           if (response.status === 429) {
@@ -177,34 +265,30 @@ export class ApiClient {
           error.message.includes('Failed to fetch') ||
           error.message.includes('NetworkError')
         )) {
-          console.warn('API_CLIENT_DEBUG - Network error, retrying:', {
-            attempt,
-            error: error.message,
-            willRetry: attempt < this.config.retryAttempts
-          });
-          
           if (attempt < this.config.retryAttempts) {
+            console.warn('API_CLIENT_DEBUG - Network error, retrying:');
+            console.warn(`  Attempt: ${attempt}/${this.config.retryAttempts}, URL: ${url.toString()}, Method: ${method}`);
+            console.warn('  Error:', serializeError(error));
+            
             // RATE LIMIT FIX: Enhanced exponential backoff with jitter for network errors
             const exponentialDelay = this.config.retryDelay * Math.pow(2, attempt - 1);
             const jitter = Math.random() * 0.1 * exponentialDelay;
             const delay = exponentialDelay + jitter;
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
+          } else {
+            // Final attempt failed - log as error
+            console.error('API_CLIENT_DEBUG - Network error (final attempt):');
+            console.error(`  Attempt: ${attempt}/${this.config.retryAttempts}, URL: ${url.toString()}, Method: ${method}`);
+            console.error('  Error Details:', serializeError(error));
+            throw lastError;
           }
         }
         
-        console.error('API_CLIENT_DEBUG - Network or parsing error:', {
-          attempt,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          url: url.toString(),
-          method
-        });
-        
-        // If this is not the last attempt and it's a retryable error, continue
-        if (attempt < this.config.retryAttempts) {
-          continue;
-        }
-        
+        // For non-network errors, log as error and throw immediately (no retry)
+        console.error('API_CLIENT_DEBUG - Non-network error:');
+        console.error(`  Attempt: ${attempt}, URL: ${url.toString()}, Method: ${method}`);
+        console.error('  Error Details:', serializeError(error));
         throw lastError;
       }
     }

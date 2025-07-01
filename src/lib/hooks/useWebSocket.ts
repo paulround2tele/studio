@@ -53,9 +53,19 @@ export function useCampaignWebSocket(
     onMessage?.(message);
   }, [onMessage]);
 
-  // Error handler that updates state
+  // Error handler that updates state - more graceful error handling
   const handleError = useCallback((error: Event | Error) => {
-    const errorObj = error instanceof Error ? error : new Error('WebSocket error');
+    let errorObj: Error;
+    
+    // Handle different error types more gracefully
+    if (error instanceof Error) {
+      errorObj = error;
+    } else if (error && typeof error === 'object' && 'type' in error && error.type === 'error') {
+      errorObj = new Error('WebSocket connection failed (network or server issue)');
+    } else {
+      errorObj = new Error('WebSocket connection error');
+    }
+    
     setState(prev => ({ ...prev, error: errorObj }));
     onError?.(errorObj);
   }, [onError]);
@@ -150,9 +160,19 @@ export function useGlobalWebSocket(
     onMessage?.(message);
   }, [onMessage]);
 
-  // Error handler that updates state
+  // Error handler that updates state - more graceful error handling
   const handleError = useCallback((error: Event | Error) => {
-    const errorObj = error instanceof Error ? error : new Error('WebSocket error');
+    let errorObj: Error;
+    
+    // Handle different error types more gracefully
+    if (error instanceof Error) {
+      errorObj = error;
+    } else if (error && typeof error === 'object' && 'type' in error && error.type === 'error') {
+      errorObj = new Error('WebSocket connection failed (network or server issue)');
+    } else {
+      errorObj = new Error('WebSocket connection error');
+    }
+    
     setState(prev => ({ ...prev, error: errorObj }));
     onError?.(errorObj);
   }, [onError]);

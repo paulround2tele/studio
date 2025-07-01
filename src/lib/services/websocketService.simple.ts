@@ -133,12 +133,21 @@ class WebSocketService {
       onError,
       onConnect: () => {
         logger.websocket.success('Connected to all campaigns');
-        // Subscribe to campaign updates
+        // Initialize connection first, then subscribe to campaign updates
         this.sendMessage(connectionKey, {
-          type: 'subscribe',
-          data: { channels: ['campaigns', 'campaign-updates'] },
+          type: 'connection_init',
+          data: { lastSequenceNumber: 0 },
           timestamp: Date.now(),
         });
+        
+        // Send subscription after a brief delay to allow connection_ack
+        setTimeout(() => {
+          this.sendMessage(connectionKey, {
+            type: 'subscribe',
+            data: { channels: ['campaigns', 'campaign-updates'] },
+            timestamp: Date.now(),
+          });
+        }, 100);
       },
       onDisconnect: () => {
         logger.info('WEBSOCKET', 'Disconnected from all campaigns');
@@ -261,7 +270,15 @@ class WebSocketService {
    * Handle connection error
    */
   private handleError(connectionKey: string, error: Event): void {
-    logger.error('WEBSOCKET', `Connection error: ${connectionKey}`, error);
+    // More graceful error logging - don't log full error objects for common WebSocket issues
+    const errorDetails = {
+      type: error.type,
+      target: error.target?.constructor?.name || 'WebSocket',
+      timeStamp: error.timeStamp
+    };
+    
+    // Use warn level instead of error for WebSocket connection issues
+    logger.warn('WEBSOCKET', `Connection error: ${connectionKey}`, errorDetails);
 
     // Update status
     const status = this.connectionStatuses.get(connectionKey);
@@ -278,7 +295,11 @@ class WebSocketService {
    * Handle connection failure
    */
   private handleConnectionFailure(connectionKey: string, error: Error): void {
-    logger.error('WEBSOCKET', `Connection failed: ${connectionKey}`, error);
+    // Use warn level for connection failures as they're often temporary network issues
+    logger.warn('WEBSOCKET', `Connection failed: ${connectionKey}`, {
+      message: error.message,
+      name: error.name
+    });
 
     // Update status
     const status = this.connectionStatuses.get(connectionKey);

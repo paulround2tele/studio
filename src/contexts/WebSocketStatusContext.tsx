@@ -130,8 +130,15 @@ export function WebSocketStatusProvider({ children }: { children: React.ReactNod
               connected = true;
               clearTimeout(timeout);
               cleanup();
-              errorDetails = error instanceof Error ? error.message : String(error);
-              logWebSocket.error('Test connection failed', error);
+              // Handle WebSocket errors more gracefully - don't log full error objects for common connection issues
+              if (error instanceof Error) {
+                errorDetails = error.message;
+              } else if (error && typeof error === 'object' && 'type' in error && error.type === 'error') {
+                errorDetails = 'WebSocket connection failed (network or server issue)';
+              } else {
+                errorDetails = 'WebSocket connection failed';
+              }
+              logWebSocket.warn('Test connection failed', { message: errorDetails });
               resolve(false);
             }
           }
@@ -183,10 +190,19 @@ export function WebSocketStatusProvider({ children }: { children: React.ReactNod
       return testResult;
     } catch (error) {
       const testDuration = Date.now() - testStartTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      let errorMessage: string;
       
-      // Simple error logging
-      logWebSocket.error(`Test failed in ${testDuration}ms: ${errorMessage}`, error);
+      // Handle different error types more gracefully
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error && typeof error === 'object' && 'type' in error && error.type === 'error') {
+        errorMessage = 'WebSocket connection failed (network or server issue)';
+      } else {
+        errorMessage = 'WebSocket connection test failed';
+      }
+      
+      // Use warn level for connection issues instead of error
+      logWebSocket.warn(`Test failed in ${testDuration}ms: ${errorMessage}`);
       
       setState(prev => ({
         ...prev,
