@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, ChevronLeft, ChevronRight, Percent } from 'lucide-react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/api-client/client'; // Updated import path
+import { apiClient, getCampaigns } from '@/lib/api-client/client'; // Updated import path
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 
@@ -182,10 +182,10 @@ export default function LatestActivityTable() {
   const fetchAndProcessData = useCallback(async (showLoadingSpinner = true) => {
     if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.FETCH_DASHBOARD_DATA, "Loading dashboard activity");
     try {
-      const response: CampaignsListResponse = await getCampaigns();
+      const response = await getCampaigns();
       const processedActivities: LatestDomainActivity[] = [];
 
-      if (response.status === 'success' && Array.isArray(response.data)) {
+      if (response && response.data && Array.isArray(response.data)) {
         const campaignsArray = transformCampaignsToViewModels(response.data);
         campaignsArray.forEach(campaign => {
           if (!campaign.id || !campaign.name || !campaign.createdAt) return;
@@ -211,7 +211,7 @@ export default function LatestActivityTable() {
           });
         });
       } else {
-        console.error("Failed to load campaigns for activity table:", response.message);
+        console.error("Failed to load campaigns for activity table:", response);
         // setAllActivityData([]); // Keep existing data on error if not showLoadingSpinner?
       }
 

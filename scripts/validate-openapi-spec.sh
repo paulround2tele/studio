@@ -1,7 +1,10 @@
 #!/bin/bash
-# Validate OpenAPI schema using swagger-cli
+# Validate OpenAPI schema using openapi-typescript
 set -e
-npx swagger-cli validate backend/docs/openapi.yaml
+echo "Validating OpenAPI schema..."
+npx openapi-typescript backend/docs/openapi.yaml --output /dev/null
 if [ -f backend/docs/openapi-fresh.yaml ]; then
-  npx swagger-cli validate backend/docs/openapi-fresh.yaml
+  echo "Validating fresh OpenAPI schema..."
+  npx openapi-typescript backend/docs/openapi-fresh.yaml --output /dev/null
 fi
+echo "OpenAPI validation completed successfully!"

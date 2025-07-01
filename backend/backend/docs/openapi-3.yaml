@@ -15,6 +15,103 @@ components:
             required:
                 - proxyId
             type: object
+        AuthConfig:
+            description: Authentication configuration
+            properties:
+                accountLockDuration:
+                    description: Account lock duration (e.g., '15m')
+                    type: string
+                bcryptCost:
+                    description: BCrypt cost factor for password hashing
+                    maximum: 20
+                    minimum: 4
+                    type: integer
+                captchaThreshold:
+                    description: Number of failed attempts before requiring CAPTCHA
+                    minimum: 1
+                    type: integer
+                fromEmail:
+                    description: From email address for system emails
+                    format: email
+                    type: string
+                fromName:
+                    description: From name for system emails
+                    type: string
+                maxFailedAttempts:
+                    description: Maximum failed login attempts before lockout
+                    minimum: 1
+                    type: integer
+                maxLoginAttempts:
+                    description: Maximum login attempts per rate limit window
+                    minimum: 1
+                    type: integer
+                maxPasswordResetAttempts:
+                    description: Maximum password reset attempts per rate limit window
+                    minimum: 1
+                    type: integer
+                passwordMinLength:
+                    description: Minimum password length requirement
+                    minimum: 8
+                    type: integer
+                rateLimitWindow:
+                    description: Rate limit window (e.g., '15m')
+                    type: string
+                recaptchaSiteKey:
+                    description: reCAPTCHA site key
+                    type: string
+                resetTokenExpiry:
+                    description: Password reset token expiry (e.g., '15m')
+                    type: string
+                sessionCookieDomain:
+                    description: Session cookie domain
+                    type: string
+                sessionCookieName:
+                    description: Session cookie name
+                    type: string
+                sessionCookieSecure:
+                    description: Whether session cookie requires HTTPS
+                    type: boolean
+                sessionDuration:
+                    description: Session duration (e.g., '120m')
+                    type: string
+                sessionIdleTimeout:
+                    description: Session idle timeout (e.g., '30m')
+                    type: string
+                smtpHost:
+                    description: SMTP server host
+                    type: string
+                smtpPort:
+                    description: SMTP server port
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                smtpUsername:
+                    description: SMTP username
+                    type: string
+            type: object
+        BatchKeywordExtractionRequest:
+            description: Request body for batch keyword extraction
+            properties:
+                items:
+                    description: Array of URLs and parameters for keyword extraction
+                    items:
+                        $ref: '#/components/schemas/KeywordExtractionRequestItem'
+                    minItems: 1
+                    type: array
+            required:
+                - items
+            type: object
+        BatchKeywordExtractionResponse:
+            description: Response body for batch keyword extraction
+            properties:
+                results:
+                    description: Array of keyword extraction results
+                    items:
+                        $ref: '#/components/schemas/KeywordExtractionAPIResult'
+                    type: array
+            required:
+                - results
+            type: object
         Campaign:
             description: Campaign information
             properties:
@@ -154,6 +251,26 @@ components:
                 - currentPassword
                 - newPassword
             type: object
+        ComponentStatus:
+            description: Status of a single component
+            properties:
+                message:
+                    description: Optional status message
+                    type: string
+                status:
+                    description: Component status
+                    enum:
+                        - ok
+                        - error
+                    type: string
+                timestamp:
+                    description: Status check timestamp
+                    format: date-time
+                    type: string
+            required:
+                - status
+                - timestamp
+            type: object
         CookieHandling:
             description: Cookie handling configuration
             properties:
@@ -290,6 +407,75 @@ components:
                 - name
                 - protocol
                 - address
+            type: object
+        DNSConfig:
+            description: DNS validator configuration
+            properties:
+                concurrentQueriesPerDomain:
+                    description: Concurrent queries per domain
+                    maximum: 10
+                    minimum: 1
+                    type: integer
+                maxConcurrentGoroutines:
+                    description: Maximum concurrent goroutines
+                    maximum: 1000
+                    minimum: 1
+                    type: integer
+                maxDomainsPerRequest:
+                    description: Maximum domains per request
+                    maximum: 1000
+                    minimum: 1
+                    type: integer
+                queryDelayMaxMs:
+                    description: Maximum query delay in milliseconds
+                    maximum: 10000
+                    minimum: 0
+                    type: integer
+                queryDelayMinMs:
+                    description: Minimum query delay in milliseconds
+                    maximum: 5000
+                    minimum: 0
+                    type: integer
+                queryTimeoutSeconds:
+                    description: DNS query timeout in seconds
+                    maximum: 60
+                    minimum: 1
+                    type: integer
+                rateLimitBurst:
+                    description: Rate limit burst capacity
+                    minimum: 1
+                    type: integer
+                rateLimitDps:
+                    description: Rate limit in queries per second
+                    minimum: 0
+                    type: number
+                resolverStrategy:
+                    description: Strategy for selecting DNS resolvers
+                    enum:
+                        - round_robin
+                        - random
+                        - weighted
+                        - priority
+                    type: string
+                resolvers:
+                    description: DNS resolver IP addresses
+                    items:
+                        format: ipv4
+                        type: string
+                    type: array
+                resolversPreferredOrder:
+                    description: Preferred order of resolvers
+                    items:
+                        type: string
+                    type: array
+                resolversWeighted:
+                    additionalProperties:
+                        type: integer
+                    description: Weighted resolver configuration
+                    type: object
+                useSystemResolvers:
+                    description: Use system DNS resolvers
+                    type: boolean
             type: object
         DNSValidationResult:
             description: DNS validation result information
@@ -584,6 +770,62 @@ components:
                     description: Enable HTTP/2
                     type: boolean
             type: object
+        HTTPConfig:
+            description: HTTP validator configuration
+            properties:
+                allowInsecureTLS:
+                    description: Allow insecure TLS connections
+                    type: boolean
+                defaultHeaders:
+                    additionalProperties:
+                        type: string
+                    description: Default HTTP headers
+                    type: object
+                defaultUserAgent:
+                    description: Default User-Agent string for HTTP requests
+                    type: string
+                followRedirects:
+                    description: Whether to follow HTTP redirects
+                    type: boolean
+                maxBodyReadBytes:
+                    description: Maximum bytes to read from response body
+                    format: int64
+                    minimum: 1024
+                    type: integer
+                maxConcurrentGoroutines:
+                    description: Maximum concurrent goroutines
+                    maximum: 1000
+                    minimum: 1
+                    type: integer
+                maxDomainsPerRequest:
+                    description: Maximum domains per request
+                    maximum: 1000
+                    minimum: 1
+                    type: integer
+                maxRedirects:
+                    description: Maximum number of redirects to follow
+                    maximum: 20
+                    minimum: 0
+                    type: integer
+                rateLimitBurst:
+                    description: Rate limit burst capacity
+                    minimum: 1
+                    type: integer
+                rateLimitDps:
+                    description: Rate limit in requests per second
+                    minimum: 0
+                    type: number
+                requestTimeoutSeconds:
+                    description: Request timeout in seconds
+                    maximum: 300
+                    minimum: 1
+                    type: integer
+                userAgents:
+                    description: List of User-Agent strings to rotate through
+                    items:
+                        type: string
+                    type: array
+            type: object
         HTTPKeywordResult:
             description: HTTP keyword validation result information
             properties:
@@ -667,6 +909,41 @@ components:
                 totalCount:
                     description: Total number of HTTP keyword results
                     type: integer
+            type: object
+        HealthStatus:
+            description: Health status of the application and its components
+            properties:
+                buildTime:
+                    description: Build timestamp
+                    format: date-time
+                    type: string
+                components:
+                    additionalProperties:
+                        $ref: '#/components/schemas/ComponentStatus'
+                    description: Status of individual components
+                    type: object
+                environment:
+                    description: Runtime environment
+                    type: string
+                status:
+                    description: Overall health status
+                    enum:
+                        - ok
+                        - degraded
+                        - error
+                    type: string
+                systemInfo:
+                    $ref: '#/components/schemas/SystemInfo'
+                version:
+                    description: Application version
+                    type: string
+            required:
+                - status
+                - version
+                - buildTime
+                - environment
+                - components
+                - systemInfo
             type: object
         HttpKeywordParams:
             description: Parameters for HTTP keyword validation campaigns
@@ -818,6 +1095,90 @@ components:
             required:
                 - userAgent
             type: object
+        KeywordExtractionAPIResult:
+            description: Result of keyword extraction for a single URL
+            properties:
+                dnsPersonaIdUsed:
+                    description: UUID of DNS persona actually used
+                    format: uuid
+                    type: string
+                error:
+                    description: Error message if extraction failed
+                    type: string
+                finalUrl:
+                    description: Final URL after redirects
+                    format: uri
+                    type: string
+                httpPersonaIdUsed:
+                    description: UUID of HTTP persona actually used
+                    format: uuid
+                    type: string
+                keywordSetIdUsed:
+                    description: UUID of keyword set used
+                    format: uuid
+                    type: string
+                matches:
+                    description: Array of keyword extraction results
+                    items:
+                        $ref: '#/components/schemas/KeywordExtractionResult'
+                    type: array
+                proxyIdUsed:
+                    description: UUID of proxy actually used
+                    format: uuid
+                    type: string
+                statusCode:
+                    description: HTTP status code from the request
+                    type: integer
+                url:
+                    description: Original URL requested
+                    format: uri
+                    type: string
+            required:
+                - url
+                - keywordSetIdUsed
+            type: object
+        KeywordExtractionRequestItem:
+            description: Single item in a batch keyword extraction request
+            properties:
+                dnsPersonaId:
+                    description: Optional UUID of DNS persona to use
+                    format: uuid
+                    type: string
+                httpPersonaId:
+                    description: Optional UUID of HTTP persona to use
+                    format: uuid
+                    type: string
+                keywordSetId:
+                    description: UUID of the keyword set to use for extraction
+                    format: uuid
+                    type: string
+                url:
+                    description: URL to extract keywords from
+                    format: uri
+                    type: string
+            required:
+                - url
+                - keywordSetId
+            type: object
+        KeywordExtractionResult:
+            description: Single keyword extraction match result
+            properties:
+                count:
+                    description: Number of matches found
+                    type: integer
+                keyword:
+                    description: The matched keyword or pattern
+                    type: string
+                matches:
+                    description: Array of text matches for this keyword
+                    items:
+                        type: string
+                    type: array
+            required:
+                - keyword
+                - matches
+                - count
+            type: object
         KeywordRule:
             description: Keyword rule information
             properties:
@@ -918,6 +1279,45 @@ components:
                     description: Keyword set last update timestamp
                     format: date-time
                     type: string
+            type: object
+        LoggingConfig:
+            description: Logging configuration
+            properties:
+                enableFileLogging:
+                    description: Enable file-based logging
+                    type: boolean
+                enableJSONFormat:
+                    description: Enable JSON log format
+                    type: boolean
+                enablePerformanceLogging:
+                    description: Enable performance logging
+                    type: boolean
+                enableRequestLogging:
+                    description: Enable request logging
+                    type: boolean
+                level:
+                    description: Log level
+                    enum:
+                        - DEBUG
+                        - INFO
+                        - WARN
+                        - ERROR
+                    type: string
+                logDirectory:
+                    description: Directory for log files
+                    type: string
+                maxAge:
+                    description: Maximum age of log files in days
+                    minimum: 0
+                    type: integer
+                maxBackups:
+                    description: Maximum number of backup log files
+                    minimum: 0
+                    type: integer
+                maxFileSize:
+                    description: Maximum log file size in MB
+                    minimum: 1
+                    type: integer
             type: object
         LoginRequest:
             description: Login credentials
@@ -1129,6 +1529,30 @@ components:
                     description: Proxy username
                     type: string
             type: object
+        ProxyManagerConfig:
+            description: Proxy manager configuration
+            properties:
+                initialHealthCheckTimeoutSeconds:
+                    description: Initial health check timeout in seconds
+                    maximum: 300
+                    minimum: 1
+                    type: integer
+                maxConcurrentInitialChecks:
+                    description: Maximum concurrent initial health checks
+                    minimum: 1
+                    type: integer
+                testTimeoutSeconds:
+                    description: Proxy test timeout in seconds
+                    maximum: 300
+                    minimum: 1
+                    type: integer
+                testUrl:
+                    description: URL to use for proxy testing
+                    format: uri
+                    type: string
+            required:
+                - testTimeoutSeconds
+            type: object
         ProxyPool:
             description: Proxy pool configuration and status information
             properties:
@@ -1294,6 +1718,21 @@ components:
                     description: Whether the test was successful
                     type: boolean
             type: object
+        RateLimiterConfig:
+            description: Rate limiter configuration
+            properties:
+                maxRequests:
+                    description: Maximum requests per window
+                    minimum: 1
+                    type: integer
+                windowSeconds:
+                    description: Rate limit window in seconds
+                    minimum: 1
+                    type: integer
+            required:
+                - maxRequests
+                - windowSeconds
+            type: object
         RefreshResponse:
             description: Session refresh response
             properties:
@@ -1304,6 +1743,34 @@ components:
                 sessionId:
                     description: New session identifier
                     type: string
+            type: object
+        ServerConfig:
+            description: Server configuration
+            properties:
+                ginMode:
+                    description: Gin framework mode
+                    enum:
+                        - debug
+                        - release
+                        - test
+                    type: string
+                port:
+                    description: Server port
+                    pattern: ^[0-9]+$
+                    type: string
+                streamChunkSize:
+                    description: Stream chunk size in bytes
+                    minimum: 1024
+                    type: integer
+            type: object
+        SimpleStatus:
+            description: Simple status response
+            properties:
+                status:
+                    description: Status message
+                    type: string
+            required:
+                - status
             type: object
         StandardAPIResponse:
             description: Standard API response wrapper
@@ -1325,6 +1792,23 @@ components:
             required:
                 - status
                 - message
+            type: object
+        SystemInfo:
+            description: System information and resources
+            properties:
+                goVersion:
+                    description: Go runtime version
+                    type: string
+                numCPU:
+                    description: Number of CPU cores
+                    type: integer
+                numGoroutine:
+                    description: Number of active goroutines
+                    type: integer
+            required:
+                - numGoroutine
+                - numCPU
+                - goVersion
             type: object
         TLSClientHello:
             description: TLS ClientHello configuration
@@ -1483,6 +1967,51 @@ components:
                     format: date-time
                     type: string
             type: object
+        WorkerConfig:
+            description: Worker configuration
+            properties:
+                batchSize:
+                    description: Batch size for processing
+                    minimum: 1
+                    type: integer
+                dnsSubtaskConcurrency:
+                    description: DNS subtask concurrency
+                    minimum: 1
+                    type: integer
+                errorRetryDelaySeconds:
+                    description: Error retry delay in seconds
+                    minimum: 1
+                    type: integer
+                httpKeywordSubtaskConcurrency:
+                    description: HTTP keyword subtask concurrency
+                    minimum: 1
+                    type: integer
+                jobProcessingTimeoutMinutes:
+                    description: Job processing timeout in minutes
+                    minimum: 1
+                    type: integer
+                maxJobRetries:
+                    description: Maximum job retry attempts
+                    minimum: 0
+                    type: integer
+                maxRetries:
+                    description: Maximum retry attempts
+                    minimum: 0
+                    type: integer
+                numWorkers:
+                    description: Number of worker goroutines
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                pollIntervalSeconds:
+                    description: Polling interval in seconds
+                    minimum: 1
+                    type: integer
+                retryDelaySeconds:
+                    description: Retry delay in seconds
+                    minimum: 1
+                    type: integer
+            type: object
     securitySchemes:
         sessionAuth:
             description: Session-based authentication using HTTP cookies
@@ -1502,6 +2031,460 @@ info:
     version: 2.0.0
 openapi: 3.0.3
 paths:
+    /api/v2/config/auth:
+        get:
+            description: Retrieves sanitized authentication configuration
+            operationId: getAuthConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AuthConfig'
+                    description: Authentication configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get authentication configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates authentication configuration
+            operationId: updateAuthConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AuthConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AuthConfig'
+                    description: Updated authentication configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update authentication configuration
+            tags:
+                - Configuration
+    /api/v2/config/dns:
+        get:
+            description: Retrieves the default DNS validator configuration
+            operationId: getDNSConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DNSConfig'
+                    description: DNS configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get DNS configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates the default DNS validator configuration
+            operationId: updateDNSConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DNSConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DNSConfig'
+                    description: Updated DNS configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update DNS configuration
+            tags:
+                - Configuration
+    /api/v2/config/http:
+        get:
+            description: Retrieves the default HTTP validator configuration
+            operationId: getHTTPConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPConfig'
+                    description: HTTP configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get HTTP configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates the default HTTP validator configuration
+            operationId: updateHTTPConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/HTTPConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPConfig'
+                    description: Updated HTTP configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update HTTP configuration
+            tags:
+                - Configuration
+    /api/v2/config/logging:
+        get:
+            description: Retrieves the current logging configuration
+            operationId: getLoggingConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LoggingConfig'
+                    description: Logging configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get logging configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates the logging configuration
+            operationId: updateLoggingConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoggingConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LoggingConfig'
+                    description: Updated logging configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update logging configuration
+            tags:
+                - Configuration
+    /api/v2/config/proxy-manager:
+        get:
+            description: Retrieves proxy manager settings
+            operationId: getProxyManagerConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyManagerConfig'
+                    description: Proxy manager configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get proxy manager configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates proxy manager settings
+            operationId: updateProxyManagerConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyManagerConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProxyManagerConfig'
+                    description: Updated proxy manager configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update proxy manager configuration
+            tags:
+                - Configuration
+    /api/v2/config/rate-limit:
+        get:
+            description: Retrieves global rate limiter settings
+            operationId: getRateLimiterConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RateLimiterConfig'
+                    description: Rate limiter configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get rate limiter configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates global rate limiter settings
+            operationId: updateRateLimiterConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RateLimiterConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RateLimiterConfig'
+                    description: Updated rate limiter configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update rate limiter configuration
+            tags:
+                - Configuration
+    /api/v2/config/server:
+        get:
+            description: Retrieves current server-wide configurations
+            operationId: getServerConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ServerConfig'
+                    description: Server configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get server configuration
+            tags:
+                - Configuration
+        put:
+            description: Updates server-wide configurations
+            operationId: updateServerConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ServerConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ServerConfig'
+                    description: Updated server configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update server configuration
+            tags:
+                - Configuration
+    /api/v2/config/worker:
+        get:
+            description: Retrieves the worker configuration
+            operationId: getWorkerConfig
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/WorkerConfig'
+                    description: Worker configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get worker configuration
+            tags:
+                - Configuration
+        post:
+            description: Updates the worker configuration
+            operationId: updateWorkerConfig
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/WorkerConfig'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/WorkerConfig'
+                    description: Updated worker configuration
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update worker configuration
+            tags:
+                - Configuration
+    /api/v2/extract/keywords:
+        post:
+            description: Extracts keywords from multiple URLs in a single batch request
+            operationId: batchExtractKeywords
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BatchKeywordExtractionRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BatchKeywordExtractionResponse'
+                    description: Batch extraction results
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request - Invalid input
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Batch keyword extraction
+            tags:
+                - Keywords
+    /api/v2/extract/keywords/stream:
+        get:
+            description: Extracts keywords from a single URL with real-time streaming results
+            operationId: streamExtractKeywords
+            parameters:
+                - description: URL to extract keywords from
+                  in: query
+                  name: url
+                  required: true
+                  schema:
+                    format: uri
+                    type: string
+                - description: UUID of the keyword set to use for extraction
+                  in: query
+                  name: keywordSetId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+                - description: Optional UUID of HTTP persona to use
+                  in: query
+                  name: httpPersonaId
+                  schema:
+                    format: uuid
+                    type: string
+                - description: Optional UUID of DNS persona to use
+                  in: query
+                  name: dnsPersonaId
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        text/event-stream:
+                            schema:
+                                description: Server-sent events stream containing keyword extraction results
+                                type: string
+                    description: Server-sent events stream with keyword extraction results
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request - Invalid parameters
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Streaming keyword extraction
+            tags:
+                - Keywords
+    /api/v2/ws:
+        get:
+            description: Upgrades HTTP connection to WebSocket for real-time communication
+            operationId: connectWebSocket
+            responses:
+                "101":
+                    description: Switching Protocols - WebSocket connection established
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request - Cannot upgrade connection
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized - Invalid session
+                "403":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Forbidden - Invalid origin or security validation failed
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: WebSocket connection endpoint
+            tags:
+                - WebSocket
     /auth/login:
         post:
             description: Authenticates a user and creates a session
@@ -2301,6 +3284,66 @@ paths:
             summary: Update feature flags
             tags:
                 - Config
+    /health:
+        get:
+            description: Returns overall health status of the application and its components
+            operationId: getHealthCheck
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HealthStatus'
+                    description: Health status
+                "503":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HealthStatus'
+                    description: Service degraded
+                default:
+                    description: ""
+            summary: Basic health check
+            tags:
+                - Health
+    /health/live:
+        get:
+            description: Checks if the service is alive and running
+            operationId: getLivenessCheck
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SimpleStatus'
+                    description: Service is alive
+                default:
+                    description: ""
+            summary: Liveness probe
+            tags:
+                - Health
+    /health/ready:
+        get:
+            description: Checks if the service is ready to receive traffic
+            operationId: getReadinessCheck
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SimpleStatus'
+                    description: Service is ready
+                "503":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Service not ready
+                default:
+                    description: ""
+            summary: Readiness probe
+            tags:
+                - Health
     /keywords/sets:
         get:
             description: Lists all keyword sets with optional filtering and pagination
@@ -3015,6 +4058,29 @@ paths:
             summary: Get HTTP persona by ID
             tags:
                 - Personas
+    /ping:
+        get:
+            description: Simple ping endpoint to test server connectivity
+            operationId: ping
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message:
+                                        example: pong
+                                        type: string
+                                    timestamp:
+                                        format: date-time
+                                        type: string
+                                type: object
+                    description: Pong response
+                default:
+                    description: ""
+            summary: Basic connectivity test
+            tags:
+                - Utilities
     /proxies:
         get:
             description: Lists all proxies with optional filtering

@@ -315,15 +315,6 @@ func (h *CampaignOrchestratorAPIHandler) resumeCampaign(c *gin.Context) {
 }
 
 // cancelCampaign cancels a campaign.
-// @Summary Cancel campaign
-// @Description Cancels a campaign by ID
-// @Tags Campaigns
-// @Param campaignId path string true "Campaign ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /campaigns/{campaignId}/cancel [post]
 func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "cancelling", h.orchestratorService.CancelCampaign)
 }

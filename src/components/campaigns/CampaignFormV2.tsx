@@ -483,59 +483,36 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         // Use the unified endpoint for new campaign creation
         const response = await apiClient.createCampaign(unifiedPayload);
 
-        if (response.status === 'success' && response.data) {
+        // The API now returns a Campaign object directly
+        if (response && response.id) {
           toast({
             title: "Campaign Created Successfully",
-            description: `Campaign "${response.data.name}" has been created.`,
+            description: `Campaign "${response.name}" has been created.`,
             variant: "default"
           });
           
           if (data.launchSequence && data.selectedType === 'domain_generation') {
             try {
-              if (response.data.id) {
-                await apiClient.startCampaign(response.id);
-              }
+              await apiClient.startCampaign(response.id);
             } catch (e) {
               console.error('Failed to start campaign sequence:', e);
             }
-            router.push(`/campaigns/${response.data.id || ''}`);
-          } else {
-            router.push(`/campaigns/${response.data.id || ''}`);
           }
+          
+          router.push(`/campaigns/${response.id}`);
           router.refresh();
         } else {
           console.error('[CampaignForm] Campaign creation failed:', response);
           
-          // Handle API response errors with field details
-          if (response.status === 'error') {
-            const fieldErrors = extractFieldErrors(response);
-            const mainError = createUserFriendlyError(response);
-            
-            if (Object.keys(fieldErrors).length > 0) {
-              setFormFieldErrors(fieldErrors);
-              setFormMainError('Please correct the highlighted fields.');
-            } else {
-              setFormFieldErrors({});
-              setFormMainError(mainError);
-            }
-            
-            // Still show toast for immediate feedback
-            toast({
-              title: "Error Creating Campaign",
-              description: mainError,
-              variant: "destructive"
-            });
-          } else {
-            const errorMessage = response.message || "Failed to create campaign. Please check your inputs and try again.";
-            setFormMainError(errorMessage);
-            setFormFieldErrors({});
-            
-            toast({
-              title: "Error Creating Campaign",
-              description: errorMessage,
-              variant: "destructive"
-            });
-          }
+          const errorMessage = "Failed to create campaign. Please check your inputs and try again.";
+          setFormMainError(errorMessage);
+          setFormFieldErrors({});
+          
+          toast({
+            title: "Error Creating Campaign",
+            description: errorMessage,
+            variant: "destructive"
+          });
         }
       }
     } catch (error: unknown) {

@@ -33,18 +33,6 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 }
 
 // Login handles user login requests.
-// @Summary User login
-// @Description Authenticates a user and creates a session
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param credentials body models.LoginRequest true "Login credentials"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 423 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Println("DEBUG: Login handler started")
 	var req models.LoginRequest
@@ -134,13 +122,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // Logout handles user logout requests.
-// @Summary User logout
-// @Description Invalidates the current session and clears session cookie
-// @Tags Auth
-// @Produce json
-// @Success 200 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// Get session ID from any of the possible cookie names
 	sessionID, err := c.Cookie(h.config.CookieName)
@@ -183,14 +164,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // Me returns current user information.
-// @Summary Get current user
-// @Description Returns information about the currently authenticated user
-// @Tags Auth
-// @Produce json
-// @Success 200 {object} models.User
-// @Failure 401 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	// Get security context from middleware
 	securityContext, exists := c.Get("security_context")
@@ -226,17 +199,6 @@ func (h *AuthHandler) Me(c *gin.Context) {
 }
 
 // ChangePassword handles password change requests.
-// @Summary Change password
-// @Description Changes the password for the currently authenticated user
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param password body map[string]string true "Password change"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	var req models.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -249,14 +211,6 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 }
 
 // RefreshSession handles session refresh requests.
-// @Summary Refresh session
-// @Description Refreshes the current session
-// @Tags Auth
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Failure 401 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	// Get session ID from cookie
 	sessionID, err := c.Cookie(h.config.CookieName)

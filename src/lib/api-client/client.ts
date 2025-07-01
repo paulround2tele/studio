@@ -523,6 +523,27 @@ export class ApiClient {
 // Export a default instance
 export const apiClient = new ApiClient();
 
+// Legacy function aliases for backward compatibility
+export const getCampaigns = () => apiClient.listCampaigns();
+export const getCampaignById = (id: string) => apiClient.getCampaignById(id);
+export const getGeneratedDomainsForCampaign = (campaignId: string, params?: { limit?: number; cursor?: number }) =>
+  apiClient.getCampaignGeneratedDomains(campaignId, params);
+export const getDnsCampaignDomains = (campaignId: string, params?: { limit?: number; cursor?: string }) =>
+  apiClient.getCampaignDNSValidationResults(campaignId, params);
+export const getHttpCampaignItems = (campaignId: string, params?: { limit?: number; cursor?: string }) =>
+  apiClient.getCampaignHTTPKeywordResults(campaignId, params);
+export const startCampaignPhase = (campaignId: string) => apiClient.startCampaign(campaignId);
+export const pauseCampaign = (campaignId: string) => apiClient.pauseCampaign(campaignId);
+export const resumeCampaign = (campaignId: string) => apiClient.resumeCampaign(campaignId);
+export const stopCampaign = (campaignId: string) => apiClient.cancelCampaign(campaignId);
+
+// Chain campaign method - assuming this creates a follow-up campaign
+export const chainCampaign = async (campaignId: string) => {
+  // This would need to be implemented based on business logic
+  // For now, we'll throw an error to indicate it needs implementation
+  throw new Error('chainCampaign not yet implemented - needs business logic definition');
+};
+
 // Export generated types for use in services
 export type {
   components,

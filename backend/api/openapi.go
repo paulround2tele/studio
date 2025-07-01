@@ -61,6 +61,12 @@ func GenerateOpenAPISpec() *openapi3.T {
 	personas.AddPersonaPaths(spec)
 	proxies.AddProxyPaths(spec)
 	proxypools.AddProxyPoolPaths(spec)
+	
+	// Add missing endpoint specifications
+	config.AddHealthCheckPaths(spec)
+	config.AddWebSocketPaths(spec)
+	config.AddKeywordExtractionPaths(spec)
+	config.AddUtilityPaths(spec)
 
 	return spec
 }

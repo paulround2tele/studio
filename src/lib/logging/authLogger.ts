@@ -474,12 +474,14 @@ class AuthLogger {
         return;
       }
 
+      // Use consistent session-based headers with OpenAPI client pattern
       const response = await fetch('/api/v2/logs/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest', // Session-based protection header
         },
-        credentials: 'include',
+        credentials: 'include', // Include cookies for session auth
         body: JSON.stringify({ logs }),
       });
 

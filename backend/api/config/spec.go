@@ -1218,3 +1218,627 @@ func addAuthConfigPaths(spec *openapi3.T) {
 		Post: postOp,
 	})
 }
+
+// AddHealthCheckPaths adds health check endpoints
+func AddHealthCheckPaths(spec *openapi3.T) {
+	addHealthCheckSchemas(spec)
+	
+	// GET /health - Basic health check
+	healthOp := &openapi3.Operation{
+		OperationID: "getHealthCheck",
+		Summary:     "Basic health check",
+		Description: "Returns overall health status of the application and its components",
+		Tags:        []string{"Health"},
+	}
+	healthOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Health status"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/HealthStatus"},
+			},
+		},
+	})
+	healthOp.AddResponse(503, &openapi3.Response{
+		Description: &[]string{"Service degraded"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/HealthStatus"},
+			},
+		},
+	})
+
+	// GET /health/ready - Readiness probe
+	readyOp := &openapi3.Operation{
+		OperationID: "getReadinessCheck",
+		Summary:     "Readiness probe",
+		Description: "Checks if the service is ready to receive traffic",
+		Tags:        []string{"Health"},
+	}
+	readyOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Service is ready"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/SimpleStatus"},
+			},
+		},
+	})
+	readyOp.AddResponse(503, &openapi3.Response{
+		Description: &[]string{"Service not ready"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ErrorResponse"},
+			},
+		},
+	})
+
+	// GET /health/live - Liveness probe
+	liveOp := &openapi3.Operation{
+		OperationID: "getLivenessCheck",
+		Summary:     "Liveness probe",
+		Description: "Checks if the service is alive and running",
+		Tags:        []string{"Health"},
+	}
+	liveOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Service is alive"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/SimpleStatus"},
+			},
+		},
+	})
+
+	spec.Paths.Set("/health", &openapi3.PathItem{Get: healthOp})
+	spec.Paths.Set("/health/ready", &openapi3.PathItem{Get: readyOp})
+	spec.Paths.Set("/health/live", &openapi3.PathItem{Get: liveOp})
+}
+
+// AddWebSocketPaths adds WebSocket connection endpoint
+func AddWebSocketPaths(spec *openapi3.T) {
+	// GET /api/v2/ws - WebSocket connection upgrade
+	wsOp := &openapi3.Operation{
+		OperationID: "connectWebSocket",
+		Summary:     "WebSocket connection endpoint",
+		Description: "Upgrades HTTP connection to WebSocket for real-time communication",
+		Tags:        []string{"WebSocket"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
+	}
+	wsOp.AddResponse(101, &openapi3.Response{
+		Description: &[]string{"Switching Protocols - WebSocket connection established"}[0],
+	})
+	wsOp.AddResponse(400, &openapi3.Response{
+		Description: &[]string{"Bad Request - Cannot upgrade connection"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ErrorResponse"},
+			},
+		},
+	})
+	wsOp.AddResponse(401, &openapi3.Response{
+		Description: &[]string{"Unauthorized - Invalid session"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ErrorResponse"},
+			},
+		},
+	})
+	wsOp.AddResponse(403, &openapi3.Response{
+		Description: &[]string{"Forbidden - Invalid origin or security validation failed"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ErrorResponse"},
+			},
+		},
+	})
+
+	spec.Paths.Set("/api/v2/ws", &openapi3.PathItem{Get: wsOp})
+}
+
+// AddKeywordExtractionPaths adds keyword extraction endpoints
+func AddKeywordExtractionPaths(spec *openapi3.T) {
+	addKeywordExtractionSchemas(spec)
+
+	// POST /api/v2/extract/keywords - Batch keyword extraction
+	batchOp := &openapi3.Operation{
+		OperationID: "batchExtractKeywords",
+		Summary:     "Batch keyword extraction",
+		Description: "Extracts keywords from multiple URLs in a single batch request",
+		Tags:        []string{"Keywords"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
+		RequestBody: &openapi3.RequestBodyRef{
+			Value: &openapi3.RequestBody{
+				Required: true,
+				Content: map[string]*openapi3.MediaType{
+					"application/json": {
+						Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/BatchKeywordExtractionRequest"},
+					},
+				},
+			},
+		},
+	}
+	batchOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Batch extraction results"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/BatchKeywordExtractionResponse"},
+			},
+		},
+	})
+	batchOp.AddResponse(400, &openapi3.Response{
+		Description: &[]string{"Bad request - Invalid input"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ErrorResponse"},
+			},
+		},
+	})
+	batchOp.AddResponse(401, &openapi3.Response{
+		Description: &[]string{"Unauthorized"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ErrorResponse"},
+			},
+		},
+	})
+
+	// GET /api/v2/extract/keywords/stream - Streaming keyword extraction
+	streamOp := &openapi3.Operation{
+		OperationID: "streamExtractKeywords",
+		Summary:     "Streaming keyword extraction",
+		Description: "Extracts keywords from a single URL with real-time streaming results",
+		Tags:        []string{"Keywords"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
+		Parameters: []*openapi3.ParameterRef{
+			{
+				Value: &openapi3.Parameter{
+					Name:        "url",
+					In:          "query",
+					Required:    true,
+					Description: "URL to extract keywords from",
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type:   &openapi3.Types{"string"},
+							Format: "uri",
+						},
+					},
+				},
+			},
+			{
+				Value: &openapi3.Parameter{
+					Name:        "keywordSetId",
+					In:          "query",
+					Required:    true,
+					Description: "UUID of the keyword set to use for extraction",
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type:   &openapi3.Types{"string"},
+							Format: "uuid",
+						},
+					},
+				},
+			},
+			{
+				Value: &openapi3.Parameter{
+					Name:        "httpPersonaId",
+					In:          "query",
+					Required:    false,
+					Description: "Optional UUID of HTTP persona to use",
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type:   &openapi3.Types{"string"},
+							Format: "uuid",
+						},
+					},
+				},
+			},
+			{
+				Value: &openapi3.Parameter{
+					Name:        "dnsPersonaId",
+					In:          "query",
+					Required:    false,
+					Description: "Optional UUID of DNS persona to use",
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type:   &openapi3.Types{"string"},
+							Format: "uuid",
+						},
+					},
+				},
+			},
+		},
+	}
+	streamOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Server-sent events stream with keyword extraction results"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"text/event-stream": {
+				Schema: &openapi3.SchemaRef{
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Server-sent events stream containing keyword extraction results",
+					},
+				},
+			},
+		},
+	})
+	streamOp.AddResponse(400, &openapi3.Response{
+		Description: &[]string{"Bad request - Invalid parameters"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ErrorResponse"},
+			},
+		},
+	})
+	streamOp.AddResponse(401, &openapi3.Response{
+		Description: &[]string{"Unauthorized"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ErrorResponse"},
+			},
+		},
+	})
+
+	spec.Paths.Set("/api/v2/extract/keywords", &openapi3.PathItem{Post: batchOp})
+	spec.Paths.Set("/api/v2/extract/keywords/stream", &openapi3.PathItem{Get: streamOp})
+}
+
+// AddUtilityPaths adds utility endpoints like ping
+func AddUtilityPaths(spec *openapi3.T) {
+	// GET /ping - Basic connectivity test
+	pingOp := &openapi3.Operation{
+		OperationID: "ping",
+		Summary:     "Basic connectivity test",
+		Description: "Simple ping endpoint to test server connectivity",
+		Tags:        []string{"Utilities"},
+	}
+	pingOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Pong response"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"object"},
+						Properties: map[string]*openapi3.SchemaRef{
+							"message": {
+								Value: &openapi3.Schema{
+									Type: &openapi3.Types{"string"},
+									Example: "pong",
+								},
+							},
+							"timestamp": {
+								Value: &openapi3.Schema{
+									Type:   &openapi3.Types{"string"},
+									Format: "date-time",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	spec.Paths.Set("/ping", &openapi3.PathItem{Get: pingOp})
+}
+
+// addHealthCheckSchemas adds health check related schemas
+func addHealthCheckSchemas(spec *openapi3.T) {
+	// HealthStatus schema
+	spec.Components.Schemas["HealthStatus"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Health status of the application and its components",
+			Properties: map[string]*openapi3.SchemaRef{
+				"status": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Overall health status",
+						Enum:        []interface{}{"ok", "degraded", "error"},
+					},
+				},
+				"version": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Application version",
+					},
+				},
+				"buildTime": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Build timestamp",
+						Format:      "date-time",
+					},
+				},
+				"environment": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Runtime environment",
+					},
+				},
+				"components": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"object"},
+						Description: "Status of individual components",
+						AdditionalProperties: openapi3.AdditionalProperties{
+							Schema: &openapi3.SchemaRef{Ref: "#/components/schemas/ComponentStatus"},
+						},
+					},
+				},
+				"systemInfo": {
+					Ref: "#/components/schemas/SystemInfo",
+				},
+			},
+			Required: []string{"status", "version", "buildTime", "environment", "components", "systemInfo"},
+		},
+	}
+
+	// ComponentStatus schema
+	spec.Components.Schemas["ComponentStatus"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Status of a single component",
+			Properties: map[string]*openapi3.SchemaRef{
+				"status": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Component status",
+						Enum:        []interface{}{"ok", "error"},
+					},
+				},
+				"message": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Optional status message",
+					},
+				},
+				"timestamp": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Status check timestamp",
+						Format:      "date-time",
+					},
+				},
+			},
+			Required: []string{"status", "timestamp"},
+		},
+	}
+
+	// SystemInfo schema
+	spec.Components.Schemas["SystemInfo"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "System information and resources",
+			Properties: map[string]*openapi3.SchemaRef{
+				"numGoroutine": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Number of active goroutines",
+					},
+				},
+				"numCPU": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Number of CPU cores",
+					},
+				},
+				"goVersion": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Go runtime version",
+					},
+				},
+			},
+			Required: []string{"numGoroutine", "numCPU", "goVersion"},
+		},
+	}
+
+	// SimpleStatus schema for ready/live endpoints
+	spec.Components.Schemas["SimpleStatus"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Simple status response",
+			Properties: map[string]*openapi3.SchemaRef{
+				"status": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Status message",
+					},
+				},
+			},
+			Required: []string{"status"},
+		},
+	}
+}
+
+// addKeywordExtractionSchemas adds keyword extraction related schemas
+func addKeywordExtractionSchemas(spec *openapi3.T) {
+	// KeywordExtractionRequestItem schema
+	spec.Components.Schemas["KeywordExtractionRequestItem"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Single item in a batch keyword extraction request",
+			Properties: map[string]*openapi3.SchemaRef{
+				"url": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "URL to extract keywords from",
+						Format:      "uri",
+					},
+				},
+				"httpPersonaId": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Optional UUID of HTTP persona to use",
+						Format:      "uuid",
+					},
+				},
+				"dnsPersonaId": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Optional UUID of DNS persona to use",
+						Format:      "uuid",
+					},
+				},
+				"keywordSetId": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "UUID of the keyword set to use for extraction",
+						Format:      "uuid",
+					},
+				},
+			},
+			Required: []string{"url", "keywordSetId"},
+		},
+	}
+
+	// BatchKeywordExtractionRequest schema
+	spec.Components.Schemas["BatchKeywordExtractionRequest"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Request body for batch keyword extraction",
+			Properties: map[string]*openapi3.SchemaRef{
+				"items": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"array"},
+						Description: "Array of URLs and parameters for keyword extraction",
+						Items: &openapi3.SchemaRef{
+							Ref: "#/components/schemas/KeywordExtractionRequestItem",
+						},
+						MinItems: 1,
+					},
+				},
+			},
+			Required: []string{"items"},
+		},
+	}
+
+	// KeywordExtractionResult schema (individual match)
+	spec.Components.Schemas["KeywordExtractionResult"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Single keyword extraction match result",
+			Properties: map[string]*openapi3.SchemaRef{
+				"keyword": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "The matched keyword or pattern",
+					},
+				},
+				"matches": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"array"},
+						Description: "Array of text matches for this keyword",
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{Type: &openapi3.Types{"string"}},
+						},
+					},
+				},
+				"count": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Number of matches found",
+					},
+				},
+			},
+			Required: []string{"keyword", "matches", "count"},
+		},
+	}
+
+	// KeywordExtractionAPIResult schema
+	spec.Components.Schemas["KeywordExtractionAPIResult"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Result of keyword extraction for a single URL",
+			Properties: map[string]*openapi3.SchemaRef{
+				"url": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Original URL requested",
+						Format:      "uri",
+					},
+				},
+				"httpPersonaIdUsed": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "UUID of HTTP persona actually used",
+						Format:      "uuid",
+					},
+				},
+				"dnsPersonaIdUsed": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "UUID of DNS persona actually used",
+						Format:      "uuid",
+					},
+				},
+				"proxyIdUsed": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "UUID of proxy actually used",
+						Format:      "uuid",
+					},
+				},
+				"keywordSetIdUsed": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "UUID of keyword set used",
+						Format:      "uuid",
+					},
+				},
+				"matches": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"array"},
+						Description: "Array of keyword extraction results",
+						Items: &openapi3.SchemaRef{
+							Ref: "#/components/schemas/KeywordExtractionResult",
+						},
+					},
+				},
+				"error": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Error message if extraction failed",
+					},
+				},
+				"finalUrl": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Final URL after redirects",
+						Format:      "uri",
+					},
+				},
+				"statusCode": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "HTTP status code from the request",
+					},
+				},
+			},
+			Required: []string{"url", "keywordSetIdUsed"},
+		},
+	}
+
+	// BatchKeywordExtractionResponse schema
+	spec.Components.Schemas["BatchKeywordExtractionResponse"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Response body for batch keyword extraction",
+			Properties: map[string]*openapi3.SchemaRef{
+				"results": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"array"},
+						Description: "Array of keyword extraction results",
+						Items: &openapi3.SchemaRef{
+							Ref: "#/components/schemas/KeywordExtractionAPIResult",
+						},
+					},
+				},
+			},
+			Required: []string{"results"},
+		},
+	}
+}

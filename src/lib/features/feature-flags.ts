@@ -13,6 +13,7 @@
 
 import { z } from 'zod';
 import React from 'react';
+import { apiClient } from '@/lib/api-client/client';
 
 // Feature flag value types
 export type FeatureFlagValue = boolean | string | number | Record<string, unknown>;
@@ -256,24 +257,23 @@ class FeatureFlagsService {
    * Update feature flags from API
    */
   async fetchFlags(): Promise<void> {
-    if (!this.config.apiEndpoint) return;
-
     try {
-      const response = await fetch(this.config.apiEndpoint, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': this.userContext.userId || '',
-          'X-User-Segment': this.userContext.segment || ''
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch feature flags: ${response.statusText}`);
+      // Use OpenAPI client to fetch feature flags
+      const result = await apiClient.getFeatureFlags();
+      
+      if (!result) {
+        throw new Error('No feature flags data received');
       }
 
-      const data = await response.json();
-      const flags = z.array(FeatureFlagSchema).parse(data);
+      // Convert OpenAPI response to our internal format
+      const apiFlags = Object.entries(result).map(([key, value]) => ({
+        key,
+        value: value as FeatureFlagValue,
+        enabled: true,
+        description: `API flag: ${key}`
+      }));
+
+      const flags = z.array(FeatureFlagSchema).parse(apiFlags);
 
       // Update flags
       flags.forEach(flag => {
@@ -288,6 +288,43 @@ class FeatureFlagsService {
       }
     } catch (error) {
       console.error('Error fetching feature flags:', error);
+      
+      // Fallback: use manual fetch if OpenAPI endpoint is specified
+      if (this.config.apiEndpoint) {
+        try {
+          const response = await fetch(this.config.apiEndpoint, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-User-Id': this.userContext.userId || '',
+              'X-User-Segment': this.userContext.segment || ''
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch feature flags: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          const flags = z.array(FeatureFlagSchema).parse(data);
+
+          // Update flags
+          flags.forEach(flag => {
+            this.flags.set(flag.key, flag);
+          });
+
+          this.cacheTimestamp = Date.now();
+          this.saveToLocalStorage();
+
+          if (this.config.enableDebugMode) {
+            console.log('Feature flags updated (fallback):', flags);
+          }
+        } catch (fallbackError) {
+          console.error('Error fetching feature flags (fallback):', fallbackError);
+        }
+      }
     }
   }
 

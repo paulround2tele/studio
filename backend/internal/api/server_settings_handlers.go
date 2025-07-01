@@ -10,14 +10,6 @@ import (
 )
 
 // GetServerConfigGin retrieves current server-wide configurations.
-// @Summary Get server configuration
-// @Description Retrieves current server-wide configurations including port, stream chunk size, and gin mode
-// @Tags Configuration
-// @Produce json
-// @Success 200 {object} map[string]interface{} "Server configuration"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/v2/config/server [get]
-// @Security SessionAuth
 func (h *APIHandler) GetServerConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
 	// Expose only specific, safe-to-view fields. APIKey should not be exposed.
@@ -36,17 +28,6 @@ func (h *APIHandler) GetServerConfigGin(c *gin.Context) {
 }
 
 // UpdateServerConfigGin updates server-wide configurations.
-// @Summary Update server configuration
-// @Description Updates server-wide configurations including stream chunk size and gin mode
-// @Tags Configuration
-// @Accept json
-// @Produce json
-// @Param config body map[string]interface{} true "Server configuration updates"
-// @Success 200 {object} map[string]interface{} "Updated server configuration"
-// @Failure 400 {object} ErrorResponse "Invalid request payload"
-// @Failure 500 {object} ErrorResponse "Failed to save configuration"
-// @Router /api/v2/config/server [put]
-// @Security SessionAuth
 func (h *APIHandler) UpdateServerConfigGin(c *gin.Context) {
 	var reqServerConfigUpdate struct {
 		StreamChunkSize *int    `json:"streamChunkSize,omitempty"`
@@ -108,14 +89,6 @@ func (h *APIHandler) UpdateServerConfigGin(c *gin.Context) {
 }
 
 // GetDNSConfigGin retrieves the default DNS validator configuration.
-// @Summary Get DNS configuration
-// @Description Retrieves the default DNS validator configuration
-// @Tags Configuration
-// @Produce json
-// @Success 200 {object} map[string]interface{} "DNS configuration"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/v2/config/dns [get]
-// @Security SessionAuth
 func (h *APIHandler) GetDNSConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
 	// Assuming ConvertDNSConfigToJSON handles sensitive data appropriately if any
@@ -125,17 +98,6 @@ func (h *APIHandler) GetDNSConfigGin(c *gin.Context) {
 }
 
 // UpdateDNSConfigGin updates the default DNS validator configuration.
-// @Summary Update DNS configuration
-// @Description Updates the default DNS validator configuration
-// @Tags Configuration
-// @Accept json
-// @Produce json
-// @Param config body map[string]interface{} true "DNS configuration updates"
-// @Success 200 {object} map[string]interface{} "Updated DNS configuration"
-// @Failure 400 {object} ErrorResponse "Invalid request body or validation error"
-// @Failure 500 {object} ErrorResponse "Failed to save configuration"
-// @Router /api/v2/config/dns [post]
-// @Security SessionAuth
 func (h *APIHandler) UpdateDNSConfigGin(c *gin.Context) {
 	var reqJSON config.DNSValidatorConfigJSON
 	if err := c.ShouldBindJSON(&reqJSON); err != nil {
@@ -169,14 +131,6 @@ func (h *APIHandler) UpdateDNSConfigGin(c *gin.Context) {
 }
 
 // GetHTTPConfigGin retrieves the default HTTP validator configuration.
-// @Summary Get HTTP configuration
-// @Description Retrieves the default HTTP validator configuration
-// @Tags Configuration
-// @Produce json
-// @Success 200 {object} map[string]interface{} "HTTP configuration"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/v2/config/http [get]
-// @Security SessionAuth
 func (h *APIHandler) GetHTTPConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
 	httpConfigJSON := config.ConvertHTTPConfigToJSON(h.Config.HTTPValidator)
@@ -185,17 +139,6 @@ func (h *APIHandler) GetHTTPConfigGin(c *gin.Context) {
 }
 
 // UpdateHTTPConfigGin updates the default HTTP validator configuration.
-// @Summary Update HTTP configuration
-// @Description Updates the default HTTP validator configuration
-// @Tags Configuration
-// @Accept json
-// @Produce json
-// @Param config body map[string]interface{} true "HTTP configuration updates"
-// @Success 200 {object} map[string]interface{} "Updated HTTP configuration"
-// @Failure 400 {object} ErrorResponse "Invalid request body or validation error"
-// @Failure 500 {object} ErrorResponse "Failed to save configuration"
-// @Router /api/v2/config/http [post]
-// @Security SessionAuth
 func (h *APIHandler) UpdateHTTPConfigGin(c *gin.Context) {
 	var reqJSON config.HTTPValidatorConfigJSON
 	if err := c.ShouldBindJSON(&reqJSON); err != nil {
@@ -223,14 +166,6 @@ func (h *APIHandler) UpdateHTTPConfigGin(c *gin.Context) {
 }
 
 // GetLoggingConfigGin retrieves the current logging configuration.
-// @Summary Get logging configuration
-// @Description Retrieves the current logging configuration
-// @Tags Configuration
-// @Produce json
-// @Success 200 {object} map[string]interface{} "Logging configuration"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/v2/config/logging [get]
-// @Security SessionAuth
 func (h *APIHandler) GetLoggingConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
 	loggingConfig := h.Config.Logging
@@ -239,17 +174,6 @@ func (h *APIHandler) GetLoggingConfigGin(c *gin.Context) {
 }
 
 // UpdateLoggingConfigGin updates the logging configuration.
-// @Summary Update logging configuration
-// @Description Updates the logging configuration
-// @Tags Configuration
-// @Accept json
-// @Produce json
-// @Param config body map[string]interface{} true "Logging configuration updates"
-// @Success 200 {object} map[string]interface{} "Updated logging configuration"
-// @Failure 400 {object} ErrorResponse "Invalid request body or validation error"
-// @Failure 500 {object} ErrorResponse "Failed to save configuration"
-// @Router /api/v2/config/logging [post]
-// @Security SessionAuth
 func (h *APIHandler) UpdateLoggingConfigGin(c *gin.Context) {
 	var reqLogging config.LoggingConfig
 	if err := c.ShouldBindJSON(&reqLogging); err != nil {
@@ -278,14 +202,6 @@ func (h *APIHandler) UpdateLoggingConfigGin(c *gin.Context) {
 }
 
 // GetWorkerConfigGin retrieves the worker configuration.
-// @Summary Get worker configuration
-// @Description Retrieves the worker configuration
-// @Tags Configuration
-// @Produce json
-// @Success 200 {object} map[string]interface{} "Worker configuration"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/v2/config/worker [get]
-// @Security SessionAuth
 func (h *APIHandler) GetWorkerConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
 	workerCfg := h.Config.Worker
@@ -294,17 +210,6 @@ func (h *APIHandler) GetWorkerConfigGin(c *gin.Context) {
 }
 
 // UpdateWorkerConfigGin updates the worker configuration.
-// @Summary Update worker configuration
-// @Description Updates the worker configuration
-// @Tags Configuration
-// @Accept json
-// @Produce json
-// @Param config body map[string]interface{} true "Worker configuration updates"
-// @Success 200 {object} map[string]interface{} "Updated worker configuration"
-// @Failure 400 {object} ErrorResponse "Invalid request body"
-// @Failure 500 {object} ErrorResponse "Failed to save configuration"
-// @Router /api/v2/config/worker [post]
-// @Security SessionAuth
 func (h *APIHandler) UpdateWorkerConfigGin(c *gin.Context) {
 	var req config.WorkerConfig
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -323,14 +228,6 @@ func (h *APIHandler) UpdateWorkerConfigGin(c *gin.Context) {
 }
 
 // GetRateLimiterConfigGin retrieves global rate limiter settings.
-// @Summary Get rate limiter configuration
-// @Description Retrieves global rate limiter settings
-// @Tags Configuration
-// @Produce json
-// @Success 200 {object} map[string]interface{} "Rate limiter configuration"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/v2/config/rate-limit [get]
-// @Security SessionAuth
 func (h *APIHandler) GetRateLimiterConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
 	rlCfg := h.Config.RateLimiter
@@ -339,17 +236,6 @@ func (h *APIHandler) GetRateLimiterConfigGin(c *gin.Context) {
 }
 
 // UpdateRateLimiterConfigGin updates global rate limiter settings.
-// @Summary Update rate limiter configuration
-// @Description Updates global rate limiter settings
-// @Tags Configuration
-// @Accept json
-// @Produce json
-// @Param config body map[string]interface{} true "Rate limiter configuration updates"
-// @Success 200 {object} map[string]interface{} "Updated rate limiter configuration"
-// @Failure 400 {object} ErrorResponse "Invalid request body"
-// @Failure 500 {object} ErrorResponse "Failed to save configuration"
-// @Router /api/v2/config/rate-limit [post]
-// @Security SessionAuth
 func (h *APIHandler) UpdateRateLimiterConfigGin(c *gin.Context) {
 	var req config.RateLimiterConfig
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -368,14 +254,6 @@ func (h *APIHandler) UpdateRateLimiterConfigGin(c *gin.Context) {
 }
 
 // GetAuthConfigGin retrieves sanitized authentication configuration.
-// @Summary Get authentication configuration
-// @Description Retrieves sanitized authentication configuration (sensitive fields omitted)
-// @Tags Configuration
-// @Produce json
-// @Success 200 {object} map[string]interface{} "Authentication configuration"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/v2/config/auth [get]
-// @Security SessionAuth
 func (h *APIHandler) GetAuthConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
 	authCfg := *h.Config.Server.AuthConfig
@@ -388,17 +266,6 @@ func (h *APIHandler) GetAuthConfigGin(c *gin.Context) {
 }
 
 // UpdateAuthConfigGin updates authentication configuration.
-// @Summary Update authentication configuration
-// @Description Updates authentication configuration
-// @Tags Configuration
-// @Accept json
-// @Produce json
-// @Param config body map[string]interface{} true "Authentication configuration updates"
-// @Success 200 {object} map[string]interface{} "Updated authentication configuration"
-// @Failure 400 {object} ErrorResponse "Invalid request body"
-// @Failure 500 {object} ErrorResponse "Failed to save configuration"
-// @Router /api/v2/config/auth [post]
-// @Security SessionAuth
 func (h *APIHandler) UpdateAuthConfigGin(c *gin.Context) {
 	var req config.AuthConfig
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -416,14 +283,6 @@ func (h *APIHandler) UpdateAuthConfigGin(c *gin.Context) {
 }
 
 // GetProxyManagerConfigGin retrieves proxy manager settings.
-// @Summary Get proxy manager configuration
-// @Description Retrieves proxy manager settings
-// @Tags Configuration
-// @Produce json
-// @Success 200 {object} map[string]interface{} "Proxy manager configuration"
-// @Failure 500 {object} ErrorResponse "Internal server error"
-// @Router /api/v2/config/proxy-manager [get]
-// @Security SessionAuth
 func (h *APIHandler) GetProxyManagerConfigGin(c *gin.Context) {
        h.configMutex.RLock()
        cfgJSON := config.ConvertProxyManagerConfigToJSON(h.Config.ProxyManager)
@@ -432,17 +291,6 @@ func (h *APIHandler) GetProxyManagerConfigGin(c *gin.Context) {
 }
 
 // UpdateProxyManagerConfigGin updates proxy manager settings.
-// @Summary Update proxy manager configuration
-// @Description Updates proxy manager settings
-// @Tags Configuration
-// @Accept json
-// @Produce json
-// @Param config body map[string]interface{} true "Proxy manager configuration updates"
-// @Success 200 {object} map[string]interface{} "Updated proxy manager configuration"
-// @Failure 400 {object} ErrorResponse "Invalid request body"
-// @Failure 500 {object} ErrorResponse "Failed to save configuration"
-// @Router /api/v2/config/proxy-manager [post]
-// @Security SessionAuth
 func (h *APIHandler) UpdateProxyManagerConfigGin(c *gin.Context) {
        var req config.ProxyManagerConfigJSON
        if err := c.ShouldBindJSON(&req); err != nil {
