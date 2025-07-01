@@ -83,8 +83,17 @@ class SessionApiClient {
       ...fetchOptions
     } = options;
 
-    // Build URL
-    const url = new URL(endpoint, this.baseUrl || window.location.origin);
+    // Build URL - handle both relative and absolute base URLs
+    let url: URL;
+    if (this.baseUrl && this.baseUrl.startsWith('http')) {
+      // Absolute base URL
+      url = new URL(endpoint, this.baseUrl);
+    } else {
+      // Relative base URL or no base URL - use current origin
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      const fullPath = this.baseUrl ? `${this.baseUrl}${endpoint}` : endpoint;
+      url = new URL(fullPath, origin);
+    }
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {

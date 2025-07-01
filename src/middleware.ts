@@ -44,7 +44,8 @@ export function middleware(request: NextRequest) {
   // CRITICAL: If no valid session, ALWAYS redirect to login
   if (!hasValidSession) {
     console.log('[MIDDLEWARE] SECURITY BLOCK: No valid session cookie, redirecting to login');
-    const loginUrl = new URL('/login', request.url);
+    // Safer URL construction with validation
+    const loginUrl = new URL('/login', request.nextUrl.origin || request.url);
     loginUrl.searchParams.set('redirect', pathname);
     
     const response = NextResponse.redirect(loginUrl);

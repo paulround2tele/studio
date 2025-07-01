@@ -1,5 +1,22 @@
 import type { paths, components } from './types';
 
+// URL construction utility for handling both relative and absolute base URLs
+const constructApiUrl = (baseUrl: string, path: string): URL => {
+  const fullPath = `${baseUrl}${path}`;
+  
+  if (baseUrl.startsWith('http')) {
+    // Absolute URL - use directly
+    return new URL(fullPath);
+  }
+  
+  // For relative URLs, use current origin
+  const origin = typeof window !== 'undefined'
+    ? window.location.origin
+    : 'http://localhost:3000'; // Fallback for SSR
+    
+  return new URL(fullPath, origin);
+};
+
 // Local error serialization utility
 const serializeError = (obj: unknown): string => {
   if (obj === null || obj === undefined) {
@@ -171,7 +188,7 @@ export class ApiClient {
       headers?: Record<string, string>;
     }
   ): Promise<TResponse> {
-    const url = new URL(`${this.baseUrl}${path}`);
+    const url = constructApiUrl(this.baseUrl, path);
     
     // Add query parameters
     if (options?.params) {
