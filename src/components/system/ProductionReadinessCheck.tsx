@@ -11,56 +11,98 @@ import { websocketService, type WebSocketMessage } from '@/lib/services/websocke
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
 
+// Enhanced error serialization utility for robust logging
+const serializeError = (obj: unknown): unknown => {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  // Handle Error instances
+  if (obj instanceof Error) {
+    const result: Record<string, unknown> = {
+      name: obj.name,
+      message: obj.message,
+      stack: obj.stack
+    };
+    
+    // Get additional enumerable properties
+    Object.getOwnPropertyNames(obj).forEach(key => {
+      if (!['name', 'message', 'stack'].includes(key)) {
+        try {
+          const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+          if (descriptor && descriptor.enumerable !== false) {
+            result[key] = (obj as any)[key];
+          }
+        } catch {
+          // Skip properties that can't be accessed
+        }
+      }
+    });
+    
+    return result;
+  }
+
+  // Handle Event instances - extract all relevant properties
+  if (obj instanceof Event) {
+    const result: Record<string, unknown> = {
+      type: obj.type,
+      isTrusted: obj.isTrusted,
+      timeStamp: obj.timeStamp
+    };
+    
+    // Add target information safely
+    if (obj.target) {
+      result.target = obj.target.constructor?.name || 'Unknown';
+    }
+    if (obj.currentTarget) {
+      result.currentTarget = obj.currentTarget.constructor?.name || 'Unknown';
+    }
+    
+    // Extract additional Event properties using getOwnPropertyNames
+    try {
+      Object.getOwnPropertyNames(obj).forEach(key => {
+        if (!['type', 'isTrusted', 'timeStamp', 'target', 'currentTarget'].includes(key)) {
+          try {
+            const value = (obj as any)[key];
+            if (typeof value !== 'function' && value !== null) {
+              result[key] = value;
+            }
+          } catch {
+            // Skip properties that can't be accessed
+          }
+        }
+      });
+    } catch {
+      // Fallback if property enumeration fails
+    }
+    
+    return result;
+  }
+
+  // Handle regular objects with circular reference protection
+  try {
+    const seen = new WeakSet();
+    return JSON.parse(JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular Reference]';
+        }
+        seen.add(value);
+      }
+      return value;
+    }));
+  } catch {
+    return `[Unserializable: ${obj?.constructor?.name || typeof obj}]`;
+  }
+};
+
 // Centralized logging utility with timestamps and proper error serialization
 const logWithTimestamp = (level: 'log' | 'warn' | 'error', message: string, ...args: unknown[]) => {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] [ProductionReadinessCheck] ${message}`;
   
-  // Serialize args for meaningful logging
-  const serializedArgs = args.map(arg => {
-    if (arg === null || arg === undefined) {
-      return String(arg);
-    }
-
-    // Handle Error instances - extract non-enumerable properties
-    if (arg instanceof Error) {
-      return {
-        name: arg.name,
-        message: arg.message,
-        stack: arg.stack,
-        ...(('cause' in arg && arg.cause !== undefined) ? { cause: arg.cause } : {}),
-        ...Object.fromEntries(Object.entries(arg))
-      };
-    }
-
-    // Handle Event instances - extract relevant non-enumerable properties
-    if (arg instanceof Event) {
-      return {
-        type: arg.type,
-        isTrusted: arg.isTrusted,
-        timeStamp: arg.timeStamp,
-        target: arg.target?.constructor?.name || 'Unknown',
-        ...(arg.currentTarget ? { currentTarget: arg.currentTarget.constructor?.name || 'Unknown' } : {}),
-        ...Object.fromEntries(Object.entries(arg))
-      };
-    }
-
-    // Handle generic objects with circular reference protection
-    try {
-      const seen = new WeakSet();
-      return JSON.parse(JSON.stringify(arg, (key, value) => {
-        if (typeof value === 'object' && value !== null) {
-          if (seen.has(value)) {
-            return '[Circular Reference]';
-          }
-          seen.add(value);
-        }
-        return value;
-      }));
-    } catch {
-      return `[Object: ${arg.constructor?.name || 'Unknown'}]`;
-    }
-  });
+  // Serialize all arguments for meaningful logging
+  const serializedArgs = args.map(serializeError);
   
   console[level](logMessage, ...serializedArgs);
 };
@@ -177,111 +219,41 @@ export default function ProductionReadinessCheck() {
       });
     }
 
-    // 3. Optimized WebSocket Check
+    // 3. WebSocket Connection Status Check (Fixed - no longer creates test connections)
     try {
-      const testStartTime = Date.now();
-      logWithTimestamp('log', '🚀 Starting optimized WebSocket connectivity test...');
+      logWithTimestamp('log', '🔌 Checking WebSocket connection status...');
       
-      // Use optimized service - it handles authentication coordination automatically
-      const wsResult = await new Promise<WebSocketTestResult>((resolve) => {
-        let connected = false;
-        let connectionError = '';
-        
-        logWithTimestamp('log', '🔌 Starting WebSocket connection attempt with optimized service...');
-        
-        const cleanup = websocketService.connectToAllCampaigns(
-          (message: WebSocketMessage) => {
-            const testDuration = Date.now() - testStartTime;
-            logWithTimestamp('log', '✅ WebSocket test SUCCESS: Received message in', testDuration + 'ms', message);
-            if (!connected) {
-              connected = true;
-              cleanup();
-              resolve({
-                connected: true,
-                testDuration
-              });
-            }
-          },
-          (error: Event | Error) => {
-            const testDuration = Date.now() - testStartTime;
-            
-            logWithTimestamp('error', '❌ WebSocket test ERROR after', testDuration + 'ms:', error);
-            connectionError = error instanceof Error ? error.message : 'Unknown error';
-            
-            cleanup();
-            resolve({
-              connected: false,
-              error: connectionError,
-              testDuration
-            });
-          }
-        );
-        
-        // Shorter timeout since optimized service handles auth coordination
-        const testTimeout = 8000; // 8 seconds - optimized service should connect faster
-        setTimeout(() => {
-          if (!connected) {
-            const testDuration = Date.now() - testStartTime;
-            logWithTimestamp('warn', `⏰ WebSocket test TIMEOUT after ${testTimeout/1000} seconds (${testDuration}ms total)`);
-            cleanup();
-            resolve({
-              connected: false,
-              error: connectionError || `Connection timeout (${testTimeout/1000}s)`,
-              testDuration
-            });
-          }
-        }, testTimeout);
-      });
-
-      const totalTestDuration = Date.now() - testStartTime;
-
-      if (wsResult.connected) {
-        logWithTimestamp('log', '🎉 WebSocket connectivity test PASSED in', totalTestDuration + 'ms');
+      // Check existing persistent connection status instead of creating test connection
+      const connectionStatus = websocketService.getConnectionStatus();
+      const hasActiveConnections = Object.values(connectionStatus).some(Boolean);
+      
+      if (hasActiveConnections) {
+        logWithTimestamp('log', '✅ WebSocket connectivity check PASSED - active persistent connections found');
         results.push({
           name: 'WebSocket Connection',
           status: 'passed',
           message: 'Real-time updates available',
-          details: `WebSocket test connection successful (${totalTestDuration}ms)`,
-          icon: <Wifi className="h-4 w-4" />,
-          isTestConnection: true
+          details: 'Persistent WebSocket connections are active and operational',
+          icon: <Wifi className="h-4 w-4" />
         });
       } else {
-        const testDuration = wsResult.testDuration || totalTestDuration;
-        logWithTimestamp('error', '❌ WebSocket connectivity test FAILED after', testDuration + 'ms:', wsResult);
-        
-        // Simplified error handling - optimized service provides better error context
-        let status: 'warning' | 'failed' = 'warning';
-        let message = 'WebSocket test connection failed';
-        let details = `Test failed after ${Math.round(testDuration/1000)}s: ${wsResult.error || 'Unknown error'}`;
-        
-        // Check for authentication-related errors
-        if (wsResult.error?.includes('authentication') || wsResult.error?.includes('401') || wsResult.error?.includes('403')) {
-          message = 'WebSocket authentication issue';
-          status = 'failed'; // Authentication issues are more serious
-        } else if (wsResult.error?.includes('timeout') || wsResult.error?.includes('Connection timeout')) {
-          message = 'WebSocket connection timeout';
-          details = `Connection timed out after ${Math.round(testDuration/1000)}s. This may be temporary - operational connections may still work.`;
-          status = 'warning'; // Timeouts are warnings
-        }
-        
+        logWithTimestamp('warn', '⚠️ WebSocket connectivity check - no active persistent connections');
         results.push({
           name: 'WebSocket Connection',
-          status,
-          message,
-          details,
-          icon: <Wifi className="h-4 w-4" />,
-          isTestConnection: true
+          status: 'warning',
+          message: 'WebSocket connections not active',
+          details: 'Real-time updates may not be available. This is normal if no pages requiring live updates are open.',
+          icon: <Wifi className="h-4 w-4" />
         });
       }
     } catch (error) {
-      logWithTimestamp('error', '🔥 WebSocket test EXCEPTION:', error);
+      logWithTimestamp('error', '🔥 WebSocket status check EXCEPTION:', error);
       results.push({
         name: 'WebSocket Connection',
         status: 'warning',
-        message: 'WebSocket test failed with exception',
-        details: `Exception during test: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        icon: <Wifi className="h-4 w-4" />,
-        isTestConnection: true
+        message: 'WebSocket status check failed',
+        details: `Exception during status check: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        icon: <Wifi className="h-4 w-4" />
       });
     }
 

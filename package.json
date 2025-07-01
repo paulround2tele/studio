@@ -18,7 +18,7 @@
     "perf:budget": "node scripts/performance-budget.mjs",
     "size-limit": "size-limit",
     "api:generate-spec": "cd backend && go run cmd/generate-openapi/main.go -output ../backend/docs/openapi-3.yaml",
-    "api:generate-client": "openapi-typescript backend/docs/openapi.yaml -o src/lib/api-client/types.ts",
+    "api:generate-client": "openapi-typescript backend/docs/openapi-3.yaml -o src/lib/api-client/types.ts",
     "api:generate": "npm run api:generate-spec && npm run api:generate-client",
     "api:validate": "scripts/validate-contracts.sh",
     "api:validate-spec": "scripts/validate-openapi-spec.sh",

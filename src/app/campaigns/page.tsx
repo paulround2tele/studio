@@ -20,6 +20,98 @@ import { useToast } from '@/hooks/use-toast';
 import { useOptimisticUpdate, useLoadingState, useStateSubscription } from '@/lib/state/stateManager';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
+// Error serialization utility for meaningful logging
+const serializeError = (obj: unknown): string => {
+  if (obj === null || obj === undefined) {
+    return String(obj);
+  }
+
+  // Handle Error instances - extract non-enumerable properties
+  if (obj instanceof Error) {
+    const errorData: Record<string, unknown> = {
+      name: obj.name,
+      message: obj.message,
+      stack: obj.stack,
+    };
+    
+    // Include cause if available (modern Error objects)
+    if ('cause' in obj && obj.cause !== undefined) {
+      errorData.cause = obj.cause;
+    }
+    
+    // Include any custom enumerable properties
+    for (const [key, value] of Object.entries(obj)) {
+      if (!(key in errorData)) {
+        errorData[key] = value;
+      }
+    }
+    
+    return JSON.stringify(errorData, null, 2);
+  }
+
+  // Handle Event instances - extract relevant non-enumerable properties
+  if (obj instanceof Event) {
+    const eventData: Record<string, unknown> = {
+      type: obj.type,
+      isTrusted: obj.isTrusted,
+      timeStamp: obj.timeStamp,
+      target: obj.target?.constructor?.name || 'Unknown',
+    };
+    
+    // Add currentTarget if available
+    if (obj.currentTarget) {
+      eventData.currentTarget = obj.currentTarget.constructor?.name || 'Unknown';
+    }
+    
+    // Include any custom enumerable properties
+    for (const [key, value] of Object.entries(obj)) {
+      if (!(key in eventData)) {
+        eventData[key] = value;
+      }
+    }
+    
+    return JSON.stringify(eventData, null, 2);
+  }
+
+  // Handle generic objects with circular reference protection
+  try {
+    const seen = new WeakSet();
+    const result = JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular Reference]';
+        }
+        seen.add(value);
+      }
+      return value;
+    }, 2);
+    
+    // If JSON.stringify returns '{}' for an object, try to extract some properties manually
+    if (result === '{}' && typeof obj === 'object' && obj !== null) {
+      const keys = Object.getOwnPropertyNames(obj);
+      if (keys.length > 0) {
+        const extractedProps: Record<string, unknown> = {};
+        keys.slice(0, 10).forEach(key => { // Limit to first 10 properties
+          try {
+            const descriptor = Object.getOwnPropertyDescriptor(obj, key);
+            if (descriptor) {
+              extractedProps[key] = descriptor.value;
+            }
+          } catch {
+            extractedProps[key] = '[Unable to access]';
+          }
+        });
+        return JSON.stringify(extractedProps, null, 2);
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    // Fallback for objects that can't be serialized
+    return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
+  }
+};
+
 // PERFORMANCE: Lazy load campaign components for better bundle splitting
 const CampaignListItem = lazy(() => import('@/components/campaigns/CampaignListItem'));
 const CampaignProgressMonitor = lazy(() => import('@/components/campaigns/CampaignProgressMonitor'));
@@ -59,15 +151,14 @@ function CampaignsPageContent() {
         
         if (!isMountedRef.current) return;
         
-        console.log('[CampaignsPage] Attempting WebSocket connection...');
+        console.log('[CampaignsPage] Connecting to WebSocket...');
         
         // Connect to all campaigns updates
         wsCleanup = websocketService.connectToAllCampaigns(
           (standardMessage: WebSocketMessage) => {
             if (!isMountedRef.current) return;
             
-            console.log('[CampaignsPage] WebSocket message received - setting connected to true:', standardMessage);
-            // DIAGNOSTIC: Log when connection is marked as successful
+            console.log('[CampaignsPage] WebSocket message received - connection established');
             setWsConnected(true);
             
             // Convert to legacy format for backward compatibility
@@ -119,25 +210,24 @@ function CampaignsPageContent() {
             }
           },
           (error) => {
-            console.error('[CampaignsPage] WebSocket error - setting connected to false:', error);
+            console.error('[CampaignsPage] WebSocket error - setting connected to false:', serializeError(error));
             if (isMountedRef.current) {
               setWsConnected(false);
             }
           }
         );
         
-        console.log('[CampaignsPage] WebSocket connectToAllCampaigns call completed');
+        console.log('[CampaignsPage] WebSocket connection attempt completed');
         
-        // DIAGNOSTIC: Check connection status after connection attempt
+        // Fallback connection status check - provides resilience against race conditions
         setTimeout(() => {
+          if (!isMountedRef.current) return;
+          
           const connectionStatus = websocketService.getConnectionStatus();
-          console.log('[CampaignsPage] Connection status after 1s:', connectionStatus);
-          
           const isAnyConnected = Object.values(connectionStatus).some(Boolean);
-          console.log('[CampaignsPage] Is any connection active?', isAnyConnected);
           
-          if (isAnyConnected && isMountedRef.current) {
-            console.log('[CampaignsPage] Detected active connection, setting wsConnected to true');
+          if (isAnyConnected && !wsConnected) {
+            console.log('[CampaignsPage] Fallback: Detected active connection, updating status');
             setWsConnected(true);
           }
         }, 1000);

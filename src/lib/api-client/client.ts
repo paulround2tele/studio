@@ -121,7 +121,7 @@ export class ApiClient {
 
   constructor(baseUrl?: string) {
     // Use environment variable for backend URL, fallback to provided baseUrl or default
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2';
     this.baseUrl = baseUrl || backendUrl;
     
     // RATE LIMIT FIX: Enhanced configuration with proper rate limiting
@@ -137,6 +137,12 @@ export class ApiClient {
     console.log(`  Base URL: ${this.baseUrl}`);
     console.log(`  Environment Variable: ${process.env.NEXT_PUBLIC_API_URL}`);
     console.log('  Config:', this.config);
+    
+    // DIAGNOSTIC: Log what URLs will be constructed for key endpoints
+    console.log('API_CLIENT_DEBUG - URL Construction Test:');
+    console.log(`  /personas -> ${this.baseUrl}/personas`);
+    console.log(`  /campaigns -> ${this.baseUrl}/campaigns`);
+    console.log(`  /config/dns -> ${this.baseUrl}/config/dns`);
   }
 
   // Enhanced request method with retry logic and better error handling
@@ -430,44 +436,44 @@ export class ApiClient {
   // PERSONA API METHODS
   async listPersonas() {
     return this.request<GetOperationResponse<ApiPaths['/personas']['get']>>(
-      '/personas', 
+      '/personas',
       'GET'
     );
   }
 
   async createPersona(data: OperationRequestBody<ApiPaths['/personas']['post']>) {
     return this.request<PostOperationResponse<ApiPaths['/personas']['post']>>(
-      '/personas', 
-      'POST', 
+      '/personas',
+      'POST',
       { body: data }
     );
   }
 
   async getPersonaById(id: string) {
     return this.request<GetOperationResponse<ApiPaths['/personas/{id}']['get']>>(
-      `/personas/${id}`, 
+      `/personas/${id}`,
       'GET'
     );
   }
 
   async updatePersona(id: string, data: OperationRequestBody<ApiPaths['/personas/{id}']['put']>) {
     return this.request<PutOperationResponse<ApiPaths['/personas/{id}']['put']>>(
-      `/personas/${id}`, 
-      'PUT', 
+      `/personas/${id}`,
+      'PUT',
       { body: data }
     );
   }
 
   async deletePersona(id: string) {
     return this.request<DeleteOperationResponse<ApiPaths['/personas/{id}']['delete']>>(
-      `/personas/${id}`, 
+      `/personas/${id}`,
       'DELETE'
     );
   }
 
   async testPersona(id: string) {
     return this.request<PostOperationResponse<ApiPaths['/personas/{id}/test']['post']>>(
-      `/personas/${id}/test`, 
+      `/personas/${id}/test`,
       'POST'
     );
   }
@@ -475,58 +481,58 @@ export class ApiClient {
   // PROXY API METHODS
   async listProxies() {
     return this.request<GetOperationResponse<ApiPaths['/proxies']['get']>>(
-      '/proxies', 
+      '/proxies',
       'GET'
     );
   }
 
   async createProxy(data: OperationRequestBody<ApiPaths['/proxies']['post']>) {
     return this.request<PostOperationResponse<ApiPaths['/proxies']['post']>>(
-      '/proxies', 
-      'POST', 
+      '/proxies',
+      'POST',
       { body: data }
     );
   }
 
   async updateProxy(proxyId: string, data: OperationRequestBody<ApiPaths['/proxies/{proxyId}']['put']>) {
     return this.request<PutOperationResponse<ApiPaths['/proxies/{proxyId}']['put']>>(
-      `/proxies/${proxyId}`, 
-      'PUT', 
+      `/proxies/${proxyId}`,
+      'PUT',
       { body: data }
     );
   }
 
   async deleteProxy(proxyId: string) {
     return this.request<DeleteOperationResponse<ApiPaths['/proxies/{proxyId}']['delete']>>(
-      `/proxies/${proxyId}`, 
+      `/proxies/${proxyId}`,
       'DELETE'
     );
   }
 
   async testProxy(proxyId: string) {
     return this.request<PostOperationResponse<ApiPaths['/proxies/{proxyId}/test']['post']>>(
-      `/proxies/${proxyId}/test`, 
+      `/proxies/${proxyId}/test`,
       'POST'
     );
   }
 
   async forceProxyHealthCheck(proxyId: string) {
     return this.request<PostOperationResponse<ApiPaths['/proxies/{proxyId}/health-check']['post']>>(
-      `/proxies/${proxyId}/health-check`, 
+      `/proxies/${proxyId}/health-check`,
       'POST'
     );
   }
 
   async forceAllProxiesHealthCheck() {
     return this.request<PostOperationResponse<ApiPaths['/proxies/health-check']['post']>>(
-      '/proxies/health-check', 
+      '/proxies/health-check',
       'POST'
     );
   }
 
   async getProxyStatuses() {
     return this.request<GetOperationResponse<ApiPaths['/proxies/status']['get']>>(
-      '/proxies/status', 
+      '/proxies/status',
       'GET'
     );
   }
@@ -534,45 +540,45 @@ export class ApiClient {
   // PROXY POOL API METHODS
   async listProxyPools() {
     return this.request<GetOperationResponse<ApiPaths['/proxy-pools']['get']>>(
-      '/proxy-pools', 
+      '/proxy-pools',
       'GET'
     );
   }
 
   async createProxyPool(data: OperationRequestBody<ApiPaths['/proxy-pools']['post']>) {
     return this.request<PostOperationResponse<ApiPaths['/proxy-pools']['post']>>(
-      '/proxy-pools', 
-      'POST', 
+      '/proxy-pools',
+      'POST',
       { body: data }
     );
   }
 
   async updateProxyPool(poolId: string, data: OperationRequestBody<ApiPaths['/proxy-pools/{poolId}']['put']>) {
     return this.request<PutOperationResponse<ApiPaths['/proxy-pools/{poolId}']['put']>>(
-      `/proxy-pools/${poolId}`, 
-      'PUT', 
+      `/proxy-pools/${poolId}`,
+      'PUT',
       { body: data }
     );
   }
 
   async deleteProxyPool(poolId: string) {
     return this.request<DeleteOperationResponse<ApiPaths['/proxy-pools/{poolId}']['delete']>>(
-      `/proxy-pools/${poolId}`, 
+      `/proxy-pools/${poolId}`,
       'DELETE'
     );
   }
 
   async addProxyToPool(poolId: string, data: OperationRequestBody<ApiPaths['/proxy-pools/{poolId}/proxies']['post']>) {
     return this.request<PostOperationResponse<ApiPaths['/proxy-pools/{poolId}/proxies']['post']>>(
-      `/proxy-pools/${poolId}/proxies`, 
-      'POST', 
+      `/proxy-pools/${poolId}/proxies`,
+      'POST',
       { body: data }
     );
   }
 
   async removeProxyFromPool(poolId: string, proxyId: string) {
     return this.request<DeleteOperationResponse<ApiPaths['/proxy-pools/{poolId}/proxies/{proxyId}']['delete']>>(
-      `/proxy-pools/${poolId}/proxies/${proxyId}`, 
+      `/proxy-pools/${poolId}/proxies/${proxyId}`,
       'DELETE'
     );
   }
@@ -580,7 +586,7 @@ export class ApiClient {
   // KEYWORD SET API METHODS
   async listKeywordSets(params?: { limit?: number; offset?: number; isEnabled?: boolean }) {
     return this.request<GetOperationResponse<ApiPaths['/keywords/sets']['get']>>(
-      '/keywords/sets', 
+      '/keywords/sets',
       'GET',
       { params }
     );
@@ -588,30 +594,30 @@ export class ApiClient {
 
   async createKeywordSet(data: OperationRequestBody<ApiPaths['/keywords/sets']['post']>) {
     return this.request<PostOperationResponse<ApiPaths['/keywords/sets']['post']>>(
-      '/keywords/sets', 
-      'POST', 
+      '/keywords/sets',
+      'POST',
       { body: data }
     );
   }
 
   async getKeywordSetById(setId: string) {
     return this.request<GetOperationResponse<ApiPaths['/keywords/sets/{setId}']['get']>>(
-      `/keywords/sets/${setId}`, 
+      `/keywords/sets/${setId}`,
       'GET'
     );
   }
 
   async updateKeywordSet(setId: string, data: OperationRequestBody<ApiPaths['/keywords/sets/{setId}']['put']>) {
     return this.request<PutOperationResponse<ApiPaths['/keywords/sets/{setId}']['put']>>(
-      `/keywords/sets/${setId}`, 
-      'PUT', 
+      `/keywords/sets/${setId}`,
+      'PUT',
       { body: data }
     );
   }
 
   async deleteKeywordSet(setId: string) {
     return this.request<DeleteOperationResponse<ApiPaths['/keywords/sets/{setId}']['delete']>>(
-      `/keywords/sets/${setId}`, 
+      `/keywords/sets/${setId}`,
       'DELETE'
     );
   }
@@ -619,15 +625,15 @@ export class ApiClient {
   // CONFIG API METHODS
   async getFeatureFlags() {
     return this.request<GetOperationResponse<ApiPaths['/config/features']['get']>>(
-      '/config/features', 
+      '/config/features',
       'GET'
     );
   }
 
   async updateFeatureFlags(data: OperationRequestBody<ApiPaths['/config/features']['post']>) {
     return this.request<PostOperationResponse<ApiPaths['/config/features']['post']>>(
-      '/config/features', 
-      'POST', 
+      '/config/features',
+      'POST',
       { body: data }
     );
   }
