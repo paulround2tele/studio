@@ -62,9 +62,10 @@ type WebSocketMessage struct {
 
 // ClientMessage represents messages received from the client
 type ClientMessage struct {
-	Type               string `json:"type"`
-	CampaignID         string `json:"campaignId,omitempty"`
-	LastSequenceNumber int64  `json:"lastSequenceNumber,omitempty"`
+	Type               string      `json:"type"`
+	CampaignID         string      `json:"campaignId,omitempty"`
+	LastSequenceNumber int64       `json:"lastSequenceNumber,omitempty"`
+	Data               interface{} `json:"data,omitempty"`
 }
 
 // Client is a middleman between the websocket connection and the hub.
@@ -216,6 +217,44 @@ func (c *Client) handleMessage(message []byte) {
 			"lastSequenceNumber": clientMsg.LastSequenceNumber,
 		}
 		c.sendMessage(response)
+
+	case "subscribe":
+		// Handle frontend subscription request with channels array
+		var subscribeData struct {
+			Channels []string `json:"channels"`
+		}
+		if dataBytes, err := json.Marshal(clientMsg.Data); err == nil {
+			if err := json.Unmarshal(dataBytes, &subscribeData); err == nil {
+				c.subscriptionMutex.Lock()
+				for _, channel := range subscribeData.Channels {
+					switch channel {
+					case "campaigns", "campaign-updates":
+						// Subscribe to all campaigns for these general channels
+						c.campaignSubscriptions["*"] = true
+						log.Printf("Client %s subscribed to general channel: %s",
+							c.conn.RemoteAddr().String(), channel)
+					default:
+						// Assume it's a specific campaign ID
+						c.campaignSubscriptions[channel] = true
+						log.Printf("Client %s subscribed to campaign: %s",
+							c.conn.RemoteAddr().String(), channel)
+					}
+				}
+				c.subscriptionMutex.Unlock()
+
+				// Send subscription acknowledgment
+				response := c.createMessage("subscription_ack", nil)
+				response.Data = map[string]interface{}{
+					"channels":   subscribeData.Channels,
+					"subscribed": true,
+				}
+				c.sendMessage(response)
+			} else {
+				log.Printf("Failed to parse subscribe data: %v", err)
+			}
+		} else {
+			log.Printf("Failed to marshal client data: %v", err)
+		}
 
 	case "subscribe_campaign":
 		if clientMsg.CampaignID != "" {

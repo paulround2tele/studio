@@ -450,6 +450,13 @@ func main() {
 	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware)
 	log.Println("Registered new campaign orchestration routes under /api/v2/campaigns.")
 
+	// Legacy campaign routes for backward compatibility (session auth only)
+	legacyCampaignGroup := router.Group("/campaigns")
+	legacyCampaignGroup.Use(authMiddleware.SessionAuth())
+	legacyCampaignGroup.Use(securityMiddleware.SessionProtection())
+	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(legacyCampaignGroup, authMiddleware)
+	log.Println("Registered legacy campaign orchestration routes under /campaigns for backward compatibility.")
+
 	// Use environment variable for port if set, otherwise use config
 	serverPort := os.Getenv("SERVER_PORT")
 	if serverPort == "" {
