@@ -5,7 +5,8 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ConditionalLayout from '@/components/layout/ConditionalLayout';
 import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
-
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { NoSSR } from '@/components/providers/NoSSR';
 
 export const metadata: Metadata = {
   title: 'DomainFlow',
@@ -18,14 +19,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className="font-sans antialiased" suppressHydrationWarning={true}>
-        <GlobalLoadingIndicator />
-        <AuthProvider>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
-        </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <NoSSR fallback={
+          <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        }>
+          <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
+            <GlobalLoadingIndicator />
+            <AuthProvider>
+              <ConditionalLayout>
+                {children}
+              </ConditionalLayout>
+            </AuthProvider>
+          </ThemeProvider>
+        </NoSSR>
       </body>
     </html>
   );

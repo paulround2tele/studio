@@ -12,9 +12,9 @@ import { useLoadingStore } from '@/lib/stores/loadingStore';
 import { cn } from '@/lib/utils';
 
 export const GlobalLoadingIndicator: React.FC = () => {
-  const { hasAnyLoading, getLoadingOperations } = useLoadingStore();
-  const isLoading = hasAnyLoading();
-  const loadingOperations = getLoadingOperations();
+  const { isAnyLoading, getActiveOperations } = useLoadingStore();
+  const isLoading = isAnyLoading;
+  const loadingOperations = getActiveOperations();
   
   // Don't render if nothing is loading
   if (!isLoading || loadingOperations.length === 0) {

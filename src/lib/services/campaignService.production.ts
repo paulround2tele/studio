@@ -104,9 +104,11 @@ class CampaignService {
       console.log('[CampaignService] Getting campaign by ID:', campaignId);
       const result = await apiClient.getCampaignById(campaignId);
       
+      // Extract campaign from wrapped response
+      const campaign = (result as { campaign?: Campaign }).campaign || result;
       return {
         status: 'success',
-        data: result as Campaign,
+        data: campaign as Campaign,
         message: 'Campaign retrieved successfully'
       };
     } catch (error) {
@@ -156,7 +158,7 @@ class CampaignService {
       
       return {
         status: 'success',
-        data: result as Campaign,
+        data: result as unknown as Campaign,
         message: 'Campaign started successfully'
       };
     } catch (error) {
@@ -175,7 +177,7 @@ class CampaignService {
       
       return {
         status: 'success',
-        data: result as Campaign,
+        data: result as unknown as Campaign,
         message: 'Campaign paused successfully'
       };
     } catch (error) {
@@ -194,7 +196,7 @@ class CampaignService {
       
       return {
         status: 'success',
-        data: result as Campaign,
+        data: result as unknown as Campaign,
         message: 'Campaign resumed successfully'
       };
     } catch (error) {
@@ -213,7 +215,7 @@ class CampaignService {
       
       return {
         status: 'success',
-        data: result as Campaign,
+        data: result as unknown as Campaign,
         message: 'Campaign cancelled successfully'
       };
     } catch (error) {

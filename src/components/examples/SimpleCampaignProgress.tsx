@@ -135,10 +135,11 @@ export function SimpleCampaignsList({ campaigns }: CampaignsListProps) {
 
   // Single global connection for all campaign updates
   const handleGlobalMessage = (message: WebSocketMessage) => {
-    if (message.campaignId && message.type === 'campaign_progress') {
+    const messageData = message.data as { campaignId?: string } | undefined;
+    if (messageData?.campaignId && message.type === 'campaign_progress') {
       setCampaignUpdates(prev => ({
         ...prev,
-        [message.campaignId!]: message
+        [messageData.campaignId!]: message
       }));
     }
   };

@@ -24,24 +24,39 @@ type OperationRequestBody<T> = T extends {
   requestBody: { content: { 'application/json': infer R } }
 } ? R : never;
 
+// Enhanced request configuration
+interface RequestConfig {
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+}
 
 export class ApiClient {
   private baseUrl: string;
+  private config: RequestConfig;
 
   constructor(baseUrl?: string) {
     // Use environment variable for backend URL, fallback to provided baseUrl or default
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-    this.baseUrl = baseUrl || `${backendUrl}/api/v2`;
+    this.baseUrl = baseUrl || backendUrl;
+    
+    // Enhanced configuration with retry logic
+    this.config = {
+      timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
+      retryAttempts: parseInt(process.env.NEXT_PUBLIC_API_RETRY_ATTEMPTS || '3'),
+      retryDelay: parseInt(process.env.NEXT_PUBLIC_API_RETRY_DELAY || '1000'),
+    };
     
     // Debug logging for API client initialization
     console.log('API_CLIENT_DEBUG - Initialized with:', {
       backendUrl,
       baseUrl: this.baseUrl,
-      envVar: process.env.NEXT_PUBLIC_API_URL
+      envVar: process.env.NEXT_PUBLIC_API_URL,
+      config: this.config
     });
   }
 
-  // Generic request method with type safety
+  // Enhanced request method with retry logic and better error handling
   private async request<TResponse = unknown>(
     path: string,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
@@ -62,68 +77,121 @@ export class ApiClient {
       });
     }
 
-    // Debug logging for API requests
-    console.log('API_CLIENT_DEBUG - Making request:', {
-      method,
-      url: url.toString(),
-      baseUrl: this.baseUrl,
-      path,
-      hasBody: !!options?.body
-    });
+    let lastError: Error | null = null;
 
-    try {
-      const response = await fetch(url.toString(), {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
-        body: options?.body ? JSON.stringify(options.body) : undefined,
-        credentials: 'include', // Include cookies for session auth
-      });
+    // Retry logic with exponential backoff
+    for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
+      try {
+        console.log('API_CLIENT_DEBUG - Making request attempt:', {
+          attempt,
+          method,
+          url: url.toString(),
+          baseUrl: this.baseUrl,
+          path,
+          hasBody: !!options?.body
+        });
 
-      console.log('API_CLIENT_DEBUG - Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        url: response.url
-      });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch (jsonError) {
-          console.error('API_CLIENT_DEBUG - Failed to parse error response as JSON:', jsonError);
-          errorData = {
-            message: `HTTP ${response.status}: ${response.statusText}`,
-            status: response.status,
-            url: response.url
-          };
-        }
-        
-        console.error('API_CLIENT_DEBUG - Request failed:', {
+        const response = await fetch(url.toString(), {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers,
+          },
+          body: options?.body ? JSON.stringify(options.body) : undefined,
+          credentials: 'include', // Include cookies for session auth
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        console.log('API_CLIENT_DEBUG - Response received:', {
+          attempt,
           status: response.status,
           statusText: response.statusText,
-          errorData,
+          ok: response.ok,
           url: response.url
         });
-        
-        const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
-        throw new Error(errorMessage);
-      }
 
-      const responseData = await response.json();
-      console.log('API_CLIENT_DEBUG - Successful response parsed');
-      return responseData;
-    } catch (error) {
-      console.error('API_CLIENT_DEBUG - Network or parsing error:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        url: url.toString(),
-        method
-      });
-      throw error;
+        if (!response.ok) {
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch (jsonError) {
+            console.error('API_CLIENT_DEBUG - Failed to parse error response as JSON:', jsonError);
+            errorData = {
+              message: `HTTP ${response.status}: ${response.statusText}`,
+              status: response.status,
+              url: response.url
+            };
+          }
+          
+          const error = new Error(errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+          
+          // Don't retry on client errors (4xx), only on server errors (5xx) and network issues
+          if (response.status >= 400 && response.status < 500) {
+            throw error;
+          }
+          
+          lastError = error;
+          
+          // Retry on server errors
+          if (attempt < this.config.retryAttempts) {
+            const delay = this.config.retryDelay * Math.pow(2, attempt - 1); // Exponential backoff
+            console.log(`API_CLIENT_DEBUG - Retrying in ${delay}ms (attempt ${attempt}/${this.config.retryAttempts})`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          
+          throw error;
+        }
+
+        const responseData = await response.json();
+        console.log('API_CLIENT_DEBUG - Successful response parsed');
+        return responseData;
+
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        
+        // Handle network errors and timeouts with retry
+        if (error instanceof Error && (
+          error.name === 'AbortError' ||
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('NetworkError')
+        )) {
+          console.warn('API_CLIENT_DEBUG - Network error, retrying:', {
+            attempt,
+            error: error.message,
+            willRetry: attempt < this.config.retryAttempts
+          });
+          
+          if (attempt < this.config.retryAttempts) {
+            const delay = this.config.retryDelay * Math.pow(2, attempt - 1);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+        }
+        
+        console.error('API_CLIENT_DEBUG - Network or parsing error:', {
+          attempt,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          url: url.toString(),
+          method
+        });
+        
+        // If this is not the last attempt and it's a retryable error, continue
+        if (attempt < this.config.retryAttempts) {
+          continue;
+        }
+        
+        throw lastError;
+      }
     }
+
+    // If we get here, all retries failed
+    throw lastError || new Error('Request failed after all retry attempts');
   }
 
   // AUTH API METHODS
@@ -150,10 +218,20 @@ export class ApiClient {
   }
 
   async getCurrentUser() {
-    return this.request<GetOperationResponse<ApiPaths['/me']['get']>>(
-      '/me', 
-      'GET'
-    );
+    try {
+      return await this.request<GetOperationResponse<ApiPaths['/me']['get']>>(
+        '/me',
+        'GET'
+      );
+    } catch (error) {
+      // Handle 401 responses gracefully for authentication checks
+      if (error instanceof Error && error.message.includes('401')) {
+        console.log('API_CLIENT_DEBUG - Authentication check: No valid session (401)');
+        return null;
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   async changePassword(data: OperationRequestBody<ApiPaths['/change-password']['post']>) {

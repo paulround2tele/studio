@@ -6,7 +6,11 @@
  */
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { websocketService, type WebSocketMessage, type MessageHandler, type ErrorHandler } from '@/lib/services/websocketService.simple';
+import { websocketService, type WebSocketMessage } from '@/lib/services/websocketService.simple';
+
+// Define the handler types locally
+type MessageHandler = (message: WebSocketMessage) => void;
+type ErrorHandler = (error: Event | Error) => void;
 
 // Hook state type
 interface WebSocketState {
@@ -71,21 +75,23 @@ export function useCampaignWebSocket(
     setState(prev => ({ ...prev, isConnecting: true }));
 
     // Connect to campaign
-    const cleanup = websocketService.connectToCampaign(
-      campaignId,
-      handleMessage,
-      handleError
+    const cleanup = websocketService.connect(
+      `campaign-${campaignId}`,
+      {
+        onMessage: handleMessage,
+        onError: handleError,
+      }
     );
 
     cleanupRef.current = cleanup;
 
     // Check connection status
     const checkConnection = () => {
-      const isConnected = websocketService.isConnected(campaignId);
-      setState(prev => ({ 
-        ...prev, 
-        isConnected, 
-        isConnecting: !isConnected && prev.isConnecting 
+      const isConnected = websocketService.isConnected(`campaign-${campaignId}`);
+      setState(prev => ({
+        ...prev,
+        isConnected,
+        isConnecting: !isConnected && prev.isConnecting
       }));
     };
 
@@ -107,7 +113,7 @@ export function useCampaignWebSocket(
   // Send message function
   const sendMessage = useCallback((message: object) => {
     if (campaignId) {
-      websocketService.sendMessage(campaignId, message as WebSocketMessage);
+      websocketService.sendMessage(`campaign-${campaignId}`, message as WebSocketMessage);
     }
   }, [campaignId]);
 
@@ -213,13 +219,9 @@ export function useWebSocketStatus() {
 
   useEffect(() => {
     const updateStatus = () => {
-      const statusArray = websocketService.getConnectionStatus();
-      const newStatus = statusArray.reduce((acc, status) => {
-        acc[status.campaignId] = status.connected;
-        return acc;
-      }, {} as Record<string, boolean>);
-      setStatus(newStatus);
-      setIsAnyConnected(Object.values(newStatus).some(Boolean));
+      const statusRecord = websocketService.getConnectionStatus();
+      setStatus(statusRecord);
+      setIsAnyConnected(Object.values(statusRecord).some(Boolean));
     };
 
     // Initial update
@@ -249,8 +251,9 @@ export function useCampaignMessages(
   const [latestMessage, setLatestMessage] = useState<WebSocketMessage | null>(null);
 
   const handleMessage = useCallback((message: WebSocketMessage) => {
-    // Filter by campaign ID
-    if (message.campaignId !== campaignId) return;
+    // Filter by campaign ID from message data
+    const messageData = message.data as { campaignId?: string } | undefined;
+    if (messageData?.campaignId && messageData.campaignId !== campaignId) return;
     
     // Filter by message type if specified
     if (messageTypes && !messageTypes.includes(message.type)) return;

@@ -47,6 +47,7 @@ export function useWebSocketStatus() {
 
 export function WebSocketStatusProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [state, setState] = useState<WebSocketStatusState>({
     connections: {},
     overallStatus: 'offline',
@@ -242,22 +243,6 @@ export function WebSocketStatusProvider({ children }: { children: React.ReactNod
     });
   }, [calculateOverallStatus]);
 
-  // Monitor WebSocket service status
-  useEffect(() => {
-    const interval = setInterval(refreshStatus, 5000); // Check every 5 seconds
-    refreshStatus(); // Initial check
-    
-    return () => clearInterval(interval);
-  }, [refreshStatus]);
-
-  // Update overall status when connections change
-  useEffect(() => {
-    setState(prev => ({
-      ...prev,
-      overallStatus: calculateOverallStatus(prev.connections),
-    }));
-  }, [state.connections, calculateOverallStatus]);
-
   // PERFORMANCE OPTIMIZATION: Memoize context value to prevent unnecessary re-renders
   // This prevents cascade re-renders when WebSocket status updates every 5 seconds
   const value: WebSocketStatusContextType = useMemo(() => ({
@@ -270,12 +255,39 @@ export function WebSocketStatusProvider({ children }: { children: React.ReactNod
     // State dependencies - only re-render when meaningful state changes occur
     state,
     // All functions are memoized with useCallback, providing stable references
-    // All functions are memoized with useCallback, providing stable references
     testConnection,
     getConnectionStatus,
     isOperationallyConnected,
     refreshStatus,
   ]);
+
+  // Prevent hydration mismatch by ensuring client-side initialization
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Monitor WebSocket service status
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const interval = setInterval(refreshStatus, 5000); // Check every 5 seconds
+    refreshStatus(); // Initial check
+    
+    return () => clearInterval(interval);
+  }, [refreshStatus, mounted]);
+
+  // Update overall status when connections change
+  useEffect(() => {
+    setState(prev => ({
+      ...prev,
+      overallStatus: calculateOverallStatus(prev.connections),
+    }));
+  }, [state.connections, calculateOverallStatus]);
+
+  // Don't render context until mounted to prevent SSR issues
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
   return (
     <WebSocketStatusContext.Provider value={value}>

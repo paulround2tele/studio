@@ -44,8 +44,8 @@ function ProxiesPageContent() {
   const { toast } = useToast();
 
   // Use centralized loading state and proxy health monitoring
-  const { startLoading, stopLoading, isLoading } = useLoadingStore();
-  const loading = isLoading(LOADING_OPERATIONS.FETCH_PROXIES);
+  const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
+  const loading = isOperationLoading(LOADING_OPERATIONS.DATA_FETCH);
   
   // Initialize proxy health monitoring for future use
   useProxyHealth({ 
@@ -54,7 +54,7 @@ function ProxiesPageContent() {
   });
 
   const fetchProxiesData = useCallback(async (showLoadingSpinner = true) => {
-    if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.FETCH_PROXIES, "Loading proxies");
+    if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading proxies");
     try {
       const response: ProxiesListResponse = await getProxies();
       if (response.status === 'success' && response.data) {
@@ -66,7 +66,7 @@ function ProxiesPageContent() {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
       toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
-      if (showLoadingSpinner) stopLoading(LOADING_OPERATIONS.FETCH_PROXIES);
+      if (showLoadingSpinner) stopLoading(LOADING_OPERATIONS.DATA_FETCH);
     }
   }, [toast, startLoading, stopLoading]);
 

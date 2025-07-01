@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthUI } from '@/lib/hooks/useAuthUI';
+import { getLogger } from '@/lib/utils/logger';
+
+const logger = getLogger();
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,7 +34,7 @@ export function LoginForm({
   title = 'Welcome back to DomainFlow',
   description = 'Sign in to your account to continue'
 }: LoginFormProps) {
-  const { login, isAuthenticated, isLoading: authLoading } = useAuthUI();
+  const { login, isAuthenticated, isLoading: authLoading, isLoginLoading } = useAuthUI();
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -41,7 +44,7 @@ export function LoginForm({
     rememberMe: false
   });
   
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,14 +66,19 @@ export function LoginForm({
       return;
     }
 
-    setIsLoading(true);
+    // Prevent double submissions
+    if (isSubmitting || isLoginLoading) {
+      return;
+    }
+
+    setIsSubmitting(true);
     setError(null);
 
-    // DIAGNOSTIC LOGGING
-    console.log('LOGIN DIAGNOSTIC - Form submission started');
-    console.log('LOGIN DIAGNOSTIC - Email:', formData.email);
-    console.log('LOGIN DIAGNOSTIC - Password length:', formData.password.length);
-    console.log('LOGIN DIAGNOSTIC - Remember me:', formData.rememberMe);
+    logger.debug('LOGIN_FORM', 'Form submission started', {
+      email: formData.email,
+      passwordLength: formData.password.length,
+      rememberMe: formData.rememberMe
+    });
 
     try {
       const result = await login({
@@ -79,33 +87,35 @@ export function LoginForm({
         rememberMe: formData.rememberMe
       });
 
-      console.log('LOGIN DIAGNOSTIC - Login result:', {
+      logger.debug('LOGIN_FORM', 'Login result received', {
         success: result.success,
-        error: result.error,
-        hasUser: !!result.user
+        hasError: !!result.error
       });
 
       if (!result.success) {
-        console.log('LOGIN DIAGNOSTIC - Login failed with error:', result.error);
+        logger.warn('LOGIN_FORM', 'Login failed', { error: result.error });
         setError(result.error || 'Login failed. Please try again.');
       } else {
-        console.log('LOGIN DIAGNOSTIC - Login succeeded, user:', result.user);
+        logger.info('LOGIN_FORM', 'Login successful - redirecting');
+        // Successful login will be handled by the redirect effect
       }
     } catch (error) {
-      console.error('LOGIN DIAGNOSTIC - Exception during login:', error);
-      setError('An unexpected error occurred. Please try again.');
+      const errorMsg = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
+      logger.error('LOGIN_FORM', 'Login exception', { error: errorMsg });
+      setError(errorMsg);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   // Show loading if auth is still loading
   if (authLoading) {
+    logger.debug('LOGIN_FORM', 'Showing auth loading screen');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Checking authentication...</p>
         </div>
       </div>
     );
@@ -113,11 +123,12 @@ export function LoginForm({
 
   // Redirect if already authenticated
   if (isAuthenticated) {
+    logger.debug('LOGIN_FORM', 'User already authenticated - showing redirect screen');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Redirecting...</p>
+          <p className="text-muted-foreground">Redirecting to dashboard...</p>
         </div>
       </div>
     );
@@ -141,7 +152,7 @@ export function LoginForm({
                 placeholder="Enter your email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                disabled={isLoading}
+                disabled={isSubmitting || isLoginLoading}
               />
             </div>
 
@@ -155,7 +166,7 @@ export function LoginForm({
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  disabled={isLoading}
+                  disabled={isSubmitting || isLoginLoading}
                   className="pr-10"
                 />
                 <Button
@@ -164,7 +175,7 @@ export function LoginForm({
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
+                  disabled={isSubmitting || isLoginLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -181,7 +192,7 @@ export function LoginForm({
                 id="rememberMe"
                 checked={formData.rememberMe}
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, rememberMe: !!checked }))}
-                disabled={isLoading}
+                disabled={isSubmitting || isLoginLoading}
               />
               <Label htmlFor="rememberMe" className="text-sm">
                 Remember me
@@ -199,9 +210,9 @@ export function LoginForm({
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading}
+              disabled={isSubmitting || isLoginLoading}
             >
-              {isLoading ? (
+              {(isSubmitting || isLoginLoading) ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...

@@ -24,9 +24,9 @@ function EditCampaignPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   // Use centralized loading state
-  const { startLoading, stopLoading, isLoading } = useLoadingStore();
+  const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
   const loadingOperationId = `edit_campaign_${campaignId}`;
-  const loading = isLoading(loadingOperationId);
+  const loading = isOperationLoading(loadingOperationId);
 
   useEffect(() => {
     if (!campaignId) {
@@ -40,7 +40,7 @@ function EditCampaignPageContent() {
       try {
         const response = await apiClient.getCampaignById(campaignId);
         if (response.campaign) {
-          setCampaign(response.campaign);
+          setCampaign(response.campaign as Campaign);
         } else {
           setError("Campaign not found.");
           setCampaign(null);

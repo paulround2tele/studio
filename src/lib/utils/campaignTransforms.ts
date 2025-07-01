@@ -179,13 +179,13 @@ function mapStatusToPhaseStatus(status: CampaignStatus): CampaignPhaseStatus {
  */
 export function extractCampaignFromViewModel(viewModel: CampaignViewModel): OpenAPICampaign {
   return {
-    id: viewModel.id,
-    name: viewModel.name,
-    campaignType: viewModel.campaignType,
-    status: viewModel.status,
-    userId: viewModel.userId,
-    createdAt: viewModel.createdAt,
-    updatedAt: viewModel.updatedAt,
+    id: viewModel.id || '00000000-0000-0000-0000-000000000000',
+    name: viewModel.name || '',
+    campaignType: viewModel.campaignType || 'domain_generation',
+    status: viewModel.status || 'pending',
+    userId: viewModel.userId || '',
+    createdAt: viewModel.createdAt || new Date().toISOString(),
+    updatedAt: viewModel.updatedAt || new Date().toISOString(),
     startedAt: viewModel.startedAt,
     completedAt: viewModel.completedAt,
     progressPercentage: viewModel.progressPercentage,

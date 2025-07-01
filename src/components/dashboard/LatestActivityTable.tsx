@@ -175,12 +175,12 @@ export default function LatestActivityTable() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE_GLOBAL);
 
   // Use centralized loading state
-  const { startLoading, stopLoading, isLoading } = useLoadingStore();
-  const loading = isLoading(LOADING_OPERATIONS.FETCH_DASHBOARD_DATA);
+  const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
+  const loading = isOperationLoading(LOADING_OPERATIONS.DATA_FETCH);
 
 
   const fetchAndProcessData = useCallback(async (showLoadingSpinner = true) => {
-    if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.FETCH_DASHBOARD_DATA, "Loading dashboard activity");
+    if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading dashboard activity");
     try {
       const response = await getCampaigns();
       const processedActivities: LatestDomainActivity[] = [];
@@ -225,7 +225,7 @@ export default function LatestActivityTable() {
       console.error("Failed to load or process activity data:", error);
        setAllActivityData([]); // Clear on major error
     } finally {
-      if (showLoadingSpinner) stopLoading(LOADING_OPERATIONS.FETCH_DASHBOARD_DATA);
+      if (showLoadingSpinner) stopLoading(LOADING_OPERATIONS.DATA_FETCH);
     }
   }, [startLoading, stopLoading]);
 

@@ -76,7 +76,12 @@ function CampaignsPageContent() {
                 if (message.campaignId) {
                   setCampaigns(prev => prev.map(campaign =>
                     campaign.id === message.campaignId
-                      ? { ...campaign, progressPercentage: message.data.progress || campaign.progressPercentage }
+                      ? {
+                          ...campaign,
+                          progressPercentage: typeof message.data.progress === 'number'
+                            ? message.data.progress
+                            : campaign.progressPercentage
+                        }
                       : campaign
                   ));
                 }

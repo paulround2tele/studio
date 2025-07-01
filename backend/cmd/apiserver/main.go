@@ -308,18 +308,17 @@ func main() {
 	router.GET("/ping", api.PingHandlerGin)
 
 	// OpenAPI 3.0 specification (public)
-	// Serve OpenAPI 3.0 specification from the repository path
-	router.StaticFile("/api/openapi.yaml", "backend/docs/openapi-3.yaml")
+	router.StaticFile("/api/openapi.yaml", "backend/docs/openapi.yaml")
 	log.Println("Registered OpenAPI 3.0 specification route under /api/openapi.yaml")
 
-	// Authentication routes (public)
-	authRoutes := router.Group("/api/v2/auth")
+	// Authentication routes (public) - aligned with OpenAPI spec
+	authRoutes := router.Group("/auth")
 	{
 		authRoutes.POST("/login", rateLimitMiddleware.LoginRateLimit(), authHandler.Login)
 		authRoutes.POST("/logout", authHandler.Logout)
 		authRoutes.POST("/refresh", authHandler.RefreshSession)
 	}
-	log.Println("Registered authentication routes under /api/v2/auth")
+	log.Println("Registered authentication routes under /auth")
 
 	// Register health check routes (legacy paths for backward compatibility)
 	api.RegisterHealthCheckRoutes(router, healthCheckHandler)
@@ -333,15 +332,22 @@ func main() {
 
 	log.Println("Authentication configured for session-only (offline mode)")
 
-	// Protected routes with session authentication only
-	apiV2 := router.Group("/api/v2")
-	apiV2.Use(authMiddleware.SessionAuth())
-	apiV2.Use(securityMiddleware.SessionProtection()) // Session-based protection for session-based requests
+	// User routes (authenticated) - aligned with OpenAPI spec
+	authRequiredRoutes := router.Group("/")
+	authRequiredRoutes.Use(authMiddleware.SessionAuth())
+	authRequiredRoutes.Use(securityMiddleware.SessionProtection())
 	{
 		// Current user routes (authenticated users)
-		apiV2.GET("/me", authHandler.Me)
-		apiV2.POST("/change-password", authHandler.ChangePassword)
+		authRequiredRoutes.GET("/me", authHandler.Me)
+		authRequiredRoutes.POST("/change-password", authHandler.ChangePassword)
+	}
+	log.Println("Registered authenticated user routes: /me, /change-password")
 
+	// Protected routes with session authentication only for /api/v2/* endpoints
+	apiV2 := router.Group("/api/v2")
+	apiV2.Use(authMiddleware.SessionAuth())
+	apiV2.Use(securityMiddleware.SessionProtection())
+	{
 		// Persona routes (session auth only)
 		personaGroup := apiV2.Group("/personas")
 		{
@@ -434,8 +440,6 @@ func main() {
 			}
 		})
 		log.Println("Registered WebSocket test broadcast route under /api/v2/broadcast-test.")
-
-		log.Println("Legacy campaign routes under /api/v2/campaigns/* have been removed. All APIs now use /api/v2.")
 	}
 
 	// V2 Campaign routes (session auth only)

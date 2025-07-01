@@ -126,9 +126,9 @@ export default function CampaignDashboardPage() {
   const chainTriggerRef = useRef(false);
 
   // Use centralized loading state instead of local loading
-  const { startLoading, stopLoading, isLoading } = useLoadingStore();
+  const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
   const loadingOperationId = `campaign_details_${campaignId}`;
-  const loading = isLoading(loadingOperationId);
+  const loading = isOperationLoading(loadingOperationId);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -273,14 +273,14 @@ export default function CampaignDashboardPage() {
         if (campaign.campaignType === 'dns_validation') {
           const dnsItemsResponse = await getDnsCampaignDomains(campaign.id!, { limit: pageSize, cursor: String((currentPage - 1) * pageSize) });
           if (dnsItemsResponse && dnsItemsResponse.data) {
-           if(isMountedRef.current) setDnsCampaignItems(dnsItemsResponse.data as CampaignValidationItem[]);
+           if(isMountedRef.current) setDnsCampaignItems(dnsItemsResponse.data as unknown as CampaignValidationItem[]);
           } else {
             toast({ title: "Error Loading DNS Items", description: "Failed to load DNS validation items", variant: "destructive" });
           }
         } else if (campaign.campaignType === 'http_keyword_validation') {
           const httpItemsResponse = await getHttpCampaignItems(campaign.id!, { limit: pageSize, cursor: String((currentPage - 1) * pageSize) });
           if (httpItemsResponse && httpItemsResponse.data) {
-            if(isMountedRef.current) setHttpCampaignItems(httpItemsResponse.data as CampaignValidationItem[]);
+            if(isMountedRef.current) setHttpCampaignItems(httpItemsResponse.data as unknown as CampaignValidationItem[]);
           } else {
             toast({ title: "Error Loading HTTP Items", description: "Failed to load HTTP validation items", variant: "destructive" });
           }
@@ -381,19 +381,19 @@ export default function CampaignDashboardPage() {
     };
     
     // Connect to domain generation stream using production WebSocket service
-    const cleanup = websocketService.connectToCampaign(
-      campaignId,
-      (message) => {
-        if (message.type === 'domain_generated' && message.data && typeof message.data === 'object') {
-          const data = message.data as { domain?: string };
+    const cleanup = websocketService.connectToAllCampaigns(
+      (message: unknown) => {
+        const msg = message as { type?: string; data?: unknown };
+        if (msg.type === 'domain_generated' && msg.data && typeof msg.data === 'object') {
+          const data = msg.data as { domain?: string };
           if (data.domain) {
             handleDomainReceived(data.domain);
           }
-        } else if (message.type === 'campaign_complete') {
+        } else if (msg.type === 'campaign_complete') {
           handleStreamComplete('completed');
         }
       },
-      (error) => {
+      (error: unknown) => {
         console.error(`[${campaignId}] Error setting up domain stream (WS):`, error);
         if (isMountedRef.current) {
           handleStreamComplete('failed', error instanceof Error ? error : new Error(String(error)));

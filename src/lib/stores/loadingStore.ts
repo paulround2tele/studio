@@ -1,215 +1,492 @@
-/**
- * Centralized Loading State Management
- * 
- * Provides global state management for tracking async operations
- * across the entire application. Supports multiple concurrent
- * loading states with automatic cleanup.
- */
+// src/lib/stores/loadingStore.ts
+// Configuration-driven loading state management for DomainFlow
+// NO HARDCODING - All loading operations configurable
 
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { subscribeWithSelector } from 'zustand/middleware';
+import { getLogger } from '@/lib/utils/logger';
 
-export type LoadingStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
+const logger = getLogger();
 
-export interface LoadingState {
-  status: LoadingStatus;
-  message?: string;
-  error?: string;
-  startedAt?: number;
-  finishedAt?: number;
+/**
+ * Loading operation configuration
+ * Allows customization of loading behavior per operation
+ */
+interface LoadingOperationConfig {
+  timeout: number;
+  showSpinner: boolean;
+  showProgress: boolean;
+  blockUI: boolean;
+  description?: string;
 }
 
-export interface LoadingStore {
-  // State
-  operations: Map<string, LoadingState>;
-  globalLoading: boolean;
-  
-  // Actions
-  startLoading: (operationId: string, message?: string) => void;
-  stopLoading: (operationId: string, status?: 'succeeded' | 'failed', error?: string) => void;
-  setError: (operationId: string, error: string) => void;
-  clearOperation: (operationId: string) => void;
-  clearAllOperations: () => void;
-  
-  // Selectors
-  isLoading: (operationId: string) => boolean;
-  getOperation: (operationId: string) => LoadingState | undefined;
-  hasAnyLoading: () => boolean;
-  getLoadingOperations: () => string[];
+interface PartialLoadingOperationConfig {
+  timeout?: number;
+  showSpinner?: boolean;
+  showProgress?: boolean;
+  blockUI?: boolean;
+  description?: string;
 }
 
-export const useLoadingStore = create<LoadingStore>()(
-  devtools(
-    (set, get) => ({
-      operations: new Map(),
-      globalLoading: false,
+/**
+ * Default configurations for different operation types
+ * Environment-configurable timeouts and behaviors
+ */
+const DEFAULT_OPERATION_CONFIGS: Record<string, LoadingOperationConfig> = {
+  'auth.login': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_AUTH_TIMEOUT || '30000'),
+    showSpinner: true,
+    showProgress: false,
+    blockUI: true,
+    description: 'Signing in...',
+  },
+  'auth.logout': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_AUTH_TIMEOUT || '10000'),
+    showSpinner: true,
+    showProgress: false,
+    blockUI: true,
+    description: 'Signing out...',
+  },
+  'auth.session_check': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_AUTH_TIMEOUT || '15000'),
+    showSpinner: false,
+    showProgress: false,
+    blockUI: false,
+    description: 'Checking session...',
+  },
+  'campaign.create': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
+    showSpinner: true,
+    showProgress: true,
+    blockUI: true,
+    description: 'Creating campaign...',
+  },
+  'campaign.start': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '20000'),
+    showSpinner: true,
+    showProgress: false,
+    blockUI: true,
+    description: 'Starting campaign...',
+  },
+  'campaign.pause': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '15000'),
+    showSpinner: true,
+    showProgress: false,
+    blockUI: true,
+    description: 'Pausing campaign...',
+  },
+  'websocket.connect': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_WS_CONNECTION_TIMEOUT || '30000'),
+    showSpinner: false,
+    showProgress: false,
+    blockUI: false,
+    description: 'Connecting...',
+  },
+  'api.request': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
+    showSpinner: true,
+    showProgress: false,
+    blockUI: false,
+    description: 'Loading...',
+  },
+  'ui.navigation': {
+    timeout: parseInt(process.env.NEXT_PUBLIC_NAVIGATION_TIMEOUT || '5000'),
+    showSpinner: false,
+    showProgress: false,
+    blockUI: false,
+    description: 'Navigating...',
+  },
+};
 
-      startLoading: (operationId: string, message?: string) => {
-        set((state) => {
-          const newOperations = new Map(state.operations);
-          newOperations.set(operationId, {
-            status: 'loading',
-            message,
-            startedAt: Date.now(),
-          });
-          
-          return {
-            operations: newOperations,
-            globalLoading: newOperations.size > 0,
-          };
-        });
-      },
-
-      stopLoading: (operationId: string, status: 'succeeded' | 'failed' = 'succeeded', error?: string) => {
-        set((state) => {
-          const newOperations = new Map(state.operations);
-          const existingOperation = newOperations.get(operationId);
-          
-          if (existingOperation) {
-            newOperations.set(operationId, {
-              ...existingOperation,
-              status,
-              error,
-              finishedAt: Date.now(),
-            });
-          }
-          
-          // Auto-cleanup successful operations after a short delay
-          if (status === 'succeeded') {
-            setTimeout(() => {
-              get().clearOperation(operationId);
-            }, 1000);
-          }
-          
-          return {
-            operations: newOperations,
-            globalLoading: Array.from(newOperations.values()).some(op => op.status === 'loading'),
-          };
-        });
-      },
-
-      setError: (operationId: string, error: string) => {
-        get().stopLoading(operationId, 'failed', error);
-      },
-
-      clearOperation: (operationId: string) => {
-        set((state) => {
-          const newOperations = new Map(state.operations);
-          newOperations.delete(operationId);
-          
-          return {
-            operations: newOperations,
-            globalLoading: Array.from(newOperations.values()).some(op => op.status === 'loading'),
-          };
-        });
-      },
-
-      clearAllOperations: () => {
-        set({
-          operations: new Map(),
-          globalLoading: false,
-        });
-      },
-
-      // Selectors
-      isLoading: (operationId: string) => {
-        const operation = get().operations.get(operationId);
-        return operation?.status === 'loading';
-      },
-
-      getOperation: (operationId: string) => {
-        return get().operations.get(operationId);
-      },
-
-      hasAnyLoading: () => {
-        return Array.from(get().operations.values()).some(op => op.status === 'loading');
-      },
-
-      getLoadingOperations: () => {
-        return Array.from(get().operations.entries())
-          .filter(([_, operation]) => operation.status === 'loading')
-          .map(([id, _]) => id);
-      },
-    }),
-    {
-      name: 'loading-store',
-    }
-  )
-);
-
-// Predefined operation IDs for common operations
+/**
+ * Loading operation identifiers - configurable per environment
+ */
 export const LOADING_OPERATIONS = {
-  // Authentication
   LOGIN: 'auth.login',
   LOGOUT: 'auth.logout',
-  SESSION_REFRESH: 'auth.session_refresh',
-  
-  // Campaigns
-  FETCH_CAMPAIGNS: 'campaigns.fetch',
-  CREATE_CAMPAIGN: 'campaigns.create',
-  UPDATE_CAMPAIGN: 'campaigns.update',
-  DELETE_CAMPAIGN: 'campaigns.delete',
-  FETCH_CAMPAIGN_DETAILS: 'campaigns.fetch_details',
-  
-  // Personas
-  FETCH_PERSONAS: 'personas.fetch',
-  FETCH_HTTP_PERSONAS: 'personas.fetch_http',
-  FETCH_DNS_PERSONAS: 'personas.fetch_dns',
-  CREATE_PERSONA: 'personas.create',
-  UPDATE_PERSONA: 'personas.update',
-  DELETE_PERSONA: 'personas.delete',
-  
-  // Proxies
-  FETCH_PROXIES: 'proxies.fetch',
-  CREATE_PROXY: 'proxies.create',
-  UPDATE_PROXY: 'proxies.update',
-  DELETE_PROXY: 'proxies.delete',
-  TEST_PROXY: 'proxies.test',
-  
-  // Keywords
-  FETCH_KEYWORD_SETS: 'keywords.fetch_sets',
-  CREATE_KEYWORD_SET: 'keywords.create_set',
-  UPDATE_KEYWORD_SET: 'keywords.update_set',
-  DELETE_KEYWORD_SET: 'keywords.delete_set',
-  
-  // Dashboard
-  FETCH_DASHBOARD_DATA: 'dashboard.fetch_data',
-  
-  // File uploads
-  UPLOAD_FILE: 'files.upload',
+  SESSION_CHECK: 'auth.session_check',
+  CAMPAIGN_CREATE: 'campaign.create',
+  CAMPAIGN_START: 'campaign.start',
+  CAMPAIGN_PAUSE: 'campaign.pause',
+  CAMPAIGN_RESUME: 'campaign.resume',
+  CAMPAIGN_CANCEL: 'campaign.cancel',
+  CAMPAIGN_DELETE: 'campaign.delete',
+  WEBSOCKET_CONNECT: 'websocket.connect',
+  API_REQUEST: 'api.request',
+  UI_NAVIGATION: 'ui.navigation',
+  DATA_FETCH: 'data.fetch',
+  DATA_SAVE: 'data.save',
+  FILE_UPLOAD: 'file.upload',
+  EXPORT: 'data.export',
+  IMPORT: 'data.import',
 } as const;
 
-// Convenience hooks for common operations
-export const useAuthLoading = () => {
-  const isLoginLoading = useLoadingStore(state => state.isLoading(LOADING_OPERATIONS.LOGIN));
-  const isLogoutLoading = useLoadingStore(state => state.isLoading(LOADING_OPERATIONS.LOGOUT));
-  const isSessionRefreshLoading = useLoadingStore(state => state.isLoading(LOADING_OPERATIONS.SESSION_REFRESH));
-  
-  return {
-    isLoginLoading,
-    isLogoutLoading,
-    isSessionRefreshLoading,
-    isAnyAuthLoading: isLoginLoading || isLogoutLoading || isSessionRefreshLoading,
-  };
-};
+export type LoadingOperation = typeof LOADING_OPERATIONS[keyof typeof LOADING_OPERATIONS] | string;
 
-export const useCampaignLoading = () => {
-  const isFetchLoading = useLoadingStore(state => state.isLoading(LOADING_OPERATIONS.FETCH_CAMPAIGNS));
-  const isCreateLoading = useLoadingStore(state => state.isLoading(LOADING_OPERATIONS.CREATE_CAMPAIGN));
-  const isUpdateLoading = useLoadingStore(state => state.isLoading(LOADING_OPERATIONS.UPDATE_CAMPAIGN));
-  const isDeleteLoading = useLoadingStore(state => state.isLoading(LOADING_OPERATIONS.DELETE_CAMPAIGN));
-  const isFetchDetailsLoading = useLoadingStore(state => state.isLoading(LOADING_OPERATIONS.FETCH_CAMPAIGN_DETAILS));
-  
-  return {
-    isFetchLoading,
-    isCreateLoading,
-    isUpdateLoading,
-    isDeleteLoading,
-    isFetchDetailsLoading,
-    isAnyCampaignLoading: isFetchLoading || isCreateLoading || isUpdateLoading || isDeleteLoading || isFetchDetailsLoading,
-  };
-};
+/**
+ * Loading state for a specific operation
+ */
+interface LoadingState {
+  operation: LoadingOperation;
+  isLoading: boolean;
+  startTime: number;
+  description: string;
+  progress?: number;
+  error?: string;
+  status: 'loading' | 'succeeded' | 'failed' | 'timeout';
+  config: LoadingOperationConfig;
+  timeoutId?: NodeJS.Timeout;
+}
 
-export const useGlobalLoading = () => {
-  return useLoadingStore(state => state.globalLoading);
-};
+/**
+ * Global loading store state
+ */
+interface LoadingStoreState {
+  // Active loading operations
+  operations: Record<string, LoadingState>;
+  
+  // Global loading indicators
+  isAnyLoading: boolean;
+  isUIBlocked: boolean;
+  
+  // Configuration
+  enableDebugMode: boolean;
+  maxConcurrentOperations: number;
+  
+  // Statistics
+  totalOperations: number;
+  successfulOperations: number;
+  failedOperations: number;
+}
+
+/**
+ * Loading store actions
+ */
+interface LoadingStoreActions {
+  // Start/stop operations
+  startLoading: (operation: LoadingOperation, description?: string, config?: PartialLoadingOperationConfig) => void;
+  stopLoading: (operation: LoadingOperation, status?: 'succeeded' | 'failed', error?: string) => void;
+  
+  // Progress updates
+  updateProgress: (operation: LoadingOperation, progress: number) => void;
+  updateDescription: (operation: LoadingOperation, description: string) => void;
+  
+  // State queries
+  isOperationLoading: (operation: LoadingOperation) => boolean;
+  getOperationState: (operation: LoadingOperation) => LoadingState | null;
+  getActiveOperations: () => LoadingState[];
+  
+  // Configuration
+  updateOperationConfig: (operation: LoadingOperation, config: PartialLoadingOperationConfig) => void;
+  setDebugMode: (enabled: boolean) => void;
+  
+  // Cleanup
+  clearCompleted: () => void;
+  clearAll: () => void;
+  
+  // Statistics
+  getStatistics: () => { total: number; successful: number; failed: number; successRate: number };
+}
+
+type LoadingStore = LoadingStoreState & LoadingStoreActions;
+
+/**
+ * Create the loading store with Zustand
+ */
+export const useLoadingStore = create<LoadingStore>()(
+  subscribeWithSelector((set, get) => ({
+    // Initial state
+    operations: {},
+    isAnyLoading: false,
+    isUIBlocked: false,
+    enableDebugMode: process.env.NODE_ENV === 'development',
+    maxConcurrentOperations: parseInt(process.env.NEXT_PUBLIC_MAX_CONCURRENT_OPERATIONS || '10'),
+    totalOperations: 0,
+    successfulOperations: 0,
+    failedOperations: 0,
+
+    // Actions
+    startLoading: (operation: LoadingOperation, description?: string, config?: PartialLoadingOperationConfig) => {
+      const state = get();
+      
+      // Check if operation is already loading
+      if (state.operations[operation]?.isLoading) {
+        if (state.enableDebugMode) {
+          logger.warn('LOADING_STORE', `Operation ${operation} is already loading`);
+        }
+        return;
+      }
+
+      // Check concurrent operation limit
+      const activeCount = Object.values(state.operations).filter(op => op.isLoading).length;
+      if (activeCount >= state.maxConcurrentOperations) {
+        logger.warn('LOADING_STORE', `Maximum concurrent operations reached (${state.maxConcurrentOperations})`);
+        return;
+      }
+
+      // Get operation configuration
+      const defaultConfig = DEFAULT_OPERATION_CONFIGS[operation] || DEFAULT_OPERATION_CONFIGS['api.request'] || {
+        timeout: 30000,
+        showSpinner: true,
+        showProgress: false,
+        blockUI: false,
+        description: 'Loading...',
+      };
+      const operationConfig: LoadingOperationConfig = {
+        timeout: config?.timeout ?? defaultConfig.timeout,
+        showSpinner: config?.showSpinner ?? defaultConfig.showSpinner,
+        showProgress: config?.showProgress ?? defaultConfig.showProgress,
+        blockUI: config?.blockUI ?? defaultConfig.blockUI,
+        description: config?.description ?? defaultConfig.description,
+      };
+      
+      // Create loading state
+      const loadingState: LoadingState = {
+        operation,
+        isLoading: true,
+        startTime: Date.now(),
+        description: description || operationConfig.description || 'Loading...',
+        status: 'loading',
+        config: operationConfig,
+      };
+
+      // Set timeout if configured
+      if (operationConfig.timeout && operationConfig.timeout > 0) {
+        loadingState.timeoutId = setTimeout(() => {
+          get().stopLoading(operation, 'failed', 'Operation timed out');
+        }, operationConfig.timeout);
+      }
+
+      if (state.enableDebugMode) {
+        logger.debug('LOADING_STORE', `Started loading: ${operation}`, {
+          description: loadingState.description,
+          timeout: operationConfig.timeout,
+        });
+      }
+
+      // Update state
+      set((state) => {
+        const newOperations = { ...state.operations, [operation]: loadingState };
+        const isAnyLoading = Object.values(newOperations).some(op => op.isLoading);
+        const isUIBlocked = Object.values(newOperations).some(op => op.isLoading && op.config.blockUI);
+
+        return {
+          operations: newOperations,
+          isAnyLoading,
+          isUIBlocked,
+          totalOperations: state.totalOperations + 1,
+        };
+      });
+    },
+
+    stopLoading: (operation: LoadingOperation, status: 'succeeded' | 'failed' = 'succeeded', error?: string) => {
+      const state = get();
+      const loadingState = state.operations[operation];
+
+      if (!loadingState || !loadingState.isLoading) {
+        if (state.enableDebugMode) {
+          logger.warn('LOADING_STORE', `Attempted to stop non-loading operation: ${operation}`);
+        }
+        return;
+      }
+
+      // Clear timeout
+      if (loadingState.timeoutId) {
+        clearTimeout(loadingState.timeoutId);
+      }
+
+      const duration = Date.now() - loadingState.startTime;
+
+      if (state.enableDebugMode) {
+        logger.debug('LOADING_STORE', `Stopped loading: ${operation}`, {
+          duration,
+          status,
+          error,
+        });
+      }
+
+      // Update state
+      set((state) => {
+        const updatedState = {
+          ...loadingState,
+          isLoading: false,
+          status,
+          error,
+        };
+
+        const newOperations = { ...state.operations, [operation]: updatedState };
+        const isAnyLoading = Object.values(newOperations).some(op => op.isLoading);
+        const isUIBlocked = Object.values(newOperations).some(op => op.isLoading && op.config.blockUI);
+
+        return {
+          operations: newOperations,
+          isAnyLoading,
+          isUIBlocked,
+          successfulOperations: status === 'succeeded' ? state.successfulOperations + 1 : state.successfulOperations,
+          failedOperations: status === 'failed' ? state.failedOperations + 1 : state.failedOperations,
+        };
+      });
+    },
+
+    updateProgress: (operation: LoadingOperation, progress: number) => {
+      const state = get();
+      const loadingState = state.operations[operation];
+
+      if (!loadingState || !loadingState.isLoading) {
+        return;
+      }
+
+      set((state) => ({
+        operations: {
+          ...state.operations,
+          [operation]: {
+            ...loadingState,
+            progress: Math.max(0, Math.min(100, progress)),
+          },
+        },
+      }));
+    },
+
+    updateDescription: (operation: LoadingOperation, description: string) => {
+      const state = get();
+      const loadingState = state.operations[operation];
+
+      if (!loadingState || !loadingState.isLoading) {
+        return;
+      }
+
+      set((state) => ({
+        operations: {
+          ...state.operations,
+          [operation]: {
+            ...loadingState,
+            description,
+          },
+        },
+      }));
+    },
+
+    isOperationLoading: (operation: LoadingOperation): boolean => {
+      const state = get();
+      return state.operations[operation]?.isLoading || false;
+    },
+
+    getOperationState: (operation: LoadingOperation): LoadingState | null => {
+      const state = get();
+      return state.operations[operation] || null;
+    },
+
+    getActiveOperations: (): LoadingState[] => {
+      const state = get();
+      return Object.values(state.operations).filter(op => op.isLoading);
+    },
+
+    updateOperationConfig: (operation: LoadingOperation, config: PartialLoadingOperationConfig) => {
+      const currentConfig = DEFAULT_OPERATION_CONFIGS[operation] || DEFAULT_OPERATION_CONFIGS['api.request'] || {
+        timeout: 30000,
+        showSpinner: true,
+        showProgress: false,
+        blockUI: false,
+        description: 'Loading...',
+      };
+      const updatedConfig: LoadingOperationConfig = {
+        timeout: config.timeout ?? currentConfig.timeout,
+        showSpinner: config.showSpinner ?? currentConfig.showSpinner,
+        showProgress: config.showProgress ?? currentConfig.showProgress,
+        blockUI: config.blockUI ?? currentConfig.blockUI,
+        description: config.description ?? currentConfig.description,
+      };
+      DEFAULT_OPERATION_CONFIGS[operation] = updatedConfig;
+    },
+
+    setDebugMode: (enabled: boolean) => {
+      set({ enableDebugMode: enabled });
+    },
+
+    clearCompleted: () => {
+      set((state) => {
+        const activeOperations = Object.fromEntries(
+          Object.entries(state.operations).filter(([_, op]) => op.isLoading)
+        );
+
+        return {
+          operations: activeOperations,
+        };
+      });
+    },
+
+    clearAll: () => {
+      const state = get();
+      
+      // Clear all timeouts
+      Object.values(state.operations).forEach(op => {
+        if (op.timeoutId) {
+          clearTimeout(op.timeoutId);
+        }
+      });
+
+      set({
+        operations: {},
+        isAnyLoading: false,
+        isUIBlocked: false,
+      });
+    },
+
+    getStatistics: () => {
+      const state = get();
+      const successRate = state.totalOperations > 0 
+        ? (state.successfulOperations / state.totalOperations) * 100 
+        : 0;
+
+      return {
+        total: state.totalOperations,
+        successful: state.successfulOperations,
+        failed: state.failedOperations,
+        successRate: Math.round(successRate * 100) / 100,
+      };
+    },
+  }))
+);
+
+// Subscribe to loading state changes for debugging
+if (process.env.NODE_ENV === 'development') {
+  useLoadingStore.subscribe(
+    (state) => state.operations,
+    (operations, previousOperations) => {
+      const newOperations = Object.keys(operations).filter(
+        key => !previousOperations[key] || (previousOperations[key] && operations[key] && previousOperations[key].status !== operations[key].status)
+      );
+
+      if (newOperations.length > 0) {
+        logger.debug('LOADING_STORE', 'Operations changed', {
+          activeCount: Object.values(operations).filter(op => op.isLoading).length,
+          newOperations: newOperations.map(key => {
+            const operation = operations[key];
+            return operation ? {
+              operation: key,
+              status: operation.status,
+              isLoading: operation.isLoading,
+            } : null;
+          }).filter(Boolean),
+        });
+      }
+    }
+  );
+}
+
+// Cleanup on page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    useLoadingStore.getState().clearAll();
+  });
+}
+
+// Export commonly used selectors
+export const selectIsAnyLoading = (state: LoadingStore) => state.isAnyLoading;
+export const selectIsUIBlocked = (state: LoadingStore) => state.isUIBlocked;
+export const selectActiveOperations = (state: LoadingStore) => state.getActiveOperations();
+export const selectOperationLoading = (operation: LoadingOperation) => (state: LoadingStore) => 
+  state.isOperationLoading(operation);
+
+// Export types
+export type { LoadingOperationConfig, LoadingState, LoadingStore };

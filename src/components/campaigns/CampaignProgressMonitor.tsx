@@ -97,14 +97,15 @@ const CampaignProgressMonitor = memo(({
   }), [campaign.id, campaign.currentPhase, campaign.phaseStatus, campaign.status]);
 
   // Optimized WebSocket message handler with stable dependencies
-  const handleWebSocketMessage = useCallback((message: import('@/lib/services/websocketService.simple').CampaignProgressMessage) => {
+  const handleWebSocketMessage = useCallback((message: WebSocketMessage & { campaignId?: string; message?: string }) => {
     setConnectionHealth(prev => ({ ...prev, lastHeartbeat: new Date() }));
     
     console.log(`[CampaignProgressMonitor] Received WebSocket message:`, message);
 
     switch (message.type) {
       case 'subscription_confirmed':
-        console.log(`[DEBUG] Campaign subscription confirmed for ${message.campaignId}`);
+        const campaignId = (message as unknown as { campaignId?: string }).campaignId;
+        console.log(`[DEBUG] Campaign subscription confirmed for ${campaignId}`);
         toast({
           title: "Campaign Subscription Active",
           description: `Now monitoring campaign ${campaignKey.id} for real-time updates.`
@@ -113,7 +114,7 @@ const CampaignProgressMonitor = memo(({
 
       case 'domain_generated':
         const domainData = message.data as { domains?: string[] };
-        if (domainData.domains && domainData.domains.length > 0) {
+        if (domainData && domainData.domains && domainData.domains.length > 0) {
           setRealtimeData(prev => ({
             ...prev,
             domainsGenerated: prev.domainsGenerated + domainData.domains!.length,
@@ -124,39 +125,41 @@ const CampaignProgressMonitor = memo(({
         break;
 
       case 'progress':
-        if (typeof message.data.progress === 'number') {
+        const progressData = message.data as { progress?: number };
+        if (progressData && typeof progressData.progress === 'number') {
           setRealtimeData(prev => ({
             ...prev,
-            currentProgress: message.data.progress!,
+            currentProgress: progressData.progress!,
             lastActivity: new Date()
           }));
-          onCampaignUpdate?.({ progress: message.data.progress });
+          onCampaignUpdate?.({ progress: progressData.progress });
         }
         break;
 
       case 'phase_complete':
-        if (message.data.phase && message.data.status) {
+        const phaseData = message.data as { phase?: string; status?: string };
+        if (phaseData && phaseData.phase && phaseData.status) {
           setRealtimeData(prev => ({
             ...prev,
-            currentPhase: message.data.phase as CampaignPhase,
-            currentStatus: normalizeStatus(message.data.status),
+            currentPhase: phaseData.phase as CampaignPhase,
+            currentStatus: normalizeStatus(phaseData.status),
             lastActivity: new Date()
           }));
           onCampaignUpdate?.({
-            currentPhase: message.data.phase as CampaignPhase,
-            status: normalizeStatus(message.data.status),
+            currentPhase: phaseData.phase as CampaignPhase,
+            status: normalizeStatus(phaseData.status),
             progress: 100
           });
           toast({
             title: "Phase Completed",
-            description: `${message.data.phase} phase has completed successfully.`
+            description: `${phaseData.phase} phase has completed successfully.`
           });
         }
         break;
 
       case 'error':
         const errorData = message.data as { error?: string };
-        const errorMsg = errorData.error || message.message || 'Unknown error occurred';
+        const errorMsg = errorData?.error || (message as unknown as { message?: string }).message || 'Unknown error occurred';
         setRealtimeData(prev => ({
           ...prev,
           errors: [...prev.errors.slice(-4), String(errorMsg)], // Keep last 5 errors
@@ -181,21 +184,23 @@ const CampaignProgressMonitor = memo(({
     if (shouldConnect && user) {
       // Use the websocketService
       if (!campaignKey.id) return;
-      cleanupRef.current = websocketService.connectToCampaign(
-        campaignKey.id,
-        (standardMessage: WebSocketMessage) => {
-          // Convert to legacy format
-          const message = adaptWebSocketMessage(standardMessage);
-          handleWebSocketMessage(message);
-        },
-        (error) => {
-          console.error('WebSocket error:', error);
-          setConnectionHealth({ isConnected: false, lastHeartbeat: null });
-          toast({
-            title: "Connection Error",
-            description: "Lost connection to real-time updates.",
-            variant: "destructive"
-          });
+      cleanupRef.current = websocketService.connect(
+        `campaign-${campaignKey.id}`,
+        {
+          onMessage: (standardMessage: WebSocketMessage) => {
+            // Convert to legacy format
+            const message = adaptWebSocketMessage(standardMessage);
+            handleWebSocketMessage(message);
+          },
+          onError: (error: Event | Error) => {
+            console.error('WebSocket error:', error);
+            setConnectionHealth({ isConnected: false, lastHeartbeat: null });
+            toast({
+              title: "Connection Error",
+              description: "Lost connection to real-time updates.",
+              variant: "destructive"
+            });
+          }
         }
       );
       

@@ -1,13 +1,17 @@
 // src/components/auth/ProtectedRoute.tsx
-// Simple protected route component with session-based authentication
+// Configuration-driven protected route component with proper loading state management
 'use client';
 
 import React, { ReactNode, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
+import { getLogger } from '@/lib/utils/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Lock, Home } from 'lucide-react';
+
+const logger = getLogger();
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -85,42 +89,82 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const {
     isAuthenticated,
-    isLoading
+    isLoading,
+    isInitialized,
+    user
   } = useAuth();
   
+  const loadingStore = useLoadingStore();
   const router = useRouter();
   const pathname = usePathname();
-  const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [hasTriedRedirect, setHasTriedRedirect] = useState(false);
+
+  // Get session loading state
+  const isSessionLoading = loadingStore.isOperationLoading(LOADING_OPERATIONS.SESSION_CHECK);
+
+  // Determine overall loading state
+  const isOverallLoading = isLoading || isSessionLoading || !isInitialized;
 
   // Handle redirect after authentication check
   useEffect(() => {
-    if (!isLoading && shouldRedirect && redirectTo) {
+    if (!isOverallLoading && !isAuthenticated && redirectTo && showLoginPrompt && !hasTriedRedirect) {
+      logger.debug('PROTECTED_ROUTE', 'Redirecting to login', {
+        pathname,
+        redirectTo,
+        isAuthenticated,
+        isOverallLoading
+      });
+      
+      setHasTriedRedirect(true);
       const currentPath = encodeURIComponent(pathname);
       router.push(`${redirectTo}?redirect=${currentPath}`);
     }
-  }, [isLoading, shouldRedirect, redirectTo, router, pathname]);
+  }, [isOverallLoading, isAuthenticated, redirectTo, showLoginPrompt, hasTriedRedirect, router, pathname]);
 
-  // Show loading while auth is loading
-  if (isLoading) {
+  // Reset redirect flag when auth state changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      setHasTriedRedirect(false);
+    }
+  }, [isAuthenticated]);
+
+  // Show loading while auth is loading or session is being checked
+  if (isOverallLoading) {
+    logger.debug('PROTECTED_ROUTE', 'Showing loading screen', {
+      isLoading,
+      isSessionLoading,
+      isInitialized,
+      pathname
+    });
     return <LoadingScreen />;
   }
 
   // Allow unauthenticated access if specified
   if (allowUnauthenticated) {
+    logger.debug('PROTECTED_ROUTE', 'Allowing unauthenticated access', { pathname });
     return <>{children}</>;
   }
 
   // Check authentication
   if (!isAuthenticated) {
-    if (redirectTo && showLoginPrompt) {
-      setShouldRedirect(true);
+    logger.debug('PROTECTED_ROUTE', 'User not authenticated', {
+      pathname,
+      redirectTo,
+      showLoginPrompt,
+      hasTriedRedirect
+    });
+
+    // If we're redirecting and haven't tried yet, show loading
+    if (redirectTo && showLoginPrompt && !hasTriedRedirect) {
       return <LoadingScreen />;
     }
     
+    // Show custom fallback if provided
     if (fallbackComponent) {
       return <>{fallbackComponent}</>;
     }
     
+    // Show access denied screen
     return (
       <AccessDenied
         redirectTo={redirectTo}
@@ -129,6 +173,12 @@ export function ProtectedRoute({
   }
 
   // All checks passed, render children
+  logger.debug('PROTECTED_ROUTE', 'Access granted', {
+    pathname,
+    isAuthenticated,
+    userId: user?.id || 'unknown'
+  });
+  
   return <>{children}</>;
 }
 

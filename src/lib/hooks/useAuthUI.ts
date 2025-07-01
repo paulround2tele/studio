@@ -1,69 +1,98 @@
 // src/lib/hooks/useAuthUI.ts
-// UI logic for authentication - loading states, logging, notifications
+// UI logic for authentication - integrates with loading states and logging
+// NO HARDCODING - Uses configurable loading states and logging
+
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
-import { logAuth } from '@/lib/utils/logger';
+import { getLogger } from '@/lib/utils/logger';
 import { useAuth } from '@/contexts/AuthContext';
-import { authService } from '@/lib/services/authService';
+import { useCallback } from 'react';
+
+const logger = getLogger();
 
 /**
- * Hook that wraps auth operations with UI logic
- * Handles loading states, logging, and user feedback
+ * Hook that wraps auth operations with UI logic and loading state management
+ * Integrates with the new loading store and provides consistent UI feedback
  */
 export function useAuthUI() {
   const auth = useAuth();
   const loadingStore = useLoadingStore();
 
-  const loginWithUI = async (credentials: { email: string; password: string; rememberMe?: boolean }) => {
-    logAuth.success('Login attempt started', { email: credentials.email });
+  const loginWithUI = useCallback(async (credentials: { email: string; password: string; rememberMe?: boolean }) => {
+    logger.info('AUTH_UI', 'Login with UI started', { email: credentials.email });
+    
+    // Start UI loading state
     loadingStore.startLoading(LOADING_OPERATIONS.LOGIN, 'Signing in...');
 
     try {
-      const result = await authService.login(credentials);
+      // Use the AuthContext login method which already handles authService integration
+      const result = await auth.login(credentials);
       
       if (result.success) {
-        auth.setAuthState({
-          user: result.user || null,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        logAuth.success('Login successful');
+        logger.info('AUTH_UI', 'Login with UI successful');
         loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'succeeded');
       } else {
-        logAuth.warn('Login failed', { error: result.error });
+        logger.warn('AUTH_UI', 'Login with UI failed', { error: result.error });
         loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'failed', result.error || 'Login failed');
       }
       
       return result;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Network error';
-      logAuth.error('Login error', { error: errorMsg });
+      logger.error('AUTH_UI', 'Login with UI error', { error: errorMsg });
       loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'failed', errorMsg);
-      throw error;
+      
+      // Return error result instead of throwing to match expected interface
+      return {
+        success: false,
+        error: errorMsg
+      };
     }
-  };
+  }, [auth, loadingStore]);
 
-  const logoutWithUI = async () => {
-    logAuth.success('Logout started');
+  const logoutWithUI = useCallback(async () => {
+    logger.info('AUTH_UI', 'Logout with UI started');
+    
+    // Start UI loading state
     loadingStore.startLoading(LOADING_OPERATIONS.LOGOUT, 'Signing out...');
 
     try {
-      await authService.logout();
-      auth.setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-      logAuth.success('Logout successful');
+      // Use the AuthContext logout method
+      await auth.logout();
+      logger.info('AUTH_UI', 'Logout with UI successful');
       loadingStore.stopLoading(LOADING_OPERATIONS.LOGOUT, 'succeeded');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Logout error';
-      logAuth.error('Logout error', { error: errorMsg });
+      logger.error('AUTH_UI', 'Logout with UI error', { error: errorMsg });
       loadingStore.stopLoading(LOADING_OPERATIONS.LOGOUT, 'failed', errorMsg);
       throw error;
     }
-  };
+  }, [auth, loadingStore]);
+
+  // Check if any auth-related loading is in progress
+  const isLoginLoading = loadingStore.isOperationLoading(LOADING_OPERATIONS.LOGIN);
+  const isLogoutLoading = loadingStore.isOperationLoading(LOADING_OPERATIONS.LOGOUT);
+  const isSessionLoading = loadingStore.isOperationLoading(LOADING_OPERATIONS.SESSION_CHECK);
+  const isAuthLoading = isLoginLoading || isLogoutLoading || isSessionLoading || auth.isLoading;
 
   return {
-    // Auth state (pass-through)
-    ...auth,
+    // Auth state (pass-through from context)
+    user: auth.user,
+    isAuthenticated: auth.isAuthenticated,
+    isInitialized: auth.isInitialized,
+    
+    // Enhanced loading states
+    isLoading: isAuthLoading,
+    isLoginLoading,
+    isLogoutLoading,
+    isSessionLoading,
+    
     // UI-wrapped operations
     login: loginWithUI,
     logout: logoutWithUI,
+    
+    // Pass-through other auth methods
+    setAuthState: auth.setAuthState,
+    changePassword: auth.changePassword,
+    validatePassword: auth.validatePassword,
   };
 }

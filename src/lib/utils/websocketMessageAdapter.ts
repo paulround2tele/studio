@@ -2,7 +2,24 @@
 // Simplified WebSocket Message Type Adaptation
 // Handles conversion between simple WebSocket messages and legacy message formats
 
-import type { WebSocketMessage, CampaignProgressMessage } from '@/lib/services/websocketService.simple';
+import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
+
+// Define the legacy message format locally
+interface CampaignProgressMessage {
+  type: string;
+  campaignId: string;
+  data: Record<string, unknown>;
+  message: string;
+  timestamp: number;
+}
+
+// Helper function to extract campaign ID from message data
+function extractCampaignIdFromData(data: unknown): string {
+  if (data && typeof data === 'object' && 'campaignId' in data) {
+    return String((data as Record<string, unknown>).campaignId);
+  }
+  return '00000000-0000-0000-0000-000000000000';
+}
 
 /**
  * Converts WebSocket message to legacy format for backward compatibility
@@ -25,13 +42,14 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
       const progressData = extractProgressData(message.data);
       return {
         type: 'progress',
-        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
+        campaignId: extractCampaignIdFromData(message.data),
         data: {
           progress: progressData.progressPercentage,
           phase: progressData.phase,
           status: progressData.status,
         },
         message: `Campaign progress: ${progressData.progressPercentage}%`,
+        timestamp: message.timestamp,
       };
 
     case 'domain_generated':
@@ -40,11 +58,12 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'unknown';
       return {
         type: 'domain_generated',
-        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
+        campaignId: extractCampaignIdFromData(message.data),
         data: {
           domains: [domain],
         },
         message: `Domain generated: ${domain}`,
+        timestamp: message.timestamp,
       };
 
     case 'dns_validation_result':
@@ -54,23 +73,25 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'unknown';
       return {
         type: 'validation_complete',
-        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
+        campaignId: extractCampaignIdFromData(message.data),
         data: {
           validationResults: [message.data],
         },
         message: `Validation complete for ${validationDomain}`,
+        timestamp: message.timestamp,
       };
 
     case 'campaign_phase_complete':
       const phaseData = extractProgressData(message.data);
       return {
         type: 'phase_complete',
-        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
+        campaignId: extractCampaignIdFromData(message.data),
         data: {
           phase: phaseData.phase,
           status: 'completed',
         },
         message: `Phase ${phaseData.phase} completed`,
+        timestamp: message.timestamp,
       };
 
     case 'campaign_complete':
@@ -79,11 +100,12 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'completed';
       return {
         type: 'phase_complete',
-        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
+        campaignId: extractCampaignIdFromData(message.data),
         data: {
           status: finalStatus,
         },
         message: `Campaign completed with status: ${finalStatus}`,
+        timestamp: message.timestamp,
       };
 
     case 'campaign_error':
@@ -92,11 +114,12 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         : 'Unknown error';
       return {
         type: 'error',
-        campaignId: message.campaignId || '00000000-0000-0000-0000-000000000000',
+        campaignId: extractCampaignIdFromData(message.data),
         data: {
           error: errorMessage,
         },
         message: errorMessage,
+        timestamp: message.timestamp,
       };
 
     case 'connection_ack':
@@ -105,6 +128,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         campaignId: '00000000-0000-0000-0000-000000000000',
         data: {},
         message: 'Connection acknowledged',
+        timestamp: message.timestamp,
       };
 
     case 'system_notification':
@@ -117,6 +141,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         campaignId: '00000000-0000-0000-0000-000000000000',
         data: {},
         message: notificationMessage,
+        timestamp: message.timestamp,
       };
 
     default:
@@ -126,6 +151,7 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         campaignId: '00000000-0000-0000-0000-000000000000',
         data: {},
         message: 'Unknown message type',
+        timestamp: message.timestamp,
       };
   }
 }
@@ -141,8 +167,9 @@ export function adaptWebSocketMessage(message: WebSocketMessage): CampaignProgre
  * Type guard to check if a message has campaign-specific data
  */
 export function isMessageForCampaign(message: WebSocketMessage, campaignId: string): boolean {
-  if (message.campaignId) {
-    return message.campaignId === campaignId;
+  const messageCampaignId = extractCampaignIdFromData(message.data);
+  if (messageCampaignId !== '00000000-0000-0000-0000-000000000000') {
+    return messageCampaignId === campaignId;
   }
   
   // System-wide messages should be processed for all campaigns
@@ -157,8 +184,9 @@ export function isMessageForCampaign(message: WebSocketMessage, campaignId: stri
  * Extract campaign ID from various message formats
  */
 export function extractCampaignId(message: WebSocketMessage): string | null {
-  if (message.campaignId) {
-    return message.campaignId;
+  const campaignId = extractCampaignIdFromData(message.data);
+  if (campaignId !== '00000000-0000-0000-0000-000000000000') {
+    return campaignId;
   }
   
   return null;

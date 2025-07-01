@@ -12,7 +12,7 @@ import { useLoadingStore } from '@/lib/stores/loadingStore';
  * Hook for managing a single async operation with loading state
  */
 export function useAsyncOperation(operationId: string) {
-  const { startLoading, stopLoading, setError, isLoading, getOperation } = useLoadingStore();
+  const { startLoading, stopLoading, isOperationLoading, getOperationState } = useLoadingStore();
   
   const execute = useCallback(async <T>(
     asyncFn: () => Promise<T>,
@@ -25,15 +25,15 @@ export function useAsyncOperation(operationId: string) {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-      setError(operationId, errorMessage);
+      stopLoading(operationId, 'failed', errorMessage);
       throw error;
     }
-  }, [operationId, startLoading, stopLoading, setError]);
+  }, [operationId, startLoading, stopLoading]);
 
   return {
     execute,
-    isLoading: isLoading(operationId),
-    operation: getOperation(operationId),
+    isLoading: isOperationLoading(operationId),
+    operation: getOperationState(operationId),
   };
 }
 
@@ -41,7 +41,7 @@ export function useAsyncOperation(operationId: string) {
  * Hook for managing multiple related async operations
  */
 export function useAsyncOperations(baseOperationId: string) {
-  const { startLoading, stopLoading, setError, isLoading: storeIsLoading, getLoadingOperations } = useLoadingStore();
+  const { startLoading, stopLoading, isOperationLoading, getActiveOperations } = useLoadingStore();
   
   const execute = useCallback(async <T>(
     subOperationId: string,
@@ -57,22 +57,22 @@ export function useAsyncOperations(baseOperationId: string) {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-      setError(fullOperationId, errorMessage);
+      stopLoading(fullOperationId, 'failed', errorMessage);
       throw error;
     }
-  }, [baseOperationId, startLoading, stopLoading, setError]);
+  }, [baseOperationId, startLoading, stopLoading]);
 
   const isLoading = useCallback((subOperationId: string) => {
     const fullOperationId = `${baseOperationId}.${subOperationId}`;
-    return storeIsLoading(fullOperationId);
-  }, [baseOperationId, storeIsLoading]);
+    return isOperationLoading(fullOperationId);
+  }, [baseOperationId, isOperationLoading]);
 
   const hasAnyLoading = useCallback(() => {
-    const loadingOperations = getLoadingOperations();
-    return loadingOperations.some((operationId: string) => 
-      operationId.startsWith(`${baseOperationId}.`)
+    const loadingOperations = getActiveOperations();
+    return loadingOperations.some((operation) =>
+      operation.operation.startsWith(`${baseOperationId}.`)
     );
-  }, [baseOperationId, getLoadingOperations]);
+  }, [baseOperationId, getActiveOperations]);
 
   return {
     execute,
