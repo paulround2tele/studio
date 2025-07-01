@@ -92,9 +92,13 @@ type Client struct {
 // readPump pumps messages from the websocket connection to the hub.
 func (c *Client) readPump() {
 	defer func() {
+		log.Printf("[WebSocket] Client %s readPump ending, unregistering client", c.conn.RemoteAddr().String())
 		c.hub.UnregisterClient(c)
 		c.conn.Close()
 	}()
+	
+	log.Printf("[WebSocket] Client %s readPump started", c.conn.RemoteAddr().String())
+	
 	c.conn.SetReadLimit(maxMessageSize)
 	if err := c.conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
 		log.Printf("websocket read deadline error: %v", err)
@@ -109,12 +113,12 @@ func (c *Client) readPump() {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("websocket read error: %v", err)
+				log.Printf("[WebSocket] Client %s read error: %v", c.conn.RemoteAddr().String(), err)
 			}
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		log.Printf("Client %s received: %s", c.conn.RemoteAddr().String(), string(message))
+		log.Printf("[WebSocket] Client %s received: %s", c.conn.RemoteAddr().String(), string(message))
 
 		// Handle campaign subscription messages
 		c.handleMessage(message)
@@ -358,6 +362,8 @@ func (c *Client) GetLastSequenceNumber(campaignID string) int64 {
 
 // NewClient creates a new client, registers it with the hub, and starts its read/write pumps.
 func NewClient(hub Broadcaster, conn *websocket.Conn) *Client {
+	log.Printf("[WebSocket] Creating new client for %s", conn.RemoteAddr().String())
+	
 	client := &Client{
 		hub:                   hub,
 		conn:                  conn,
@@ -365,9 +371,12 @@ func NewClient(hub Broadcaster, conn *websocket.Conn) *Client {
 		campaignSubscriptions: make(map[string]bool),
 		sequenceNumbers:       make(map[string]int64),
 	}
+	
+	log.Printf("[WebSocket] Registering client %s with hub", conn.RemoteAddr().String())
 	client.hub.RegisterClient(client) // Register client with the hub
 
 	// Start goroutines for reading and writing messages for this client.
+	log.Printf("[WebSocket] Starting read/write pumps for client %s", conn.RemoteAddr().String())
 	go client.writePump()
 	go client.readPump()
 
@@ -376,6 +385,12 @@ func NewClient(hub Broadcaster, conn *websocket.Conn) *Client {
 
 // NewClientWithSecurity creates a new client with security context
 func NewClientWithSecurity(hub Broadcaster, conn *websocket.Conn, securityContext *models.SecurityContext) *Client {
+	userId := "unknown"
+	if securityContext != nil {
+		userId = securityContext.UserID.String()
+	}
+	log.Printf("[WebSocket] Creating new client with security for %s (user: %s)", conn.RemoteAddr().String(), userId)
+	
 	client := &Client{
 		hub:                   hub,
 		conn:                  conn,
@@ -384,9 +399,12 @@ func NewClientWithSecurity(hub Broadcaster, conn *websocket.Conn, securityContex
 		sequenceNumbers:       make(map[string]int64),
 		securityContext:       securityContext,
 	}
+	
+	log.Printf("[WebSocket] Registering client %s with hub (user: %s)", conn.RemoteAddr().String(), userId)
 	client.hub.RegisterClient(client) // Register client with the hub
 
 	// Start goroutines for reading and writing messages for this client.
+	log.Printf("[WebSocket] Starting read/write pumps for client %s (user: %s)", conn.RemoteAddr().String(), userId)
 	go client.writePump()
 	go client.readPump()
 

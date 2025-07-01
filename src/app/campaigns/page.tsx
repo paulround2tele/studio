@@ -59,12 +59,16 @@ function CampaignsPageContent() {
         
         if (!isMountedRef.current) return;
         
+        console.log('[CampaignsPage] Attempting WebSocket connection...');
+        
         // Connect to all campaigns updates
         wsCleanup = websocketService.connectToAllCampaigns(
           (standardMessage: WebSocketMessage) => {
             if (!isMountedRef.current) return;
             
-            console.log('[CampaignsPage] WebSocket message received:', standardMessage);
+            console.log('[CampaignsPage] WebSocket message received - setting connected to true:', standardMessage);
+            // DIAGNOSTIC: Log when connection is marked as successful
+            setWsConnected(true);
             
             // Convert to legacy format for backward compatibility
             const message = adaptWebSocketMessage(standardMessage);
@@ -115,14 +119,28 @@ function CampaignsPageContent() {
             }
           },
           (error) => {
-            console.error('WebSocket error:', error);
+            console.error('[CampaignsPage] WebSocket error - setting connected to false:', error);
             if (isMountedRef.current) {
               setWsConnected(false);
             }
           }
         );
         
-        setWsConnected(true);
+        console.log('[CampaignsPage] WebSocket connectToAllCampaigns call completed');
+        
+        // DIAGNOSTIC: Check connection status after connection attempt
+        setTimeout(() => {
+          const connectionStatus = websocketService.getConnectionStatus();
+          console.log('[CampaignsPage] Connection status after 1s:', connectionStatus);
+          
+          const isAnyConnected = Object.values(connectionStatus).some(Boolean);
+          console.log('[CampaignsPage] Is any connection active?', isAnyConnected);
+          
+          if (isAnyConnected && isMountedRef.current) {
+            console.log('[CampaignsPage] Detected active connection, setting wsConnected to true');
+            setWsConnected(true);
+          }
+        }, 1000);
 
       } catch (error) {
         console.error('Failed to connect WebSocket:', error);

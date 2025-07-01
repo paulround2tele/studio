@@ -128,10 +128,19 @@ class WebSocketService {
   ): () => void {
     const connectionKey = 'all-campaigns';
     
+    console.log('[WebSocketService] connectToAllCampaigns called');
+    
     return this.connect(connectionKey, {
-      onMessage,
-      onError,
+      onMessage: (message) => {
+        console.log('[WebSocketService] Message received on all-campaigns connection:', message);
+        onMessage?.(message);
+      },
+      onError: (error) => {
+        console.log('[WebSocketService] Error on all-campaigns connection:', error);
+        onError?.(error);
+      },
       onConnect: () => {
+        console.log('[WebSocketService] Successfully connected to all campaigns');
         logger.websocket.success('Connected to all campaigns');
         // Initialize connection first, then subscribe to campaign updates
         this.sendMessage(connectionKey, {
@@ -142,6 +151,7 @@ class WebSocketService {
         
         // Send subscription after a brief delay to allow connection_ack
         setTimeout(() => {
+          console.log('[WebSocketService] Sending subscription message');
           this.sendMessage(connectionKey, {
             type: 'subscribe',
             data: { channels: ['campaigns', 'campaign-updates'] },
@@ -150,6 +160,7 @@ class WebSocketService {
         }, 100);
       },
       onDisconnect: () => {
+        console.log('[WebSocketService] Disconnected from all campaigns');
         logger.info('WEBSOCKET', 'Disconnected from all campaigns');
       },
     });
@@ -160,16 +171,21 @@ class WebSocketService {
    */
   private establishConnection(connectionKey: string, url: string): void {
     try {
+      console.log(`[WebSocketService] Establishing connection for ${connectionKey} to ${url}`);
+      
       // Close existing connection if any
       this.closeConnection(connectionKey);
 
       // Create new WebSocket connection
       const ws = new WebSocket(url, this.config.protocols);
       this.connections.set(connectionKey, ws);
+      
+      console.log(`[WebSocketService] WebSocket created for ${connectionKey}, readyState: ${ws.readyState}`);
 
       // Set connection timeout
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState === WebSocket.CONNECTING) {
+          console.log(`[WebSocketService] Connection timeout for ${connectionKey} after ${this.config.connectionTimeout}ms`);
           logger.warn('WEBSOCKET', `Connection timeout for ${connectionKey}`);
           ws.close();
           this.handleConnectionFailure(connectionKey, new Error('Connection timeout'));
@@ -178,25 +194,34 @@ class WebSocketService {
 
       // Setup event handlers
       ws.onopen = () => {
+        console.log(`[WebSocketService] WebSocket onopen triggered for ${connectionKey}`);
         clearTimeout(connectionTimeout);
         this.handleConnectionOpen(connectionKey);
       };
 
       ws.onmessage = (event) => {
+        console.log(`[WebSocketService] WebSocket onmessage triggered for ${connectionKey}:`, event.data);
         this.handleMessage(connectionKey, event);
       };
 
       ws.onerror = (error) => {
+        console.log(`[WebSocketService] WebSocket onerror triggered for ${connectionKey}:`, error);
         clearTimeout(connectionTimeout);
         this.handleError(connectionKey, error);
       };
 
       ws.onclose = (event) => {
+        console.log(`[WebSocketService] WebSocket onclose triggered for ${connectionKey}:`, {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
         clearTimeout(connectionTimeout);
         this.handleConnectionClose(connectionKey, event);
       };
 
     } catch (error) {
+      console.log(`[WebSocketService] Exception while establishing connection for ${connectionKey}:`, error);
       logger.error('WEBSOCKET', `Failed to create connection ${connectionKey}`, error);
       this.handleConnectionFailure(connectionKey, error as Error);
     }
@@ -490,6 +515,7 @@ class WebSocketService {
       status[key] = connectionStatus.isConnected;
     }
     
+    console.log('[WebSocketService] getConnectionStatus returning:', status);
     return status;
   }
 
