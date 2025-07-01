@@ -40,8 +40,9 @@ export default function ProductionReadinessCheck() {
   const [checks, setChecks] = useState<SystemCheck[]>([]);
   const [isChecking, setIsChecking] = useState(false);
   const [overallStatus, setOverallStatus] = useState<'ready' | 'issues' | 'critical' | 'checking'>('checking');
+  const [lastHealthCheck, setLastHealthCheck] = useState<Date | null>(null);
 
-  const runChecks = useCallback(async () => {
+  const runChecks = useCallback(async (forceHealthRefresh = false) => {
     // Prevent concurrent checks
     if (isChecking) {
       logWithTimestamp('warn', '⚠️ Check already in progress, skipping duplicate request');
@@ -86,15 +87,28 @@ export default function ProductionReadinessCheck() {
       });
     }
 
-    // 2. API Connectivity Check
+    // 2. API Connectivity Check - CRITICAL FIX: Use cached health service
     try {
-      const data = await healthService.getHealth();
+      // Only force refresh if explicitly requested, otherwise use cache (hourly)
+      const data = await healthService.getHealth(forceHealthRefresh);
+      
+      // Update last health check timestamp
+      if (!data.isCached) {
+        setLastHealthCheck(new Date());
+      }
+      
+      let healthDetails = `Version: ${data.version || 'Unknown'}`;
+      if (data.isCached) {
+        const ageMinutes = Math.floor((data.cacheAge || 0) / 60);
+        healthDetails += ` (Cached ${ageMinutes}m ago)`;
+      }
+      
       if (data.status === 'ok') {
         results.push({
           name: 'API Backend',
           status: 'passed',
           message: 'Backend API is responsive',
-          details: `Version: ${data.version || 'Unknown'}`,
+          details: healthDetails,
           icon: <Database className="h-4 w-4" />
         });
       } else {
@@ -102,7 +116,7 @@ export default function ProductionReadinessCheck() {
           name: 'API Backend',
           status: 'warning',
           message: 'Backend API returned non-healthy status',
-          details: data.message || 'Check backend logs',
+          details: `${data.message || 'Check backend logs'} ${data.isCached ? '(Cached)' : ''}`,
           icon: <Database className="h-4 w-4" />
         });
       }
@@ -270,12 +284,32 @@ export default function ProductionReadinessCheck() {
     setIsChecking(false);
   }, [isAuthenticated, user, isChecking]);
 
+  // CRITICAL FIX: Load cached health status on mount, don't auto-refresh
   useEffect(() => {
-    // Only run checks when authentication is stable and ready
-    if (isAuthenticated && user && !isChecking) {
-      runChecks();
+    // Only run initial checks when authentication is stable and ready
+    if (isAuthenticated && user && !isChecking && checks.length === 0) {
+      logWithTimestamp('log', '🏁 Initial system check on authentication ready');
+      runChecks(false); // Use cached health data for initial load
     }
-  }, [isAuthenticated, user, isChecking, runChecks]); // Added missing dependencies
+    // RATE LIMIT FIX: Only run once when auth is ready, not on every state change
+  }, [isAuthenticated, user]); // Removed isChecking and runChecks dependencies
+
+  // CRITICAL FIX: Hourly automatic health refresh (optional background check)
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    // Set up hourly health refresh interval
+    const hourlyHealthRefresh = setInterval(() => {
+      // Only refresh if cache is expired and no manual check is in progress
+      const timeUntilRefresh = healthService.getTimeUntilNextRefresh();
+      if (timeUntilRefresh <= 0 && !isChecking) {
+        logWithTimestamp('log', '⏰ Hourly health check refresh');
+        runChecks(true); // Force refresh after 1 hour
+      }
+    }, 3600000); // Check every hour (3600 seconds)
+
+    return () => clearInterval(hourlyHealthRefresh);
+  }, [isAuthenticated, user, isChecking, runChecks]);
 
   const getStatusIcon = (status: SystemCheck['status']) => {
     switch (status) {
@@ -313,24 +347,32 @@ export default function ProductionReadinessCheck() {
           </div>
           <div className="flex items-center gap-2">
             {getOverallStatusBadge()}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={runChecks}
-              disabled={isChecking}
-            >
-              {isChecking ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Checking...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Recheck
-                </>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => runChecks(true)}
+                disabled={isChecking}
+                title="Force refresh all system checks"
+              >
+                {isChecking ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Check Now
+                  </>
+                )}
+              </Button>
+              {lastHealthCheck && (
+                <span className="text-xs text-muted-foreground">
+                  Last check: {lastHealthCheck.toLocaleTimeString()}
+                </span>
               )}
-            </Button>
+            </div>
           </div>
         </div>
       </CardHeader>

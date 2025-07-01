@@ -231,8 +231,8 @@ export default function LatestActivityTable() {
 
   useEffect(() => {
     fetchAndProcessData(); // Initial fetch
-    // Polling interval
-    const intervalId = setInterval(() => fetchAndProcessData(false), 10000); // Poll every 10 seconds without full loading spinner
+    // CRITICAL FIX: Reduced polling from every 10 seconds to every 5 minutes (300 seconds) to prevent excessive backend requests
+    const intervalId = setInterval(() => fetchAndProcessData(false), 300000); // Poll every 5 minutes without full loading spinner
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, [fetchAndProcessData]);
 

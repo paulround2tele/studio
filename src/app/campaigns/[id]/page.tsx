@@ -259,7 +259,8 @@ export default function CampaignDashboardPage() {
     if (!campaign || campaign.status === 'completed' || campaign.status === 'failed' || campaign.status === 'paused' || campaign.status === 'pending' || (campaign.campaignType === 'domain_generation' && campaign.status === 'running')) {
       return;
     }
-    const intervalId = setInterval(() => loadCampaignData(false) , 3000);
+    // RATE LIMIT FIX: Reduced from 3s to 30s to prevent "Too Many Requests" errors
+    const intervalId = setInterval(() => loadCampaignData(false) , 30000);
     return () => clearInterval(intervalId);
   }, [campaign, loadCampaignData]);
 
@@ -317,7 +318,8 @@ export default function CampaignDashboardPage() {
       fetchItems();
       // Simple poll for items if campaign is still running
       if (executionStatus === 'running') {
-          const itemPollInterval = setInterval(fetchItems, 5000);
+          // RATE LIMIT FIX: Reduced from 5s to 30s to prevent "Too Many Requests" errors
+          const itemPollInterval = setInterval(fetchItems, 30000);
           return () => clearInterval(itemPollInterval);
       }
     }

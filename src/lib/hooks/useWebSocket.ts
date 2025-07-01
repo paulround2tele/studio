@@ -85,7 +85,7 @@ export function useCampaignWebSocket(
 
     cleanupRef.current = cleanup;
 
-    // Check connection status
+    // Check connection status with throttling
     const checkConnection = () => {
       const isConnected = websocketService.isConnected(`campaign-${campaignId}`);
       setState(prev => ({
@@ -98,8 +98,8 @@ export function useCampaignWebSocket(
     // Initial check
     checkConnection();
 
-    // Periodic check (simple approach)
-    const interval = setInterval(checkConnection, 1000);
+    // RATE LIMIT FIX: Reduced from 1s to 30s to prevent request flooding
+    const interval = setInterval(checkConnection, 30000);
 
     return () => {
       clearInterval(interval);
@@ -178,22 +178,22 @@ export function useGlobalWebSocket(
 
     cleanupRef.current = cleanup;
 
-    // Check connection status
+    // Check connection status with throttling
     const checkConnection = () => {
       const status = websocketService.getConnectionStatus();
       const isConnected = Object.keys(status).length > 0 && Object.values(status).some(Boolean);
-      setState(prev => ({ 
-        ...prev, 
-        isConnected, 
-        isConnecting: !isConnected && prev.isConnecting 
+      setState(prev => ({
+        ...prev,
+        isConnected,
+        isConnecting: !isConnected && prev.isConnecting
       }));
     };
 
     // Initial check
     checkConnection();
 
-    // Periodic check
-    const interval = setInterval(checkConnection, 1000);
+    // RATE LIMIT FIX: Reduced from 1s to 30s to prevent request flooding
+    const interval = setInterval(checkConnection, 30000);
 
     return () => {
       clearInterval(interval);
@@ -227,8 +227,8 @@ export function useWebSocketStatus() {
     // Initial update
     updateStatus();
 
-    // Periodic updates
-    const interval = setInterval(updateStatus, 1000);
+    // RATE LIMIT FIX: Reduced from 1s to 30s to prevent request flooding
+    const interval = setInterval(updateStatus, 30000);
 
     return () => clearInterval(interval);
   }, []);

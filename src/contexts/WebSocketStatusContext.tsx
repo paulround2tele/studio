@@ -270,7 +270,8 @@ export function WebSocketStatusProvider({ children }: { children: React.ReactNod
   useEffect(() => {
     if (!mounted) return;
     
-    const interval = setInterval(refreshStatus, 5000); // Check every 5 seconds
+    // RATE LIMIT FIX: Reduced from 5s to 60s to prevent request flooding
+    const interval = setInterval(refreshStatus, 60000); // Check every 60 seconds
     refreshStatus(); // Initial check
     
     return () => clearInterval(interval);

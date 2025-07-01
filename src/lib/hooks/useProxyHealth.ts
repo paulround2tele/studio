@@ -54,7 +54,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     autoRefresh = true,
     refreshInterval = 30000, // 30 seconds
     enableHealthChecks = false,
-    healthCheckInterval = 300000 // 5 minutes
+    healthCheckInterval = 3600000 // CRITICAL FIX: 1 hour (3600 seconds) instead of 5 minutes
   } = options;
 
   const { toast } = useToast();

@@ -27,10 +27,12 @@ interface WebSocketConfig {
  */
 const DEFAULT_CONFIG: WebSocketConfig = {
   url: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/api/v2/ws',
-  reconnectInterval: parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || '5000'),
-  maxReconnectAttempts: parseInt(process.env.NEXT_PUBLIC_WS_MAX_RECONNECTS || '10'),
+  // RATE LIMIT FIX: Increased base reconnect interval from 5s to 10s
+  reconnectInterval: parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || '10000'),
+  maxReconnectAttempts: parseInt(process.env.NEXT_PUBLIC_WS_MAX_RECONNECTS || '5'),
   connectionTimeout: parseInt(process.env.NEXT_PUBLIC_WS_CONNECTION_TIMEOUT || '30000'),
-  heartbeatInterval: parseInt(process.env.NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL || '30000'),
+  // RATE LIMIT FIX: Increased heartbeat interval from 30s to 60s
+  heartbeatInterval: parseInt(process.env.NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL || '60000'),
   enableHeartbeat: process.env.NEXT_PUBLIC_WS_ENABLE_HEARTBEAT !== 'false',
   enableDebugMode: process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEBUG === 'true',
   protocols: process.env.NEXT_PUBLIC_WS_PROTOCOLS?.split(',') || [],
@@ -306,6 +308,14 @@ class WebSocketService {
     
     logger.info('WEBSOCKET', `Scheduling reconnect attempt ${status.reconnectAttempts}/${this.config.maxReconnectAttempts} for ${connectionKey}`);
 
+    // RATE LIMIT FIX: Implement exponential backoff with jitter
+    const baseDelay = this.config.reconnectInterval;
+    const exponentialDelay = Math.min(baseDelay * Math.pow(2, status.reconnectAttempts - 1), 300000); // Max 5 minutes
+    const jitter = Math.random() * 0.1 * exponentialDelay; // Add 10% jitter
+    const finalDelay = exponentialDelay + jitter;
+    
+    logger.info('WEBSOCKET', `Scheduling reconnect attempt ${status.reconnectAttempts}/${this.config.maxReconnectAttempts} for ${connectionKey} in ${Math.round(finalDelay/1000)}s`);
+
     const timer = setTimeout(() => {
       logger.info('WEBSOCKET', `Reconnect attempt ${status.reconnectAttempts} for ${connectionKey}`);
       
@@ -313,7 +323,7 @@ class WebSocketService {
       handlers?.onReconnect?.(status.reconnectAttempts);
       
       this.establishConnection(connectionKey, this.config.url);
-    }, this.config.reconnectInterval);
+    }, finalDelay);
 
     this.reconnectTimers.set(connectionKey, timer);
   }

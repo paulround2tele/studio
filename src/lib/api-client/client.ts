@@ -40,11 +40,11 @@ export class ApiClient {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     this.baseUrl = baseUrl || backendUrl;
     
-    // Enhanced configuration with retry logic
+    // RATE LIMIT FIX: Enhanced configuration with proper rate limiting
     this.config = {
       timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
       retryAttempts: parseInt(process.env.NEXT_PUBLIC_API_RETRY_ATTEMPTS || '3'),
-      retryDelay: parseInt(process.env.NEXT_PUBLIC_API_RETRY_DELAY || '1000'),
+      retryDelay: parseInt(process.env.NEXT_PUBLIC_API_RETRY_DELAY || '2000'), // Increased base delay
     };
     
     // Debug logging for API client initialization
@@ -130,17 +130,33 @@ export class ApiClient {
           
           const error = new Error(errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
           
-          // Don't retry on client errors (4xx), only on server errors (5xx) and network issues
-          if (response.status >= 400 && response.status < 500) {
+          // RATE LIMIT FIX: Special handling for 429 Too Many Requests
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('Retry-After');
+            const delay = retryAfter ? parseInt(retryAfter) * 1000 : this.config.retryDelay * Math.pow(2, attempt);
+            
+            console.log(`API_CLIENT_DEBUG - Rate limited (429), retrying in ${delay}ms (attempt ${attempt}/${this.config.retryAttempts})`);
+            
+            if (attempt < this.config.retryAttempts) {
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+          }
+          
+          // Don't retry on other client errors (4xx), only on server errors (5xx) and network issues
+          if (response.status >= 400 && response.status < 500 && response.status !== 429) {
             throw error;
           }
           
           lastError = error;
           
-          // Retry on server errors
+          // Retry on server errors with exponential backoff + jitter
           if (attempt < this.config.retryAttempts) {
-            const delay = this.config.retryDelay * Math.pow(2, attempt - 1); // Exponential backoff
-            console.log(`API_CLIENT_DEBUG - Retrying in ${delay}ms (attempt ${attempt}/${this.config.retryAttempts})`);
+            const exponentialDelay = this.config.retryDelay * Math.pow(2, attempt - 1);
+            const jitter = Math.random() * 0.1 * exponentialDelay; // Add 10% jitter
+            const delay = exponentialDelay + jitter;
+            
+            console.log(`API_CLIENT_DEBUG - Server error, retrying in ${Math.round(delay)}ms (attempt ${attempt}/${this.config.retryAttempts})`);
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
@@ -168,7 +184,10 @@ export class ApiClient {
           });
           
           if (attempt < this.config.retryAttempts) {
-            const delay = this.config.retryDelay * Math.pow(2, attempt - 1);
+            // RATE LIMIT FIX: Enhanced exponential backoff with jitter for network errors
+            const exponentialDelay = this.config.retryDelay * Math.pow(2, attempt - 1);
+            const jitter = Math.random() * 0.1 * exponentialDelay;
+            const delay = exponentialDelay + jitter;
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
