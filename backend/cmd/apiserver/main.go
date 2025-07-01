@@ -321,9 +321,15 @@ func main() {
 	}
 	log.Println("Registered authentication routes under /api/v2/auth")
 
-	// Register health check routes
+	// Register health check routes (legacy paths for backward compatibility)
 	api.RegisterHealthCheckRoutes(router, healthCheckHandler)
 	log.Println("Registered health check routes: /health, /health/ready, /health/live")
+
+	// Register health check routes under /api/v2/ to match frontend expectations
+	router.GET("/api/v2/health", healthCheckHandler.HandleHealthCheck)
+	router.GET("/api/v2/health/ready", healthCheckHandler.HandleReadinessCheck)
+	router.GET("/api/v2/health/live", healthCheckHandler.HandleLivenessCheck)
+	log.Println("Registered API v2 health check routes: /api/v2/health, /api/v2/health/ready, /api/v2/health/live")
 
 	log.Println("Authentication configured for session-only (offline mode)")
 

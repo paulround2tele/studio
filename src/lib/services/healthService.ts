@@ -25,7 +25,11 @@ export async function getHealth(): Promise<HealthResponse> {
       throw new Error(`Health check failed: ${response.statusText}`);
     }
 
-    return response.json();
+    const responseData = await response.json();
+    
+    // Backend returns wrapped response: { success: true, data: { status: "ok", ... } }
+    // Extract the inner data object to match expected HealthResponse interface
+    return responseData.data || responseData;
   } catch (error) {
     // Fallback response
     return {
