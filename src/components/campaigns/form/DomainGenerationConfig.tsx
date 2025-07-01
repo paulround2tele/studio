@@ -55,6 +55,7 @@ interface DomainGenerationConfigProps {
   };
   calculationWarning?: string | null;
   isCalculationSafe: boolean;
+  amount?: number; // Amount field value for remaining calculation
 }
 
 /**
@@ -66,8 +67,12 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
   totalPossible,
   calculationDetails,
   calculationWarning,
-  isCalculationSafe
+  isCalculationSafe,
+  amount
 }) => {
+  
+  // Calculate remaining domains
+  const remainingDomains = amount && totalPossible > 0 ? Math.max(0, totalPossible - amount) : 0;
   return (
     <Card className="p-4 pt-2 border-dashed">
       <CardHeader className="p-2">
@@ -85,9 +90,9 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="prefix_variable">Prefix Variable (e.g., [aaa]constant.com)</SelectItem>
-                <SelectItem value="suffix_variable">Suffix Variable (e.g., constant[aaa].com)</SelectItem>
-                <SelectItem value="both_variable">Prefix & Suffix Variable (e.g., [aaa]constant[bbb].com)</SelectItem>
+                <SelectItem value="prefix_variable">Prefix + Variable Characters (e.g., [aaa]constant.com)</SelectItem>
+                <SelectItem value="suffix_variable">Variable Characters + Suffix (e.g., constant[aaa].com)</SelectItem>
+                <SelectItem value="both_variable">Prefix + Variable + Suffix (e.g., [aaa]constant[bbb].com)</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -116,10 +121,76 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
 
         <FormField control={control} name="tldsInput" render={({ field }) => (
           <FormItem>
-            <FormLabel>TLDs (comma-separated)</FormLabel>
-            <FormControl>
-              <Input placeholder="e.g., .com, .net, .org" {...field} />
-            </FormControl>
+            <FormLabel>TLDs</FormLabel>
+            <Select onValueChange={(value) => {
+              // Handle multiple selection by appending to existing value
+              const currentValue = field.value || '';
+              const existingTlds = currentValue.split(',').map(tld => tld.trim()).filter(tld => tld.length > 0);
+              if (!existingTlds.includes(value)) {
+                const newValue = existingTlds.length > 0 ? `${currentValue}, ${value}` : value;
+                field.onChange(newValue);
+              }
+            }} value="">
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select TLDs" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="max-h-60">
+                <SelectItem value=".com">.com</SelectItem>
+                <SelectItem value=".net">.net</SelectItem>
+                <SelectItem value=".org">.org</SelectItem>
+                <SelectItem value=".io">.io</SelectItem>
+                <SelectItem value=".co">.co</SelectItem>
+                <SelectItem value=".uk">.uk</SelectItem>
+                <SelectItem value=".de">.de</SelectItem>
+                <SelectItem value=".fr">.fr</SelectItem>
+                <SelectItem value=".ca">.ca</SelectItem>
+                <SelectItem value=".au">.au</SelectItem>
+                <SelectItem value=".in">.in</SelectItem>
+                <SelectItem value=".cn">.cn</SelectItem>
+                <SelectItem value=".jp">.jp</SelectItem>
+                <SelectItem value=".br">.br</SelectItem>
+                <SelectItem value=".ru">.ru</SelectItem>
+                <SelectItem value=".mx">.mx</SelectItem>
+                <SelectItem value=".es">.es</SelectItem>
+                <SelectItem value=".it">.it</SelectItem>
+                <SelectItem value=".nl">.nl</SelectItem>
+                <SelectItem value=".se">.se</SelectItem>
+                <SelectItem value=".no">.no</SelectItem>
+                <SelectItem value=".fi">.fi</SelectItem>
+                <SelectItem value=".dk">.dk</SelectItem>
+                <SelectItem value=".pl">.pl</SelectItem>
+                <SelectItem value=".cz">.cz</SelectItem>
+                <SelectItem value=".be">.be</SelectItem>
+                <SelectItem value=".ch">.ch</SelectItem>
+                <SelectItem value=".at">.at</SelectItem>
+                <SelectItem value=".pt">.pt</SelectItem>
+                <SelectItem value=".gr">.gr</SelectItem>
+                <SelectItem value=".hu">.hu</SelectItem>
+                <SelectItem value=".ro">.ro</SelectItem>
+                <SelectItem value=".bg">.bg</SelectItem>
+                <SelectItem value=".hr">.hr</SelectItem>
+                <SelectItem value=".si">.si</SelectItem>
+                <SelectItem value=".sk">.sk</SelectItem>
+                <SelectItem value=".lt">.lt</SelectItem>
+                <SelectItem value=".lv">.lv</SelectItem>
+                <SelectItem value=".ee">.ee</SelectItem>
+                <SelectItem value=".is">.is</SelectItem>
+                <SelectItem value=".ie">.ie</SelectItem>
+                <SelectItem value=".lu">.lu</SelectItem>
+                <SelectItem value=".mt">.mt</SelectItem>
+                <SelectItem value=".cy">.cy</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="mt-2">
+              <Input
+                placeholder="Selected TLDs (e.g., .com, .net, .org)"
+                value={field.value || ''}
+                onChange={field.onChange}
+                className="text-sm"
+              />
+            </div>
             <FormMessage />
           </FormItem>
         )} />
@@ -148,7 +219,7 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
 
         <FormField control={control} name="maxDomainsToGenerate" render={({ field }) => (
           <FormItem>
-            <FormLabel>Maximum Domains to Generate</FormLabel>
+            <FormLabel>Amount</FormLabel>
             <FormControl>
               <Input type="number" min="1" placeholder="1000" {...field} />
             </FormControl>
@@ -165,8 +236,8 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
             </div>
             {calculationDetails && (
               <div className="text-xs text-muted-foreground mt-1">
-                Pattern: {calculationDetails.pattern} • 
-                Character set length: {calculationDetails.charSetLength} • 
+                Pattern: {calculationDetails.pattern} •
+                Character set length: {calculationDetails.charSetLength} •
                 {calculationDetails.pattern === 'prefix_variable' && `Prefix length: ${calculationDetails.prefixLength} • `}
                 {calculationDetails.pattern === 'suffix_variable' && `Suffix length: ${calculationDetails.suffixLength} • `}
                 {calculationDetails.pattern === 'both_variable' && `Prefix: ${calculationDetails.prefixLength}, Suffix: ${calculationDetails.suffixLength} • `}
@@ -178,6 +249,19 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
                 ⚠️ {calculationWarning}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Remaining Domains Section */}
+        {totalPossible > 0 && amount && amount > 0 && (
+          <div className="p-3 rounded-md bg-blue-50 border border-blue-200">
+            <div className="text-sm font-medium text-blue-700">Remaining Domains</div>
+            <div className="text-lg font-semibold text-blue-800">
+              {remainingDomains.toLocaleString()} domains
+            </div>
+            <div className="text-xs text-blue-600 mt-1">
+              Available after generating {amount.toLocaleString()} domains
+            </div>
           </div>
         )}
 

@@ -273,6 +273,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
   const prefixVariableLength = watch("prefixVariableLength");
   const suffixVariableLength = watch("suffixVariableLength");
   const tldsInput = watch("tldsInput");
+  const maxDomainsToGenerate = watch("maxDomainsToGenerate");
 
   const domainCalculation = useDomainCalculation(
     selectedCampaignType,
@@ -679,6 +680,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                   calculationDetails={domainCalculation.details}
                   calculationWarning={domainCalculation.warning}
                   isCalculationSafe={domainCalculation.isSafe}
+                  amount={maxDomainsToGenerate ? Number(maxDomainsToGenerate) : undefined}
                 />
               )}
 
