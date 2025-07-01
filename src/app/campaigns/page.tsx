@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
-import type { CampaignViewModel, CampaignsListResponse, CampaignDeleteResponse, CampaignOperationResponse } from '@/lib/types';
+import type { CampaignViewModel } from '@/lib/types';
 import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +18,7 @@ import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
 import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
 import { useToast } from '@/hooks/use-toast';
 import { useOptimisticUpdate, useLoadingState, useStateSubscription } from '@/lib/state/stateManager';
-import { transformCampaignsToViewModels, mergeCampaignApiUpdate } from '@/lib/utils/campaignTransforms';
+import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
 // PERFORMANCE: Lazy load campaign components for better bundle splitting
 const CampaignListItem = lazy(() => import('@/components/campaigns/CampaignListItem'));
@@ -351,13 +351,12 @@ function CampaignsPageContent() {
 
     try {
       // Call the appropriate API method directly
-      let response;
       if (action === 'pause') {
-        response = await apiClient.pauseCampaign(campaignId);
+        await apiClient.pauseCampaign(campaignId);
       } else if (action === 'resume') {
-        response = await apiClient.resumeCampaign(campaignId);
+        await apiClient.resumeCampaign(campaignId);
       } else {
-        response = await apiClient.cancelCampaign(campaignId);
+        await apiClient.cancelCampaign(campaignId);
       }
       
       await confirmUpdate(updateId);

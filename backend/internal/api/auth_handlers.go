@@ -117,8 +117,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"expiresAt": sessionData.ExpiresAt.Format(time.RFC3339),
 	}
 
-	// Return successful login response with correct field names
-	respondWithJSONGin(c, http.StatusOK, sessionResponse)
+	// Return successful login response directly (unwrapped) to match OpenAPI spec
+	c.JSON(http.StatusOK, sessionResponse)
 }
 
 // Logout handles user logout requests.

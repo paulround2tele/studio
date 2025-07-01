@@ -32,6 +32,13 @@ export class ApiClient {
     // Use environment variable for backend URL, fallback to provided baseUrl or default
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     this.baseUrl = baseUrl || `${backendUrl}/api/v2`;
+    
+    // Debug logging for API client initialization
+    console.log('API_CLIENT_DEBUG - Initialized with:', {
+      backendUrl,
+      baseUrl: this.baseUrl,
+      envVar: process.env.NEXT_PUBLIC_API_URL
+    });
   }
 
   // Generic request method with type safety
@@ -55,22 +62,68 @@ export class ApiClient {
       });
     }
 
-    const response = await fetch(url.toString(), {
+    // Debug logging for API requests
+    console.log('API_CLIENT_DEBUG - Making request:', {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-      body: options?.body ? JSON.stringify(options.body) : undefined,
-      credentials: 'include', // Include cookies for session auth
+      url: url.toString(),
+      baseUrl: this.baseUrl,
+      path,
+      hasBody: !!options?.body
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(errorData.message || `HTTP ${response.status}`);
-    }
+    try {
+      const response = await fetch(url.toString(), {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+        body: options?.body ? JSON.stringify(options.body) : undefined,
+        credentials: 'include', // Include cookies for session auth
+      });
 
-    return response.json();
+      console.log('API_CLIENT_DEBUG - Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          console.error('API_CLIENT_DEBUG - Failed to parse error response as JSON:', jsonError);
+          errorData = {
+            message: `HTTP ${response.status}: ${response.statusText}`,
+            status: response.status,
+            url: response.url
+          };
+        }
+        
+        console.error('API_CLIENT_DEBUG - Request failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          url: response.url
+        });
+        
+        const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
+
+      const responseData = await response.json();
+      console.log('API_CLIENT_DEBUG - Successful response parsed');
+      return responseData;
+    } catch (error) {
+      console.error('API_CLIENT_DEBUG - Network or parsing error:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        url: url.toString(),
+        method
+      });
+      throw error;
+    }
   }
 
   // AUTH API METHODS
@@ -538,7 +591,7 @@ export const resumeCampaign = (campaignId: string) => apiClient.resumeCampaign(c
 export const stopCampaign = (campaignId: string) => apiClient.cancelCampaign(campaignId);
 
 // Chain campaign method - assuming this creates a follow-up campaign
-export const chainCampaign = async (campaignId: string) => {
+export const chainCampaign = async (_campaignId: string) => {
   // This would need to be implemented based on business logic
   // For now, we'll throw an error to indicate it needs implementation
   throw new Error('chainCampaign not yet implemented - needs business logic definition');

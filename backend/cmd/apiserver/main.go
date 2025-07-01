@@ -94,7 +94,7 @@ func main() {
 	if appConfig.Server.DatabaseConfig != nil {
 		dsn = config.GetDatabaseDSN(appConfig.Server.DatabaseConfig)
 	} else {
-		// Fallback to environment variables for backward compatibility
+		// Load database configuration from environment variables only
 		dbHost := os.Getenv("DB_HOST")
 		dbPort := os.Getenv("DB_PORT")
 		dbUser := os.Getenv("DB_USER")
@@ -102,29 +102,32 @@ func main() {
 		dbName := os.Getenv("DB_NAME")
 		dbSSLMode := os.Getenv("DB_SSLMODE")
 
+		// Validate required environment variables
 		if dbHost == "" {
-			dbHost = "localhost"
+			log.Fatal("FATAL: DB_HOST environment variable is required")
 		}
 		if dbPort == "" {
-			dbPort = "5432"
+			log.Fatal("FATAL: DB_PORT environment variable is required")
 		}
 		if dbUser == "" {
-			dbUser = "domainflow"
+			log.Fatal("FATAL: DB_USER environment variable is required")
 		}
 		if dbPassword == "" {
-			// Development fallback only - never used in production
-			dbPassword = "domainflow_dev_password"
+			log.Fatal("FATAL: DB_PASSWORD environment variable is required")
 		}
 		if dbName == "" {
-			dbName = "domainflow_dev"
+			log.Fatal("FATAL: DB_NAME environment variable is required")
 		}
 		if dbSSLMode == "" {
-			dbSSLMode = "disable"
+			dbSSLMode = "disable" // Only this can have a reasonable default
 		}
 
 		dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 			dbHost, dbPort, dbUser, dbPassword, dbName, dbSSLMode)
 	}
+
+	log.Printf("Connecting to database: host=%s port=%s user=%s dbname=%s sslmode=%s",
+		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_NAME"), os.Getenv("DB_SSLMODE"))
 
 	var pgErr error
 	db, pgErr = sqlx.Connect("postgres", dsn)
@@ -438,9 +441,12 @@ func main() {
 	log.Println("Registered new campaign orchestration routes under /api/v2/campaigns.")
 
 	// Use environment variable for port if set, otherwise use config
-	serverPort := os.Getenv("DOMAINFLOW_PORT")
+	serverPort := os.Getenv("SERVER_PORT")
 	if serverPort == "" {
 		serverPort = appConfig.Server.Port
+	}
+	if serverPort == "" {
+		serverPort = "8080" // Default fallback
 	}
 
 	srv := &http.Server{

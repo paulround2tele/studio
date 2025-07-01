@@ -18,7 +18,6 @@ import type { LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
-  apiClient,
   getCampaignById,
   getGeneratedDomainsForCampaign,
   getDnsCampaignDomains,
@@ -26,8 +25,7 @@ import {
   startCampaignPhase,
   pauseCampaign,
   resumeCampaign,
-  stopCampaign,
-  chainCampaign
+  stopCampaign
 } from '@/lib/api-client/client';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import { websocketService } from '@/lib/services/websocketService.simple';
@@ -520,7 +518,7 @@ export default function CampaignDashboardPage() {
         });
       }
     }
-  }, [campaign, isSequenceMode, router]);
+  }, [campaign, isSequenceMode, router, toast]);
 
 
   const handleDownloadDomains = (domainsToDownload: string[] | undefined, fileNamePrefix: string) => {

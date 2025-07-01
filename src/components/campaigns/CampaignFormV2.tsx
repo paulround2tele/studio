@@ -154,7 +154,7 @@ function needsDnsPersona(campaignType?: CampaignSelectedType | null): boolean {
 }
 import React, { useCallback, useMemo, useState } from "react";
 import { FormErrorSummary } from '@/components/ui/form-field-error';
-import { extractFieldErrors, createUserFriendlyError, type FormErrorState } from '@/lib/utils/errorHandling';
+import { type FormErrorState } from '@/lib/utils/errorHandling';
 
 // Performance-optimized hooks
 import { useDomainCalculation } from "@/lib/hooks/useDomainCalculation";

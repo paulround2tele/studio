@@ -33,7 +33,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
     if (!campaign) return;
     setAnalyzingContentId(item.id);
     try {
-      const analysisInput: AnalyzeContentInput = {
+      const _analysisInput: AnalyzeContentInput = {
         content: item.text,
         keywords: item.text.toLowerCase().split(/\s+/).filter(kw => kw.length > 3).slice(0, 5), // Simple existing keywords
       };

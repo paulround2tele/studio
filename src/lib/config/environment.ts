@@ -101,7 +101,7 @@ const environments: Record<string, EnvironmentConfig> = {
       sessionTimeoutMinutes: 120, // 2 hours
     },
     websocket: {
-      url: '/api/v2/ws',
+      url: process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || 'wss://api.domainflow.com/api/v2/ws',
       reconnectAttempts: 10,
       reconnectDelay: 3000,
       heartbeatInterval: 30000,
@@ -136,7 +136,7 @@ const environments: Record<string, EnvironmentConfig> = {
       sessionTimeoutMinutes: 120, // 2 hours
     },
     websocket: {
-      url: '/api/v2/ws',
+      url: process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || 'wss://api.domainflow.com/api/v2/ws',
       reconnectAttempts: 15,
       reconnectDelay: 5000,
       heartbeatInterval: 30000,

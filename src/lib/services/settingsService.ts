@@ -49,6 +49,16 @@ export interface FeatureFlagsConfig {
   enableDebugMode: boolean;
 }
 
+export interface AuthConfig {
+  sessionTimeoutMinutes?: number;
+  maxLoginAttempts?: number;
+  lockoutDurationMinutes?: number;
+  requirePasswordChange?: boolean;
+  passwordMinLength?: number;
+  enableTwoFactor?: boolean;
+  [key: string]: unknown;
+}
+
 export interface WorkerConfig {
   numWorkers: number;
   pollIntervalSeconds: number;
@@ -97,7 +107,7 @@ class SettingsService {
   }
 
   async updateDNSConfig(cfg: DNSConfig): Promise<void> {
-    await openApiClient.updateDNSConfig(cfg as any);
+    await openApiClient.updateDNSConfig(cfg as unknown as Parameters<typeof openApiClient.updateDNSConfig>[0]);
   }
 
   async getHTTPConfig(): Promise<HTTPConfig> {
@@ -106,7 +116,7 @@ class SettingsService {
   }
 
   async updateHTTPConfig(cfg: HTTPConfig): Promise<void> {
-    await openApiClient.updateHTTPConfig(cfg as any);
+    await openApiClient.updateHTTPConfig(cfg as unknown as Parameters<typeof openApiClient.updateHTTPConfig>[0]);
   }
 
   async getLoggingConfig(): Promise<LoggingConfig> {
@@ -115,7 +125,7 @@ class SettingsService {
   }
 
   async updateLoggingConfig(cfg: LoggingConfig): Promise<void> {
-    await openApiClient.updateLoggingConfig(cfg as any);
+    await openApiClient.updateLoggingConfig(cfg as unknown as Parameters<typeof openApiClient.updateLoggingConfig>[0]);
   }
 
   async getWorkerConfig(): Promise<WorkerConfig> {
@@ -124,7 +134,7 @@ class SettingsService {
   }
 
   async updateWorkerConfig(cfg: WorkerConfig): Promise<void> {
-    await openApiClient.updateWorkerConfig(cfg as any);
+    await openApiClient.updateWorkerConfig(cfg as unknown as Parameters<typeof openApiClient.updateWorkerConfig>[0]);
   }
 
   async getRateLimiterConfig(): Promise<RateLimiterConfig> {
@@ -133,7 +143,7 @@ class SettingsService {
   }
 
   async updateRateLimiterConfig(cfg: RateLimiterConfig): Promise<void> {
-    await openApiClient.updateRateLimiterConfig(cfg as any);
+    await openApiClient.updateRateLimiterConfig(cfg as unknown as Parameters<typeof openApiClient.updateRateLimiterConfig>[0]);
   }
 
   async getProxyManagerConfig(): Promise<ProxyManagerConfig> {
@@ -142,7 +152,7 @@ class SettingsService {
   }
 
   async updateProxyManagerConfig(cfg: ProxyManagerConfig): Promise<void> {
-    await openApiClient.updateProxyManagerConfig(cfg as any);
+    await openApiClient.updateProxyManagerConfig(cfg as unknown as Parameters<typeof openApiClient.updateProxyManagerConfig>[0]);
   }
 
   async getServerConfig(): Promise<ServerConfig> {
@@ -151,16 +161,16 @@ class SettingsService {
   }
 
   async updateServerConfig(cfg: Partial<ServerConfig>): Promise<void> {
-    await openApiClient.updateServerConfig(cfg as any);
+    await openApiClient.updateServerConfig(cfg as unknown as Parameters<typeof openApiClient.updateServerConfig>[0]);
   }
 
-  async getAuthConfig(): Promise<any> {
+  async getAuthConfig(): Promise<AuthConfig> {
     const response = await openApiClient.getAuthConfig();
-    return response;
+    return response as unknown as AuthConfig;
   }
 
-  async updateAuthConfig(cfg: any): Promise<void> {
-    await openApiClient.updateAuthConfig(cfg as any);
+  async updateAuthConfig(cfg: AuthConfig): Promise<void> {
+    await openApiClient.updateAuthConfig(cfg as unknown as Parameters<typeof openApiClient.updateAuthConfig>[0]);
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsConfig> {
@@ -169,7 +179,7 @@ class SettingsService {
   }
 
   async updateFeatureFlags(flags: FeatureFlagsConfig): Promise<void> {
-    await openApiClient.updateFeatureFlags(flags as any);
+    await openApiClient.updateFeatureFlags(flags as unknown as Parameters<typeof openApiClient.updateFeatureFlags>[0]);
   }
 }
 

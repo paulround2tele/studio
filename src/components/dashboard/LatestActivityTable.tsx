@@ -5,14 +5,14 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { CampaignViewModel, LatestDomainActivity, CampaignPhase, DomainActivityStatus, CampaignsListResponse, CampaignSelectedType } from '@/lib/types';
+import type { CampaignViewModel, LatestDomainActivity, CampaignPhase, DomainActivityStatus, CampaignSelectedType } from '@/lib/types';
 import { CAMPAIGN_PHASES_ORDERED } from '@/lib/constants';
 import { ScrollArea } from '../ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, ChevronLeft, ChevronRight, Percent } from 'lucide-react';
 import Link from 'next/link';
-import { apiClient, getCampaigns } from '@/lib/api-client/client'; // Updated import path
+import { getCampaigns } from '@/lib/api-client/client'; // Updated import path
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 

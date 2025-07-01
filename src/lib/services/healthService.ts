@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client/client';
+// Health service for direct API calls
 
 export interface HealthResponse {
   status: string;
@@ -10,8 +10,9 @@ export interface HealthResponse {
 
 export async function getHealth(): Promise<HealthResponse> {
   try {
-    // Use a generic endpoint until health endpoints are added to OpenAPI spec
-    const response = await fetch('/api/health', {
+    // Use the backend API URL instead of frontend API route
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const response = await fetch(`${backendUrl}/api/v2/health`, {
       method: 'GET',
       credentials: 'include',
       headers: {

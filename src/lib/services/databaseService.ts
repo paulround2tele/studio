@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client/client';
+// Database service for direct API calls
 
 export interface QueryResult {
   columns: string[];
