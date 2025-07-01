@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Control } from 'react-hook-form';
+import { Control, UseFormWatch } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ interface CampaignFormValues {
 
 interface DomainGenerationConfigProps {
   control: Control<CampaignFormValues>;
+  watch: UseFormWatch<CampaignFormValues>;
   totalPossible: number;
   calculationDetails?: {
     pattern: string;
@@ -64,12 +65,19 @@ interface DomainGenerationConfigProps {
  */
 const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
   control,
+  watch,
   totalPossible,
   calculationDetails,
   calculationWarning,
   isCalculationSafe,
   amount
 }) => {
+  
+  // Watch the generation pattern to conditionally show suffix input
+  const generationPattern = watch("generationPattern");
+  
+  // Determine if suffix variable length input should be shown
+  const showSuffixInput = generationPattern === 'both_variable' || generationPattern === 'suffix_variable';
   
   // Calculate remaining domains
   const remainingDomains = amount && totalPossible > 0 ? Math.max(0, totalPossible - amount) : 0;
@@ -206,15 +214,17 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
             </FormItem>
           )} />
 
-          <FormField control={control} name="suffixVariableLength" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Suffix Variable Length</FormLabel>
-              <FormControl>
-                <Input type="number" min="0" placeholder="0" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+          {showSuffixInput && (
+            <FormField control={control} name="suffixVariableLength" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Suffix Variable Length</FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" placeholder="0" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          )}
         </div>
 
         <FormField control={control} name="maxDomainsToGenerate" render={({ field }) => (

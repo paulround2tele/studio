@@ -186,8 +186,11 @@ export default function LatestActivityTable() {
       const processedActivities: LatestDomainActivity[] = [];
 
       // Handle the nested response structure: { success: true, data: { success: true, data: [...] } }
-      if (response && response.data && Array.isArray(response.data)) {
-        const campaignsArray = transformCampaignsToViewModels(response.data);
+      // Check for success at both levels and ensure we have campaign data
+      if (response && response.success && response.data &&
+          typeof response.data === 'object' && response.data.success &&
+          Array.isArray(response.data.data)) {
+        const campaignsArray = transformCampaignsToViewModels(response.data.data);
         campaignsArray.forEach(campaign => {
           if (!campaign.id || !campaign.name || !campaign.createdAt) return;
           (campaign.domains || []).forEach(domainName => {
