@@ -168,7 +168,7 @@ class SessionWebSocketClient {
     const wsProtocol = baseUrl.startsWith('https://') ? 'wss://' : 'ws://';
     const host = baseUrl.replace(/^https?:\/\//, '');
     
-    return `${wsProtocol}${host}/api/v2/ws`;
+    return `${wsProtocol}${host}/ws`;
   }
 
   private validateSessionForConnection(): boolean {

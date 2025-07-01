@@ -92,7 +92,7 @@ export interface ServerConfig {
 
 class SettingsService {
   private static instance: SettingsService;
-  private readonly basePath = "/api/v2/config";
+  private readonly basePath = "/config";
 
   static getInstance(): SettingsService {
     if (!SettingsService.instance) {

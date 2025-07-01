@@ -1,7 +1,7 @@
 /**
  * CV-010 Fix Verification Test
  *
- * This test verifies that the PUT /api/v2/admin/users/{id} endpoint
+ * This test verifies that the PUT /admin/users/{id} endpoint
  * is properly integrated in the frontend service, resolving CV-010
  * from CONTRACT_VIOLATIONS_MATRIX.
  */
@@ -24,7 +24,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
     jest.clearAllMocks();
   });
 
-  it('should call PUT /api/v2/admin/users/{id} endpoint', async () => {
+  it('should call PUT /admin/users/{id} endpoint', async () => {
     // Arrange
     const updateRequest: UpdateUserRequest = {
       firstName: 'Updated',
@@ -57,7 +57,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
 
     // Assert
     expect(apiClient.put).toHaveBeenCalledWith(
-      `/api/v2/admin/users/${mockUserId}`,
+      `/admin/users/${mockUserId}`,
       updateRequest
     );
     expect(result).toBeDefined();
@@ -95,7 +95,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
 
     // Assert
     expect(apiClient.put).toHaveBeenCalledWith(
-      `/api/v2/admin/users/${mockUserId}`,
+      `/admin/users/${mockUserId}`,
       partialUpdate
     );
     expect(result.isActive).toBe(false);
@@ -137,7 +137,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
 
     // Assert
     expect(apiClient.put).toHaveBeenCalledWith(
-      `/api/v2/admin/users/${mockUserId}`,
+      `/admin/users/${mockUserId}`,
       roleUpdate
     );
     expect(result.roles).toHaveLength(2);
@@ -193,7 +193,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
   it('should verify the endpoint path matches backend registration', () => {
     // This test verifies that the frontend is using the correct endpoint path
     // that matches what's registered in the backend (main.go line 324)
-    const expectedPath = `/api/v2/admin/users/${mockUserId}`;
+    const expectedPath = `/admin/users/${mockUserId}`;
     
     // Call the service
     adminService.updateUser(mockUserId, { firstName: 'Test' }).catch(() => {});

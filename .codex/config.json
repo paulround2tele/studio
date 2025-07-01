@@ -48,7 +48,7 @@
     },
     "backend": {
       "port": 8080,
-      "binary": "./backend/apiserver",
+      "binary": "./backend/bin/apiserver",
       "configFile": "./backend/config.json"
     },
     "frontend": {

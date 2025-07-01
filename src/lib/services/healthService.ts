@@ -119,7 +119,7 @@ export async function getHealth(forceRefresh = false): Promise<HealthResponse> {
     const result = await circuitBreaker.execute(async () => {
       // Use the backend API URL instead of frontend API route
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const response = await fetch(`${backendUrl}/api/v2/health`, {
+      const response = await fetch(`${backendUrl}/health`, {
         method: 'GET',
         credentials: 'include',
         headers: {

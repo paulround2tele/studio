@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     
     // Test the backend login directly
     const baseUrl = await getApiBaseUrl();
-    const backendResponse = await fetch(`${baseUrl}/api/v2/auth/login`, {
+    const backendResponse = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
