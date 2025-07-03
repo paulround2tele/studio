@@ -16,8 +16,11 @@ const (
 
 // DNS validation status constants
 const (
-	DNSStatusNotFound = "Not Found"
-	DNSStatusResolved = "Resolved"
+	DNSStatusPending   = "pending"
+	DNSStatusNotFound  = "unresolved"
+	DNSStatusResolved  = "resolved"
+	DNSStatusTimeout   = "timeout"
+	DNSStatusError     = "error"
 )
 
 // Go type constants

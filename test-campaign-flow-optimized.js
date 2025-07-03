@@ -105,6 +105,59 @@ async function testCampaignFlow() {
       await descInput.type('Automated test campaign for domain generation');
       console.log('✅ Description filled');
     }
+
+    // CRITICAL: Select campaign type (REQUIRED FIELD)
+    console.log('🎯 Selecting campaign type...');
+    
+    // First, look for the "Select type" button (shadcn/ui select component)
+    const campaignTypeButton = await page.waitForSelector('button:has-text("Select type")', { timeout: 5000 }).catch(() => null);
+    
+    if (campaignTypeButton) {
+      console.log('✅ Found campaign type selector button, clicking to open dropdown...');
+      await campaignTypeButton.click();
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Wait for dropdown animation
+      
+      // Try multiple selectors for domain_generation option in the dropdown
+      const optionSelectors = [
+        '[role="option"]:has-text("domain_generation")',
+        '[data-value="domain_generation"]',
+        'div:has-text("domain_generation")',
+        '.select-item:has-text("domain_generation")',
+        '[aria-label*="domain_generation"]'
+      ];
+      
+      let optionSelected = false;
+      for (const selector of optionSelectors) {
+        try {
+          const option = await page.waitForSelector(selector, { timeout: 2000 }).catch(() => null);
+          if (option) {
+            await option.click();
+            console.log(`✅ Campaign type selected: domain_generation (using selector: ${selector})`);
+            optionSelected = true;
+            break;
+          }
+        } catch (e) {
+          // Continue to next selector
+        }
+      }
+      
+      if (!optionSelected) {
+        // Fallback: try to click any available option
+        console.log('⚠️ Could not find domain_generation option, trying first available option...');
+        const firstOption = await page.waitForSelector('[role="option"]', { timeout: 2000 }).catch(() => null);
+        if (firstOption) {
+          await firstOption.click();
+          console.log('✅ Campaign type selected: first available option');
+          optionSelected = true;
+        }
+      }
+      
+      if (!optionSelected) {
+        console.log('❌ Could not select any campaign type - this will cause form validation to fail');
+      }
+    } else {
+      console.log('❌ Campaign type selector button not found - form submission will fail');
+    }
     
     // Look for persona selection (dropdown or select)
     const personaSelect = await page.waitForSelector('select[name="persona"], select[name="personaId"], .persona-select select, [data-testid="persona-select"]', { timeout: 3000 }).catch(() => null);

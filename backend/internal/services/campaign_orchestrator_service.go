@@ -1065,7 +1065,10 @@ func (s *campaignOrchestratorServiceImpl) DeleteCampaign(ctx context.Context, ca
 
 // CreateCampaignUnified creates a campaign of any type using a unified request structure
 func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Context, req CreateCampaignRequest) (*models.Campaign, error) {
-	log.Printf("Orchestrator: Creating campaign with unified endpoint. Type: %s, Name: %s", req.CampaignType, req.Name)
+	log.Printf("Orchestrator: Creating campaign with unified endpoint. Type: %s, Name: %s, LaunchSequence: %v", req.CampaignType, req.Name, req.LaunchSequence)
+
+	var campaign *models.Campaign
+	var err error
 
 	switch req.CampaignType {
 	case "domain_generation":
@@ -1085,7 +1088,7 @@ func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Cont
 			UserID:               req.UserID,
 		}
 
-		return s.domainGenService.CreateCampaign(ctx, legacyReq)
+		campaign, err = s.domainGenService.CreateCampaign(ctx, legacyReq)
 
 	case "dns_validation":
 		if req.DnsValidationParams == nil {
@@ -1104,7 +1107,7 @@ func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Cont
 			UserID:                     req.UserID,
 		}
 
-		return s.dnsService.CreateCampaign(ctx, legacyReq)
+		campaign, err = s.dnsService.CreateCampaign(ctx, legacyReq)
 
 	case "http_keyword_validation":
 		if req.HttpKeywordParams == nil {
@@ -1128,48 +1131,93 @@ func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Cont
 			UserID:                   req.UserID,
 		}
 
-		return s.httpKeywordService.CreateCampaign(ctx, legacyReq)
+		campaign, err = s.httpKeywordService.CreateCampaign(ctx, legacyReq)
 
 	default:
 		return nil, fmt.Errorf("unsupported campaign type: %s", req.CampaignType)
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Update the campaign with the launch sequence preference
+	if campaign != nil && campaign.LaunchSequence != req.LaunchSequence {
+		log.Printf("Orchestrator: Setting launch_sequence to %v for campaign %s", req.LaunchSequence, campaign.ID)
+		campaign.LaunchSequence = req.LaunchSequence
+		campaign.UpdatedAt = time.Now().UTC()
+		
+		var querier store.Querier
+		if s.db != nil {
+			querier = s.db
+		}
+		
+		if updateErr := s.campaignStore.UpdateCampaign(ctx, querier, campaign); updateErr != nil {
+			log.Printf("Warning: Failed to update launch_sequence for campaign %s: %v", campaign.ID, updateErr)
+			// Don't fail the entire operation, just log the warning
+		}
+	}
+
+	return campaign, nil
 }
 
 // Legacy campaign creation methods (kept for backward compatibility)
 
 // HandleCampaignCompletion creates and queues the next campaign in the chain
 // when a campaign completes. Domain generation -> DNS -> HTTP.
+// Only creates the next campaign if the original campaign has launch_sequence=true.
 func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error {
+	log.Printf("[DEBUG] HandleCampaignCompletion called for campaign %s", campaignID)
+	
 	campaign, err := s.campaignStore.GetCampaignByID(ctx, s.db, campaignID)
 	if err != nil {
+		log.Printf("[DEBUG] Failed to get campaign %s: %v", campaignID, err)
 		return err
 	}
+	
+	log.Printf("[DEBUG] Campaign %s type: %s, launch_sequence: %v", campaignID, campaign.CampaignType, campaign.LaunchSequence)
+	
+	// Check if campaign has launch_sequence flag enabled before auto-chaining
+	if !campaign.LaunchSequence {
+		log.Printf("[INFO] Campaign %s has launch_sequence=false, skipping auto-chaining to next campaign type", campaignID)
+		return nil
+	}
+	
+	log.Printf("[INFO] Campaign %s has launch_sequence=true, proceeding with auto-chaining to next campaign type", campaignID)
 
 	switch campaign.CampaignType {
 	case models.CampaignTypeDomainGeneration:
 		enabled := true
 		personas, err := s.personaStore.ListPersonas(ctx, s.db, store.ListPersonasFilter{Type: models.PersonaTypeDNS, IsEnabled: &enabled, Limit: 1})
 		if err != nil || len(personas) == 0 {
+			log.Printf("[ERROR] Failed to find enabled DNS personas for auto-chaining from campaign %s: %v", campaignID, err)
 			return err
 		}
 		req := CreateDNSValidationCampaignRequest{
 			Name:                       campaign.Name + " DNS",
 			SourceGenerationCampaignID: campaignID,
 			PersonaIDs:                 []uuid.UUID{personas[0].ID},
+			UserID:                     *campaign.UserID,
 		}
+		log.Printf("[INFO] Creating DNS validation campaign for auto-chain from campaign %s", campaignID)
 		nextCamp, err := s.dnsService.CreateCampaign(ctx, req)
 		if err != nil {
+			log.Printf("[ERROR] Failed to create DNS validation campaign for auto-chain: %v", err)
 			return err
 		}
+		log.Printf("[INFO] Successfully created DNS validation campaign %s, starting it", nextCamp.ID)
 		return s.StartCampaign(ctx, nextCamp.ID)
+		
 	case models.CampaignTypeDNSValidation:
 		enabled := true
 		personas, err := s.personaStore.ListPersonas(ctx, s.db, store.ListPersonasFilter{Type: models.PersonaTypeHTTP, IsEnabled: &enabled, Limit: 1})
 		if err != nil || len(personas) == 0 {
+			log.Printf("[ERROR] Failed to find enabled HTTP personas for auto-chaining from campaign %s: %v", campaignID, err)
 			return err
 		}
 		sets, err := s.keywordStore.ListKeywordSets(ctx, s.db, store.ListKeywordSetsFilter{Limit: 1})
 		if err != nil || len(sets) == 0 {
+			log.Printf("[ERROR] Failed to find keyword sets for auto-chaining from campaign %s: %v", campaignID, err)
 			return err
 		}
 		req := CreateHTTPKeywordCampaignRequest{
@@ -1177,12 +1225,19 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 			SourceCampaignID: campaignID,
 			PersonaIDs:       []uuid.UUID{personas[0].ID},
 			KeywordSetIDs:    []uuid.UUID{sets[0].ID},
+			UserID:           *campaign.UserID,
 		}
+		log.Printf("[INFO] Creating HTTP keyword validation campaign for auto-chain from campaign %s", campaignID)
 		nextCamp, err := s.httpKeywordService.CreateCampaign(ctx, req)
 		if err != nil {
+			log.Printf("[ERROR] Failed to create HTTP keyword validation campaign for auto-chain: %v", err)
 			return err
 		}
+		log.Printf("[INFO] Successfully created HTTP keyword validation campaign %s, starting it", nextCamp.ID)
 		return s.StartCampaign(ctx, nextCamp.ID)
+		
+	default:
+		log.Printf("[DEBUG] Campaign %s type %s is not configured for auto-chaining", campaignID, campaign.CampaignType)
 	}
 	return nil
 }

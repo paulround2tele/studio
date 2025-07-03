@@ -233,6 +233,7 @@ type Campaign struct {
 	CampaignType       CampaignTypeEnum   `db:"campaign_type" json:"campaignType" validate:"required"`
 	Status             CampaignStatusEnum `db:"status" json:"status" validate:"required"`
 	UserID             *uuid.UUID         `db:"user_id" json:"userId,omitempty"`
+	LaunchSequence     bool               `db:"launch_sequence" json:"launchSequence"` // Whether to automatically chain to next campaign types when this campaign completes
 	CreatedAt          time.Time          `db:"created_at" json:"createdAt"`
 	UpdatedAt          time.Time          `db:"updated_at" json:"updatedAt"`
 	StartedAt          *time.Time         `db:"started_at" json:"startedAt,omitempty"`

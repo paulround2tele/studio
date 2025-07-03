@@ -355,6 +355,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             campaignType: 'domain_generation',
             name: data.name,
             description: data.description,
+            launchSequence: data.launchSequence || false,
             domainGenerationParams: {
               patternType: mapPatternType(data.generationPattern),
               variableLength: variableLength,
@@ -363,7 +364,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               tld: tlds[0] || '.com',
               numDomainsToGenerate: maxDomains,
             },
-          };
+          } as CreateCampaignRequest & { launchSequence?: boolean };
           break;
         }
 
@@ -391,6 +392,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             campaignType: 'dns_validation',
             name: data.name,
             description: data.description,
+            launchSequence: data.launchSequence || false,
             dnsValidationParams: {
               sourceCampaignId: data.sourceCampaignId,
               personaIds: [data.assignedDnsPersonaId],
@@ -399,7 +401,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               batchSize: Number(data.batchSize),
               retryAttempts: Number(data.retryAttempts),
             },
-          };
+          } as CreateCampaignRequest & { launchSequence?: boolean };
           break;
         }
 
@@ -445,6 +447,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             campaignType: 'http_keyword_validation',
             name: data.name,
             description: data.description,
+            launchSequence: data.launchSequence || false,
             httpKeywordParams: {
               sourceCampaignId: data.sourceCampaignId,
               adHocKeywords: adHocKeywords,
@@ -458,7 +461,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               retryAttempts: Number(data.retryAttempts),
               targetHttpPorts: data.targetHttpPorts,
             },
-          };
+          } as CreateCampaignRequest & { launchSequence?: boolean };
           break;
         }
 
@@ -482,25 +485,67 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         return;
       } else {
         // Use the unified endpoint for new campaign creation
+        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Making API call with payload:', {
+          payload: unifiedPayload,
+          timestamp: new Date().toISOString()
+        });
+        
         const response = await apiClient.createCampaign(unifiedPayload);
+        
+        console.log('🌐 [CAMPAIGN_FORM_DEBUG] API response received:', {
+          response,
+          responseType: typeof response,
+          responseKeys: response ? Object.keys(response) : null,
+          timestamp: new Date().toISOString()
+        });
 
-        // The API now returns a Campaign object directly
-        if (response && response.id) {
+        // Handle the API response structure: response is the campaign directly
+        const campaign = response;
+        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Extracted campaign data:', {
+          campaign,
+          campaignId: campaign?.id,
+          campaignName: campaign?.name,
+          timestamp: new Date().toISOString()
+        });
+        
+        if (campaign && campaign.id) {
+          console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign creation successful:', {
+            campaignId: campaign.id,
+            campaignName: campaign.name,
+            launchSequence: data.launchSequence,
+            selectedType: data.selectedType,
+            willStartSequence: data.launchSequence && data.selectedType === 'domain_generation'
+          });
+
           toast({
             title: "Campaign Created Successfully",
-            description: `Campaign "${response.name}" has been created.`,
+            description: `Campaign "${campaign.name}" has been created.`,
             variant: "default"
           });
           
           if (data.launchSequence && data.selectedType === 'domain_generation') {
+            console.log('🚀 [CAMPAIGN_FORM_DEBUG] Starting campaign sequence...');
             try {
-              await apiClient.startCampaign(response.id);
+              await apiClient.startCampaign(campaign.id);
+              console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign sequence started successfully');
             } catch (e) {
-              console.error('Failed to start campaign sequence:', e);
+              console.error('❌ [CAMPAIGN_FORM_DEBUG] Failed to start campaign sequence:', e);
             }
           }
           
-          router.push(`/campaigns/${response.id}`);
+          // 🔍 DIAGNOSTIC: Log the redirect flow for debugging missing type parameter
+          console.log('🧭 [CAMPAIGN_FORM_DEBUG] Preparing navigation after campaign creation:', {
+            campaignId: campaign.id,
+            campaignName: campaign.name,
+            selectedType: data.selectedType,
+            fixedUrl: `/campaigns/${campaign.id}?type=${data.selectedType}`,
+            timestamp: new Date().toISOString()
+          });
+          
+          const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
+          console.log('✅ [CAMPAIGN_FORM_DEBUG] Navigating to campaign page with type parameter:', redirectUrl);
+          
+          router.push(redirectUrl);
           router.refresh();
         } else {
           console.error('[CampaignForm] Campaign creation failed:', response);

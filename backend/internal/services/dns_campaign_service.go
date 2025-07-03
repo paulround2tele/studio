@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -455,7 +456,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 				// Check for batch context cancellation before each persona attempt
 				if batchCtx.Err() != nil {
 					log.Printf("Batch context cancelled during persona processing for domain %s (persona %s)", domainModel.DomainName, persona.ID)
-					finalValidationResult = &dnsvalidator.ValidationResult{Domain: domainModel.DomainName, Status: "Error", Error: fmt.Sprintf("Context cancelled during persona %s processing", persona.ID)}
+					finalValidationResult = &dnsvalidator.ValidationResult{Domain: domainModel.DomainName, Status: constants.DNSStatusError, Error: fmt.Sprintf("Context cancelled during persona %s processing", persona.ID)}
 					goto StoreResultInGoRoutine
 				}
 
@@ -475,7 +476,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 				validator := dnsvalidator.New(validatorConfig)
 				valResult := validator.ValidateSingleDomain(domainModel.DomainName, batchCtx) // Use batchCtx
 
-				if valResult.Status == "Resolved" {
+				if valResult.Status == constants.DNSStatusResolved {
 					finalValidationResult = &valResult
 					successPersonaID = uuid.NullUUID{UUID: persona.ID, Valid: true}
 					goto StoreResultInGoRoutine
@@ -490,7 +491,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 					select {
 					case <-batchCtx.Done(): // Use batchCtx.Done()
 						log.Printf("Batch context cancelled during DNS persona rotation for domain %s", domainModel.DomainName)
-						finalValidationResult = &dnsvalidator.ValidationResult{Domain: domainModel.DomainName, Status: "Error", Error: "Context cancelled during rotation"}
+						finalValidationResult = &dnsvalidator.ValidationResult{Domain: domainModel.DomainName, Status: constants.DNSStatusError, Error: "Context cancelled during rotation"}
 						goto StoreResultInGoRoutine
 					case <-time.After(time.Duration(rotationInterval) * time.Second):
 						// Continue
@@ -503,7 +504,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 				log.Printf("Batch context cancelled after all DNS persona attempts for domain %s", domainModel.DomainName)
 				finalValidationResult = &dnsvalidator.ValidationResult{
 					Domain: domainModel.DomainName,
-					Status: "Error",
+					Status: constants.DNSStatusError,
 					Error:  "Context cancelled after all attempts",
 				}
 			}
@@ -513,7 +514,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 				log.Printf("CRITICAL: finalValidationResult is nil for domain %s before storing. Setting to generic error.", domainModel.DomainName)
 				finalValidationResult = &dnsvalidator.ValidationResult{
 					Domain: domainModel.DomainName,
-					Status: "Error",
+					Status: constants.DNSStatusError,
 					Error:  "Internal processing error: validation result not captured.",
 				}
 			}

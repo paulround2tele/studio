@@ -215,7 +215,7 @@ func (dv *DNSValidator) ValidateSingleDomain(domain string, ctx context.Context)
 		for {
 			select {
 			case <-ctx.Done():
-				return ValidationResult{Domain: domain, Status: "Error", Error: "Context canceled before validation attempt", Timestamp: time.Now().Format(time.RFC3339)}
+				return ValidationResult{Domain: domain, Status: constants.DNSStatusError, Error: "Context canceled before validation attempt", Timestamp: time.Now().Format(time.RFC3339)}
 			default:
 			}
 			result := dv.performSingleDomainAttempt(domain, ctx)
@@ -256,12 +256,12 @@ func (dv *DNSValidator) performSingleDomainAttempt(domain string, ctx context.Co
 	// It also ensures that parts of the domain are not just hyphens.
 	re := regexp.MustCompile(`^([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,63}$`)
 	if !re.MatchString(domain) || strings.Contains(domain, "..") || strings.HasPrefix(domain, "-") || strings.HasSuffix(domain, "-") {
-		return ValidationResult{Domain: domain, Status: "Error", Error: "Invalid domain format", Timestamp: startTime.Format(time.RFC3339), DurationMs: time.Since(startTime).Milliseconds()}
+		return ValidationResult{Domain: domain, Status: constants.DNSStatusError, Error: "Invalid domain format", Timestamp: startTime.Format(time.RFC3339), DurationMs: time.Since(startTime).Milliseconds()}
 	}
 
 	resolverClient, err := dv.getNextResolver()
 	if err != nil {
-		return ValidationResult{Domain: domain, Status: "Error", Error: "Failed to get resolver: " + err.Error(), Timestamp: startTime.Format(time.RFC3339), DurationMs: time.Since(startTime).Milliseconds()}
+		return ValidationResult{Domain: domain, Status: constants.DNSStatusError, Error: "Failed to get resolver: " + err.Error(), Timestamp: startTime.Format(time.RFC3339), DurationMs: time.Since(startTime).Milliseconds()}
 	}
 
 	if dv.config.QueryDelayMin > 0 && dv.config.QueryDelayMax > 0 && dv.config.QueryDelayMax >= dv.config.QueryDelayMin {
@@ -273,7 +273,7 @@ func (dv *DNSValidator) performSingleDomainAttempt(domain string, ctx context.Co
 		select {
 		case <-time.After(randomDelay):
 		case <-ctx.Done():
-			return ValidationResult{Domain: domain, Status: "Error", Error: "Context canceled during query delay", Resolver: resolverClient.Address, Timestamp: startTime.Format(time.RFC3339), DurationMs: time.Since(startTime).Milliseconds()}
+			return ValidationResult{Domain: domain, Status: constants.DNSStatusError, Error: "Context canceled during query delay", Resolver: resolverClient.Address, Timestamp: startTime.Format(time.RFC3339), DurationMs: time.Since(startTime).Milliseconds()}
 		}
 	}
 
@@ -287,7 +287,7 @@ func (dv *DNSValidator) performSingleDomainAttempt(domain string, ctx context.Co
 	// Initial check if context is already cancelled before launching any queries.
 	select {
 	case <-ctx.Done():
-		return ValidationResult{Domain: domain, Status: "Error", Error: "Context canceled before starting queries for domain: " + ctx.Err().Error(), Resolver: resolverClient.Address, Timestamp: startTime.Format(time.RFC3339), DurationMs: time.Since(startTime).Milliseconds()}
+		return ValidationResult{Domain: domain, Status: constants.DNSStatusError, Error: "Context canceled before starting queries for domain: " + ctx.Err().Error(), Resolver: resolverClient.Address, Timestamp: startTime.Format(time.RFC3339), DurationMs: time.Since(startTime).Milliseconds()}
 	default:
 	}
 
@@ -383,21 +383,21 @@ func (dv *DNSValidator) performSingleDomainAttempt(domain string, ctx context.Co
 	}
 
 	if establishedError != nil {
-		result.Status = "Error" // Default status if error occurred
+		result.Status = constants.DNSStatusError // Default status if error occurred
 		// Use errors.Is for more robust context cancellation checks
 		if errors.Is(establishedError, context.Canceled) || errors.Is(establishedError, context.DeadlineExceeded) {
-			result.Status = "Cancelled"
+			result.Status = constants.DNSStatusError
 		} else if dnsErr, ok := establishedError.(*net.DNSError); ok {
 			if dnsErr.IsNotFound {
 				result.Status = constants.DNSStatusNotFound
 			}
 			if dnsErr.IsTimeout { // Timeout can override "Not Found"
-				result.Status = "Timeout"
+				result.Status = constants.DNSStatusTimeout
 			}
 		} else if isNXDOMAIN(establishedError) {
 			result.Status = constants.DNSStatusNotFound
 		} else if isTimeout(establishedError) {
-			result.Status = "Timeout"
+			result.Status = constants.DNSStatusTimeout
 		}
 		// If status is still "Error", it's some other kind of error not specifically handled above.
 		result.Error = establishedError.Error()
@@ -405,7 +405,7 @@ func (dv *DNSValidator) performSingleDomainAttempt(domain string, ctx context.Co
 		// If establishedError is nil, it implies queries were successful and IPs were found.
 		// (because if IPs were not found, establishedError would have been set in the block above).
 		// Thus, len(finalIPs) should be > 0 here.
-		result.Status = "Resolved"
+		result.Status = constants.DNSStatusResolved
 		result.IPs = deduplicateIPs(finalIPs)
 	}
 	return result

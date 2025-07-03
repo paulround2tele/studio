@@ -324,6 +324,7 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 					if activeJobsCount == 0 {
 						log.Printf("Worker [%s]: No other active jobs found for campaign %s, campaign may be complete", workerName, job.CampaignID)
 						if s.campaignOrchestratorSvc != nil {
+							log.Printf("[DEBUG] Worker [%s]: Calling HandleCampaignCompletion for campaign %s - this will auto-chain campaigns!", workerName, job.CampaignID)
 							if err := s.campaignOrchestratorSvc.HandleCampaignCompletion(jobCtx, job.CampaignID); err != nil {
 								log.Printf("Worker [%s]: Error handling completion for campaign %s: %v", workerName, job.CampaignID, err)
 							}

@@ -35,10 +35,11 @@ type UpdateCampaignRequest struct {
 // --- Unified Campaign Creation Request DTO ---
 
 type CreateCampaignRequest struct {
-	CampaignType string    `json:"campaignType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation"`
-	Name         string    `json:"name" validate:"required"`
-	Description  string    `json:"description,omitempty"`
-	UserID       uuid.UUID `json:"userId,omitempty"`
+	CampaignType   string    `json:"campaignType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation"`
+	Name           string    `json:"name" validate:"required"`
+	Description    string    `json:"description,omitempty"`
+	UserID         uuid.UUID `json:"userId,omitempty"`
+	LaunchSequence bool      `json:"launchSequence,omitempty"` // Whether to automatically chain to next campaign types when this campaign completes
 
 	// Domain Generation specific fields
 	DomainGenerationParams *DomainGenerationParams `json:"domainGenerationParams,omitempty"`

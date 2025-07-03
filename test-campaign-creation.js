@@ -25,8 +25,8 @@ async function testCampaignCreation() {
     
     // Step 2: Login
     console.log('🔐 Step 2: Performing login...');
-    await page.type('input[placeholder*="email"]', 'admin@domainflow.com');
-    await page.type('input[placeholder*="password"]', 'admin123');
+    await page.type('input[placeholder*="email"]', 'test@example.com');
+    await page.type('input[placeholder*="password"]', 'password123');
     
     // Wait for and click login button
     await page.waitForSelector('button[type="submit"]');

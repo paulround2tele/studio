@@ -287,6 +287,16 @@ export const useLoadingStore = create<LoadingStore>()(
         if (state.enableDebugMode) {
           logger.warn('LOADING_STORE', `Attempted to stop non-loading operation: ${operation}`);
         }
+        // 🔍 DIAGNOSTIC: Enhanced logging to trace the missing type parameter issue
+        console.log('⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation:', {
+          operation,
+          hasLoadingState: !!loadingState,
+          isCurrentlyLoading: loadingState?.isLoading || false,
+          operationStartTime: loadingState?.startTime,
+          currentTime: Date.now(),
+          allActiveOperations: Object.keys(state.operations).filter(key => state.operations[key]?.isLoading),
+          reason: 'This usually happens when campaign details page fails validation and calls stopLoading early'
+        });
         return;
       }
 

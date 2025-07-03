@@ -199,17 +199,77 @@ export default function CampaignDashboardPage() {
 
 
   const loadCampaignData = useCallback(async (showLoadingSpinner = true) => {
+    // 🔍 DIAGNOSTIC: Enhanced logging for campaign details issue
+    const loadStartTime = Date.now();
+    console.log('🔍 [CAMPAIGN_DETAILS_DEBUG] loadCampaignData called with:', {
+      campaignId,
+      campaignTypeFromQuery,
+      hasValidCampaignId: !!campaignId,
+      hasValidCampaignType: !!campaignTypeFromQuery,
+      currentUrl: window.location.href,
+      searchParamsString: window.location.search,
+      allSearchParams: Object.fromEntries(searchParams.entries()),
+      timestamp: new Date().toISOString(),
+      loadStartTime
+    });
+    
     if (!campaignId || !campaignTypeFromQuery) { // campaignTypeFromQuery check added
+      console.log('❌ [CAMPAIGN_DETAILS_DEBUG] VALIDATION FAILED - Missing required parameters:', {
+        campaignId: campaignId || 'MISSING',
+        campaignTypeFromQuery: campaignTypeFromQuery || 'MISSING',
+        allAvailableParams: Object.fromEntries(searchParams.entries()),
+        urlBreakdown: {
+          pathname: window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+          href: window.location.href
+        },
+        willShowError: true,
+        willStopLoading: true
+      });
+      
       toast({ title: "Error", description: "Campaign ID or Type missing from URL.", variant: "destructive" });
       if(isMountedRef.current) stopLoading(loadingOperationId);
       return;
     }
     if(showLoadingSpinner && isMountedRef.current) startLoading(loadingOperationId, "Loading campaign details");
+    
+    console.log('🚀 [CAMPAIGN_DETAILS_DEBUG] Starting API call to getCampaignById:', {
+      campaignId,
+      apiCallStartTime: Date.now(),
+      timeSinceLoadStart: Date.now() - loadStartTime
+    });
+    
     try {
         // Generic getCampaignById is fine as backend V2 returns type-specific params
+        const apiCallStartTime = Date.now();
         const campaignDetailsResponse = await getCampaignById(campaignId);
+        const apiCallDuration = Date.now() - apiCallStartTime;
+        
+        console.log('📥 [CAMPAIGN_DETAILS_DEBUG] getCampaignById response received:', {
+          campaignId,
+          responseReceived: !!campaignDetailsResponse,
+          hasCampaign: !!(campaignDetailsResponse && campaignDetailsResponse.campaign),
+          campaignData: campaignDetailsResponse?.campaign ? {
+            id: campaignDetailsResponse.campaign.id,
+            name: campaignDetailsResponse.campaign.name,
+            campaignType: campaignDetailsResponse.campaign.campaignType,
+            status: campaignDetailsResponse.campaign.status
+          } : null,
+          apiCallDuration,
+          totalTimeSinceLoadStart: Date.now() - loadStartTime,
+          timestamp: new Date().toISOString()
+        });
 
         if (campaignDetailsResponse && campaignDetailsResponse.campaign) {
+            console.log('✅ [CAMPAIGN_DETAILS_DEBUG] Campaign data found, processing:', {
+              campaignId: campaignDetailsResponse.campaign.id,
+              campaignName: campaignDetailsResponse.campaign.name,
+              campaignType: campaignDetailsResponse.campaign.campaignType,
+              campaignStatus: campaignDetailsResponse.campaign.status,
+              processingStartTime: Date.now()
+            });
+            
             if(isMountedRef.current) {
               setCampaign(transformCampaignToViewModel(campaignDetailsResponse.campaign));
               // Domain generation stream will update streamedDomains, which is then merged here.
@@ -224,19 +284,57 @@ export default function CampaignDashboardPage() {
                 }
               }
             }
+            
+            console.log('✅ [CAMPAIGN_DETAILS_DEBUG] Campaign state updated successfully:', {
+              totalProcessingTime: Date.now() - loadStartTime,
+              campaignLoaded: true
+            });
         } else {
+            console.log('❌ [CAMPAIGN_DETAILS_DEBUG] Campaign not found in response:', {
+              campaignId,
+              responseStructure: campaignDetailsResponse ? Object.keys(campaignDetailsResponse) : 'null/undefined',
+              fullResponse: campaignDetailsResponse,
+              possibleCause: 'Campaign may not exist or API returned unexpected structure',
+              totalTimeSinceLoadStart: Date.now() - loadStartTime
+            });
+            
             toast({ title: "Error Loading Campaign", description: "Failed to load campaign data.", variant: "destructive"});
             if(isMountedRef.current) setCampaign(null);
         }
     } catch (error: unknown) {
-        console.error("Failed to load campaign data:", error);
+        const apiErrorTime = Date.now() - loadStartTime;
+        console.error('❌ [CAMPAIGN_DETAILS_DEBUG] API call failed:', {
+          campaignId,
+          error: error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          } : error,
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          apiErrorTime,
+          possibleCauses: [
+            'Campaign does not exist in database',
+            'Race condition - campaign creation not yet committed',
+            'API endpoint error',
+            'Network connectivity issue',
+            'Authentication/authorization issue'
+          ]
+        });
+        
         const errorMessage = error instanceof Error ? error.message : "An unexpected network error occurred.";
         toast({ title: "Error", description: errorMessage, variant: "destructive"});
         if(isMountedRef.current) setCampaign(null);
     } finally {
         if(showLoadingSpinner && isMountedRef.current) stopLoading(loadingOperationId);
+        
+        console.log('🏁 [CAMPAIGN_DETAILS_DEBUG] loadCampaignData completed:', {
+          campaignId,
+          totalDuration: Date.now() - loadStartTime,
+          success: !!campaign,
+          timestamp: new Date().toISOString()
+        });
     }
-  }, [campaignId, campaignTypeFromQuery, toast, startLoading, stopLoading, loadingOperationId]);
+  }, [campaignId, campaignTypeFromQuery, toast, startLoading, stopLoading, loadingOperationId, searchParams, campaign]);
 
   useEffect(() => {
     loadCampaignData();
