@@ -484,37 +484,171 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         });
         return;
       } else {
-        // Use the unified endpoint for new campaign creation
-        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Making API call with payload:', {
+        // Enhanced diagnostic logging for campaign creation flow
+        const creationStartTime = Date.now();
+        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Starting campaign creation process:', {
           payload: unifiedPayload,
+          selectedType: data.selectedType,
+          campaignName: data.name,
+          creationStartTime,
           timestamp: new Date().toISOString()
         });
         
+        const apiCallStartTime = Date.now();
         const response = await apiClient.createCampaign(unifiedPayload);
+        const apiCallDuration = Date.now() - apiCallStartTime;
         
-        console.log('🌐 [CAMPAIGN_FORM_DEBUG] API response received:', {
+        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Campaign creation API response received:', {
           response,
           responseType: typeof response,
           responseKeys: response ? Object.keys(response) : null,
+          apiCallDuration,
+          timeSinceCreationStart: Date.now() - creationStartTime,
           timestamp: new Date().toISOString()
         });
 
-        // Handle the API response structure: response is the campaign directly
-        const campaign = response;
-        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Extracted campaign data:', {
+        // 🔧 COMPREHENSIVE FIX: Handle ALL possible response structures
+        let campaign;
+        
+        // 🔍 ENHANCED DIAGNOSTIC: Comprehensive response analysis with JSON serialization
+        const responseAnalysis = {
+          responseType: typeof response,
+          isArray: Array.isArray(response),
+          isNull: response === null,
+          isUndefined: response === undefined,
+          hasKeys: response && typeof response === 'object' ? Object.keys(response) : null,
+          arrayLength: Array.isArray(response) ? response.length : undefined,
+          rawResponseJSON: (() => {
+            try {
+              return JSON.stringify(response, null, 2);
+            } catch (e) {
+              return `JSON stringify failed: ${e.message}`;
+            }
+          })(),
+          timestamp: new Date().toISOString()
+        };
+        
+        console.log('🔧 [CAMPAIGN_FORM_DEBUG] COMPREHENSIVE response analysis:', responseAnalysis);
+        
+        // 🔍 STRATEGY 1: Check if response is an array
+        if (Array.isArray(response)) {
+          console.log('🔧 [STRATEGY_1] Response is ARRAY - analyzing elements...');
+          
+          const elementAnalysis = response.map((item, index) => {
+            if (item && typeof item === 'object') {
+              return {
+                index,
+                type: typeof item,
+                keys: Object.keys(item),
+                hasId: 'id' in item,
+                idValue: item.id,
+                serialized: JSON.stringify(item, null, 2).substring(0, 300)
+              };
+            }
+            return { index, type: typeof item, value: item };
+          });
+          
+          console.log('🔧 [STRATEGY_1] Array elements analysis:', elementAnalysis);
+          
+          // Find first valid campaign object
+          campaign = response.find(item =>
+            item &&
+            typeof item === 'object' &&
+            'id' in item &&
+            item.id
+          ) || response[0];
+          
+          console.log('🔧 [STRATEGY_1] Selected campaign from array:', {
+            selectedIndex: campaign ? response.indexOf(campaign) : -1,
+            campaignId: campaign?.id,
+            campaignName: campaign?.name
+          });
+          
+        // 🔍 STRATEGY 2: Check if response is direct object with ID
+        } else if (response && typeof response === 'object' && 'id' in response) {
+          console.log('🔧 [STRATEGY_2] Response is DIRECT OBJECT with ID');
+          campaign = response;
+          
+        // 🔍 STRATEGY 3: Check if response is wrapper object containing campaign
+        } else if (response && typeof response === 'object') {
+          console.log('🔧 [STRATEGY_3] Response is OBJECT - searching for nested campaign...');
+          
+          const possibleKeys = ['campaign', 'data', 'result', 'payload', 'campaign_data'];
+          let foundCampaign = null;
+          
+          for (const key of possibleKeys) {
+            if (key in response && response[key] && typeof response[key] === 'object') {
+              if ('id' in response[key] && response[key].id) {
+                foundCampaign = response[key];
+                console.log(`🔧 [STRATEGY_3] Found campaign in response.${key}:`, {
+                  id: foundCampaign.id,
+                  name: foundCampaign.name,
+                  keys: Object.keys(foundCampaign)
+                });
+                break;
+              }
+            }
+          }
+          
+          if (!foundCampaign) {
+            // Try to find any nested object with an id
+            const searchNested = (obj, path = '') => {
+              for (const [key, value] of Object.entries(obj)) {
+                if (value && typeof value === 'object' && 'id' in value && value.id) {
+                  return { campaign: value, path: `${path}.${key}` };
+                }
+                if (value && typeof value === 'object' && !Array.isArray(value)) {
+                  const nested = searchNested(value, `${path}.${key}`);
+                  if (nested) return nested;
+                }
+              }
+              return null;
+            };
+            
+            const nestedResult = searchNested(response);
+            if (nestedResult) {
+              foundCampaign = nestedResult.campaign;
+              console.log(`🔧 [STRATEGY_3] Found campaign at path ${nestedResult.path}:`, {
+                id: foundCampaign.id,
+                name: foundCampaign.name
+              });
+            }
+          }
+          
+          campaign = foundCampaign;
+          
+        // 🔍 STRATEGY 4: Unexpected structure
+        } else {
+          console.error('🔧 [STRATEGY_4] UNEXPECTED response structure - cannot extract campaign');
+          campaign = null;
+        }
+        
+        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Final campaign processing result:', {
           campaign,
           campaignId: campaign?.id,
           campaignName: campaign?.name,
+          campaignStatus: campaign?.status,
+          hasValidId: !!(campaign?.id),
+          campaignData: campaign ? {
+            id: campaign.id,
+            name: campaign.name,
+            campaignType: campaign.campaignType,
+            status: campaign.status,
+            createdAt: campaign.createdAt
+          } : null,
           timestamp: new Date().toISOString()
         });
         
         if (campaign && campaign.id) {
-          console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign creation successful:', {
+          console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign creation successful - starting post-creation flow:', {
             campaignId: campaign.id,
             campaignName: campaign.name,
+            campaignType: campaign.campaignType,
+            campaignStatus: campaign.status,
             launchSequence: data.launchSequence,
             selectedType: data.selectedType,
-            willStartSequence: data.launchSequence && data.selectedType === 'domain_generation'
+            willStartSequence: data.launchSequence && data.selectedType === 'domain_generation',
+            totalCreationTime: Date.now() - creationStartTime
           });
 
           toast({
@@ -526,29 +660,65 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           if (data.launchSequence && data.selectedType === 'domain_generation') {
             console.log('🚀 [CAMPAIGN_FORM_DEBUG] Starting campaign sequence...');
             try {
+              const startSequenceTime = Date.now();
               await apiClient.startCampaign(campaign.id);
-              console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign sequence started successfully');
+              console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign sequence started successfully:', {
+                startSequenceDuration: Date.now() - startSequenceTime
+              });
             } catch (e) {
               console.error('❌ [CAMPAIGN_FORM_DEBUG] Failed to start campaign sequence:', e);
             }
           }
           
-          // 🔍 DIAGNOSTIC: Log the redirect flow for debugging missing type parameter
+          // 🔍 RACE CONDITION DIAGNOSTIC: Add delay to test if immediate navigation causes issues
+          const navigationPrepTime = Date.now();
           console.log('🧭 [CAMPAIGN_FORM_DEBUG] Preparing navigation after campaign creation:', {
             campaignId: campaign.id,
             campaignName: campaign.name,
             selectedType: data.selectedType,
-            fixedUrl: `/campaigns/${campaign.id}?type=${data.selectedType}`,
+            targetUrl: `/campaigns/${campaign.id}?type=${data.selectedType}`,
+            timeSinceCreation: Date.now() - creationStartTime,
+            navigationPrepTime,
+            willAddDelay: true,
             timestamp: new Date().toISOString()
           });
           
           const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
-          console.log('✅ [CAMPAIGN_FORM_DEBUG] Navigating to campaign page with type parameter:', redirectUrl);
+          
+          // 🔍 RACE CONDITION TEST: Add small delay to see if immediate navigation is the issue
+          console.log('⏱️ [CAMPAIGN_FORM_DEBUG] Adding 500ms delay before navigation to test race condition hypothesis...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const navigationStartTime = Date.now();
+          console.log('✅ [CAMPAIGN_FORM_DEBUG] Starting navigation to campaign page:', {
+            redirectUrl,
+            navigationStartTime,
+            totalTimeBeforeNavigation: navigationStartTime - creationStartTime,
+            campaignShouldExist: true
+          });
           
           router.push(redirectUrl);
-          router.refresh();
+          
+          // Add additional delay before refresh to ensure navigation completes
+          setTimeout(() => {
+            console.log('🔄 [CAMPAIGN_FORM_DEBUG] Triggering router refresh after navigation:', {
+              refreshTime: Date.now(),
+              totalProcessTime: Date.now() - creationStartTime
+            });
+            router.refresh();
+          }, 100);
         } else {
-          console.error('[CampaignForm] Campaign creation failed:', response);
+          console.error('❌ [CAMPAIGN_FORM_DEBUG] Campaign creation failed - invalid response:', {
+            response,
+            expectedStructure: 'Should have campaign.id',
+            actualStructure: response ? Object.keys(response) : 'null/undefined',
+            possibleCauses: [
+              'API returned different structure than expected',
+              'Campaign creation failed on backend',
+              'Response parsing issue'
+            ],
+            timestamp: new Date().toISOString()
+          });
           
           const errorMessage = "Failed to create campaign. Please check your inputs and try again.";
           setFormMainError(errorMessage);

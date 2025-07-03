@@ -241,12 +241,98 @@ export default function CampaignDashboardPage() {
     });
     
     try {
-        // Generic getCampaignById is fine as backend V2 returns type-specific params
+        // 🔧 FIX: Handle backend response structure for getCampaignById
         const apiCallStartTime = Date.now();
-        const campaignDetailsResponse = await getCampaignById(campaignId);
+        const rawResponse = await getCampaignById(campaignId);
         const apiCallDuration = Date.now() - apiCallStartTime;
         
-        console.log('📥 [CAMPAIGN_DETAILS_DEBUG] getCampaignById response received:', {
+        console.log('📥 [CAMPAIGN_DETAILS_DEBUG] Raw getCampaignById response received:', {
+          campaignId,
+          rawResponse,
+          responseType: typeof rawResponse,
+          isArray: Array.isArray(rawResponse),
+          responseKeys: rawResponse ? Object.keys(rawResponse) : null,
+          responseLength: Array.isArray(rawResponse) ? rawResponse.length : undefined,
+          apiCallDuration,
+          totalTimeSinceLoadStart: Date.now() - loadStartTime,
+          timestamp: new Date().toISOString()
+        });
+        
+        // 🔧 FIX: Extract campaign from different possible response structures
+        let campaignDetailsResponse;
+        
+        if (Array.isArray(rawResponse)) {
+          console.log('🔧 [CAMPAIGN_DETAILS_DEBUG] getCampaignById returned array, extracting campaign:', {
+            arrayLength: rawResponse.length,
+            elements: rawResponse.map((item, index) => ({
+              index,
+              type: typeof item,
+              hasId: !!(item && typeof item === 'object' && 'id' in item),
+              keys: item && typeof item === 'object' ? Object.keys(item) : null
+            }))
+          });
+          
+          // Look for the campaign object in the array
+          const campaign = rawResponse.find(item =>
+            item &&
+            typeof item === 'object' &&
+            'id' in item &&
+            item.id === campaignId
+          ) || rawResponse[0]; // Fallback to first element
+          
+          console.log('🔧 [CAMPAIGN_DETAILS_DEBUG] Extracted campaign from array for details:', {
+            selectedIndex: rawResponse.indexOf(campaign),
+            extractedCampaign: campaign,
+            hasValidId: !!(campaign && campaign.id)
+          });
+          
+          // Wrap it in the expected structure
+          campaignDetailsResponse = campaign ? { campaign } : null;
+        } else if (rawResponse && typeof rawResponse === 'object') {
+          // Check if it's already wrapped or a direct campaign object
+          if ('campaign' in rawResponse) {
+            // Already wrapped
+            campaignDetailsResponse = rawResponse;
+            console.log('🔧 [CAMPAIGN_DETAILS_DEBUG] Using already-wrapped campaign object');
+          } else if ('id' in rawResponse) {
+            // Direct campaign object, wrap it
+            campaignDetailsResponse = { campaign: rawResponse };
+            console.log('🔧 [CAMPAIGN_DETAILS_DEBUG] Wrapping direct campaign object');
+          } else {
+            // 🔧 NEW: Check for nested campaign in data/result/payload properties
+            console.log('🔧 [CAMPAIGN_DETAILS_DEBUG] Checking for nested campaign structure...');
+            
+            const possibleKeys = ['data', 'campaign', 'result', 'payload', 'campaign_data'];
+            let foundCampaign = null;
+            
+            for (const key of possibleKeys) {
+              if (key in rawResponse && rawResponse[key] && typeof rawResponse[key] === 'object') {
+                if ('id' in rawResponse[key] && rawResponse[key].id) {
+                  foundCampaign = rawResponse[key];
+                  console.log(`🔧 [CAMPAIGN_DETAILS_DEBUG] Found campaign in rawResponse.${key}:`, {
+                    id: foundCampaign.id,
+                    name: foundCampaign.name,
+                    keys: Object.keys(foundCampaign)
+                  });
+                  break;
+                }
+              }
+            }
+            
+            if (foundCampaign) {
+              campaignDetailsResponse = { campaign: foundCampaign };
+              console.log('✅ [CAMPAIGN_DETAILS_DEBUG] Successfully extracted nested campaign');
+            } else {
+              console.error('🔧 [CAMPAIGN_DETAILS_DEBUG] No valid campaign found in response structure');
+              campaignDetailsResponse = null;
+            }
+          }
+        } else {
+          console.error('🔧 [CAMPAIGN_DETAILS_DEBUG] Invalid response type');
+          campaignDetailsResponse = null;
+        }
+        
+        console.log('📥 [CAMPAIGN_DETAILS_DEBUG] Final processed response:', {
           campaignId,
           responseReceived: !!campaignDetailsResponse,
           hasCampaign: !!(campaignDetailsResponse && campaignDetailsResponse.campaign),
@@ -256,8 +342,7 @@ export default function CampaignDashboardPage() {
             campaignType: campaignDetailsResponse.campaign.campaignType,
             status: campaignDetailsResponse.campaign.status
           } : null,
-          apiCallDuration,
-          totalTimeSinceLoadStart: Date.now() - loadStartTime,
+          processingSuccess: true,
           timestamp: new Date().toISOString()
         });
 
