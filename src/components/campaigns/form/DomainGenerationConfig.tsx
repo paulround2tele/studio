@@ -26,6 +26,7 @@ interface CampaignFormValues {
   prefixVariableLength?: number;
   suffixVariableLength?: number;
   maxDomainsToGenerate?: number;
+  domainGenerationOffset?: number; // 🔧 PHASE 4: Backend offset support
   targetKeywordsInput?: string;
   scrapingRateLimitRequests?: number;
   scrapingRateLimitPer?: 'second' | 'minute';
@@ -233,6 +234,27 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
             <FormControl>
               <Input type="number" min="1" placeholder="1000" {...field} />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+
+        {/* 🔧 PHASE 4: Backend Offset Parameter for Domain Generation Deduplication */}
+        <FormField control={control} name="domainGenerationOffset" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Generation Offset</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min="0"
+                placeholder="0"
+                {...field}
+                title="Start generation from this offset to avoid duplicates from previous campaigns with the same pattern"
+              />
+            </FormControl>
+            <div className="text-xs text-muted-foreground mt-1">
+              Start domain generation from this offset to prevent duplicates across campaigns with the same pattern.
+              Use 0 for new patterns, or set to the end of previous campaigns to continue where they left off.
+            </div>
             <FormMessage />
           </FormItem>
         )} />

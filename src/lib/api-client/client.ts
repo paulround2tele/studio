@@ -381,7 +381,32 @@ export class ApiClient {
         }
 
         const responseData = await response.json();
-        console.log('API_CLIENT_DEBUG - Successful response parsed');
+        console.log('API_CLIENT_DEBUG - Successful response parsed:', {
+          url: url.toString(),
+          method: method,
+          status: response.status,
+          responseType: typeof responseData,
+          responseKeys: responseData && typeof responseData === 'object' ? Object.keys(responseData) : null,
+          responseKeysCount: responseData && typeof responseData === 'object' ? Object.keys(responseData).length : 0,
+          isEmptyObject: responseData && typeof responseData === 'object' && Object.keys(responseData).length === 0,
+          responseData: responseData
+        });
+        
+        // 🔧 CRITICAL: Check for empty object responses which indicate backend issues
+        if (responseData && typeof responseData === 'object' && Object.keys(responseData).length === 0) {
+          console.warn('⚠️ API_CLIENT_DEBUG - Empty object response detected:', {
+            url: url.toString(),
+            method: method,
+            status: response.status,
+            possibleCauses: [
+              'Authentication/authorization issue',
+              'Backend returning empty response',
+              'Database connection problem',
+              'Backend not properly handling request'
+            ]
+          });
+        }
+        
         return responseData;
 
       } catch (error) {
@@ -475,10 +500,18 @@ export class ApiClient {
 
   // CAMPAIGN API METHODS
   async listCampaigns() {
-    return this.request<GetOperationResponse<ApiPaths['/campaigns']['get']>>(
-      '/campaigns', 
-      'GET'
-    );
+    console.log('🔧 [API_CLIENT] Starting listCampaigns request...');
+    try {
+      const result = this.request<GetOperationResponse<ApiPaths['/campaigns']['get']>>(
+        '/campaigns',
+        'GET'
+      );
+      console.log('🔧 [API_CLIENT] listCampaigns request initiated');
+      return result;
+    } catch (error) {
+      console.error('❌ [API_CLIENT] listCampaigns failed:', error);
+      throw error;
+    }
   }
 
   async createCampaign(data: OperationRequestBody<ApiPaths['/campaigns']['post']>) {

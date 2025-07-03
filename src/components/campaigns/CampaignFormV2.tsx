@@ -61,6 +61,7 @@ export interface CampaignViewModel extends Omit<BaseCampaign, 'dnsValidationPara
     prefixVariableLength?: number;
     suffixVariableLength?: number;
     maxDomainsToGenerate?: number;
+    domainGenerationOffset?: number; // 🔧 PHASE 4: Backend offset support
   };
   leadGenerationSpecificConfig?: {
     targetKeywords?: string[];
@@ -116,6 +117,7 @@ interface CampaignFormValues {
   prefixVariableLength?: number;
   suffixVariableLength?: number;
   maxDomainsToGenerate?: number;
+  domainGenerationOffset?: number; // 🔧 PHASE 4: Backend offset support
   targetKeywordsInput?: string;
   scrapingRateLimitRequests?: number;
   scrapingRateLimitPer?: 'second' | 'minute';
@@ -223,6 +225,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
       prefixVariableLength: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.prefixVariableLength === undefined ? undefined : Number(campaignToEdit.domainGenerationConfig.prefixVariableLength)) : 3,
       suffixVariableLength: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.suffixVariableLength === undefined ? undefined : Number(campaignToEdit.domainGenerationConfig.suffixVariableLength)) : 0,
       maxDomainsToGenerate: isEditing && campaignToEdit ? campaignToEdit.domainGenerationConfig?.maxDomainsToGenerate : 1000,
+      domainGenerationOffset: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.domainGenerationOffset || 0) : 0, // 🔧 PHASE 4: Default offset 0
       
       targetKeywordsInput: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.targetKeywords?.join(', ') || "") : "telecom, voip, saas",
       scrapingRateLimitRequests: isEditing && campaignToEdit ? campaignToEdit.leadGenerationSpecificConfig?.scrapingRateLimit?.requests : 1,
@@ -363,6 +366,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               constantString: data.constantPart.trim(),
               tld: tlds[0] || '.com',
               numDomainsToGenerate: maxDomains,
+              offset: data.domainGenerationOffset || 0, // 🔧 PHASE 4: Backend offset for deduplication
             },
           } as CreateCampaignRequest & { launchSequence?: boolean };
           break;

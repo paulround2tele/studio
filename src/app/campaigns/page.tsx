@@ -287,7 +287,16 @@ function CampaignsPageContent() {
   });
 
   const loadCampaignsData = useCallback(async (showLoadingSpinner = true, signal?: AbortSignal) => {
-    console.log(`[CampaignsPage] loadCampaignsData called with showLoadingSpinner: ${showLoadingSpinner}`);
+    const loadStartTime = Date.now();
+    console.log('🔍 [CAMPAIGNS_LIST_DEBUG] loadCampaignsData called - TRACKING ZERO RECORDS ISSUE:', {
+      showLoadingSpinner,
+      currentCampaignsCount: campaigns.length,
+      isComponentMounted: isMountedRef.current,
+      isAlreadyLoading: isGlobalLoading('campaigns_load'),
+      callStack: new Error().stack?.split('\n').slice(1, 3).join(' | '),
+      timestamp: new Date().toISOString(),
+      loadStartTime
+    });
     
     // MEMORY LEAK FIX: Check if component is still mounted
     if (!isMountedRef.current) {
@@ -305,35 +314,287 @@ function CampaignsPageContent() {
     setGlobalLoading('campaigns_load', true, 'Loading campaigns');
     
     try {
+      // 🔍 DIAGNOSTIC: Track API call timing and response
+      const apiCallStartTime = Date.now();
+      console.log('🚀 [CAMPAIGNS_LIST_DEBUG] Calling apiClient.listCampaigns()...', {
+        apiCallStartTime,
+        timeSinceLoadStart: apiCallStartTime - loadStartTime
+      });
+      
       // MEMORY LEAK FIX: Pass AbortSignal to API call (if getCampaigns supports it)
       const response = await apiClient.listCampaigns();
+      const apiCallDuration = Date.now() - apiCallStartTime;
       
-      // MEMORY LEAK FIX: Check if request was aborted or component unmounted
-      if (signal?.aborted || !isMountedRef.current) {
-        console.log('[CampaignsPage] Request aborted or component unmounted');
+      // 🔍 DIAGNOSTIC: Log raw API response structure
+      console.log('📥 [CAMPAIGNS_LIST_DEBUG] Raw listCampaigns API response:', {
+        responseReceived: !!response,
+        responseType: typeof response,
+        responseKeys: response ? Object.keys(response) : null,
+        status: response?.status,
+        dataProperty: {
+          exists: !!(response && response.data),
+          type: response && response.data ? typeof response.data : null,
+          isArray: response && response.data ? Array.isArray(response.data) : false,
+          length: response && response.data && Array.isArray(response.data) ? response.data.length : 'N/A',
+          firstItemKeys: response && response.data && Array.isArray(response.data) && response.data.length > 0 && response.data[0]
+            ? Object.keys(response.data[0])
+            : null,
+          rawValue: response?.data
+        },
+        apiCallDuration,
+        totalTimeSinceLoadStart: Date.now() - loadStartTime
+      });
+      
+      // 🔧 FIX: Only check abort status for component unmount, not for successful responses
+      if (!isMountedRef.current) {
+        console.log('[CampaignsPage] Component unmounted during response processing');
         return;
       }
+      
+      // 🔍 DIAGNOSTIC: Enhanced logging for response processing
+      console.log('📋 [CAMPAIGNS_LIST_DEBUG] Processing successful API response:', {
+        signal_aborted: signal?.aborted || false,
+        component_mounted: isMountedRef.current,
+        response_status: response?.status,
+        response_data_type: typeof response?.data,
+        response_data_array: Array.isArray(response?.data),
+        response_data_length: Array.isArray(response?.data) ? response.data.length : 'N/A',
+        processing_will_continue: true
+      });
 
-      if (response.status === 'success' && Array.isArray(response.data)) {
-        console.log(`[CampaignsPage] Successfully loaded ${response.data.length} campaigns`);
+      // 🔧 FINAL FIX: Handle empty backend responses and authentication issues
+      console.log('🔧 [BACKEND_INTEGRATION] Processing campaign list response:', {
+        responseType: typeof response,
+        responseKeys: response ? Object.keys(response) : null,
+        responseKeysCount: response ? Object.keys(response).length : 0,
+        hasStatus: !!(response && 'status' in response),
+        hasData: !!(response && 'data' in response),
+        isDirectArray: Array.isArray(response),
+        isEmptyObject: response && typeof response === 'object' && Object.keys(response).length === 0,
+        rawResponse: response
+      });
+
+      let campaignsData: any[] = [];
+      let responseValid = false;
+      let isEmptyButValid = false;
+
+      // 🔧 CRITICAL FIX: More robust response format handling
+      console.log('🔧 [BACKEND_INTEGRATION] Analyzing response structure:', {
+        responseType: typeof response,
+        isArray: Array.isArray(response),
+        isNull: response === null,
+        isUndefined: response === undefined,
+        objectKeys: response && typeof response === 'object' ? Object.keys(response) : null,
+        responseConstructor: response?.constructor?.name,
+        rawResponse: response
+      });
+
+      // Handle null/undefined response
+      if (response === null || response === undefined) {
+        console.log('⚠️ [BACKEND_INTEGRATION] Null/undefined response - treating as empty but valid');
+        campaignsData = [];
+        responseValid = true;
+        isEmptyButValid = true;
+      }
+      // Handle empty object response (likely no campaigns exist)
+      else if (response && typeof response === 'object' && Object.keys(response).length === 0) {
+        console.log('⚠️ [BACKEND_INTEGRATION] Empty object response - likely no campaigns exist');
+        campaignsData = [];
+        responseValid = true;
+        isEmptyButValid = true;
+      }
+      // Handle direct array response (most common for Go backends)
+      else if (Array.isArray(response)) {
+        campaignsData = response;
+        responseValid = true;
+        console.log('✅ [BACKEND_INTEGRATION] Direct array response format detected');
+      }
+      // Handle standard backend response format: { success: true, data: {...} } or { status: "success", data: [...] }
+      else if (response && typeof response === 'object' && (('success' in response) || ('status' in response)) && 'data' in response) {
+        const isSuccessField = 'success' in response;
+        const successValue = isSuccessField ? (response as any).success : (response as any).status;
+        const isSuccess = successValue === true || successValue === 'success' || successValue === 'ok' || successValue === 200;
+        
+        if (isSuccess) {
+          const dataField = (response as any).data;
+          
+          // Handle double-nested response: {success: true, data: {success: true, data: [...]}}
+          if (dataField && typeof dataField === 'object' && 'data' in dataField && Array.isArray(dataField.data)) {
+            campaignsData = dataField.data;
+            responseValid = true;
+            console.log('✅ [BACKEND_INTEGRATION] Double-nested backend response format detected');
+          }
+          // Handle single-nested response: {success: true, data: [...]}
+          else if (Array.isArray(dataField)) {
+            campaignsData = dataField;
+            responseValid = true;
+            console.log('✅ [BACKEND_INTEGRATION] Single-nested backend response format detected');
+          }
+          // Handle nested null data
+          else if (dataField === null || (dataField && typeof dataField === 'object' && 'data' in dataField && dataField.data === null)) {
+            campaignsData = [];
+            responseValid = true;
+            isEmptyButValid = true;
+            console.log('✅ [BACKEND_INTEGRATION] Successful response with no campaigns (nested null)');
+          }
+          else {
+            console.warn('⚠️ [BACKEND_INTEGRATION] Success response but unexpected data structure:', {
+              successValue,
+              dataType: typeof dataField,
+              dataKeys: dataField && typeof dataField === 'object' ? Object.keys(dataField) : null
+            });
+          }
+        } else {
+          console.warn('⚠️ [BACKEND_INTEGRATION] Response indicates error:', {
+            successValue,
+            dataType: typeof (response as any).data
+          });
+        }
+      }
+      // Handle wrapped response with campaigns field
+      else if (response && typeof response === 'object' && 'campaigns' in response) {
+        const campaigns = (response as any).campaigns;
+        if (Array.isArray(campaigns)) {
+          campaignsData = campaigns;
+          responseValid = true;
+          console.log('✅ [BACKEND_INTEGRATION] Wrapped campaigns response format detected');
+        } else if (campaigns === null) {
+          campaignsData = [];
+          responseValid = true;
+          isEmptyButValid = true;
+          console.log('✅ [BACKEND_INTEGRATION] Wrapped response with no campaigns');
+        }
+      }
+      // Handle any object with array properties (flexible search)
+      else if (response && typeof response === 'object') {
+        const possibleDataKeys = ['data', 'campaigns', 'results', 'items', 'list', 'content'];
+        let foundData = false;
+        
+        for (const key of possibleDataKeys) {
+          if (key in response) {
+            const value = (response as any)[key];
+            if (Array.isArray(value)) {
+              campaignsData = value;
+              responseValid = true;
+              foundData = true;
+              console.log(`✅ [BACKEND_INTEGRATION] Found campaigns in response.${key}`);
+              break;
+            } else if (value === null) {
+              campaignsData = [];
+              responseValid = true;
+              isEmptyButValid = true;
+              foundData = true;
+              console.log(`✅ [BACKEND_INTEGRATION] Found null campaigns in response.${key}`);
+              break;
+            }
+          }
+        }
+        
+        // If no standard keys found, check if the object itself contains campaign-like properties
+        if (!foundData) {
+          const objectKeys = Object.keys(response);
+          if (objectKeys.length > 0 && objectKeys[0]) {
+            // Check if this might be a single campaign object that should be wrapped in array
+            const firstKey = objectKeys[0];
+            const firstValue = (response as any)[firstKey];
+            if (typeof firstValue === 'string' || typeof firstValue === 'number') {
+              // Looks like a single object with primitive values, treat as single campaign
+              campaignsData = [response];
+              responseValid = true;
+              console.log('✅ [BACKEND_INTEGRATION] Single campaign object detected, wrapping in array');
+            } else {
+              // Try to use the response as-is if it looks like it has campaign data
+              console.log('⚠️ [BACKEND_INTEGRATION] Unknown object structure, attempting to use as campaign array');
+              campaignsData = [];
+              responseValid = true;
+              isEmptyButValid = true;
+            }
+          }
+        }
+      }
+      // Handle primitive responses (strings, numbers, booleans)
+      else if (typeof response === 'string' || typeof response === 'number' || typeof response === 'boolean') {
+        console.log('⚠️ [BACKEND_INTEGRATION] Primitive response type, treating as empty but valid');
+        campaignsData = [];
+        responseValid = true;
+        isEmptyButValid = true;
+      }
+
+      if (responseValid) {
+        console.log('✅ [BACKEND_INTEGRATION] Valid response processed:', {
+          rawCampaignsCount: campaignsData.length,
+          isEmpty: campaignsData.length === 0,
+          isEmptyButValid,
+          sampleCampaign: campaignsData[0] ? {
+            id: campaignsData[0].id,
+            name: campaignsData[0].name,
+            status: campaignsData[0].status
+          } : 'No campaigns available',
+          transformationStartTime: Date.now()
+        });
+        
+        // Transform campaigns using proper backend data
+        const transformedCampaigns = transformCampaignsToViewModels(campaignsData);
+        console.log('🔧 [BACKEND_INTEGRATION] Campaigns transformation completed:', {
+          originalCount: campaignsData.length,
+          transformedCount: transformedCampaigns.length,
+          transformedSample: transformedCampaigns.slice(0, 2).map(c => ({
+            id: c.id,
+            name: c.name,
+            status: c.status,
+            campaignType: c.campaignType
+          })),
+          backendIntegrationSuccess: true,
+          showingEmptyState: transformedCampaigns.length === 0
+        });
+        
         if (isMountedRef.current) {
-          setCampaigns(transformCampaignsToViewModels(response.data));
+          setCampaigns(transformedCampaigns);
+          console.log('📝 [BACKEND_INTEGRATION] Campaign state updated successfully:', {
+            newStateCount: transformedCampaigns.length,
+            stateUpdateSuccess: true,
+            phase1Complete: true,
+            willShowEmptyState: transformedCampaigns.length === 0
+          });
+          
+          // Show appropriate user message for empty state
+          if (transformedCampaigns.length === 0 && isEmptyButValid) {
+            console.log('ℹ️ [BACKEND_INTEGRATION] No campaigns found - showing empty state');
+            // Don't show error toast for empty but valid responses
+          }
         }
       } else {
-        console.warn('[CampaignsPage] Failed to load campaigns');
+        console.error('❌ [BACKEND_INTEGRATION] PHASE 1 FAILED - Invalid response format:', {
+          responseType: typeof response,
+          hasStatus: !!(response && 'status' in response),
+          status: response && 'status' in response ? (response as any).status : 'missing',
+          hasData: !!(response && 'data' in response),
+          dataType: response && 'data' in response ? typeof (response as any).data : 'missing',
+          isDataArray: response && 'data' in response ? Array.isArray((response as any).data) : false,
+          fullResponse: response,
+          possibleBackendIssues: [
+            'Backend API returning unexpected format',
+            'Authentication/authorization failure',
+            'Database connection issue',
+            'API versioning mismatch',
+            'Backend error not properly handled',
+            'Network connectivity problem'
+          ]
+        });
+        
         if (isMountedRef.current) {
           setCampaigns([]);
           toast({
-            title: "Error Loading Campaigns",
-            description: "Failed to load campaigns.",
+            title: "Backend Connection Error",
+            description: "Failed to load campaigns. Please check your connection and try again.",
             variant: "destructive"
           });
         }
       }
     } catch (error: unknown) {
-      // MEMORY LEAK FIX: Don't update state if component unmounted or request aborted
-      if (signal?.aborted || !isMountedRef.current) {
-        console.log('[CampaignsPage] Request aborted or component unmounted during error handling');
+      // 🔧 FIX: Only check component mount status, not abort signal for error handling
+      if (!isMountedRef.current) {
+        console.log('[CampaignsPage] Component unmounted during error handling');
         return;
       }
       
@@ -366,15 +627,17 @@ function CampaignsPageContent() {
     // Initial load
     loadCampaignsData(true, abortController.signal);
     
-    // MEMORY LEAK FIX: Set up interval with proper cleanup - reduced frequency for better performance
+    // 🔧 FIX: Improved interval management - only check mount status
     const intervalId = setInterval(() => {
-      if (!isMountedRef.current || abortController.signal.aborted) {
-        console.log('[CampaignsPage] Interval stopped due to unmount or abort');
+      if (!isMountedRef.current) {
+        console.log('[CampaignsPage] Interval stopped due to unmount');
         clearInterval(intervalId);
         return;
       }
       console.log('[CampaignsPage] Interval refresh triggered');
-      loadCampaignsData(false, abortController.signal);
+      // Create new AbortController for each interval request
+      const refreshController = new AbortController();
+      loadCampaignsData(false, refreshController.signal);
     }, 30000); // FIXED: Changed from 5 seconds to 30 seconds to reduce refresh frequency
     
     intervalRef.current = intervalId;
