@@ -6,6 +6,97 @@ import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
 
+// Dynamic WebSocket URL detection (same backend detection logic as API client)
+const detectBackendUrlForWs = async (): Promise<string> => {
+  // In production, backend is same origin
+  if (process.env.NODE_ENV === 'production') {
+    return '';  // Use relative URLs
+  }
+  
+  // In development, try common backend ports (same as API client)
+  if (typeof window !== 'undefined') {
+    const commonPorts = [8080, 3001, 5000, 8000, 4000];
+    const host = window.location.hostname; // Just hostname, not host:port
+    
+    for (const port of commonPorts) {
+      try {
+        const testUrl = `http://${host}:${port}/health`;
+        const response = await fetch(testUrl, {
+          method: 'GET',
+          signal: AbortSignal.timeout(1000) // 1 second timeout
+        });
+        
+        if (response.ok) {
+          console.log(`✅ [WebSocketService] Backend detected at http://${host}:${port}`);
+          return `http://${host}:${port}`;
+        }
+      } catch (error) {
+        // Continue to next port
+        console.log(`❌ [WebSocketService] No backend found at http://${host}:${port}`);
+        continue;
+      }
+    }
+  }
+  
+  // Fallback: assume same origin (for SSR or if detection fails)
+  console.log('⚠️ [WebSocketService] Backend auto-detection failed, using same origin');
+  return '';
+};
+
+const getBackendUrlForWs = async (): Promise<string> => {
+  // If explicitly configured, use it
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (configured && configured.trim()) {
+    console.log(`🔧 [WebSocketService] Using configured backend URL: ${configured}`);
+    return configured;
+  }
+  
+  // Otherwise, auto-detect
+  console.log('🔍 [WebSocketService] Auto-detecting backend URL...');
+  return await detectBackendUrlForWs();
+};
+
+// Dynamic WebSocket URL construction using backend detection
+const getWebSocketUrl = async (): Promise<string> => {
+  // DIAGNOSTIC: Log WebSocket URL construction
+  console.log('🔍 [WebSocketService] URL_CONSTRUCTION:');
+  console.log(`  NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`  NEXT_PUBLIC_WS_URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
+  console.log(`  window available: ${typeof window !== 'undefined'}`);
+
+  // If explicitly configured, use it
+  if (process.env.NEXT_PUBLIC_WS_URL) {
+    console.log(`  ✅ Using configured WebSocket URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
+    return process.env.NEXT_PUBLIC_WS_URL;
+  }
+
+  // Get backend URL using same detection as API client
+  const backendUrl = await getBackendUrlForWs();
+  console.log(`  Detected backend URL: ${backendUrl}`);
+
+  // Construct WebSocket URL from backend URL
+  if (backendUrl) {
+    // Convert HTTP backend URL to WebSocket URL
+    const protocol = backendUrl.startsWith('https:') ? 'wss:' : 'ws:';
+    const wsUrl = backendUrl.replace(/^https?:/, protocol) + '/api/v2/ws';
+    console.log(`  ✅ Constructed WebSocket URL from backend: ${wsUrl}`);
+    return wsUrl;
+  }
+
+  // Fallback to relative URL (same origin)
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = `${protocol}//${window.location.host}/api/v2/ws`;
+    console.log(`  ✅ Fallback WebSocket URL: ${url}`);
+    return url;
+  }
+
+  // SSR fallback
+  const fallbackUrl = '/api/v2/ws';
+  console.log(`  ✅ SSR fallback WebSocket URL: ${fallbackUrl}`);
+  return fallbackUrl;
+};
+
 /**
  * Environment-aware WebSocket configuration
  * Adapts connection behavior based on environment settings
@@ -26,9 +117,7 @@ interface WebSocketConfig {
  * Default configuration from environment variables
  */
 const DEFAULT_CONFIG: WebSocketConfig = {
-  url: process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ?
-    `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v2/ws` :
-    '/api/v2/ws'),
+  url: '', // Will be resolved dynamically when connecting
   // RATE LIMIT FIX: Increased base reconnect interval from 5s to 10s
   reconnectInterval: parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || '10000'),
   maxReconnectAttempts: parseInt(process.env.NEXT_PUBLIC_WS_MAX_RECONNECTS || '5'),
@@ -97,13 +186,11 @@ class WebSocketService {
    * Connect to WebSocket with specified key and handlers
    */
   connect(
-    connectionKey: string, 
+    connectionKey: string,
     handlers: WebSocketEventHandlers = {},
     customUrl?: string
   ): () => void {
-    const url = customUrl || this.config.url;
-    
-    logger.info('WEBSOCKET', `Connecting to ${connectionKey}`, { url });
+    logger.info('WEBSOCKET', `Starting connection setup for ${connectionKey}`);
 
     // Store handlers for this connection
     this.eventHandlers.set(connectionKey, handlers);
@@ -114,8 +201,20 @@ class WebSocketService {
       reconnectAttempts: 0,
     });
 
-    // Start connection
-    this.establishConnection(connectionKey, url);
+    // Resolve URL dynamically and start connection
+    if (customUrl) {
+      logger.info('WEBSOCKET', `Using custom URL for ${connectionKey}`, { url: customUrl });
+      this.establishConnection(connectionKey, customUrl);
+    } else {
+      // Resolve URL dynamically
+      getWebSocketUrl().then(url => {
+        logger.info('WEBSOCKET', `Resolved dynamic URL for ${connectionKey}`, { url });
+        this.establishConnection(connectionKey, url);
+      }).catch(error => {
+        logger.error('WEBSOCKET', `Failed to resolve URL for ${connectionKey}`, error);
+        this.handleConnectionFailure(connectionKey, error);
+      });
+    }
 
     // Return cleanup function
     return () => this.disconnect(connectionKey);
@@ -389,7 +488,14 @@ class WebSocketService {
       const handlers = this.eventHandlers.get(connectionKey);
       handlers?.onReconnect?.(status.reconnectAttempts);
       
-      this.establishConnection(connectionKey, this.config.url);
+      // Resolve URL dynamically for reconnection (same as initial connection)
+      getWebSocketUrl().then(url => {
+        logger.info('WEBSOCKET', `Resolved dynamic URL for reconnection ${connectionKey}`, { url });
+        this.establishConnection(connectionKey, url);
+      }).catch(error => {
+        logger.error('WEBSOCKET', `Failed to resolve URL for reconnection ${connectionKey}`, error);
+        this.handleConnectionFailure(connectionKey, error);
+      });
     }, finalDelay);
 
     this.reconnectTimers.set(connectionKey, timer);

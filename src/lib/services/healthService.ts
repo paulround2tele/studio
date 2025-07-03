@@ -10,6 +10,65 @@ export interface HealthResponse {
   cacheAge?: number;
 }
 
+// Shared backend URL detection logic (same as API client)
+const detectBackendUrl = async (): Promise<string> => {
+  // DIAGNOSTIC: Log environment detection
+  console.log('🔍 [HealthService] ENVIRONMENT_DETECTION:');
+  console.log(`  NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`  window.location.origin: ${typeof window !== 'undefined' ? window.location.origin : 'SSR'}`);
+  console.log(`  window.location.host: ${typeof window !== 'undefined' ? window.location.host : 'SSR'}`);
+  
+  // In production, backend is same origin
+  if (process.env.NODE_ENV === 'production') {
+    console.log('  ✅ PRODUCTION_MODE: Using relative URLs');
+    return '';  // Use relative URLs
+  }
+  
+  console.log('  🛠️ DEVELOPMENT_MODE: Starting port detection');
+  
+  // In development, try common backend ports
+  if (typeof window !== 'undefined') {
+    const commonPorts = [8080, 3001, 5000, 8000, 4000];
+    const host = window.location.hostname;
+    
+    for (const port of commonPorts) {
+      try {
+        const testUrl = `http://${host}:${port}/health`;
+        const response = await fetch(testUrl, {
+          method: 'GET',
+          signal: AbortSignal.timeout(1000) // 1 second timeout
+        });
+        
+        if (response.ok) {
+          console.log(`✅ [HealthService] Backend detected at http://${host}:${port}`);
+          return `http://${host}:${port}`;
+        }
+      } catch (error) {
+        // Continue to next port
+        console.log(`❌ [HealthService] No backend found at http://${host}:${port}`);
+        continue;
+      }
+    }
+  }
+  
+  // Fallback: assume same origin (for SSR or if detection fails)
+  console.log('⚠️ [HealthService] Backend auto-detection failed, using same origin');
+  return '';
+};
+
+const getBackendUrl = async (): Promise<string> => {
+  // If explicitly configured, use it
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (configured && configured.trim()) {
+    console.log(`🔧 [HealthService] Using configured backend URL: ${configured}`);
+    return configured;
+  }
+  
+  // Otherwise, auto-detect
+  console.log('🔍 [HealthService] Auto-detecting backend URL...');
+  return await detectBackendUrl();
+};
+
 // RATE LIMIT FIX: Circuit breaker to prevent repeated failed requests
 class HealthCircuitBreaker {
   private failureCount = 0;
@@ -117,9 +176,19 @@ export async function getHealth(forceRefresh = false): Promise<HealthResponse> {
 
   try {
     const result = await circuitBreaker.execute(async () => {
-      // Use the backend API URL instead of frontend API route
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${backendUrl}/health`, {
+      // Use the same backend detection logic as API client
+      const backendUrl = await getBackendUrl();
+      // Call /health directly on backend, bypassing nginx entirely
+      const healthUrl = `${backendUrl}/health`;
+      
+      // DIAGNOSTIC: Log health URL construction
+      console.log('🔍 [HealthService] HEALTH_URL_CONSTRUCTION:');
+      console.log(`  Detected backend URL: ${backendUrl}`);
+      console.log(`  Final health URL: ${healthUrl}`);
+      console.log(`  Environment: ${process.env.NODE_ENV}`);
+      console.log(`  Calling backend /health directly (bypassing nginx)`);
+      
+      const response = await fetch(healthUrl, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -127,6 +196,10 @@ export async function getHealth(forceRefresh = false): Promise<HealthResponse> {
           'X-Requested-With': 'XMLHttpRequest',
         },
       });
+
+      console.log(`🩺 [HealthService] Health response: ${response.status} ${response.statusText}`);
+      console.log(`  URL: ${response.url}`);
+      console.log(`  OK: ${response.ok}`);
 
       if (!response.ok) {
         // RATE LIMIT FIX: Don't retry on 429 errors immediately

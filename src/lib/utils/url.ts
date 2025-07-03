@@ -1,7 +1,95 @@
 /**
- * URL construction utilities for handling both relative and absolute base URLs
- * Fixes "Failed to construct 'URL': Invalid URL" errors when using relative URLs
+ * Dynamic URL construction with intelligent backend auto-detection
+ * Eliminates hardcoded localhost URLs and works in any environment
  */
+
+/**
+ * Auto-detect backend URL based on environment and availability
+ */
+export async function detectBackendUrl(): Promise<string> {
+  // In production, backend is same origin
+  if (process.env.NODE_ENV === 'production') {
+    return '';  // Use relative URLs
+  }
+  
+  // In development, try common backend ports
+  if (typeof window !== 'undefined') {
+    const commonPorts = [8080, 3001, 5000, 8000, 4000];
+    const host = window.location.hostname;
+    
+    for (const port of commonPorts) {
+      try {
+        const testUrl = `http://${host}:${port}/health`;
+        const response = await fetch(testUrl, { 
+          method: 'GET',
+          signal: AbortSignal.timeout(1000) // 1 second timeout
+        });
+        
+        if (response.ok) {
+          console.log(`✅ Backend detected at http://${host}:${port}`);
+          return `http://${host}:${port}`;
+        }
+      } catch (error) {
+        // Continue to next port
+        console.log(`❌ No backend found at http://${host}:${port}`);
+        continue;
+      }
+    }
+  }
+  
+  // Fallback: assume same origin (for SSR or if detection fails)
+  console.log('⚠️ Backend auto-detection failed, using same origin');
+  return '';
+}
+
+/**
+ * Get backend URL with smart detection
+ */
+export async function getBackendUrl(): Promise<string> {
+  // If explicitly configured, use it
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (configured && configured.trim()) {
+    console.log(`🔧 Using configured backend URL: ${configured}`);
+    return configured;
+  }
+  
+  // Otherwise, auto-detect
+  console.log('🔍 Auto-detecting backend URL...');
+  return await detectBackendUrl();
+}
+
+/**
+ * Check if a backend is available at the given URL
+ */
+export async function pingBackend(baseUrl: string): Promise<boolean> {
+  try {
+    const healthUrl = `${baseUrl}/health`;
+    const response = await fetch(healthUrl, {
+      method: 'GET',
+      signal: AbortSignal.timeout(2000),
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Fallback URL construction when auto-detection fails
+ */
+export function getFallbackUrl(path: string): string {
+  if (typeof window !== 'undefined') {
+    // In browser, try same origin first
+    return `${window.location.origin}${path}`;
+  }
+  
+  // In SSR, assume standard development setup
+  return process.env.NODE_ENV === 'development' 
+    ? `http://localhost:8080${path}`
+    : path; // Relative URL for production
+}
 
 /**
  * Safely construct URL handling both relative and absolute base URLs
@@ -13,13 +101,23 @@ export function constructApiUrl(baseUrl: string, path: string): URL {
   const fullPath = `${baseUrl}${path}`;
   
   if (baseUrl.startsWith('http')) {
-    // Absolute URL - use directly
+    // Absolute URL - use directly (development with explicit backend URL)
     return new URL(fullPath);
   }
   
-  // For relative URLs, use current origin
-  const origin = getCurrentOrigin();
+  // Relative URL - use current origin (production where frontend/backend same origin)
+  const origin = typeof window !== 'undefined'
+    ? window.location.origin
+    : 'http://localhost:3000'; // Fallback for SSR
+    
   return new URL(fullPath, origin);
+}
+
+/**
+ * Detect if we're in development mode with separate frontend/backend servers
+ */
+export function isDevelopmentMode(): boolean {
+  return process.env.NODE_ENV === 'development';
 }
 
 /**

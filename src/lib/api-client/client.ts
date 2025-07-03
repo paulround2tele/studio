@@ -1,6 +1,55 @@
 import type { paths, components } from './types';
 
-// URL construction utility for handling both relative and absolute base URLs
+// Inline dynamic URL detection utilities to avoid import issues
+const detectBackendUrl = async (): Promise<string> => {
+  // In production, backend is same origin
+  if (process.env.NODE_ENV === 'production') {
+    return '';  // Use relative URLs
+  }
+  
+  // In development, try common backend ports
+  if (typeof window !== 'undefined') {
+    const commonPorts = [8080, 3001, 5000, 8000, 4000];
+    const host = window.location.hostname;
+    
+    for (const port of commonPorts) {
+      try {
+        const testUrl = `http://${host}:${port}/health`;
+        const response = await fetch(testUrl, {
+          method: 'GET',
+          signal: AbortSignal.timeout(1000) // 1 second timeout
+        });
+        
+        if (response.ok) {
+          console.log(`✅ Backend detected at http://${host}:${port}`);
+          return `http://${host}:${port}`;
+        }
+      } catch (error) {
+        // Continue to next port
+        console.log(`❌ No backend found at http://${host}:${port}`);
+        continue;
+      }
+    }
+  }
+  
+  // Fallback: assume same origin (for SSR or if detection fails)
+  console.log('⚠️ Backend auto-detection failed, using same origin');
+  return '';
+};
+
+const getBackendUrl = async (): Promise<string> => {
+  // If explicitly configured, use it
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (configured && configured.trim()) {
+    console.log(`🔧 Using configured backend URL: ${configured}`);
+    return configured;
+  }
+  
+  // Otherwise, auto-detect
+  console.log('🔍 Auto-detecting backend URL...');
+  return await detectBackendUrl();
+};
+
 const constructApiUrl = (baseUrl: string, path: string): URL => {
   const fullPath = `${baseUrl}${path}`;
   
@@ -133,13 +182,12 @@ interface RequestConfig {
 }
 
 export class ApiClient {
-  private baseUrl: string;
+  private _detectedBackendUrl: string | null = null;
   private config: RequestConfig;
 
   constructor(baseUrl?: string) {
-    // Use environment variable for backend URL, fallback to relative URL for production
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api/v2';
-    this.baseUrl = baseUrl || backendUrl;
+    // Store explicit baseUrl if provided
+    this._detectedBackendUrl = baseUrl || null;
     
     // RATE LIMIT FIX: Enhanced configuration with proper rate limiting
     this.config = {
@@ -152,30 +200,48 @@ export class ApiClient {
     console.log('API Client Configuration:', {
       providedBaseUrl: baseUrl,
       envApiUrl: process.env.NEXT_PUBLIC_API_URL,
-      finalBaseUrl: this.baseUrl,
-      isLocalhost: this.baseUrl?.includes('localhost'),
+      willAutoDetect: !baseUrl && !process.env.NEXT_PUBLIC_API_URL?.trim(),
       environment: process.env.NODE_ENV
     });
+  }
+  
+  /**
+   * Get effective backend URL with auto-detection
+   */
+  private async getEffectiveBackendUrl(): Promise<string> {
+    if (this._detectedBackendUrl === null) {
+      this._detectedBackendUrl = await getBackendUrl();
+    }
+    return this._detectedBackendUrl;
+  }
+
+  // Handle different routing structures for auth vs API routes
+  private async getEffectiveBaseUrl(path: string): Promise<string> {
+    const baseUrl = await this.getEffectiveBackendUrl();
     
-    // Warning for localhost URLs in production
-    if (this.baseUrl?.includes('localhost')) {
-      console.warn('WARNING: API Client is using localhost URL - this will break in production!');
-      console.warn(`  Current baseUrl: ${this.baseUrl}`);
-      console.warn('  This suggests localStorage override issue or misconfiguration');
+    // DIAGNOSTIC: Log route construction decision making
+    console.log('🔍 ROUTE_CONSTRUCTION_DEBUG:');
+    console.log(`  Input path: ${path}`);
+    console.log(`  Detected backend URL: ${baseUrl}`);
+    
+    // Auth routes (/auth/*) are served directly from backend root
+    if (path.startsWith('/auth') || path.startsWith('/me') || path.startsWith('/change-password')) {
+      console.log(`  ✅ AUTH_ROUTE_DETECTED: Using base URL without /api/v2 prefix`);
+      console.log(`  Final base URL for auth: ${baseUrl}`);
+      return baseUrl;
     }
     
-    // Debug logging for API client initialization (legacy format for compatibility)
-    console.log('API_CLIENT_DEBUG - Initialized:');
-    console.log(`  Backend URL: ${backendUrl}`);
-    console.log(`  Base URL: ${this.baseUrl}`);
-    console.log(`  Environment Variable: ${process.env.NEXT_PUBLIC_API_URL}`);
-    console.log('  Config:', this.config);
-    
-    // DIAGNOSTIC: Log what URLs will be constructed for key endpoints
-    console.log('API_CLIENT_DEBUG - URL Construction Test:');
-    console.log(`  /personas -> ${this.baseUrl}/personas`);
-    console.log(`  /campaigns -> ${this.baseUrl}/campaigns`);
-    console.log(`  /config/dns -> ${this.baseUrl}/config/dns`);
+    // API routes need /api/v2 prefix if not already included
+    if (baseUrl.endsWith('/api/v2')) {
+      console.log(`  ✅ API_ROUTE_WITH_PREFIX: Base URL already has /api/v2`);
+      console.log(`  Final base URL for API: ${baseUrl}`);
+      return baseUrl;
+    } else {
+      const apiBaseUrl = `${baseUrl}/api/v2`;
+      console.log(`  ✅ API_ROUTE_ADD_PREFIX: Adding /api/v2 to base URL`);
+      console.log(`  Final base URL for API: ${apiBaseUrl}`);
+      return apiBaseUrl;
+    }
   }
 
   // Enhanced request method with retry logic and better error handling
@@ -188,7 +254,9 @@ export class ApiClient {
       headers?: Record<string, string>;
     }
   ): Promise<TResponse> {
-    const url = constructApiUrl(this.baseUrl, path);
+    // Handle different routing structures: auth routes vs API routes
+    const effectiveBaseUrl = await this.getEffectiveBaseUrl(path);
+    const url = constructApiUrl(effectiveBaseUrl, path);
     
     // Add query parameters
     if (options?.params) {
@@ -204,9 +272,30 @@ export class ApiClient {
     // Retry logic with exponential backoff
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
-        console.log('API_CLIENT_DEBUG - Making request attempt:');
+        console.log('🚀 API_CLIENT_DEBUG - Making request attempt:');
         console.log(`  Attempt: ${attempt}, Method: ${method}, URL: ${url.toString()}`);
-        console.log(`  BaseURL: ${this.baseUrl}, Path: ${path}, HasBody: ${!!options?.body}`);
+        console.log(`  BaseURL: ${effectiveBaseUrl}, Path: ${path}, HasBody: ${!!options?.body}`);
+        
+        // CRITICAL DIAGNOSTIC: Log exact URL construction for debugging 404 issues
+        console.log('🔍 CRITICAL_URL_CONSTRUCTION_VALIDATION:');
+        console.log(`  Original Path: ${path}`);
+        console.log(`  Effective Base URL: ${effectiveBaseUrl}`);
+        console.log(`  Constructed Full Path: ${effectiveBaseUrl}${path}`);
+        console.log(`  Final Request URL: ${url.toString()}`);
+        console.log(`  Is Auth Route: ${path.startsWith('/auth') || path.startsWith('/me') || path.startsWith('/change-password')}`);
+        
+        // DIAGNOSTIC: Route expectation validation
+        if (path.startsWith('/auth') || path.startsWith('/me') || path.startsWith('/change-password')) {
+          console.log('🔐 AUTH_ROUTE_VALIDATION:');
+          console.log(`  ✅ Should NOT have /api/v2 prefix`);
+          console.log(`  ✅ Expected to work: ${url.toString()}`);
+          console.log(`  ❌ Would fail at: ${effectiveBaseUrl}/api/v2${path}`);
+        } else {
+          console.log('🛠️ API_ROUTE_VALIDATION:');
+          console.log(`  ✅ Should HAVE /api/v2 prefix`);
+          console.log(`  ✅ Expected to work: ${url.toString()}`);
+          console.log(`  ❌ Would fail at: ${effectiveBaseUrl.replace('/api/v2', '')}${path}`);
+        }
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
