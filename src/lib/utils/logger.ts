@@ -64,7 +64,7 @@ function serializeError(obj: unknown): string {
 
   // Handle WebSocket-specific events
   if (typeof obj === 'object' && obj !== null && 'type' in obj) {
-    const eventObj = obj as any;
+    const eventObj = obj as Record<string, unknown>;
     if (eventObj.type === 'error' || eventObj.type === 'close') {
       const wsEventData: Record<string, unknown> = {
         type: eventObj.type,
@@ -116,7 +116,7 @@ function serializeError(obj: unknown): string {
     }
     
     return result;
-  } catch (error) {
+  } catch (_error) {
     // Fallback for objects that can't be serialized
     return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
   }

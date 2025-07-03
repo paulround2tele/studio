@@ -30,7 +30,7 @@ const detectBackendUrlForWs = async (): Promise<string> => {
           console.log(`✅ [WebSocketService] Backend detected at http://${host}:${port}`);
           return `http://${host}:${port}`;
         }
-      } catch (error) {
+      } catch (_error) {
         // Continue to next port
         console.log(`❌ [WebSocketService] No backend found at http://${host}:${port}`);
         continue;

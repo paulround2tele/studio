@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CAMPAIGN_PHASES_ORDERED, getNextPhase } from '@/lib/constants';
 
 interface CampaignListItemProps {
@@ -36,6 +37,9 @@ interface CampaignListItemProps {
   onResumeCampaign?: (campaignId: string) => void;
   onStopCampaign?: (campaignId: string) => void;
   isActionLoading?: Record<string, boolean>;
+  // Bulk selection props
+  isSelected?: boolean;
+  onSelect?: (campaignId: string, selected: boolean) => void;
 }
 
 // Memoized utility functions for better performance
@@ -97,7 +101,7 @@ const getStatusBadgeInfo = (campaign: CampaignViewModel): { text: string, varian
 
 
 // Memoized main component with optimized performance
-const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, onResumeCampaign, onStopCampaign, isActionLoading = {} }: CampaignListItemProps) => {
+const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, onResumeCampaign, onStopCampaign, isActionLoading = {}, isSelected = false, onSelect }: CampaignListItemProps) => {
   // Memoize expensive calculations to prevent recalculation on every render
   const overallProgress = useMemo(() => getOverallCampaignProgress(campaign), [campaign]);
   const statusInfo = useMemo(() => getStatusBadgeInfo(campaign), [campaign]);
@@ -133,6 +137,13 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
     if (campaign.id) onStopCampaign?.(campaign.id);
   }, [onStopCampaign, campaign.id]);
 
+  // Memoize selection handler
+  const handleSelect = useCallback((checked: boolean) => {
+    if (campaign.id && onSelect) {
+      onSelect(campaign.id, checked);
+    }
+  }, [onSelect, campaign.id]);
+
   // Memoize conditional rendering flags
   const showActions = useMemo(() => ({
     showPause: campaign.phaseStatus === 'InProgress' && onPauseCampaign,
@@ -145,7 +156,17 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
       <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
         <CardHeader>
           <div className="flex justify-between items-start">
-            <CardTitle className="text-xl mb-1">{campaign.name}</CardTitle>
+            <div className="flex items-start gap-3 flex-1">
+              {onSelect && (
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={handleSelect}
+                  className="mt-1"
+                  aria-label={`Select campaign ${campaign.name}`}
+                />
+              )}
+              <CardTitle className="text-xl mb-1">{campaign.name}</CardTitle>
+            </div>
             <div className="flex items-center gap-2">
               <TooltipProvider>
                 <Tooltip>

@@ -14,17 +14,29 @@ const detectBackendUrl = async (): Promise<string> => {
     
     for (const port of commonPorts) {
       try {
-        const testUrl = `http://${host}:${port}/health`;
-        const response = await fetch(testUrl, {
-          method: 'GET',
-          signal: AbortSignal.timeout(1000) // 1 second timeout
-        });
+        // Try both health endpoint variants
+        const testUrls = [
+          `http://${host}:${port}/api/v2/health`,
+          `http://${host}:${port}/health`
+        ];
         
-        if (response.ok) {
-          console.log(`✅ Backend detected at http://${host}:${port}`);
-          return `http://${host}:${port}`;
+        for (const testUrl of testUrls) {
+          try {
+            const response = await fetch(testUrl, {
+              method: 'GET',
+              signal: AbortSignal.timeout(1000) // 1 second timeout
+            });
+            
+            if (response.ok) {
+              console.log(`✅ Backend detected at http://${host}:${port} using ${testUrl}`);
+              return `http://${host}:${port}`;
+            }
+          } catch (_innerError) {
+            // Try next URL variant
+            continue;
+          }
         }
-      } catch (error) {
+      } catch (_error) {
         // Continue to next port
         console.log(`❌ No backend found at http://${host}:${port}`);
         continue;
@@ -144,7 +156,7 @@ const serializeError = (obj: unknown): string => {
     }
     
     return result;
-  } catch (error) {
+  } catch (_error) {
     // Fallback for objects that can't be serialized
     return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
   }
@@ -536,6 +548,14 @@ export class ApiClient {
     );
   }
 
+  async bulkDeleteCampaigns(data: OperationRequestBody<ApiPaths['/campaigns']['delete']>) {
+    return this.request<DeleteOperationResponse<ApiPaths['/campaigns']['delete']>>(
+      '/campaigns',
+      'DELETE',
+      { body: data }
+    );
+  }
+
   async startCampaign(campaignId: string) {
     return this.request<PostOperationResponse<ApiPaths['/campaigns/{campaignId}/start']['post']>>(
       `/campaigns/${campaignId}/start`, 
@@ -912,6 +932,83 @@ export class ApiClient {
       'POST',
       { body: data }
     );
+  }
+
+  // HEALTH API METHODS (note: health endpoints are at root level, not under /api/v2)
+  async healthCheck() {
+    const baseUrl = await this.getEffectiveBackendUrl();
+    const url = constructApiUrl(baseUrl, '/health');
+    
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000) // 5 second timeout for health checks
+      });
+      
+      if (response.ok) {
+        return await response.json();
+      } else {
+        throw new Error(`Health check failed: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Health check failed:', error);
+      throw error;
+    }
+  }
+
+  async livenessCheck() {
+    const baseUrl = await this.getEffectiveBackendUrl();
+    const url = constructApiUrl(baseUrl, '/health/live');
+    
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000)
+      });
+      
+      return response.ok;
+    } catch (error) {
+      console.error('Liveness check failed:', error);
+      return false;
+    }
+  }
+
+  async readinessCheck() {
+    const baseUrl = await this.getEffectiveBackendUrl();
+    const url = constructApiUrl(baseUrl, '/health/ready');
+    
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000)
+      });
+      
+      return response.ok;
+    } catch (error) {
+      console.error('Readiness check failed:', error);
+      return false;
+    }
+  }
+
+  async ping() {
+    const baseUrl = await this.getEffectiveBackendUrl();
+    const url = constructApiUrl(baseUrl, '/ping');
+    
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000)
+      });
+      
+      if (response.ok) {
+        return await response.json();
+      } else {
+        throw new Error(`Ping failed: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Ping failed:', error);
+      throw error;
+    }
   }
 }
 

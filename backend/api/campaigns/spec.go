@@ -15,6 +15,7 @@ func AddCampaignPaths(spec *openapi3.T) {
 	addResumeCampaignPath(spec)
 	addCancelCampaignPath(spec)
 	addDeleteCampaignPath(spec)
+	addBulkDeleteCampaignsPath(spec)
 	addGetGeneratedDomainsPath(spec)
 	addGetDNSValidationResultsPath(spec)
 	addGetHTTPKeywordResultsPath(spec)
@@ -88,9 +89,10 @@ func addCreateCampaignPath(spec *openapi3.T) {
 		},
 	})
 
-	spec.Paths.Set("/campaigns", &openapi3.PathItem{
-		Post: createOp,
-	})
+	if spec.Paths.Find("/campaigns") == nil {
+		spec.Paths.Set("/campaigns", &openapi3.PathItem{})
+	}
+	spec.Paths.Find("/campaigns").Post = createOp
 }
 
 // addListCampaignsPath adds the list campaigns endpoint
@@ -525,6 +527,82 @@ func addDeleteCampaignPath(spec *openapi3.T) {
 	spec.Paths.Find("/campaigns/{campaignId}").Delete = deleteOp
 }
 
+// addBulkDeleteCampaignsPath adds the bulk delete campaigns endpoint
+func addBulkDeleteCampaignsPath(spec *openapi3.T) {
+	bulkDeleteOp := &openapi3.Operation{
+		OperationID: "bulkDeleteCampaigns",
+		Summary:     "Bulk delete campaigns",
+		Description: "Permanently deletes multiple campaigns and all their associated data",
+		Tags:        []string{"Campaigns"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
+		RequestBody: &openapi3.RequestBodyRef{
+			Value: &openapi3.RequestBody{
+				Required: true,
+				Content: map[string]*openapi3.MediaType{
+					"application/json": {
+						Schema: &openapi3.SchemaRef{
+							Ref: "#/components/schemas/BulkDeleteRequest",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	bulkDeleteOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Campaigns bulk delete completed"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/BulkDeleteResponse",
+				},
+			},
+		},
+	})
+
+	bulkDeleteOp.AddResponse(400, &openapi3.Response{
+		Description: &[]string{"Bad request"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	bulkDeleteOp.AddResponse(401, &openapi3.Response{
+		Description: &[]string{"Unauthorized"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	bulkDeleteOp.AddResponse(500, &openapi3.Response{
+		Description: &[]string{"Internal server error"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	campaignsPath := spec.Paths.Find("/campaigns")
+	if campaignsPath == nil {
+		campaignsPath = &openapi3.PathItem{}
+		spec.Paths.Set("/campaigns", campaignsPath)
+	}
+	campaignsPath.Delete = bulkDeleteOp
+}
+
 // addGetGeneratedDomainsPath adds the get generated domains endpoint
 func addGetGeneratedDomainsPath(spec *openapi3.T) {
 	getDomainsOp := &openapi3.Operation{
@@ -917,6 +995,76 @@ func addCampaignSchemas(spec *openapi3.T) {
 						OneOf: []*openapi3.SchemaRef{
 							{Ref: "#/components/schemas/HttpKeywordParams"},
 						},
+					},
+				},
+			},
+		},
+	}
+
+	// BulkDeleteRequest schema
+	spec.Components.Schemas["BulkDeleteRequest"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Request to bulk delete campaigns",
+			Required:    []string{"campaignIds"},
+			Properties: map[string]*openapi3.SchemaRef{
+				"campaignIds": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type:   &openapi3.Types{"string"},
+								Format: "uuid",
+							},
+						},
+						MinItems:    uint64(1),
+						Description: "Array of campaign UUIDs to delete",
+					},
+				},
+			},
+		},
+	}
+
+	// BulkDeleteResponse schema
+	spec.Components.Schemas["BulkDeleteResponse"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Response for bulk delete operation",
+			Properties: map[string]*openapi3.SchemaRef{
+				"message": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Operation result message",
+					},
+				},
+				"totalRequested": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Total number of campaigns requested for deletion",
+					},
+				},
+				"successfulDeletions": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Number of campaigns successfully deleted",
+					},
+				},
+				"failedDeletions": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Number of campaigns that failed to delete",
+					},
+				},
+				"errors": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type:        &openapi3.Types{"string"},
+								Description: "Error message for failed deletions",
+							},
+						},
+						Description: "List of error messages for failed deletions",
 					},
 				},
 			},

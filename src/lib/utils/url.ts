@@ -29,7 +29,7 @@ export async function detectBackendUrl(): Promise<string> {
           console.log(`✅ Backend detected at http://${host}:${port}`);
           return `http://${host}:${port}`;
         }
-      } catch (error) {
+      } catch (_error) {
         // Continue to next port
         console.log(`❌ No backend found at http://${host}:${port}`);
         continue;
@@ -71,7 +71,7 @@ export async function pingBackend(baseUrl: string): Promise<boolean> {
     });
     
     return response.ok;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }

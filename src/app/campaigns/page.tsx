@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { CampaignViewModel } from '@/lib/types';
-import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff } from 'lucide-react';
+import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff, Trash2, Loader2 } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import { apiClient } from '@/lib/api-client/client';
 import { normalizeStatus, isActiveStatus } from '@/lib/utils/statusMapping';
 import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
@@ -106,7 +107,7 @@ const serializeError = (obj: unknown): string => {
     }
     
     return result;
-  } catch (error) {
+  } catch (_error) {
     // Fallback for objects that can't be serialized
     return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
   }
@@ -129,6 +130,8 @@ function CampaignsPageContent() {
   const [activeTab, setActiveTab] = useState<"all" | "active" | "completed" | "failed" | "paused">("all");
   const [wsConnected, setWsConnected] = useState(false);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [selectedCampaigns, setSelectedCampaigns] = useState<Set<string>>(new Set());
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   
   const { toast } = useToast();
   const { applyUpdate, confirmUpdate, rollbackUpdate } = useOptimisticUpdate();
@@ -268,7 +271,7 @@ function CampaignsPageContent() {
         wsCleanup();
       }
     };
-  }, []);
+  }, [wsConnected]);
 
   // MEMORY LEAK FIX: Track component mount status
   useEffect(() => {
@@ -374,7 +377,7 @@ function CampaignsPageContent() {
         rawResponse: response
       });
 
-      let campaignsData: any[] = [];
+      let campaignsData: unknown[] = [];
       let responseValid = false;
       let isEmptyButValid = false;
 
@@ -412,11 +415,12 @@ function CampaignsPageContent() {
       // Handle standard backend response format: { success: true, data: {...} } or { status: "success", data: [...] }
       else if (response && typeof response === 'object' && (('success' in response) || ('status' in response)) && 'data' in response) {
         const isSuccessField = 'success' in response;
-        const successValue = isSuccessField ? (response as any).success : (response as any).status;
+        const responseObj = response as Record<string, unknown>;
+        const successValue = isSuccessField ? responseObj.success : responseObj.status;
         const isSuccess = successValue === true || successValue === 'success' || successValue === 'ok' || successValue === 200;
         
         if (isSuccess) {
-          const dataField = (response as any).data;
+          const dataField = responseObj.data;
           
           // Handle double-nested response: {success: true, data: {success: true, data: [...]}}
           if (dataField && typeof dataField === 'object' && 'data' in dataField && Array.isArray(dataField.data)) {
@@ -447,13 +451,13 @@ function CampaignsPageContent() {
         } else {
           console.warn('⚠️ [BACKEND_INTEGRATION] Response indicates error:', {
             successValue,
-            dataType: typeof (response as any).data
+            dataType: typeof (response as Record<string, unknown>).data
           });
         }
       }
       // Handle wrapped response with campaigns field
       else if (response && typeof response === 'object' && 'campaigns' in response) {
-        const campaigns = (response as any).campaigns;
+        const campaigns = (response as Record<string, unknown>).campaigns;
         if (Array.isArray(campaigns)) {
           campaignsData = campaigns;
           responseValid = true;
@@ -472,7 +476,7 @@ function CampaignsPageContent() {
         
         for (const key of possibleDataKeys) {
           if (key in response) {
-            const value = (response as any)[key];
+            const value = (response as Record<string, unknown>)[key];
             if (Array.isArray(value)) {
               campaignsData = value;
               responseValid = true;
@@ -496,7 +500,7 @@ function CampaignsPageContent() {
           if (objectKeys.length > 0 && objectKeys[0]) {
             // Check if this might be a single campaign object that should be wrapped in array
             const firstKey = objectKeys[0];
-            const firstValue = (response as any)[firstKey];
+            const firstValue = (response as Record<string, unknown>)[firstKey];
             if (typeof firstValue === 'string' || typeof firstValue === 'number') {
               // Looks like a single object with primitive values, treat as single campaign
               campaignsData = [response];
@@ -526,15 +530,15 @@ function CampaignsPageContent() {
           isEmpty: campaignsData.length === 0,
           isEmptyButValid,
           sampleCampaign: campaignsData[0] ? {
-            id: campaignsData[0].id,
-            name: campaignsData[0].name,
-            status: campaignsData[0].status
+            id: (campaignsData[0] as Record<string, unknown>).id,
+            name: (campaignsData[0] as Record<string, unknown>).name,
+            status: (campaignsData[0] as Record<string, unknown>).status
           } : 'No campaigns available',
           transformationStartTime: Date.now()
         });
         
         // Transform campaigns using proper backend data
-        const transformedCampaigns = transformCampaignsToViewModels(campaignsData);
+        const transformedCampaigns = transformCampaignsToViewModels(campaignsData as Parameters<typeof transformCampaignsToViewModels>[0]);
         console.log('🔧 [BACKEND_INTEGRATION] Campaigns transformation completed:', {
           originalCount: campaignsData.length,
           transformedCount: transformedCampaigns.length,
@@ -567,10 +571,10 @@ function CampaignsPageContent() {
         console.error('❌ [BACKEND_INTEGRATION] PHASE 1 FAILED - Invalid response format:', {
           responseType: typeof response,
           hasStatus: !!(response && 'status' in response),
-          status: response && 'status' in response ? (response as any).status : 'missing',
+          status: response && 'status' in response ? (response as Record<string, unknown>).status : 'missing',
           hasData: !!(response && 'data' in response),
-          dataType: response && 'data' in response ? typeof (response as any).data : 'missing',
-          isDataArray: response && 'data' in response ? Array.isArray((response as any).data) : false,
+          dataType: response && 'data' in response ? typeof (response as Record<string, unknown>).data : 'missing',
+          isDataArray: response && 'data' in response ? Array.isArray((response as Record<string, unknown>).data) : false,
           fullResponse: response,
           possibleBackendIssues: [
             'Backend API returning unexpected format',
@@ -614,7 +618,7 @@ function CampaignsPageContent() {
         setGlobalLoading('campaigns_load', false);
       }
     }
-  }, [toast, setGlobalLoading]); // INFINITE LOOP FIX: Remove isGlobalLoading dependency as it's stable
+  }, [campaigns.length, isGlobalLoading, toast, setGlobalLoading]);
 
 
   useEffect(() => {
@@ -655,7 +659,7 @@ function CampaignsPageContent() {
         abortControllerRef.current = null;
       }
     };
-  }, []); // INFINITE LOOP FIX: Remove loadCampaignsData dependency to prevent re-creation
+  }, [loadCampaignsData]);
 
   // MEMORY LEAK FIX: Cleanup on unmount
   useEffect(() => {
@@ -770,7 +774,7 @@ function CampaignsPageContent() {
     }
   };
 
-
+  // Filter campaigns first (needed by bulk handlers)
   const filteredCampaigns = campaigns.filter(campaign => {
     // Normalize campaign status to ensure consistency
     const status = normalizeStatus(campaign.status);
@@ -787,6 +791,81 @@ function CampaignsPageContent() {
   const countCompleted = campaigns.filter(c => normalizeStatus(c.status) === "completed").length;
   const countFailed = campaigns.filter(c => normalizeStatus(c.status) === "failed").length;
 
+
+  // Bulk delete functionality
+  const handleSelectCampaign = useCallback((campaignId: string, selected: boolean) => {
+    setSelectedCampaigns(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(campaignId);
+      } else {
+        newSet.delete(campaignId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    const allFilteredIds = filteredCampaigns.map(c => c.id).filter(Boolean) as string[];
+    const allSelected = allFilteredIds.every(id => selectedCampaigns.has(id));
+    
+    if (allSelected) {
+      // Deselect all
+      setSelectedCampaigns(new Set());
+    } else {
+      // Select all visible campaigns
+      setSelectedCampaigns(new Set(allFilteredIds));
+    }
+  }, [filteredCampaigns, selectedCampaigns]);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedCampaigns.size === 0) return;
+
+    setBulkDeleteLoading(true);
+    setGlobalLoading('bulk_delete_campaigns', true, `Deleting ${selectedCampaigns.size} campaigns`);
+
+    const campaignsToDelete = Array.from(selectedCampaigns);
+    const campaignNames = campaignsToDelete
+      .map(id => campaigns.find(c => c.id === id)?.name)
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(', ');
+
+    try {
+      // Optimistic UI update - remove campaigns immediately
+      setCampaigns(prev => prev.filter(c => !c.id || !selectedCampaigns.has(c.id)));
+      
+      // Use proper bulk delete API - let backend handle the business logic
+      await apiClient.bulkDeleteCampaigns({
+        campaignIds: campaignsToDelete
+      });
+
+      // Clear selection
+      setSelectedCampaigns(new Set());
+
+      toast({
+        title: "Campaigns Deleted Successfully",
+        description: `${campaignsToDelete.length} campaigns deleted: ${campaignNames}${campaignsToDelete.length > 3 ? '...' : ''}`,
+      });
+
+      // Refresh campaigns to ensure consistency with backend
+      loadCampaignsData(false);
+
+    } catch (error: unknown) {
+      // Rollback optimistic update on error
+      loadCampaignsData(false);
+      
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete campaigns.";
+      toast({
+        title: "Bulk Delete Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setBulkDeleteLoading(false);
+      setGlobalLoading('bulk_delete_campaigns', false);
+    }
+  }, [selectedCampaigns, campaigns, toast, setGlobalLoading, loadCampaignsData]);
 
   return (
     <>
@@ -837,6 +916,60 @@ function CampaignsPageContent() {
         </TabsList>
       </Tabs>
 
+      {/* Bulk Actions Toolbar */}
+      {filteredCampaigns.length > 0 && (
+        <div className="mb-4 p-3 bg-muted/30 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={
+                  filteredCampaigns.length > 0 &&
+                  filteredCampaigns.every(c => c.id && selectedCampaigns.has(c.id))
+                }
+                onCheckedChange={handleSelectAll}
+                aria-label="Select all campaigns"
+              />
+              <span className="text-sm font-medium">
+                {selectedCampaigns.size === 0
+                  ? `${filteredCampaigns.length} campaigns`
+                  : `${selectedCampaigns.size} of ${filteredCampaigns.length} selected`
+                }
+              </span>
+            </div>
+            
+            {selectedCampaigns.size > 0 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedCampaigns(new Set())}
+                >
+                  Clear Selection
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleteLoading || selectedCampaigns.size === 0}
+                >
+                  {bulkDeleteLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete {selectedCampaigns.size} Campaign{selectedCampaigns.size !== 1 ? 's' : ''}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {loading ? (
          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
@@ -872,6 +1005,8 @@ function CampaignsPageContent() {
                   onResumeCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'resume')}
                   onStopCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'stop')}
                   isActionLoading={actionLoading}
+                  isSelected={campaign.id ? selectedCampaigns.has(campaign.id) : false}
+                  onSelect={handleSelectCampaign}
               />
             </Suspense>
           ))}

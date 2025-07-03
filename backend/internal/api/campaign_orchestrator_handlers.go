@@ -60,6 +60,7 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 
 	// Campaign deletion routes - session-based auth
 	group.DELETE("/:campaignId", h.deleteCampaign)
+	group.DELETE("", h.bulkDeleteCampaigns)
 
 	// Campaign results routes - session-based auth
 	group.GET("/:campaignId/results/generated-domains", h.getGeneratedDomains)
@@ -322,6 +323,85 @@ func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
 // deleteCampaign deletes a campaign.
 func (h *CampaignOrchestratorAPIHandler) deleteCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "deleting", h.orchestratorService.DeleteCampaign)
+}
+
+// BulkDeleteRequest represents the request payload for bulk delete operations
+type BulkDeleteRequest struct {
+	CampaignIDs []string `json:"campaignIds" validate:"required,min=1,dive,uuid"`
+}
+
+// bulkDeleteCampaigns deletes multiple campaigns at once.
+func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
+	var req BulkDeleteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		var validationErrors []ErrorDetail
+		validationErrors = append(validationErrors, ErrorDetail{
+			Field:   "body",
+			Code:    ErrorCodeValidation,
+			Message: "Invalid request payload: " + err.Error(),
+		})
+		respondWithValidationErrorGin(c, validationErrors)
+		return
+	}
+
+	// Validate request structure
+	if validate != nil {
+		if err := validate.Struct(req); err != nil {
+			var validationErrors []ErrorDetail
+			validationErrors = append(validationErrors, ErrorDetail{
+				Code:    ErrorCodeValidation,
+				Message: "Validation failed: " + err.Error(),
+			})
+			respondWithValidationErrorGin(c, validationErrors)
+			return
+		}
+	}
+
+	// Validate campaign IDs and convert to UUIDs
+	var campaignUUIDs []uuid.UUID
+	for i, idStr := range req.CampaignIDs {
+		campaignID, err := uuid.Parse(idStr)
+		if err != nil {
+			respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+				"Invalid campaign ID format", []ErrorDetail{
+					{
+						Field:   fmt.Sprintf("campaignIds[%d]", i),
+						Code:    ErrorCodeValidation,
+						Message: "Campaign ID must be a valid UUID",
+						Context: map[string]interface{}{
+							"provided_value": idStr,
+						},
+					},
+				})
+			return
+		}
+		campaignUUIDs = append(campaignUUIDs, campaignID)
+	}
+
+	// Perform bulk deletion through orchestrator service
+	result, err := h.orchestratorService.BulkDeleteCampaigns(c.Request.Context(), campaignUUIDs)
+	if err != nil {
+		log.Printf("Error bulk deleting campaigns: %v", err)
+		respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
+			"Failed to delete campaigns", []ErrorDetail{
+				{
+					Code:    ErrorCodeInternalServer,
+					Message: err.Error(),
+					Context: map[string]interface{}{
+						"campaign_count": len(campaignUUIDs),
+					},
+				},
+			})
+		return
+	}
+
+	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
+		"message":           "Bulk deletion completed",
+		"total_requested":   len(campaignUUIDs),
+		"successfully_deleted": result.SuccessfullyDeleted,
+		"failed_deletions":  result.FailedDeletions,
+		"deleted_campaign_ids": result.DeletedCampaignIDs,
+	})
 }
 
 // getGeneratedDomains gets generated domains for a campaign.

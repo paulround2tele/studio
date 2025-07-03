@@ -187,10 +187,11 @@ export default function LatestActivityTable() {
 
       // Handle the nested response structure: { success: true, data: { success: true, data: [...] } }
       // Check for success at both levels and ensure we have campaign data
-      if (response && response.success && response.data &&
-          typeof response.data === 'object' && response.data.success &&
-          Array.isArray(response.data.data)) {
-        const campaignsArray = transformCampaignsToViewModels(response.data.data);
+      const responseAny = response as Record<string, unknown>;
+      if (response && responseAny.success && responseAny.data &&
+          typeof responseAny.data === 'object' && (responseAny.data as Record<string, unknown>).success &&
+          Array.isArray((responseAny.data as Record<string, unknown>).data)) {
+        const campaignsArray = transformCampaignsToViewModels((responseAny.data as Record<string, unknown>).data as Parameters<typeof transformCampaignsToViewModels>[0]);
         campaignsArray.forEach(campaign => {
           if (!campaign.id || !campaign.name || !campaign.createdAt) return;
           (campaign.domains || []).forEach(domainName => {
@@ -265,7 +266,7 @@ export default function LatestActivityTable() {
             }
             
             return result;
-          } catch (error) {
+          } catch (_error) {
             return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
           }
         };

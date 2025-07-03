@@ -1063,6 +1063,53 @@ func (s *campaignOrchestratorServiceImpl) DeleteCampaign(ctx context.Context, ca
 	return nil
 }
 
+// BulkDeleteCampaigns deletes multiple campaigns at once with proper transaction handling and error aggregation
+func (s *campaignOrchestratorServiceImpl) BulkDeleteCampaigns(ctx context.Context, campaignIDs []uuid.UUID) (*BulkDeleteResult, error) {
+	if len(campaignIDs) == 0 {
+		return &BulkDeleteResult{}, nil
+	}
+
+	result := &BulkDeleteResult{
+		DeletedCampaignIDs: make([]uuid.UUID, 0, len(campaignIDs)),
+		FailedCampaignIDs:  make([]uuid.UUID, 0),
+		Errors:             make([]string, 0),
+	}
+
+	log.Printf("Starting bulk deletion of %d campaigns", len(campaignIDs))
+
+	// Process each campaign deletion individually to ensure proper error handling
+	// This approach provides better error isolation and transaction safety
+	for _, campaignID := range campaignIDs {
+		err := s.DeleteCampaign(ctx, campaignID)
+		if err != nil {
+			result.FailedDeletions++
+			result.FailedCampaignIDs = append(result.FailedCampaignIDs, campaignID)
+			result.Errors = append(result.Errors, fmt.Sprintf("Campaign %s: %v", campaignID, err))
+			log.Printf("Failed to delete campaign %s: %v", campaignID, err)
+		} else {
+			result.SuccessfullyDeleted++
+			result.DeletedCampaignIDs = append(result.DeletedCampaignIDs, campaignID)
+			log.Printf("Successfully deleted campaign %s", campaignID)
+		}
+	}
+
+	log.Printf("Bulk deletion completed: %d successful, %d failed",
+		result.SuccessfullyDeleted, result.FailedDeletions)
+
+	// Return error if all deletions failed
+	if result.SuccessfullyDeleted == 0 && result.FailedDeletions > 0 {
+		return result, fmt.Errorf("all %d campaign deletions failed", result.FailedDeletions)
+	}
+
+	// Return partial success if some deletions failed
+	if result.FailedDeletions > 0 {
+		log.Printf("Partial success: %d campaigns deleted, %d failed",
+			result.SuccessfullyDeleted, result.FailedDeletions)
+	}
+
+	return result, nil
+}
+
 // CreateCampaignUnified creates a campaign of any type using a unified request structure
 func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Context, req CreateCampaignRequest) (*models.Campaign, error) {
 	log.Printf("Orchestrator: Creating campaign with unified endpoint. Type: %s, Name: %s, LaunchSequence: %v", req.CampaignType, req.Name, req.LaunchSequence)

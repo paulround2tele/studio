@@ -73,7 +73,8 @@
         "frontend_test_coverage",
         "frontend_react_component_tests"
       ],
-      "timeout": 300
+      "timeout": 300,
+      "disabled": true
     }
   }
 }

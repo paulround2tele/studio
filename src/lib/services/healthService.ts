@@ -43,7 +43,7 @@ const detectBackendUrl = async (): Promise<string> => {
           console.log(`✅ [HealthService] Backend detected at http://${host}:${port}`);
           return `http://${host}:${port}`;
         }
-      } catch (error) {
+      } catch (_error) {
         // Continue to next port
         console.log(`❌ [HealthService] No backend found at http://${host}:${port}`);
         continue;

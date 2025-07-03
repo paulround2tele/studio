@@ -143,6 +143,15 @@ type HTTPKeywordResultsResponse struct {
 	TotalCount int64                      `json:"totalCount"`
 }
 
+// BulkDeleteResult represents the result of a bulk delete operation
+type BulkDeleteResult struct {
+	SuccessfullyDeleted   int         `json:"successfully_deleted"`
+	FailedDeletions      int         `json:"failed_deletions"`
+	DeletedCampaignIDs   []uuid.UUID `json:"deleted_campaign_ids"`
+	FailedCampaignIDs    []uuid.UUID `json:"failed_campaign_ids,omitempty"`
+	Errors               []string    `json:"errors,omitempty"`
+}
+
 // --- Service Interfaces ---
 
 // CampaignOrchestratorService defines the interface for managing the lifecycle of all campaigns.
@@ -170,6 +179,7 @@ type CampaignOrchestratorService interface {
 	CancelCampaign(ctx context.Context, campaignID uuid.UUID) error
 	UpdateCampaign(ctx context.Context, campaignID uuid.UUID, req UpdateCampaignRequest) (*models.Campaign, error)
 	DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error
+	BulkDeleteCampaigns(ctx context.Context, campaignIDs []uuid.UUID) (*BulkDeleteResult, error)
 	SetCampaignErrorStatus(ctx context.Context, campaignID uuid.UUID, errorMessage string) error
 	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.CampaignStatusEnum) error
 	HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error

@@ -218,12 +218,12 @@ export default function CampaignDashboardPage() {
       callStack: new Error().stack?.split('\n').slice(1, 4).join(' | '),
       timestamp: new Date().toISOString(),
       loadStartTime,
-      isReloadLoop: loadStartTime - (window as any).__lastLoadTime < 5000,
-      timeSinceLastLoad: loadStartTime - ((window as any).__lastLoadTime || 0)
+      isReloadLoop: loadStartTime - ((window as unknown as { __lastLoadTime?: number }).__lastLoadTime || 0) < 5000,
+      timeSinceLastLoad: loadStartTime - ((window as unknown as { __lastLoadTime?: number }).__lastLoadTime || 0)
     });
     
     // Track load times to detect reload loops
-    (window as any).__lastLoadTime = loadStartTime;
+    (window as unknown as { __lastLoadTime?: number }).__lastLoadTime = loadStartTime;
     
     if (!campaignId || !campaignTypeFromQuery) { // campaignTypeFromQuery check added
       console.error('❌ [RELOAD_LOOP_DEBUG] VALIDATION FAILED - This could cause reload loops!:', {
@@ -325,13 +325,13 @@ export default function CampaignDashboardPage() {
             
             for (const key of possibleKeys) {
               // 🔧 FIX: Add proper type assertion for dynamic property access
-              const rawResponseAny = rawResponse as Record<string, any>;
+              const rawResponseAny = rawResponse as Record<string, unknown>;
               if (key in rawResponseAny && rawResponseAny[key] && typeof rawResponseAny[key] === 'object') {
-                if ('id' in rawResponseAny[key] && rawResponseAny[key].id) {
+                if ('id' in rawResponseAny[key] && (rawResponseAny[key] as Record<string, unknown>).id) {
                   foundCampaign = rawResponseAny[key];
                   console.log(`🔧 [CAMPAIGN_DETAILS_DEBUG] Found campaign in rawResponse.${key}:`, {
-                    id: foundCampaign.id,
-                    name: foundCampaign.name,
+                    id: (foundCampaign as Record<string, unknown>).id,
+                    name: (foundCampaign as Record<string, unknown>).name,
                     keys: Object.keys(foundCampaign)
                   });
                   break;
@@ -419,11 +419,11 @@ export default function CampaignDashboardPage() {
                         if ('data' in rawGenDomainsResp && Array.isArray(rawGenDomainsResp.data)) {
                           processedDomains = rawGenDomainsResp.data as GeneratedDomain[];
                           console.log('✅ [GENERATED_DOMAINS_DEBUG] Extracted from response.data:', processedDomains.length);
-                        } else if ('domains' in rawGenDomainsResp && Array.isArray((rawGenDomainsResp as any).domains)) {
-                          processedDomains = (rawGenDomainsResp as any).domains as GeneratedDomain[];
+                        } else if ('domains' in rawGenDomainsResp && Array.isArray((rawGenDomainsResp as Record<string, unknown>).domains)) {
+                          processedDomains = (rawGenDomainsResp as Record<string, unknown>).domains as GeneratedDomain[];
                           console.log('✅ [GENERATED_DOMAINS_DEBUG] Extracted from response.domains:', processedDomains.length);
-                        } else if ('generated_domains' in rawGenDomainsResp && Array.isArray((rawGenDomainsResp as any).generated_domains)) {
-                          processedDomains = (rawGenDomainsResp as any).generated_domains as GeneratedDomain[];
+                        } else if ('generated_domains' in rawGenDomainsResp && Array.isArray((rawGenDomainsResp as Record<string, unknown>).generated_domains)) {
+                          processedDomains = (rawGenDomainsResp as Record<string, unknown>).generated_domains as GeneratedDomain[];
                           console.log('✅ [GENERATED_DOMAINS_DEBUG] Extracted from response.generated_domains:', processedDomains.length);
                         } else {
                           // Check for nested data structures
@@ -431,7 +431,7 @@ export default function CampaignDashboardPage() {
                           let foundDomains = null;
                           
                           for (const key of possibleKeys) {
-                            const rawResponseAny = rawGenDomainsResp as Record<string, any>;
+                            const rawResponseAny = rawGenDomainsResp as Record<string, unknown>;
                             if (key in rawResponseAny && rawResponseAny[key]) {
                               // Check if it's an array directly
                               if (Array.isArray(rawResponseAny[key])) {
@@ -442,9 +442,10 @@ export default function CampaignDashboardPage() {
                               // Check if it's a nested object with domains
                               else if (typeof rawResponseAny[key] === 'object' && rawResponseAny[key] !== null) {
                                 const nestedKeys = ['data', 'domains', 'generated_domains', 'items'];
+                                const nestedObj = rawResponseAny[key] as Record<string, unknown>;
                                 for (const nestedKey of nestedKeys) {
-                                  if (nestedKey in rawResponseAny[key] && Array.isArray(rawResponseAny[key][nestedKey])) {
-                                    foundDomains = rawResponseAny[key][nestedKey];
+                                  if (nestedKey in nestedObj && Array.isArray(nestedObj[nestedKey])) {
+                                    foundDomains = nestedObj[nestedKey];
                                     console.log(`✅ [GENERATED_DOMAINS_DEBUG] Found domains in rawGenDomainsResp.${key}.${nestedKey}:`, foundDomains.length);
                                     break;
                                   }
@@ -538,7 +539,7 @@ export default function CampaignDashboardPage() {
 
   useEffect(() => {
     loadCampaignData();
-  }, [campaignId, campaignTypeFromQuery]); // 🔧 FIX: Remove loadCampaignData dependency to prevent infinite loop
+  }, [campaignId, campaignTypeFromQuery, loadCampaignData]); // Fix: Add loadCampaignData dependency
 
   useEffect(() => {
     if (isSequenceMode && campaign) {
@@ -707,8 +708,8 @@ export default function CampaignDashboardPage() {
                 if ('data' in rawGenDomainsResp && Array.isArray(rawGenDomainsResp.data)) {
                   processedDomains = rawGenDomainsResp.data as GeneratedDomain[];
                   console.log('✅ [BACKEND_PAGINATION] Extracted from response.data:', processedDomains.length);
-                } else if ('domains' in rawGenDomainsResp && Array.isArray((rawGenDomainsResp as any).domains)) {
-                  processedDomains = (rawGenDomainsResp as any).domains as GeneratedDomain[];
+                } else if ('domains' in rawGenDomainsResp && Array.isArray((rawGenDomainsResp as Record<string, unknown>).domains)) {
+                  processedDomains = (rawGenDomainsResp as Record<string, unknown>).domains as GeneratedDomain[];
                   console.log('✅ [BACKEND_PAGINATION] Extracted from response.domains:', processedDomains.length);
                 } else {
                   // Check for standard backend response structure
@@ -716,7 +717,7 @@ export default function CampaignDashboardPage() {
                   let foundDomains = null;
                   
                   for (const key of possibleKeys) {
-                    const rawResponseAny = rawGenDomainsResp as Record<string, any>;
+                    const rawResponseAny = rawGenDomainsResp as Record<string, unknown>;
                     if (key in rawResponseAny && Array.isArray(rawResponseAny[key])) {
                       foundDomains = rawResponseAny[key];
                       console.log(`✅ [BACKEND_PAGINATION] Found domains in response.${key}:`, foundDomains.length);
@@ -780,7 +781,7 @@ export default function CampaignDashboardPage() {
     
     // Return undefined for other code paths
     return undefined;
-  }, [campaign?.id, campaign?.campaignType, campaign?.status, campaignTypeFromQuery]); // 🔧 FIX: Remove pageSize and currentPage dependencies for domain generation to prevent refetching on pagination
+  }, [campaign?.id, campaign?.campaignType, campaign?.status, campaignTypeFromQuery, currentPage, pageSize, toast, campaign]); // Fix: Add missing dependencies
 
 
   // 🔧 FIX: Enhanced WebSocket for Real-Time Domain Streaming
@@ -814,7 +815,7 @@ export default function CampaignDashboardPage() {
 
     console.log(`✅ [BACKEND_REALTIME] Connecting WebSocket for Go backend domain generation. Campaign status: ${campaign.status}`);
     
-    const handleDomainReceived = (domain: string, backendMetadata?: any) => {
+    const handleDomainReceived = (domain: string, backendMetadata?: Record<string, unknown>) => {
         if (!isMountedRef.current) return;
         
         console.log(`📥 [BACKEND_REALTIME] New domain received from Go backend:`, {
@@ -843,12 +844,12 @@ export default function CampaignDashboardPage() {
             
             // 🔧 BACKEND-ALIGNED: Create domain with backend-compatible structure
             const newDomain: GeneratedDomain = {
-                id: backendMetadata?.id || `${domain}-${Date.now()}`, // Use backend ID if provided
+                id: (backendMetadata?.id as string) || `${domain}-${Date.now()}`, // Use backend ID if provided
                 generationCampaignId: campaignId,
                 domainName: domain,
-                offsetIndex: backendMetadata?.offsetIndex ?? prev.length, // Backend-provided index
-                generatedAt: backendMetadata?.generatedAt || new Date().toISOString(),
-                createdAt: backendMetadata?.createdAt || new Date().toISOString(),
+                offsetIndex: (backendMetadata?.offsetIndex as number) ?? prev.length, // Backend-provided index
+                generatedAt: (backendMetadata?.generatedAt as string) || new Date().toISOString(),
+                createdAt: (backendMetadata?.createdAt as string) || new Date().toISOString(),
                 // Additional backend fields if provided
                 ...(backendMetadata?.additionalFields || {})
             };
@@ -1034,7 +1035,7 @@ export default function CampaignDashboardPage() {
         streamCleanupRef.current = null;
       }
     };
-  }, [campaign, campaignId, loadCampaignData]);
+  }, [campaign, campaignId, loadCampaignData, generatedDomains.length]);
 
 
   const submitStartPhase = async (payload: StartCampaignPhasePayload) => {
@@ -1096,19 +1097,19 @@ export default function CampaignDashboardPage() {
       
       // Re-check status after refresh
       const refreshedResponse = await getCampaignById(campaign.id!);
-      let refreshedCampaign = null;
+      let refreshedCampaign: Record<string, unknown> | null = null;
       
       if (refreshedResponse && typeof refreshedResponse === 'object') {
         if ('data' in refreshedResponse && refreshedResponse.data) {
-          refreshedCampaign = (refreshedResponse as any).data;
+          refreshedCampaign = (refreshedResponse as Record<string, unknown>).data as Record<string, unknown>;
         } else if ('id' in refreshedResponse) {
-          refreshedCampaign = refreshedResponse;
+          refreshedCampaign = refreshedResponse as Record<string, unknown>;
         }
       }
       
-      if (refreshedCampaign && refreshedCampaign.status === 'completed') {
+      if (refreshedCampaign && (refreshedCampaign as Record<string, unknown>).status === 'completed') {
         console.log('✅ [STATUS_SYNC_DEBUG] Campaign is actually completed - updating UI state');
-        setCampaign(transformCampaignToViewModel(refreshedCampaign));
+        setCampaign(transformCampaignToViewModel(refreshedCampaign as Campaign));
         toast({
           title: "Campaign Already Completed",
           description: "This campaign has already finished. The page will update to reflect the current status.",
@@ -1117,12 +1118,12 @@ export default function CampaignDashboardPage() {
         return;
       }
       
-      if (refreshedCampaign && refreshedCampaign.status !== 'pending') {
-        console.log('⚠️ [STATUS_SYNC_DEBUG] Campaign is not pending - current status:', refreshedCampaign.status);
-        setCampaign(transformCampaignToViewModel(refreshedCampaign));
+      if (refreshedCampaign && (refreshedCampaign as Record<string, unknown>).status !== 'pending') {
+        console.log('⚠️ [STATUS_SYNC_DEBUG] Campaign is not pending - current status:', (refreshedCampaign as Record<string, unknown>).status);
+        setCampaign(transformCampaignToViewModel(refreshedCampaign as Campaign));
         toast({
           title: "Campaign Not Ready",
-          description: `Campaign status is "${refreshedCampaign.status}". Only pending campaigns can be started.`,
+          description: `Campaign status is "${(refreshedCampaign as Record<string, unknown>).status}". Only pending campaigns can be started.`,
           variant: "destructive"
         });
         return;

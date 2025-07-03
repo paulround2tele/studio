@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, AlertCircle, RefreshCw, Loader2, Shield, Wifi, Database, Key } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { websocketService, type WebSocketMessage } from '@/lib/services/websocketService.simple';
+import { websocketService } from '@/lib/services/websocketService.simple';
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
 
@@ -31,7 +31,7 @@ const serializeError = (obj: unknown): unknown => {
         try {
           const descriptor = Object.getOwnPropertyDescriptor(obj, key);
           if (descriptor && descriptor.enumerable !== false) {
-            result[key] = (obj as any)[key];
+            result[key] = (obj as unknown as Record<string, unknown>)[key];
           }
         } catch {
           // Skip properties that can't be accessed
@@ -63,7 +63,7 @@ const serializeError = (obj: unknown): unknown => {
       Object.getOwnPropertyNames(obj).forEach(key => {
         if (!['type', 'isTrusted', 'timeStamp', 'target', 'currentTarget'].includes(key)) {
           try {
-            const value = (obj as any)[key];
+            const value = (obj as unknown as Record<string, unknown>)[key];
             if (typeof value !== 'function' && value !== null) {
               result[key] = value;
             }
@@ -116,13 +116,13 @@ interface SystemCheck {
   isTestConnection?: boolean; // Distinguish between test and operational status
 }
 
-interface WebSocketTestResult {
-  connected: boolean;
-  error?: string;
-  url?: string;
-  wasAuthWaiting?: boolean;
-  testDuration?: number;
-}
+// interface WebSocketTestResult {
+//   connected: boolean;
+//   error?: string;
+//   url?: string;
+//   wasAuthWaiting?: boolean;
+//   testDuration?: number;
+// }
 
 export default function ProductionReadinessCheck() {
   const { isAuthenticated, user } = useAuth();
@@ -312,7 +312,7 @@ export default function ProductionReadinessCheck() {
       runChecks(false); // Use cached health data for initial load
     }
     // RATE LIMIT FIX: Only run once when auth is ready, not on every state change
-  }, [isAuthenticated, user]); // Removed isChecking and runChecks dependencies
+  }, [isAuthenticated, user, isChecking, runChecks, checks.length]);
 
   // CRITICAL FIX: Hourly automatic health refresh (optional background check)
   useEffect(() => {

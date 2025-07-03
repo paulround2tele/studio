@@ -175,7 +175,49 @@ make migrate         # Run database migrations
 - **Go**: Standard Go practices with comprehensive error handling
 - **Testing**: Unit & integration tests for all critical paths
 
-## 🔄 API Client & Transformations
+## 🔄 API Generation & Client Management
+
+DomainFlow uses a code-first approach where the OpenAPI specification is generated from Go backend code, and TypeScript types are auto-generated from that specification.
+
+### API Generation Workflow
+
+```bash
+# Generate OpenAPI spec from Go code and TypeScript types in one command
+npm run api:generate
+
+# Or run steps individually:
+npm run api:generate-spec    # Generate OpenAPI 3.0 spec from Go backend
+npm run api:generate-client  # Generate TypeScript types from OpenAPI spec
+```
+
+### When to Regenerate APIs
+
+Run `npm run api:generate` whenever:
+- ✅ Adding new backend endpoints or handlers
+- ✅ Modifying request/response schemas in Go code
+- ✅ Changing API paths or operation IDs
+- ✅ Adding new OpenAPI schema definitions
+- ✅ Updating backend validation rules or constraints
+
+### Generation Process Details
+
+1. **Backend OpenAPI Generation** (`api:generate-spec`)
+   ```bash
+   cd backend && go run cmd/generate-openapi/main.go -output ../backend/docs/openapi-3.yaml
+   ```
+   - Generates `backend/docs/openapi-3.yaml` from Go source code
+   - Includes all endpoints, schemas, and validation rules
+   - Validates OpenAPI 3.0.3 compliance
+
+2. **Frontend TypeScript Generation** (`api:generate-client`)
+   ```bash
+   openapi-typescript backend/docs/openapi-3.yaml -o src/lib/api-client/types.ts
+   ```
+   - Generates `src/lib/api-client/types.ts` from OpenAPI specification
+   - Creates fully-typed interfaces for all API operations
+   - Enables compile-time validation of API calls
+
+### Enhanced API Client & Transformations
 
 The enhanced API client provides automatic transformations between frontend and backend naming conventions:
 
@@ -195,17 +237,23 @@ const response = await enhancedApiClient.post('/api/v2/campaigns', {
 console.log(response.data.campaignId); // Not campaign_id
 ```
 
+### Generated Files & Git Management
+
+After running `npm run api:generate`, commit these updated files:
+- `backend/docs/openapi-3.yaml` - Generated OpenAPI specification
+- `src/lib/api-client/types.ts` - Generated TypeScript types
+
 ## 📊 API Documentation
 
 The API follows OpenAPI 3.0 specification with automatically generated TypeScript clients.
 
 ### Key Endpoints
 - **Authentication**: `/auth/login`, `/auth/logout`, `/auth/refresh`
-- **Campaigns**: `/api/v2/campaigns/*` - Full CRUD operations
+- **Campaigns**: `/api/v2/campaigns/*` - Full CRUD operations (including DELETE bulk delete)
 - **Admin**: `/api/v2/admin/*` - User & system management (including PUT /users/:id)
 - **WebSocket**: `/ws` - Real-time campaign updates with SafeBigInt support
 
-Refer to `backend/docs/openapi.yaml` for the canonical OpenAPI specification.
+Refer to `backend/docs/openapi-3.yaml` for the canonical OpenAPI specification.
 
 ## 🗄️ Database
 
@@ -293,7 +341,7 @@ npm test src/lib/types/__tests__/uuid-type-safety-fix.test.ts
 
 - `COMPREHENSIVE_REMEDIATION_REPORT.md` - Complete contract alignment documentation
 - `DEPLOYMENT_GUIDE.md` - Step-by-step deployment instructions
-- `backend/docs/openapi.yaml` - Canonical OpenAPI specification
+- `backend/docs/openapi-3.yaml` - Canonical OpenAPI 3.0.3 specification (auto-generated)
 - `DATABASE_SETUP_GUIDE.md` - Database schema & setup
 - `backend/README.md` - Backend-specific documentation
 - `docs/` - Component & architecture documentation
@@ -304,10 +352,14 @@ npm test src/lib/types/__tests__/uuid-type-safety-fix.test.ts
 1. Follow TypeScript strict mode with branded types
 2. Ensure contract alignment between frontend/backend
 3. Write comprehensive tests for new features
-4. Update API documentation for endpoint changes
+4. **API Changes**: After modifying backend endpoints or schemas:
+   - Run `npm run api:generate` to regenerate OpenAPI spec and TypeScript types
+   - Commit both `backend/docs/openapi-3.yaml` and `src/lib/api-client/types.ts`
+   - Test frontend integration with new/updated endpoints
+   - Verify API contract alignment between backend implementation and frontend usage
 5. Follow Go standard practices and error handling
 6. Ensure both frontend and backend build successfully
-7. Run `npm run api:generate` and commit updates in `src/lib/api-client`
+7. Run full test suite before submitting changes
 
 ## 📄 License
 

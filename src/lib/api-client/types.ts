@@ -334,7 +334,11 @@ export interface paths {
          * @description Creates a new campaign using unified endpoint supporting all campaign types
          */
         post: operations["createCampaign"];
-        delete?: never;
+        /**
+         * Bulk delete campaigns
+         * @description Permanently deletes multiple campaigns and all their associated data
+         */
+        delete: operations["bulkDeleteCampaigns"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1097,6 +1101,24 @@ export interface components {
         BatchKeywordExtractionResponse: {
             /** @description Array of keyword extraction results */
             results: components["schemas"]["KeywordExtractionAPIResult"][];
+        };
+        /** @description Request to bulk delete campaigns */
+        BulkDeleteRequest: {
+            /** @description Array of campaign UUIDs to delete */
+            campaignIds: string[];
+        };
+        /** @description Response for bulk delete operation */
+        BulkDeleteResponse: {
+            /** @description List of error messages for failed deletions */
+            errors?: string[];
+            /** @description Number of campaigns that failed to delete */
+            failedDeletions?: number;
+            /** @description Operation result message */
+            message?: string;
+            /** @description Number of campaigns successfully deleted */
+            successfulDeletions?: number;
+            /** @description Total number of campaigns requested for deletion */
+            totalRequested?: number;
         };
         /** @description Campaign information */
         Campaign: {
@@ -3211,6 +3233,63 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bulkDeleteCampaigns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Campaigns bulk delete completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkDeleteResponse"];
                 };
             };
             /** @description Bad request */

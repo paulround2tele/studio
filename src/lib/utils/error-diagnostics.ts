@@ -49,7 +49,7 @@ export function debugObjectSerialization(obj: unknown, label: string = 'Object')
       name: obj.name,
       message: obj.message,
       stack: obj.stack,
-      cause: (obj as any).cause
+      cause: (obj as unknown as Record<string, unknown>).cause
     });
   }
   
@@ -74,8 +74,8 @@ export function serializeError(error: unknown): Record<string, unknown> {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      cause: (error as any).cause,
-      ...(error as any) // Spread any additional enumerable properties
+      cause: (error as unknown as Record<string, unknown>).cause,
+      ...(error as unknown as Record<string, unknown>) // Spread any additional enumerable properties
     };
   }
   
@@ -87,9 +87,9 @@ export function serializeError(error: unknown): Record<string, unknown> {
       currentTarget: error.currentTarget?.constructor?.name || 'Unknown',
       timeStamp: error.timeStamp,
       // Add other relevant Event properties
-      bubbles: (error as any).bubbles,
-      cancelable: (error as any).cancelable,
-      defaultPrevented: (error as any).defaultPrevented
+      bubbles: (error as unknown as Record<string, unknown>).bubbles,
+      cancelable: (error as unknown as Record<string, unknown>).cancelable,
+      defaultPrevented: (error as unknown as Record<string, unknown>).defaultPrevented
     };
   }
   
@@ -109,7 +109,7 @@ export function serializeError(error: unknown): Record<string, unknown> {
         try {
           const descriptor = Object.getOwnPropertyDescriptor(error, prop);
           if (descriptor && descriptor.enumerable !== false) {
-            extracted[prop] = (error as any)[prop];
+            extracted[prop] = (error as Record<string, unknown>)[prop];
           }
         } catch {
           // Skip properties that can't be accessed

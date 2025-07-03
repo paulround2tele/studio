@@ -52,11 +52,37 @@ export interface EnvironmentConfig {
   };
 }
 
+// Automatic API URL detection for development
+function getAutomaticApiUrl(): string {
+  if (typeof window === 'undefined') {
+    // SSR: Default to localhost:8080 for development
+    return 'http://localhost:8080';
+  }
+  
+  const { hostname, port, protocol } = window.location;
+  
+  // Development environment detection
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // If frontend is on port 3000 (Next.js dev), backend is on 8080
+    if (port === '3000') {
+      return 'http://localhost:8080';
+    }
+    // If no port or port 80, assume backend is also on same host with standard backend port
+    if (!port || port === '80') {
+      return `${protocol}//localhost:8080`;
+    }
+  }
+  
+  // For other environments, try to infer backend URL
+  // This maintains the automatic detection principle
+  return `${protocol}//${hostname}${port && port !== '80' && port !== '443' ? ':8080' : ''}`;
+}
+
 // Environment-specific configurations
 const environments: Record<string, EnvironmentConfig> = {
   development: {
     api: {
-      baseUrl: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '',
+      baseUrl: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || getAutomaticApiUrl(),
       timeout: 30000,
       retryAttempts: 3,
       retryDelay: 1000,

@@ -526,7 +526,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             try {
               return JSON.stringify(response, null, 2);
             } catch (e) {
-              return `JSON stringify failed: ${e.message}`;
+              return `JSON stringify failed: ${e instanceof Error ? e.message : String(e)}`;
             }
           })(),
           timestamp: new Date().toISOString()
@@ -581,9 +581,11 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           let foundCampaign = null;
           
           for (const key of possibleKeys) {
-            if (key in response && response[key] && typeof response[key] === 'object') {
-              if ('id' in response[key] && response[key].id) {
-                foundCampaign = response[key];
+            const responseAsRecord = response as Record<string, unknown>;
+            if (key in responseAsRecord && responseAsRecord[key] && typeof responseAsRecord[key] === 'object') {
+              const nestedObj = responseAsRecord[key] as Record<string, unknown>;
+              if ('id' in nestedObj && nestedObj.id) {
+                foundCampaign = nestedObj;
                 console.log(`🔧 [STRATEGY_3] Found campaign in response.${key}:`, {
                   id: foundCampaign.id,
                   name: foundCampaign.name,
@@ -596,20 +598,20 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           
           if (!foundCampaign) {
             // Try to find any nested object with an id
-            const searchNested = (obj, path = '') => {
+            const searchNested = (obj: Record<string, unknown>, path = ''): { campaign: Record<string, unknown>; path: string } | null => {
               for (const [key, value] of Object.entries(obj)) {
-                if (value && typeof value === 'object' && 'id' in value && value.id) {
-                  return { campaign: value, path: `${path}.${key}` };
+                if (value && typeof value === 'object' && 'id' in value && (value as Record<string, unknown>).id) {
+                  return { campaign: value as Record<string, unknown>, path: `${path}.${key}` };
                 }
                 if (value && typeof value === 'object' && !Array.isArray(value)) {
-                  const nested = searchNested(value, `${path}.${key}`);
+                  const nested = searchNested(value as Record<string, unknown>, `${path}.${key}`);
                   if (nested) return nested;
                 }
               }
               return null;
             };
             
-            const nestedResult = searchNested(response);
+            const nestedResult = searchNested(response as Record<string, unknown>);
             if (nestedResult) {
               foundCampaign = nestedResult.campaign;
               console.log(`🔧 [STRATEGY_3] Found campaign at path ${nestedResult.path}:`, {

@@ -154,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionCheckRef.current.abort();
       }
     };
-  }, []); // Empty dependency array - only run once on mount
+  }, []); // FIXED: Empty dependency array to prevent infinite loop
 
   const login = useCallback(async (credentials: { email: string; password: string }) => {
     logger.info('AUTH_CONTEXT', 'Login attempt started', { email: credentials.email });
