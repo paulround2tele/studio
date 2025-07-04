@@ -1,11 +1,11 @@
 #!/bin/bash
 
 echo "Testing login with correct credentials..."
-echo "Testing admin@domainflow.com / AdminPassword123!"
+echo "Testing test@example.com / password123"
 
 curl -X POST \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@domainflow.com","password":"AdminPassword123!"}' \
+  -d '{"email":"test@example.com","password":"password123"}' \
   -c cookies.txt \
   http://localhost:8080/api/v2/auth/login
 

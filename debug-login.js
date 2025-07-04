@@ -10,8 +10,8 @@ fetch('http://localhost:8080/api/v2/auth/login', {
   },
   credentials: 'include',
   body: JSON.stringify({
-    email: 'admin@domainflow.com',
-    password: 'AdminPassword123!'
+    email: 'test@example.com',
+    password: 'password123'
   })
 })
 .then(response => {

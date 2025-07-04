@@ -535,11 +535,11 @@ export default function CampaignDashboardPage() {
           timestamp: new Date().toISOString()
         });
     }
-  }, [campaignId, campaignTypeFromQuery, toast, startLoading, stopLoading, loadingOperationId, searchParams, campaign]);
+  }, [campaignId, campaignTypeFromQuery, toast, startLoading, stopLoading, loadingOperationId, searchParams]);
 
   useEffect(() => {
     loadCampaignData();
-  }, [campaignId, campaignTypeFromQuery, loadCampaignData]); // Fix: Add loadCampaignData dependency
+  }, [campaignId, campaignTypeFromQuery]); // Load when campaign ID or type changes
 
   useEffect(() => {
     if (isSequenceMode && campaign) {
@@ -593,7 +593,7 @@ export default function CampaignDashboardPage() {
       console.log('🛑 [POLLING_DEBUG] Cleaning up polling interval for campaign:', campaign.id);
       clearInterval(intervalId);
     };
-  }, [campaign, loadCampaignData]);
+  }, [campaign?.id, campaign?.status, campaign?.campaignType]);
 
   // Fetch campaign items (DNS or HTTP) based on actual campaign type
   useEffect(() => {
@@ -796,9 +796,11 @@ export default function CampaignDashboardPage() {
       return;
     }
     
-    // 🔧 FIX: Connect WebSocket for pending, running, and recently completed campaigns
-    const shouldConnectWebSocket = ['pending', 'running'].includes(campaign.status || '');
+    // 🔧 REALTIME_STREAMING_FIX: Keep WebSocket connected for domain streaming even after completion
+    // This ensures real-time domain updates continue to stream until all results are received
+    const shouldConnectWebSocket = ['pending', 'running', 'completed'].includes(campaign.status || '');
     
+    // 🔧 REALTIME_STREAMING_FIX: Only disconnect WebSocket for explicitly failed or non-domain-generation states
     if (!shouldConnectWebSocket) {
       if(streamCleanupRef.current) {
         console.log(`[${campaignId}] Stopping stream - campaign status: ${campaign.status}`);
@@ -877,6 +879,10 @@ export default function CampaignDashboardPage() {
             return newLoading;
         });
         
+        // 🔧 REALTIME_STREAMING_FIX: Don't immediately disconnect WebSocket after completion
+        // Keep connection alive for a grace period to receive any final domain updates
+        console.log(`🔗 [REALTIME_STREAMING] Keeping WebSocket connected for grace period to receive final domains`);
+        
         // 🔧 BACKEND-ALIGNED: Load final domain list from Go backend after completion
         setTimeout(() => {
           if (isMountedRef.current) {
@@ -889,7 +895,14 @@ export default function CampaignDashboardPage() {
           }
         }, 1000); // Small delay to ensure Go backend completion processing
         
-        streamCleanupRef.current = null;
+        // 🔧 REALTIME_STREAMING_FIX: Grace period for final domain updates before cleanup
+        setTimeout(() => {
+          if (isMountedRef.current && streamCleanupRef.current) {
+            console.log(`🧹 [REALTIME_STREAMING] Grace period ended - cleaning up WebSocket after completion`);
+            streamCleanupRef.current();
+            streamCleanupRef.current = null;
+          }
+        }, 5000); // 5 second grace period to receive final streaming domains
     };
     
     // 🔧 PHASE 3 FIX: Real-time individual domain streaming from Go backend
@@ -919,7 +932,7 @@ export default function CampaignDashboardPage() {
           expectingIndividualDomain: msg.type === 'domain_generated'
         });
         
-        // 🔧 PHASE 3 FIX: Handle individual domain_generated events (NOT batches)
+        // 🔧 REALTIME_STREAMING_FIX: Handle individual domain_generated events with enhanced logging
         if (msg.type === 'domain_generated' && msg.data && typeof msg.data === 'object') {
           const data = msg.data as {
             domain?: string;
@@ -935,37 +948,61 @@ export default function CampaignDashboardPage() {
           const batchSize = data.batchSize || 1;
           
           if (domainName) {
-            console.log(`🔧 [REALTIME_STREAMING] Processing INDIVIDUAL domain event:`, {
+            console.log(`🔧 [REALTIME_STREAMING] Processing INDIVIDUAL domain event (streaming continues even after completion):`, {
               domainName,
               offsetIndex: data.offsetIndex,
               batchSize: batchSize,
               isIndividualEvent: batchSize === 1,
               realTimeStreaming: true,
               backendId: data.id,
-              generatedAt: data.generatedAt
+              generatedAt: data.generatedAt,
+              campaignStatus: campaign?.status,
+              streamingContinuesAfterCompletion: true
             });
             
-            // Ensure this is truly an individual domain event
+            // 🔧 REALTIME_STREAMING_FIX: Process all individual domain events regardless of campaign status
+            // This ensures real-time table updates continue even after campaign completion
             if (batchSize === 1 || !data.batchSize) {
               handleDomainReceived(domainName, data);
             } else {
               console.warn(`⚠️ [REALTIME_STREAMING] Received batch event (size: ${batchSize}) - expecting individual events`);
-              // Still process but log the issue
+              // Still process but log the issue - all domain events should update the table in real-time
               handleDomainReceived(domainName, data);
             }
           } else {
             console.error(`❌ [REALTIME_STREAMING] domain_generated event missing domain name:`, data);
           }
         }
-        // Handle campaign completion with real-time finalization
+        // 🔧 REALTIME_STREAMING_FIX: Handle campaign completion with continued real-time updates
         else if (msg.type === 'campaign_completed' || msg.type === 'campaign_complete') {
-          console.log(`✅ [REALTIME_STREAMING] Campaign completed - individual streaming finished`);
-          handleStreamComplete('completed');
+          console.log(`✅ [REALTIME_STREAMING] Campaign completed - continuing to stream final domain results in real-time`);
+          // Don't call handleStreamComplete immediately - let the grace period handle cleanup
+          // This ensures final domain events continue to update the table in real-time
+          
+          // Update campaign status without disconnecting stream
+          if (isMountedRef.current) {
+            setCampaign(prev => prev ? { ...prev, status: 'completed' } : null);
+            
+            // Clear action loading state
+            setActionLoading(prev => {
+              const newLoading = { ...prev };
+              delete newLoading[`phase-domain_generation`];
+              return newLoading;
+            });
+          }
+          
+          // Schedule final data sync after grace period for real-time updates
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              console.log(`🔄 [REALTIME_STREAMING] Final data sync after completion grace period`);
+              loadCampaignData(false);
+            }
+          }, 6000); // After grace period ends
         }
         else if (msg.type === 'campaign_failed' || msg.type === 'campaign_error') {
           const data = msg.data as { reason?: string; error?: string } | undefined;
           const errorReason = data?.reason || data?.error || 'Campaign failed via WebSocket';
-          console.log(`❌ [REALTIME_STREAMING] Campaign failed - individual streaming stopped:`, errorReason);
+          console.log(`❌ [REALTIME_STREAMING] Campaign failed - stopping real-time streaming:`, errorReason);
           handleStreamComplete('failed', new Error(errorReason));
         }
         // 🔧 PHASE 3 FIX: Handle real-time progress updates (individual, not batched)
@@ -1035,7 +1072,7 @@ export default function CampaignDashboardPage() {
         streamCleanupRef.current = null;
       }
     };
-  }, [campaign, campaignId, loadCampaignData, generatedDomains.length]);
+  }, [campaign?.id, campaign?.status, campaign?.campaignType, campaignId]);
 
 
   const submitStartPhase = async (payload: StartCampaignPhasePayload) => {

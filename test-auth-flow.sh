@@ -8,7 +8,7 @@ echo "1. Performing login..."
 curl -c test_cookies.txt -X POST \
   -H "Content-Type: application/json" \
   -H "X-Requested-With: XMLHttpRequest" \
-  -d '{"email":"admin@domainflow.com","password":"AdminPassword123!"}' \
+  -d '{"email":"test@example.com","password":"password123"}' \
   http://localhost:8080/api/v2/auth/login > login_response.json
 
 echo "Login response:"

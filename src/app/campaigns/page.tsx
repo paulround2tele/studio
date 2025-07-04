@@ -271,7 +271,7 @@ function CampaignsPageContent() {
         wsCleanup();
       }
     };
-  }, [wsConnected]);
+  }, []); // WebSocket should connect once on mount
 
   // MEMORY LEAK FIX: Track component mount status
   useEffect(() => {
@@ -618,7 +618,7 @@ function CampaignsPageContent() {
         setGlobalLoading('campaigns_load', false);
       }
     }
-  }, [campaigns.length, isGlobalLoading, toast, setGlobalLoading]);
+  }, [toast]);
 
 
   useEffect(() => {
@@ -659,7 +659,7 @@ function CampaignsPageContent() {
         abortControllerRef.current = null;
       }
     };
-  }, [loadCampaignsData]);
+  }, []); // Initial load effect - should only run once on mount
 
   // MEMORY LEAK FIX: Cleanup on unmount
   useEffect(() => {
