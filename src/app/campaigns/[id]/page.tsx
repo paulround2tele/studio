@@ -535,7 +535,7 @@ export default function CampaignDashboardPage() {
           timestamp: new Date().toISOString()
         });
     }
-  }, [campaignId, campaignTypeFromQuery, toast, startLoading, stopLoading, loadingOperationId, searchParams]);
+  }, [campaignId, campaignTypeFromQuery]);
 
   useEffect(() => {
     loadCampaignData();
