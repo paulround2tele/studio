@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -343,13 +344,100 @@ type CodeMap struct {
 	Snippet   string `json:"snippet"`
 }
 
+// Point represents a coordinate point with optional timing and pressure for gestures
+type Point struct {
+	X        float64 `json:"x"`
+	Y        float64 `json:"y"`
+	Delay    int     `json:"delay,omitempty"`
+	Pressure float64 `json:"pressure,omitempty"`
+}
+
 // UIAction describes an automated browser action for Playwright
 type UIAction struct {
+	// Existing fields (maintained for backward compatibility)
 	Action   string `json:"action"`
 	Selector string `json:"selector,omitempty"`
 	Text     string `json:"text,omitempty"`
 	URL      string `json:"url,omitempty"`
 	Timeout  int    `json:"timeout,omitempty"`
+	
+	// Coordinate fields for precise positioning
+	X    *float64 `json:"x,omitempty"`
+	Y    *float64 `json:"y,omitempty"`
+	ToX  *float64 `json:"toX,omitempty"`
+	ToY  *float64 `json:"toY,omitempty"`
+	
+	// Mouse configuration
+	Button string `json:"button,omitempty"`
+	Clicks int    `json:"clicks,omitempty"`
+	Delay  int    `json:"delay,omitempty"`
+	
+	// Coordinate system options
+	CoordSystem string `json:"coordSystem,omitempty"`
+	RelativeTo  string `json:"relativeTo,omitempty"`
+	
+	// Gesture support
+	Points   []Point `json:"points,omitempty"`
+	Pressure float64 `json:"pressure,omitempty"`
+	Smooth   bool    `json:"smooth,omitempty"`
+	
+	// Scroll configuration
+	ScrollX     *float64 `json:"scrollX,omitempty"`
+	ScrollY     *float64 `json:"scrollY,omitempty"`
+	ScrollDelta int      `json:"scrollDelta,omitempty"`
+}
+
+// ValidateCoordinateAction validates coordinate-based actions in UIAction
+func (ua *UIAction) ValidateCoordinateAction() error {
+	// Check for coordinate-based actions
+	coordinateActions := map[string]bool{
+		"click":       true,
+		"hover":       true,
+		"drag":        true,
+		"scroll":      true,
+		"gesture":     true,
+		"mouse_move":  true,
+		"mouse_down":  true,
+		"mouse_up":    true,
+	}
+	
+	if !coordinateActions[ua.Action] {
+		return nil // Non-coordinate actions don't need validation
+	}
+	
+	// Validate coordinate requirements
+	switch ua.Action {
+	case "click", "hover", "mouse_move", "mouse_down", "mouse_up":
+		if ua.X == nil || ua.Y == nil {
+			return fmt.Errorf("action '%s' requires X and Y coordinates", ua.Action)
+		}
+	case "drag":
+		if ua.X == nil || ua.Y == nil || ua.ToX == nil || ua.ToY == nil {
+			return fmt.Errorf("action '%s' requires X, Y, ToX, and ToY coordinates", ua.Action)
+		}
+	case "scroll":
+		if ua.ScrollX == nil && ua.ScrollY == nil && ua.ScrollDelta == 0 {
+			return fmt.Errorf("action '%s' requires scrollX, scrollY, or scrollDelta", ua.Action)
+		}
+	case "gesture":
+		if len(ua.Points) < 2 {
+			return fmt.Errorf("action '%s' requires at least 2 points", ua.Action)
+		}
+	}
+	
+	// Validate coordinate system if specified
+	if ua.CoordSystem != "" {
+		validSystems := map[string]bool{
+			"viewport": true,
+			"element":  true,
+			"page":     true,
+		}
+		if !validSystems[ua.CoordSystem] {
+			return fmt.Errorf("invalid coordinate system: %s", ua.CoordSystem)
+		}
+	}
+	
+	return nil
 }
 
 // UIScreenshot represents the screenshot location or encoded data
@@ -690,4 +778,401 @@ type AdvancedTool struct {
 	Description string `json:"description"`
 	Path        string `json:"path"`
 	Category    string `json:"category"`
+}
+
+// ===== INCREMENTAL UI STATE STREAMING MODELS =====
+
+// DOMOperation represents the type of DOM change
+type DOMOperation string
+
+const (
+	DOMOpAdd        DOMOperation = "add"        // Node added
+	DOMOpRemove     DOMOperation = "remove"     // Node removed
+	DOMOpModify     DOMOperation = "modify"     // Node modified
+	DOMOpAttribute  DOMOperation = "attribute"  // Attribute changed
+	DOMOpText       DOMOperation = "text"       // Text content changed
+	DOMOpStyle      DOMOperation = "style"      // Style changed
+	DOMOpClass      DOMOperation = "class"      // Class list changed
+)
+
+// ChangeType represents the category of UI change
+type ChangeType string
+
+const (
+	ChangeTypeDOM        ChangeType = "dom"        // DOM structure change
+	ChangeTypeVisual     ChangeType = "visual"     // Visual/style change
+	ChangeTypeContent    ChangeType = "content"    // Text/content change
+	ChangeTypeInteraction ChangeType = "interaction" // Interactive element change
+	ChangeTypeLayout     ChangeType = "layout"     // Layout/positioning change
+)
+
+// ChangePriority represents the importance of a change for AI decision-making
+type ChangePriority int
+
+const (
+	PriorityLow      ChangePriority = 1 // Style changes, animations
+	PriorityMedium   ChangePriority = 2 // Content updates, form changes
+	PriorityHigh     ChangePriority = 3 // Navigation, modal dialogs
+	PriorityCritical ChangePriority = 4 // Error states, security prompts
+)
+
+// StreamingMode controls how UI state is captured and transmitted
+type StreamingMode string
+
+const (
+	StreamingModeFull        StreamingMode = "full"        // Current full capture behavior
+	StreamingModeIncremental StreamingMode = "incremental" // Delta-based streaming
+	StreamingModeAdaptive    StreamingMode = "adaptive"    // Smart switching based on change size
+)
+
+// CompressionType specifies the compression algorithm used for data
+type CompressionType string
+
+const (
+	CompressionNone   CompressionType = "none"
+	CompressionGzip   CompressionType = "gzip"
+	CompressionBrotli CompressionType = "brotli"
+	CompressionDelta  CompressionType = "delta"  // Binary delta compression
+	CompressionWebP   CompressionType = "webp"   // WebP image compression
+)
+
+// MessageType represents the type of streaming message
+type MessageType string
+
+const (
+	MsgTypeIncremental MessageType = "incremental"
+	MsgTypeSnapshot    MessageType = "snapshot"
+	MsgTypeHeartbeat   MessageType = "heartbeat"
+	MsgTypeResync      MessageType = "resync"
+)
+
+// MessagePriority controls message delivery order
+type MessagePriority int
+
+const (
+	MsgPriorityLow    MessagePriority = 1
+	MsgPriorityNormal MessagePriority = 2
+	MsgPriorityHigh   MessagePriority = 3
+	MsgPriorityUrgent MessagePriority = 4
+)
+
+// Rectangle represents a bounding box for screenshots and element positioning
+type Rectangle struct {
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
+}
+
+// DOMDelta represents a single change to the DOM structure
+type DOMDelta struct {
+	OperationType DOMOperation          `json:"operation"`
+	TargetPath    string                `json:"target_path"`    // CSS selector path
+	ElementID     string                `json:"element_id,omitempty"`
+	OldValue      interface{}           `json:"old_value,omitempty"`
+	NewValue      interface{}           `json:"new_value,omitempty"`
+	Attributes    map[string]string     `json:"attributes,omitempty"`
+	BoundingRect  *Rectangle            `json:"bounding_rect,omitempty"`
+	ChildNodes    []string              `json:"child_nodes,omitempty"`  // For add/remove operations
+	TextContent   string                `json:"text_content,omitempty"`
+	Timestamp     int64                 `json:"timestamp"`              // Microsecond precision
+}
+
+// ScreenshotRegion represents a selective screenshot of a page region
+type ScreenshotRegion struct {
+	RegionID     string     `json:"region_id"`
+	BoundingBox  Rectangle  `json:"bounding_box"`
+	ImageData    []byte     `json:"image_data"`          // Compressed image data
+	Encoding     string     `json:"encoding"`            // "webp", "jpeg", "png"
+	ChangeHash   string     `json:"change_hash"`         // For deduplication
+	Compression  float64    `json:"compression_ratio"`   // Achieved compression ratio
+	IsDiff       bool       `json:"is_diff"`             // True if this is a diff image
+	BaseRegionID string     `json:"base_region_id,omitempty"` // For diff images
+}
+
+// ChangeMetadata provides context about what triggered the change
+type ChangeMetadata struct {
+	TriggerAction     string         `json:"trigger_action"`      // Action that caused the change
+	AffectedAreas     []string       `json:"affected_areas"`      // CSS selectors of affected elements
+	ComponentTypes    []string       `json:"component_types"`     // Types of components affected
+	Priority          ChangePriority `json:"priority"`
+	CompressedSize    int            `json:"compressed_size"`     // Size after compression
+	OriginalSize      int            `json:"original_size"`       // Size before compression
+	ProcessingTime    int64          `json:"processing_time_us"`  // Time to process changes (microseconds)
+	DetectionLatency  int64          `json:"detection_latency_us"` // Time from action to detection
+	NetworkLatency    int64          `json:"network_latency_us,omitempty"` // Network transmission time
+}
+
+// IncrementalState represents a single incremental update to UI state
+type IncrementalState struct {
+	SessionID      string                 `json:"session_id"`
+	SequenceNum    int64                  `json:"sequence_num"`
+	Timestamp      time.Time              `json:"timestamp"`
+	ChangeType     ChangeType             `json:"change_type"`
+	DOMDeltas      []DOMDelta             `json:"dom_deltas,omitempty"`
+	ScreenRegions  []ScreenshotRegion     `json:"screen_regions,omitempty"`
+	ComponentState map[string]interface{} `json:"component_state,omitempty"`
+	Metadata       ChangeMetadata         `json:"metadata"`
+	PreviousState  string                 `json:"previous_state_id,omitempty"` // Reference to previous state
+	Checksum       string                 `json:"checksum"`                    // Integrity verification
+}
+
+// DOMSnapshot represents a complete DOM state for reconstruction
+type DOMSnapshot struct {
+	ElementTree  map[string]DOMElement `json:"element_tree"`
+	VisibleNodes []string              `json:"visible_nodes"`
+	Checksum     string                `json:"checksum"`
+	CapturedAt   time.Time             `json:"captured_at"`
+	ViewportSize Rectangle             `json:"viewport_size"`
+}
+
+// DOMElement represents a DOM element in the snapshot
+type DOMElement struct {
+	TagName      string                `json:"tag_name"`
+	Attributes   map[string]string     `json:"attributes,omitempty"`
+	TextContent  string                `json:"text_content,omitempty"`
+	BoundingRect Rectangle             `json:"bounding_rect"`
+	Children     []string              `json:"children,omitempty"`
+	Parent       string                `json:"parent,omitempty"`
+	IsVisible    bool                  `json:"is_visible"`
+	ComputedStyle map[string]string    `json:"computed_style,omitempty"`
+}
+
+// StateCache manages the current UI state for incremental updates
+type StateCache struct {
+	CurrentDOM      *DOMSnapshot           `json:"current_dom"`
+	ScreenshotCache map[string][]byte      `json:"screenshot_cache"`
+	ComponentStates map[string]interface{} `json:"component_states"`
+	LastUpdate      time.Time              `json:"last_update"`
+	Version         int64                  `json:"version"`
+	SessionID       string                 `json:"session_id"`
+	MaxCacheSize    int                    `json:"max_cache_size"`
+	CacheHitRate    float64                `json:"cache_hit_rate"`
+}
+
+// StreamMessage represents a message in the incremental streaming protocol
+type StreamMessage struct {
+	Type         MessageType      `json:"type"`
+	SessionID    string           `json:"session_id"`
+	SequenceNum  int64            `json:"sequence_num"`
+	Payload      interface{}      `json:"payload"`
+	Compression  CompressionType  `json:"compression"`
+	Priority     MessagePriority  `json:"priority"`
+	Timestamp    time.Time        `json:"timestamp"`
+	Size         int              `json:"size"`          // Message size in bytes
+	Checksum     string           `json:"checksum"`      // Message integrity check
+}
+
+// CompressedDelta represents a compressed set of changes
+type CompressedDelta struct {
+	DOMDiff         []byte  `json:"dom_diff"`          // Compressed DOM changes
+	ImageDiffs      []byte  `json:"image_diffs"`       // Compressed image changes
+	StateDiff       []byte  `json:"state_diff"`        // Compressed state changes
+	CompressionType string  `json:"compression_type"`
+	CompressionRatio float64 `json:"compression_ratio"`
+	OriginalSize    int     `json:"original_size"`
+	CompressedSize  int     `json:"compressed_size"`
+}
+
+// IncrementalUIAction extends UIAction with incremental streaming capabilities
+type IncrementalUIAction struct {
+	UIAction                               // Embed existing action
+	
+	// Incremental-specific fields
+	ExpectedChanges   []string        `json:"expected_changes"`   // CSS selectors of elements expected to change
+	RegionsOfInterest []Rectangle     `json:"regions_of_interest"` // Specific regions to monitor
+	StreamingMode     StreamingMode   `json:"streaming_mode"`
+	FeedbackInterval  time.Duration   `json:"feedback_interval"`   // How often to send updates
+	MaxDeltaSize      int             `json:"max_delta_size"`      // Switch to snapshot if delta exceeds this
+	RequireVisual     bool            `json:"require_visual"`      // Whether visual confirmation is needed
+	Priority          ChangePriority  `json:"priority"`            // Priority for processing
+}
+
+// IncrementalSession manages a streaming session
+type IncrementalSession struct {
+	SessionID      string                    `json:"session_id"`
+	StartURL       string                    `json:"start_url"`
+	Mode           StreamingMode             `json:"mode"`
+	StateCache     *StateCache               `json:"state_cache"`
+	ChangeStream   chan *IncrementalState    `json:"-"`                  // Not serialized
+	StartTime      time.Time                 `json:"start_time"`
+	LastActivity   time.Time                 `json:"last_activity"`
+	TotalChanges   int64                     `json:"total_changes"`
+	BytesSaved     int64                     `json:"bytes_saved"`        // Bytes saved vs full capture
+	CompressionAvg float64                   `json:"compression_avg"`    // Average compression ratio
+	IsActive       bool                      `json:"is_active"`
+}
+
+// StreamingThresholds defines when to switch between streaming modes
+type StreamingThresholds struct {
+	MaxDeltaSize        int           `json:"max_delta_size"`        // Switch to snapshot if delta too large
+	MaxRegionCount      int           `json:"max_region_count"`      // Limit screenshot regions
+	CompressionRatio    float64       `json:"compression_ratio"`     // Minimum compression efficiency
+	LatencyThreshold    time.Duration `json:"latency_threshold"`     // Maximum acceptable delay
+	MemoryThreshold     int64         `json:"memory_threshold"`      // Maximum memory usage
+	CacheHitThreshold   float64       `json:"cache_hit_threshold"`   // Minimum cache hit rate
+}
+
+// PerformanceTracker monitors streaming performance
+type PerformanceTracker struct {
+	NetworkLatency     time.Duration `json:"network_latency"`
+	CompressionLatency time.Duration `json:"compression_latency"`
+	DetectionLatency   time.Duration `json:"detection_latency"`
+	MemoryUsage        int64         `json:"memory_usage"`
+	CacheHitRate       float64       `json:"cache_hit_rate"`
+	ThroughputMbps     float64       `json:"throughput_mbps"`
+	ErrorRate          float64       `json:"error_rate"`
+	LastUpdated        time.Time     `json:"last_updated"`
+}
+
+// EnhancedUIPromptPayload extends UIPromptPayload with incremental data
+type EnhancedUIPromptPayload struct {
+	UIPromptPayload                    // Embed existing payload
+	
+	// Incremental enhancements
+	IncrementalState *IncrementalState `json:"incremental_state,omitempty"`
+	SessionID        string            `json:"session_id"`
+	SequenceNum      int64             `json:"sequence_num"`
+	IsIncremental    bool              `json:"is_incremental"`
+	TokenReduction   float64           `json:"token_reduction"`    // Percentage reduction vs full capture
+	ProcessingTime   time.Duration     `json:"processing_time"`
+	QualityScore     float64           `json:"quality_score"`      // Visual fidelity score (0-1)
+}
+
+// ValidateIncrementalAction validates incremental-specific action parameters
+func (iua *IncrementalUIAction) ValidateIncrementalAction() error {
+	// Validate base UIAction first
+	if err := iua.UIAction.ValidateCoordinateAction(); err != nil {
+		return err
+	}
+	
+	// Validate streaming mode
+	validModes := map[StreamingMode]bool{
+		StreamingModeFull:        true,
+		StreamingModeIncremental: true,
+		StreamingModeAdaptive:    true,
+	}
+	if !validModes[iua.StreamingMode] {
+		return fmt.Errorf("invalid streaming mode: %s", iua.StreamingMode)
+	}
+	
+	// Validate feedback interval
+	if iua.FeedbackInterval < 0 {
+		return fmt.Errorf("feedback interval cannot be negative")
+	}
+	
+	// Validate max delta size
+	if iua.MaxDeltaSize < 0 {
+		return fmt.Errorf("max delta size cannot be negative")
+	}
+	
+	// Validate regions of interest
+	for i, region := range iua.RegionsOfInterest {
+		if region.Width <= 0 || region.Height <= 0 {
+			return fmt.Errorf("region %d has invalid dimensions", i)
+		}
+	}
+	
+	return nil
+}
+
+// CalculateTokenReduction estimates the token reduction compared to full capture
+func (payload *EnhancedUIPromptPayload) CalculateTokenReduction() float64 {
+	if payload.IncrementalState == nil {
+		return 0.0
+	}
+	
+	// Estimate tokens for full payload
+	fullTokens := len(payload.HTML) + len(payload.Screenshot.Base64)
+	for _, comp := range payload.Metadata {
+		fullTokens += len(comp.Name) + len(comp.Tag) + len(comp.ID)
+	}
+	
+	// Estimate tokens for incremental payload
+	incrementalTokens := 0
+	for _, delta := range payload.IncrementalState.DOMDeltas {
+		incrementalTokens += len(delta.TargetPath) + len(delta.TextContent)
+	}
+	for _, region := range payload.IncrementalState.ScreenRegions {
+		incrementalTokens += len(region.ImageData)
+	}
+	
+	if fullTokens == 0 {
+		return 0.0
+	}
+	
+	reduction := 1.0 - (float64(incrementalTokens) / float64(fullTokens))
+	if reduction < 0 {
+		reduction = 0.0
+	}
+	
+	return reduction
+}
+
+// GetCompressionRatio returns the achieved compression ratio
+func (delta *CompressedDelta) GetCompressionRatio() float64 {
+	if delta.OriginalSize == 0 {
+		return 0.0
+	}
+	return float64(delta.CompressedSize) / float64(delta.OriginalSize)
+}
+
+// IsExpired checks if the session has expired based on activity
+func (session *IncrementalSession) IsExpired(timeout time.Duration) bool {
+	return time.Since(session.LastActivity) > timeout
+}
+
+// UpdateActivity updates the last activity timestamp
+func (session *IncrementalSession) UpdateActivity() {
+	session.LastActivity = time.Now()
+}
+
+// EstimateBandwidthSavings calculates bandwidth savings compared to full capture
+func (session *IncrementalSession) EstimateBandwidthSavings(fullCaptureSize int64) float64 {
+	if session.BytesSaved == 0 || fullCaptureSize == 0 {
+		return 0.0
+	}
+	
+	estimatedFullSize := fullCaptureSize * session.TotalChanges
+	return float64(session.BytesSaved) / float64(estimatedFullSize)
+}
+
+// === BRIDGE INTEGRATION MODELS ===
+
+// IncrementalBrowseResult represents the result of incremental browsing
+type IncrementalBrowseResult struct {
+	Type          string                `json:"type"`             // "initial" or "delta"
+	SessionID     string                `json:"session_id"`
+	URL           string                `json:"url"`
+	HTML          string                `json:"html,omitempty"`   // Full HTML for initial, empty for delta
+	Screenshot    string                `json:"screenshot,omitempty"` // Full screenshot for initial, empty for delta
+	Delta         *DOMDelta             `json:"delta,omitempty"`
+	Regions       []ScreenshotRegion    `json:"regions,omitempty"`
+	CompressedData *CompressedDelta     `json:"compressed_data,omitempty"`
+	TokenSavings  int                   `json:"token_savings"`
+}
+
+// IncrementalActionResult represents the result of an incremental action
+type IncrementalActionResult struct {
+	SessionID     string                `json:"session_id"`
+	ActionType    string                `json:"action_type"`
+	Success       bool                  `json:"success"`
+	Delta         *DOMDelta             `json:"delta,omitempty"`
+	Regions       []ScreenshotRegion    `json:"regions,omitempty"`
+	CompressedData *CompressedDelta     `json:"compressed_data,omitempty"`
+	TokenSavings  int                   `json:"token_savings"`
+	Timestamp     time.Time             `json:"timestamp"`
+}
+
+// StreamingStats represents performance and usage statistics for streaming
+type StreamingStats struct {
+	SessionID       string            `json:"session_id"`
+	URL             string            `json:"url"`
+	StreamingMode   StreamingMode     `json:"streaming_mode"`
+	TotalActions    int64             `json:"total_actions"`
+	TotalDeltas     int64             `json:"total_deltas"`
+	TokensSaved     int64             `json:"tokens_saved"`
+	CompressionRatio float64          `json:"compression_ratio"`
+	SessionDuration time.Duration     `json:"session_duration"`
+	LastUpdate      time.Time         `json:"last_update"`
 }

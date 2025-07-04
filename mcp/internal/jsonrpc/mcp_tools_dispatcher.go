@@ -382,6 +382,164 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 			},
 		},
 		{
+			Name:        "browse_with_playwright_incremental",
+			Description: "Browse with incremental UI state streaming for optimized token usage",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"url": map[string]interface{}{
+						"type":        "string",
+						"description": "URL to visit",
+					},
+					"sessionId": map[string]interface{}{
+						"type":        "string",
+						"description": "Session ID for incremental state tracking (optional)",
+					},
+					"streamingMode": map[string]interface{}{
+						"type":        "string",
+						"description": "Streaming mode: 'full', 'incremental', or 'adaptive'",
+						"enum":        []string{"full", "incremental", "adaptive"},
+					},
+				},
+				"required": []string{"url"},
+			},
+		},
+		{
+			Name:        "process_ui_action_incremental",
+			Description: "Process UI action with incremental state updates",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sessionId": map[string]interface{}{
+						"type":        "string",
+						"description": "Session ID for incremental state tracking",
+					},
+					"action": map[string]interface{}{
+						"type":        "string",
+						"description": "Type of action to perform",
+						"enum":        []string{"click", "type", "hover", "scroll", "navigate", "wait"},
+					},
+					"selector": map[string]interface{}{
+						"type":        "string",
+						"description": "CSS selector for the target element",
+					},
+					"text": map[string]interface{}{
+						"type":        "string",
+						"description": "Text to type (for type action)",
+					},
+					"url": map[string]interface{}{
+						"type":        "string",
+						"description": "URL to navigate to (for navigate action)",
+					},
+					"x": map[string]interface{}{
+						"type":        "number",
+						"description": "X coordinate for action",
+					},
+					"y": map[string]interface{}{
+						"type":        "number",
+						"description": "Y coordinate for action",
+					},
+					"timeout": map[string]interface{}{
+						"type":        "integer",
+						"description": "Timeout in milliseconds",
+						"minimum":     0,
+					},
+				},
+				"required": []string{"sessionId", "action"},
+			},
+		},
+		{
+			Name:        "get_incremental_ui_state",
+			Description: "Get current incremental UI state for a session",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sessionId": map[string]interface{}{
+						"type":        "string",
+						"description": "Session ID for incremental state tracking",
+					},
+					"includeScreenshot": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Include screenshot in response",
+					},
+					"includeDeltas": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Include DOM deltas in response",
+					},
+				},
+				"required": []string{"sessionId"},
+			},
+		},
+		{
+			Name:        "set_streaming_mode",
+			Description: "Set streaming mode for incremental UI updates",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sessionId": map[string]interface{}{
+						"type":        "string",
+						"description": "Session ID for incremental state tracking",
+					},
+					"mode": map[string]interface{}{
+						"type":        "string",
+						"description": "Streaming mode to set",
+						"enum":        []string{"full", "incremental", "adaptive"},
+					},
+					"adaptiveThreshold": map[string]interface{}{
+						"type":        "number",
+						"description": "Token usage threshold for adaptive mode (optional)",
+						"minimum":     0,
+					},
+				},
+				"required": []string{"sessionId", "mode"},
+			},
+		},
+		{
+			Name:        "get_stream_stats",
+			Description: "Get streaming statistics and performance metrics",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sessionId": map[string]interface{}{
+						"type":        "string",
+						"description": "Session ID for incremental state tracking (optional)",
+					},
+				},
+			},
+		},
+		{
+			Name:        "cleanup_incremental_session",
+			Description: "Clean up incremental session and free resources",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sessionId": map[string]interface{}{
+						"type":        "string",
+						"description": "Session ID to clean up",
+					},
+				},
+				"required": []string{"sessionId"},
+			},
+		},
+		{
+			Name:        "get_incremental_debug_info",
+			Description: "Get debug information for incremental streaming session",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sessionId": map[string]interface{}{
+						"type":        "string",
+						"description": "Session ID for debug information",
+					},
+					"includeDetailedState": map[string]interface{}{
+						"type":        "boolean",
+						"description": "Include detailed internal state information",
+					},
+				},
+				"required": []string{"sessionId"},
+			},
+		},
+		{
 			Name:        "get_latest_screenshot",
 			Description: "Return the most recent Playwright screenshot",
 			InputSchema: map[string]interface{}{
@@ -440,11 +598,134 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 						"items": map[string]interface{}{
 							"type": "object",
 							"properties": map[string]interface{}{
-								"action":   map[string]interface{}{"type": "string"},
-								"selector": map[string]interface{}{"type": "string"},
-								"text":     map[string]interface{}{"type": "string"},
-								"url":      map[string]interface{}{"type": "string"},
-								"timeout":  map[string]interface{}{"type": "integer"},
+								// Existing fields (backward compatibility)
+								"action": map[string]interface{}{
+									"type":        "string",
+									"description": "Type of action to perform",
+									"enum": []string{
+										"click", "type", "hover", "scroll", "navigate", "wait",
+										"moveto", "clickat", "doubleclickat", "rightclickat",
+										"dragfrom", "hoverat", "scrollat", "gesture",
+									},
+								},
+								"selector": map[string]interface{}{
+									"type":        "string",
+									"description": "CSS selector for the target element",
+								},
+								"text": map[string]interface{}{
+									"type":        "string",
+									"description": "Text to type or search for",
+								},
+								"url": map[string]interface{}{
+									"type":        "string",
+									"description": "URL to navigate to",
+								},
+								"timeout": map[string]interface{}{
+									"type":        "integer",
+									"description": "Timeout in milliseconds",
+									"minimum":     0,
+								},
+								
+								// Coordinate fields for precise positioning
+								"x": map[string]interface{}{
+									"type":        "number",
+									"description": "X coordinate for action",
+								},
+								"y": map[string]interface{}{
+									"type":        "number",
+									"description": "Y coordinate for action",
+								},
+								"toX": map[string]interface{}{
+									"type":        "number",
+									"description": "Target X coordinate for drag operations",
+								},
+								"toY": map[string]interface{}{
+									"type":        "number",
+									"description": "Target Y coordinate for drag operations",
+								},
+								
+								// Mouse configuration
+								"button": map[string]interface{}{
+									"type":        "string",
+									"description": "Mouse button to use",
+									"enum":        []string{"left", "right", "middle"},
+								},
+								"clicks": map[string]interface{}{
+									"type":        "integer",
+									"description": "Number of clicks to perform",
+									"minimum":     1,
+								},
+								"delay": map[string]interface{}{
+									"type":        "integer",
+									"description": "Delay between actions in milliseconds",
+									"minimum":     0,
+								},
+								
+								// Coordinate system options
+								"coordSystem": map[string]interface{}{
+									"type":        "string",
+									"description": "Coordinate system to use",
+									"enum":        []string{"viewport", "element", "page"},
+								},
+								"relativeTo": map[string]interface{}{
+									"type":        "string",
+									"description": "Element selector to use as coordinate reference",
+								},
+								
+								// Gesture support
+								"points": map[string]interface{}{
+									"type":        "array",
+									"description": "Array of points for gesture actions",
+									"items": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"x": map[string]interface{}{
+												"type":        "number",
+												"description": "X coordinate of the point",
+											},
+											"y": map[string]interface{}{
+												"type":        "number",
+												"description": "Y coordinate of the point",
+											},
+											"delay": map[string]interface{}{
+												"type":        "integer",
+												"description": "Delay before this point in milliseconds",
+												"minimum":     0,
+											},
+											"pressure": map[string]interface{}{
+												"type":        "number",
+												"description": "Pressure level for touch actions (0-1)",
+												"minimum":     0,
+												"maximum":     1,
+											},
+										},
+										"required": []string{"x", "y"},
+									},
+								},
+								"pressure": map[string]interface{}{
+									"type":        "number",
+									"description": "Default pressure level for gesture actions (0-1)",
+									"minimum":     0,
+									"maximum":     1,
+								},
+								"smooth": map[string]interface{}{
+									"type":        "boolean",
+									"description": "Whether to smooth gesture movements",
+								},
+								
+								// Scroll configuration
+								"scrollX": map[string]interface{}{
+									"type":        "number",
+									"description": "Horizontal scroll amount in pixels",
+								},
+								"scrollY": map[string]interface{}{
+									"type":        "number",
+									"description": "Vertical scroll amount in pixels",
+								},
+								"scrollDelta": map[string]interface{}{
+									"type":        "integer",
+									"description": "Scroll wheel delta amount",
+								},
 							},
 							"required": []string{"action"},
 						},
@@ -828,6 +1109,20 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callApplyCodeChange(ctx, toolCall.Arguments)
 	case "browse_with_playwright":
 		return s.callBrowseWithPlaywright(ctx, toolCall.Arguments)
+	case "browse_with_playwright_incremental":
+		return s.callBrowseWithPlaywrightIncremental(ctx, toolCall.Arguments)
+	case "process_ui_action_incremental":
+		return s.callProcessUIActionIncremental(ctx, toolCall.Arguments)
+	case "get_incremental_ui_state":
+		return s.callGetIncrementalUIState(ctx, toolCall.Arguments)
+	case "set_streaming_mode":
+		return s.callSetStreamingMode(ctx, toolCall.Arguments)
+	case "get_stream_stats":
+		return s.callGetStreamStats(ctx, toolCall.Arguments)
+	case "cleanup_incremental_session":
+		return s.callCleanupIncrementalSession(ctx, toolCall.Arguments)
+	case "get_incremental_debug_info":
+		return s.callGetIncrementalDebugInfo(ctx, toolCall.Arguments)
 	case "get_latest_screenshot":
 		return s.callGetLatestScreenshot(ctx, toolCall.Arguments)
 	case "get_ui_metadata":

@@ -87,7 +87,14 @@
         "get_enhanced_api_schema",
         "get_enhanced_security_analysis",
         "get_enhanced_dependencies",
-        "get_business_domain_routes"
+        "get_business_domain_routes",
+        "browse_with_playwright_incremental",
+        "cleanup_incremental_session",
+        "get_stream_stats",
+        "get_incremental_debug_info",
+        "set_streaming_mode",
+        "get_incremental_ui_state",
+        "process_ui_action_incremental"
       ],
       "timeout": 300,
       "disabled": false

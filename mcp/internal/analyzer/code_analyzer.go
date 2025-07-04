@@ -694,6 +694,99 @@ func RunTerminalCommand(command, workingDir string) (models.CommandResult, error
 	return result, err
 }
 
+// transformCoordinates transforms action coordinates based on the specified coordinate system
+func transformCoordinates(action *models.UIAction, page playwright.Page) (float64, float64, error) {
+	if action.X == nil || action.Y == nil {
+		return 0, 0, fmt.Errorf("coordinates X and Y are required")
+	}
+
+	x, y := *action.X, *action.Y
+
+	switch action.CoordSystem {
+	case "viewport", "":
+		// Default viewport coordinates - no transformation needed
+		return x, y, nil
+		
+	case "element":
+		// Element-relative coordinates
+		if action.RelativeTo == "" {
+			return 0, 0, fmt.Errorf("relativeTo selector is required for element coordinate system")
+		}
+		return getElementRelativeCoords(action.RelativeTo, x, y, page)
+		
+	case "page":
+		// Page coordinates - account for scroll position
+		scrollX, err := page.Evaluate("window.pageXOffset")
+		if err != nil {
+			return 0, 0, fmt.Errorf("failed to get page scroll X: %v", err)
+		}
+		scrollY, err := page.Evaluate("window.pageYOffset")
+		if err != nil {
+			return 0, 0, fmt.Errorf("failed to get page scroll Y: %v", err)
+		}
+		
+		// Convert scroll values to float64
+		scrollXFloat, ok := scrollX.(float64)
+		if !ok {
+			scrollXFloat = 0
+		}
+		scrollYFloat, ok := scrollY.(float64)
+		if !ok {
+			scrollYFloat = 0
+		}
+		
+		return x - scrollXFloat, y - scrollYFloat, nil
+		
+	default:
+		return 0, 0, fmt.Errorf("invalid coordinate system: %s", action.CoordSystem)
+	}
+}
+
+// validateCoordinates validates that coordinates are within the viewport bounds
+func validateCoordinates(x, y float64, page playwright.Page) error {
+	viewportSize := page.ViewportSize()
+	if viewportSize == nil {
+		return fmt.Errorf("failed to get viewport size")
+	}
+	
+	if x < 0 || y < 0 {
+		return fmt.Errorf("coordinates cannot be negative: x=%f, y=%f", x, y)
+	}
+	
+	if x > float64(viewportSize.Width) || y > float64(viewportSize.Height) {
+		return fmt.Errorf("coordinates exceed viewport bounds: x=%f, y=%f (viewport: %dx%d)",
+			x, y, viewportSize.Width, viewportSize.Height)
+	}
+	
+	return nil
+}
+
+// getElementRelativeCoords calculates absolute coordinates relative to an element
+func getElementRelativeCoords(selector string, x, y float64, page playwright.Page) (float64, float64, error) {
+	// Get element bounding box
+	element, err := page.QuerySelector(selector)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to find element with selector '%s': %v", selector, err)
+	}
+	if element == nil {
+		return 0, 0, fmt.Errorf("element not found with selector: %s", selector)
+	}
+	
+	bbox, err := element.BoundingBox()
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to get element bounding box: %v", err)
+	}
+	if bbox == nil {
+		return 0, 0, fmt.Errorf("element has no bounding box (may be hidden): %s", selector)
+	}
+	
+	// Calculate absolute coordinates
+	absoluteX := bbox.X + x
+	absoluteY := bbox.Y + y
+	
+	return absoluteX, absoluteY, nil
+}
+
 // BrowseWithPlaywright uses Playwright to fetch a web page and take a screenshot
 func BrowseWithPlaywright(url string) (models.PlaywrightResult, error) {
 	pw, err := playwright.Run()
@@ -762,41 +855,263 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 	// Execute actions sequentially
 	for _, a := range actions {
 		switch strings.ToLower(a.Action) {
-		case "type":
-			if a.Selector == "" {
-				return models.PlaywrightResult{}, fmt.Errorf("type action missing selector")
+			case "type":
+				if a.Selector == "" {
+					return models.PlaywrightResult{}, fmt.Errorf("type action missing selector")
+				}
+				if err := page.Type(a.Selector, a.Text); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+			case "click":
+				// Enhanced click action with coordinate support
+				if a.X != nil && a.Y != nil {
+					// Coordinate-based click
+					x, y, err := transformCoordinates(&a, page)
+					if err != nil {
+						return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
+					}
+					if err := validateCoordinates(x, y, page); err != nil {
+						return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
+					}
+					
+					// Configure click options
+					clickOpts := playwright.PageClickOptions{
+						Position: &playwright.Position{X: x, Y: y},
+					}
+					if a.Button != "" {
+						button := playwright.MouseButton(a.Button)
+						clickOpts.Button = &button
+					}
+					if a.Clicks > 0 {
+						clickOpts.ClickCount = playwright.Int(a.Clicks)
+					}
+					if a.Delay > 0 {
+						clickOpts.Delay = playwright.Float(float64(a.Delay))
+					}
+					
+					if err := page.Click("body", clickOpts); err != nil {
+						return models.PlaywrightResult{}, err
+					}
+				} else if a.Selector != "" {
+					// Selector-based click (backward compatibility)
+					if err := page.Click(a.Selector); err != nil {
+						return models.PlaywrightResult{}, err
+					}
+				} else {
+					return models.PlaywrightResult{}, fmt.Errorf("click action requires either selector or coordinates")
+				}
+				
+			case "moveto":
+				// Move cursor to coordinates
+				if a.X == nil || a.Y == nil {
+					return models.PlaywrightResult{}, fmt.Errorf("moveto action requires X and Y coordinates")
+				}
+				x, y, err := transformCoordinates(&a, page)
+				if err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
+				}
+				if err := validateCoordinates(x, y, page); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
+				}
+				if err := page.Mouse().Move(x, y); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				
+			case "clickat":
+				// Click at specific coordinates
+				if a.X == nil || a.Y == nil {
+					return models.PlaywrightResult{}, fmt.Errorf("clickat action requires X and Y coordinates")
+				}
+				x, y, err := transformCoordinates(&a, page)
+				if err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
+				}
+				if err := validateCoordinates(x, y, page); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
+				}
+				
+				// Configure click options
+				clickOpts := playwright.MouseClickOptions{}
+				if a.Button != "" {
+					button := playwright.MouseButton(a.Button)
+					clickOpts.Button = &button
+				}
+				if a.Clicks > 0 {
+					clickOpts.ClickCount = playwright.Int(a.Clicks)
+				}
+				if a.Delay > 0 {
+					clickOpts.Delay = playwright.Float(float64(a.Delay))
+				}
+				
+				if err := page.Mouse().Click(x, y, clickOpts); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				
+			case "doubleclickat":
+				// Double-click at coordinates
+				if a.X == nil || a.Y == nil {
+					return models.PlaywrightResult{}, fmt.Errorf("doubleclickat action requires X and Y coordinates")
+				}
+				x, y, err := transformCoordinates(&a, page)
+				if err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
+				}
+				if err := validateCoordinates(x, y, page); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
+				}
+				
+				clickOpts := playwright.MouseClickOptions{
+					ClickCount: playwright.Int(2),
+				}
+				if a.Button != "" {
+					button := playwright.MouseButton(a.Button)
+					clickOpts.Button = &button
+				}
+				if a.Delay > 0 {
+					clickOpts.Delay = playwright.Float(float64(a.Delay))
+				}
+				
+				if err := page.Mouse().Click(x, y, clickOpts); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				
+			case "rightclickat":
+				// Right-click at coordinates
+				if a.X == nil || a.Y == nil {
+					return models.PlaywrightResult{}, fmt.Errorf("rightclickat action requires X and Y coordinates")
+				}
+				x, y, err := transformCoordinates(&a, page)
+				if err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
+				}
+				if err := validateCoordinates(x, y, page); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
+				}
+				
+				clickOpts := playwright.MouseClickOptions{
+					Button: playwright.MouseButtonRight,
+				}
+				if a.Delay > 0 {
+					clickOpts.Delay = playwright.Float(float64(a.Delay))
+				}
+				
+				if err := page.Mouse().Click(x, y, clickOpts); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				
+			case "dragfrom":
+				// Drag from one point to another
+				if a.X == nil || a.Y == nil || a.ToX == nil || a.ToY == nil {
+					return models.PlaywrightResult{}, fmt.Errorf("dragfrom action requires X, Y, ToX, and ToY coordinates")
+				}
+				
+				// Transform start coordinates
+				x, y, err := transformCoordinates(&a, page)
+				if err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("start coordinate transformation failed: %v", err)
+				}
+				if err := validateCoordinates(x, y, page); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("start coordinate validation failed: %v", err)
+				}
+				
+				// Transform end coordinates
+				toAction := a
+				toAction.X = a.ToX
+				toAction.Y = a.ToY
+				toX, toY, err := transformCoordinates(&toAction, page)
+				if err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("end coordinate transformation failed: %v", err)
+				}
+				if err := validateCoordinates(toX, toY, page); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("end coordinate validation failed: %v", err)
+				}
+				
+				// Perform drag sequence
+				if err := page.Mouse().Move(x, y); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				if err := page.Mouse().Down(); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				if err := page.Mouse().Move(toX, toY); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				if err := page.Mouse().Up(); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				
+			case "hoverat":
+				// Hover at specific coordinates
+				if a.X == nil || a.Y == nil {
+					return models.PlaywrightResult{}, fmt.Errorf("hoverat action requires X and Y coordinates")
+				}
+				x, y, err := transformCoordinates(&a, page)
+				if err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
+				}
+				if err := validateCoordinates(x, y, page); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
+				}
+				if err := page.Mouse().Move(x, y); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				
+			case "scrollat":
+				// Scroll at specific coordinates
+				if a.X == nil || a.Y == nil {
+					return models.PlaywrightResult{}, fmt.Errorf("scrollat action requires X and Y coordinates")
+				}
+				x, y, err := transformCoordinates(&a, page)
+				if err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
+				}
+				if err := validateCoordinates(x, y, page); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
+				}
+				
+				// Move to position first
+				if err := page.Mouse().Move(x, y); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				
+				// Perform scroll
+				deltaX := 0.0
+				deltaY := 0.0
+				if a.ScrollX != nil {
+					deltaX = *a.ScrollX
+				}
+				if a.ScrollY != nil {
+					deltaY = *a.ScrollY
+				}
+				if a.ScrollDelta != 0 {
+					deltaY = float64(a.ScrollDelta)
+				}
+				
+				if err := page.Mouse().Wheel(deltaX, deltaY); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+				
+			case "waitforselector":
+				if a.Selector == "" {
+					return models.PlaywrightResult{}, fmt.Errorf("waitForSelector action missing selector")
+				}
+				opts := playwright.PageWaitForSelectorOptions{}
+				if a.Timeout > 0 {
+					opts.Timeout = playwright.Float(float64(a.Timeout))
+				}
+				if _, err := page.WaitForSelector(a.Selector, opts); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+			case "navigate":
+				if a.URL == "" {
+					return models.PlaywrightResult{}, fmt.Errorf("navigate action missing url")
+				}
+				if _, err := page.Goto(a.URL); err != nil {
+					return models.PlaywrightResult{}, err
+				}
+			default:
+				return models.PlaywrightResult{}, fmt.Errorf("unknown action: %s", a.Action)
 			}
-			if err := page.Type(a.Selector, a.Text); err != nil {
-				return models.PlaywrightResult{}, err
-			}
-		case "click":
-			if a.Selector == "" {
-				return models.PlaywrightResult{}, fmt.Errorf("click action missing selector")
-			}
-			if err := page.Click(a.Selector); err != nil {
-				return models.PlaywrightResult{}, err
-			}
-		case "waitforselector":
-			if a.Selector == "" {
-				return models.PlaywrightResult{}, fmt.Errorf("waitForSelector action missing selector")
-			}
-			opts := playwright.PageWaitForSelectorOptions{}
-			if a.Timeout > 0 {
-				opts.Timeout = playwright.Float(float64(a.Timeout))
-			}
-			if _, err := page.WaitForSelector(a.Selector, opts); err != nil {
-				return models.PlaywrightResult{}, err
-			}
-		case "navigate":
-			if a.URL == "" {
-				return models.PlaywrightResult{}, fmt.Errorf("navigate action missing url")
-			}
-			if _, err := page.Goto(a.URL); err != nil {
-				return models.PlaywrightResult{}, err
-			}
-		default:
-			return models.PlaywrightResult{}, fmt.Errorf("unknown action: %s", a.Action)
-		}
 	}
 	html, _ := page.Content()
 	htmlPath := filepath.Join(os.TempDir(), fmt.Sprintf("playwright_%d.html", time.Now().UnixNano()))

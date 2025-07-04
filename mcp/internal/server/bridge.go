@@ -34,21 +34,31 @@ import (
 // It allows other Go components or extensions to interact with the server's
 // functionality directly, bypassing the HTTP layer.
 type Bridge struct {
-	DB             *sql.DB
-	BackendPath    string
-	LastHTML       string
-	LastScreenshot string
+	DB                    *sql.DB
+	BackendPath           string
+	LastHTML              string
+	LastScreenshot        string
+	IncrementalStateManager *analyzer.IncrementalStateManager
+	RegionScreenshotManager *analyzer.RegionScreenshotManager
+	DeltaCompressor       *analyzer.DeltaCompressor
 	// Add other common dependencies here if needed by multiple tools
 }
 
 // NewBridge creates a new instance of the Bridge.
 // It takes the necessary dependencies that the underlying tool logic requires.
 func NewBridge(db *sql.DB, backendPath string) *Bridge {
+	incrementalManager := analyzer.NewIncrementalStateManager()
+	regionManager := analyzer.NewRegionScreenshotManager()
+	deltaCompressor := analyzer.NewDeltaCompressor()
+	
 	return &Bridge{
-		DB:             db,
-		BackendPath:    backendPath,
-		LastHTML:       "",
-		LastScreenshot: "",
+		DB:                      db,
+		BackendPath:             backendPath,
+		LastHTML:                "",
+		LastScreenshot:          "",
+		IncrementalStateManager: incrementalManager,
+		RegionScreenshotManager: regionManager,
+		DeltaCompressor:         deltaCompressor,
 	}
 }
 
@@ -1852,6 +1862,290 @@ func (b *Bridge) GetBusinessDomainCrossDependencies() (map[string]interface{}, e
 	}
 	
 	return make(map[string]interface{}), nil
+}
+
+// === INCREMENTAL UI STATE STREAMING METHODS ===
+
+// BrowseWithPlaywrightIncremental opens a URL using Playwright with incremental state tracking
+func (b *Bridge) BrowseWithPlaywrightIncremental(url string) (models.IncrementalBrowseResult, error) {
+	if !config.Flags.AllowTerminal {
+		return models.IncrementalBrowseResult{}, errors.New("terminal commands are disabled")
+	}
+	
+	// First get full page result using standard browse
+	result, err := analyzer.BrowseWithPlaywright(url)
+	if err != nil {
+		return models.IncrementalBrowseResult{}, err
+	}
+	
+	// Update state managers
+	b.LastHTML = result.HTML
+	b.LastScreenshot = result.Screenshot
+	
+	// Generate session ID
+	sessionID := fmt.Sprintf("session_%d", time.Now().UnixNano())
+	
+	// Check if this is initial state or update
+	if session, exists := b.IncrementalStateManager.GetSession(sessionID); !exists || session == nil {
+		// Initialize new session
+		session := b.IncrementalStateManager.CreateSession(sessionID, url, models.StreamingModeFull)
+		
+		// For initial state, return full data
+		return models.IncrementalBrowseResult{
+			Type:          "initial",
+			SessionID:     session.SessionID,
+			URL:           url,
+			HTML:          result.HTML,
+			Screenshot:    result.Screenshot,
+			Delta:         nil,
+			Regions:       []models.ScreenshotRegion{},
+			CompressedData: nil,
+			TokenSavings:  0,
+		}, nil
+	} else {
+		// Generate incremental state for update
+		state, err := b.IncrementalStateManager.ProcessHTMLChanges(sessionID, b.LastHTML, result.HTML)
+		if err != nil {
+			return models.IncrementalBrowseResult{}, err
+		}
+		
+		// Generate screenshot regions if there are DOM changes
+		var regions []models.ScreenshotRegion
+		if len(state.DOMDeltas) > 0 {
+			// Calculate regions from DOM deltas
+			deltaRegions := b.RegionScreenshotManager.CalculateRegionsFromDeltas(state.DOMDeltas, models.Rectangle{
+				X: 0, Y: 0, Width: 1920, Height: 1080, // Default viewport size
+			})
+			
+			if len(deltaRegions) > 0 {
+				regions, err = b.RegionScreenshotManager.CaptureRegions(deltaRegions, result.Screenshot)
+				if err != nil {
+					// Non-fatal error, continue without regions
+					regions = []models.ScreenshotRegion{}
+				}
+			}
+		}
+		
+		// Compress delta if significant
+		var compressed *models.CompressedDelta
+		if len(state.DOMDeltas) > 0 {
+			compressed, err = b.DeltaCompressor.CompressDelta(sessionID, state)
+			if err != nil {
+				// Non-fatal error, continue without compression
+				compressed = nil
+			}
+		}
+		
+		// Calculate token savings
+		tokenSavings := b.calculateTokenSavings(result.HTML, state.DOMDeltas, compressed)
+		
+		return models.IncrementalBrowseResult{
+			Type:          "delta",
+			SessionID:     sessionID,
+			URL:           url,
+			HTML:          "", // Don't return full HTML for delta
+			Screenshot:    "", // Don't return full screenshot for delta
+			Delta:         nil, // Return first delta or nil
+			Regions:       regions,
+			CompressedData: compressed,
+			TokenSavings:  tokenSavings,
+		}, nil
+	}
+}
+
+// ProcessUIActionIncremental processes a UI action and returns incremental updates
+func (b *Bridge) ProcessUIActionIncremental(sessionID, url string, action models.UIAction) (models.IncrementalActionResult, error) {
+	if !config.Flags.AllowTerminal {
+		return models.IncrementalActionResult{}, errors.New("terminal commands are disabled")
+	}
+	
+	// Get session to retrieve current context
+	session, exists := b.IncrementalStateManager.GetSession(sessionID)
+	if !exists {
+		return models.IncrementalActionResult{}, errors.New("session not found")
+	}
+	
+	// Use session URL if no URL provided
+	targetURL := url
+	if targetURL == "" {
+		targetURL = session.StartURL
+	}
+	
+	// Store old HTML
+	oldHTML := b.LastHTML
+	
+	// Execute the UI action
+	actions := []models.UIAction{action}
+	result, err := analyzer.BrowseWithPlaywrightActions(targetURL, actions)
+	if err != nil {
+		return models.IncrementalActionResult{}, err
+	}
+	
+	// Update last known state
+	b.LastHTML = result.HTML
+	b.LastScreenshot = result.Screenshot
+	
+	// Generate incremental state from changes
+	state, err := b.IncrementalStateManager.ProcessHTMLChanges(sessionID, oldHTML, result.HTML)
+	if err != nil {
+		return models.IncrementalActionResult{}, err
+	}
+	
+	// Generate screenshot regions for changed areas
+	var regions []models.ScreenshotRegion
+	if len(state.DOMDeltas) > 0 {
+		// Calculate regions from DOM deltas
+		deltaRegions := b.RegionScreenshotManager.CalculateRegionsFromDeltas(state.DOMDeltas, models.Rectangle{
+			X: 0, Y: 0, Width: 1920, Height: 1080,
+		})
+		
+		if len(deltaRegions) > 0 {
+			regions, err = b.RegionScreenshotManager.CaptureRegions(deltaRegions, result.Screenshot)
+			if err != nil {
+				regions = []models.ScreenshotRegion{}
+			}
+		}
+	}
+	
+	// Compress delta
+	var compressed *models.CompressedDelta
+	if len(state.DOMDeltas) > 0 {
+		compressed, err = b.DeltaCompressor.CompressDelta(sessionID, state)
+		if err != nil {
+			compressed = nil
+		}
+	}
+	
+	// Calculate token savings
+	tokenSavings := b.calculateTokenSavings(result.HTML, state.DOMDeltas, compressed)
+	
+	return models.IncrementalActionResult{
+		SessionID:     sessionID,
+		ActionType:    action.Action,
+		Success:       true,
+		Delta:         nil, // Return first delta or nil
+		Regions:       regions,
+		CompressedData: compressed,
+		TokenSavings:  tokenSavings,
+		Timestamp:     time.Now(),
+	}, nil
+}
+
+// GetIncrementalUIState returns the current incremental state for a session
+func (b *Bridge) GetIncrementalUIState(sessionID string) (*models.IncrementalSession, error) {
+	session, exists := b.IncrementalStateManager.GetSession(sessionID)
+	if !exists {
+		return nil, errors.New("session not found")
+	}
+	return session, nil
+}
+
+// SetStreamingMode sets the streaming mode for a session
+func (b *Bridge) SetStreamingMode(sessionID string, mode models.StreamingMode) error {
+	session, exists := b.IncrementalStateManager.GetSession(sessionID)
+	if !exists {
+		return errors.New("no active session found")
+	}
+	
+	session.Mode = mode
+	session.UpdateActivity()
+	
+	return nil
+}
+
+// GetStreamStats returns streaming statistics and performance metrics
+func (b *Bridge) GetStreamStats(sessionID string) (models.StreamingStats, error) {
+	session, exists := b.IncrementalStateManager.GetSession(sessionID)
+	if !exists {
+		return models.StreamingStats{}, errors.New("no active session found")
+	}
+	
+	stats := models.StreamingStats{
+		SessionID:       session.SessionID,
+		URL:             session.StartURL,
+		StreamingMode:   session.Mode,
+		TotalActions:    0, // Would need to track this in state
+		TotalDeltas:     session.TotalChanges,
+		TokensSaved:     session.BytesSaved,
+		CompressionRatio: session.CompressionAvg,
+		SessionDuration: time.Since(session.StartTime),
+		LastUpdate:      session.LastActivity,
+	}
+	
+	return stats, nil
+}
+
+// CleanupIncrementalSession cleans up an incremental streaming session
+func (b *Bridge) CleanupIncrementalSession(sessionID string) error {
+	// Use the existing cleanup method with a short timeout to clean this specific session
+	cleaned := b.IncrementalStateManager.CleanupExpiredSessions(time.Nanosecond)
+	if cleaned > 0 {
+		return nil
+	}
+	return errors.New("session not found or already cleaned")
+}
+
+// GetIncrementalDebugInfo returns debug information for incremental streaming
+func (b *Bridge) GetIncrementalDebugInfo(sessionID string) (map[string]interface{}, error) {
+	session, exists := b.IncrementalStateManager.GetSession(sessionID)
+	if !exists {
+		return nil, errors.New("no active session found")
+	}
+	
+	cacheStats := b.RegionScreenshotManager.GetCacheStats()
+	
+	debug := map[string]interface{}{
+		"session_id":       session.SessionID,
+		"url":             session.StartURL,
+		"streaming_mode":   session.Mode,
+		"start_time":      session.StartTime,
+		"last_activity":   session.LastActivity,
+		"total_changes":   session.TotalChanges,
+		"bytes_saved":     session.BytesSaved,
+		"compression_avg": session.CompressionAvg,
+		"is_active":       session.IsActive,
+		"manager_stats": map[string]interface{}{
+			"region_cache_stats": cacheStats,
+			"compression_enabled": true,
+		},
+	}
+	
+	return debug, nil
+}
+
+// calculateTokenSavings estimates token savings from using incremental approach
+func (b *Bridge) calculateTokenSavings(fullHTML string, deltas []models.DOMDelta, compressed *models.CompressedDelta) int {
+	if len(deltas) == 0 {
+		return 0
+	}
+	
+	// Rough estimation: 4 characters per token
+	fullTokens := len(fullHTML) / 4
+	
+	// Calculate delta size
+	deltaSize := 0
+	if compressed != nil {
+		deltaSize = len(compressed.DOMDiff) + len(compressed.ImageDiffs) + len(compressed.StateDiff)
+	} else {
+		// Estimate uncompressed delta size
+		for _, delta := range deltas {
+			deltaSize += len(delta.TargetPath) + len(delta.TextContent)
+			if delta.Attributes != nil {
+				for k, v := range delta.Attributes {
+					deltaSize += len(k) + len(v)
+				}
+			}
+		}
+	}
+	
+	deltaTokens := deltaSize / 4
+	savings := fullTokens - deltaTokens
+	
+	if savings < 0 {
+		return 0
+	}
+	
+	return savings
 }
 
 // TODO: Add more methods for other enhanced tools as needed.
