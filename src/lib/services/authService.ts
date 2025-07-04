@@ -94,6 +94,21 @@ class AuthService {
     logger.debug('AUTH_SERVICE', 'Checking current user session');
 
     try {
+      // DIAGNOSTIC: Log cookie state before session check
+      if (typeof window !== 'undefined') {
+        const cookies = document.cookie || '';
+        const sessionCookie = cookies.split(';').find(c => c.trim().startsWith('domainflow_session='));
+        const cookieNames = cookies
+          ? cookies.split(';').filter(c => c.trim()).map(c => c.split('=')[0]?.trim() || 'unknown')
+          : [];
+        logger.debug('AUTH_SERVICE', 'Cookie state before session check', {
+          hasSessionCookie: !!sessionCookie,
+          cookieValue: sessionCookie ? sessionCookie.substring(0, 50) + '...' : 'none',
+          allCookies: cookieNames,
+          cookieCount: cookieNames.length
+        });
+      }
+
       // Add timeout to prevent infinite loading
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
@@ -101,12 +116,16 @@ class AuthService {
         }, this.sessionCheckTimeout);
       });
 
+      // DIAGNOSTIC: Log API client state
+      logger.debug('AUTH_SERVICE', 'Making getCurrentUser API call');
       const sessionPromise = apiClient.getCurrentUser();
       
       const response = await Promise.race([sessionPromise, timeoutPromise]);
       
       if (response && typeof response === 'object') {
-        const adaptedUser = adaptUser(response as GeneratedUser);
+        // Handle wrapped API response format: { success: true, data: User }
+        const userData = (response as any)?.data || response;
+        const adaptedUser = adaptUser(userData as GeneratedUser);
         if (adaptedUser) {
           logger.info('AUTH_SERVICE', 'Session check successful', {
             userId: adaptedUser.id

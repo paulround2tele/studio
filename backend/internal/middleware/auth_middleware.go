@@ -130,14 +130,25 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 			return
 		}
 
+		// DIAGNOSTIC: Log all cookies received
+		allCookies := c.Request.Header.Get("Cookie")
+		fmt.Printf("[DIAGNOSTIC] Auth middleware cookie check: path=%s, allCookies=%s, timestamp=%s\n",
+			c.Request.URL.Path, allCookies, time.Now().Format(time.RFC3339))
+	
 		// Get session ID from cookie (try new names first, then fallback to legacy)
 		cookieStart := time.Now()
 		sessionID, err := c.Cookie(m.config.CookieName)
+		cookieSource := m.config.CookieName
 		if err != nil {
 			// Try legacy cookie name for backward compatibility
 			sessionID, err = c.Cookie(config.LegacySessionCookieName)
+			cookieSource = config.LegacySessionCookieName
 		}
 		cookieDuration := time.Since(cookieStart)
+	
+		// DIAGNOSTIC: Log cookie extraction result
+		fmt.Printf("[DIAGNOSTIC] Cookie extraction: cookieName=%s, found=%v, sessionIDLength=%d, error=%v\n",
+			cookieSource, err == nil, len(sessionID), err)
 
 		if err != nil {
 			duration := time.Since(startTime)

@@ -476,11 +476,31 @@ export class ApiClient {
 
   async getCurrentUser() {
     try {
+      // DIAGNOSTIC: Log API client state before request
+      const effectiveBackendUrl = await this.getEffectiveBackendUrl();
+      const finalBaseUrl = await this.getEffectiveBaseUrl('/me');
+      
+      console.log('[DIAGNOSTIC] getCurrentUser API call details:', {
+        effectiveBackendUrl,
+        finalBaseUrl,
+        timestamp: new Date().toISOString(),
+        userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'SSR'
+      });
+
       return await this.request<GetOperationResponse<ApiPaths['/me']['get']>>(
         '/me',
         'GET'
       );
     } catch (error) {
+      // DIAGNOSTIC: Enhanced error logging
+      console.error('[DIAGNOSTIC] getCurrentUser failed:', {
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
+        timestamp: new Date().toISOString(),
+        effectiveBaseUrl: await this.getEffectiveBackendUrl().catch(() => 'failed'),
+        finalBaseUrl: await this.getEffectiveBaseUrl('/me').catch(() => 'failed')
+      });
+
       // Handle 401 responses gracefully for authentication checks
       if (error instanceof Error && error.message.includes('401')) {
         if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {

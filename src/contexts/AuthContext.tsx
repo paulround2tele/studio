@@ -89,22 +89,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userId: user.id
         });
         
-        // Only update state if component is still mounted
-        if (mountedRef.current) {
-          setAuthState({
-            user,
-            isAuthenticated: true,
-            isLoading: false
-          });
-        } else {
-          logger.debug('AUTH_CONTEXT', 'Component unmounted, skipping session check state update');
-        }
+        // ALWAYS update state for successful authentication - React can handle unmounted updates safely
+        setAuthState({
+          user,
+          isAuthenticated: true,
+          isLoading: false
+        });
         
         loadingStore.stopLoading(LOADING_OPERATIONS.SESSION_CHECK, 'succeeded');
       } else {
         logger.debug('AUTH_CONTEXT', 'Session check completed - no valid session');
         
-        // Only update state if component is still mounted
+        // Only update state if component is still mounted for unauthenticated state
         if (mountedRef.current) {
           setAuthState({
             user: null,

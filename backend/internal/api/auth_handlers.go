@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -80,32 +81,46 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	fmt.Printf("DEBUG: Session created successfully with ID: %s\n", sessionData.ID)
 
-	// Set session cookie with SameSite attribute
+	// Set session cookie using Gin's SetCookie for proper formatting and persistence
 	fmt.Printf("DEBUG: Setting session cookie with name: %s, value: %s\n", h.config.CookieName, sessionData.ID)
-
-	// Build cookie manually to include SameSite attribute
-	cookieValue := fmt.Sprintf("%s=%s; Path=%s; Max-Age=%d; HttpOnly",
-		h.config.CookieName,
-		sessionData.ID,
-		h.config.CookiePath,
-		int(time.Until(sessionData.ExpiresAt).Seconds()),
-	)
-
-	// Add domain if specified
-	if h.config.CookieDomain != "" {
-		cookieValue += fmt.Sprintf("; Domain=%s", h.config.CookieDomain)
+	
+	// Use Gin's SetCookie method for consistent cookie handling across all auth methods
+	// For localhost development, set domain to empty string to avoid domain issues
+	domain := ""
+	if h.config.CookieDomain != "localhost" && h.config.CookieDomain != "" {
+		domain = h.config.CookieDomain
 	}
-
-	// Add Secure if enabled
+	
+	// Construct cookie manually to include SameSite attribute (Gin's SetCookie doesn't support it)
+	cookieParts := []string{
+		fmt.Sprintf("%s=%s", h.config.CookieName, sessionData.ID),
+		fmt.Sprintf("Path=%s", h.config.CookiePath),
+		fmt.Sprintf("Max-Age=%d", h.config.CookieMaxAge),
+	}
+	
+	if h.config.CookieHttpOnly {
+		cookieParts = append(cookieParts, "HttpOnly")
+	}
+	
 	if h.config.CookieSecure {
-		cookieValue += "; Secure"
+		cookieParts = append(cookieParts, "Secure")
 	}
-
-	// Add SameSite=Lax for cross-origin compatibility in development
-	cookieValue += "; SameSite=Lax"
-
+	
+	if domain != "" {
+		cookieParts = append(cookieParts, fmt.Sprintf("Domain=%s", domain))
+	}
+	
+	// Add SameSite attribute (this is the missing piece!)
+	if h.config.CookieSameSite != "" {
+		cookieParts = append(cookieParts, fmt.Sprintf("SameSite=%s", h.config.CookieSameSite))
+	}
+	
+	cookieValue := strings.Join(cookieParts, "; ")
 	c.Header("Set-Cookie", cookieValue)
-	fmt.Printf("DEBUG: Cookie set with value: %s\n", cookieValue)
+	
+	fmt.Printf("DEBUG: Cookie set with SameSite support - %s\n", cookieValue)
+	fmt.Printf("DEBUG: Cookie details - Name: %s, MaxAge: %d, Path: %s, Domain: '%s', Secure: %v, HttpOnly: %v, SameSite: %s\n",
+		h.config.CookieName, h.config.CookieMaxAge, h.config.CookiePath, domain, h.config.CookieSecure, h.config.CookieHttpOnly, h.config.CookieSameSite)
 
 	// Update last login information
 	h.updateLastLogin(user.ID, ipAddress)

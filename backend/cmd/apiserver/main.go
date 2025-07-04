@@ -167,8 +167,17 @@ func main() {
 	kwordScannerSvc := keywordscanner.NewService(keywordStore)
 	log.Println("KeywordScanner service initialized.")
 
-	// Initialize session service for session-based authentication
-	sessionConfig := config.GetDefaultSessionSettings()
+	// Initialize session service for session-based authentication with environment-aware settings
+	environment := os.Getenv("ENVIRONMENT")
+	if environment == "" {
+		environment = "development" // Default to development for localhost
+	}
+	
+	sessionConfigManager := config.NewSessionConfigManager(environment)
+	sessionConfig := sessionConfigManager.GetSettings()
+	log.Printf("Using session configuration for environment: %s (CookieSecure: %v, CookieDomain: '%s')",
+		environment, sessionConfig.CookieSecure, sessionConfig.CookieDomain)
+	
 	sessionService, err := services.NewSessionService(db, sessionConfig.ToServiceConfig(), auditLogStore)
 	if err != nil {
 		log.Fatalf("FATAL: Failed to initialize session service: %v", err)

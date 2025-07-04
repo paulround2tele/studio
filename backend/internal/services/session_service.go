@@ -200,12 +200,21 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 // ValidateSession validates a session and returns session data
 func (s *SessionService) ValidateSession(sessionID, clientIP string) (*SessionData, error) {
 	startTime := time.Now()
-	fmt.Printf("DEBUG: Validating session ID: %s for client IP: %s\n", sessionID, clientIP)
+	fmt.Printf("[DIAGNOSTIC] ValidateSession called: sessionID=%s, clientIP=%s, timestamp=%s\n",
+		sessionID, clientIP, time.Now().Format(time.RFC3339))
+
+	// DIAGNOSTIC: Log memory store state
+	totalSessions := int64(0)
+	s.inMemoryStore.sessions.Range(func(key, value interface{}) bool {
+		totalSessions++
+		return true
+	})
+	fmt.Printf("[DIAGNOSTIC] Memory store state: totalSessions=%d\n", totalSessions)
 
 	// Try memory first for performance
 	session, found := s.getFromMemory(sessionID)
 	cacheHit := found
-	fmt.Printf("DEBUG: Memory lookup result: found=%v\n", found)
+	fmt.Printf("[DIAGNOSTIC] Memory lookup: found=%v, sessionExists=%v\n", found, session != nil)
 
 	if !found {
 		// Fallback to database
