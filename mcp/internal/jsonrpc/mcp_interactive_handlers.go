@@ -8,7 +8,7 @@ import (
 // Interactive tool handlers
 
 // callRunTerminalCommand implements the run_terminal_command tool
-func (s *JSONRPCServer) callRunTerminalCommand(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callRunTerminalCommand(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	command, ok := args["command"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -52,7 +52,7 @@ func (s *JSONRPCServer) callRunTerminalCommand(ctx context.Context, args map[str
 }
 
 // callApplyCodeChange implements the apply_code_change tool
-func (s *JSONRPCServer) callApplyCodeChange(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callApplyCodeChange(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	diff, ok := args["diff"].(string)
 	if !ok {
 		return map[string]interface{}{

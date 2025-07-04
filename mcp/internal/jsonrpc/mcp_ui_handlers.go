@@ -11,7 +11,7 @@ import (
 
 // UI context tool handlers
 
-func (s *JSONRPCServer) callGetLatestScreenshot(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callGetLatestScreenshot(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	toBase64, _ := args["base64"].(bool)
 	shot, err := s.bridge.GetLatestScreenshot(toBase64)
 	if err != nil {
@@ -25,7 +25,7 @@ func (s *JSONRPCServer) callGetLatestScreenshot(ctx context.Context, args map[st
 	}, nil
 }
 
-func (s *JSONRPCServer) callGetUIMetadata(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetUIMetadata(_ context.Context) (interface{}, error) {
 	comps, content, err := s.bridge.GetUIMetadata()
 	if err != nil {
 		return map[string]interface{}{
@@ -42,7 +42,7 @@ func (s *JSONRPCServer) callGetUIMetadata(ctx context.Context) (interface{}, err
 	}, nil
 }
 
-func (s *JSONRPCServer) callGetUICodeMap(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetUICodeMap(_ context.Context) (interface{}, error) {
 	comps, _, err := s.bridge.GetUIMetadata()
 	if err != nil {
 		return map[string]interface{}{
@@ -61,7 +61,7 @@ func (s *JSONRPCServer) callGetUICodeMap(ctx context.Context) (interface{}, erro
 	}, nil
 }
 
-func (s *JSONRPCServer) callGetVisualContext(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callGetVisualContext(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	url, ok := args["url"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -80,7 +80,7 @@ func (s *JSONRPCServer) callGetVisualContext(ctx context.Context, args map[strin
 	}, nil
 }
 
-func (s *JSONRPCServer) callGenerateUITestPromptWithActions(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callGenerateUITestPromptWithActions(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	url, ok := args["url"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -117,7 +117,7 @@ func (s *JSONRPCServer) callGenerateUITestPromptWithActions(ctx context.Context,
 	}, nil
 }
 
-func (s *JSONRPCServer) callGenerateUITestPrompt(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callGenerateUITestPrompt(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	componentName, _ := args["componentName"].(string)
 	testType, _ := args["testType"].(string)
 	includeAccessibility, _ := args["includeAccessibility"].(bool)

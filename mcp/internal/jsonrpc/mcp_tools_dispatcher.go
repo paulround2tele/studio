@@ -9,1004 +9,536 @@ import (
 	"mcp/internal/models"
 )
 
-// handleListTools handles MCP tools/list request
-func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMessage) (interface{}, error) {
-	tools := []models.MCPTool{
-		// Database Tools (1)
-		{
-			Name:        "get_database_schema",
-			Description: "Get the database schema including tables, columns, and indexes",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_backend_openapi_schema",
-			Description: "Get OpenAPI schema including specifications and route definitions",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
+// ToolRegistry manages all available MCP tools
+type ToolRegistry struct {
+	tools map[string]models.MCPTool
+}
 
-		// Code Analysis Tools (7)
-		{
-			Name:        "get_backend_data_models",
-			Description: "Get all backend data models and their structures",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_backend_api_routes",
-			Description: "Get all API routes and endpoints",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_backend_api_endpoints",
-			Description: "Get all API endpoints (alias for get_backend_api_routes)",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_backend_request_handlers",
-			Description: "Get all backend request handlers",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_backend_services",
-			Description: "Get all backend service definitions and interfaces",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_interfaces",
-			Description: "Get all interfaces and their methods",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "find_implementations",
-			Description: "Find implementations of interfaces",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"interface": map[string]interface{}{
-						"type":        "string",
-						"description": "Interface name to find implementations for",
-					},
-				},
-			},
-		},
-		{
-			Name:        "get_call_graph",
-			Description: "Get call graph analysis of functions",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"function": map[string]interface{}{
-						"type":        "string",
-						"description": "Function name to analyze (optional, defaults to 'main')",
-					},
-				},
-			},
-		},
+// NewToolRegistry creates a new tool registry with all available tools
+func NewToolRegistry() *ToolRegistry {
+	registry := &ToolRegistry{
+		tools: make(map[string]models.MCPTool),
+	}
+	registry.registerAllTools()
+	return registry
+}
 
-		// Configuration Tools (3)
-		{
-			Name:        "get_config",
-			Description: "Get application configuration structure",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_middleware",
-			Description: "Get middleware configuration and usage",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_env_vars",
-			Description: "Get environment variables used in the application",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
+// GetAllTools returns all registered tools
+func (tr *ToolRegistry) GetAllTools() []models.MCPTool {
+	tools := make([]models.MCPTool, 0, len(tr.tools))
+	for _, tool := range tr.tools {
+		tools = append(tools, tool)
+	}
+	return tools
+}
 
-		// Search Tools (4)
-		{
-			Name:        "search_code",
-			Description: "Search for code patterns and implementations",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"query": map[string]interface{}{
-						"type":        "string",
-						"description": "Search query for code",
-					},
-				},
-				"required": []string{"query"},
-			},
-		},
-		{
-			Name:        "get_package_structure",
-			Description: "Get the package and module structure",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_dependencies",
-			Description: "Get project dependencies and their relationships",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_dependency_graph",
-			Description: "Get project package dependency graph",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
+// GetTool returns a specific tool by name
+func (tr *ToolRegistry) GetTool(name string) (models.MCPTool, bool) {
+	tool, exists := tr.tools[name]
+	return tool, exists
+}
 
-		// WebSocket Tools (3)
-		{
-			Name:        "get_websocket_endpoints",
-			Description: "Get WebSocket endpoints and their configurations",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_websocket_handlers",
-			Description: "Get WebSocket message handlers",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_websocket_messages",
-			Description: "Get WebSocket message types and structures",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_websocket_lifecycle",
-			Description: "Get WebSocket connection lifecycle and state management",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "test_websocket_flow",
-			Description: "Test WebSocket message flow and connectivity",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
+// registerAllTools registers all available tools
+func (tr *ToolRegistry) registerAllTools() {
+	// Database Tools
+	tr.registerDatabaseTools()
+	
+	// Code Analysis Tools
+	tr.registerCodeAnalysisTools()
+	
+	// Configuration Tools
+	tr.registerConfigurationTools()
+	
+	// Search Tools
+	tr.registerSearchTools()
+	
+	// WebSocket Tools
+	tr.registerWebSocketTools()
+	
+	// Business Logic Tools
+	tr.registerBusinessLogicTools()
+	
+	// Advanced Tools
+	tr.registerAdvancedTools()
+	
+	// Interactive Tools
+	tr.registerInteractiveTools()
+	
+	// UI Tools
+	tr.registerUITools()
+	
+	// Analysis Tools
+	tr.registerAnalysisTools()
+	
+	// Frontend Tools
+	tr.registerFrontendTools()
+	
+	// Business Domain Tools
+	tr.registerBusinessDomainTools()
+	
+	// Enhanced Analysis Tools
+	tr.registerEnhancedAnalysisTools()
+}
 
-		// Business Logic Tools (4)
-		{
-			Name:        "get_middleware_usage",
-			Description: "Get middleware usage patterns and analysis",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "trace_middleware_flow",
-			Description: "Trace middleware execution flow and pipeline",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_workflows",
-			Description: "Get business workflows and processes",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_business_rules",
-			Description: "Get business rules and validation logic",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_feature_flags",
-			Description: "Get feature flags and their configurations",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_campaign_pipeline",
-			Description: "Get the pipeline status for a campaign",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"campaignId": map[string]interface{}{
-						"type":        "string",
-						"description": "Campaign UUID",
-					},
-				},
-				"required": []string{"campaignId"},
-			},
-		},
+// Schema helpers for common patterns
+func noParamsSchema() map[string]interface{} {
+	return map[string]interface{}{
+		"type":       "object",
+		"properties": map[string]interface{}{},
+	}
+}
 
-		// Advanced Tools (5)
-		{
-			Name:        "find_by_type",
-			Description: "Find code elements by type",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"type": map[string]interface{}{
-						"type":        "string",
-						"description": "Type to search for",
-					},
-				},
-				"required": []string{"type"},
-			},
-		},
-		{
-			Name:        "get_references",
-			Description: "Get references and usages of code elements",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"symbol": map[string]interface{}{
-						"type":        "string",
-						"description": "Symbol to find references for",
-					},
-					"filePath": map[string]interface{}{
-						"type":        "string",
-						"description": "File path context (optional)",
-					},
-				},
-				"required": []string{"symbol"},
-			},
-		},
-		{
-			Name:        "get_change_impact",
-			Description: "Analyze the impact of code changes",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"file": map[string]interface{}{
-						"type":        "string",
-						"description": "File to analyze impact for",
-					},
-				},
-				"required": []string{"file"},
-			},
-		},
-		{
-			Name:        "snapshot",
-			Description: "Create a snapshot of the current codebase state",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "contract_drift_check",
-			Description: "Check for API contract drift and inconsistencies",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-
-		// Interactive Tools (2)
-		{
-			Name:        "run_terminal_command",
-			Description: "Execute terminal commands in the project context",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"command": map[string]interface{}{
-						"type":        "string",
-						"description": "Command to execute",
-					},
-					"workingDir": map[string]interface{}{
-						"type":        "string",
-						"description": "Working directory for command execution (optional)",
-					},
-				},
-				"required": []string{"command"},
-			},
-		},
-		{
-			Name:        "apply_code_change",
-			Description: "Apply a code change using diff/patch",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"diff": map[string]interface{}{
-						"type":        "string",
-						"description": "The diff to apply",
-					},
-				},
-				"required": []string{"diff"},
-			},
-		},
-		{
-			Name:        "browse_with_playwright",
-			Description: "Fetch a URL in a headless browser and capture a screenshot",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"url": map[string]interface{}{
-						"type":        "string",
-						"description": "URL to visit",
-					},
-				},
-				"required": []string{"url"},
-			},
-		},
-		{
-			Name:        "browse_with_playwright_incremental",
-			Description: "Browse with incremental UI state streaming for optimized token usage",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"url": map[string]interface{}{
-						"type":        "string",
-						"description": "URL to visit",
-					},
-					"sessionId": map[string]interface{}{
-						"type":        "string",
-						"description": "Session ID for incremental state tracking (optional)",
-					},
-					"streamingMode": map[string]interface{}{
-						"type":        "string",
-						"description": "Streaming mode: 'full', 'incremental', or 'adaptive'",
-						"enum":        []string{"full", "incremental", "adaptive"},
-					},
-				},
-				"required": []string{"url"},
-			},
-		},
-		{
-			Name:        "process_ui_action_incremental",
-			Description: "Process UI action with incremental state updates",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"sessionId": map[string]interface{}{
-						"type":        "string",
-						"description": "Session ID for incremental state tracking",
-					},
-					"action": map[string]interface{}{
-						"type":        "string",
-						"description": "Type of action to perform",
-						"enum":        []string{"click", "type", "hover", "scroll", "navigate", "wait"},
-					},
-					"selector": map[string]interface{}{
-						"type":        "string",
-						"description": "CSS selector for the target element",
-					},
-					"text": map[string]interface{}{
-						"type":        "string",
-						"description": "Text to type (for type action)",
-					},
-					"url": map[string]interface{}{
-						"type":        "string",
-						"description": "URL to navigate to (for navigate action)",
-					},
-					"x": map[string]interface{}{
-						"type":        "number",
-						"description": "X coordinate for action",
-					},
-					"y": map[string]interface{}{
-						"type":        "number",
-						"description": "Y coordinate for action",
-					},
-					"timeout": map[string]interface{}{
-						"type":        "integer",
-						"description": "Timeout in milliseconds",
-						"minimum":     0,
-					},
-				},
-				"required": []string{"sessionId", "action"},
-			},
-		},
-		{
-			Name:        "get_incremental_ui_state",
-			Description: "Get current incremental UI state for a session",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"sessionId": map[string]interface{}{
-						"type":        "string",
-						"description": "Session ID for incremental state tracking",
-					},
-					"includeScreenshot": map[string]interface{}{
-						"type":        "boolean",
-						"description": "Include screenshot in response",
-					},
-					"includeDeltas": map[string]interface{}{
-						"type":        "boolean",
-						"description": "Include DOM deltas in response",
-					},
-				},
-				"required": []string{"sessionId"},
-			},
-		},
-		{
-			Name:        "set_streaming_mode",
-			Description: "Set streaming mode for incremental UI updates",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"sessionId": map[string]interface{}{
-						"type":        "string",
-						"description": "Session ID for incremental state tracking",
-					},
-					"mode": map[string]interface{}{
-						"type":        "string",
-						"description": "Streaming mode to set",
-						"enum":        []string{"full", "incremental", "adaptive"},
-					},
-					"adaptiveThreshold": map[string]interface{}{
-						"type":        "number",
-						"description": "Token usage threshold for adaptive mode (optional)",
-						"minimum":     0,
-					},
-				},
-				"required": []string{"sessionId", "mode"},
-			},
-		},
-		{
-			Name:        "get_stream_stats",
-			Description: "Get streaming statistics and performance metrics",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"sessionId": map[string]interface{}{
-						"type":        "string",
-						"description": "Session ID for incremental state tracking (optional)",
-					},
-				},
-			},
-		},
-		{
-			Name:        "cleanup_incremental_session",
-			Description: "Clean up incremental session and free resources",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"sessionId": map[string]interface{}{
-						"type":        "string",
-						"description": "Session ID to clean up",
-					},
-				},
-				"required": []string{"sessionId"},
-			},
-		},
-		{
-			Name:        "get_incremental_debug_info",
-			Description: "Get debug information for incremental streaming session",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"sessionId": map[string]interface{}{
-						"type":        "string",
-						"description": "Session ID for debug information",
-					},
-					"includeDetailedState": map[string]interface{}{
-						"type":        "boolean",
-						"description": "Include detailed internal state information",
-					},
-				},
-				"required": []string{"sessionId"},
-			},
-		},
-		{
-			Name:        "get_latest_screenshot",
-			Description: "Return the most recent Playwright screenshot",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"base64": map[string]interface{}{
-						"type":        "boolean",
-						"description": "Return base64 encoded data",
-					},
-				},
-			},
-		},
-		{
-			Name:        "get_ui_metadata",
-			Description: "Extract component metadata from the last HTML capture",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_ui_code_map",
-			Description: "Map captured components to React source files",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_visual_context",
-			Description: "Run Playwright and assemble screenshot, metadata and code mapping",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"url": map[string]interface{}{
-						"type":        "string",
-						"description": "URL to visit",
-					},
-				},
-				"required": []string{"url"},
-			},
-		},
-		{
-			Name:        "generate_ui_test_prompt_with_actions",
-			Description: "Run Playwright with scripted actions and return visual context",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"url": map[string]interface{}{
-						"type":        "string",
-						"description": "Initial URL",
-					},
-					"actions": map[string]interface{}{
-						"type":        "array",
-						"description": "List of UI actions",
-						"items": map[string]interface{}{
-							"type": "object",
-							"properties": map[string]interface{}{
-								// Existing fields (backward compatibility)
-								"action": map[string]interface{}{
-									"type":        "string",
-									"description": "Type of action to perform",
-									"enum": []string{
-										"click", "type", "hover", "scroll", "navigate", "wait",
-										"moveto", "clickat", "doubleclickat", "rightclickat",
-										"dragfrom", "hoverat", "scrollat", "gesture",
-									},
-								},
-								"selector": map[string]interface{}{
-									"type":        "string",
-									"description": "CSS selector for the target element",
-								},
-								"text": map[string]interface{}{
-									"type":        "string",
-									"description": "Text to type or search for",
-								},
-								"url": map[string]interface{}{
-									"type":        "string",
-									"description": "URL to navigate to",
-								},
-								"timeout": map[string]interface{}{
-									"type":        "integer",
-									"description": "Timeout in milliseconds",
-									"minimum":     0,
-								},
-								
-								// Coordinate fields for precise positioning
-								"x": map[string]interface{}{
-									"type":        "number",
-									"description": "X coordinate for action",
-								},
-								"y": map[string]interface{}{
-									"type":        "number",
-									"description": "Y coordinate for action",
-								},
-								"toX": map[string]interface{}{
-									"type":        "number",
-									"description": "Target X coordinate for drag operations",
-								},
-								"toY": map[string]interface{}{
-									"type":        "number",
-									"description": "Target Y coordinate for drag operations",
-								},
-								
-								// Mouse configuration
-								"button": map[string]interface{}{
-									"type":        "string",
-									"description": "Mouse button to use",
-									"enum":        []string{"left", "right", "middle"},
-								},
-								"clicks": map[string]interface{}{
-									"type":        "integer",
-									"description": "Number of clicks to perform",
-									"minimum":     1,
-								},
-								"delay": map[string]interface{}{
-									"type":        "integer",
-									"description": "Delay between actions in milliseconds",
-									"minimum":     0,
-								},
-								
-								// Coordinate system options
-								"coordSystem": map[string]interface{}{
-									"type":        "string",
-									"description": "Coordinate system to use",
-									"enum":        []string{"viewport", "element", "page"},
-								},
-								"relativeTo": map[string]interface{}{
-									"type":        "string",
-									"description": "Element selector to use as coordinate reference",
-								},
-								
-								// Gesture support
-								"points": map[string]interface{}{
-									"type":        "array",
-									"description": "Array of points for gesture actions",
-									"items": map[string]interface{}{
-										"type": "object",
-										"properties": map[string]interface{}{
-											"x": map[string]interface{}{
-												"type":        "number",
-												"description": "X coordinate of the point",
-											},
-											"y": map[string]interface{}{
-												"type":        "number",
-												"description": "Y coordinate of the point",
-											},
-											"delay": map[string]interface{}{
-												"type":        "integer",
-												"description": "Delay before this point in milliseconds",
-												"minimum":     0,
-											},
-											"pressure": map[string]interface{}{
-												"type":        "number",
-												"description": "Pressure level for touch actions (0-1)",
-												"minimum":     0,
-												"maximum":     1,
-											},
-										},
-										"required": []string{"x", "y"},
-									},
-								},
-								"pressure": map[string]interface{}{
-									"type":        "number",
-									"description": "Default pressure level for gesture actions (0-1)",
-									"minimum":     0,
-									"maximum":     1,
-								},
-								"smooth": map[string]interface{}{
-									"type":        "boolean",
-									"description": "Whether to smooth gesture movements",
-								},
-								
-								// Scroll configuration
-								"scrollX": map[string]interface{}{
-									"type":        "number",
-									"description": "Horizontal scroll amount in pixels",
-								},
-								"scrollY": map[string]interface{}{
-									"type":        "number",
-									"description": "Vertical scroll amount in pixels",
-								},
-								"scrollDelta": map[string]interface{}{
-									"type":        "integer",
-									"description": "Scroll wheel delta amount",
-								},
-							},
-							"required": []string{"action"},
-						},
-					},
-				},
-				"required": []string{"url", "actions"},
-			},
-		},
-		{
-			Name:        "generate_ui_test_prompt",
-			Description: "Generate automated test prompts for UI components based on visual context and metadata",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"componentName": map[string]interface{}{
-						"type":        "string",
-						"description": "Name of the component to generate tests for",
-					},
-					"testType": map[string]interface{}{
-						"type":        "string",
-						"description": "Type of test to generate (unit, integration, e2e)",
-					},
-					"includeAccessibility": map[string]interface{}{
-						"type":        "boolean",
-						"description": "Include accessibility testing requirements",
-					},
-					"includeInteractions": map[string]interface{}{
-						"type":        "boolean",
-						"description": "Include interaction testing requirements",
-					},
-				},
-			},
-		},
-
-		// New Tools (6 additional to reach 34)
-		{
-			Name:        "get_database_stats",
-			Description: "Get database performance statistics and metrics",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "analyze_performance",
-			Description: "Analyze application performance bottlenecks",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_security_analysis",
-			Description: "Perform security analysis of the codebase",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "validate_api_contracts",
-			Description: "Validate API contracts and OpenAPI specifications",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_test_coverage",
-			Description: "Get test coverage analysis and metrics",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "analyze_code_quality",
-			Description: "Analyze code quality metrics and technical debt",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "analyze_complexity",
-			Description: "Run gocyclo to report function complexity",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_lint_diagnostics",
-			Description: "Run golangci-lint or staticcheck and go build",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-
-		// Frontend Tools
-		{
-			Name:        "frontend_nextjs_app_routes",
-			Description: "[Frontend] List Next.js app router routes",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "frontend_react_component_tree",
-			Description: "[Frontend] Get React component import tree and dependencies",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "frontend_react_component_props",
-			Description: "[Frontend] Extract props and event handlers for React components",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "frontend_test_coverage",
-			Description: "[Frontend] Run frontend tests and return coverage",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "frontend_react_component_tests",
-			Description: "[Frontend] Map React components to their test files",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-
-		// New Frontend Analysis Tools
-		{
-			Name:        "frontend_api_client_analysis",
-			Description: "[Frontend] Analyze sophisticated TypeScript API client structure and capabilities",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-
-		// New Backend Business Domain Tools
-		{
-			Name:        "get_business_domains",
-			Description: "Analyze business domains within the backend architecture",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_advanced_tooling",
-			Description: "Analyze advanced development and database tooling",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_keyword_extraction_services",
-			Description: "Analyze keyword extraction service implementations and patterns",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_keyword_scanning_services",
-			Description: "Analyze keyword scanning service implementations and patterns",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_proxy_management_services",
-			Description: "Analyze proxy management service implementations and patterns",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_keyword_set_api_specs",
-			Description: "Analyze keyword-sets API specifications and endpoints",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_proxy_pool_api_specs",
-			Description: "Analyze proxy-pools API specifications and endpoints",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_database_tooling_analysis",
-			Description: "Analyze advanced database tooling including migration verifiers and schema validators",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_business_domain_routes",
-			Description: "Analyze API routes categorized by business domains",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-
-		// Enhanced Dependency and Security Analysis Tools
-		{
-			Name:        "get_enhanced_dependencies",
-			Description: "Get enhanced dependency analysis with business domain mapping",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_enhanced_security_analysis",
-			Description: "Get enhanced security analysis for business domains",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_enhanced_api_schema",
-			Description: "Get enhanced API schema analysis with business domain awareness",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-
-		// Business Domain Middleware and Dependencies
-		{
-			Name:        "get_business_domain_middleware",
-			Description: "Analyze middleware specific to business domains",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_internal_service_dependencies",
-			Description: "Analyze dependencies between internal services",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
-		{
-			Name:        "get_business_domain_cross_dependencies",
-			Description: "Analyze cross-dependencies between business domains",
-			InputSchema: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
+func stringParamSchema(name, description string, required bool) map[string]interface{} {
+	schema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			name: map[string]interface{}{
+				"type":        "string",
+				"description": description,
 			},
 		},
 	}
+	if required {
+		schema["required"] = []string{name}
+	}
+	return schema
+}
 
+func urlParamSchema() map[string]interface{} {
+	return stringParamSchema("url", "URL to visit", true)
+}
+
+// Tool registration methods
+func (tr *ToolRegistry) registerDatabaseTools() {
+	tr.tools["get_database_schema"] = models.MCPTool{
+		Name:        "get_database_schema",
+		Description: "Get the database schema including tables, columns, and indexes",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_backend_openapi_schema"] = models.MCPTool{
+		Name:        "get_backend_openapi_schema",
+		Description: "Get OpenAPI schema including specifications and route definitions",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_database_stats"] = models.MCPTool{
+		Name:        "get_database_stats",
+		Description: "Get database performance statistics and metrics",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerCodeAnalysisTools() {
+	tr.tools["get_backend_data_models"] = models.MCPTool{
+		Name:        "get_backend_data_models",
+		Description: "Get all backend data models and their structures",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_backend_api_routes"] = models.MCPTool{
+		Name:        "get_backend_api_routes",
+		Description: "Get all API routes and endpoints",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_backend_api_endpoints"] = models.MCPTool{
+		Name:        "get_backend_api_endpoints",
+		Description: "Get all API endpoints (alias for get_backend_api_routes)",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_backend_request_handlers"] = models.MCPTool{
+		Name:        "get_backend_request_handlers",
+		Description: "Get all backend request handlers",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_backend_services"] = models.MCPTool{
+		Name:        "get_backend_services",
+		Description: "Get all backend service definitions and interfaces",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_interfaces"] = models.MCPTool{
+		Name:        "get_interfaces",
+		Description: "Get all interfaces and their methods",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["find_implementations"] = models.MCPTool{
+		Name:        "find_implementations",
+		Description: "Find implementations of interfaces",
+		InputSchema: stringParamSchema("interface", "Interface name to find implementations for", true),
+	}
+	
+	tr.tools["get_call_graph"] = models.MCPTool{
+		Name:        "get_call_graph",
+		Description: "Get call graph analysis of functions",
+		InputSchema: stringParamSchema("function", "Function name to analyze (optional, defaults to 'main')", false),
+	}
+}
+
+func (tr *ToolRegistry) registerConfigurationTools() {
+	tr.tools["get_config"] = models.MCPTool{
+		Name:        "get_config",
+		Description: "Get application configuration structure",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_middleware"] = models.MCPTool{
+		Name:        "get_middleware",
+		Description: "Get middleware configuration and usage",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_env_vars"] = models.MCPTool{
+		Name:        "get_env_vars",
+		Description: "Get environment variables used in the application",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerSearchTools() {
+	tr.tools["search_code"] = models.MCPTool{
+		Name:        "search_code",
+		Description: "Search for code patterns and implementations",
+		InputSchema: stringParamSchema("query", "Search query for code", true),
+	}
+	
+	tr.tools["get_package_structure"] = models.MCPTool{
+		Name:        "get_package_structure",
+		Description: "Get the package and module structure",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_dependencies"] = models.MCPTool{
+		Name:        "get_dependencies",
+		Description: "Get project dependencies and their relationships",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_dependency_graph"] = models.MCPTool{
+		Name:        "get_dependency_graph",
+		Description: "Get project package dependency graph",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerWebSocketTools() {
+	tr.tools["get_websocket_endpoints"] = models.MCPTool{
+		Name:        "get_websocket_endpoints",
+		Description: "Get WebSocket endpoints and their configurations",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_websocket_handlers"] = models.MCPTool{
+		Name:        "get_websocket_handlers",
+		Description: "Get WebSocket message handlers",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_websocket_messages"] = models.MCPTool{
+		Name:        "get_websocket_messages",
+		Description: "Get WebSocket message types and structures",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_websocket_lifecycle"] = models.MCPTool{
+		Name:        "get_websocket_lifecycle",
+		Description: "Get WebSocket connection lifecycle and state management",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["test_websocket_flow"] = models.MCPTool{
+		Name:        "test_websocket_flow",
+		Description: "Test WebSocket message flow and connectivity",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerBusinessLogicTools() {
+	tr.tools["get_middleware_usage"] = models.MCPTool{
+		Name:        "get_middleware_usage",
+		Description: "Get middleware usage patterns and analysis",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["trace_middleware_flow"] = models.MCPTool{
+		Name:        "trace_middleware_flow",
+		Description: "Trace middleware execution flow and pipeline",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_workflows"] = models.MCPTool{
+		Name:        "get_workflows",
+		Description: "Get business workflows and processes",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_business_rules"] = models.MCPTool{
+		Name:        "get_business_rules",
+		Description: "Get business rules and validation logic",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_feature_flags"] = models.MCPTool{
+		Name:        "get_feature_flags",
+		Description: "Get feature flags and their configurations",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_campaign_pipeline"] = models.MCPTool{
+		Name:        "get_campaign_pipeline",
+		Description: "Get the pipeline status for a campaign",
+		InputSchema: stringParamSchema("campaignId", "Campaign UUID", true),
+	}
+}
+
+func (tr *ToolRegistry) registerAdvancedTools() {
+	tr.tools["find_by_type"] = models.MCPTool{
+		Name:        "find_by_type",
+		Description: "Find code elements by type",
+		InputSchema: stringParamSchema("type", "Type to search for", true),
+	}
+	
+	tr.tools["get_references"] = models.MCPTool{
+		Name:        "get_references",
+		Description: "Get references and usages of code elements",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"symbol": map[string]interface{}{
+					"type":        "string",
+					"description": "Symbol to find references for",
+				},
+				"filePath": map[string]interface{}{
+					"type":        "string",
+					"description": "File path context (optional)",
+				},
+			},
+			"required": []string{"symbol"},
+		},
+	}
+	
+	tr.tools["get_change_impact"] = models.MCPTool{
+		Name:        "get_change_impact",
+		Description: "Analyze the impact of code changes",
+		InputSchema: stringParamSchema("file", "File to analyze impact for", true),
+	}
+	
+	tr.tools["snapshot"] = models.MCPTool{
+		Name:        "snapshot",
+		Description: "Create a snapshot of the current codebase state",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["contract_drift_check"] = models.MCPTool{
+		Name:        "contract_drift_check",
+		Description: "Check for API contract drift and inconsistencies",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerInteractiveTools() {
+	tr.tools["run_terminal_command"] = models.MCPTool{
+		Name:        "run_terminal_command",
+		Description: "Execute terminal commands in the project context",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"command": map[string]interface{}{
+					"type":        "string",
+					"description": "Command to execute",
+				},
+				"workingDir": map[string]interface{}{
+					"type":        "string",
+					"description": "Working directory for command execution (optional)",
+				},
+			},
+			"required": []string{"command"},
+		},
+	}
+	
+	tr.tools["apply_code_change"] = models.MCPTool{
+		Name:        "apply_code_change",
+		Description: "Apply a code change using diff/patch",
+		InputSchema: stringParamSchema("diff", "The diff to apply", true),
+	}
+}
+
+func (tr *ToolRegistry) registerUITools() {
+	tr.tools["browse_with_playwright"] = models.MCPTool{
+		Name:        "browse_with_playwright",
+		Description: "Fetch a URL in a headless browser and capture a screenshot",
+		InputSchema: urlParamSchema(),
+	}
+	
+	tr.tools["browse_with_playwright_incremental"] = models.MCPTool{
+		Name:        "browse_with_playwright_incremental",
+		Description: "Browse with incremental UI state streaming for optimized token usage",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"url": map[string]interface{}{
+					"type":        "string",
+					"description": "URL to visit",
+				},
+				"sessionId": map[string]interface{}{
+					"type":        "string",
+					"description": "Session ID for incremental state tracking (optional)",
+				},
+				"streamingMode": map[string]interface{}{
+					"type":        "string",
+					"description": "Streaming mode: 'full', 'incremental', or 'adaptive'",
+					"enum":        []string{"full", "incremental", "adaptive"},
+				},
+			},
+			"required": []string{"url"},
+		},
+	}
+	
+	// Additional UI tools...
+	tr.tools["get_latest_screenshot"] = models.MCPTool{
+		Name:        "get_latest_screenshot",
+		Description: "Return the most recent Playwright screenshot",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"base64": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Return base64 encoded data",
+				},
+			},
+		},
+	}
+	
+	tr.tools["get_ui_metadata"] = models.MCPTool{
+		Name:        "get_ui_metadata",
+		Description: "Extract component metadata from the last HTML capture",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_visual_context"] = models.MCPTool{
+		Name:        "get_visual_context",
+		Description: "Run Playwright and assemble screenshot, metadata and code mapping",
+		InputSchema: urlParamSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerAnalysisTools() {
+	tr.tools["analyze_performance"] = models.MCPTool{
+		Name:        "analyze_performance",
+		Description: "Analyze application performance bottlenecks",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_security_analysis"] = models.MCPTool{
+		Name:        "get_security_analysis",
+		Description: "Perform security analysis of the codebase",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["validate_api_contracts"] = models.MCPTool{
+		Name:        "validate_api_contracts",
+		Description: "Validate API contracts and OpenAPI specifications",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_test_coverage"] = models.MCPTool{
+		Name:        "get_test_coverage",
+		Description: "Get test coverage analysis and metrics",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["analyze_code_quality"] = models.MCPTool{
+		Name:        "analyze_code_quality",
+		Description: "Analyze code quality metrics and technical debt",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["analyze_complexity"] = models.MCPTool{
+		Name:        "analyze_complexity",
+		Description: "Run gocyclo to report function complexity",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_lint_diagnostics"] = models.MCPTool{
+		Name:        "get_lint_diagnostics",
+		Description: "Run golangci-lint or staticcheck and go build",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerFrontendTools() {
+	tr.tools["frontend_nextjs_app_routes"] = models.MCPTool{
+		Name:        "frontend_nextjs_app_routes",
+		Description: "[Frontend] List Next.js app router routes",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["frontend_react_component_tree"] = models.MCPTool{
+		Name:        "frontend_react_component_tree",
+		Description: "[Frontend] Get React component import tree and dependencies",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["frontend_api_client_analysis"] = models.MCPTool{
+		Name:        "frontend_api_client_analysis",
+		Description: "[Frontend] Analyze sophisticated TypeScript API client structure and capabilities",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerBusinessDomainTools() {
+	tr.tools["get_business_domains"] = models.MCPTool{
+		Name:        "get_business_domains",
+		Description: "Analyze business domains within the backend architecture",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_advanced_tooling"] = models.MCPTool{
+		Name:        "get_advanced_tooling",
+		Description: "Analyze advanced development and database tooling",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_business_domain_middleware"] = models.MCPTool{
+		Name:        "get_business_domain_middleware",
+		Description: "Analyze middleware specific to business domains",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+func (tr *ToolRegistry) registerEnhancedAnalysisTools() {
+	tr.tools["get_enhanced_dependencies"] = models.MCPTool{
+		Name:        "get_enhanced_dependencies",
+		Description: "Get enhanced dependency analysis with business domain mapping",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_enhanced_security_analysis"] = models.MCPTool{
+		Name:        "get_enhanced_security_analysis",
+		Description: "Get enhanced security analysis for business domains",
+		InputSchema: noParamsSchema(),
+	}
+	
+	tr.tools["get_enhanced_api_schema"] = models.MCPTool{
+		Name:        "get_enhanced_api_schema",
+		Description: "Get enhanced API schema analysis with business domain awareness",
+		InputSchema: noParamsSchema(),
+	}
+}
+
+// handleListTools handles MCP tools/list request
+func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMessage) (interface{}, error) {
+	if s.toolRegistry == nil {
+		s.toolRegistry = NewToolRegistry()
+	}
+	
+	tools := s.toolRegistry.GetAllTools()
 	log.Printf("Returning %d MCP tools", len(tools))
-
+	
 	return map[string]interface{}{
 		"tools": tools,
 	}, nil
@@ -1016,11 +548,33 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessage) (interface{}, error) {
 	var toolCall models.MCPToolCall
 	if err := json.Unmarshal(params, &toolCall); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal tool call: %w", err)
 	}
 
 	log.Printf("MCP tool call: %s", toolCall.Name)
 
+	// Validate tool exists
+	if s.toolRegistry == nil {
+		s.toolRegistry = NewToolRegistry()
+	}
+	
+	if _, exists := s.toolRegistry.GetTool(toolCall.Name); !exists {
+		return map[string]interface{}{
+			"content": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": fmt.Sprintf("Unknown tool: %s", toolCall.Name),
+				},
+			},
+		}, nil
+	}
+
+	// Route to appropriate handler
+	return s.routeToolCall(ctx, toolCall)
+}
+
+// routeToolCall routes tool calls to appropriate handlers
+func (s *JSONRPCServer) routeToolCall(ctx context.Context, toolCall models.MCPToolCall) (interface{}, error) {
 	switch toolCall.Name {
 	// Database Tools
 	case "get_database_schema":
@@ -1102,42 +656,25 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 	case "contract_drift_check":
 		return s.callCheckContractDrift()
 
-		// Interactive Tools
+	// Interactive Tools
 	case "run_terminal_command":
 		return s.callRunTerminalCommand(ctx, toolCall.Arguments)
 	case "apply_code_change":
 		return s.callApplyCodeChange(ctx, toolCall.Arguments)
+
+	// UI Tools
 	case "browse_with_playwright":
 		return s.callBrowseWithPlaywright(ctx, toolCall.Arguments)
 	case "browse_with_playwright_incremental":
 		return s.callBrowseWithPlaywrightIncremental(ctx, toolCall.Arguments)
-	case "process_ui_action_incremental":
-		return s.callProcessUIActionIncremental(ctx, toolCall.Arguments)
-	case "get_incremental_ui_state":
-		return s.callGetIncrementalUIState(ctx, toolCall.Arguments)
-	case "set_streaming_mode":
-		return s.callSetStreamingMode(ctx, toolCall.Arguments)
-	case "get_stream_stats":
-		return s.callGetStreamStats(ctx, toolCall.Arguments)
-	case "cleanup_incremental_session":
-		return s.callCleanupIncrementalSession(ctx, toolCall.Arguments)
-	case "get_incremental_debug_info":
-		return s.callGetIncrementalDebugInfo(ctx, toolCall.Arguments)
 	case "get_latest_screenshot":
 		return s.callGetLatestScreenshot(ctx, toolCall.Arguments)
 	case "get_ui_metadata":
 		return s.callGetUIMetadata(ctx)
-	case "get_ui_code_map":
-		return s.callGetUICodeMap(ctx)
 	case "get_visual_context":
 		return s.callGetVisualContext(ctx, toolCall.Arguments)
-	case "generate_ui_test_prompt_with_actions":
-		return s.callGenerateUITestPromptWithActions(ctx, toolCall.Arguments)
 
-	case "generate_ui_test_prompt":
-		return s.callGenerateUITestPrompt(ctx, toolCall.Arguments)
-
-	// New Tools
+	// Analysis Tools
 	case "analyze_performance":
 		return s.callAnalyzePerformance()
 	case "get_security_analysis":
@@ -1158,38 +695,18 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetFrontendRoutes()
 	case "frontend_react_component_tree":
 		return s.callGetComponentTree()
-	case "frontend_react_component_props":
-		return s.callGetComponentPropsAndEvents()
-	case "frontend_test_coverage":
-		return s.callGetFrontendTestCoverage()
-	case "frontend_react_component_tests":
-		return s.callGetComponentToTestMap()
-
-	// New Frontend Analysis Tools
 	case "frontend_api_client_analysis":
 		return s.callGetFrontendAPIClientAnalysis()
 
-	// New Backend Business Domain Tools
+	// Business Domain Tools
 	case "get_business_domains":
 		return s.callGetBusinessDomains()
 	case "get_advanced_tooling":
 		return s.callGetAdvancedTooling()
-	case "get_keyword_extraction_services":
-		return s.callGetKeywordExtractionServices()
-	case "get_keyword_scanning_services":
-		return s.callGetKeywordScanningServices()
-	case "get_proxy_management_services":
-		return s.callGetProxyManagementServices()
-	case "get_keyword_set_api_specs":
-		return s.callGetKeywordSetAPISpecs()
-	case "get_proxy_pool_api_specs":
-		return s.callGetProxyPoolAPISpecs()
-	case "get_database_tooling_analysis":
-		return s.callGetDatabaseToolingAnalysis()
-	case "get_business_domain_routes":
-		return s.callGetBusinessDomainRoutes()
+	case "get_business_domain_middleware":
+		return s.callGetBusinessDomainMiddleware()
 
-	// Enhanced Dependency and Security Analysis Tools
+	// Enhanced Analysis Tools
 	case "get_enhanced_dependencies":
 		return s.callGetEnhancedDependencies()
 	case "get_enhanced_security_analysis":
@@ -1197,22 +714,7 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 	case "get_enhanced_api_schema":
 		return s.callGetEnhancedAPISchema()
 
-	// Business Domain Middleware and Dependencies
-	case "get_business_domain_middleware":
-		return s.callGetBusinessDomainMiddleware()
-	case "get_internal_service_dependencies":
-		return s.callGetInternalServiceDependencies()
-	case "get_business_domain_cross_dependencies":
-		return s.callGetBusinessDomainCrossDependencies()
-
 	default:
-		return map[string]interface{}{
-			"content": []map[string]interface{}{
-				{
-					"type": "text",
-					"text": fmt.Sprintf("Unknown tool: %s", toolCall.Name),
-				},
-			},
-		}, nil
+		return nil, fmt.Errorf("tool handler not implemented: %s", toolCall.Name)
 	}
 }

@@ -16,14 +16,15 @@ import (
 
 // JSONRPCServer handles JSON-RPC 2.0 communication
 type JSONRPCServer struct {
-	bridge   *server.Bridge
-	reader   *bufio.Reader
-	writer   *bufio.Writer
-	ctx      context.Context
-	cancel   context.CancelFunc
-	mu       sync.Mutex
-	handlers map[string]Handler
-	shutdown bool
+	bridge       *server.Bridge
+	reader       *bufio.Reader
+	writer       *bufio.Writer
+	ctx          context.Context
+	cancel       context.CancelFunc
+	mu           sync.Mutex
+	handlers     map[string]Handler
+	shutdown     bool
+	toolRegistry *ToolRegistry
 }
 
 // Handler represents a JSON-RPC method handler

@@ -118,7 +118,7 @@ func formatAdvancedTools(tools []models.AdvancedTool) string {
 	}
 
 	for category, categoryTools := range categories {
-		result.WriteString(fmt.Sprintf("📂 %s:\n", strings.Title(category)))
+		result.WriteString(fmt.Sprintf("📂 %s:\n", strings.ToUpper(string(category[0]))+category[1:]))
 		for _, tool := range categoryTools {
 			result.WriteString(fmt.Sprintf("  🔧 %s (%s)\n", tool.Name, tool.Type))
 			result.WriteString(fmt.Sprintf("     📄 %s\n", tool.Description))

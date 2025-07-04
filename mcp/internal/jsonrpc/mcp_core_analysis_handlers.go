@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-// Code analysis tool handlers
+// Core analysis tool handlers
 
-// callGetModels implements the get_models tool
+// callGetModels implements the get_backend_data_models tool
 func (s *JSONRPCServer) callGetModels() (interface{}, error) {
 	models, err := s.bridge.GetModels()
 	if err != nil {
@@ -31,7 +31,7 @@ func (s *JSONRPCServer) callGetModels() (interface{}, error) {
 	}, nil
 }
 
-// callGetRoutes implements the get_routes/get_endpoints tool
+// callGetRoutes implements the get_backend_api_routes tool
 func (s *JSONRPCServer) callGetRoutes() (interface{}, error) {
 	routes, err := s.bridge.GetRoutes()
 	if err != nil {
@@ -64,7 +64,7 @@ func (s *JSONRPCServer) callGetRoutes() (interface{}, error) {
 	}, nil
 }
 
-// callGetHandlers implements the get_handlers tool
+// callGetHandlers implements the get_backend_request_handlers tool
 func (s *JSONRPCServer) callGetHandlers() (interface{}, error) {
 	handlers, err := s.bridge.GetHandlers()
 	if err != nil {
@@ -88,7 +88,7 @@ func (s *JSONRPCServer) callGetHandlers() (interface{}, error) {
 	}, nil
 }
 
-// callGetServices implements the get_services tool
+// callGetServices implements the get_backend_services tool
 func (s *JSONRPCServer) callGetServices() (interface{}, error) {
 	services, err := s.bridge.GetServices()
 	if err != nil {

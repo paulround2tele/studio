@@ -1,9 +1,0 @@
-2025/06/29 00:27:21 Looking for database config in project root: /home/vboxuser/studio
-2025/06/29 00:27:21 [INFO] Auto-detecting database configuration from project root: /home/vboxuser/studio
-2025/06/29 00:27:21 [INFO] Found database config in: /home/vboxuser/studio/backend/config.json
-2025/06/29 00:27:21 Using database URL from auto-detection: postgres://domainflow:%2A%2A%2A%2A%2A%2A@localhost:5432/domainflow_production?sslmode=disable
-2025/06/29 00:27:21 MCP JSON-RPC 2.0 server starting...
-2025/06/29 00:27:21 Received method: initialize
-2025/06/29 00:27:21 Client disconnected
-2025/06/29 00:27:21 MCP Initialize request from client: TestClient 1.0.0
-{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-03-26","capabilities":{"tools":{}},"serverInfo":{"name":"MCP Go Server","version":"1.0.0"},"tools":null}}

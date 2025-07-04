@@ -9,7 +9,7 @@ import (
 // Browser tool handlers
 
 // callBrowseWithPlaywright implements the browse_with_playwright tool
-func (s *JSONRPCServer) callBrowseWithPlaywright(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callBrowseWithPlaywright(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	url, ok := args["url"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -36,7 +36,7 @@ func (s *JSONRPCServer) callBrowseWithPlaywright(ctx context.Context, args map[s
 }
 
 // callBrowseWithPlaywrightIncremental implements the browse_with_playwright_incremental tool
-func (s *JSONRPCServer) callBrowseWithPlaywrightIncremental(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callBrowseWithPlaywrightIncremental(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	url, ok := args["url"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -72,7 +72,7 @@ func (s *JSONRPCServer) callBrowseWithPlaywrightIncremental(ctx context.Context,
 }
 
 // callProcessUIActionIncremental implements the process_ui_action_incremental tool
-func (s *JSONRPCServer) callProcessUIActionIncremental(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callProcessUIActionIncremental(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	sessionID, ok := args["sessionId"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -116,7 +116,7 @@ func (s *JSONRPCServer) callProcessUIActionIncremental(ctx context.Context, args
 }
 
 // callGetIncrementalUIState implements the get_incremental_ui_state tool
-func (s *JSONRPCServer) callGetIncrementalUIState(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callGetIncrementalUIState(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	sessionID, ok := args["sessionId"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -146,7 +146,7 @@ func (s *JSONRPCServer) callGetIncrementalUIState(ctx context.Context, args map[
 }
 
 // callSetStreamingMode implements the set_streaming_mode tool
-func (s *JSONRPCServer) callSetStreamingMode(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callSetStreamingMode(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	sessionID, ok := args["sessionId"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -198,7 +198,7 @@ func (s *JSONRPCServer) callSetStreamingMode(ctx context.Context, args map[strin
 }
 
 // callGetStreamStats implements the get_stream_stats tool
-func (s *JSONRPCServer) callGetStreamStats(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callGetStreamStats(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	sessionID, _ := args["sessionId"].(string) // Optional parameter
 	
 	stats, err := s.bridge.GetStreamStats(sessionID)
@@ -221,7 +221,7 @@ func (s *JSONRPCServer) callGetStreamStats(ctx context.Context, args map[string]
 }
 
 // callCleanupIncrementalSession implements the cleanup_incremental_session tool
-func (s *JSONRPCServer) callCleanupIncrementalSession(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callCleanupIncrementalSession(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	sessionID, ok := args["sessionId"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -248,7 +248,7 @@ func (s *JSONRPCServer) callCleanupIncrementalSession(ctx context.Context, args 
 }
 
 // callGetIncrementalDebugInfo implements the get_incremental_debug_info tool
-func (s *JSONRPCServer) callGetIncrementalDebugInfo(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callGetIncrementalDebugInfo(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	sessionID, ok := args["sessionId"].(string)
 	if !ok {
 		return map[string]interface{}{

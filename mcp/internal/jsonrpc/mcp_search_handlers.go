@@ -8,7 +8,7 @@ import (
 // Search tool handlers
 
 // callSearchCode implements the search_code tool
-func (s *JSONRPCServer) callSearchCode(ctx context.Context, args map[string]interface{}) (interface{}, error) {
+func (s *JSONRPCServer) callSearchCode(_ context.Context, args map[string]interface{}) (interface{}, error) {
 	query, ok := args["query"].(string)
 	if !ok {
 		return map[string]interface{}{
@@ -44,7 +44,7 @@ func (s *JSONRPCServer) callSearchCode(ctx context.Context, args map[string]inte
 }
 
 // callGetPackageStructure implements the get_package_structure tool
-func (s *JSONRPCServer) callGetPackageStructure(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetPackageStructure(_ context.Context) (interface{}, error) {
 	structure, err := s.bridge.GetPackageStructure()
 	if err != nil {
 		return map[string]interface{}{
@@ -68,7 +68,7 @@ func (s *JSONRPCServer) callGetPackageStructure(ctx context.Context) (interface{
 }
 
 // callGetDependencies implements the get_dependencies tool
-func (s *JSONRPCServer) callGetDependencies(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetDependencies(_ context.Context) (interface{}, error) {
 	dependencies, err := s.bridge.GetDependencies()
 	if err != nil {
 		return map[string]interface{}{
@@ -92,7 +92,7 @@ func (s *JSONRPCServer) callGetDependencies(ctx context.Context) (interface{}, e
 }
 
 // callGetDependencyGraph implements the get_dependency_graph tool
-func (s *JSONRPCServer) callGetDependencyGraph(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetDependencyGraph(_ context.Context) (interface{}, error) {
 	graph, err := s.bridge.GetDependencyGraph()
 	if err != nil {
 		return map[string]interface{}{

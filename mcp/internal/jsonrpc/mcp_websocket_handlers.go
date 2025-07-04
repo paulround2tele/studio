@@ -8,7 +8,7 @@ import (
 // WebSocket tool handlers
 
 // callGetWebSocketEndpoints implements the get_websocket_endpoints tool
-func (s *JSONRPCServer) callGetWebSocketEndpoints(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetWebSocketEndpoints(_ context.Context) (interface{}, error) {
 	endpoints, err := s.bridge.GetWebSocketEndpoints()
 	if err != nil {
 		return map[string]interface{}{
@@ -32,7 +32,7 @@ func (s *JSONRPCServer) callGetWebSocketEndpoints(ctx context.Context) (interfac
 }
 
 // callGetWebSocketHandlers implements the get_websocket_handlers tool
-func (s *JSONRPCServer) callGetWebSocketHandlers(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetWebSocketHandlers(_ context.Context) (interface{}, error) {
 	handlers, err := s.bridge.GetWebSocketHandlers()
 	if err != nil {
 		return map[string]interface{}{
@@ -56,7 +56,7 @@ func (s *JSONRPCServer) callGetWebSocketHandlers(ctx context.Context) (interface
 }
 
 // callGetWebSocketMessages implements the get_websocket_messages tool
-func (s *JSONRPCServer) callGetWebSocketMessages(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetWebSocketMessages(_ context.Context) (interface{}, error) {
 	messages, err := s.bridge.GetWebSocketMessages()
 	if err != nil {
 		return map[string]interface{}{
@@ -80,7 +80,7 @@ func (s *JSONRPCServer) callGetWebSocketMessages(ctx context.Context) (interface
 }
 
 // callGetWebSocketLifecycle returns runtime statistics about WebSocket connections
-func (s *JSONRPCServer) callGetWebSocketLifecycle(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callGetWebSocketLifecycle(_ context.Context) (interface{}, error) {
 	if s.bridge == nil {
 		return map[string]interface{}{
 			"content": []map[string]interface{}{
@@ -115,7 +115,7 @@ func (s *JSONRPCServer) callGetWebSocketLifecycle(ctx context.Context) (interfac
 }
 
 // callTestWebSocketFlow actively dials the configured WebSocket endpoint to verify connectivity
-func (s *JSONRPCServer) callTestWebSocketFlow(ctx context.Context) (interface{}, error) {
+func (s *JSONRPCServer) callTestWebSocketFlow(_ context.Context) (interface{}, error) {
 	if s.bridge == nil {
 		return map[string]interface{}{
 			"content": []map[string]interface{}{
