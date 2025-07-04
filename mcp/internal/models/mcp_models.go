@@ -1152,16 +1152,50 @@ type IncrementalBrowseResult struct {
 	TokenSavings  int                   `json:"token_savings"`
 }
 
-// IncrementalActionResult represents the result of an incremental action
+// IncrementalActionResult represents the result of an incremental action with REAL debugging capabilities
 type IncrementalActionResult struct {
 	SessionID     string                `json:"session_id"`
 	ActionType    string                `json:"action_type"`
 	Success       bool                  `json:"success"`
+	
+	// REAL debugging fields - not fake incremental bullshit
+	HTML          string                `json:"html,omitempty"`          // ACTUAL HTML from Playwright
+	Screenshot    string                `json:"screenshot,omitempty"`    // ACTUAL screenshot path
+	URL           string                `json:"url,omitempty"`           // ACTUAL URL result
+	ErrorMessage  string                `json:"error_message,omitempty"` // ACTUAL error details
+	
+	// Enhanced debugging capabilities for cookie-based auth flows
+	ConsoleLogs   []ConsoleLogEntry     `json:"console_logs,omitempty"`  // Browser console logs
+	NetworkLogs   []NetworkLogEntry     `json:"network_logs,omitempty"`  // Network requests/responses
+	CookieState   map[string]interface{} `json:"cookie_state,omitempty"` // Current cookie state
+	
+	// Legacy incremental fields (kept for compatibility but not used for real debugging)
 	Delta         *DOMDelta             `json:"delta,omitempty"`
 	Regions       []ScreenshotRegion    `json:"regions,omitempty"`
 	CompressedData *CompressedDelta     `json:"compressed_data,omitempty"`
 	TokenSavings  int                   `json:"token_savings"`
 	Timestamp     time.Time             `json:"timestamp"`
+}
+
+// ConsoleLogEntry represents a browser console log entry for debugging
+type ConsoleLogEntry struct {
+	Type      string    `json:"type"`
+	Text      string    `json:"text"`
+	Timestamp time.Time `json:"timestamp"`
+	Location  string    `json:"location,omitempty"`
+}
+
+// NetworkLogEntry represents a network request/response for debugging
+type NetworkLogEntry struct {
+	Type       string                 `json:"type"` // "request" or "response"
+	Method     string                 `json:"method,omitempty"`
+	URL        string                 `json:"url"`
+	Status     int                    `json:"status,omitempty"`
+	Headers    map[string]string      `json:"headers,omitempty"`
+	Body       string                 `json:"body,omitempty"`
+	Timestamp  time.Time              `json:"timestamp"`
+	Duration   time.Duration          `json:"duration,omitempty"`
+	Cookies    map[string]interface{} `json:"cookies,omitempty"`
 }
 
 // StreamingStats represents performance and usage statistics for streaming

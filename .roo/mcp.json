@@ -63,7 +63,6 @@
         "get_ui_metadata",
         "get_ui_code_map",
         "get_visual_context",
-        "generate_ui_test_prompt_with_actions",
         "generate_ui_test_prompt",
         "analyze_complexity",
         "get_lint_diagnostics",
@@ -97,7 +96,14 @@
         "process_ui_action_incremental"
       ],
       "timeout": 300,
-      "disabled": false
+      "disabled": true,
+      "disabledTools": [
+        "get_visual_context",
+        "get_latest_screenshot",
+        "generate_ui_test_prompt_with_actions",
+        "browse_with_playwright",
+        "get_ui_metadata"
+      ]
     }
   }
 }

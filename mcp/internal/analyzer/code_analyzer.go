@@ -11,10 +11,93 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	playwright "github.com/playwright-community/playwright-go"
 )
+
+// PersistentBrowserSession maintains a long-running browser session for cookie persistence with debugging
+type PersistentBrowserSession struct {
+	SessionID     string
+	Browser       playwright.Browser
+	Context       playwright.BrowserContext
+	Page          playwright.Page
+	Playwright    *playwright.Playwright
+	LastUsed      time.Time
+	mutex         sync.Mutex
+	ConsoleLogs   []models.ConsoleLogEntry
+	NetworkLogs   []models.NetworkLogEntry
+	CookieState   map[string]interface{}
+	DebugEnabled  bool
+}
+
+
+// Global map to store persistent browser sessions
+var persistentSessions = make(map[string]*PersistentBrowserSession)
+var sessionsMutex sync.RWMutex
+
+// GetPersistentSession retrieves a persistent browser session for debugging
+func GetPersistentSession(sessionID string) (*PersistentBrowserSession, bool) {
+	sessionsMutex.RLock()
+	defer sessionsMutex.RUnlock()
+	session, exists := persistentSessions[sessionID]
+	return session, exists
+}
+
+// CleanupPersistentSession removes a specific persistent session
+func CleanupPersistentSession(sessionID string) bool {
+	sessionsMutex.Lock()
+	defer sessionsMutex.Unlock()
+	
+	if session, exists := persistentSessions[sessionID]; exists {
+		// Clean up the session resources
+		if session.Context != nil {
+			session.Context.Close()
+		}
+		if session.Browser != nil {
+			session.Browser.Close()
+		}
+		if session.Playwright != nil {
+			session.Playwright.Stop()
+		}
+		delete(persistentSessions, sessionID)
+		return true
+	}
+	return false
+}
+
+// GetSessionDebuggingInfo safely retrieves debugging information from a persistent session
+func GetSessionDebuggingInfo(sessionID string) ([]models.ConsoleLogEntry, []models.NetworkLogEntry, map[string]interface{}) {
+	sessionsMutex.RLock()
+	session, exists := persistentSessions[sessionID]
+	sessionsMutex.RUnlock()
+	
+	if !exists {
+		// Session not found - return empty debug info
+		return make([]models.ConsoleLogEntry, 0), make([]models.NetworkLogEntry, 0), make(map[string]interface{})
+	}
+	
+	// Lock the session to safely access debug data
+	session.mutex.Lock()
+	defer session.mutex.Unlock()
+	
+	// Copy console logs (to avoid sharing the slice)
+	consoleLogs := make([]models.ConsoleLogEntry, len(session.ConsoleLogs))
+	copy(consoleLogs, session.ConsoleLogs)
+	
+	// Copy network logs (to avoid sharing the slice)
+	networkLogs := make([]models.NetworkLogEntry, len(session.NetworkLogs))
+	copy(networkLogs, session.NetworkLogs)
+	
+	// Copy cookie state (deep copy of the map)
+	cookieState := make(map[string]interface{})
+	for k, v := range session.CookieState {
+		cookieState[k] = v
+	}
+	
+	return consoleLogs, networkLogs, cookieState
+}
 
 // GetValidationRules analyzes code for validation patterns
 func GetValidationRules(dir string) ([]models.ValidationRule, error) {
@@ -787,7 +870,197 @@ func getElementRelativeCoords(selector string, x, y float64, page playwright.Pag
 	return absoluteX, absoluteY, nil
 }
 
+// getOrCreatePersistentSession gets or creates a persistent browser session with cookie preservation and debugging
+func getOrCreatePersistentSession(sessionID string) (*PersistentBrowserSession, error) {
+	sessionsMutex.Lock()
+	defer sessionsMutex.Unlock()
+
+	// Check if session already exists
+	if session, exists := persistentSessions[sessionID]; exists {
+		session.LastUsed = time.Now()
+		return session, nil
+	}
+
+	// Create new persistent session with debugging enabled
+	pw, err := playwright.Run()
+	if err != nil {
+		return nil, fmt.Errorf("failed to start playwright: %v", err)
+	}
+
+	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
+		Headless: playwright.Bool(true),
+		Args: []string{
+			"--disable-blink-features=AutomationControlled",
+			"--disable-web-security",
+			"--disable-features=VizDisplayCompositor",
+			"--enable-features=NetworkService,NetworkServiceLogging",
+			"--disable-site-isolation-trials",
+			"--disable-extensions",
+			"--allow-running-insecure-content",
+			"--disable-backgrounding-occluded-windows",
+			"--disable-background-timer-throttling",
+			"--disable-features=TranslateUI",
+			"--disable-ipc-flooding-protection",
+			"--disable-dev-shm-usage",
+			"--no-sandbox",
+			"--disable-setuid-sandbox",
+		},
+	})
+	if err != nil {
+		pw.Stop()
+		return nil, fmt.Errorf("failed to launch browser: %v", err)
+	}
+
+	// Create browser context with CRITICAL cookie storage configuration for localhost
+	context, err := browser.NewContext(playwright.BrowserNewContextOptions{
+		AcceptDownloads:   playwright.Bool(false),
+		IgnoreHttpsErrors: playwright.Bool(true),
+		// Set viewport for consistent behavior
+		Viewport: &playwright.Size{
+			Width:  1280,
+			Height: 720,
+		},
+		// Set user agent to mimic real browser
+		UserAgent: playwright.String("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"),
+		// Enable cookie handling for localhost - critical for session persistence
+		Locale: playwright.String("en-US"),
+		// Configure proper HTTP headers for cookie handling
+		ExtraHttpHeaders: map[string]string{
+			"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8",
+			"Accept-Language":           "en-US,en;q=0.9",
+			"Accept-Encoding":           "gzip, deflate",
+			"Connection":                "keep-alive",
+			"Upgrade-Insecure-Requests": "1",
+			"Sec-Fetch-Dest":            "document",
+			"Sec-Fetch-Mode":            "navigate",
+			"Sec-Fetch-Site":            "same-origin",
+			"Cache-Control":             "max-age=0",
+		},
+		// Enable JavaScript which is required for modern web apps
+		JavaScriptEnabled: playwright.Bool(true),
+	})
+	if err != nil {
+		browser.Close()
+		pw.Stop()
+		return nil, fmt.Errorf("failed to create browser context: %v", err)
+	}
+
+	page, err := context.NewPage()
+	if err != nil {
+		context.Close()
+		browser.Close()
+		pw.Stop()
+		return nil, fmt.Errorf("failed to create page: %v", err)
+	}
+
+	// Set timeout for dev servers
+	page.SetDefaultTimeout(120000)
+
+	session := &PersistentBrowserSession{
+		SessionID:    sessionID,
+		Browser:      browser,
+		Context:      context,
+		Page:         page,
+		Playwright:   pw,
+		LastUsed:     time.Now(),
+		ConsoleLogs:  make([]models.ConsoleLogEntry, 0),
+		NetworkLogs:  make([]models.NetworkLogEntry, 0),
+		CookieState:  make(map[string]interface{}),
+		DebugEnabled: true,
+	}
+
+	// Set up console logging
+	page.OnConsole(func(msg playwright.ConsoleMessage) {
+		if session.DebugEnabled {
+			logEntry := models.ConsoleLogEntry{
+				Type:      msg.Type(),
+				Text:      msg.Text(),
+				Timestamp: time.Now(),
+				Location:  msg.Location().URL + ":" + fmt.Sprintf("%d", msg.Location().LineNumber),
+			}
+			session.ConsoleLogs = append(session.ConsoleLogs, logEntry)
+			
+			// Keep only last 100 console logs to prevent memory issues
+			if len(session.ConsoleLogs) > 100 {
+				session.ConsoleLogs = session.ConsoleLogs[len(session.ConsoleLogs)-100:]
+			}
+		}
+	})
+
+	// Set up network request monitoring
+	page.OnRequest(func(request playwright.Request) {
+		if session.DebugEnabled {
+			headers := make(map[string]string)
+			for k, v := range request.Headers() {
+				headers[k] = v
+			}
+			
+			logEntry := models.NetworkLogEntry{
+				Type:      "request",
+				Method:    request.Method(),
+				URL:       request.URL(),
+				Headers:   headers,
+				Timestamp: time.Now(),
+			}
+			session.NetworkLogs = append(session.NetworkLogs, logEntry)
+		}
+	})
+
+	// Set up network response monitoring
+	page.OnResponse(func(response playwright.Response) {
+		if session.DebugEnabled {
+			headers := make(map[string]string)
+			for k, v := range response.Headers() {
+				headers[k] = v
+			}
+			
+			// Get response cookies
+			cookies := make(map[string]interface{})
+			if cookieHeader, exists := headers["set-cookie"]; exists {
+				cookies["set-cookie"] = cookieHeader
+			}
+			
+			logEntry := models.NetworkLogEntry{
+				Type:      "response",
+				URL:       response.URL(),
+				Status:    response.Status(),
+				Headers:   headers,
+				Timestamp: time.Now(),
+				Cookies:   cookies,
+			}
+			session.NetworkLogs = append(session.NetworkLogs, logEntry)
+			
+			// Keep only last 100 network logs to prevent memory issues
+			if len(session.NetworkLogs) > 100 {
+				session.NetworkLogs = session.NetworkLogs[len(session.NetworkLogs)-100:]
+			}
+		}
+	})
+
+	persistentSessions[sessionID] = session
+	return session, nil
+}
+
+// cleanupExpiredSessions removes sessions that haven't been used for a while
+func cleanupExpiredSessions() {
+	sessionsMutex.Lock()
+	defer sessionsMutex.Unlock()
+
+	expiration := 30 * time.Minute
+	now := time.Now()
+
+	for sessionID, session := range persistentSessions {
+		if now.Sub(session.LastUsed) > expiration {
+			session.Context.Close()
+			session.Browser.Close()
+			session.Playwright.Stop()
+			delete(persistentSessions, sessionID)
+		}
+	}
+}
+
 // BrowseWithPlaywright uses Playwright to fetch a web page and take a screenshot
+// For standalone use without session management
 func BrowseWithPlaywright(url string) (models.PlaywrightResult, error) {
 	pw, err := playwright.Run()
 	if err != nil {
@@ -829,48 +1102,139 @@ func BrowseWithPlaywright(url string) (models.PlaywrightResult, error) {
 	return models.PlaywrightResult{URL: url, HTML: html, Screenshot: screenshotPath}, nil
 }
 
-// BrowseWithPlaywrightActions opens a URL and executes a series of UI actions
+// BrowseWithPlaywrightPersistent navigates to URL while preserving cookies in a session
+func BrowseWithPlaywrightPersistent(sessionID, url string) (models.PlaywrightResult, error) {
+	// Clean up expired sessions periodically
+	go cleanupExpiredSessions()
+
+	session, err := getOrCreatePersistentSession(sessionID)
+	if err != nil {
+		return models.PlaywrightResult{}, err
+	}
+
+	session.mutex.Lock()
+	defer session.mutex.Unlock()
+
+	// Navigate with cookie preservation
+	if _, err := session.Page.Goto(url, playwright.PageGotoOptions{
+		Timeout: playwright.Float(120000),
+	}); err != nil {
+		return models.PlaywrightResult{}, fmt.Errorf("navigation failed: %v", err)
+	}
+
+	session.LastUsed = time.Now()
+
+	// Get current state with cookies preserved
+	html, _ := session.Page.Content()
+	screenshotPath := fmt.Sprintf("/tmp/persistent_%s_%d.png", sessionID, time.Now().UnixNano())
+
+	if _, err := session.Page.Screenshot(playwright.PageScreenshotOptions{
+		Path:     playwright.String(screenshotPath),
+		FullPage: playwright.Bool(true),
+	}); err != nil {
+		return models.PlaywrightResult{}, fmt.Errorf("screenshot failed: %v", err)
+	}
+
+	currentURL := session.Page.URL()
+	return models.PlaywrightResult{
+		URL:        currentURL,
+		HTML:       html,
+		Screenshot: screenshotPath,
+	}, nil
+}
+
+// BrowseWithPlaywrightActions opens a URL and executes a series of UI actions WITH COOKIE PERSISTENCE
 func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.PlaywrightResult, error) {
-	pw, err := playwright.Run()
+	// Use default session ID for cookie persistence across actions
+	sessionID := "default_session"
+	return BrowseWithPlaywrightActionsWithSession(sessionID, url, actions)
+}
+
+// BrowseWithPlaywrightActionsWithSession performs actions with explicit session management and debugging
+func BrowseWithPlaywrightActionsWithSession(sessionID, url string, actions []models.UIAction) (models.PlaywrightResult, error) {
+	// Clean up expired sessions periodically
+	go cleanupExpiredSessions()
+
+	session, err := getOrCreatePersistentSession(sessionID)
 	if err != nil {
-		return models.PlaywrightResult{}, err
+		return models.PlaywrightResult{}, fmt.Errorf("failed to get/create session '%s': %v", sessionID, err)
 	}
-	browser, err := pw.Chromium.Launch()
-	if err != nil {
-		pw.Stop()
-		return models.PlaywrightResult{}, err
+
+	session.mutex.Lock()
+	defer session.mutex.Unlock()
+
+	// Clear previous logs for this session to start fresh
+	session.ConsoleLogs = make([]models.ConsoleLogEntry, 0)
+	session.NetworkLogs = make([]models.NetworkLogEntry, 0)
+
+	// Navigate with cookie preservation if URL is provided
+	if url != "" {
+		if _, err := session.Page.Goto(url, playwright.PageGotoOptions{
+			Timeout: playwright.Float(120000),
+		}); err != nil {
+			return models.PlaywrightResult{}, fmt.Errorf("navigation to %s failed: %v", url, err)
+		}
+		
+		// Update cookie state after navigation
+		if err := updateCookieState(session); err != nil {
+			fmt.Printf("Warning: failed to update cookie state: %v\n", err)
+		}
 	}
-	page, err := browser.NewPage()
-	if err != nil {
-		browser.Close()
-		pw.Stop()
-		return models.PlaywrightResult{}, err
-	}
-	if _, err := page.Goto(url); err != nil {
-		page.Close()
-		browser.Close()
-		pw.Stop()
-		return models.PlaywrightResult{}, err
-	}
-	// Execute actions sequentially
-	for _, a := range actions {
+	// Execute actions sequentially with PERSISTENT SESSION, COOKIE PRESERVATION, and DEBUG LOGGING
+	for i, a := range actions {
+		actionStart := time.Now()
+		
+		// Validate action parameters with detailed logging
+		if err := validateUIAction(a); err != nil {
+			return models.PlaywrightResult{}, fmt.Errorf("action %d (%s) validation failed: %v", i, a.Action, err)
+		}
+		
 		switch strings.ToLower(a.Action) {
 			case "type":
 				if a.Selector == "" {
-					return models.PlaywrightResult{}, fmt.Errorf("type action missing selector")
+					return models.PlaywrightResult{}, fmt.Errorf("action %d: type action missing selector", i)
 				}
-				if err := page.Type(a.Selector, a.Text); err != nil {
-					return models.PlaywrightResult{}, err
+				if a.Text == "" {
+					return models.PlaywrightResult{}, fmt.Errorf("action %d: type action missing text", i)
 				}
+				
+				// Wait for element to be available, visible, and interactable
+				if _, err := session.Page.WaitForSelector(a.Selector, playwright.PageWaitForSelectorOptions{
+					Timeout: playwright.Float(5000),
+					State:   playwright.WaitForSelectorStateVisible,
+				}); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("action %d: selector '%s' not found/visible: %v", i, a.Selector, err)
+				}
+				
+				// Focus the element before typing to ensure it's ready
+				if err := session.Page.Focus(a.Selector); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("action %d: failed to focus element '%s': %v", i, a.Selector, err)
+				}
+				
+				// Clear the field if needed (some forms require this)
+				if err := session.Page.Fill(a.Selector, ""); err != nil {
+					fmt.Printf("DEBUG: Warning - failed to clear field '%s': %v\n", a.Selector, err)
+					// Continue anyway, this might not be critical
+				}
+				
+				// Type the text into the element
+				if err := session.Page.Type(a.Selector, a.Text, playwright.PageTypeOptions{
+					Delay: playwright.Float(50), // Add small delay between keystrokes for stability
+				}); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("action %d: failed to type '%s' into '%s': %v", i, a.Text, a.Selector, err)
+				}
+				
+				fmt.Printf("DEBUG: Successfully typed '%s' into '%s' (took %v)\n", a.Text, a.Selector, time.Since(actionStart))
+				
 			case "click":
 				// Enhanced click action with coordinate support
 				if a.X != nil && a.Y != nil {
 					// Coordinate-based click
-					x, y, err := transformCoordinates(&a, page)
+					x, y, err := transformCoordinates(&a, session.Page)
 					if err != nil {
 						return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
 					}
-					if err := validateCoordinates(x, y, page); err != nil {
+					if err := validateCoordinates(x, y, session.Page); err != nil {
 						return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
 					}
 					
@@ -889,16 +1253,26 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 						clickOpts.Delay = playwright.Float(float64(a.Delay))
 					}
 					
-					if err := page.Click("body", clickOpts); err != nil {
+					if err := session.Page.Click("body", clickOpts); err != nil {
 						return models.PlaywrightResult{}, err
 					}
 				} else if a.Selector != "" {
-					// Selector-based click (backward compatibility)
-					if err := page.Click(a.Selector); err != nil {
-						return models.PlaywrightResult{}, err
+					// Selector-based click (backward compatibility) with enhanced debugging
+					// Wait for element to be available and visible
+					if _, err := session.Page.WaitForSelector(a.Selector, playwright.PageWaitForSelectorOptions{
+						Timeout: playwright.Float(5000),
+						State:   playwright.WaitForSelectorStateVisible,
+					}); err != nil {
+						return models.PlaywrightResult{}, fmt.Errorf("action %d: click selector '%s' not found/visible: %v", i, a.Selector, err)
 					}
+					
+					if err := session.Page.Click(a.Selector); err != nil {
+						return models.PlaywrightResult{}, fmt.Errorf("action %d: failed to click selector '%s': %v", i, a.Selector, err)
+					}
+					
+					fmt.Printf("DEBUG: Successfully clicked selector '%s' (took %v)\n", a.Selector, time.Since(actionStart))
 				} else {
-					return models.PlaywrightResult{}, fmt.Errorf("click action requires either selector or coordinates")
+					return models.PlaywrightResult{}, fmt.Errorf("action %d: click action requires either selector or coordinates", i)
 				}
 				
 			case "moveto":
@@ -906,14 +1280,14 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				if a.X == nil || a.Y == nil {
 					return models.PlaywrightResult{}, fmt.Errorf("moveto action requires X and Y coordinates")
 				}
-				x, y, err := transformCoordinates(&a, page)
+				x, y, err := transformCoordinates(&a, session.Page)
 				if err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
 				}
-				if err := validateCoordinates(x, y, page); err != nil {
+				if err := validateCoordinates(x, y, session.Page); err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
 				}
-				if err := page.Mouse().Move(x, y); err != nil {
+				if err := session.Page.Mouse().Move(x, y); err != nil {
 					return models.PlaywrightResult{}, err
 				}
 				
@@ -922,11 +1296,11 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				if a.X == nil || a.Y == nil {
 					return models.PlaywrightResult{}, fmt.Errorf("clickat action requires X and Y coordinates")
 				}
-				x, y, err := transformCoordinates(&a, page)
+				x, y, err := transformCoordinates(&a, session.Page)
 				if err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
 				}
-				if err := validateCoordinates(x, y, page); err != nil {
+				if err := validateCoordinates(x, y, session.Page); err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
 				}
 				
@@ -943,7 +1317,7 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 					clickOpts.Delay = playwright.Float(float64(a.Delay))
 				}
 				
-				if err := page.Mouse().Click(x, y, clickOpts); err != nil {
+				if err := session.Page.Mouse().Click(x, y, clickOpts); err != nil {
 					return models.PlaywrightResult{}, err
 				}
 				
@@ -952,11 +1326,11 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				if a.X == nil || a.Y == nil {
 					return models.PlaywrightResult{}, fmt.Errorf("doubleclickat action requires X and Y coordinates")
 				}
-				x, y, err := transformCoordinates(&a, page)
+				x, y, err := transformCoordinates(&a, session.Page)
 				if err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
 				}
-				if err := validateCoordinates(x, y, page); err != nil {
+				if err := validateCoordinates(x, y, session.Page); err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
 				}
 				
@@ -971,7 +1345,7 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 					clickOpts.Delay = playwright.Float(float64(a.Delay))
 				}
 				
-				if err := page.Mouse().Click(x, y, clickOpts); err != nil {
+				if err := session.Page.Mouse().Click(x, y, clickOpts); err != nil {
 					return models.PlaywrightResult{}, err
 				}
 				
@@ -980,11 +1354,11 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				if a.X == nil || a.Y == nil {
 					return models.PlaywrightResult{}, fmt.Errorf("rightclickat action requires X and Y coordinates")
 				}
-				x, y, err := transformCoordinates(&a, page)
+				x, y, err := transformCoordinates(&a, session.Page)
 				if err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
 				}
-				if err := validateCoordinates(x, y, page); err != nil {
+				if err := validateCoordinates(x, y, session.Page); err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
 				}
 				
@@ -995,7 +1369,7 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 					clickOpts.Delay = playwright.Float(float64(a.Delay))
 				}
 				
-				if err := page.Mouse().Click(x, y, clickOpts); err != nil {
+				if err := session.Page.Mouse().Click(x, y, clickOpts); err != nil {
 					return models.PlaywrightResult{}, err
 				}
 				
@@ -1006,11 +1380,11 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				}
 				
 				// Transform start coordinates
-				x, y, err := transformCoordinates(&a, page)
+				x, y, err := transformCoordinates(&a, session.Page)
 				if err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("start coordinate transformation failed: %v", err)
 				}
-				if err := validateCoordinates(x, y, page); err != nil {
+				if err := validateCoordinates(x, y, session.Page); err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("start coordinate validation failed: %v", err)
 				}
 				
@@ -1018,25 +1392,25 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				toAction := a
 				toAction.X = a.ToX
 				toAction.Y = a.ToY
-				toX, toY, err := transformCoordinates(&toAction, page)
+				toX, toY, err := transformCoordinates(&toAction, session.Page)
 				if err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("end coordinate transformation failed: %v", err)
 				}
-				if err := validateCoordinates(toX, toY, page); err != nil {
+				if err := validateCoordinates(toX, toY, session.Page); err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("end coordinate validation failed: %v", err)
 				}
 				
 				// Perform drag sequence
-				if err := page.Mouse().Move(x, y); err != nil {
+				if err := session.Page.Mouse().Move(x, y); err != nil {
 					return models.PlaywrightResult{}, err
 				}
-				if err := page.Mouse().Down(); err != nil {
+				if err := session.Page.Mouse().Down(); err != nil {
 					return models.PlaywrightResult{}, err
 				}
-				if err := page.Mouse().Move(toX, toY); err != nil {
+				if err := session.Page.Mouse().Move(toX, toY); err != nil {
 					return models.PlaywrightResult{}, err
 				}
-				if err := page.Mouse().Up(); err != nil {
+				if err := session.Page.Mouse().Up(); err != nil {
 					return models.PlaywrightResult{}, err
 				}
 				
@@ -1045,14 +1419,14 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				if a.X == nil || a.Y == nil {
 					return models.PlaywrightResult{}, fmt.Errorf("hoverat action requires X and Y coordinates")
 				}
-				x, y, err := transformCoordinates(&a, page)
+				x, y, err := transformCoordinates(&a, session.Page)
 				if err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
 				}
-				if err := validateCoordinates(x, y, page); err != nil {
+				if err := validateCoordinates(x, y, session.Page); err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
 				}
-				if err := page.Mouse().Move(x, y); err != nil {
+				if err := session.Page.Mouse().Move(x, y); err != nil {
 					return models.PlaywrightResult{}, err
 				}
 				
@@ -1061,16 +1435,16 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				if a.X == nil || a.Y == nil {
 					return models.PlaywrightResult{}, fmt.Errorf("scrollat action requires X and Y coordinates")
 				}
-				x, y, err := transformCoordinates(&a, page)
+				x, y, err := transformCoordinates(&a, session.Page)
 				if err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate transformation failed: %v", err)
 				}
-				if err := validateCoordinates(x, y, page); err != nil {
+				if err := validateCoordinates(x, y, session.Page); err != nil {
 					return models.PlaywrightResult{}, fmt.Errorf("coordinate validation failed: %v", err)
 				}
 				
 				// Move to position first
-				if err := page.Mouse().Move(x, y); err != nil {
+				if err := session.Page.Mouse().Move(x, y); err != nil {
 					return models.PlaywrightResult{}, err
 				}
 				
@@ -1087,7 +1461,7 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 					deltaY = float64(a.ScrollDelta)
 				}
 				
-				if err := page.Mouse().Wheel(deltaX, deltaY); err != nil {
+				if err := session.Page.Mouse().Wheel(deltaX, deltaY); err != nil {
 					return models.PlaywrightResult{}, err
 				}
 				
@@ -1099,35 +1473,184 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 				if a.Timeout > 0 {
 					opts.Timeout = playwright.Float(float64(a.Timeout))
 				}
-				if _, err := page.WaitForSelector(a.Selector, opts); err != nil {
+				if _, err := session.Page.WaitForSelector(a.Selector, opts); err != nil {
 					return models.PlaywrightResult{}, err
 				}
+			case "wait":
+				// Simple wait/delay action
+				timeout := 1000 // Default 1 second
+				if a.Timeout > 0 {
+					timeout = a.Timeout
+				}
+				session.Page.WaitForTimeout(float64(timeout))
 			case "navigate":
 				if a.URL == "" {
 					return models.PlaywrightResult{}, fmt.Errorf("navigate action missing url")
 				}
-				if _, err := page.Goto(a.URL); err != nil {
+				if _, err := session.Page.Goto(a.URL, playwright.PageGotoOptions{
+					WaitUntil: playwright.WaitUntilStateNetworkidle,
+					Timeout:   playwright.Float(30000),
+				}); err != nil {
 					return models.PlaywrightResult{}, err
 				}
+			case "waitforurl":
+				// Wait for URL to change (useful after form submissions that redirect)
+				targetURL := a.URL
+				if targetURL == "" {
+					return models.PlaywrightResult{}, fmt.Errorf("waitforurl action missing url pattern")
+				}
+				if err := session.Page.WaitForURL(targetURL, playwright.PageWaitForURLOptions{
+					Timeout: playwright.Float(10000),
+				}); err != nil {
+					return models.PlaywrightResult{}, fmt.Errorf("URL wait timeout: %v", err)
+				}
 			default:
-				return models.PlaywrightResult{}, fmt.Errorf("unknown action: %s", a.Action)
+				return models.PlaywrightResult{}, fmt.Errorf("action %d: unknown action type '%s'. Valid actions: type, click, moveto, clickat, doubleclickat, rightclickat, dragfrom, hoverat, scrollat, waitforselector, wait, navigate", i, a.Action)
 			}
+			
+		// Update cookie state after each action to monitor auth changes
+		if err := updateCookieState(session); err != nil {
+			fmt.Printf("Warning: failed to update cookie state after action %d: %v\n", i, err)
+		}
+		
+		// Small delay between actions for stability
+		session.Page.WaitForTimeout(100)
 	}
-	html, _ := page.Content()
-	htmlPath := filepath.Join(os.TempDir(), fmt.Sprintf("playwright_%d.html", time.Now().UnixNano()))
+
+	// Update session timestamp
+	session.LastUsed = time.Now()
+
+	// Get current state with COOKIES PRESERVED
+	html, _ := session.Page.Content()
+	htmlPath := filepath.Join(os.TempDir(), fmt.Sprintf("persistent_%s_%d.html", sessionID, time.Now().UnixNano()))
 	_ = os.WriteFile(htmlPath, []byte(html), 0644)
-	screenshotPath := filepath.Join(os.TempDir(), fmt.Sprintf("playwright_%d.png", time.Now().UnixNano()))
-	if _, err := page.Screenshot(playwright.PageScreenshotOptions{Path: playwright.String(screenshotPath), FullPage: playwright.Bool(true)}); err != nil {
-		page.Close()
-		browser.Close()
-		pw.Stop()
-		return models.PlaywrightResult{}, err
+	screenshotPath := filepath.Join(os.TempDir(), fmt.Sprintf("persistent_%s_%d.png", sessionID, time.Now().UnixNano()))
+	
+	if _, err := session.Page.Screenshot(playwright.PageScreenshotOptions{
+		Path:     playwright.String(screenshotPath),
+		FullPage: playwright.Bool(true),
+	}); err != nil {
+		return models.PlaywrightResult{}, fmt.Errorf("screenshot failed: %v", err)
 	}
-	currentURL := page.URL()
-	page.Close()
-	browser.Close()
-	pw.Stop()
-	return models.PlaywrightResult{URL: currentURL, HTML: html, Screenshot: screenshotPath, HTMLPath: htmlPath}, nil
+	
+	currentURL := session.Page.URL()
+	
+	// Final cookie state update
+	if err := updateCookieState(session); err != nil {
+		fmt.Printf("Warning: failed to update final cookie state: %v\n", err)
+	}
+	
+	// Create comprehensive debugging result
+	result := models.PlaywrightResult{
+		URL:        currentURL,
+		HTML:       html,
+		Screenshot: screenshotPath,
+		HTMLPath:   htmlPath,
+	}
+	
+	// Add debugging information if enabled
+	if session.DebugEnabled {
+		fmt.Printf("DEBUG: Session %s completed with %d console logs, %d network logs\n",
+			sessionID, len(session.ConsoleLogs), len(session.NetworkLogs))
+		
+		// Print recent console logs
+		if len(session.ConsoleLogs) > 0 {
+			fmt.Printf("DEBUG: Recent console logs:\n")
+			for _, log := range session.ConsoleLogs {
+				fmt.Printf("  [%s] %s: %s\n", log.Timestamp.Format("15:04:05"), log.Type, log.Text)
+			}
+		}
+		
+		// Print recent network activity
+		if len(session.NetworkLogs) > 0 {
+			fmt.Printf("DEBUG: Recent network activity:\n")
+			for _, log := range session.NetworkLogs[len(session.NetworkLogs)-10:] { // Last 10 requests
+				if log.Type == "response" {
+					fmt.Printf("  %s %s -> %d\n", log.Method, log.URL, log.Status)
+					if len(log.Cookies) > 0 {
+						fmt.Printf("    Cookies: %v\n", log.Cookies)
+					}
+				}
+			}
+		}
+		
+		// Print cookie state
+		if len(session.CookieState) > 0 {
+			fmt.Printf("DEBUG: Cookie state: %v\n", session.CookieState)
+		}
+	}
+	
+	// DO NOT close browser/page - keep session alive for cookie persistence!
+	return result, nil
+}
+
+// validateUIAction validates a UI action's parameters
+func validateUIAction(action models.UIAction) error {
+	if action.Action == "" {
+		return fmt.Errorf("action type is required")
+	}
+	
+	switch strings.ToLower(action.Action) {
+	case "type":
+		if action.Selector == "" {
+			return fmt.Errorf("type action requires selector")
+		}
+		if action.Text == "" {
+			return fmt.Errorf("type action requires text")
+		}
+	case "click":
+		if action.Selector == "" && (action.X == nil || action.Y == nil) {
+			return fmt.Errorf("click action requires either selector or coordinates (X, Y)")
+		}
+	case "moveto", "clickat", "doubleclickat", "rightclickat", "hoverat", "scrollat":
+		if action.X == nil || action.Y == nil {
+			return fmt.Errorf("%s action requires X and Y coordinates", action.Action)
+		}
+	case "dragfrom":
+		if action.X == nil || action.Y == nil || action.ToX == nil || action.ToY == nil {
+			return fmt.Errorf("dragfrom action requires X, Y, ToX, and ToY coordinates")
+		}
+	case "waitforselector":
+		if action.Selector == "" {
+			return fmt.Errorf("waitforselector action requires selector")
+		}
+	case "navigate":
+		if action.URL == "" {
+			return fmt.Errorf("navigate action requires URL")
+		}
+	case "wait":
+		// wait action doesn't require parameters
+	default:
+		return fmt.Errorf("unknown action type: %s", action.Action)
+	}
+	
+	return nil
+}
+
+// updateCookieState updates the session's cookie state for debugging
+func updateCookieState(session *PersistentBrowserSession) error {
+	if !session.DebugEnabled {
+		return nil
+	}
+	
+	cookies, err := session.Context.Cookies()
+	if err != nil {
+		return fmt.Errorf("failed to get cookies: %v", err)
+	}
+	
+	session.CookieState = make(map[string]interface{})
+	for _, cookie := range cookies {
+		session.CookieState[cookie.Name] = map[string]interface{}{
+			"value":    cookie.Value,
+			"domain":   cookie.Domain,
+			"path":     cookie.Path,
+			"secure":   cookie.Secure,
+			"httpOnly": cookie.HttpOnly,
+			"expires":  cookie.Expires,
+		}
+	}
+	
+	return nil
 }
 
 // ParseApiSchema analyzes API schema from Go files with enhanced business domain awareness

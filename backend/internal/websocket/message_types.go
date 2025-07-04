@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"log"
 	"time"
 )
 
@@ -209,19 +210,40 @@ func (m *WebSocketManager) BroadcastStandardizedMessage(campaignID string, messa
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
+	// DIAGNOSTIC: Enhanced logging for websocket broadcasting
+	log.Printf("[DIAGNOSTIC] BroadcastStandardizedMessage called:")
+	log.Printf("  CampaignID: %s", campaignID)
+	log.Printf("  Message Type: %s", message.Type)
+	log.Printf("  Message Timestamp: %v", message.Timestamp)
+	log.Printf("  Active Clients: %d", len(m.clients))
+
 	// Convert to JSON for broadcasting
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
+		log.Printf("[DIAGNOSTIC] Failed to marshal message: %v", err)
 		return
 	}
 
+	log.Printf("[DIAGNOSTIC] Message JSON length: %d bytes", len(messageBytes))
+	if len(messageBytes) > 200 {
+		log.Printf("[DIAGNOSTIC] Message JSON preview: %s...", string(messageBytes[:200]))
+	} else {
+		log.Printf("[DIAGNOSTIC] Message JSON full: %s", string(messageBytes))
+	}
+
 	// Broadcast to all clients subscribed to this campaign
+	broadcastCount := 0
 	for client := range m.clients {
 		select {
 		case client.send <- messageBytes:
+			broadcastCount++
+			log.Printf("[DIAGNOSTIC] Message sent to client %p", client)
 		default:
 			close(client.send)
 			delete(m.clients, client)
+			log.Printf("[DIAGNOSTIC] Removed slow/disconnected client %p", client)
 		}
 	}
+	
+	log.Printf("[DIAGNOSTIC] Successfully broadcast to %d clients", broadcastCount)
 }

@@ -76,20 +76,48 @@ export function processWebSocketMessage(
 ): void {
   
   try {
+    // DIAGNOSTIC: Enhanced message processing logging
+    console.log(`🔍 [DIAGNOSTIC] Processing WebSocket message:`, {
+      messageLength: rawMessage.length,
+      messagePreview: rawMessage.substring(0, 100) + (rawMessage.length > 100 ? '...' : '')
+    });
+    
     // Parse and validate message
     const message = parseWebSocketMessage(rawMessage);
     
     if (!message) {
-      console.error('Invalid WebSocket message format', { rawMessage });
+      console.error('❌ [DIAGNOSTIC] Invalid WebSocket message format', {
+        rawMessage: rawMessage.substring(0, 200),
+        parseError: 'parseWebSocketMessage returned null'
+      });
       return;
+    }
+
+    // DIAGNOSTIC: Log parsed message details
+    console.log(`✅ [DIAGNOSTIC] Successfully parsed WebSocket message:`, {
+      type: message.type,
+      hasData: !!message.data,
+      dataKeys: message.data ? Object.keys(message.data as object) : [],
+      timestamp: message.timestamp
+    });
+
+    // DIAGNOSTIC: Check for campaign ID in various formats
+    const campaignId = extractCampaignId(message);
+    if (campaignId) {
+      console.log(`🎯 [DIAGNOSTIC] Campaign ID extracted: ${campaignId}`);
+    } else {
+      console.log(`⚠️ [DIAGNOSTIC] No campaign ID found in message type: ${message.type}`);
     }
 
     // Route to appropriate handlers
     handleTypedMessage(registry, message);
 
-
   } catch (error) {
-    console.error('WebSocket message processing error', { error, rawMessage });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ [DIAGNOSTIC] WebSocket message processing error', {
+      error: errorMessage,
+      rawMessage: rawMessage.substring(0, 200)
+    });
   }
 }
 

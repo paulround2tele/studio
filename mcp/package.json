@@ -25,7 +25,10 @@
   "license": "MIT",
   "mcpServer": {
     "command": "go",
-    "args": ["run", "./cmd/mcp-server"],
+    "args": [
+      "run",
+      "./cmd/mcp-server"
+    ],
     "cwd": ".",
     "env": {
       "DB_CONNECTION": "postgres://user:password@localhost/mcpdb?sslmode=disable"
@@ -35,11 +38,17 @@
     "mcpServers": {
       "studio-backend": {
         "command": "go",
-        "args": ["run", "./cmd/mcp-server"],
+        "args": [
+          "run",
+          "./cmd/mcp-server"
+        ],
         "env": {
           "DB_CONNECTION": "${env:DB_CONNECTION}"
         }
       }
     }
+  },
+  "dependencies": {
+    "playwright": "^1.53.2"
   }
 }

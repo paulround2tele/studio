@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"log"
 	"sync"
 )
 
@@ -103,18 +104,32 @@ func (m *WebSocketManager) BroadcastToCampaign(campaignID string, message WebSoc
 		return
 	}
 
+	// DIAGNOSTIC: Log broadcast attempt details
+	clientCount := len(m.clients)
+	sentCount := 0
+	
 	// Send to clients subscribed to this campaign
 	for client := range m.clients {
-		if client.IsSubscribedToCampaign(campaignID) {
+		isSubscribed := client.IsSubscribedToCampaign(campaignID)
+		if isSubscribed {
+			sentCount++
 			select {
 			case client.send <- data:
+				// DIAGNOSTIC: Log successful send
+				log.Printf("[DIAGNOSTIC] Successfully sent message to client %s for campaign %s",
+					client.conn.RemoteAddr().String(), campaignID)
 			default:
 				// Client is slow or disconnected, remove it
 				close(client.send)
 				delete(m.clients, client)
+				log.Printf("[DIAGNOSTIC] Removed slow/disconnected client %s during broadcast",
+					client.conn.RemoteAddr().String())
 			}
 		}
 	}
+	
+	log.Printf("[DIAGNOSTIC] BroadcastToCampaign completed: campaignID=%s, messageType=%s, totalClients=%d, subscribedClients=%d, messagesSent=%d",
+		campaignID, message.Type, clientCount, sentCount, sentCount)
 }
 
 // Ensure WebSocketManager implements Broadcaster

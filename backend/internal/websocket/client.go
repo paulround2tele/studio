@@ -350,7 +350,14 @@ func (c *Client) sendMessage(msg WebSocketMessage) {
 func (c *Client) IsSubscribedToCampaign(campaignID string) bool {
 	c.subscriptionMutex.RLock()
 	defer c.subscriptionMutex.RUnlock()
-	return c.campaignSubscriptions[campaignID]
+	
+	// DIAGNOSTIC: Log subscription check details
+	hasSpecific := c.campaignSubscriptions[campaignID]
+	hasWildcard := c.campaignSubscriptions["*"]
+	log.Printf("[DIAGNOSTIC] IsSubscribedToCampaign check: campaignID=%s, hasSpecific=%t, hasWildcard=%t, allSubscriptions=%v",
+		campaignID, hasSpecific, hasWildcard, c.campaignSubscriptions)
+	
+	return c.campaignSubscriptions[campaignID] || c.campaignSubscriptions["*"]
 }
 
 // GetLastSequenceNumber returns the last sequence number for a campaign subscription
@@ -655,42 +662,74 @@ func CreateConnectionAckMessage(connectionID, userID string, lastSequenceNumber 
 
 // BroadcastCampaignProgress broadcasts campaign progress to subscribed clients
 func BroadcastCampaignProgress(campaignID string, progress float64, status string, phase string) {
+	log.Printf("[DIAGNOSTIC] BroadcastCampaignProgress called: campaignID=%s, progress=%.2f, status=%s, phase=%s",
+		campaignID, progress, status, phase)
+	
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
+		log.Printf("[DIAGNOSTIC] Broadcaster available, creating message")
 		message := CreateCampaignProgressMessage(campaignID, progress, status, phase)
+		log.Printf("[DIAGNOSTIC] Broadcasting campaign progress message: %+v", message)
 		broadcaster.BroadcastToCampaign(campaignID, message)
+	} else {
+		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for campaign progress")
 	}
 }
 
 // BroadcastProxyStatus broadcasts proxy status updates to subscribed clients
 func BroadcastProxyStatus(proxyID, status string, campaignID string) {
+	log.Printf("[DIAGNOSTIC] BroadcastProxyStatus called: proxyID=%s, status=%s, campaignID=%s",
+		proxyID, status, campaignID)
+	
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateProxyStatusMessage(proxyID, status, campaignID)
+		log.Printf("[DIAGNOSTIC] Broadcasting proxy status message")
 		broadcaster.BroadcastToCampaign(campaignID, message)
+	} else {
+		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for proxy status")
 	}
 }
 
 // BroadcastDomainGeneration broadcasts domain generation progress
 func BroadcastDomainGeneration(campaignID string, domainsGenerated int64, totalDomains int64) {
+	log.Printf("[DIAGNOSTIC] BroadcastDomainGeneration called: campaignID=%s, generated=%d, total=%d",
+		campaignID, domainsGenerated, totalDomains)
+	
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateDomainGenerationMessage(campaignID, domainsGenerated, totalDomains)
+		log.Printf("[DIAGNOSTIC] Broadcasting domain generation message")
 		broadcaster.BroadcastToCampaign(campaignID, message)
+	} else {
+		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for domain generation")
 	}
 }
 
 // BroadcastValidationProgress broadcasts validation progress
 func BroadcastValidationProgress(campaignID string, validationsProcessed int64, totalValidations int64, validationType string) {
+	log.Printf("[DIAGNOSTIC] BroadcastValidationProgress called: campaignID=%s, processed=%d, total=%d, type=%s",
+		campaignID, validationsProcessed, totalValidations, validationType)
+	
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateValidationProgressMessage(campaignID, validationsProcessed, totalValidations, validationType)
+		log.Printf("[DIAGNOSTIC] Broadcasting validation progress message")
 		broadcaster.BroadcastToCampaign(campaignID, message)
+	} else {
+		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for validation progress")
 	}
 }
 
 // BroadcastSystemNotification broadcasts system-wide notifications
 func BroadcastSystemNotification(message string, level string) {
+	log.Printf("[DIAGNOSTIC] BroadcastSystemNotification called: message=%s, level=%s", message, level)
+	
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		notification := CreateSystemNotificationMessage(message, level)
+		log.Printf("[DIAGNOSTIC] Broadcasting system notification")
 		if data, err := json.Marshal(notification); err == nil {
 			broadcaster.BroadcastMessage(data)
+		} else {
+			log.Printf("[DIAGNOSTIC] ERROR: Failed to marshal system notification: %v", err)
 		}
+	} else {
+		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for system notification")
 	}
 }

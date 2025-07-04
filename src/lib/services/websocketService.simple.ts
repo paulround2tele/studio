@@ -302,6 +302,58 @@ class WebSocketService {
 
       ws.onmessage = (event) => {
         console.log(`[WebSocketService] WebSocket onmessage triggered for ${connectionKey}:`, event.data);
+        
+        // DIAGNOSTIC: Enhanced message logging for websocket debugging
+        try {
+          const parsedData = JSON.parse(event.data);
+          console.log(`🔍 [DIAGNOSTIC] WebSocket Message Details:`, {
+            connectionKey,
+            messageType: parsedData.type,
+            campaignId: parsedData.campaignId || parsedData.campaign_id || parsedData.data?.campaignId || parsedData.data?.campaign_id,
+            hasData: !!parsedData.data,
+            timestamp: parsedData.timestamp,
+            sequenceNumber: parsedData.sequenceNumber,
+            messageSize: event.data.length,
+            rawType: typeof parsedData.type,
+            allKeys: Object.keys(parsedData)
+          });
+          
+          // Check for message format issues
+          if (parsedData.type) {
+            const messageType = parsedData.type;
+            if (messageType.includes('_')) {
+              console.log(`⚠️ [DIAGNOSTIC] Legacy message format detected: "${messageType}" (should use dot notation)`);
+            }
+            if (messageType.includes('.')) {
+              console.log(`✅ [DIAGNOSTIC] Modern message format detected: "${messageType}"`);
+            }
+          }
+          
+          // Check for campaign ID field variations
+          const campaignIdVariations = {
+            campaignId: parsedData.campaignId,
+            campaign_id: parsedData.campaign_id,
+            campaignID: parsedData.campaignID,
+            'data.campaignId': parsedData.data?.campaignId,
+            'data.campaign_id': parsedData.data?.campaign_id
+          };
+          
+          const foundCampaignIds = Object.entries(campaignIdVariations)
+            .filter(([key, value]) => value)
+            .map(([key, value]) => ({ field: key, value }));
+            
+          if (foundCampaignIds.length > 0) {
+            console.log(`🎯 [DIAGNOSTIC] Campaign ID fields found:`, foundCampaignIds);
+          } else {
+            console.log(`❌ [DIAGNOSTIC] No campaign ID found in message`);
+          }
+          
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.log(`❌ [DIAGNOSTIC] Failed to parse WebSocket message:`, errorMessage);
+          console.log(`❌ [DIAGNOSTIC] Raw message:`, event.data.substring(0, 200));
+        }
+        
         this.handleMessage(connectionKey, event);
       };
 

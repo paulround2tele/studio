@@ -1866,94 +1866,43 @@ func (b *Bridge) GetBusinessDomainCrossDependencies() (map[string]interface{}, e
 
 // === INCREMENTAL UI STATE STREAMING METHODS ===
 
-// BrowseWithPlaywrightIncremental opens a URL using Playwright with incremental state tracking
+// BrowseWithPlaywrightIncremental opens a URL using Playwright with REAL debugging capabilities
 func (b *Bridge) BrowseWithPlaywrightIncremental(url string) (models.IncrementalBrowseResult, error) {
 	if !config.Flags.AllowTerminal {
 		return models.IncrementalBrowseResult{}, errors.New("terminal commands are disabled")
 	}
 	
-	// First get full page result using standard browse
+	// Execute REAL Playwright automation with full debugging
 	result, err := analyzer.BrowseWithPlaywright(url)
 	if err != nil {
 		return models.IncrementalBrowseResult{}, err
 	}
 	
-	// Update state managers
+	// Update state managers with real data
 	b.LastHTML = result.HTML
 	b.LastScreenshot = result.Screenshot
 	
 	// Generate session ID
 	sessionID := fmt.Sprintf("session_%d", time.Now().UnixNano())
 	
-	// Check if this is initial state or update
-	if session, exists := b.IncrementalStateManager.GetSession(sessionID); !exists || session == nil {
-		// Initialize new session
-		session := b.IncrementalStateManager.CreateSession(sessionID, url, models.StreamingModeFull)
-		
-		// For initial state, return full data
-		return models.IncrementalBrowseResult{
-			Type:          "initial",
-			SessionID:     session.SessionID,
-			URL:           url,
-			HTML:          result.HTML,
-			Screenshot:    result.Screenshot,
-			Delta:         nil,
-			Regions:       []models.ScreenshotRegion{},
-			CompressedData: nil,
-			TokenSavings:  0,
-		}, nil
-	} else {
-		// Generate incremental state for update
-		state, err := b.IncrementalStateManager.ProcessHTMLChanges(sessionID, b.LastHTML, result.HTML)
-		if err != nil {
-			return models.IncrementalBrowseResult{}, err
-		}
-		
-		// Generate screenshot regions if there are DOM changes
-		var regions []models.ScreenshotRegion
-		if len(state.DOMDeltas) > 0 {
-			// Calculate regions from DOM deltas
-			deltaRegions := b.RegionScreenshotManager.CalculateRegionsFromDeltas(state.DOMDeltas, models.Rectangle{
-				X: 0, Y: 0, Width: 1920, Height: 1080, // Default viewport size
-			})
-			
-			if len(deltaRegions) > 0 {
-				regions, err = b.RegionScreenshotManager.CaptureRegions(deltaRegions, result.Screenshot)
-				if err != nil {
-					// Non-fatal error, continue without regions
-					regions = []models.ScreenshotRegion{}
-				}
-			}
-		}
-		
-		// Compress delta if significant
-		var compressed *models.CompressedDelta
-		if len(state.DOMDeltas) > 0 {
-			compressed, err = b.DeltaCompressor.CompressDelta(sessionID, state)
-			if err != nil {
-				// Non-fatal error, continue without compression
-				compressed = nil
-			}
-		}
-		
-		// Calculate token savings
-		tokenSavings := b.calculateTokenSavings(result.HTML, state.DOMDeltas, compressed)
-		
-		return models.IncrementalBrowseResult{
-			Type:          "delta",
-			SessionID:     sessionID,
-			URL:           url,
-			HTML:          "", // Don't return full HTML for delta
-			Screenshot:    "", // Don't return full screenshot for delta
-			Delta:         nil, // Return first delta or nil
-			Regions:       regions,
-			CompressedData: compressed,
-			TokenSavings:  tokenSavings,
-		}, nil
-	}
+	// Always create new session for this call
+	session := b.IncrementalStateManager.CreateSession(sessionID, url, models.StreamingModeIncremental)
+	
+	// Return REAL debugging data - not fake incremental bullshit
+	return models.IncrementalBrowseResult{
+		Type:          "initial",
+		SessionID:     session.SessionID,
+		URL:           url,
+		HTML:          result.HTML,      // RETURN REAL HTML
+		Screenshot:    result.Screenshot, // RETURN REAL SCREENSHOT
+		Delta:         nil,
+		Regions:       []models.ScreenshotRegion{},
+		CompressedData: nil,
+		TokenSavings:  0, // Stop lying about token savings
+	}, nil
 }
 
-// ProcessUIActionIncremental processes a UI action and returns incremental updates
+// ProcessUIActionIncremental processes a UI action with REAL debugging capabilities
 func (b *Bridge) ProcessUIActionIncremental(sessionID, url string, action models.UIAction) (models.IncrementalActionResult, error) {
 	if !config.Flags.AllowTerminal {
 		return models.IncrementalActionResult{}, errors.New("terminal commands are disabled")
@@ -1971,64 +1920,61 @@ func (b *Bridge) ProcessUIActionIncremental(sessionID, url string, action models
 		targetURL = session.StartURL
 	}
 	
-	// Store old HTML
-	oldHTML := b.LastHTML
-	
-	// Execute the UI action
+	// Execute REAL Playwright automation with the action using session-based approach
 	actions := []models.UIAction{action}
-	result, err := analyzer.BrowseWithPlaywrightActions(targetURL, actions)
+	result, err := analyzer.BrowseWithPlaywrightActionsWithSession(sessionID, targetURL, actions)
 	if err != nil {
-		return models.IncrementalActionResult{}, err
+		return models.IncrementalActionResult{
+			SessionID:     sessionID,
+			ActionType:    action.Action,
+			Success:       false,
+			ErrorMessage:  fmt.Sprintf("Action failed: %v", err),
+			HTML:          "",
+			Screenshot:    "",
+			URL:           targetURL,
+			ConsoleLogs:   []models.ConsoleLogEntry{},
+			NetworkLogs:   []models.NetworkLogEntry{},
+			CookieState:   make(map[string]interface{}),
+			TokenSavings:  0,
+			Timestamp:     time.Now(),
+		}, nil // Return error details with context, don't fail the MCP call
 	}
 	
-	// Update last known state
+	// Update last known state with REAL data
 	b.LastHTML = result.HTML
 	b.LastScreenshot = result.Screenshot
 	
-	// Generate incremental state from changes
-	state, err := b.IncrementalStateManager.ProcessHTMLChanges(sessionID, oldHTML, result.HTML)
-	if err != nil {
-		return models.IncrementalActionResult{}, err
-	}
+	// Update session activity
+	session.UpdateActivity()
+	session.TotalChanges++
 	
-	// Generate screenshot regions for changed areas
-	var regions []models.ScreenshotRegion
-	if len(state.DOMDeltas) > 0 {
-		// Calculate regions from DOM deltas
-		deltaRegions := b.RegionScreenshotManager.CalculateRegionsFromDeltas(state.DOMDeltas, models.Rectangle{
-			X: 0, Y: 0, Width: 1920, Height: 1080,
-		})
-		
-		if len(deltaRegions) > 0 {
-			regions, err = b.RegionScreenshotManager.CaptureRegions(deltaRegions, result.Screenshot)
-			if err != nil {
-				regions = []models.ScreenshotRegion{}
-			}
-		}
-	}
+	// Get debugging information from the persistent session
+	debugLogs, networkLogs, cookieState := b.getSessionDebuggingInfo(sessionID)
 	
-	// Compress delta
-	var compressed *models.CompressedDelta
-	if len(state.DOMDeltas) > 0 {
-		compressed, err = b.DeltaCompressor.CompressDelta(sessionID, state)
-		if err != nil {
-			compressed = nil
-		}
-	}
-	
-	// Calculate token savings
-	tokenSavings := b.calculateTokenSavings(result.HTML, state.DOMDeltas, compressed)
-	
+	// Return REAL action result with comprehensive debugging info
 	return models.IncrementalActionResult{
 		SessionID:     sessionID,
 		ActionType:    action.Action,
 		Success:       true,
-		Delta:         nil, // Return first delta or nil
-		Regions:       regions,
-		CompressedData: compressed,
-		TokenSavings:  tokenSavings,
+		HTML:          result.HTML,      // RETURN REAL HTML for debugging
+		Screenshot:    result.Screenshot, // RETURN REAL SCREENSHOT for debugging
+		URL:           result.URL,       // RETURN REAL URL for debugging
+		ErrorMessage:  "",              // No error
+		ConsoleLogs:   debugLogs,       // RETURN REAL console logs for debugging
+		NetworkLogs:   networkLogs,     // RETURN REAL network logs for debugging
+		CookieState:   cookieState,     // RETURN REAL cookie state for debugging
+		Delta:         nil,             // Legacy field - not used for real debugging
+		Regions:       []models.ScreenshotRegion{}, // Legacy field - not used for real debugging
+		CompressedData: nil,            // Legacy field - not used for real debugging
+		TokenSavings:  0,               // Stop lying about token savings
 		Timestamp:     time.Now(),
 	}, nil
+}
+
+// getSessionDebuggingInfo retrieves debugging information from a persistent browser session
+func (b *Bridge) getSessionDebuggingInfo(sessionID string) ([]models.ConsoleLogEntry, []models.NetworkLogEntry, map[string]interface{}) {
+	// Use the analyzer package's safe method to get debugging info
+	return analyzer.GetSessionDebuggingInfo(sessionID)
 }
 
 // GetIncrementalUIState returns the current incremental state for a session

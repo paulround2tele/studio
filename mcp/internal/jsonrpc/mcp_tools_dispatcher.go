@@ -424,6 +424,202 @@ func (tr *ToolRegistry) registerUITools() {
 		Description: "Run Playwright and assemble screenshot, metadata and code mapping",
 		InputSchema: urlParamSchema(),
 	}
+	
+	tr.tools["generate_ui_test_prompt_with_actions"] = models.MCPTool{
+		Name:        "generate_ui_test_prompt_with_actions",
+		Description: "Run Playwright with scripted actions and return visual context",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"url": map[string]interface{}{
+					"type":        "string",
+					"description": "Initial URL",
+				},
+				"actions": map[string]interface{}{
+					"type":        "array",
+					"description": "List of UI actions",
+					"items": map[string]interface{}{
+						"type": "object",
+						"properties": map[string]interface{}{
+							"action": map[string]interface{}{
+								"type":        "string",
+								"description": "Type of action to perform",
+								"enum":        []string{"click", "type", "hover", "scroll", "navigate", "wait", "moveto", "clickat", "doubleclickat", "rightclickat", "dragfrom", "hoverat", "scrollat", "gesture"},
+							},
+							"selector": map[string]interface{}{
+								"type":        "string",
+								"description": "CSS selector for the target element",
+							},
+							"text": map[string]interface{}{
+								"type":        "string",
+								"description": "Text to type or search for",
+							},
+							"url": map[string]interface{}{
+								"type":        "string",
+								"description": "URL to navigate to",
+							},
+							"timeout": map[string]interface{}{
+								"type":        "integer",
+								"description": "Timeout in milliseconds",
+								"minimum":     0,
+							},
+							"x": map[string]interface{}{
+								"type":        "number",
+								"description": "X coordinate for action",
+							},
+							"y": map[string]interface{}{
+								"type":        "number",
+								"description": "Y coordinate for action",
+							},
+						},
+						"required": []string{"action"},
+					},
+				},
+			},
+			"required": []string{"url", "actions"},
+		},
+	}
+	
+	tr.tools["process_ui_action_incremental"] = models.MCPTool{
+		Name:        "process_ui_action_incremental",
+		Description: "Process UI action with incremental state updates",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"sessionId": map[string]interface{}{
+					"type":        "string",
+					"description": "Session ID for incremental state tracking",
+				},
+				"action": map[string]interface{}{
+					"type":        "string",
+					"description": "Type of action to perform",
+					"enum":        []string{"click", "type", "hover", "scroll", "navigate", "wait", "moveto", "clickat", "doubleclickat", "rightclickat", "dragfrom", "hoverat", "scrollat", "gesture"},
+				},
+				"selector": map[string]interface{}{
+					"type":        "string",
+					"description": "CSS selector for the target element",
+				},
+				"text": map[string]interface{}{
+					"type":        "string",
+					"description": "Text to type (for type action)",
+				},
+				"url": map[string]interface{}{
+					"type":        "string",
+					"description": "URL to navigate to (for navigate action)",
+				},
+				"timeout": map[string]interface{}{
+					"type":        "integer",
+					"description": "Timeout in milliseconds",
+					"minimum":     0,
+				},
+				"x": map[string]interface{}{
+					"type":        "number",
+					"description": "X coordinate for action",
+				},
+				"y": map[string]interface{}{
+					"type":        "number",
+					"description": "Y coordinate for action",
+				},
+			},
+			"required": []string{"sessionId", "action"},
+		},
+	}
+	
+	tr.tools["get_incremental_ui_state"] = models.MCPTool{
+		Name:        "get_incremental_ui_state",
+		Description: "Get current incremental UI state for a session",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"sessionId": map[string]interface{}{
+					"type":        "string",
+					"description": "Session ID for incremental state tracking",
+				},
+				"includeScreenshot": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Include screenshot in response",
+				},
+				"includeDeltas": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Include DOM deltas in response",
+				},
+			},
+			"required": []string{"sessionId"},
+		},
+	}
+	
+	tr.tools["set_streaming_mode"] = models.MCPTool{
+		Name:        "set_streaming_mode",
+		Description: "Set streaming mode for incremental UI updates",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"sessionId": map[string]interface{}{
+					"type":        "string",
+					"description": "Session ID for incremental state tracking",
+				},
+				"mode": map[string]interface{}{
+					"type":        "string",
+					"description": "Streaming mode to set",
+					"enum":        []string{"full", "incremental", "adaptive"},
+				},
+				"adaptiveThreshold": map[string]interface{}{
+					"type":        "number",
+					"description": "Token usage threshold for adaptive mode (optional)",
+					"minimum":     0,
+				},
+			},
+			"required": []string{"sessionId", "mode"},
+		},
+	}
+	
+	tr.tools["get_stream_stats"] = models.MCPTool{
+		Name:        "get_stream_stats",
+		Description: "Get streaming statistics and performance metrics",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"sessionId": map[string]interface{}{
+					"type":        "string",
+					"description": "Session ID for incremental state tracking (optional)",
+				},
+			},
+		},
+	}
+	
+	tr.tools["cleanup_incremental_session"] = models.MCPTool{
+		Name:        "cleanup_incremental_session",
+		Description: "Clean up incremental session and free resources",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"sessionId": map[string]interface{}{
+					"type":        "string",
+					"description": "Session ID to clean up",
+				},
+			},
+			"required": []string{"sessionId"},
+		},
+	}
+	
+	tr.tools["get_incremental_debug_info"] = models.MCPTool{
+		Name:        "get_incremental_debug_info",
+		Description: "Get debug information for incremental streaming session",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"sessionId": map[string]interface{}{
+					"type":        "string",
+					"description": "Session ID for debug information",
+				},
+				"includeDetailedState": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Include detailed internal state information",
+				},
+			},
+			"required": []string{"sessionId"},
+		},
+	}
 }
 
 func (tr *ToolRegistry) registerAnalysisTools() {
@@ -673,6 +869,20 @@ func (s *JSONRPCServer) routeToolCall(ctx context.Context, toolCall models.MCPTo
 		return s.callGetUIMetadata(ctx)
 	case "get_visual_context":
 		return s.callGetVisualContext(ctx, toolCall.Arguments)
+	case "generate_ui_test_prompt_with_actions":
+		return s.callGenerateUITestPromptWithActions(ctx, toolCall.Arguments)
+	case "process_ui_action_incremental":
+		return s.callProcessUIActionIncremental(ctx, toolCall.Arguments)
+	case "get_incremental_ui_state":
+		return s.callGetIncrementalUIState(ctx, toolCall.Arguments)
+	case "set_streaming_mode":
+		return s.callSetStreamingMode(ctx, toolCall.Arguments)
+	case "get_stream_stats":
+		return s.callGetStreamStats(ctx, toolCall.Arguments)
+	case "cleanup_incremental_session":
+		return s.callCleanupIncrementalSession(ctx, toolCall.Arguments)
+	case "get_incremental_debug_info":
+		return s.callGetIncrementalDebugInfo(ctx, toolCall.Arguments)
 
 	// Analysis Tools
 	case "analyze_performance":

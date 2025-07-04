@@ -1,0 +1,2823 @@
+{
+  "steps": [
+    {
+      "timestamp": "2025-07-04T18:36:08.984Z",
+      "message": "Setting up browser and page...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:10.261Z",
+      "message": "Browser setup complete",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:10.261Z",
+      "message": "STEP 1: Starting login process...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:14.783Z",
+      "message": "API call successful: http://localhost:8080/auth/login - Status: 200",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:15.125Z",
+      "message": "Login successful - User ID: d5bd1dee-03c1-473f-a6f5-43fd4ebb2982",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:15.127Z",
+      "message": "STEP 2: Navigating to campaigns page...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:19.209Z",
+      "message": "Successfully navigated to campaigns page",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:19.210Z",
+      "message": "STEP 3: Starting campaign creation...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:21.958Z",
+      "message": "Campaign creation form loaded",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:21.960Z",
+      "message": "STEP 4: Filling campaign form...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:27.879Z",
+      "message": "Domain generation configuration fields loaded with defaults",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:27.879Z",
+      "message": "Campaign form filled successfully",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:27.880Z",
+      "message": "STEP 5: Submitting campaign...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:28.248Z",
+      "message": "API call successful: http://localhost:8080/api/v2/campaigns - Status: 201",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:28.257Z",
+      "message": "Campaign created successfully - ID: unknown",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:28.257Z",
+      "message": "STEP 6: STAYING ON CURRENT PAGE - Monitoring WebSocket streaming...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:28.257Z",
+      "message": "Waiting for app redirect after campaign creation...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:31.259Z",
+      "message": "Current page URL: http://localhost:3000/campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f?type=domain_generation",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:31.259Z",
+      "message": "Starting ENHANCED WebSocket streaming monitoring on current page...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:31.259Z",
+      "message": "STEP 7: ENHANCED WebSocket streaming monitoring on current page...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:31.259Z",
+      "message": "Current page for monitoring: http://localhost:3000/campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f?type=domain_generation",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:31.259Z",
+      "message": "⏱️ Starting 60-second monitoring period for real-time updates...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:36.277Z",
+      "message": "📈 Interval 1/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:41.290Z",
+      "message": "📈 Interval 2/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:46.301Z",
+      "message": "📈 Interval 3/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:51.316Z",
+      "message": "📈 Interval 4/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:36:56.325Z",
+      "message": "📈 Interval 5/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:01.338Z",
+      "message": "📈 Interval 6/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:06.352Z",
+      "message": "📈 Interval 7/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:11.362Z",
+      "message": "📈 Interval 8/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:16.374Z",
+      "message": "📈 Interval 9/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:21.386Z",
+      "message": "📈 Interval 10/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:26.453Z",
+      "message": "📈 Interval 11/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.474Z",
+      "message": "📈 Interval 12/12: Progress=2, Status=0, TableRows=1, BackendWS=0, API=0, CampaignUpdates=0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "=== ENHANCED REAL-TIME STREAMING VERIFICATION RESULTS ===",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "🔌 Backend WebSocket connections: 0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "🚀 Campaign updates via WebSocket: 0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "📡 API polling requests: 0",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "=== MESSAGE FORMAT ANALYSIS ===",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "=== CAMPAIGN ID FIELD ANALYSIS ===",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "🎯 Expected Campaign ID: undefined",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "=== WEBSOCKET ENDPOINT ANALYSIS ===",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "=== DIAGNOSTIC SUMMARY ===",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.475Z",
+      "message": "❌ RESULT: No real-time update mechanism detected",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.476Z",
+      "message": "🎉 All test steps completed successfully!",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.476Z",
+      "message": "Cleaning up test environment...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-07-04T18:37:31.899Z",
+      "message": "Test cleanup complete",
+      "type": "info"
+    }
+  ],
+  "errors": [
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/",
+      "status": 307,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.324Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/login?redirect=%2F",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.711Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_globals_b805903d.css",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.821Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_fd44f5a4._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.821Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_%40swc_helpers_cjs_00636ac3._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.903Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/_e69f0d32._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.912Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/_93808211._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.912Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_2ecbf5fa._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.958Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_favicon_ico_mjs_8a7a8fdc._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:10.983Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_layout_tsx_c0237562._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.046Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_1a6ee436._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.061Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.207Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_not-found_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.216Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_login_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.217Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.337Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/_26fcb79c._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.338Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_9f28454c._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.416Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:11.416Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+      "timestamp": "2025-07-04T18:36:11.469Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:11.493Z] [juqd6tgx] [DEBUG] [AUTH_SERVICE] Initialized with configuration {\n  \"sessionCheckTimeout\": 15000,\n  \"maxRetries\": 2\n}",
+      "timestamp": "2025-07-04T18:36:11.527Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:11.929Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Service initialized {\n  \"url\": \"\",\n  \"reconnectInterval\": 10000,\n  \"maxReconnectAttempts\": 5\n}",
+      "timestamp": "2025-07-04T18:36:11.935Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_66796270._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:12.091Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:12.099Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.088Z] [juqd6tgx] [DEBUG] [AUTH_CONTEXT] Starting session check",
+      "timestamp": "2025-07-04T18:36:12.099Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.089Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Started loading: auth.session_check {\n  \"description\": \"Checking session...\",\n  \"timeout\": 15000\n}",
+      "timestamp": "2025-07-04T18:36:12.100Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.089Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.session_check\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+      "timestamp": "2025-07-04T18:36:12.101Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.094Z] [juqd6tgx] [DEBUG] [AUTH_SERVICE] Checking current user session",
+      "timestamp": "2025-07-04T18:36:12.103Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.099Z] [juqd6tgx] [DEBUG] [AUTH_SERVICE] Cookie state before session check {\n  \"hasSessionCookie\": false,\n  \"cookieValue\": \"none\",\n  \"allCookies\": [],\n  \"cookieCount\": 0\n}",
+      "timestamp": "2025-07-04T18:36:12.104Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.100Z] [juqd6tgx] [DEBUG] [AUTH_SERVICE] Making getCurrentUser API call",
+      "timestamp": "2025-07-04T18:36:12.104Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.188Z] [juqd6tgx] [DEBUG] [AUTH_CONTEXT] Starting session check",
+      "timestamp": "2025-07-04T18:36:12.193Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:12.189Z] [juqd6tgx] [WARN] [LOADING_STORE] Operation auth.session_check is already loading",
+      "timestamp": "2025-07-04T18:36:12.194Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.190Z] [juqd6tgx] [DEBUG] [AUTH_SERVICE] Checking current user session",
+      "timestamp": "2025-07-04T18:36:12.197Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.190Z] [juqd6tgx] [DEBUG] [AUTH_SERVICE] Cookie state before session check {\n  \"hasSessionCookie\": false,\n  \"cookieValue\": \"none\",\n  \"allCookies\": [],\n  \"cookieCount\": 0\n}",
+      "timestamp": "2025-07-04T18:36:12.198Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.191Z] [juqd6tgx] [DEBUG] [AUTH_SERVICE] Making getCurrentUser API call",
+      "timestamp": "2025-07-04T18:36:12.199Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:12.251Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[DIAGNOSTIC] getCurrentUser API call details: {effectiveBackendUrl: http://localhost:8080, finalBaseUrl: http://localhost:8080, timestamp: 2025-07-04T18:36:12.248Z, userAgent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36…KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36}",
+      "timestamp": "2025-07-04T18:36:12.252Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:12.322Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[DIAGNOSTIC] getCurrentUser API call details: {effectiveBackendUrl: http://localhost:8080, finalBaseUrl: http://localhost:8080, timestamp: 2025-07-04T18:36:12.267Z, userAgent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36…KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36}",
+      "timestamp": "2025-07-04T18:36:12.324Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[Fast Refresh] done in NaNms",
+      "timestamp": "2025-07-04T18:36:12.328Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.324Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "timestamp": "2025-07-04T18:36:12.330Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.325Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "timestamp": "2025-07-04T18:36:12.330Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/me",
+      "status": 401,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:12.412Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "timestamp": "2025-07-04T18:36:12.424Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/me",
+      "status": 401,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:12.431Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "timestamp": "2025-07-04T18:36:12.449Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "API_CLIENT_DEBUG - Non-network error:",
+      "timestamp": "2025-07-04T18:36:12.742Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+      "timestamp": "2025-07-04T18:36:12.743Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:280:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:394:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1288:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1912:30)\"\n}",
+      "timestamp": "2025-07-04T18:36:12.745Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "[DIAGNOSTIC] getCurrentUser failed: {errorMessage: Authentication required, errorType: Error, timestamp: 2025-07-04T18:36:12.746Z, effectiveBaseUrl: http://localhost:8080, finalBaseUrl: http://localhost:8080}",
+      "timestamp": "2025-07-04T18:36:12.750Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:12.746Z] [juqd6tgx] [WARN] [AUTH_SERVICE] Session check failed unexpectedly {\n  \"error\": \"Authentication required\"\n}",
+      "timestamp": "2025-07-04T18:36:12.800Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.746Z] [juqd6tgx] [DEBUG] [AUTH_CONTEXT] Session check completed - no valid session",
+      "timestamp": "2025-07-04T18:36:12.855Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.759Z] [juqd6tgx] [DEBUG] [AUTH_CONTEXT] Component unmounted, skipping session check state update",
+      "timestamp": "2025-07-04T18:36:12.856Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.760Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Stopped loading: auth.session_check {\n  \"duration\": 671,\n  \"status\": \"succeeded\"\n}",
+      "timestamp": "2025-07-04T18:36:12.865Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.760Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.session_check\",\n      \"status\": \"succeeded\",\n      \"isLoading\": false\n    }\n  ]\n}",
+      "timestamp": "2025-07-04T18:36:12.869Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.805Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "timestamp": "2025-07-04T18:36:12.869Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:12.827Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "timestamp": "2025-07-04T18:36:12.882Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "API_CLIENT_DEBUG - Non-network error:",
+      "timestamp": "2025-07-04T18:36:13.070Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+      "timestamp": "2025-07-04T18:36:13.070Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:280:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:394:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1288:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1912:30)\"\n}",
+      "timestamp": "2025-07-04T18:36:13.079Z"
+    },
+    {
+      "type": "console_log",
+      "level": "error",
+      "message": "[DIAGNOSTIC] getCurrentUser failed: {errorMessage: Authentication required, errorType: Error, timestamp: 2025-07-04T18:36:13.010Z, effectiveBaseUrl: http://localhost:8080, finalBaseUrl: http://localhost:8080}",
+      "timestamp": "2025-07-04T18:36:13.081Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:13.010Z] [juqd6tgx] [WARN] [AUTH_SERVICE] Session check failed unexpectedly {\n  \"error\": \"Authentication required\"\n}",
+      "timestamp": "2025-07-04T18:36:13.081Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:13.010Z] [juqd6tgx] [DEBUG] [AUTH_CONTEXT] Session check completed - no valid session",
+      "timestamp": "2025-07-04T18:36:13.081Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:13.015Z] [juqd6tgx] [DEBUG] [AUTH_CONTEXT] Component unmounted, skipping session check state update",
+      "timestamp": "2025-07-04T18:36:13.081Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:13.017Z] [juqd6tgx] [WARN] [LOADING_STORE] Attempted to stop non-loading operation: auth.session_check",
+      "timestamp": "2025-07-04T18:36:13.081Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation: {operation: auth.session_check, hasLoadingState: true, isCurrentlyLoading: false, operationStartTime: 1751654172089, currentTime: 1751654173017}",
+      "timestamp": "2025-07-04T18:36:13.081Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/__nextjs_font/geist-latin.woff2",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:13.757Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/__nextjs_original-stack-frames",
+      "status": 200,
+      "method": "POST",
+      "timestamp": "2025-07-04T18:36:13.769Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/favicon.ico?favicon.56766c03.ico",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:13.770Z"
+    },
+    {
+      "type": "console_log",
+      "level": "verbose",
+      "message": "[DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o",
+      "timestamp": "2025-07-04T18:36:13.773Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/__nextjs_original-stack-frames",
+      "status": 200,
+      "method": "POST",
+      "timestamp": "2025-07-04T18:36:13.938Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/__nextjs_original-stack-frames",
+      "status": 200,
+      "method": "POST",
+      "timestamp": "2025-07-04T18:36:13.998Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/__nextjs_original-stack-frames",
+      "status": 200,
+      "method": "POST",
+      "timestamp": "2025-07-04T18:36:13.998Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/__nextjs_original-stack-frames",
+      "status": 200,
+      "method": "POST",
+      "timestamp": "2025-07-04T18:36:14.041Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.376Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] Form submission started {\n  \"email\": \"test@example.com\",\n  \"passwordLength\": 11\n}",
+      "timestamp": "2025-07-04T18:36:14.391Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:14.377Z] [juqd6tgx] [INFO] [AUTH_UI] Login with UI started {\n  \"email\": \"test@example.com\"\n}",
+      "timestamp": "2025-07-04T18:36:14.398Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.379Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Started loading: auth.login {\n  \"description\": \"Signing in...\",\n  \"timeout\": 30000\n}",
+      "timestamp": "2025-07-04T18:36:14.398Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.379Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.login\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+      "timestamp": "2025-07-04T18:36:14.398Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:14.379Z] [juqd6tgx] [INFO] [AUTH_CONTEXT] Login attempt started {\n  \"email\": \"test@example.com\"\n}",
+      "timestamp": "2025-07-04T18:36:14.399Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:14.379Z] [juqd6tgx] [INFO] [AUTH_SERVICE] Login attempt started {\n  \"email\": \"test@example.com\"\n}",
+      "timestamp": "2025-07-04T18:36:14.399Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.387Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "timestamp": "2025-07-04T18:36:14.399Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.387Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "timestamp": "2025-07-04T18:36:14.400Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/auth/login",
+      "status": 200,
+      "method": "POST",
+      "timestamp": "2025-07-04T18:36:14.783Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.786Z] [juqd6tgx] [DEBUG] [AUTH_SERVICE] User adapted successfully {\n  \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\",\n  \"email\": \"test@example.com\"\n}",
+      "timestamp": "2025-07-04T18:36:14.799Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:14.786Z] [juqd6tgx] [INFO] [AUTH_SERVICE] Login successful {\n  \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\",\n  \"attempt\": 1\n}",
+      "timestamp": "2025-07-04T18:36:14.799Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:14.786Z] [juqd6tgx] [INFO] [AUTH_CONTEXT] Login successful {\n  \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\"\n}",
+      "timestamp": "2025-07-04T18:36:14.803Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:14.786Z] [juqd6tgx] [INFO] [AUTH_UI] Login with UI successful",
+      "timestamp": "2025-07-04T18:36:14.803Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.786Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Stopped loading: auth.login {\n  \"duration\": 407,\n  \"status\": \"succeeded\"\n}",
+      "timestamp": "2025-07-04T18:36:14.803Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.786Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.login\",\n      \"status\": \"succeeded\",\n      \"isLoading\": false\n    }\n  ]\n}",
+      "timestamp": "2025-07-04T18:36:14.803Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.796Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] User already authenticated - showing redirect screen",
+      "timestamp": "2025-07-04T18:36:14.812Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.798Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] User already authenticated - showing redirect screen",
+      "timestamp": "2025-07-04T18:36:14.825Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.956Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] Login result received {\n  \"success\": true,\n  \"hasError\": false\n}",
+      "timestamp": "2025-07-04T18:36:14.960Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:14.958Z] [juqd6tgx] [INFO] [LOGIN_FORM] Login successful - redirecting",
+      "timestamp": "2025-07-04T18:36:14.965Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.960Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] User already authenticated - showing redirect screen",
+      "timestamp": "2025-07-04T18:36:15.002Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:14.969Z] [juqd6tgx] [DEBUG] [LOGIN_FORM] User already authenticated - showing redirect screen",
+      "timestamp": "2025-07-04T18:36:15.002Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/?_rsc=mqe01",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:15.357Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:15.495Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_page_tsx_b025fed5._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:15.495Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[AppLayout] Cleaning up global WebSocket services",
+      "timestamp": "2025-07-04T18:36:15.822Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:15.812Z] [juqd6tgx] [INFO] [WEBSOCKET] Disconnecting all connections",
+      "timestamp": "2025-07-04T18:36:15.823Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] getConnectionStatus returning: {}",
+      "timestamp": "2025-07-04T18:36:15.913Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:15.913Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_page_tsx_b025fed5._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:15.915Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/dashboard?_rsc=rxx9e",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:16.784Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/favicon.ico?favicon.56766c03.ico",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:16.798Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_dashboard_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:16.934Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:16.942Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_25e712f6._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:16.982Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[2025-07-04T18:36:17.162Z] [ProductionReadinessCheck] 🏁 Initial system check on authentication ready",
+      "timestamp": "2025-07-04T18:36:17.239Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[HealthService] Cache miss, fetching health status...",
+      "timestamp": "2025-07-04T18:36:17.246Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [HealthService] Auto-detecting backend URL...",
+      "timestamp": "2025-07-04T18:36:17.247Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [HealthService] ENVIRONMENT_DETECTION:",
+      "timestamp": "2025-07-04T18:36:17.247Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  NODE_ENV: development",
+      "timestamp": "2025-07-04T18:36:17.247Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  window.location.origin: http://localhost:3000",
+      "timestamp": "2025-07-04T18:36:17.247Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  window.location.host: localhost:3000",
+      "timestamp": "2025-07-04T18:36:17.248Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  🛠️ DEVELOPMENT_MODE: Starting port detection",
+      "timestamp": "2025-07-04T18:36:17.248Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:17.218Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Started loading: data.fetch {\n  \"description\": \"Loading dashboard activity\",\n  \"timeout\": 30000\n}",
+      "timestamp": "2025-07-04T18:36:17.248Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:17.228Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"data.fetch\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+      "timestamp": "2025-07-04T18:36:17.248Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[2025-07-04T18:36:17.248Z] [ProductionReadinessCheck] 🏁 Initial system check on authentication ready",
+      "timestamp": "2025-07-04T18:36:17.258Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[HealthService] Cache miss, fetching health status...",
+      "timestamp": "2025-07-04T18:36:17.258Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [HealthService] Auto-detecting backend URL...",
+      "timestamp": "2025-07-04T18:36:17.258Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [HealthService] ENVIRONMENT_DETECTION:",
+      "timestamp": "2025-07-04T18:36:17.262Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  NODE_ENV: development",
+      "timestamp": "2025-07-04T18:36:17.267Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  window.location.origin: http://localhost:3000",
+      "timestamp": "2025-07-04T18:36:17.267Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  window.location.host: localhost:3000",
+      "timestamp": "2025-07-04T18:36:17.268Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  🛠️ DEVELOPMENT_MODE: Starting port detection",
+      "timestamp": "2025-07-04T18:36:17.268Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:17.257Z] [juqd6tgx] [WARN] [LOADING_STORE] Operation data.fetch is already loading",
+      "timestamp": "2025-07-04T18:36:17.286Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_dashboard_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.420Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.473Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [HealthService] Backend detected at http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:17.480Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [HealthService] HEALTH_URL_CONSTRUCTION:",
+      "timestamp": "2025-07-04T18:36:17.480Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Detected backend URL: http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:17.480Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Final health URL: http://localhost:8080/health",
+      "timestamp": "2025-07-04T18:36:17.480Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Environment: development",
+      "timestamp": "2025-07-04T18:36:17.480Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Calling backend /health directly (bypassing nginx)",
+      "timestamp": "2025-07-04T18:36:17.481Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.496Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [HealthService] Backend detected at http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:17.497Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [HealthService] HEALTH_URL_CONSTRUCTION:",
+      "timestamp": "2025-07-04T18:36:17.498Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Detected backend URL: http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:17.499Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Final health URL: http://localhost:8080/health",
+      "timestamp": "2025-07-04T18:36:17.499Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Environment: development",
+      "timestamp": "2025-07-04T18:36:17.504Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Calling backend /health directly (bypassing nginx)",
+      "timestamp": "2025-07-04T18:36:17.504Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_25e712f6._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.505Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.505Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/campaigns",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.509Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.630Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🩺 [HealthService] Health response: 200 OK",
+      "timestamp": "2025-07-04T18:36:17.631Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  URL: http://localhost:8080/health",
+      "timestamp": "2025-07-04T18:36:17.632Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  OK: true",
+      "timestamp": "2025-07-04T18:36:17.634Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.640Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🩺 [HealthService] Health response: 200 OK",
+      "timestamp": "2025-07-04T18:36:17.640Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  URL: http://localhost:8080/health",
+      "timestamp": "2025-07-04T18:36:17.640Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  OK: true",
+      "timestamp": "2025-07-04T18:36:17.640Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/campaigns",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.640Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:17.643Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Stopped loading: data.fetch {\n  \"duration\": 425,\n  \"status\": \"succeeded\"\n}",
+      "timestamp": "2025-07-04T18:36:17.648Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:17.643Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"data.fetch\",\n      \"status\": \"succeeded\",\n      \"isLoading\": false\n    }\n  ]\n}",
+      "timestamp": "2025-07-04T18:36:17.648Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[HealthService] Health check cached for 1 hour",
+      "timestamp": "2025-07-04T18:36:17.793Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[2025-07-04T18:36:17.749Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...",
+      "timestamp": "2025-07-04T18:36:17.793Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] getConnectionStatus returning: {}",
+      "timestamp": "2025-07-04T18:36:17.793Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:17.749Z] [ProductionReadinessCheck] ⚠️ WebSocket connectivity check - no active persistent connections",
+      "timestamp": "2025-07-04T18:36:17.793Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[HealthService] Health check cached for 1 hour",
+      "timestamp": "2025-07-04T18:36:17.831Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[2025-07-04T18:36:17.819Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...",
+      "timestamp": "2025-07-04T18:36:17.832Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] getConnectionStatus returning: {}",
+      "timestamp": "2025-07-04T18:36:17.833Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:17.820Z] [ProductionReadinessCheck] ⚠️ WebSocket connectivity check - no active persistent connections",
+      "timestamp": "2025-07-04T18:36:17.833Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:17.850Z] [juqd6tgx] [WARN] [LOADING_STORE] Attempted to stop non-loading operation: data.fetch",
+      "timestamp": "2025-07-04T18:36:17.896Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation: {operation: data.fetch, hasLoadingState: true, isCurrentlyLoading: false, operationStartTime: 1751654177218, currentTime: 1751654177861}",
+      "timestamp": "2025-07-04T18:36:17.909Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/favicon.ico?favicon.56766c03.ico",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:17.916Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/campaigns?_rsc=s91z9",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:18.410Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:18.442Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_c24a32ee._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:18.476Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_f2a438ea._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:18.479Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_d21669a1._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:18.500Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] Initial load effect triggered",
+      "timestamp": "2025-07-04T18:36:18.822Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [CAMPAIGNS_LIST_DEBUG] loadCampaignsData called - TRACKING ZERO RECORDS ISSUE: {showLoadingSpinner: true, currentCampaignsCount: 0, isComponentMounted: true, isAlreadyLoading: false, callStack:     at CampaignsPageContent.useCallback[loadCampai…00/_next/static/chunks/src_d21669a1._.js:3090:13)}",
+      "timestamp": "2025-07-04T18:36:18.822Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🚀 [CAMPAIGNS_LIST_DEBUG] Calling apiClient.listCampaigns()... {apiCallStartTime: 1751654178810, timeSinceLoadStart: 4}",
+      "timestamp": "2025-07-04T18:36:18.824Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] Cleaning up interval and aborting requests",
+      "timestamp": "2025-07-04T18:36:18.850Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] Initial load effect triggered",
+      "timestamp": "2025-07-04T18:36:18.850Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [CAMPAIGNS_LIST_DEBUG] loadCampaignsData called - TRACKING ZERO RECORDS ISSUE: {showLoadingSpinner: true, currentCampaignsCount: 0, isComponentMounted: true, isAlreadyLoading: true, callStack:     at CampaignsPageContent.useCallback[loadCampai…00/_next/static/chunks/src_d21669a1._.js:3090:13)}",
+      "timestamp": "2025-07-04T18:36:18.850Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] Already loading campaigns, skipping duplicate call",
+      "timestamp": "2025-07-04T18:36:18.850Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] Connecting to WebSocket...",
+      "timestamp": "2025-07-04T18:36:18.850Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] connectToAllCampaigns called",
+      "timestamp": "2025-07-04T18:36:18.850Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:18.830Z] [juqd6tgx] [INFO] [WEBSOCKET] Starting connection setup for all-campaigns",
+      "timestamp": "2025-07-04T18:36:18.851Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [WebSocketService] URL_CONSTRUCTION:",
+      "timestamp": "2025-07-04T18:36:18.851Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  NODE_ENV: development",
+      "timestamp": "2025-07-04T18:36:18.851Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  NEXT_PUBLIC_WS_URL: ",
+      "timestamp": "2025-07-04T18:36:18.851Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  window available: true",
+      "timestamp": "2025-07-04T18:36:18.851Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [WebSocketService] Auto-detecting backend URL...",
+      "timestamp": "2025-07-04T18:36:18.852Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] WebSocket connection attempt completed",
+      "timestamp": "2025-07-04T18:36:18.852Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] Connecting to WebSocket...",
+      "timestamp": "2025-07-04T18:36:18.852Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] connectToAllCampaigns called",
+      "timestamp": "2025-07-04T18:36:18.852Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:18.831Z] [juqd6tgx] [INFO] [WEBSOCKET] Starting connection setup for all-campaigns",
+      "timestamp": "2025-07-04T18:36:18.852Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [WebSocketService] URL_CONSTRUCTION:",
+      "timestamp": "2025-07-04T18:36:18.853Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  NODE_ENV: development",
+      "timestamp": "2025-07-04T18:36:18.853Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  NEXT_PUBLIC_WS_URL: ",
+      "timestamp": "2025-07-04T18:36:18.853Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  window available: true",
+      "timestamp": "2025-07-04T18:36:18.853Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [WebSocketService] Auto-detecting backend URL...",
+      "timestamp": "2025-07-04T18:36:18.853Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] WebSocket connection attempt completed",
+      "timestamp": "2025-07-04T18:36:18.853Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_c24a32ee._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:18.869Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:19.122Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_d21669a1._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:19.173Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_f2a438ea._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:19.174Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:19.241Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [WebSocketService] Backend detected at http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:19.241Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Detected backend URL: http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:19.241Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  ✅ Constructed WebSocket URL from backend: ws://localhost:8080/api/v2/ws",
+      "timestamp": "2025-07-04T18:36:19.241Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:19.235Z] [juqd6tgx] [INFO] [WEBSOCKET] Resolved dynamic URL for all-campaigns {\n  \"url\": \"ws://localhost:8080/api/v2/ws\"\n}",
+      "timestamp": "2025-07-04T18:36:19.242Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Establishing connection for all-campaigns to ws://localhost:8080/api/v2/ws",
+      "timestamp": "2025-07-04T18:36:19.243Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket created for all-campaigns, readyState: 0",
+      "timestamp": "2025-07-04T18:36:19.245Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/campaigns",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:19.400Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📥 [CAMPAIGNS_LIST_DEBUG] Raw listCampaigns API response: {responseReceived: true, responseType: object, responseKeys: Array(3), status: undefined, dataProperty: Object}",
+      "timestamp": "2025-07-04T18:36:19.596Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📋 [CAMPAIGNS_LIST_DEBUG] Processing successful API response: {signal_aborted: true, component_mounted: true, response_status: undefined, response_data_type: object, response_data_array: false}",
+      "timestamp": "2025-07-04T18:36:19.603Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [BACKEND_INTEGRATION] Processing campaign list response: {responseType: object, responseKeys: Array(3), responseKeysCount: 3, hasStatus: false, hasData: true}",
+      "timestamp": "2025-07-04T18:36:19.606Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [BACKEND_INTEGRATION] Analyzing response structure: {responseType: object, isArray: false, isNull: false, isUndefined: false, objectKeys: Array(3)}",
+      "timestamp": "2025-07-04T18:36:19.606Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [BACKEND_INTEGRATION] Double-nested backend response format detected",
+      "timestamp": "2025-07-04T18:36:19.607Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [BACKEND_INTEGRATION] Valid response processed: {rawCampaignsCount: 17, isEmpty: false, isEmptyButValid: false, sampleCampaign: Object, transformationStartTime: 1751654179576}",
+      "timestamp": "2025-07-04T18:36:19.607Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [BACKEND_INTEGRATION] Campaigns transformation completed: {originalCount: 17, transformedCount: 17, transformedSample: Array(2), backendIntegrationSuccess: true, showingEmptyState: false}",
+      "timestamp": "2025-07-04T18:36:19.607Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📝 [BACKEND_INTEGRATION] Campaign state updated successfully: {newStateCount: 17, stateUpdateSuccess: true, phase1Complete: true, willShowEmptyState: false}",
+      "timestamp": "2025-07-04T18:36:19.607Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:19.765Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [WebSocketService] Backend detected at http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:19.765Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Detected backend URL: http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:19.765Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  ✅ Constructed WebSocket URL from backend: ws://localhost:8080/api/v2/ws",
+      "timestamp": "2025-07-04T18:36:19.765Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:19.754Z] [juqd6tgx] [INFO] [WEBSOCKET] Resolved dynamic URL for all-campaigns {\n  \"url\": \"ws://localhost:8080/api/v2/ws\"\n}",
+      "timestamp": "2025-07-04T18:36:19.765Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Establishing connection for all-campaigns to ws://localhost:8080/api/v2/ws",
+      "timestamp": "2025-07-04T18:36:19.765Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "WebSocket connection to 'ws://localhost:8080/api/v2/ws' failed: WebSocket is closed before the connection is established.",
+      "timestamp": "2025-07-04T18:36:19.766Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket created for all-campaigns, readyState: 0",
+      "timestamp": "2025-07-04T18:36:19.767Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onerror triggered for all-campaigns: Event",
+      "timestamp": "2025-07-04T18:36:19.823Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:19.822Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Connection attempt failed: all-campaigns (will retry) {\n  \"type\": \"error\",\n  \"timeStamp\": 9547.400000002235\n}",
+      "timestamp": "2025-07-04T18:36:19.824Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onclose triggered for all-campaigns: {code: 1006, reason: , wasClean: false}",
+      "timestamp": "2025-07-04T18:36:19.825Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:19.824Z] [juqd6tgx] [INFO] [WEBSOCKET] Connection closed: all-campaigns {\n  \"code\": 1006,\n  \"reason\": \"\",\n  \"wasClean\": false\n}",
+      "timestamp": "2025-07-04T18:36:19.837Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Disconnected from all campaigns",
+      "timestamp": "2025-07-04T18:36:19.840Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:19.824Z] [juqd6tgx] [INFO] [WEBSOCKET] Disconnected from all campaigns",
+      "timestamp": "2025-07-04T18:36:19.840Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:19.824Z] [juqd6tgx] [INFO] [WEBSOCKET] Scheduling reconnect attempt 1/5 for all-campaigns",
+      "timestamp": "2025-07-04T18:36:19.840Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:19.825Z] [juqd6tgx] [INFO] [WEBSOCKET] Scheduling reconnect attempt 1/5 for all-campaigns in 11s",
+      "timestamp": "2025-07-04T18:36:19.840Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] getConnectionStatus returning: {all-campaigns: false}",
+      "timestamp": "2025-07-04T18:36:19.851Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] getConnectionStatus returning: {all-campaigns: false}",
+      "timestamp": "2025-07-04T18:36:19.851Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/favicon.ico?favicon.56766c03.ico",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:20.324Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/campaigns/new?_rsc=wcpdk",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:20.326Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_components_campaigns_CampaignListItem_tsx_a1b1f395._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:20.332Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_b7aaca95._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:20.332Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_4e1b07b4._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:20.375Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onopen triggered for all-campaigns",
+      "timestamp": "2025-07-04T18:36:20.375Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:20.368Z] [juqd6tgx] [INFO] [WEBSOCKET] Connected: all-campaigns",
+      "timestamp": "2025-07-04T18:36:20.375Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Successfully connected to all campaigns",
+      "timestamp": "2025-07-04T18:36:20.375Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:20.368Z] [juqd6tgx] [INFO] [WEBSOCKET] Connected to all campaigns",
+      "timestamp": "2025-07-04T18:36:20.375Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:20.368Z] [juqd6tgx] [WARN] [WEBSOCKET] Cannot send message - connection all-campaigns not ready",
+      "timestamp": "2025-07-04T18:36:20.375Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Sending subscription message",
+      "timestamp": "2025-07-04T18:36:20.511Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:20.487Z] [juqd6tgx] [WARN] [WEBSOCKET] Cannot send message - connection all-campaigns not ready",
+      "timestamp": "2025-07-04T18:36:20.511Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[Fast Refresh] rebuilding",
+      "timestamp": "2025-07-04T18:36:20.511Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_new_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:20.575Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[Fast Refresh] done in 341ms",
+      "timestamp": "2025-07-04T18:36:20.734Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_7edbd419._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:20.845Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_182de56b._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:20.873Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:21.160Z] [juqd6tgx] [INFO] [WEBSOCKET] Disconnecting: all-campaigns",
+      "timestamp": "2025-07-04T18:36:21.266Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[CampaignsPage] Cleaning up interval and aborting requests",
+      "timestamp": "2025-07-04T18:36:21.271Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_new_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:21.816Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_7edbd419._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:21.816Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_182de56b._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:21.834Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/personas",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:21.879Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/campaigns",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:21.881Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/personas",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:22.028Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/campaigns",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:22.050Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[useCampaignFormData] Failed to load campaigns: {success: true, data: Object, requestId: 15fa26f0-e649-4fd9-8ef5-7df1092f4ac9}",
+      "timestamp": "2025-07-04T18:36:22.084Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/personas",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:22.085Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/personas",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:22.177Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[useCampaignFormData] Failed to load campaigns: {success: true, data: Object, requestId: 48b1035a-ae6c-4229-9bda-32778570a26d}",
+      "timestamp": "2025-07-04T18:36:22.190Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/favicon.ico?favicon.56766c03.ico",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:22.408Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "Select is changing from uncontrolled to controlled. Components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled value for the lifetime of the component.",
+      "timestamp": "2025-07-04T18:36:27.608Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🌐 [CAMPAIGN_FORM_DEBUG] Starting campaign creation process: {payload: Object, selectedType: domain_generation, campaignName: E2E Test Domain Generation Campaign, creationStartTime: 1751654188022, timestamp: 2025-07-04T18:36:28.022Z}",
+      "timestamp": "2025-07-04T18:36:28.025Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/campaigns",
+      "status": 201,
+      "method": "POST",
+      "timestamp": "2025-07-04T18:36:28.160Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🌐 [CAMPAIGN_FORM_DEBUG] Campaign creation API response received: {response: Object, responseType: object, responseKeys: Array(3), apiCallDuration: 118, timeSinceCreationStart: 119}",
+      "timestamp": "2025-07-04T18:36:28.175Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [CAMPAIGN_FORM_DEBUG] COMPREHENSIVE response analysis: {responseType: object, isArray: false, isNull: false, isUndefined: false, hasKeys: Array(3)}",
+      "timestamp": "2025-07-04T18:36:28.177Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [STRATEGY_3] Response is OBJECT - searching for nested campaign...",
+      "timestamp": "2025-07-04T18:36:28.177Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [STRATEGY_3] Found campaign in response.data: {id: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, name: E2E Test Domain Generation Campaign, keys: Array(11)}",
+      "timestamp": "2025-07-04T18:36:28.177Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🌐 [CAMPAIGN_FORM_DEBUG] Final campaign processing result: {campaign: Object, campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignName: E2E Test Domain Generation Campaign, campaignStatus: pending, hasValidId: true}",
+      "timestamp": "2025-07-04T18:36:28.180Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [CAMPAIGN_FORM_DEBUG] Campaign creation successful - starting post-creation flow: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignName: E2E Test Domain Generation Campaign, campaignType: domain_generation, campaignStatus: pending, launchSequence: false}",
+      "timestamp": "2025-07-04T18:36:28.181Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🧭 [CAMPAIGN_FORM_DEBUG] Preparing navigation after campaign creation: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignName: E2E Test Domain Generation Campaign, selectedType: domain_generation, targetUrl: /campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f?type=domain_generation, timeSinceCreation: 130}",
+      "timestamp": "2025-07-04T18:36:28.181Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⏱️ [CAMPAIGN_FORM_DEBUG] Adding 500ms delay before navigation to test race condition hypothesis...",
+      "timestamp": "2025-07-04T18:36:28.182Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [CAMPAIGN_FORM_DEBUG] Starting navigation to campaign page: {redirectUrl: /campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f?type=domain_generation, navigationStartTime: 1751654188659, totalTimeBeforeNavigation: 637, campaignShouldExist: true}",
+      "timestamp": "2025-07-04T18:36:28.660Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔄 [CAMPAIGN_FORM_DEBUG] Triggering router refresh after navigation: {refreshTime: 1751654188940, totalProcessTime: 918}",
+      "timestamp": "2025-07-04T18:36:28.945Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f?type=domain_generation&_rsc=1x71s",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:29.027Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_%5Bid%5D_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:29.139Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_8c3a9d1c._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:29.250Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_53bfefb0._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:29.271Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f?type=domain_generation&_rsc=w3xjw",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:29.460Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [RELOAD_LOOP_DEBUG] loadCampaignData called - TRACKING RELOAD BEHAVIOR: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignTypeFromQuery: domain_generation, hasValidCampaignId: true, hasValidCampaignType: true, currentUrl: http://localhost:3000/campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f?type=domain_generation}",
+      "timestamp": "2025-07-04T18:36:29.609Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:29.600Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Started loading: campaign_details_1109b094-cdc8-4011-9a5a-95691aaf3b9f {\n  \"description\": \"Loading campaign details\",\n  \"timeout\": 30000\n}",
+      "timestamp": "2025-07-04T18:36:29.615Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:29.601Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"campaign_details_1109b094-cdc8-4011-9a5a-95691aaf3b9f\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+      "timestamp": "2025-07-04T18:36:29.617Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🚀 [CAMPAIGN_DETAILS_DEBUG] Starting API call to getCampaignById: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, apiCallStartTime: 1751654189602, timeSinceLoadStart: 5}",
+      "timestamp": "2025-07-04T18:36:29.618Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [POLLING_DEBUG] Polling conditions NOT met - no polling will occur: {campaignExists: false, campaignStatus: undefined, campaignType: undefined, skipReasons: Object}",
+      "timestamp": "2025-07-04T18:36:29.618Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [RELOAD_LOOP_DEBUG] loadCampaignData called - TRACKING RELOAD BEHAVIOR: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignTypeFromQuery: domain_generation, hasValidCampaignId: true, hasValidCampaignType: true, currentUrl: http://localhost:3000/campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f?type=domain_generation}",
+      "timestamp": "2025-07-04T18:36:29.618Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:29.606Z] [juqd6tgx] [WARN] [LOADING_STORE] Operation campaign_details_1109b094-cdc8-4011-9a5a-95691aaf3b9f is already loading",
+      "timestamp": "2025-07-04T18:36:29.618Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🚀 [CAMPAIGN_DETAILS_DEBUG] Starting API call to getCampaignById: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, apiCallStartTime: 1751654189607, timeSinceLoadStart: 3}",
+      "timestamp": "2025-07-04T18:36:29.620Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [POLLING_DEBUG] Polling conditions NOT met - no polling will occur: {campaignExists: false, campaignStatus: undefined, campaignType: undefined, skipReasons: Object}",
+      "timestamp": "2025-07-04T18:36:29.621Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_%5Bid%5D_page_tsx_2eded05f._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:29.773Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/src_53bfefb0._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:29.826Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_8c3a9d1c._.js",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:29.850Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:30.506Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/api/v2/campaigns/1109b094-cdc8-4011-9a5a-95691aaf3b9f",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:30.507Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📥 [CAMPAIGN_DETAILS_DEBUG] Raw getCampaignById response received: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, rawResponse: Object, responseType: object, isArray: false, responseKeys: Array(3)}",
+      "timestamp": "2025-07-04T18:36:30.569Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [CAMPAIGN_DETAILS_DEBUG] Checking for nested campaign structure...",
+      "timestamp": "2025-07-04T18:36:30.569Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [CAMPAIGN_DETAILS_DEBUG] Found campaign in rawResponse.data: {id: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, name: E2E Test Domain Generation Campaign, keys: Array(12)}",
+      "timestamp": "2025-07-04T18:36:30.569Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [CAMPAIGN_DETAILS_DEBUG] Successfully extracted nested campaign",
+      "timestamp": "2025-07-04T18:36:30.577Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📥 [CAMPAIGN_DETAILS_DEBUG] Final processed response: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, responseReceived: true, hasCampaign: true, campaignData: Object, processingSuccess: true}",
+      "timestamp": "2025-07-04T18:36:30.577Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [RELOAD_LOOP_DEBUG] Campaign data found - checking for problematic status: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignName: E2E Test Domain Generation Campaign, campaignType: domain_generation, campaignStatus: pending, statusAnalysis: Object}",
+      "timestamp": "2025-07-04T18:36:30.579Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [CAMPAIGN_DETAILS_DEBUG] Campaign state updated successfully: {totalProcessingTime: 944, campaignLoaded: true}",
+      "timestamp": "2025-07-04T18:36:30.579Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:30.545Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Stopped loading: campaign_details_1109b094-cdc8-4011-9a5a-95691aaf3b9f {\n  \"duration\": 941,\n  \"status\": \"succeeded\"\n}",
+      "timestamp": "2025-07-04T18:36:30.579Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:30.552Z] [juqd6tgx] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"campaign_details_1109b094-cdc8-4011-9a5a-95691aaf3b9f\",\n      \"status\": \"succeeded\",\n      \"isLoading\": false\n    }\n  ]\n}",
+      "timestamp": "2025-07-04T18:36:30.595Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🏁 [CAMPAIGN_DETAILS_DEBUG] loadCampaignData completed: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, totalDuration: 956, success: false, timestamp: 2025-07-04T18:36:30.553Z}",
+      "timestamp": "2025-07-04T18:36:30.598Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [ITEMS_TO_MAP_DEBUG] campaignDomainDetails useMemo called: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignType: domain_generation, campaignStatus: pending, generatedDomainsState: Object, dnsCampaignItemsState: Object}",
+      "timestamp": "2025-07-04T18:36:30.615Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [ITEMS_TO_MAP_DEBUG] domain_generation - itemsToMap assigned: {isArray: true, length: 0, sourceIsArray: true}",
+      "timestamp": "2025-07-04T18:36:30.617Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [ITEMS_TO_MAP_DEBUG] itemsToMap validation passed: {campaignType: domain_generation, itemType: domain_gen, isArray: true, length: 0, proceedingWithMapping: true}",
+      "timestamp": "2025-07-04T18:36:30.618Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [ITEMS_TO_MAP_DEBUG] campaignDomainDetails useMemo called: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignType: domain_generation, campaignStatus: pending, generatedDomainsState: Object, dnsCampaignItemsState: Object}",
+      "timestamp": "2025-07-04T18:36:30.619Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [ITEMS_TO_MAP_DEBUG] domain_generation - itemsToMap assigned: {isArray: true, length: 0, sourceIsArray: true}",
+      "timestamp": "2025-07-04T18:36:30.619Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [ITEMS_TO_MAP_DEBUG] itemsToMap validation passed: {campaignType: domain_generation, itemType: domain_gen, isArray: true, length: 0, proceedingWithMapping: true}",
+      "timestamp": "2025-07-04T18:36:30.619Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📊 [BACKEND_REALTIME] Table pagination update (Go backend source): {totalDomains: 0, currentPage: 1, pageSize: 50, startIndex: 0, endIndex: 50}",
+      "timestamp": "2025-07-04T18:36:30.620Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📊 [BACKEND_REALTIME] Table pagination update (Go backend source): {totalDomains: 0, currentPage: 1, pageSize: 50, startIndex: 0, endIndex: 50}",
+      "timestamp": "2025-07-04T18:36:30.620Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🚨 [STATUS_SYNC_DEBUG] Campaign showing as pending - will show start button: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, frontendStatus: pending, campaignType: domain_generation, warning: If backend says completed but frontend says pending, this is a sync issue}",
+      "timestamp": "2025-07-04T18:36:30.622Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🚨 [STATUS_SYNC_DEBUG] Campaign showing as pending - will show start button: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, frontendStatus: pending, campaignType: domain_generation, warning: If backend says completed but frontend says pending, this is a sync issue}",
+      "timestamp": "2025-07-04T18:36:30.626Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [POLLING_DEBUG] Polling conditions NOT met - no polling will occur: {campaignExists: true, campaignStatus: pending, campaignType: domain_generation, skipReasons: Object}",
+      "timestamp": "2025-07-04T18:36:30.793Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [BACKEND_REALTIME] Connecting WebSocket for Go backend domain generation. Campaign status: pending",
+      "timestamp": "2025-07-04T18:36:30.816Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] connectToAllCampaigns called",
+      "timestamp": "2025-07-04T18:36:30.858Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:30.738Z] [juqd6tgx] [INFO] [WEBSOCKET] Starting connection setup for all-campaigns",
+      "timestamp": "2025-07-04T18:36:30.884Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [WebSocketService] URL_CONSTRUCTION:",
+      "timestamp": "2025-07-04T18:36:30.884Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  NODE_ENV: development",
+      "timestamp": "2025-07-04T18:36:30.884Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  NEXT_PUBLIC_WS_URL: ",
+      "timestamp": "2025-07-04T18:36:30.884Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  window available: true",
+      "timestamp": "2025-07-04T18:36:30.884Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [WebSocketService] Auto-detecting backend URL...",
+      "timestamp": "2025-07-04T18:36:30.888Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔗 [REALTIME_STREAMING] WebSocket connected for campaign 1109b094-cdc8-4011-9a5a-95691aaf3b9f",
+      "timestamp": "2025-07-04T18:36:30.888Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📥 [CAMPAIGN_DETAILS_DEBUG] Raw getCampaignById response received: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, rawResponse: Object, responseType: object, isArray: false, responseKeys: Array(3)}",
+      "timestamp": "2025-07-04T18:36:30.930Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [CAMPAIGN_DETAILS_DEBUG] Checking for nested campaign structure...",
+      "timestamp": "2025-07-04T18:36:30.933Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [CAMPAIGN_DETAILS_DEBUG] Found campaign in rawResponse.data: {id: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, name: E2E Test Domain Generation Campaign, keys: Array(12)}",
+      "timestamp": "2025-07-04T18:36:30.933Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [CAMPAIGN_DETAILS_DEBUG] Successfully extracted nested campaign",
+      "timestamp": "2025-07-04T18:36:30.933Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📥 [CAMPAIGN_DETAILS_DEBUG] Final processed response: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, responseReceived: true, hasCampaign: true, campaignData: Object, processingSuccess: true}",
+      "timestamp": "2025-07-04T18:36:30.933Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [RELOAD_LOOP_DEBUG] Campaign data found - checking for problematic status: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignName: E2E Test Domain Generation Campaign, campaignType: domain_generation, campaignStatus: pending, statusAnalysis: Object}",
+      "timestamp": "2025-07-04T18:36:30.933Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [CAMPAIGN_DETAILS_DEBUG] Campaign state updated successfully: {totalProcessingTime: 1322, campaignLoaded: true}",
+      "timestamp": "2025-07-04T18:36:30.934Z"
+    },
+    {
+      "type": "console_log",
+      "level": "warning",
+      "message": "[2025-07-04T18:36:30.926Z] [juqd6tgx] [WARN] [LOADING_STORE] Attempted to stop non-loading operation: campaign_details_1109b094-cdc8-4011-9a5a-95691aaf3b9f",
+      "timestamp": "2025-07-04T18:36:30.934Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation: {operation: campaign_details_1109b094-cdc8-4011-9a5a-95691aaf3b9f, hasLoadingState: true, isCurrentlyLoading: false, operationStartTime: 1751654189600, currentTime: 1751654190926}",
+      "timestamp": "2025-07-04T18:36:30.934Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🏁 [CAMPAIGN_DETAILS_DEBUG] loadCampaignData completed: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, totalDuration: 1322, success: false, timestamp: 2025-07-04T18:36:30.926Z}",
+      "timestamp": "2025-07-04T18:36:30.934Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:3000/favicon.ico?favicon.56766c03.ico",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:30.937Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [ITEMS_TO_MAP_DEBUG] campaignDomainDetails useMemo called: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignType: domain_generation, campaignStatus: pending, generatedDomainsState: Object, dnsCampaignItemsState: Object}",
+      "timestamp": "2025-07-04T18:36:30.970Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [ITEMS_TO_MAP_DEBUG] domain_generation - itemsToMap assigned: {isArray: true, length: 0, sourceIsArray: true}",
+      "timestamp": "2025-07-04T18:36:30.970Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [ITEMS_TO_MAP_DEBUG] itemsToMap validation passed: {campaignType: domain_generation, itemType: domain_gen, isArray: true, length: 0, proceedingWithMapping: true}",
+      "timestamp": "2025-07-04T18:36:30.970Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [ITEMS_TO_MAP_DEBUG] campaignDomainDetails useMemo called: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, campaignType: domain_generation, campaignStatus: pending, generatedDomainsState: Object, dnsCampaignItemsState: Object}",
+      "timestamp": "2025-07-04T18:36:30.970Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔧 [ITEMS_TO_MAP_DEBUG] domain_generation - itemsToMap assigned: {isArray: true, length: 0, sourceIsArray: true}",
+      "timestamp": "2025-07-04T18:36:30.970Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [ITEMS_TO_MAP_DEBUG] itemsToMap validation passed: {campaignType: domain_generation, itemType: domain_gen, isArray: true, length: 0, proceedingWithMapping: true}",
+      "timestamp": "2025-07-04T18:36:30.970Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📊 [BACKEND_REALTIME] Table pagination update (Go backend source): {totalDomains: 0, currentPage: 1, pageSize: 50, startIndex: 0, endIndex: 50}",
+      "timestamp": "2025-07-04T18:36:30.973Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📊 [BACKEND_REALTIME] Table pagination update (Go backend source): {totalDomains: 0, currentPage: 1, pageSize: 50, startIndex: 0, endIndex: 50}",
+      "timestamp": "2025-07-04T18:36:30.973Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🚨 [STATUS_SYNC_DEBUG] Campaign showing as pending - will show start button: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, frontendStatus: pending, campaignType: domain_generation, warning: If backend says completed but frontend says pending, this is a sync issue}",
+      "timestamp": "2025-07-04T18:36:30.973Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🚨 [STATUS_SYNC_DEBUG] Campaign showing as pending - will show start button: {campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, frontendStatus: pending, campaignType: domain_generation, warning: If backend says completed but frontend says pending, this is a sync issue}",
+      "timestamp": "2025-07-04T18:36:30.988Z"
+    },
+    {
+      "type": "network_response",
+      "url": "http://localhost:8080/health",
+      "status": 200,
+      "method": "GET",
+      "timestamp": "2025-07-04T18:36:31.121Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "✅ [WebSocketService] Backend detected at http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:31.121Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  Detected backend URL: http://localhost:8080",
+      "timestamp": "2025-07-04T18:36:31.130Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "  ✅ Constructed WebSocket URL from backend: ws://localhost:8080/api/v2/ws",
+      "timestamp": "2025-07-04T18:36:31.130Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:31.112Z] [juqd6tgx] [INFO] [WEBSOCKET] Resolved dynamic URL for all-campaigns {\n  \"url\": \"ws://localhost:8080/api/v2/ws\"\n}",
+      "timestamp": "2025-07-04T18:36:31.130Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Establishing connection for all-campaigns to ws://localhost:8080/api/v2/ws",
+      "timestamp": "2025-07-04T18:36:31.130Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket created for all-campaigns, readyState: 0",
+      "timestamp": "2025-07-04T18:36:31.138Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onopen triggered for all-campaigns",
+      "timestamp": "2025-07-04T18:36:31.154Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:31.152Z] [juqd6tgx] [INFO] [WEBSOCKET] Connected: all-campaigns",
+      "timestamp": "2025-07-04T18:36:31.154Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Successfully connected to all campaigns",
+      "timestamp": "2025-07-04T18:36:31.168Z"
+    },
+    {
+      "type": "console_log",
+      "level": "info",
+      "message": "[2025-07-04T18:36:31.152Z] [juqd6tgx] [INFO] [WEBSOCKET] Connected to all campaigns",
+      "timestamp": "2025-07-04T18:36:31.175Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:31.152Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message sent on all-campaigns {\n  \"type\": \"connection_init\",\n  \"data\": {\n    \"lastSequenceNumber\": 0\n  },\n  \"timestamp\": 1751654191152\n}",
+      "timestamp": "2025-07-04T18:36:31.176Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onmessage triggered for all-campaigns: {\"id\":\"d888a72c-8502-49fa-a9b3-ae0566716658\",\"timestamp\":\"2025-07-04T18:36:31Z\",\"type\":\"connection_ack\",\"sequenceNumber\":1,\"data\":{\"connectionId\":\"b570c240-93e0-4f1c-b58c-e8b40a2964b6\",\"lastSequenceNumber\":0,\"userId\":\"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\"}}",
+      "timestamp": "2025-07-04T18:36:31.194Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [DIAGNOSTIC] WebSocket Message Details: {connectionKey: all-campaigns, messageType: connection_ack, campaignId: undefined, hasData: true, timestamp: 2025-07-04T18:36:31Z}",
+      "timestamp": "2025-07-04T18:36:31.196Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⚠️ [DIAGNOSTIC] Legacy message format detected: \"connection_ack\" (should use dot notation)",
+      "timestamp": "2025-07-04T18:36:31.196Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "❌ [DIAGNOSTIC] No campaign ID found in message",
+      "timestamp": "2025-07-04T18:36:31.196Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:31.186Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message received on all-campaigns {\n  \"id\": \"d888a72c-8502-49fa-a9b3-ae0566716658\",\n  \"timestamp\": \"2025-07-04T18:36:31Z\",\n  \"type\": \"connection_ack\",\n  \"sequenceNumber\": 1,\n  \"data\": {\n    \"connectionId\": \"b570c240-93e0-4f1c-b58c-e8b40a2964b6\",\n    \"lastSequenceNumber\": 0,\n    \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\"\n  }\n}",
+      "timestamp": "2025-07-04T18:36:31.196Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Message received on all-campaigns connection: {id: d888a72c-8502-49fa-a9b3-ae0566716658, timestamp: 2025-07-04T18:36:31Z, type: connection_ack, sequenceNumber: 1, data: Object}",
+      "timestamp": "2025-07-04T18:36:31.196Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📨 [REALTIME_STREAMING] Individual WebSocket event from Go backend: {type: connection_ack, campaignId: undefined, timestamp: 2025-07-04T18:36:31Z, messageId: undefined, sequenceNumber: 1}",
+      "timestamp": "2025-07-04T18:36:31.210Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔗 [REALTIME_STREAMING] Go backend connection acknowledged: {type: connection_ack, readyForIndividualEvents: true}",
+      "timestamp": "2025-07-04T18:36:31.210Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Sending subscription message",
+      "timestamp": "2025-07-04T18:36:31.255Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:31.253Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message sent on all-campaigns {\n  \"type\": \"subscribe\",\n  \"data\": {\n    \"channels\": [\n      \"campaigns\",\n      \"campaign-updates\"\n    ]\n  },\n  \"timestamp\": 1751654191253\n}",
+      "timestamp": "2025-07-04T18:36:31.255Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onmessage triggered for all-campaigns: {\"id\":\"324aaa9a-cb9a-4a44-968f-15296f801d4b\",\"timestamp\":\"2025-07-04T18:36:31Z\",\"type\":\"subscription_ack\",\"sequenceNumber\":2,\"data\":{\"channels\":[\"campaigns\",\"campaign-updates\"],\"subscribed\":true}}",
+      "timestamp": "2025-07-04T18:36:31.258Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [DIAGNOSTIC] WebSocket Message Details: {connectionKey: all-campaigns, messageType: subscription_ack, campaignId: undefined, hasData: true, timestamp: 2025-07-04T18:36:31Z}",
+      "timestamp": "2025-07-04T18:36:31.258Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⚠️ [DIAGNOSTIC] Legacy message format detected: \"subscription_ack\" (should use dot notation)",
+      "timestamp": "2025-07-04T18:36:31.258Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "❌ [DIAGNOSTIC] No campaign ID found in message",
+      "timestamp": "2025-07-04T18:36:31.258Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:31.257Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message received on all-campaigns {\n  \"id\": \"324aaa9a-cb9a-4a44-968f-15296f801d4b\",\n  \"timestamp\": \"2025-07-04T18:36:31Z\",\n  \"type\": \"subscription_ack\",\n  \"sequenceNumber\": 2,\n  \"data\": {\n    \"channels\": [\n      \"campaigns\",\n      \"campaign-updates\"\n    ],\n    \"subscribed\": true\n  }\n}",
+      "timestamp": "2025-07-04T18:36:31.260Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Message received on all-campaigns connection: {id: 324aaa9a-cb9a-4a44-968f-15296f801d4b, timestamp: 2025-07-04T18:36:31Z, type: subscription_ack, sequenceNumber: 2, data: Object}",
+      "timestamp": "2025-07-04T18:36:31.260Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📨 [REALTIME_STREAMING] Individual WebSocket event from Go backend: {type: subscription_ack, campaignId: undefined, timestamp: 2025-07-04T18:36:31Z, messageId: undefined, sequenceNumber: 2}",
+      "timestamp": "2025-07-04T18:36:31.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔗 [REALTIME_STREAMING] Go backend connection acknowledged: {type: subscription_ack, readyForIndividualEvents: true}",
+      "timestamp": "2025-07-04T18:36:31.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onmessage triggered for all-campaigns: {\"id\":\"26c5b311-aa93-4422-8192-20787aca7393\",\"timestamp\":\"2025-07-04T18:36:31Z\",\"type\":\"campaign_progress\",\"sequenceNumber\":3,\"data\":{\"phase\":\"domain_generation\",\"processedItems\":0,\"progressPercentage\":0,\"status\":\"running\",\"totalItems\":0},\"campaignId\":\"1109b094-cdc8-4011-9a5a-95691aaf3b9f\"}",
+      "timestamp": "2025-07-04T18:36:31.526Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [DIAGNOSTIC] WebSocket Message Details: {connectionKey: all-campaigns, messageType: campaign_progress, campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, hasData: true, timestamp: 2025-07-04T18:36:31Z}",
+      "timestamp": "2025-07-04T18:36:31.527Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⚠️ [DIAGNOSTIC] Legacy message format detected: \"campaign_progress\" (should use dot notation)",
+      "timestamp": "2025-07-04T18:36:31.527Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🎯 [DIAGNOSTIC] Campaign ID fields found: [Object]",
+      "timestamp": "2025-07-04T18:36:31.557Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:31.532Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message received on all-campaigns {\n  \"id\": \"26c5b311-aa93-4422-8192-20787aca7393\",\n  \"timestamp\": \"2025-07-04T18:36:31Z\",\n  \"type\": \"campaign_progress\",\n  \"sequenceNumber\": 3,\n  \"data\": {\n    \"phase\": \"domain_generation\",\n    \"processedItems\": 0,\n    \"progressPercentage\": 0,\n    \"status\": \"running\",\n    \"totalItems\": 0\n  },\n  \"campaignId\": \"1109b094-cdc8-4011-9a5a-95691aaf3b9f\"\n}",
+      "timestamp": "2025-07-04T18:36:31.557Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Message received on all-campaigns connection: {id: 26c5b311-aa93-4422-8192-20787aca7393, timestamp: 2025-07-04T18:36:31Z, type: campaign_progress, sequenceNumber: 3, data: Object}",
+      "timestamp": "2025-07-04T18:36:31.557Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📨 [REALTIME_STREAMING] Individual WebSocket event from Go backend: {type: campaign_progress, campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, timestamp: 2025-07-04T18:36:31Z, messageId: undefined, sequenceNumber: 3}",
+      "timestamp": "2025-07-04T18:36:31.557Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📝 [REALTIME_STREAMING] Unhandled event type: {type: campaign_progress, data: Object, notCritical: true}",
+      "timestamp": "2025-07-04T18:36:31.557Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onmessage triggered for all-campaigns: {\"id\":\"c7184dbb-9fe2-400c-bad9-83eb0462d0cc\",\"timestamp\":\"2025-07-04T18:36:32Z\",\"type\":\"domain_generation_progress\",\"sequenceNumber\":4,\"data\":{\"domainsGenerated\":1000,\"phase\":\"domain_generation\",\"progress\":100,\"status\":\"generating\",\"totalDomains\":1000},\"campaignId\":\"1109b094-cdc8-4011-9a5a-95691aaf3b9f\"}",
+      "timestamp": "2025-07-04T18:36:32.259Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [DIAGNOSTIC] WebSocket Message Details: {connectionKey: all-campaigns, messageType: domain_generation_progress, campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, hasData: true, timestamp: 2025-07-04T18:36:32Z}",
+      "timestamp": "2025-07-04T18:36:32.259Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⚠️ [DIAGNOSTIC] Legacy message format detected: \"domain_generation_progress\" (should use dot notation)",
+      "timestamp": "2025-07-04T18:36:32.259Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🎯 [DIAGNOSTIC] Campaign ID fields found: [Object]",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:32.252Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message received on all-campaigns {\n  \"id\": \"c7184dbb-9fe2-400c-bad9-83eb0462d0cc\",\n  \"timestamp\": \"2025-07-04T18:36:32Z\",\n  \"type\": \"domain_generation_progress\",\n  \"sequenceNumber\": 4,\n  \"data\": {\n    \"domainsGenerated\": 1000,\n    \"phase\": \"domain_generation\",\n    \"progress\": 100,\n    \"status\": \"generating\",\n    \"totalDomains\": 1000\n  },\n  \"campaignId\": \"1109b094-cdc8-4011-9a5a-95691aaf3b9f\"\n}",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Message received on all-campaigns connection: {id: c7184dbb-9fe2-400c-bad9-83eb0462d0cc, timestamp: 2025-07-04T18:36:32Z, type: domain_generation_progress, sequenceNumber: 4, data: Object}",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📨 [REALTIME_STREAMING] Individual WebSocket event from Go backend: {type: domain_generation_progress, campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, timestamp: 2025-07-04T18:36:32Z, messageId: undefined, sequenceNumber: 4}",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📊 [REALTIME_STREAMING] Individual progress update: {generated: 1000, target: undefined, progress: undefined, realTimeUpdate: true}",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onmessage triggered for all-campaigns: {\"id\":\"48170e08-489c-4e89-80e4-8b327e22a4bb\",\"timestamp\":\"2025-07-04T18:36:32Z\",\"type\":\"campaign_progress\",\"sequenceNumber\":5,\"data\":{\"phase\":\"domain_generation\",\"processedItems\":0,\"progressPercentage\":100,\"status\":\"completed\",\"totalItems\":0},\"campaignId\":\"1109b094-cdc8-4011-9a5a-95691aaf3b9f\"}",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [DIAGNOSTIC] WebSocket Message Details: {connectionKey: all-campaigns, messageType: campaign_progress, campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, hasData: true, timestamp: 2025-07-04T18:36:32Z}",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "⚠️ [DIAGNOSTIC] Legacy message format detected: \"campaign_progress\" (should use dot notation)",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🎯 [DIAGNOSTIC] Campaign ID fields found: [Object]",
+      "timestamp": "2025-07-04T18:36:32.261Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:36:32.253Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message received on all-campaigns {\n  \"id\": \"48170e08-489c-4e89-80e4-8b327e22a4bb\",\n  \"timestamp\": \"2025-07-04T18:36:32Z\",\n  \"type\": \"campaign_progress\",\n  \"sequenceNumber\": 5,\n  \"data\": {\n    \"phase\": \"domain_generation\",\n    \"processedItems\": 0,\n    \"progressPercentage\": 100,\n    \"status\": \"completed\",\n    \"totalItems\": 0\n  },\n  \"campaignId\": \"1109b094-cdc8-4011-9a5a-95691aaf3b9f\"\n}",
+      "timestamp": "2025-07-04T18:36:32.262Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] Message received on all-campaigns connection: {id: 48170e08-489c-4e89-80e4-8b327e22a4bb, timestamp: 2025-07-04T18:36:32Z, type: campaign_progress, sequenceNumber: 5, data: Object}",
+      "timestamp": "2025-07-04T18:36:32.262Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📨 [REALTIME_STREAMING] Individual WebSocket event from Go backend: {type: campaign_progress, campaignId: 1109b094-cdc8-4011-9a5a-95691aaf3b9f, timestamp: 2025-07-04T18:36:32Z, messageId: undefined, sequenceNumber: 5}",
+      "timestamp": "2025-07-04T18:36:32.262Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "📝 [REALTIME_STREAMING] Unhandled event type: {type: campaign_progress, data: Object, notCritical: true}",
+      "timestamp": "2025-07-04T18:36:32.262Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[Fast Refresh] rebuilding",
+      "timestamp": "2025-07-04T18:36:37.574Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[Fast Refresh] done in 142ms",
+      "timestamp": "2025-07-04T18:36:37.622Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] getConnectionStatus returning: {all-campaigns: true}",
+      "timestamp": "2025-07-04T18:37:15.906Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:37:31.153Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message sent on all-campaigns {\n  \"type\": \"ping\",\n  \"timestamp\": 1751654251153\n}",
+      "timestamp": "2025-07-04T18:37:31.156Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "[WebSocketService] WebSocket onmessage triggered for all-campaigns: {\"id\":\"b09e8198-f3aa-4843-a2be-3cfee1860ea2\",\"timestamp\":\"2025-07-04T18:37:31Z\",\"type\":\"pong\",\"sequenceNumber\":6}",
+      "timestamp": "2025-07-04T18:37:31.157Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "🔍 [DIAGNOSTIC] WebSocket Message Details: {connectionKey: all-campaigns, messageType: pong, campaignId: undefined, hasData: false, timestamp: 2025-07-04T18:37:31Z}",
+      "timestamp": "2025-07-04T18:37:31.157Z"
+    },
+    {
+      "type": "console_log",
+      "level": "log",
+      "message": "❌ [DIAGNOSTIC] No campaign ID found in message",
+      "timestamp": "2025-07-04T18:37:31.157Z"
+    },
+    {
+      "type": "console_log",
+      "level": "debug",
+      "message": "[2025-07-04T18:37:31.155Z] [juqd6tgx] [DEBUG] [WEBSOCKET] Message: Message received on all-campaigns {\n  \"id\": \"b09e8198-f3aa-4843-a2be-3cfee1860ea2\",\n  \"timestamp\": \"2025-07-04T18:37:31Z\",\n  \"type\": \"pong\",\n  \"sequenceNumber\": 6\n}",
+      "timestamp": "2025-07-04T18:37:31.157Z"
+    }
+  ],
+  "screenshots": [],
+  "startTime": "2025-07-04T18:36:08.984Z",
+  "endTime": "2025-07-04T18:37:31.899Z",
+  "diagnostics": {
+    "messageFormatStats": {
+      "domain.generated": 0,
+      "domain_generated": 0,
+      "campaign.progress": 0,
+      "campaign_progress": 0,
+      "campaign.status": 0,
+      "campaign_status": 0,
+      "other": 0
+    },
+    "campaignIdFields": {},
+    "wsEndpoints": [],
+    "unknownMessageTypes": [],
+    "hasCampaignMatch": false,
+    "hasCorrectFormat": false,
+    "hasLegacyFormat": false
+  },
+  "duration": 82915,
+  "summary": {
+    "totalSteps": 47,
+    "totalErrors": 410,
+    "success": false,
+    "durationMs": 82915
+  }
+}
