@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Code analysis tool handlers
@@ -44,11 +45,20 @@ func (s *JSONRPCServer) callGetRoutes() (interface{}, error) {
 		}, nil
 	}
 
+	// Build route summary with essential information
+	var routeLines []string
+	routeLines = append(routeLines, fmt.Sprintf("Found %d API routes:\n", len(routes)))
+	
+	for _, route := range routes {
+		routeLine := fmt.Sprintf("  %s %s -> %s", route.Method, route.Path, route.Handler)
+		routeLines = append(routeLines, routeLine)
+	}
+
 	return map[string]interface{}{
 		"content": []map[string]interface{}{
 			{
 				"type": "text",
-				"text": fmt.Sprintf("Found %d API routes", len(routes)),
+				"text": strings.Join(routeLines, "\n"),
 			},
 		},
 	}, nil
