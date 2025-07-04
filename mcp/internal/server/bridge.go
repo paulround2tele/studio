@@ -1713,4 +1713,145 @@ func (b *Bridge) GetComponentToTestMap() ([]models.ComponentTestMap, error) {
 	return analyzer.GetComponentToTestMap(root)
 }
 
-// TODO: Add more methods for other tools as needed.
+// GetBusinessDomains analyzes business domains within the backend
+func (b *Bridge) GetBusinessDomains() ([]models.BusinessDomain, error) {
+	return analyzer.ParseBusinessDomains(b.BackendPath)
+}
+
+// GetAdvancedTooling analyzes advanced development and database tooling
+func (b *Bridge) GetAdvancedTooling() ([]models.AdvancedTool, error) {
+	return analyzer.ParseAdvancedTooling(b.BackendPath)
+}
+
+// GetEnhancedDependencies provides enhanced dependency analysis for business domains
+func (b *Bridge) GetEnhancedDependencies() (map[string]interface{}, error) {
+	return analyzer.GetEnhancedDependencies(b.BackendPath)
+}
+
+// GetEnhancedSecurityAnalysis provides enhanced security analysis for business domains
+func (b *Bridge) GetEnhancedSecurityAnalysis() (map[string]interface{}, error) {
+	return analyzer.GetEnhancedSecurityAnalysis(b.BackendPath)
+}
+
+// GetEnhancedAPISchema provides enhanced API schema analysis with business domain awareness
+func (b *Bridge) GetEnhancedAPISchema() (interface{}, error) {
+	return analyzer.ParseApiSchema(b.BackendPath)
+}
+
+// GetBusinessDomainRoutes analyzes routes categorized by business domains
+func (b *Bridge) GetBusinessDomainRoutes() (map[string][]models.Route, error) {
+	mainGoPath := filepath.Join(b.BackendPath, "cmd/apiserver/main.go")
+	return analyzer.ParseBusinessDomainRoutes(mainGoPath)
+}
+
+// GetEnhancedRouteAnalysis provides comprehensive route analysis with business domain mapping
+func (b *Bridge) GetEnhancedRouteAnalysis() (analyzer.RouteAnalysisResult, error) {
+	mainGoPath := filepath.Join(b.BackendPath, "cmd/apiserver/main.go")
+	return analyzer.EnhancedRouteAnalysis(mainGoPath)
+}
+
+// GetKeywordExtractionServices analyzes keyword extraction service implementations
+func (b *Bridge) GetKeywordExtractionServices() ([]models.Service, error) {
+	keywordExtractorPath := filepath.Join(b.BackendPath, "internal/keywordextractor")
+	return analyzer.ParseServices(keywordExtractorPath)
+}
+
+// GetKeywordScanningServices analyzes keyword scanning service implementations
+func (b *Bridge) GetKeywordScanningServices() ([]models.Service, error) {
+	keywordScannerPath := filepath.Join(b.BackendPath, "internal/keywordscanner")
+	return analyzer.ParseServices(keywordScannerPath)
+}
+
+// GetProxyManagementServices analyzes proxy management service implementations
+func (b *Bridge) GetProxyManagementServices() ([]models.Service, error) {
+	proxyManagerPath := filepath.Join(b.BackendPath, "internal/proxymanager")
+	return analyzer.ParseServices(proxyManagerPath)
+}
+
+// GetKeywordSetAPISpecs analyzes keyword-sets API specifications
+func (b *Bridge) GetKeywordSetAPISpecs() (interface{}, error) {
+	keywordSetsAPIPath := filepath.Join(b.BackendPath, "api/keyword-sets")
+	return analyzer.ParseApiSchema(keywordSetsAPIPath)
+}
+
+// GetProxyPoolAPISpecs analyzes proxy-pools API specifications
+func (b *Bridge) GetProxyPoolAPISpecs() (interface{}, error) {
+	proxyPoolsAPIPath := filepath.Join(b.BackendPath, "api/proxy-pools")
+	return analyzer.ParseApiSchema(proxyPoolsAPIPath)
+}
+
+// GetDatabaseToolingAnalysis analyzes advanced database tooling
+func (b *Bridge) GetDatabaseToolingAnalysis() ([]models.AdvancedTool, error) {
+	var allTools []models.AdvancedTool
+	
+	// Analyze migration verifier
+	migrationVerifierPath := filepath.Join(b.BackendPath, "cmd/migration_verifier")
+	if tools, err := analyzer.ParseAdvancedTooling(migrationVerifierPath); err == nil {
+		allTools = append(allTools, tools...)
+	}
+	
+	// Analyze schema validator
+	schemaValidatorPath := filepath.Join(b.BackendPath, "cmd/schema_validator")
+	if tools, err := analyzer.ParseAdvancedTooling(schemaValidatorPath); err == nil {
+		allTools = append(allTools, tools...)
+	}
+	
+	// Analyze other advanced tooling
+	cmdPath := filepath.Join(b.BackendPath, "cmd")
+	if tools, err := analyzer.ParseAdvancedTooling(cmdPath); err == nil {
+		allTools = append(allTools, tools...)
+	}
+	
+	return allTools, nil
+}
+
+// GetBusinessDomainMiddleware analyzes middleware specific to business domains
+func (b *Bridge) GetBusinessDomainMiddleware() ([]models.Middleware, error) {
+	// Analyze middleware in internal/middleware directory
+	middlewarePath := filepath.Join(b.BackendPath, "internal/middleware")
+	middleware, err := analyzer.ParseMiddleware(middlewarePath)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Filter and categorize by business domain
+	var businessDomainMiddleware []models.Middleware
+	for _, mw := range middleware {
+		// Only include middleware that has business domain context
+		if mw.BusinessDomain != "" && mw.BusinessDomain != "core" {
+			businessDomainMiddleware = append(businessDomainMiddleware, mw)
+		}
+	}
+	
+	return businessDomainMiddleware, nil
+}
+
+// GetInternalServiceDependencies analyzes dependencies between internal services
+func (b *Bridge) GetInternalServiceDependencies() (map[string][]string, error) {
+	result, err := analyzer.GetEnhancedDependencies(b.BackendPath)
+	if err != nil {
+		return nil, err
+	}
+	
+	if internalDeps, ok := result["internalDependencies"].(map[string][]string); ok {
+		return internalDeps, nil
+	}
+	
+	return make(map[string][]string), nil
+}
+
+// GetBusinessDomainCrossDependencies analyzes cross-dependencies between business domains
+func (b *Bridge) GetBusinessDomainCrossDependencies() (map[string]interface{}, error) {
+	result, err := analyzer.GetEnhancedDependencies(b.BackendPath)
+	if err != nil {
+		return nil, err
+	}
+	
+	if domainDeps, ok := result["businessDomainDependencies"].(map[string]interface{}); ok {
+		return domainDeps, nil
+	}
+	
+	return make(map[string]interface{}), nil
+}
+
+// TODO: Add more methods for other enhanced tools as needed.

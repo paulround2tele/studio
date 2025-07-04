@@ -1,0 +1,936 @@
+{
+  "timestamp": "2025-07-04T09:39:16.035Z",
+  "testResults": {
+    "loginSuccess": true,
+    "campaignsLoaded": false,
+    "individualCampaignLoaded": false,
+    "websocketConnected": false,
+    "realTimeUpdatesDetected": false,
+    "batchRefreshDetected": false,
+    "errors": [
+      "Campaigns navigation failed: this.page.waitForTimeout is not a function",
+      "Test execution failed: this.page.waitForTimeout is not a function"
+    ]
+  },
+  "logs": [
+    {
+      "timestamp": "2025-07-04T09:39:04.110Z",
+      "level": "info",
+      "message": "Initializing WebSocket Streaming Test",
+      "data": null
+    },
+    {
+      "timestamp": "2025-07-04T09:39:05.566Z",
+      "level": "info",
+      "message": "Starting login process",
+      "data": null
+    },
+    {
+      "timestamp": "2025-07-04T09:39:06.352Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_fd44f5a4._.js",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/login",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "sec-ch-ua-mobile": "?0",
+          "accept": "*/*"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:06.422Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_fd44f5a4._.js",
+        "headers": {
+          "accept-ranges": "bytes",
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
+          "access-control-allow-methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+          "access-control-allow-origin": "http://localhost:8080",
+          "cache-control": "no-store, must-revalidate",
+          "connection": "keep-alive",
+          "content-length": "730",
+          "content-type": "application/javascript; charset=UTF-8",
+          "date": "Fri, 04 Jul 2025 09:39:06 GMT",
+          "etag": "W/\"2da-197d1ea2d3c\"",
+          "keep-alive": "timeout=5",
+          "last-modified": "Thu, 03 Jul 2025 20:11:14 GMT",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "vary": "Accept-Encoding",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:07.568Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "🔗 [WEBSOCKET_MONITOR] WebSocket connection created: ws://localhost:3000/_next/webpack-hmr"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:07.580Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/login",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "sec-ch-ua-mobile": "?0",
+          "accept": "*/*"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:07.588Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_66796270._.js",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/login",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "sec-ch-ua-mobile": "?0",
+          "accept": "*/*"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:07.625Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "[2025-07-04T09:39:07.618Z] [yoxax6t3] [DEBUG] [WEBSOCKET] Service initialized {\n  \"url\": \"\",\n  \"reconnectInterval\": 10000,\n  \"maxReconnectAttempts\": 5\n}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:07.678Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_66796270._.js",
+        "headers": {
+          "accept-ranges": "bytes",
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
+          "access-control-allow-methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+          "access-control-allow-origin": "http://localhost:8080",
+          "cache-control": "no-store, must-revalidate",
+          "connection": "keep-alive",
+          "content-length": "286",
+          "content-type": "application/javascript; charset=UTF-8",
+          "date": "Fri, 04 Jul 2025 09:39:07 GMT",
+          "etag": "W/\"11e-197d1ea2e87\"",
+          "keep-alive": "timeout=5",
+          "last-modified": "Thu, 03 Jul 2025 20:11:14 GMT",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "vary": "Accept-Encoding",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:07.678Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_61dcf9ba._.js",
+        "headers": {
+          "accept-ranges": "bytes",
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
+          "access-control-allow-methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+          "access-control-allow-origin": "http://localhost:8080",
+          "cache-control": "no-store, must-revalidate",
+          "connection": "keep-alive",
+          "content-encoding": "gzip",
+          "content-type": "application/javascript; charset=UTF-8",
+          "date": "Fri, 04 Jul 2025 09:39:07 GMT",
+          "etag": "W/\"3c7e-197d1ea2d53\"",
+          "keep-alive": "timeout=5",
+          "last-modified": "Thu, 03 Jul 2025 20:11:14 GMT",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "vary": "Accept-Encoding",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:07.740Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "✅ [WEBSOCKET_MONITOR] WebSocket opened: ws://localhost:3000/_next/webpack-hmr"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:07.853Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"isrManifest\",\"data\":{\"/campaigns/5d249b59-d844-4fa3-919f-f8f25d24e45b\":true,\"/\":true,\"/campaigns\":true,\"/dashboard\":true,\"/login\":true}}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.127Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"turbopack-connected\",\"data\":{\"sessionId\":4550133252000885}}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.168Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"sync\",\"errors\":[],\"warnings\":[],\"hash\":\"\",\"versionInfo\":{\"staleness\":\"stale-patch\",\"expected\":\"15.3.5\",\"installed\":\"15.3.3\"},\"debug\":{},\"devIndicator\":{\"disabledUntil\":0}}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.215Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.245Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"86\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.245Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.249Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"87\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.279Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.431Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"88\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:08.714Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:09.041Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"89\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:09.469Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:09.531Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"90\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:09.682Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:09.739Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"91\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:09.868Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:09.990Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"92\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:10.089Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:10.222Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"93\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:10.318Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:10.341Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"94\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:10.362Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:10.378Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"95\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:10.430Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:10.451Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"96\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:11.605Z",
+      "level": "debug",
+      "message": "Email entered",
+      "data": null
+    },
+    {
+      "timestamp": "2025-07-04T09:39:11.990Z",
+      "level": "debug",
+      "message": "Password entered",
+      "data": null
+    },
+    {
+      "timestamp": "2025-07-04T09:39:12.144Z",
+      "level": "debug",
+      "message": "Sign in button clicked",
+      "data": null
+    },
+    {
+      "timestamp": "2025-07-04T09:39:12.431Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:12.459Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"97\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:12.545Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:12.574Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"98\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:12.607Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"isrManifest\",\"data\":{\"/campaigns/5d249b59-d844-4fa3-919f-f8f25d24e45b\":true,\"/\":true,\"/campaigns\":true,\"/login\":true}}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:12.648Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"isrManifest\",\"data\":{\"/campaigns/5d249b59-d844-4fa3-919f-f8f25d24e45b\":true,\"/\":true,\"/campaigns\":true,\"/login\":true,\"/dashboard\":true}}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.004Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.100Z",
+      "level": "success",
+      "message": "Login successful",
+      "data": {
+        "url": "http://localhost:3000/dashboard"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.100Z",
+      "level": "info",
+      "message": "Navigating to campaigns page",
+      "data": null
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.234Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"99\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.250Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "[2025-07-04T09:39:13.192Z] [yoxax6t3] [INFO] [WEBSOCKET] Disconnecting all connections"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.773Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "sec-ch-ua-mobile": "?0",
+          "x-requested-with": "XMLHttpRequest",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "content-type": "application/json",
+          "accept": "*/*",
+          "cookie": "domainflow_session=ce2aaa9d4d1258dfc5ba326829b78ef3448e4a2c94102232a57233d738eb6c8ce17ace5a680d5a7e9db51e668b81af1b0b4ed6ee9c524388ee484d5f2ee5ae3a"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.774Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "sec-ch-ua-mobile": "?0",
+          "x-requested-with": "XMLHttpRequest",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "content-type": "application/json",
+          "accept": "*/*",
+          "cookie": "domainflow_session=ce2aaa9d4d1258dfc5ba326829b78ef3448e4a2c94102232a57233d738eb6c8ce17ace5a680d5a7e9db51e668b81af1b0b4ed6ee9c524388ee484d5f2ee5ae3a"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.775Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "sec-ch-ua-mobile": "?0",
+          "x-requested-with": "XMLHttpRequest",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "content-type": "application/json",
+          "accept": "*/*",
+          "cookie": "domainflow_session=ce2aaa9d4d1258dfc5ba326829b78ef3448e4a2c94102232a57233d738eb6c8ce17ace5a680d5a7e9db51e668b81af1b0b4ed6ee9c524388ee484d5f2ee5ae3a"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:13.775Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "sec-ch-ua-mobile": "?0",
+          "x-requested-with": "XMLHttpRequest",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "content-type": "application/json",
+          "accept": "*/*",
+          "cookie": "domainflow_session=ce2aaa9d4d1258dfc5ba326829b78ef3448e4a2c94102232a57233d738eb6c8ce17ace5a680d5a7e9db51e668b81af1b0b4ed6ee9c524388ee484d5f2ee5ae3a"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.253Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, Content-Length, Accept-Encoding, Authorization, accept, origin, Cache-Control, X-Requested-With",
+          "access-control-allow-methods": "POST, GET, OPTIONS, PUT, DELETE, PATCH",
+          "access-control-max-age": "86400",
+          "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' wss: https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+          "content-type": "application/json; charset=utf-8",
+          "date": "Fri, 04 Jul 2025 09:39:13 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-ratelimit-key": "::1",
+          "x-ratelimit-limit": "100",
+          "x-ratelimit-remaining": "92",
+          "x-ratelimit-reset": "1751622007",
+          "x-ratelimit-window": "1m0s",
+          "x-total-count": "9",
+          "x-xss-protection": "1; mode=block"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.286Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, Content-Length, Accept-Encoding, Authorization, accept, origin, Cache-Control, X-Requested-With",
+          "access-control-allow-methods": "POST, GET, OPTIONS, PUT, DELETE, PATCH",
+          "access-control-max-age": "86400",
+          "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' wss: https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+          "content-type": "application/json; charset=utf-8",
+          "date": "Fri, 04 Jul 2025 09:39:13 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-total-count": "9",
+          "x-xss-protection": "1; mode=block"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.462Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, Content-Length, Accept-Encoding, Authorization, accept, origin, Cache-Control, X-Requested-With",
+          "access-control-allow-methods": "POST, GET, OPTIONS, PUT, DELETE, PATCH",
+          "access-control-max-age": "86400",
+          "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' wss: https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+          "content-type": "application/json; charset=utf-8",
+          "date": "Fri, 04 Jul 2025 09:39:14 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-ratelimit-key": "::1",
+          "x-ratelimit-limit": "100",
+          "x-ratelimit-remaining": "90",
+          "x-ratelimit-reset": "1751622007",
+          "x-ratelimit-window": "1m0s",
+          "x-total-count": "9",
+          "x-xss-protection": "1; mode=block"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.614Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "Content-Type, Content-Length, Accept-Encoding, Authorization, accept, origin, Cache-Control, X-Requested-With",
+          "access-control-allow-methods": "POST, GET, OPTIONS, PUT, DELETE, PATCH",
+          "access-control-max-age": "86400",
+          "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' wss: https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+          "content-type": "application/json; charset=utf-8",
+          "date": "Fri, 04 Jul 2025 09:39:14 GMT",
+          "permissions-policy": "geolocation=(), microphone=(), camera=()",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "transfer-encoding": "chunked",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-ratelimit-key": "::1",
+          "x-ratelimit-limit": "100",
+          "x-ratelimit-remaining": "88",
+          "x-ratelimit-reset": "1751622007",
+          "x-ratelimit-window": "1m0s",
+          "x-total-count": "9",
+          "x-xss-protection": "1; mode=block"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.818Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:3000/campaigns?_rsc=s91z9",
+        "headers": {
+          "rsc": "1",
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/dashboard",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "sec-ch-ua-mobile": "?0",
+          "next-router-state-tree": "%5B%22%22%2C%7B%22children%22%3A%5B%22dashboard%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2C%22%2Fdashboard%22%2C%22refresh%22%5D%7D%5D%7D%2Cnull%2Cnull%2Ctrue%5D",
+          "next-url": "/dashboard",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "accept": "*/*",
+          "cookie": "domainflow_session=ce2aaa9d4d1258dfc5ba326829b78ef3448e4a2c94102232a57233d738eb6c8ce17ace5a680d5a7e9db51e668b81af1b0b4ed6ee9c524388ee484d5f2ee5ae3a"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.896Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.917Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"100\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.954Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:14.988Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"101\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:15.033Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"isrManifest\",\"data\":{\"/campaigns/5d249b59-d844-4fa3-919f-f8f25d24e45b\":true,\"/\":true,\"/login\":true,\"/dashboard\":true}}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:15.129Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"isrManifest\",\"data\":{\"/campaigns/5d249b59-d844-4fa3-919f-f8f25d24e45b\":true,\"/\":true,\"/login\":true,\"/dashboard\":true,\"/campaigns\":true}}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:15.135Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:3000/campaigns?_rsc=s91z9",
+        "headers": {
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
+          "access-control-allow-methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+          "access-control-allow-origin": "http://localhost:8080",
+          "cache-control": "no-store, must-revalidate",
+          "connection": "keep-alive",
+          "content-encoding": "gzip",
+          "content-type": "text/x-component",
+          "date": "Fri, 04 Jul 2025 09:39:15 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "1; mode=block"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:15.192Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_page_tsx_2eded05f._.js",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/dashboard",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "sec-ch-ua-mobile": "?0",
+          "accept": "*/*",
+          "cookie": "domainflow_session=ce2aaa9d4d1258dfc5ba326829b78ef3448e4a2c94102232a57233d738eb6c8ce17ace5a680d5a7e9db51e668b81af1b0b4ed6ee9c524388ee484d5f2ee5ae3a"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:15.481Z",
+      "level": "debug",
+      "message": "Network Response",
+      "data": {
+        "status": 200,
+        "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_page_tsx_2eded05f._.js",
+        "headers": {
+          "accept-ranges": "bytes",
+          "access-control-allow-credentials": "true",
+          "access-control-allow-headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
+          "access-control-allow-methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+          "access-control-allow-origin": "http://localhost:8080",
+          "cache-control": "no-store, must-revalidate",
+          "connection": "keep-alive",
+          "content-length": "324",
+          "content-type": "application/javascript; charset=UTF-8",
+          "date": "Fri, 04 Jul 2025 09:39:15 GMT",
+          "etag": "W/\"144-197d20900a3\"",
+          "keep-alive": "timeout=5",
+          "last-modified": "Thu, 03 Jul 2025 20:44:54 GMT",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "vary": "Accept-Encoding",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:15.501Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"building\"}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:15.930Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "[2025-07-04T09:39:15.929Z] [yoxax6t3] [INFO] [WEBSOCKET] Starting connection setup for all-campaigns"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:15.935Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "[2025-07-04T09:39:15.932Z] [yoxax6t3] [INFO] [WEBSOCKET] Starting connection setup for all-campaigns"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:16.009Z",
+      "level": "websocket",
+      "message": "Browser Console",
+      "data": {
+        "message": "📨 [WEBSOCKET_MONITOR] WebSocket message received: {\"action\":\"built\",\"hash\":\"102\",\"errors\":[],\"warnings\":[]}"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:16.013Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:3000/_next/static/chunks/src_app_campaigns_page_tsx_2eded05f._.js",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/campaigns",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "sec-ch-ua-mobile": "?0",
+          "accept": "*/*",
+          "cookie": "domainflow_session=ce2aaa9d4d1258dfc5ba326829b78ef3448e4a2c94102232a57233d738eb6c8ce17ace5a680d5a7e9db51e668b81af1b0b4ed6ee9c524388ee484d5f2ee5ae3a"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:16.013Z",
+      "level": "debug",
+      "message": "Network Request",
+      "data": {
+        "method": "GET",
+        "url": "http://localhost:8080/api/v2/campaigns",
+        "headers": {
+          "sec-ch-ua-platform": "\"Linux\"",
+          "referer": "http://localhost:3000/",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+          "sec-ch-ua-mobile": "?0",
+          "x-requested-with": "XMLHttpRequest",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+          "content-type": "application/json",
+          "accept": "*/*",
+          "cookie": "domainflow_session=ce2aaa9d4d1258dfc5ba326829b78ef3448e4a2c94102232a57233d738eb6c8ce17ace5a680d5a7e9db51e668b81af1b0b4ed6ee9c524388ee484d5f2ee5ae3a"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:16.035Z",
+      "level": "error",
+      "message": "Failed to navigate to campaigns",
+      "data": {
+        "error": "this.page.waitForTimeout is not a function"
+      }
+    },
+    {
+      "timestamp": "2025-07-04T09:39:16.035Z",
+      "level": "error",
+      "message": "Test execution failed",
+      "data": {
+        "error": "this.page.waitForTimeout is not a function"
+      }
+    }
+  ],
+  "summary": {
+    "overallSuccess": false,
+    "criticalIssues": [
+      "Campaigns navigation failed: this.page.waitForTimeout is not a function",
+      "Test execution failed: this.page.waitForTimeout is not a function"
+    ],
+    "websocketStatus": "Failed",
+    "streamingStatus": "No updates detected"
+  }
+}

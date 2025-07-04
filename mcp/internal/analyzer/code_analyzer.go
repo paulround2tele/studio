@@ -815,23 +815,28 @@ func BrowseWithPlaywrightActions(url string, actions []models.UIAction) (models.
 	return models.PlaywrightResult{URL: currentURL, HTML: html, Screenshot: screenshotPath, HTMLPath: htmlPath}, nil
 }
 
-// ParseApiSchema analyzes API schema from Go files
+// ParseApiSchema analyzes API schema from Go files with enhanced business domain awareness
 func ParseApiSchema(apiDir string) (interface{}, error) {
 	var schema struct {
-		Routes     []models.Route         `json:"routes"`
-		Models     []models.GoModel       `json:"models"`
-		Handlers   []models.Handler       `json:"handlers"`
-		Middleware []models.Middleware    `json:"middleware"`
-		Types      map[string]interface{} `json:"types"`
+		Routes          []models.Route                 `json:"routes"`
+		Models          []models.GoModel               `json:"models"`
+		Handlers        []models.Handler               `json:"handlers"`
+		Middleware      []models.Middleware            `json:"middleware"`
+		Types           map[string]interface{}         `json:"types"`
+		BusinessDomains []models.BusinessDomain        `json:"businessDomains"`
+		DomainRoutes    map[string][]models.Route      `json:"domainRoutes"`
+		OpenAPISpecs    map[string]interface{}         `json:"openApiSpecs"`
 	}
 
-	// Parse routes
+	// Parse routes with business domain categorization
 	routes, err := ParseGinRoutes(filepath.Join(apiDir, "main.go"))
 	if err == nil {
 		schema.Routes = routes
+		// Categorize routes by business domain
+		schema.DomainRoutes = categorizeRoutesByDomain(routes)
 	}
 
-	// Parse models
+	// Parse models with enhanced domain detection
 	models, err := parseModelsFromDir(apiDir)
 	if err == nil {
 		schema.Models = models
@@ -843,7 +848,7 @@ func ParseApiSchema(apiDir string) (interface{}, error) {
 		schema.Handlers = handlers
 	}
 
-	// Parse middleware
+	// Parse middleware with business domain context
 	middleware, err := ParseMiddleware(apiDir)
 	if err == nil {
 		schema.Middleware = middleware
@@ -855,7 +860,481 @@ func ParseApiSchema(apiDir string) (interface{}, error) {
 		schema.Types = types
 	}
 
+	// Parse business domains
+	businessDomains, err := ParseBusinessDomains(apiDir)
+	if err == nil {
+		schema.BusinessDomains = businessDomains
+	}
+
+	// Parse OpenAPI specifications for new domains
+	openApiSpecs, err := parseOpenAPISpecs(apiDir)
+	if err == nil {
+		schema.OpenAPISpecs = openApiSpecs
+	}
+
 	return schema, nil
+}
+
+// categorizeRoutesByDomain categorizes routes by their business domain
+func categorizeRoutesByDomain(routes []models.Route) map[string][]models.Route {
+	domainRoutes := make(map[string][]models.Route)
+	
+	for _, route := range routes {
+		domain := categorizeRouteToDomain(route.Path)
+		domainRoutes[domain] = append(domainRoutes[domain], route)
+	}
+	
+	return domainRoutes
+}
+
+// parseOpenAPISpecs parses OpenAPI specifications for business domains
+func parseOpenAPISpecs(apiDir string) (map[string]interface{}, error) {
+	specs := make(map[string]interface{})
+	
+	// Look for API specification files in the new business domains
+	specDirs := []string{
+		"keyword-sets",
+		"proxy-pools",
+		"campaigns",
+		"personas",
+		"proxies",
+		"auth",
+		"config",
+	}
+	
+	for _, specDir := range specDirs {
+		specPath := filepath.Join(apiDir, specDir, "spec.go")
+		if _, err := os.Stat(specPath); err == nil {
+			// Parse the spec file to extract OpenAPI definitions
+			specData, err := parseSpecFile(specPath)
+			if err == nil {
+				specs[specDir] = specData
+			}
+		}
+	}
+	
+	return specs, nil
+}
+
+// parseSpecFile extracts OpenAPI specification data from spec.go files
+func parseSpecFile(specPath string) (interface{}, error) {
+	content, err := os.ReadFile(specPath)
+	if err != nil {
+		return nil, err
+	}
+	
+	lines := strings.Split(string(content), "\n")
+	specData := make(map[string]interface{})
+	
+	// Extract key information from the spec file
+	for i, line := range lines {
+		// Look for function definitions that add paths
+		if strings.Contains(line, "func Add") && strings.Contains(line, "Paths") {
+			funcName := extractFunctionName(line)
+			specData["pathFunction"] = funcName
+		}
+		
+		// Look for endpoint definitions
+		if strings.Contains(line, "OperationID:") {
+			operationID := extractQuotedValue(line)
+			if operationID != "" {
+				if specData["operations"] == nil {
+					specData["operations"] = []string{}
+				}
+				operations := specData["operations"].([]string)
+				specData["operations"] = append(operations, operationID)
+			}
+		}
+		
+		// Look for schema definitions
+		if strings.Contains(line, "spec.Components.Schemas[") {
+			schemaName := extractSchemaName(line)
+			if schemaName != "" {
+				if specData["schemas"] == nil {
+					specData["schemas"] = []string{}
+				}
+				schemas := specData["schemas"].([]string)
+				specData["schemas"] = append(schemas, schemaName)
+			}
+		}
+		
+		// Extract API paths
+		if strings.Contains(line, "spec.Paths.Set(") {
+			path := extractPathFromSetCall(line)
+			if path != "" {
+				if specData["paths"] == nil {
+					specData["paths"] = []string{}
+				}
+				paths := specData["paths"].([]string)
+				specData["paths"] = append(paths, path)
+			}
+		}
+		
+		// Add line number for reference
+		_ = i // Line number available if needed
+	}
+	
+	return specData, nil
+}
+
+// Helper functions for parsing spec files
+func extractFunctionName(line string) string {
+	parts := strings.Fields(line)
+	for i, part := range parts {
+		if part == "func" && i+1 < len(parts) {
+			funcName := parts[i+1]
+			if parenIdx := strings.Index(funcName, "("); parenIdx != -1 {
+				return funcName[:parenIdx]
+			}
+			return funcName
+		}
+	}
+	return ""
+}
+
+func extractQuotedValue(line string) string {
+	start := strings.Index(line, "\"")
+	if start == -1 {
+		return ""
+	}
+	end := strings.Index(line[start+1:], "\"")
+	if end == -1 {
+		return ""
+	}
+	return line[start+1 : start+1+end]
+}
+
+func extractSchemaName(line string) string {
+	start := strings.Index(line, "[\"")
+	if start == -1 {
+		return ""
+	}
+	end := strings.Index(line[start+2:], "\"]")
+	if end == -1 {
+		return ""
+	}
+	return line[start+2 : start+2+end]
+}
+
+func extractPathFromSetCall(line string) string {
+	start := strings.Index(line, "(\"")
+	if start == -1 {
+		return ""
+	}
+	end := strings.Index(line[start+2:], "\"")
+	if end == -1 {
+		return ""
+	}
+	return line[start+2 : start+2+end]
+}
+
+// Enhanced dependency analysis for new business domains
+func GetEnhancedDependencies(dirPath string) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+	
+	// Get standard dependencies
+	deps, err := GetDependencies(dirPath)
+	if err != nil {
+		return result, err
+	}
+	result["dependencies"] = deps
+	
+	// Analyze internal service dependencies
+	internalDeps, err := analyzeInternalDependencies(dirPath)
+	if err == nil {
+		result["internalDependencies"] = internalDeps
+	}
+	
+	// Analyze business domain dependencies
+	domainDeps, err := analyzeBusinessDomainDependencies(dirPath)
+	if err == nil {
+		result["businessDomainDependencies"] = domainDeps
+	}
+	
+	return result, nil
+}
+
+// analyzeInternalDependencies analyzes dependencies between internal services
+func analyzeInternalDependencies(dirPath string) (map[string][]string, error) {
+	internalDeps := make(map[string][]string)
+	
+	// Key internal services to analyze
+	services := []string{
+		"keywordextractor",
+		"keywordscanner",
+		"proxymanager",
+		"migrationverifier",
+		"schemavalidator",
+	}
+	
+	for _, service := range services {
+		servicePath := filepath.Join(dirPath, "internal", service)
+		if _, err := os.Stat(servicePath); err == nil {
+			deps, err := extractServiceDependencies(servicePath)
+			if err == nil {
+				internalDeps[service] = deps
+			}
+		}
+	}
+	
+	return internalDeps, nil
+}
+
+// extractServiceDependencies extracts dependencies from a service directory
+func extractServiceDependencies(servicePath string) ([]string, error) {
+	var dependencies []string
+	
+	err := filepath.Walk(servicePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+		
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		
+		lines := strings.Split(string(content), "\n")
+		for _, line := range lines {
+			// Look for internal imports
+			if strings.Contains(line, "github.com/fntelecomllc/studio/backend/internal/") {
+				if importPath := extractImportPath(line); importPath != "" {
+					dependencies = append(dependencies, importPath)
+				}
+			}
+		}
+		
+		return nil
+	})
+	
+	return dependencies, err
+}
+
+// extractImportPath extracts import path from import line
+func extractImportPath(line string) string {
+	line = strings.TrimSpace(line)
+	if strings.HasPrefix(line, "\"") && strings.HasSuffix(line, "\"") {
+		return line[1 : len(line)-1]
+	}
+	
+	// Handle imports with aliases
+	parts := strings.Fields(line)
+	for _, part := range parts {
+		if strings.HasPrefix(part, "\"") && strings.HasSuffix(part, "\"") {
+			return part[1 : len(part)-1]
+		}
+	}
+	
+	return ""
+}
+
+// analyzeBusinessDomainDependencies analyzes dependencies between business domains
+func analyzeBusinessDomainDependencies(dirPath string) (map[string]interface{}, error) {
+	domainDeps := make(map[string]interface{})
+	
+	// Business domains to analyze
+	domains := map[string]string{
+		"keyword-extraction": "keywordextractor",
+		"keyword-scanning":   "keywordscanner",
+		"proxy-management":   "proxymanager",
+		"campaign-management": "campaigns",
+		"persona-management":  "personas",
+	}
+	
+	for domain, serviceDir := range domains {
+		servicePath := filepath.Join(dirPath, "internal", serviceDir)
+		if _, err := os.Stat(servicePath); err == nil {
+			deps, err := analyzeBusinessDomainCrossDependencies(servicePath, domains)
+			if err == nil {
+				domainDeps[domain] = deps
+			}
+		}
+	}
+	
+	return domainDeps, nil
+}
+
+// analyzeBusinessDomainCrossDependencies analyzes cross-dependencies between business domains
+func analyzeBusinessDomainCrossDependencies(servicePath string, domains map[string]string) (map[string]interface{}, error) {
+	crossDeps := make(map[string]interface{})
+	
+	err := filepath.Walk(servicePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+		
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		
+		// Analyze cross-references to other business domains
+		for domain, serviceDir := range domains {
+			if strings.Contains(string(content), serviceDir) {
+				if crossDeps["references"] == nil {
+					crossDeps["references"] = []string{}
+				}
+				refs := crossDeps["references"].([]string)
+				crossDeps["references"] = append(refs, domain)
+			}
+		}
+		
+		return nil
+	})
+	
+	return crossDeps, err
+}
+
+// Enhanced security analysis for new business domains
+func GetEnhancedSecurityAnalysis(dirPath string) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+	
+	// Get standard security policies
+	policies, err := GetSecurityPolicies(dirPath)
+	if err == nil {
+		result["securityPolicies"] = policies
+	}
+	
+	// Analyze business domain authorization patterns
+	authPatterns, err := analyzeBusinessDomainAuthPatterns(dirPath)
+	if err == nil {
+		result["businessDomainAuthPatterns"] = authPatterns
+	}
+	
+	// Analyze new authentication mechanisms
+	authMechanisms, err := analyzeEnhancedAuthMechanisms(dirPath)
+	if err == nil {
+		result["enhancedAuthMechanisms"] = authMechanisms
+	}
+	
+	return result, nil
+}
+
+// analyzeBusinessDomainAuthPatterns analyzes authorization patterns for business domains
+func analyzeBusinessDomainAuthPatterns(dirPath string) (map[string]interface{}, error) {
+	authPatterns := make(map[string]interface{})
+	
+	// Analyze API directories for authorization patterns
+	apiDirs := []string{
+		"keyword-sets",
+		"proxy-pools",
+		"campaigns",
+		"personas",
+		"proxies",
+	}
+	
+	for _, apiDir := range apiDirs {
+		apiPath := filepath.Join(dirPath, "api", apiDir)
+		if _, err := os.Stat(apiPath); err == nil {
+			patterns, err := extractAuthPatternsFromAPI(apiPath)
+			if err == nil {
+				authPatterns[apiDir] = patterns
+			}
+		}
+	}
+	
+	return authPatterns, nil
+}
+
+// extractAuthPatternsFromAPI extracts authorization patterns from API files
+func extractAuthPatternsFromAPI(apiPath string) (map[string]interface{}, error) {
+	patterns := make(map[string]interface{})
+	
+	err := filepath.Walk(apiPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+		
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		
+		contentStr := string(content)
+		
+		// Look for session auth patterns
+		if strings.Contains(contentStr, `"sessionAuth"`) {
+			patterns["sessionAuth"] = true
+		}
+		
+		// Look for API key patterns
+		if strings.Contains(contentStr, `"apiKey"`) || strings.Contains(contentStr, "API_KEY") {
+			patterns["apiKeyAuth"] = true
+		}
+		
+		// Look for role-based access patterns
+		if strings.Contains(contentStr, "role") || strings.Contains(contentStr, "permission") {
+			patterns["roleBasedAccess"] = true
+		}
+		
+		return nil
+	})
+	
+	return patterns, err
+}
+
+// analyzeEnhancedAuthMechanisms analyzes enhanced authentication mechanisms
+func analyzeEnhancedAuthMechanisms(dirPath string) ([]string, error) {
+	var mechanisms []string
+	
+	authDirs := []string{
+		filepath.Join(dirPath, "internal", "middleware"),
+		filepath.Join(dirPath, "api", "auth"),
+	}
+	
+	for _, authDir := range authDirs {
+		if _, err := os.Stat(authDir); err == nil {
+			mechs, err := extractAuthMechanisms(authDir)
+			if err == nil {
+				mechanisms = append(mechanisms, mechs...)
+			}
+		}
+	}
+	
+	return mechanisms, nil
+}
+
+// extractAuthMechanisms extracts authentication mechanisms from directory
+func extractAuthMechanisms(authDir string) ([]string, error) {
+	var mechanisms []string
+	
+	err := filepath.Walk(authDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || !strings.HasSuffix(path, ".go") {
+			return err
+		}
+		
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		
+		contentStr := strings.ToLower(string(content))
+		
+		// Detect various authentication mechanisms
+		if strings.Contains(contentStr, "jwt") || strings.Contains(contentStr, "token") {
+			mechanisms = append(mechanisms, "JWT/Token Authentication")
+		}
+		
+		if strings.Contains(contentStr, "session") {
+			mechanisms = append(mechanisms, "Session-based Authentication")
+		}
+		
+		if strings.Contains(contentStr, "oauth") {
+			mechanisms = append(mechanisms, "OAuth Authentication")
+		}
+		
+		if strings.Contains(contentStr, "basic auth") {
+			mechanisms = append(mechanisms, "Basic Authentication")
+		}
+		
+		if strings.Contains(contentStr, "api key") || strings.Contains(contentStr, "apikey") {
+			mechanisms = append(mechanisms, "API Key Authentication")
+		}
+		
+		return nil
+	})
+	
+	return mechanisms, err
 }
 
 // parseModelsFromDir extracts model definitions from a directory

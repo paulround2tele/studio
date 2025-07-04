@@ -586,6 +586,142 @@ func (s *JSONRPCServer) handleListTools(ctx context.Context, params json.RawMess
 				"properties": map[string]interface{}{},
 			},
 		},
+
+		// New Frontend Analysis Tools
+		{
+			Name:        "frontend_api_client_analysis",
+			Description: "[Frontend] Analyze sophisticated TypeScript API client structure and capabilities",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+
+		// New Backend Business Domain Tools
+		{
+			Name:        "get_business_domains",
+			Description: "Analyze business domains within the backend architecture",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_advanced_tooling",
+			Description: "Analyze advanced development and database tooling",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_keyword_extraction_services",
+			Description: "Analyze keyword extraction service implementations and patterns",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_keyword_scanning_services",
+			Description: "Analyze keyword scanning service implementations and patterns",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_proxy_management_services",
+			Description: "Analyze proxy management service implementations and patterns",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_keyword_set_api_specs",
+			Description: "Analyze keyword-sets API specifications and endpoints",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_proxy_pool_api_specs",
+			Description: "Analyze proxy-pools API specifications and endpoints",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_database_tooling_analysis",
+			Description: "Analyze advanced database tooling including migration verifiers and schema validators",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_business_domain_routes",
+			Description: "Analyze API routes categorized by business domains",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+
+		// Enhanced Dependency and Security Analysis Tools
+		{
+			Name:        "get_enhanced_dependencies",
+			Description: "Get enhanced dependency analysis with business domain mapping",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_enhanced_security_analysis",
+			Description: "Get enhanced security analysis for business domains",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_enhanced_api_schema",
+			Description: "Get enhanced API schema analysis with business domain awareness",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+
+		// Business Domain Middleware and Dependencies
+		{
+			Name:        "get_business_domain_middleware",
+			Description: "Analyze middleware specific to business domains",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_internal_service_dependencies",
+			Description: "Analyze dependencies between internal services",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
+		{
+			Name:        "get_business_domain_cross_dependencies",
+			Description: "Analyze cross-dependencies between business domains",
+			InputSchema: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
+			},
+		},
 	}
 
 	log.Printf("Returning %d MCP tools", len(tools))
@@ -733,6 +869,46 @@ func (s *JSONRPCServer) handleCallTool(ctx context.Context, params json.RawMessa
 		return s.callGetFrontendTestCoverage()
 	case "frontend_react_component_tests":
 		return s.callGetComponentToTestMap()
+
+	// New Frontend Analysis Tools
+	case "frontend_api_client_analysis":
+		return s.callGetFrontendAPIClientAnalysis()
+
+	// New Backend Business Domain Tools
+	case "get_business_domains":
+		return s.callGetBusinessDomains()
+	case "get_advanced_tooling":
+		return s.callGetAdvancedTooling()
+	case "get_keyword_extraction_services":
+		return s.callGetKeywordExtractionServices()
+	case "get_keyword_scanning_services":
+		return s.callGetKeywordScanningServices()
+	case "get_proxy_management_services":
+		return s.callGetProxyManagementServices()
+	case "get_keyword_set_api_specs":
+		return s.callGetKeywordSetAPISpecs()
+	case "get_proxy_pool_api_specs":
+		return s.callGetProxyPoolAPISpecs()
+	case "get_database_tooling_analysis":
+		return s.callGetDatabaseToolingAnalysis()
+	case "get_business_domain_routes":
+		return s.callGetBusinessDomainRoutes()
+
+	// Enhanced Dependency and Security Analysis Tools
+	case "get_enhanced_dependencies":
+		return s.callGetEnhancedDependencies()
+	case "get_enhanced_security_analysis":
+		return s.callGetEnhancedSecurityAnalysis()
+	case "get_enhanced_api_schema":
+		return s.callGetEnhancedAPISchema()
+
+	// Business Domain Middleware and Dependencies
+	case "get_business_domain_middleware":
+		return s.callGetBusinessDomainMiddleware()
+	case "get_internal_service_dependencies":
+		return s.callGetInternalServiceDependencies()
+	case "get_business_domain_cross_dependencies":
+		return s.callGetBusinessDomainCrossDependencies()
 
 	default:
 		return map[string]interface{}{

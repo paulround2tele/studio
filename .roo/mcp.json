@@ -71,10 +71,26 @@
         "frontend_nextjs_app_routes",
         "frontend_react_component_props",
         "frontend_test_coverage",
-        "frontend_react_component_tests"
+        "frontend_react_component_tests",
+        "frontend_api_client_analysis",
+        "get_business_domains",
+        "get_keyword_extraction_services",
+        "get_keyword_scanning_services",
+        "get_proxy_management_services",
+        "get_keyword_set_api_specs",
+        "get_proxy_pool_api_specs",
+        "get_advanced_tooling",
+        "get_database_tooling_analysis",
+        "get_business_domain_cross_dependencies",
+        "get_internal_service_dependencies",
+        "get_business_domain_middleware",
+        "get_enhanced_api_schema",
+        "get_enhanced_security_analysis",
+        "get_enhanced_dependencies",
+        "get_business_domain_routes"
       ],
       "timeout": 300,
-      "disabled": true
+      "disabled": false
     }
   }
 }

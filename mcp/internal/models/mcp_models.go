@@ -48,6 +48,7 @@ type Service struct {
 	File      string   `json:"file"`
 	Methods   []string `json:"methods"`
 	Interface string   `json:"interface,omitempty"`
+	Category  string   `json:"category,omitempty"`
 }
 
 // ConfigField represents a single field in the application's configuration.
@@ -60,10 +61,12 @@ type ConfigField struct {
 
 // Middleware represents a single middleware function.
 type Middleware struct {
-	Name     string `json:"name"`
-	File     string `json:"file"`
-	Line     int    `json:"line"`
-	Receiver string `json:"receiver,omitempty"`
+	Name           string `json:"name"`
+	File           string `json:"file"`
+	Line           int    `json:"line"`
+	Receiver       string `json:"receiver,omitempty"`
+	Type           string `json:"type,omitempty"`
+	BusinessDomain string `json:"businessDomain,omitempty"`
 }
 
 // WebSocketEndpoint represents a route that establishes a WebSocket connection.
@@ -670,3 +673,21 @@ const (
 	CampaignTypeDNSValidation         = "dns_validation"
 	CampaignTypeHTTPKeywordValidation = "http_keyword_validation"
 )
+
+// BusinessDomain represents a business domain within the application
+type BusinessDomain struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Path        string   `json:"path"`
+	Services    []string `json:"services"`
+	APIs        []string `json:"apis"`
+}
+
+// AdvancedTool represents advanced development and database tooling
+type AdvancedTool struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	Path        string `json:"path"`
+	Category    string `json:"category"`
+}

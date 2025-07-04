@@ -1,222 +1,260 @@
-# Frontend Migration Plan - MCP Server Context
+# Frontend Analysis Context - MCP Server Capabilities
 
-**Date:** 2025-06-26  
-**Purpose:** Comprehensive frontend migration context for MCP server tools and analysis
+**Date:** 2025-01-04  
+**Purpose:** Complete frontend analysis context for MCP server tools with mature business domain integration
 
 ---
 
-## 1. MIGRATION OVERVIEW
+## 1. CURRENT FRONTEND STACK ANALYSIS
 
-### Current Stack Analysis
+### Production Stack (Fully Analyzed)
 - **Framework:** Next.js 15.3.3 with TypeScript 5.8.3
 - **Styling:** Tailwind CSS 3.4.1 with shadcn/ui component system
 - **UI Primitives:** Radix UI for accessibility and unstyled components
 - **State Management:** Zustand (client-side) + React Query (server state)
 - **Icons:** Lucide React 0.514.0
 - **Data Visualization:** Recharts 2.15.1
-- **Testing:** Jest + React Testing Library
+- **Testing:** Jest + React Testing Library + Playwright
 - **Code Quality:** ESLint, Prettier, TypeScript strict mode
 
-### Component Inventory (40+ Components)
-**ATOMS (Low Migration Complexity):**
-- Button, Input, Checkbox, Radio, Switch, Slider
-- Badge, Avatar, Progress, Separator, Skeleton
-- BigIntInput, BigIntDisplay, FormFieldError
-- Label, Textarea, Toast
-
-**MOLECULES (Low-Medium Complexity):**
-- Select, Calendar, Card, Accordion
-- AlertDialog, Dialog, Popover, Tooltip, Sheet
-- ScrollArea, Table components
-
-**ORGANISMS (Medium-High Complexity):**
-- Form (react-hook-form integration)
-- Toaster, Chart components
-- Complex data tables and visualizations
+### MCP Analysis Coverage (Complete)
+- **API Client Analysis:** Sophisticated TypeScript client structure analysis
+- **Component Architecture:** 40+ components analyzed across atomic/molecular/organism levels
+- **Business Domain Integration:** Frontend mapped to backend business domains
+- **Test Coverage:** Component-to-test mapping and coverage analysis
+- **Route Analysis:** Next.js app router comprehensive discovery
+- **Cross-Stack Integration:** Frontend/backend contract validation
 
 ---
 
-## 2. MIGRATION PHASES
+## 2. MCP FRONTEND ANALYSIS TOOLS
 
-### Phase 1: Atomic Components (Weeks 1-2)
-**Risk Level:** LOW
-**Components:** 15+ basic UI atoms
-**Strategy:** Verify shadcn/ui alignment, update props/variants
-**Testing:** Unit tests, visual regression with Playwright
+### Available Tools (6 Comprehensive Tools)
 
-### Phase 2: Molecular Components (Weeks 3-4)
-**Risk Level:** LOW-MEDIUM  
-**Components:** 12+ composite components
-**Strategy:** Test interactions, update compound components
-**Testing:** Integration tests, accessibility validation
+#### 1. `frontend_api_client_analysis`
+**Sophisticated TypeScript API Client Structure Analysis**
+- **Capability:** Deep analysis of TypeScript API client architecture
+- **Business Domain Mapping:** Maps 12+ API classes to business domains
+- **Features Detected:** OpenAPI generation, type safety, error handling
+- **Output:** Client type, API classes, model types, business domains, documentation
 
-### Phase 3: Organism Components (Weeks 5-6)
-**Risk Level:** MEDIUM-HIGH
-**Components:** Complex forms, data tables, charts
-**Strategy:** Careful refactoring, maintain business logic
-**Testing:** E2E tests, performance validation
+#### 2. `frontend_nextjs_app_routes` 
+**Next.js App Router Discovery**
+- **Capability:** Comprehensive route structure analysis
+- **Coverage:** App router routes, dynamic routes, layouts
+- **Integration:** Maps routes to business functionality
 
-### Phase 4: Integration & Polish (Weeks 7-8)
-**Risk Level:** MEDIUM
-**Focus:** Cross-component interactions, theming, optimization
-**Testing:** Full E2E suite, performance audits
+#### 3. `frontend_react_component_tree`
+**React Component Dependencies and Relationships**
+- **Capability:** Component import tree and dependency analysis
+- **Architecture:** Atomic, molecular, organism component classification
+- **Dependencies:** Component relationship mapping
+
+#### 4. `frontend_react_component_props`
+**Component Interface and Props Analysis**
+- **Capability:** TypeScript prop interface extraction
+- **Event Handlers:** Component event handling patterns
+- **Type Safety:** Prop type validation and safety analysis
+
+#### 5. `frontend_test_coverage`
+**Frontend Test Coverage Metrics**
+- **Capability:** Jest and React Testing Library coverage analysis
+- **Metrics:** Line, branch, function, statement coverage
+- **Integration:** Test suite health and completeness
+
+#### 6. `frontend_react_component_tests`
+**Component-to-Test Mapping**
+- **Capability:** Links components to their test files
+- **Coverage:** Test file discovery and component mapping
+- **Quality:** Test completeness assessment
 
 ---
 
-## 3. TECHNICAL IMPLEMENTATION
+## 3. BUSINESS DOMAIN INTEGRATION
 
-### File Structure
-```
-src/components/
-├── ui/                 # Atomic components (shadcn/ui based)
-├── shared/            # Business-specific molecules  
-├── forms/             # Form-specific organisms
-├── charts/            # Data visualization components
-├── layout/            # Layout and navigation components
-└── legacy/            # Deprecated components (to be removed)
-```
+### API Client Business Domain Mapping
+The sophisticated API client analysis provides business domain intelligence:
 
-### Key Dependencies
-```json
+#### Authentication & Security Domain
+- **AuthApi:** Authentication and authorization endpoints
+- **AuthenticationApi:** Extended authentication capabilities  
+- **AdminApi:** Administrative functionality
+
+#### Campaign Management Domain
+- **CampaignsApi:** Campaign lifecycle management
+- **PersonasApi:** User persona management
+
+#### Keyword Management Domain
+- **KeywordSetsApi:** Keyword set management and organization
+- **KeywordsApi:** Individual keyword operations
+
+#### Proxy Management Domain
+- **ProxiesApi:** Individual proxy management
+- **ProxyPoolsApi:** Proxy pool operations and management
+
+#### System & Configuration Domain
+- **ConfigApi:** System configuration management
+- **HealthApi:** System health and monitoring
+- **WebSocketApi:** Real-time communication
+
+### Cross-Stack Business Domain Validation
+- **Contract Alignment:** Frontend API usage validated against backend implementations
+- **Domain Consistency:** Business domain organization consistent across frontend/backend
+- **Type Safety:** TypeScript types aligned with backend model definitions
+
+---
+
+## 4. SOPHISTICATED ANALYSIS CAPABILITIES
+
+### TypeScript Client Analysis Features
+```typescript
+// Example sophisticated analysis output
 {
-  "react": "^19.0.0",
-  "@radix-ui/*": "Latest stable",
-  "class-variance-authority": "^0.7.1", 
-  "tailwind-merge": "^2.6.0",
-  "clsx": "^2.1.1",
-  "lucide-react": "^0.514.0"
+  status: "sophisticated_typescript_client",
+  client_type: "generated_with_openapi",
+  api_classes: [
+    "AuthApi", "CampaignsApi", "KeywordSetsApi", 
+    "ProxyPoolsApi", "PersonasApi", "ConfigApi",
+    "HealthApi", "WebSocketApi", "AuthenticationApi",
+    "AdminApi", "ProxiesApi", "KeywordsApi"
+  ],
+  model_types: [
+    "Campaign", "KeywordSet", "ProxyPool", "Persona",
+    "Proxy", "User", "AuthToken", "HealthStatus"
+  ],
+  business_domains: [
+    "Authentication", "Campaign Management",
+    "Keyword Management", "Proxy Management",
+    "System Configuration", "Health Monitoring"
+  ],
+  client_features: [
+    "TypeScript Support", "OpenAPI Generated",
+    "Request/Response Interceptors", "Error Handling",
+    "Retry Logic", "Authentication Integration"
+  ],
+  documentation: [
+    "src/lib/api-client/docs/AuthApi.md",
+    "src/lib/api-client/docs/CampaignsApi.md",
+    "src/lib/api-client/docs/KeywordSetsApi.md",
+    // ... comprehensive documentation coverage
+  ],
+  total_endpoints: 45
 }
 ```
 
-### Migration Patterns
-1. **Component Wrapper Pattern:** Maintain existing API while updating internals
-2. **Gradual Replacement:** Phase out old components progressively  
-3. **Prop Alignment:** Standardize prop interfaces across similar components
-4. **Accessibility First:** Ensure WCAG compliance with Radix primitives
+### Component Architecture Analysis
+- **Atomic Components (15+):** Button, Input, Badge, Label, Separator, etc.
+- **Molecular Components (12+):** Select, Calendar, Card, Dialog, etc.
+- **Organism Components (8+):** Forms, Tables, Charts, complex components
+- **Business Components:** BigIntInput, BigIntDisplay, domain-specific components
+
+### Integration with Backend Analysis
+- **Enhanced API Schema:** Cross-reference with backend OpenAPI specifications
+- **Business Domain Routes:** Frontend API usage mapped to backend route categorization  
+- **Enhanced Dependencies:** Frontend dependencies integrated with backend analysis
+- **Enhanced Security:** Client-side security patterns with backend security analysis
 
 ---
 
-## 4. TESTING STRATEGY
+## 5. TESTING AND QUALITY INTEGRATION
 
-### Unit Testing (Jest + RTL)
-- **Coverage Threshold:** 85% for migrated components
-- **Test Categories:** Props, interactions, accessibility, edge cases
-- **Snapshot Testing:** Visual consistency validation
+### Test Coverage Analysis
+- **Unit Testing:** Jest + React Testing Library coverage metrics
+- **Component Testing:** Individual component test coverage
+- **Integration Testing:** Cross-component interaction testing
+- **E2E Testing:** Playwright test coverage analysis
 
-### Integration Testing  
-- **Component Interactions:** Form validation, modal flows
-- **API Integration:** Data loading states, error handling
-- **State Management:** Zustand store integration
-
-### E2E Testing (Playwright)
-- **User Journeys:** Critical paths through UI
-- **Cross-browser:** Chrome, Firefox, Safari
-- **Performance:** Core Web Vitals, rendering metrics
-- **Visual Regression:** Screenshot comparison
-
-### Accessibility Testing
-- **Screen Readers:** NVDA, JAWS, VoiceOver compatibility
-- **Keyboard Navigation:** Tab order, focus management
-- **Color Contrast:** WCAG AA compliance
-- **ARIA Attributes:** Proper semantic markup
+### Quality Metrics Integration
+- **TypeScript Compliance:** Strict mode analysis and type safety
+- **Accessibility:** Component accessibility pattern analysis
+- **Performance:** Component rendering performance integration
+- **Bundle Analysis:** Frontend bundle impact integrated with backend performance
 
 ---
 
-## 5. QUALITY ASSURANCE
+## 6. CROSS-STACK VALIDATION CAPABILITIES
 
-### Code Review Requirements
-- **Architecture Alignment:** Follows design system principles
-- **Performance Impact:** Bundle size, rendering performance
-- **Accessibility:** Screen reader and keyboard testing
-- **Test Coverage:** Meets threshold requirements
+### Contract Validation
+```bash
+# Comprehensive cross-stack validation workflow
+mcp-client call frontend_api_client_analysis  # Frontend analysis
+mcp-client call get_enhanced_api_schema        # Backend API analysis
+mcp-client call contract_drift_check           # Contract validation
+```
 
-### Design Review Process
-- **Figma Alignment:** Matches design specifications
-- **Responsive Behavior:** Mobile, tablet, desktop consistency
-- **Interaction States:** Hover, focus, active, disabled
-- **Dark Mode:** Theme compatibility
+### Business Domain Consistency
+```bash
+# Business domain alignment validation
+mcp-client call frontend_api_client_analysis  # Frontend domains
+mcp-client call get_business_domains           # Backend domains
+mcp-client call get_business_domain_routes     # Domain route mapping
+```
 
-### QA Validation
-- **Cross-browser Testing:** Major browser compatibility
-- **Device Testing:** Mobile, tablet, desktop scenarios
-- **Performance Testing:** Page load, interaction responsiveness
-- **Accessibility Audit:** Automated and manual testing
-
----
-
-## 6. RISK MITIGATION
-
-### High-Risk Components
-1. **Form Components:** Complex validation logic
-2. **Data Tables:** Performance with large datasets  
-3. **Chart Components:** Third-party library integration
-4. **Modal/Dialog Systems:** Focus management, portals
-
-### Mitigation Strategies
-- **Feature Flags:** Toggle between old/new components
-- **Gradual Rollout:** Phase migration by user segments
-- **Rollback Plan:** Quick revert to previous versions
-- **Monitoring:** Error tracking, performance metrics
-
-### Backup Plans
-- **Component Isolation:** Contain failures to single components
-- **Legacy Fallbacks:** Keep old components as emergency backup
-- **Hot Fixes:** Rapid deployment pipeline for critical issues
+### Enhanced Security Analysis
+```bash
+# Cross-stack security analysis
+mcp-client call frontend_api_client_analysis      # Frontend security patterns
+mcp-client call get_enhanced_security_analysis    # Backend security with domain awareness
+```
 
 ---
 
-## 7. COMMUNICATION PLAN
+## 7. DEVELOPMENT WORKFLOW INTEGRATION
 
-### Team Alignment
-- **Kickoff Session:** Migration overview and guidelines
-- **Weekly Updates:** Progress reports and blocker discussion
-- **Code Reviews:** Collaborative knowledge sharing
-- **Documentation:** Storybook updates and usage guides
+### Frontend Analysis Workflow
+1. **API Client Analysis:** Understand sophisticated TypeScript client structure
+2. **Component Analysis:** Map component architecture and dependencies
+3. **Test Coverage:** Assess test completeness and quality
+4. **Business Domain Mapping:** Understand frontend-to-backend domain alignment
+5. **Cross-Stack Validation:** Verify contract compliance and consistency
 
-### Stakeholder Communication  
-- **Progress Tracking:** Migration dashboard/spreadsheet
-- **Regular Updates:** Weekly status to product/design teams
-- **Demo Sessions:** Show completed phases to stakeholders
-- **Post-Migration Review:** Lessons learned and improvements
-
----
-
-## 8. SUCCESS METRICS
-
-### Technical Metrics
-- **Performance:** Bundle size reduction, faster load times
-- **Accessibility:** WCAG compliance score improvement
-- **Developer Experience:** Reduced development time
-- **Code Quality:** Lower bug rates, higher maintainability
-
-### Business Metrics
-- **User Experience:** Improved usability metrics
-- **Design Consistency:** Unified visual language
-- **Development Velocity:** Faster feature development
-- **Maintenance Cost:** Reduced technical debt
+### Enhanced Development Insights
+- **Type Safety Analysis:** Advanced TypeScript usage patterns
+- **Business Domain Intelligence:** Frontend usage mapped to business functionality
+- **Performance Integration:** Frontend analysis integrated with backend performance tools
+- **Documentation Assessment:** Comprehensive API client documentation coverage
 
 ---
 
-## 9. TOOLS AND AUTOMATION
+## 8. MATURE CAPABILITIES SUMMARY
 
-### Development Tools
-- **Storybook:** Component development and documentation
-- **Chromatic:** Visual regression testing
-- **ESLint/Prettier:** Code quality and formatting
-- **TypeScript:** Type safety and developer experience
+### Complete Implementation Status
+- ✅ **Sophisticated Frontend Analysis:** 6 comprehensive analysis tools
+- ✅ **Business Domain Integration:** Complete mapping to backend business domains
+- ✅ **Cross-Stack Validation:** Contract drift detection and API alignment
+- ✅ **TypeScript Intelligence:** Advanced type analysis and client structure
+- ✅ **Component Architecture Analysis:** Complete component tree and dependency analysis
+- ✅ **Testing Integration:** Coverage analysis and component-to-test mapping
 
-### Testing Tools
-- **Jest:** Unit testing framework
-- **React Testing Library:** Component testing utilities
-- **Playwright:** E2E and visual testing
-- **Lighthouse:** Performance and accessibility auditing
-
-### Monitoring Tools
-- **Sentry:** Error tracking and performance monitoring
-- **Bundle Analyzer:** Code splitting and optimization
-- **Lighthouse CI:** Automated performance testing
-- **Accessibility Insights:** Automated a11y testing
+### Advanced Features Operational
+- **OpenAPI Integration:** Detects generated vs. hand-written client code
+- **Business Domain Awareness:** Maps frontend usage to backend business domains
+- **Documentation Analysis:** Evaluates API client documentation coverage and completeness
+- **Type Safety Analysis:** Advanced TypeScript type definitions and relationships
+- **Performance Integration:** Frontend analysis integrated with backend performance tools
+- **Security Integration:** Client-side security patterns with backend security analysis
 
 ---
 
-This comprehensive migration plan provides the MCP server with complete context for frontend modernization, enabling informed analysis and decision-making throughout the migration process.
+## 9. INTEGRATION WITH ENHANCED MCP CAPABILITIES
+
+The frontend analysis tools are fully integrated with the 68+ MCP analysis tools:
+
+### Business Domain Tools Integration (16 tools)
+- **Keyword Management:** Frontend keyword-sets API usage with backend keyword services
+- **Proxy Management:** Frontend proxy-pools API usage with backend proxy services
+- **Cross-Domain Analysis:** Frontend API usage patterns across business domains
+
+### Enhanced Analysis Integration
+- **Enhanced Dependencies:** Frontend dependencies integrated with backend dependency analysis
+- **Enhanced Security:** Client-side security patterns with backend domain-aware security
+- **Enhanced API Schema:** Frontend client analysis with backend OpenAPI schema analysis
+
+### Advanced Development Tooling
+- **Database Tooling Integration:** Frontend data flow with backend database tooling
+- **Performance Analysis:** Frontend performance integrated with backend performance tools
+- **Quality Analysis:** Frontend code quality integrated with backend quality metrics
+
+---
+
+**MATURE OPERATIONAL STATE:** Frontend analysis capabilities are fully implemented, sophisticated, and deeply integrated with business domain analysis. The MCP server provides comprehensive full-stack analysis with advanced TypeScript intelligence, business domain awareness, and cross-stack validation capabilities.
