@@ -297,14 +297,13 @@ function applyRuntimeOverrides(config: EnvironmentConfig): EnvironmentConfig {
       console.info('Debug mode enabled via localStorage');
     }
     
-    // Add diagnostic logging
-    console.log('API URL resolution:', {
-      envUrl: process.env.NEXT_PUBLIC_API_URL,
-      storedOverride: storedApiUrl,
-      isLocalhost: isLocalhostUrl,
-      finalUrl: overriddenConfig.api.baseUrl,
-      environment: isProduction ? 'production' : isDevelopment ? 'development' : 'unknown'
-    });
+    // Only log in debug mode to reduce noise
+    if (overriddenConfig.features.enableDebugMode) {
+      console.debug('API URL auto-detection:', {
+        autoDetectedUrl: overriddenConfig.api.baseUrl,
+        environment: isDevelopment ? 'development' : 'production'
+      });
+    }
     
   } catch (error) {
     console.warn('Failed to apply runtime overrides:', error);

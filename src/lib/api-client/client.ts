@@ -28,7 +28,9 @@ const detectBackendUrl = async (): Promise<string> => {
             });
             
             if (response.ok) {
-              console.log(`✅ Backend detected at http://${host}:${port} using ${testUrl}`);
+              if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+                console.debug(`✅ Backend detected at http://${host}:${port} using ${testUrl}`);
+              }
               return `http://${host}:${port}`;
             }
           } catch (_innerError) {
@@ -38,14 +40,18 @@ const detectBackendUrl = async (): Promise<string> => {
         }
       } catch (_error) {
         // Continue to next port
-        console.log(`❌ No backend found at http://${host}:${port}`);
+        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+          console.debug(`❌ No backend found at http://${host}:${port}`);
+        }
         continue;
       }
     }
   }
   
   // Fallback: assume same origin (for SSR or if detection fails)
-  console.log('⚠️ Backend auto-detection failed, using same origin');
+  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+    console.debug('⚠️ Backend auto-detection failed, using same origin');
+  }
   return '';
 };
 
@@ -53,12 +59,16 @@ const getBackendUrl = async (): Promise<string> => {
   // If explicitly configured, use it
   const configured = process.env.NEXT_PUBLIC_API_URL;
   if (configured && configured.trim()) {
-    console.log(`🔧 Using configured backend URL: ${configured}`);
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+      console.debug(`🔧 Using configured backend URL: ${configured}`);
+    }
     return configured;
   }
   
   // Otherwise, auto-detect
-  console.log('🔍 Auto-detecting backend URL...');
+  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+    console.debug('🔍 Auto-detecting backend URL...');
+  }
   return await detectBackendUrl();
 };
 
@@ -208,13 +218,14 @@ export class ApiClient {
       retryDelay: parseInt(process.env.NEXT_PUBLIC_API_RETRY_DELAY || '2000'), // Increased base delay
     };
     
-    // Enhanced debug logging for API client initialization
-    console.log('API Client Configuration:', {
-      providedBaseUrl: baseUrl,
-      envApiUrl: process.env.NEXT_PUBLIC_API_URL,
-      willAutoDetect: !baseUrl && !process.env.NEXT_PUBLIC_API_URL?.trim(),
-      environment: process.env.NODE_ENV
-    });
+    // Only log API client configuration in debug mode
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+      console.debug('API Client Configuration:', {
+        providedBaseUrl: baseUrl,
+        willAutoDetect: !baseUrl && !process.env.NEXT_PUBLIC_API_URL?.trim(),
+        environment: process.env.NODE_ENV
+      });
+    }
   }
   
   /**
@@ -231,28 +242,16 @@ export class ApiClient {
   private async getEffectiveBaseUrl(path: string): Promise<string> {
     const baseUrl = await this.getEffectiveBackendUrl();
     
-    // DIAGNOSTIC: Log route construction decision making
-    console.log('🔍 ROUTE_CONSTRUCTION_DEBUG:');
-    console.log(`  Input path: ${path}`);
-    console.log(`  Detected backend URL: ${baseUrl}`);
-    
     // Auth routes (/auth/*) are served directly from backend root
     if (path.startsWith('/auth') || path.startsWith('/me') || path.startsWith('/change-password')) {
-      console.log(`  ✅ AUTH_ROUTE_DETECTED: Using base URL without /api/v2 prefix`);
-      console.log(`  Final base URL for auth: ${baseUrl}`);
       return baseUrl;
     }
     
     // API routes need /api/v2 prefix if not already included
     if (baseUrl.endsWith('/api/v2')) {
-      console.log(`  ✅ API_ROUTE_WITH_PREFIX: Base URL already has /api/v2`);
-      console.log(`  Final base URL for API: ${baseUrl}`);
       return baseUrl;
     } else {
-      const apiBaseUrl = `${baseUrl}/api/v2`;
-      console.log(`  ✅ API_ROUTE_ADD_PREFIX: Adding /api/v2 to base URL`);
-      console.log(`  Final base URL for API: ${apiBaseUrl}`);
-      return apiBaseUrl;
+      return `${baseUrl}/api/v2`;
     }
   }
 
@@ -284,29 +283,11 @@ export class ApiClient {
     // Retry logic with exponential backoff
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
-        console.log('🚀 API_CLIENT_DEBUG - Making request attempt:');
-        console.log(`  Attempt: ${attempt}, Method: ${method}, URL: ${url.toString()}`);
-        console.log(`  BaseURL: ${effectiveBaseUrl}, Path: ${path}, HasBody: ${!!options?.body}`);
-        
-        // CRITICAL DIAGNOSTIC: Log exact URL construction for debugging 404 issues
-        console.log('🔍 CRITICAL_URL_CONSTRUCTION_VALIDATION:');
-        console.log(`  Original Path: ${path}`);
-        console.log(`  Effective Base URL: ${effectiveBaseUrl}`);
-        console.log(`  Constructed Full Path: ${effectiveBaseUrl}${path}`);
-        console.log(`  Final Request URL: ${url.toString()}`);
-        console.log(`  Is Auth Route: ${path.startsWith('/auth') || path.startsWith('/me') || path.startsWith('/change-password')}`);
-        
-        // DIAGNOSTIC: Route expectation validation
-        if (path.startsWith('/auth') || path.startsWith('/me') || path.startsWith('/change-password')) {
-          console.log('🔐 AUTH_ROUTE_VALIDATION:');
-          console.log(`  ✅ Should NOT have /api/v2 prefix`);
-          console.log(`  ✅ Expected to work: ${url.toString()}`);
-          console.log(`  ❌ Would fail at: ${effectiveBaseUrl}/api/v2${path}`);
-        } else {
-          console.log('🛠️ API_ROUTE_VALIDATION:');
-          console.log(`  ✅ Should HAVE /api/v2 prefix`);
-          console.log(`  ✅ Expected to work: ${url.toString()}`);
-          console.log(`  ❌ Would fail at: ${effectiveBaseUrl.replace('/api/v2', '')}${path}`);
+        // Only log detailed request info in debug mode
+        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+          console.debug('🚀 API_CLIENT_DEBUG - Making request attempt:');
+          console.debug(`  Attempt: ${attempt}, Method: ${method}, URL: ${url.toString()}`);
+          console.debug(`  BaseURL: ${effectiveBaseUrl}, Path: ${path}, HasBody: ${!!options?.body}`);
         }
 
         const controller = new AbortController();
@@ -326,9 +307,11 @@ export class ApiClient {
 
         clearTimeout(timeoutId);
 
-        console.log('API_CLIENT_DEBUG - Response received:');
-        console.log(`  Attempt: ${attempt}, Status: ${response.status} ${response.statusText}`);
-        console.log(`  OK: ${response.ok}, URL: ${response.url}`);
+        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+          console.debug('API_CLIENT_DEBUG - Response received:');
+          console.debug(`  Attempt: ${attempt}, Status: ${response.status} ${response.statusText}`);
+          console.debug(`  OK: ${response.ok}, URL: ${response.url}`);
+        }
 
         if (!response.ok) {
           let errorData;
@@ -363,7 +346,9 @@ export class ApiClient {
             const retryAfter = response.headers.get('Retry-After');
             const delay = retryAfter ? parseInt(retryAfter) * 1000 : this.config.retryDelay * Math.pow(2, attempt);
             
-            console.log(`API_CLIENT_DEBUG - Rate limited (429), retrying in ${delay}ms (attempt ${attempt}/${this.config.retryAttempts})`);
+            if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+              console.debug(`API_CLIENT_DEBUG - Rate limited (429), retrying in ${delay}ms (attempt ${attempt}/${this.config.retryAttempts})`);
+            }
             
             if (attempt < this.config.retryAttempts) {
               await new Promise(resolve => setTimeout(resolve, delay));
@@ -384,7 +369,9 @@ export class ApiClient {
             const jitter = Math.random() * 0.1 * exponentialDelay; // Add 10% jitter
             const delay = exponentialDelay + jitter;
             
-            console.log(`API_CLIENT_DEBUG - Server error, retrying in ${Math.round(delay)}ms (attempt ${attempt}/${this.config.retryAttempts})`);
+            if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+              console.debug(`API_CLIENT_DEBUG - Server error, retrying in ${Math.round(delay)}ms (attempt ${attempt}/${this.config.retryAttempts})`);
+            }
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
@@ -393,16 +380,18 @@ export class ApiClient {
         }
 
         const responseData = await response.json();
-        console.log('API_CLIENT_DEBUG - Successful response parsed:', {
-          url: url.toString(),
-          method: method,
-          status: response.status,
-          responseType: typeof responseData,
-          responseKeys: responseData && typeof responseData === 'object' ? Object.keys(responseData) : null,
-          responseKeysCount: responseData && typeof responseData === 'object' ? Object.keys(responseData).length : 0,
-          isEmptyObject: responseData && typeof responseData === 'object' && Object.keys(responseData).length === 0,
-          responseData: responseData
-        });
+        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+          console.debug('API_CLIENT_DEBUG - Successful response parsed:', {
+            url: url.toString(),
+            method: method,
+            status: response.status,
+            responseType: typeof responseData,
+            responseKeys: responseData && typeof responseData === 'object' ? Object.keys(responseData) : null,
+            responseKeysCount: responseData && typeof responseData === 'object' ? Object.keys(responseData).length : 0,
+            isEmptyObject: responseData && typeof responseData === 'object' && Object.keys(responseData).length === 0,
+            responseData: responseData
+          });
+        }
         
         // 🔧 CRITICAL: Check for empty object responses which indicate backend issues
         if (responseData && typeof responseData === 'object' && Object.keys(responseData).length === 0) {
@@ -494,7 +483,9 @@ export class ApiClient {
     } catch (error) {
       // Handle 401 responses gracefully for authentication checks
       if (error instanceof Error && error.message.includes('401')) {
-        console.log('API_CLIENT_DEBUG - Authentication check: No valid session (401)');
+        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+          console.debug('API_CLIENT_DEBUG - Authentication check: No valid session (401)');
+        }
         return null;
       }
       // Re-throw other errors
@@ -512,13 +503,17 @@ export class ApiClient {
 
   // CAMPAIGN API METHODS
   async listCampaigns() {
-    console.log('🔧 [API_CLIENT] Starting listCampaigns request...');
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+      console.debug('🔧 [API_CLIENT] Starting listCampaigns request...');
+    }
     try {
       const result = this.request<GetOperationResponse<ApiPaths['/campaigns']['get']>>(
         '/campaigns',
         'GET'
       );
-      console.log('🔧 [API_CLIENT] listCampaigns request initiated');
+      if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+        console.debug('🔧 [API_CLIENT] listCampaigns request initiated');
+      }
       return result;
     } catch (error) {
       console.error('❌ [API_CLIENT] listCampaigns failed:', error);
