@@ -37,104 +37,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const sessionCheckRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
   const sessionCheckStartedRef = useRef(false);
+  const minLoadingTimeRef = useRef<NodeJS.Timeout | null>(null);
 
   // Ensure auth loading state gets cleared when loading operations complete
   const isSessionLoading = loadingStore.isOperationLoading(LOADING_OPERATIONS.SESSION_CHECK);
   
-  // Force update auth loading state when session loading changes
+  // Force update auth loading state when session loading changes - but with minimum loading time
   useEffect(() => {
     if (!isSessionLoading && authState.isLoading) {
-      // Session check completed but auth state still loading - force update
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false
-      }));
+      // Minimum loading time to prevent flash - give time for cookies to be available
+      if (minLoadingTimeRef.current) {
+        clearTimeout(minLoadingTimeRef.current);
+      }
+      
+      minLoadingTimeRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          setAuthState(prev => ({
+            ...prev,
+            isLoading: false
+          }));
+        }
+      }, 200); // 200ms minimum loading time to prevent flash
     }
   }, [isSessionLoading, authState.isLoading]);
 
   const checkSession = useCallback(async () => {
     // Prevent multiple simultaneous session checks
     if (sessionCheckStartedRef.current) {
-      logger.debug('AUTH_CONTEXT', 'Session check already in progress, skipping');
       return;
     }
 
     sessionCheckStartedRef.current = true;
-    logger.debug('AUTH_CONTEXT', 'Starting session check');
     
-    // Cancel any existing session check
-    if (sessionCheckRef.current) {
-      sessionCheckRef.current.abort();
-    }
-    
-    // Create new abort controller for this session check
-    sessionCheckRef.current = new AbortController();
-    
-    // Start loading operation
-    loadingStore.startLoading(
-      LOADING_OPERATIONS.SESSION_CHECK,
-      'Checking session...',
-      {
-        timeout: 15000, // 15 second timeout
-        showSpinner: false,
-        blockUI: false
-      }
-    );
-
     try {
+      // SIMPLE SESSION CHECK - just call the API, don't overthink it
       const user = await authService.getCurrentUser();
 
       if (user) {
-        logger.info('AUTH_CONTEXT', 'Session check successful - user authenticated', {
-          userId: user.id
-        });
-        
-        // ALWAYS update state for successful authentication - React can handle unmounted updates safely
         setAuthState({
           user,
           isAuthenticated: true,
           isLoading: false
         });
-        
-        loadingStore.stopLoading(LOADING_OPERATIONS.SESSION_CHECK, 'succeeded');
       } else {
-        logger.debug('AUTH_CONTEXT', 'Session check completed - no valid session');
-        
-        // Only update state if component is still mounted for unauthenticated state
-        if (mountedRef.current) {
-          setAuthState({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false
-          });
-        } else {
-          logger.debug('AUTH_CONTEXT', 'Component unmounted, skipping session check state update');
-        }
-        
-        loadingStore.stopLoading(LOADING_OPERATIONS.SESSION_CHECK, 'succeeded');
-      }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Session check failed';
-      logger.warn('AUTH_CONTEXT', 'Session check failed', { error: errorMsg });
-      
-      // Only update state if component is still mounted
-      if (mountedRef.current) {
         setAuthState({
           user: null,
           isAuthenticated: false,
           isLoading: false
         });
-      } else {
-        logger.debug('AUTH_CONTEXT', 'Component unmounted, skipping session check error state update');
       }
-      
-      // Always stop loading operation, even if component unmounted
-      loadingStore.stopLoading(LOADING_OPERATIONS.SESSION_CHECK, 'failed', errorMsg);
+    } catch (_error) {
+      // On any error, just set as unauthenticated - don't make it complicated
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false
+      });
     } finally {
-      sessionCheckRef.current = null;
       sessionCheckStartedRef.current = false;
     }
-  }, [loadingStore]);
+  }, []);
 
   // Check for existing session on mount ONLY - no dependencies to prevent infinite loops
   useEffect(() => {
@@ -148,6 +110,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mountedRef.current = false;
       if (sessionCheckRef.current) {
         sessionCheckRef.current.abort();
+      }
+      if (minLoadingTimeRef.current) {
+        clearTimeout(minLoadingTimeRef.current);
       }
     };
   }, []); // FIXED: Empty dependency array to prevent infinite loop

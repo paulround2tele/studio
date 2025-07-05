@@ -3,7 +3,7 @@
 
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Briefcase } from 'lucide-react';
@@ -18,7 +18,18 @@ import CampaignMetrics from '@/components/campaigns/CampaignMetrics';
 import DomainStreamingTable from '@/components/campaigns/DomainStreamingTable';
 
 // Centralized state management and operations
-import { useCampaignDetailsStore, useCampaignData, useDomainData, useStreamingStats, useTableState, useActionLoading } from '@/lib/stores/campaignDetailsStore';
+import {
+  useCampaignDetailsStore,
+  useCampaignData,
+  useDomainData,
+  useStreamingStats,
+  useTableState,
+  useActionLoading,
+  type StreamingMessage,
+  type TableFilters,
+  type PaginationState,
+  type StreamingStats
+} from '@/lib/stores/campaignDetailsStore';
 import { getWebSocketStreamManager } from '@/lib/websocket/WebSocketStreamManager';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
 
@@ -64,12 +75,26 @@ export default function RefactoredCampaignDetailsPage() {
   const { filters, pagination } = useTableState();
   const actionLoading = useActionLoading();
 
-  // 🔧 FIX: Use stable store references to prevent infinite loops
-  const updateFilters = useCampaignDetailsStore(state => state.updateFilters);
-  const updatePagination = useCampaignDetailsStore(state => state.updatePagination);
-  const updateFromWebSocket = useCampaignDetailsStore(state => state.updateFromWebSocket);
-  const updateStreamingStats = useCampaignDetailsStore(state => state.updateStreamingStats);
-  const reset = useCampaignDetailsStore(state => state.reset);
+  // 🔧 CRITICAL FIX: Use useCallback to create stable references for Zustand store functions
+  const updateFilters = useCallback((filters: Partial<TableFilters>) => {
+    useCampaignDetailsStore.getState().updateFilters(filters);
+  }, []);
+  
+  const updatePagination = useCallback((pagination: Partial<PaginationState>) => {
+    useCampaignDetailsStore.getState().updatePagination(pagination);
+  }, []);
+  
+  const updateFromWebSocket = useCallback((message: StreamingMessage) => {
+    useCampaignDetailsStore.getState().updateFromWebSocket(message);
+  }, []);
+  
+  const updateStreamingStats = useCallback((stats: Partial<StreamingStats>) => {
+    useCampaignDetailsStore.getState().updateStreamingStats(stats);
+  }, []);
+  
+  const reset = useCallback(() => {
+    useCampaignDetailsStore.getState().reset();
+  }, []);
 
   // 🔍 DIAGNOSTIC: Track function creation patterns
   const campaignOperations = useCampaignOperations(campaignId);
@@ -167,7 +192,7 @@ export default function RefactoredCampaignDetailsPage() {
       // Cleanup on unmount
       console.log('🧹 [CAMPAIGN_DETAILS_DEBUG] Cleaning up useEffect');
     };
-  }, [campaignId, campaignTypeFromQuery, reset]);
+  }, [campaignId, campaignTypeFromQuery, loadCampaignData, reset]);
 
   // WebSocket integration for real-time domain streaming
   useEffect(() => {

@@ -175,8 +175,8 @@ func main() {
 	
 	sessionConfigManager := config.NewSessionConfigManager(environment)
 	sessionConfig := sessionConfigManager.GetSettings()
-	log.Printf("Using session configuration for environment: %s (CookieSecure: %v, CookieDomain: '%s')",
-		environment, sessionConfig.CookieSecure, sessionConfig.CookieDomain)
+	log.Printf("Using session configuration for environment: %s (CookieSecure: %v, CookieDomain: '%s', CookieName: '%s')",
+		environment, sessionConfig.CookieSecure, sessionConfig.CookieDomain, sessionConfig.CookieName)
 	
 	sessionService, err := services.NewSessionService(db, sessionConfig.ToServiceConfig(), auditLogStore)
 	if err != nil {

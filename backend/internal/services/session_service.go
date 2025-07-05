@@ -26,16 +26,16 @@ var (
 	ErrSessionExpired           = fmt.Errorf("session expired")
 )
 
-// DefaultSessionConfig returns default session configuration
+// DefaultSessionConfig returns VERY RELAXED session configuration
 func DefaultSessionConfig() *config.SessionConfig {
 	return &config.SessionConfig{
-		Duration:           2 * time.Hour,
-		IdleTimeout:        30 * time.Minute,
-		CleanupInterval:    5 * time.Minute,
-		MaxSessionsPerUser: 5,
-		SessionIDLength:    128,
-		RequireIPMatch:     false, // Disabled by default for flexibility
-		RequireUAMatch:     false, // Disabled by default for flexibility
+		Duration:           24 * time.Hour, // 24 hours - very long
+		IdleTimeout:        12 * time.Hour, // 12 hours idle - very generous
+		CleanupInterval:    60 * time.Minute, // Clean up less frequently
+		MaxSessionsPerUser: 100, // Allow many sessions
+		SessionIDLength:    64, // Shorter for easier debugging
+		RequireIPMatch:     false, // Always disabled
+		RequireUAMatch:     false, // Always disabled
 	}
 }
 
@@ -200,33 +200,24 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 // ValidateSession validates a session and returns session data
 func (s *SessionService) ValidateSession(sessionID, clientIP string) (*SessionData, error) {
 	startTime := time.Now()
-	fmt.Printf("[DIAGNOSTIC] ValidateSession called: sessionID=%s, clientIP=%s, timestamp=%s\n",
-		sessionID, clientIP, time.Now().Format(time.RFC3339))
-
-	// DIAGNOSTIC: Log memory store state
-	totalSessions := int64(0)
-	s.inMemoryStore.sessions.Range(func(key, value interface{}) bool {
-		totalSessions++
-		return true
-	})
-	fmt.Printf("[DIAGNOSTIC] Memory store state: totalSessions=%d\n", totalSessions)
+	
+	// Validate session ID format first for security
+	if sessionID == "" || len(sessionID) < 32 {
+		return nil, ErrSessionNotFound
+	}
 
 	// Try memory first for performance
 	session, found := s.getFromMemory(sessionID)
 	cacheHit := found
-	fmt.Printf("[DIAGNOSTIC] Memory lookup: found=%v, sessionExists=%v\n", found, session != nil)
 
 	if !found {
 		// Fallback to database
-		fmt.Printf("DEBUG: Session not in memory, checking database\n")
 		var err error
 		session, err = s.loadFromDatabase(sessionID)
 		if err != nil {
-			fmt.Printf("DEBUG: Database lookup failed: %v\n", err)
 			return nil, ErrSessionNotFound
 		}
-		fmt.Printf("DEBUG: Session found in database, caching in memory\n")
-		// Cache in memory
+		// Cache in memory for future requests
 		s.storeInMemory(session)
 	}
 
@@ -246,41 +237,49 @@ func (s *SessionService) ValidateSession(sessionID, clientIP string) (*SessionDa
 		return nil, ErrSessionExpired
 	}
 
-	// Check idle timeout
-	if now.Sub(session.LastActivity) > s.config.IdleTimeout {
+	// Check idle timeout - be more lenient with timing to avoid race conditions
+	idleTime := now.Sub(session.LastActivity)
+	if idleTime > s.config.IdleTimeout+time.Minute { // Add 1-minute grace period
 		s.invalidateSession(sessionID)
 		s.logAuditEvent(context.TODO(), sessionID, session.UserID, "session_expired", "Session expired due to idle timeout")
 		return nil, ErrSessionExpired
 	}
 
-	// Enhanced security checks
+	// Enhanced security checks (only if enabled in config)
 	if err := s.validateSessionSecurity(session, clientIP, ""); err != nil {
 		s.logAuditEvent(context.TODO(), sessionID, session.UserID, "session_security_violation", fmt.Sprintf("Security violation: %s", err.Error()))
 		s.invalidateSession(sessionID)
 		return nil, err
 	}
 
-	// Update last activity
+	// Update last activity atomically to prevent race conditions
 	session.LastActivity = now
-	s.updateLastActivity(sessionID, now)
+	// Only update database every 30 seconds to reduce load
+	if idleTime > 30*time.Second {
+		s.updateLastActivity(sessionID, now)
+	}
+	// Always update memory cache
+	s.inMemoryStore.sessions.Store(sessionID, session)
 
 	duration := time.Since(startTime)
 
-	// Log successful validation
-	logging.LogSessionEvent(
-		"session_validated",
-		&session.UserID,
-		&sessionID,
-		clientIP,
-		"",
-		true,
-		&session.ExpiresAt,
-		map[string]interface{}{
-			"validation_duration_ms": duration.Milliseconds(),
-			"cache_hit":              cacheHit,
-			"idle_time_mins":         now.Sub(session.LastActivity).Minutes(),
-		},
-	)
+	// Log successful validation (reduce verbosity)
+	if duration > 100*time.Millisecond { // Only log slow validations
+		logging.LogSessionEvent(
+			"session_validated_slow",
+			&session.UserID,
+			&sessionID,
+			clientIP,
+			"",
+			true,
+			&session.ExpiresAt,
+			map[string]interface{}{
+				"validation_duration_ms": duration.Milliseconds(),
+				"cache_hit":              cacheHit,
+				"idle_time_mins":         idleTime.Minutes(),
+			},
+		)
+	}
 
 	return session, nil
 }

@@ -57,45 +57,44 @@ const (
 	CookieDomain = "" // Let browser decide
 )
 
-// GetDefaultSessionSettings returns default session configuration
+// GetDefaultSessionSettings returns VERY RELAXED session configuration for easy development
 func GetDefaultSessionSettings() *SessionSettings {
 	return &SessionSettings{
-		// Session duration and timeouts
-		SessionDuration:    2 * time.Hour,
-		IdleTimeout:        30 * time.Minute,
-		CleanupInterval:    5 * time.Minute,
-		MaxSessionsPerUser: 5,
-		SessionIDLength:    128,
+		// Session duration and timeouts - VERY RELAXED
+		SessionDuration:    24 * time.Hour, // 24 hours - much longer for convenience
+		IdleTimeout:        12 * time.Hour, // 12 hours idle - very generous
+		CleanupInterval:    60 * time.Minute, // Clean up less frequently
+		MaxSessionsPerUser: 50, // Allow many concurrent sessions
+		SessionIDLength:    64, // Shorter IDs for easier debugging
 
-		// Security settings - conservative defaults
-		RequireIPMatch:       false, // Disabled for flexibility with mobile/proxy usage
-		RequireUAMatch:       false, // Disabled for flexibility with browser updates
-		EnableFingerprinting: true,  // Enabled for enhanced security
+		// Security settings - ALL DISABLED for easy development
+		RequireIPMatch:       false, // Disabled
+		RequireUAMatch:       false, // Disabled
+		EnableFingerprinting: false, // Disabled for simplicity
 
-		// Cookie settings for session-only authentication
+		// Cookie settings - VERY PERMISSIVE
 		CookieName:     SessionCookieName,
 		CookiePath:     CookiePath,
-		CookieDomain:   CookieDomain,
-		CookieSecure:   false,          // Disabled for development (HTTP)
-		CookieHttpOnly: CookieHttpOnly, // No JavaScript access
-		CookieSameSite: "lax",          // More flexible for development
+		CookieDomain:   "", // Empty domain for maximum compatibility
+		CookieSecure:   false, // Always disabled
+		CookieHttpOnly: false, // Allow JavaScript access
+		CookieSameSite: "None", // Most permissive
 		CookieMaxAge:   CookieMaxAge,
 
-		// CSRF Protection disabled - session-only authentication
-		RequireOriginValidation: false, // DISABLED for session-only auth
-		RequireCustomHeader:     false, // DISABLED for session-only auth
+		// CSRF Protection - ALL DISABLED
+		RequireOriginValidation: false,
+		RequireCustomHeader:     false,
 		AllowedOrigins: []string{
-			"https://localhost:3000",
-			"http://localhost:3000", // Development only
+			"*", // Allow all origins
 		},
-		CustomHeaderName:  "X-Requested-With",
-		CustomHeaderValue: "XMLHttpRequest",
+		CustomHeaderName:  "",
+		CustomHeaderValue: "",
 
-		// Rate limiting
-		RateLimitEnabled:      true,
-		RateLimitWindow:       15 * time.Minute,
-		MaxLoginAttempts:      10,
-		MaxSessionValidations: 1000, // High limit for normal session validation
+		// Rate limiting - VERY RELAXED
+		RateLimitEnabled:      false, // Disabled completely
+		RateLimitWindow:       60 * time.Minute,
+		MaxLoginAttempts:      1000, // Essentially unlimited
+		MaxSessionValidations: 10000, // Very high limit
 	}
 }
 

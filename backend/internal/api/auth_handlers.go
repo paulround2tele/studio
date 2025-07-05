@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -81,46 +80,35 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	fmt.Printf("DEBUG: Session created successfully with ID: %s\n", sessionData.ID)
 
-	// Set session cookie using Gin's SetCookie for proper formatting and persistence
+	// Set session cookie using proper formatting and persistence
 	fmt.Printf("DEBUG: Setting session cookie with name: %s, value: %s\n", h.config.CookieName, sessionData.ID)
 	
-	// Use Gin's SetCookie method for consistent cookie handling across all auth methods
 	// For localhost development, set domain to empty string to avoid domain issues
 	domain := ""
 	if h.config.CookieDomain != "localhost" && h.config.CookieDomain != "" {
 		domain = h.config.CookieDomain
 	}
 	
-	// Construct cookie manually to include SameSite attribute (Gin's SetCookie doesn't support it)
-	cookieParts := []string{
-		fmt.Sprintf("%s=%s", h.config.CookieName, sessionData.ID),
-		fmt.Sprintf("Path=%s", h.config.CookiePath),
-		fmt.Sprintf("Max-Age=%d", h.config.CookieMaxAge),
+	// Calculate cookie max age to match session expiry exactly
+	sessionDuration := int(sessionData.ExpiresAt.Sub(time.Now()).Seconds())
+	if sessionDuration <= 0 {
+		sessionDuration = h.config.CookieMaxAge // Fallback to default
 	}
 	
-	if h.config.CookieHttpOnly {
-		cookieParts = append(cookieParts, "HttpOnly")
-	}
+	// Use Gin's SetSameSite and SetCookie for proper SameSite support
+	c.SetSameSite(http.SameSiteLaxMode) // Use constant instead of string for reliability
+	c.SetCookie(
+		h.config.CookieName,
+		sessionData.ID,
+		sessionDuration,
+		h.config.CookiePath,
+		domain,
+		h.config.CookieSecure,
+		h.config.CookieHttpOnly,
+	)
 	
-	if h.config.CookieSecure {
-		cookieParts = append(cookieParts, "Secure")
-	}
-	
-	if domain != "" {
-		cookieParts = append(cookieParts, fmt.Sprintf("Domain=%s", domain))
-	}
-	
-	// Add SameSite attribute (this is the missing piece!)
-	if h.config.CookieSameSite != "" {
-		cookieParts = append(cookieParts, fmt.Sprintf("SameSite=%s", h.config.CookieSameSite))
-	}
-	
-	cookieValue := strings.Join(cookieParts, "; ")
-	c.Header("Set-Cookie", cookieValue)
-	
-	fmt.Printf("DEBUG: Cookie set with SameSite support - %s\n", cookieValue)
-	fmt.Printf("DEBUG: Cookie details - Name: %s, MaxAge: %d, Path: %s, Domain: '%s', Secure: %v, HttpOnly: %v, SameSite: %s\n",
-		h.config.CookieName, h.config.CookieMaxAge, h.config.CookiePath, domain, h.config.CookieSecure, h.config.CookieHttpOnly, h.config.CookieSameSite)
+	fmt.Printf("DEBUG: Cookie set successfully - Name: %s, MaxAge: %d, Path: %s, Domain: '%s', Secure: %v, HttpOnly: %v, SameSite: Lax\n",
+		h.config.CookieName, sessionDuration, h.config.CookiePath, domain, h.config.CookieSecure, h.config.CookieHttpOnly)
 
 	// Update last login information
 	h.updateLastLogin(user.ID, ipAddress)
@@ -263,13 +251,20 @@ func (h *AuthHandler) RefreshSession(c *gin.Context) {
 		return
 	}
 
-	// Update cookie with new expiry
+	// Update cookie with new expiry using consistent cookie handling
+	domain := ""
+	if h.config.CookieDomain != "localhost" && h.config.CookieDomain != "" {
+		domain = h.config.CookieDomain
+	}
+	
+	sessionDuration := int(time.Until(newExpiry).Seconds())
+	c.SetSameSite(http.SameSiteLaxMode) // Consistent SameSite handling
 	c.SetCookie(
 		h.config.CookieName,
 		sessionID,
-		int(time.Until(newExpiry).Seconds()),
+		sessionDuration,
 		h.config.CookiePath,
-		h.config.CookieDomain,
+		domain,
 		h.config.CookieSecure,
 		h.config.CookieHttpOnly,
 	)
@@ -462,13 +457,20 @@ func (h *AuthHandler) recordSuccessfulLogin(userID, ipAddress string) {
 // Helper functions
 
 func (h *AuthHandler) clearSessionCookies(c *gin.Context) {
-	// Clear new session cookie
+	// For localhost development, set domain to empty string to avoid domain issues
+	domain := ""
+	if h.config.CookieDomain != "localhost" && h.config.CookieDomain != "" {
+		domain = h.config.CookieDomain
+	}
+
+	// Clear new session cookie with consistent SameSite handling
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(
 		h.config.CookieName,
 		"",
 		-1,
 		h.config.CookiePath,
-		h.config.CookieDomain,
+		domain,
 		h.config.CookieSecure,
 		h.config.CookieHttpOnly,
 	)
@@ -476,4 +478,5 @@ func (h *AuthHandler) clearSessionCookies(c *gin.Context) {
 	// Clear legacy cookies for backward compatibility
 	c.SetCookie("session_token", "", -1, "/", "", h.config.CookieSecure, true)
 	c.SetCookie("auth_tokens", "", -1, "/", "", h.config.CookieSecure, false)
+	c.SetCookie(config.LegacySessionCookieName, "", -1, "/", "", h.config.CookieSecure, true)
 }

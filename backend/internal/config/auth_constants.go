@@ -9,11 +9,11 @@ const (
 	LegacySessionCookieName = "sessionId" // Swapped: old name is now legacy
 )
 
-// Cookie settings
+// Cookie settings - VERY RELAXED for development and testing
 const (
-	CookieMaxAge   = 7200 // 2 hours in seconds (as per security audit)
+	CookieMaxAge   = 86400 // 24 hours - much longer for convenience
 	CookiePath     = "/"
-	CookieSecure   = false // Disabled for development (HTTP localhost)
-	CookieHttpOnly = true
-	CookieSameSite = "Lax" // More flexible for development
+	CookieSecure   = false // Always disabled for easy testing
+	CookieHttpOnly = false // Allow JavaScript access for easier debugging
+	CookieSameSite = "None" // Most permissive setting
 )

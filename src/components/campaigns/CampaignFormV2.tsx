@@ -795,15 +795,12 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
     }
   }, [toast, router, isEditing, campaignToEdit, sourceCampaigns]);
 
-  // 🔍 DIAGNOSTIC: Track clearFormErrors function recreation
+  // 🔧 CRITICAL FIX: Stable clearFormErrors function without dependencies
   const clearFormErrors = useCallback(() => {
     clearErrorsCallCountRef.current += 1;
     
     console.log('🧹 [FORM_DEBUG] clearFormErrors called:', {
       callCount: clearErrorsCallCountRef.current,
-      hasFieldErrors: Object.keys(formFieldErrors).length > 0,
-      hasMainError: !!formMainError,
-      formFieldErrorsKeys: Object.keys(formFieldErrors),
       renderCount: renderCountRef.current,
       timestamp: new Date().toISOString()
     });
@@ -811,23 +808,20 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
     if (clearErrorsCallCountRef.current > 5) {
       console.warn('⚠️ [FORM_DEBUG] clearFormErrors called more than 5 times - potential loop source:', {
         callCount: clearErrorsCallCountRef.current,
-        renderCount: renderCountRef.current,
-        stackTrace: new Error().stack?.split('\n').slice(1, 6)
+        renderCount: renderCountRef.current
       });
     }
 
-    if (Object.keys(formFieldErrors).length > 0 || formMainError) {
-      setFormFieldErrors({});
-      setFormMainError(null);
-    }
-  }, [formFieldErrors, formMainError]);
+    // Use functional state updates to avoid dependencies
+    setFormFieldErrors(current => Object.keys(current).length > 0 ? {} : current);
+    setFormMainError(current => current ? null : current);
+  }, []); // No dependencies - this is the key fix
 
-  // 🔍 DIAGNOSTIC: Track form watch subscription cycles
+  // 🔧 CRITICAL FIX: Stable form watch subscription without unstable dependencies
   useEffect(() => {
     console.log('🔍 [FORM_DEBUG] Setting up form.watch subscription:', {
       renderCount: renderCountRef.current,
       clearErrorsCallCount: clearErrorsCallCountRef.current,
-      hasExistingSubscription: 'checking...',
       timestamp: new Date().toISOString()
     });
 
@@ -839,8 +833,6 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         fieldName: name,
         changeType: type,
         renderCount: renderCountRef.current,
-        clearErrorsCallCount: clearErrorsCallCountRef.current,
-        willCallClearErrors: true,
         timestamp: new Date().toISOString()
       });
 
@@ -848,7 +840,6 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         console.error('🚨 [FORM_DEBUG] FORM STATE CHANGE LOOP DETECTED!', {
           changeCount: formStateChangeCountRef.current,
           renderCount: renderCountRef.current,
-          clearErrorsCallCount: clearErrorsCallCountRef.current,
           lastChangedField: name,
           changeType: type
         });
@@ -865,7 +856,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
       });
       subscription?.unsubscribe?.();
     };
-  }, [form, clearFormErrors]);
+  }, [form]); // Only form as dependency - clearFormErrors is now stable
 
   // Memoized persona requirements to prevent unnecessary recalculations
   const needsHttp = useMemo(() => needsHttpPersona(selectedCampaignType), [selectedCampaignType]);

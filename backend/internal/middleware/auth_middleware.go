@@ -500,20 +500,27 @@ func (m *AuthMiddleware) validateRequestOrigin(c *gin.Context) bool {
 
 // clearSessionCookies clears all session-related cookies
 func (m *AuthMiddleware) clearSessionCookies(c *gin.Context) {
-	// Clear new session cookie
+	// For localhost development, set domain to empty string to avoid domain issues
+	domain := ""
+	if m.config.CookieDomain != "localhost" && m.config.CookieDomain != "" {
+		domain = m.config.CookieDomain
+	}
+
+	// Clear new session cookie with consistent SameSite handling
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(
 		m.config.CookieName,
 		"",
 		-1,
 		m.config.CookiePath,
-		m.config.CookieDomain,
+		domain,
 		m.config.CookieSecure,
 		m.config.CookieHttpOnly,
 	)
 
 	// Clear legacy cookies for backward compatibility
-	c.SetCookie(config.LegacySessionCookieName, "", -1, config.CookiePath, "", config.CookieSecure, config.CookieHttpOnly)
-	c.SetCookie(config.AuthTokensCookieName, "", -1, config.CookiePath, "", config.CookieSecure, false)
+	c.SetCookie(config.LegacySessionCookieName, "", -1, "/", "", m.config.CookieSecure, true)
+	c.SetCookie(config.AuthTokensCookieName, "", -1, "/", "", m.config.CookieSecure, false)
 }
 
 // getErrorCode returns appropriate error code based on the error type

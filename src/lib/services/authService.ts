@@ -88,64 +88,23 @@ class AuthService {
   }
 
   /**
-   * Check current session status with configurable timeout
+   * SIMPLE session check - no overthinking, just works
    */
   async getCurrentUser(): Promise<User | null> {
-    logger.debug('AUTH_SERVICE', 'Checking current user session');
-
     try {
-      // DIAGNOSTIC: Log cookie state before session check
-      if (typeof window !== 'undefined') {
-        const cookies = document.cookie || '';
-        const sessionCookie = cookies.split(';').find(c => c.trim().startsWith('domainflow_session='));
-        const cookieNames = cookies
-          ? cookies.split(';').filter(c => c.trim()).map(c => c.split('=')[0]?.trim() || 'unknown')
-          : [];
-        logger.debug('AUTH_SERVICE', 'Cookie state before session check', {
-          hasSessionCookie: !!sessionCookie,
-          cookieValue: sessionCookie ? sessionCookie.substring(0, 50) + '...' : 'none',
-          allCookies: cookieNames,
-          cookieCount: cookieNames.length
-        });
-      }
-
-      // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          reject(new Error('Session check timeout'));
-        }, this.sessionCheckTimeout);
-      });
-
-      // DIAGNOSTIC: Log API client state
-      logger.debug('AUTH_SERVICE', 'Making getCurrentUser API call');
-      const sessionPromise = apiClient.getCurrentUser();
-      
-      const response = await Promise.race([sessionPromise, timeoutPromise]);
+      // Just call the API - simple and straightforward
+      const response = await apiClient.getCurrentUser();
       
       if (response && typeof response === 'object') {
         // Handle wrapped API response format: { success: true, data: User }
         const userData = (response as { data?: GeneratedUser })?.data || response;
         const adaptedUser = adaptUser(userData as GeneratedUser);
-        if (adaptedUser) {
-          logger.info('AUTH_SERVICE', 'Session check successful', {
-            userId: adaptedUser.id
-          });
-          return adaptedUser;
-        }
+        return adaptedUser;
       }
 
-      logger.warn('AUTH_SERVICE', 'Session check returned invalid user data');
       return null;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      
-      // Don't log session check failures as errors in normal operation
-      if (errorMsg.includes('timeout') || errorMsg.includes('401') || errorMsg.includes('403')) {
-        logger.debug('AUTH_SERVICE', 'Session check failed (expected)', { error: errorMsg });
-      } else {
-        logger.warn('AUTH_SERVICE', 'Session check failed unexpectedly', { error: errorMsg });
-      }
-      
+    } catch (_error) {
+      // Just return null on any error - keep it simple
       return null;
     }
   }
