@@ -1,0 +1,23 @@
+{
+  "name": "domainflow-browser-testing",
+  "version": "1.0.0",
+  "description": "Comprehensive browser testing suite for DomainFlow campaign system",
+  "main": "comprehensive-browser-test.js",
+  "scripts": {
+    "test": "node comprehensive-browser-test.js",
+    "test:headless": "HEADLESS=true node comprehensive-browser-test.js",
+    "test:debug": "DEBUG=true node comprehensive-browser-test.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.6.1"
+  },
+  "keywords": [
+    "browser-testing",
+    "puppeteer",
+    "automation",
+    "websocket",
+    "debugging"
+  ],
+  "author": "DomainFlow Team",
+  "license": "MIT"
+}
