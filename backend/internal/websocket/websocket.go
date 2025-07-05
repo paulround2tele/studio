@@ -100,16 +100,26 @@ func (m *WebSocketManager) BroadcastMessage(message []byte) {
 func (m *WebSocketManager) BroadcastToCampaign(campaignID string, message WebSocketMessage) {
 	data, err := json.Marshal(message)
 	if err != nil {
-		// Log error but don't crash
+		log.Printf("[DIAGNOSTIC] ERROR: Failed to marshal message for campaign %s: %v", campaignID, err)
 		return
 	}
 
 	// DIAGNOSTIC: Log broadcast attempt details
+	m.mutex.RLock()
 	clientCount := len(m.clients)
+	m.mutex.RUnlock()
+	
 	sentCount := 0
 	
-	// Send to clients subscribed to this campaign
+	// Send to clients subscribed to this campaign with proper locking
+	m.mutex.RLock()
+	clientsCopy := make([]*Client, 0, len(m.clients))
 	for client := range m.clients {
+		clientsCopy = append(clientsCopy, client)
+	}
+	m.mutex.RUnlock()
+	
+	for _, client := range clientsCopy {
 		isSubscribed := client.IsSubscribedToCampaign(campaignID)
 		if isSubscribed {
 			sentCount++
@@ -119,11 +129,12 @@ func (m *WebSocketManager) BroadcastToCampaign(campaignID string, message WebSoc
 				log.Printf("[DIAGNOSTIC] Successfully sent message to client %s for campaign %s",
 					client.conn.RemoteAddr().String(), campaignID)
 			default:
-				// Client is slow or disconnected, remove it
-				close(client.send)
-				delete(m.clients, client)
-				log.Printf("[DIAGNOSTIC] Removed slow/disconnected client %s during broadcast",
+				// Client is slow or disconnected, signal for removal through unregister channel
+				log.Printf("[DIAGNOSTIC] Client %s is slow/disconnected, scheduling for removal",
 					client.conn.RemoteAddr().String())
+				go func(c *Client) {
+					m.UnregisterClient(c)
+				}(client)
 			}
 		}
 	}

@@ -66,6 +66,15 @@ type CampaignStore interface {
 	CreateHTTPKeywordResults(ctx context.Context, exec Querier, results []*models.HTTPKeywordResult) error
 	GetHTTPKeywordResultsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, filter ListValidationResultsFilter) ([]*models.HTTPKeywordResult, error)
 	GetDomainsForHTTPValidation(ctx context.Context, exec Querier, httpKeywordCampaignID uuid.UUID, sourceCampaignID uuid.UUID, limit int, lastDomainName string) ([]*models.DNSValidationResult, error)
+
+	// Enhanced cursor-based pagination methods for enterprise scale
+	GetGeneratedDomainsWithCursor(ctx context.Context, exec Querier, filter ListGeneratedDomainsFilter) (*PaginatedResult[*models.GeneratedDomain], error)
+	GetDNSValidationResultsWithCursor(ctx context.Context, exec Querier, filter ListDNSValidationResultsFilter) (*PaginatedResult[*models.DNSValidationResult], error)
+	GetHTTPKeywordResultsWithCursor(ctx context.Context, exec Querier, filter ListHTTPValidationResultsFilter) (*PaginatedResult[*models.HTTPKeywordResult], error)
+	
+	// Performance monitoring methods
+	RecordQueryPerformance(ctx context.Context, exec Querier, metric *models.QueryPerformanceMetric) error
+	RecordConnectionPoolMetrics(ctx context.Context, exec Querier, metrics *models.ConnectionPoolMetrics) error
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same

@@ -339,7 +339,7 @@ class WebSocketService {
           };
           
           const foundCampaignIds = Object.entries(campaignIdVariations)
-            .filter(([key, value]) => value)
+            .filter(([_key, value]) => value)
             .map(([key, value]) => ({ field: key, value }));
             
           if (foundCampaignIds.length > 0) {

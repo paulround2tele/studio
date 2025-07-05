@@ -96,7 +96,7 @@
         "process_ui_action_incremental"
       ],
       "timeout": 300,
-      "disabled": true,
+      "disabled": false,
       "disabledTools": [
         "get_visual_context",
         "get_latest_screenshot",

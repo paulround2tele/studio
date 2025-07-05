@@ -124,7 +124,7 @@ class AuthService {
       
       if (response && typeof response === 'object') {
         // Handle wrapped API response format: { success: true, data: User }
-        const userData = (response as any)?.data || response;
+        const userData = (response as { data?: GeneratedUser })?.data || response;
         const adaptedUser = adaptUser(userData as GeneratedUser);
         if (adaptedUser) {
           logger.info('AUTH_SERVICE', 'Session check successful', {

@@ -14,9 +14,17 @@ const (
 	DefaultSystemAPIKeyPlaceholder  = "SET_A_REAL_KEY_IN_CONFIG_OR_ENV_d9f8s7d9f8s7d9f8"
 	DefaultStreamChunkSize          = 200
 	DefaultGinMode                  = "debug"
-	DefaultDBMaxOpenConns           = 25
-	DefaultDBMaxIdleConns           = 25
-	DefaultDBConnMaxLifetimeMinutes = 5
+	DefaultDBMaxOpenConns           = 100   // Increased for enterprise scale
+	DefaultDBMaxIdleConns           = 50    // Increased for enterprise scale
+	DefaultDBConnMaxLifetimeMinutes = 30    // Increased for stability
+
+	// Enterprise database optimization defaults
+	DefaultDBMaxIdleTimeMinutes     = 15
+	DefaultDBConnMaxIdleTime        = 15
+	DefaultDBReadTimeoutSeconds     = 30
+	DefaultDBWriteTimeoutSeconds    = 30
+	DefaultDBQueryTimeoutSeconds    = 60
+	DefaultDBPingTimeoutSeconds     = 5
 
 	// WorkerConfig Defaults
 	DefaultNumWorkers                  = 5

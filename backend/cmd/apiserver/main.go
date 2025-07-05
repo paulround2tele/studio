@@ -449,6 +449,40 @@ func main() {
 			}
 		})
 		log.Println("Registered WebSocket test broadcast route under /api/v2/broadcast-test.")
+
+		// Test endpoint for campaign-specific WebSocket messages
+		apiV2.GET("/test-campaign-ws/:campaignId", func(c *gin.Context) {
+			campaignID := c.Param("campaignId")
+			messageType := c.DefaultQuery("type", "domain_generated")
+			
+			if b := websocket.GetBroadcaster(); b != nil {
+				var message websocket.WebSocketMessage
+				
+				switch messageType {
+				case "domain_generated":
+					message = websocket.CreateDomainGeneratedMessage(campaignID, "test-domain-id", "test.example.com", 1, 1)
+				case "campaign_progress":
+					message = websocket.CreateCampaignProgressMessage(campaignID, 50.0, "running", "domain_generation")
+				case "dns_validation":
+					dnsRecords := map[string]interface{}{"A": []string{"1.2.3.4"}}
+					message = websocket.CreateDNSValidationResultMessage(campaignID, "test-domain-id", "test.example.com", "resolved", 1, dnsRecords)
+				default:
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message type"})
+					return
+				}
+				
+				b.BroadcastToCampaign(campaignID, message)
+				c.JSON(http.StatusOK, gin.H{
+					"message": "Campaign message sent",
+					"campaignId": campaignID,
+					"messageType": messageType,
+					"messageId": message.ID,
+				})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Broadcaster not available"})
+			}
+		})
+		log.Println("Registered WebSocket campaign test route under /api/v2/test-campaign-ws/:campaignId.")
 	}
 
 	// V2 Campaign routes (session auth only)
