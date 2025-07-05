@@ -1,75 +1,38 @@
 import type { paths, components } from './types';
 
-// Inline dynamic URL detection utilities to avoid import issues
-const detectBackendUrl = async (): Promise<string> => {
-  // In production, backend is same origin
-  if (process.env.NODE_ENV === 'production') {
-    return '';  // Use relative URLs
-  }
-  
-  // In development, try common backend ports
-  if (typeof window !== 'undefined') {
-    const commonPorts = [8080, 3001, 5000, 8000, 4000];
-    const host = window.location.hostname;
-    
-    for (const port of commonPorts) {
-      try {
-        // Try both health endpoint variants
-        const testUrls = [
-          `http://${host}:${port}/api/v2/health`,
-          `http://${host}:${port}/health`
-        ];
-        
-        for (const testUrl of testUrls) {
-          try {
-            const response = await fetch(testUrl, {
-              method: 'GET',
-              signal: AbortSignal.timeout(1000) // 1 second timeout
-            });
-            
-            if (response.ok) {
-              if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
-                console.debug(`✅ Backend detected at http://${host}:${port} using ${testUrl}`);
-              }
-              return `http://${host}:${port}`;
-            }
-          } catch (_innerError) {
-            // Try next URL variant
-            continue;
-          }
-        }
-      } catch (_error) {
-        // Continue to next port
-        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
-          console.debug(`❌ No backend found at http://${host}:${port}`);
-        }
-        continue;
-      }
-    }
-  }
-  
-  // Fallback: assume same origin (for SSR or if detection fails)
-  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
-    console.debug('⚠️ Backend auto-detection failed, using same origin');
-  }
-  return '';
-};
-
-const getBackendUrl = async (): Promise<string> => {
+// Simplified backend URL detection using environment variables
+const getBackendUrl = (): string => {
   // If explicitly configured, use it
   const configured = process.env.NEXT_PUBLIC_API_URL;
   if (configured && configured.trim()) {
-    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
-      console.debug(`🔧 Using configured backend URL: ${configured}`);
-    }
     return configured;
   }
   
-  // Otherwise, auto-detect
-  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
-    console.debug('🔍 Auto-detecting backend URL...');
+  // Auto-detect based on current location (simplified from environment.ts logic)
+  if (typeof window !== 'undefined') {
+    const { hostname, port, protocol } = window.location;
+    
+    // If frontend is on port 3000 (Next.js dev), backend is on 8080
+    if (port === '3000') {
+      return `${protocol}//${hostname}:8080`;
+    }
+    
+    // If localhost without specific port, use standard backend port
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
+      return `${protocol}//${hostname}:8080`;
+    }
+    
+    // For production or other environments, use same origin or standard ports
+    if (!port || port === '80' || port === '443') {
+      return `${protocol}//${hostname}`;
+    }
+    
+    // Fallback: assume backend is on port 8080 for development
+    return `${protocol}//${hostname}:8080`;
   }
-  return await detectBackendUrl();
+  
+  // SSR fallback
+  return 'http://localhost:8080';
 };
 
 const constructApiUrl = (baseUrl: string, path: string): URL => {
@@ -231,16 +194,16 @@ export class ApiClient {
   /**
    * Get effective backend URL with auto-detection
    */
-  private async getEffectiveBackendUrl(): Promise<string> {
+  private getEffectiveBackendUrl(): string {
     if (this._detectedBackendUrl === null) {
-      this._detectedBackendUrl = await getBackendUrl();
+      this._detectedBackendUrl = getBackendUrl();
     }
     return this._detectedBackendUrl;
   }
 
   // Handle different routing structures for auth vs API routes
-  private async getEffectiveBaseUrl(path: string): Promise<string> {
-    const baseUrl = await this.getEffectiveBackendUrl();
+  private getEffectiveBaseUrl(path: string): string {
+    const baseUrl = this.getEffectiveBackendUrl();
     
     // Auth routes (/auth/*) are served directly from backend root
     if (path.startsWith('/auth') || path.startsWith('/me') || path.startsWith('/change-password')) {
@@ -266,7 +229,7 @@ export class ApiClient {
     }
   ): Promise<TResponse> {
     // Handle different routing structures: auth routes vs API routes
-    const effectiveBaseUrl = await this.getEffectiveBaseUrl(path);
+    const effectiveBaseUrl = this.getEffectiveBaseUrl(path);
     const url = constructApiUrl(effectiveBaseUrl, path);
     
     // Add query parameters
@@ -477,8 +440,8 @@ export class ApiClient {
   async getCurrentUser() {
     try {
       // DIAGNOSTIC: Log API client state before request
-      const effectiveBackendUrl = await this.getEffectiveBackendUrl();
-      const finalBaseUrl = await this.getEffectiveBaseUrl('/me');
+      const effectiveBackendUrl = this.getEffectiveBackendUrl();
+      const finalBaseUrl = this.getEffectiveBaseUrl('/me');
       
       console.log('[DIAGNOSTIC] getCurrentUser API call details:', {
         effectiveBackendUrl,
@@ -497,8 +460,8 @@ export class ApiClient {
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
         errorType: error instanceof Error ? error.constructor.name : typeof error,
         timestamp: new Date().toISOString(),
-        effectiveBaseUrl: await this.getEffectiveBackendUrl().catch(() => 'failed'),
-        finalBaseUrl: await this.getEffectiveBaseUrl('/me').catch(() => 'failed')
+        effectiveBaseUrl: this.getEffectiveBackendUrl(),
+        finalBaseUrl: this.getEffectiveBaseUrl('/me')
       });
 
       // Handle 401 responses gracefully for authentication checks
@@ -951,7 +914,7 @@ export class ApiClient {
 
   // HEALTH API METHODS (note: health endpoints are at root level, not under /api/v2)
   async healthCheck() {
-    const baseUrl = await this.getEffectiveBackendUrl();
+    const baseUrl = this.getEffectiveBackendUrl();
     const url = constructApiUrl(baseUrl, '/health');
     
     try {
@@ -972,7 +935,7 @@ export class ApiClient {
   }
 
   async livenessCheck() {
-    const baseUrl = await this.getEffectiveBackendUrl();
+    const baseUrl = this.getEffectiveBackendUrl();
     const url = constructApiUrl(baseUrl, '/health/live');
     
     try {
@@ -989,7 +952,7 @@ export class ApiClient {
   }
 
   async readinessCheck() {
-    const baseUrl = await this.getEffectiveBackendUrl();
+    const baseUrl = this.getEffectiveBackendUrl();
     const url = constructApiUrl(baseUrl, '/health/ready');
     
     try {
@@ -1006,7 +969,7 @@ export class ApiClient {
   }
 
   async ping() {
-    const baseUrl = await this.getEffectiveBackendUrl();
+    const baseUrl = this.getEffectiveBackendUrl();
     const url = constructApiUrl(baseUrl, '/ping');
     
     try {

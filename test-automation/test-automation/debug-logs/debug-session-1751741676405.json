@@ -1,0 +1,640 @@
+[
+  {
+    "timestamp": "2025-07-05T18:54:25.030Z",
+    "elapsed": 2,
+    "level": "INFO",
+    "category": "INIT",
+    "message": "Starting Campaign Flow Debugger",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:28.974Z",
+    "elapsed": 3944,
+    "level": "INFO",
+    "category": "INIT",
+    "message": "Browser initialized successfully",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:28.974Z",
+    "elapsed": 3944,
+    "level": "INFO",
+    "category": "AUTH",
+    "message": "Starting login process",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.117Z",
+    "elapsed": 6087,
+    "level": "DEBUG",
+    "category": "NETWORK",
+    "message": "API Request: GET http://localhost:8080/api/v2/health",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.236Z",
+    "elapsed": 6206,
+    "level": "DEBUG",
+    "category": "NETWORK",
+    "message": "API Request: GET http://localhost:8080/api/v2/health",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.264Z",
+    "elapsed": 6234,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"isrManifest\",\"data\":{\"/campaigns/invalid-campaign-123\":true,\"/logout\":true,\"/\":true,\"/campaigns/40213405-6ebb-449e-8c05-3c416ab74b6a\":true,\"/dashboard\":true,\"/campaigns/new\":true,\"/campaigns/f6fbf543-a107-4f58-a956-039db3061df0\":true,\"/campaigns\":true,\"/login\":true}}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.352Z",
+    "elapsed": 6322,
+    "level": "DEBUG",
+    "category": "NETWORK",
+    "message": "API Response: 200 http://localhost:8080/api/v2/health",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.388Z",
+    "elapsed": 6358,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/_e69f0d32._.js\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.395Z",
+    "elapsed": 6365,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/src_app_favicon_ico_mjs_8a7a8fdc._.js\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.396Z",
+    "elapsed": 6366,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/src_app_layout_tsx_c0237562._.js\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.396Z",
+    "elapsed": 6366,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/src_app_not-found_tsx_2eded05f._.js\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.400Z",
+    "elapsed": 6370,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/src_app_login_page_tsx_2eded05f._.js\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.404Z",
+    "elapsed": 6374,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_66796270._.js\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.405Z",
+    "elapsed": 6375,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"turbopack-connected\",\"data\":{\"sessionId\":5601360874928037}}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.408Z",
+    "elapsed": 6378,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/_e69f0d32._.js\",\"headers\":null}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.408Z",
+    "elapsed": 6378,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/src_app_favicon_ico_mjs_8a7a8fdc._.js\",\"headers\":null}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.408Z",
+    "elapsed": 6378,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/src_app_layout_tsx_c0237562._.js\",\"headers\":null}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.409Z",
+    "elapsed": 6379,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/src_app_not-found_tsx_2eded05f._.js\",\"headers\":null}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.409Z",
+    "elapsed": 6379,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/src_app_login_page_tsx_2eded05f._.js\",\"headers\":null}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.409Z",
+    "elapsed": 6379,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"type\":\"turbopack-subscribe\",\"path\":\"static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_66796270._.js\",\"headers\":null}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.409Z",
+    "elapsed": 6379,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"sync\",\"errors\":[],\"warnings\":[],\"hash\":\"\",\"versionInfo\":{\"staleness\":\"stale-patch\",\"expected\":\"15.3.5\",\"installed\":\"15.3.3\"},\"debug\":{},\"devIndicator\":{\"disabledUntil\":0}}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.409Z",
+    "elapsed": 6379,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.409Z",
+    "elapsed": 6379,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.409Z",
+    "elapsed": 6379,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"452\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.410Z",
+    "elapsed": 6380,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.411Z",
+    "elapsed": 6381,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.411Z",
+    "elapsed": 6381,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"454\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.411Z",
+    "elapsed": 6381,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.411Z",
+    "elapsed": 6381,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.433Z",
+    "elapsed": 6403,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"456\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.434Z",
+    "elapsed": 6404,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.434Z",
+    "elapsed": 6404,
+    "level": "DEBUG",
+    "category": "NETWORK",
+    "message": "API Response: 200 http://localhost:8080/api/v2/health",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.792Z",
+    "elapsed": 6762,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.879Z",
+    "elapsed": 6849,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error: Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:31.905Z",
+    "elapsed": 6875,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error: Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.089Z",
+    "elapsed": 7059,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"458\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.089Z",
+    "elapsed": 7059,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.145Z",
+    "elapsed": 7115,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error: API_CLIENT_DEBUG - Non-network error:",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.146Z",
+    "elapsed": 7116,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error:   Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.146Z",
+    "elapsed": 7116,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error:   Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:280:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:394:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1288:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1912:30)\"\n}",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.166Z",
+    "elapsed": 7136,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error: [DIAGNOSTIC] getCurrentUser failed: JSHandle@object",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.242Z",
+    "elapsed": 7212,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error: API_CLIENT_DEBUG - Non-network error:",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.243Z",
+    "elapsed": 7213,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error:   Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.244Z",
+    "elapsed": 7214,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error:   Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:280:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:394:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1288:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1912:30)\"\n}",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:32.244Z",
+    "elapsed": 7214,
+    "level": "ERROR",
+    "category": "CONSOLE",
+    "message": "Console Error: [DIAGNOSTIC] getCurrentUser failed: JSHandle@object",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.298Z",
+    "elapsed": 8268,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.445Z",
+    "elapsed": 8415,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"460\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.445Z",
+    "elapsed": 8415,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.485Z",
+    "elapsed": 8455,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.536Z",
+    "elapsed": 8506,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"462\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.537Z",
+    "elapsed": 8507,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.634Z",
+    "elapsed": 8604,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.643Z",
+    "elapsed": 8613,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"464\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.646Z",
+    "elapsed": 8616,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.648Z",
+    "elapsed": 8618,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.687Z",
+    "elapsed": 8657,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"466\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.688Z",
+    "elapsed": 8658,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.696Z",
+    "elapsed": 8666,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"building\"}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.752Z",
+    "elapsed": 8722,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message received",
+    "data": {
+      "data": "{\"action\":\"built\",\"hash\":\"468\",\"errors\":[],\"warnings\":[]}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:33.754Z",
+    "elapsed": 8724,
+    "level": "DEBUG",
+    "category": "WEBSOCKET",
+    "message": "Message sent",
+    "data": {
+      "data": "{\"event\":\"client-success\",\"clientId\":1751741670801}"
+    }
+  },
+  {
+    "timestamp": "2025-07-05T18:54:35.770Z",
+    "elapsed": 10740,
+    "level": "ERROR",
+    "category": "SCREENSHOT",
+    "message": "Failed to capture screenshot: png screenshots do not support 'quality'.",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:36.171Z",
+    "elapsed": 11142,
+    "level": "DEBUG",
+    "category": "AUTH",
+    "message": "Email entered",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:36.303Z",
+    "elapsed": 11274,
+    "level": "DEBUG",
+    "category": "AUTH",
+    "message": "Password entered",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:36.331Z",
+    "elapsed": 11301,
+    "level": "ERROR",
+    "category": "SCREENSHOT",
+    "message": "Failed to capture screenshot: png screenshots do not support 'quality'.",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:36.399Z",
+    "elapsed": 11369,
+    "level": "ERROR",
+    "category": "AUTH",
+    "message": "Login failed: Failed to execute 'querySelectorAll' on 'Document': 'button[type=\"submit\"], button:contains(\"Login\"), button:contains(\"Sign In\")' is not a valid selector.\nre (pptr:internal:3:12826)\nIe (pptr:internal:3:13100)\npptr:evaluateHandle;PQueryHandler.queryOne%20(%2Fhome%2Fvboxuser%2Fstudio%2Ftest-automation%2Fnode_modules%2Fpuppeteer-core%2Flib%2Fcjs%2Fpuppeteer%2Fcommon%2FQueryHandler.js%3A130%3A73):2:16",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:36.402Z",
+    "elapsed": 11372,
+    "level": "ERROR",
+    "category": "SCREENSHOT",
+    "message": "Failed to capture screenshot: png screenshots do not support 'quality'.",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:36.402Z",
+    "elapsed": 11372,
+    "level": "ERROR",
+    "category": "TEST",
+    "message": "Test failed: Login failed",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:36.404Z",
+    "elapsed": 11374,
+    "level": "ERROR",
+    "category": "SCREENSHOT",
+    "message": "Failed to capture screenshot: png screenshots do not support 'quality'.",
+    "data": {}
+  },
+  {
+    "timestamp": "2025-07-05T18:54:36.405Z",
+    "elapsed": 11375,
+    "level": "INFO",
+    "category": "CLEANUP",
+    "message": "Cleaning up resources",
+    "data": {}
+  }
+]

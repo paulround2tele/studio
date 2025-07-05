@@ -32,6 +32,31 @@ export default function RefactoredCampaignDetailsPage() {
   const campaignId = params.id as string;
   const campaignTypeFromQuery = searchParams.get('type') as CampaignType | null;
 
+  // 🔍 DIAGNOSTIC: Render counting for infinite loop detection
+  const renderCountRef = useRef(0);
+  const dataLoadCallCountRef = useRef(0);
+  const resetCallCountRef = useRef(0);
+  
+  renderCountRef.current += 1;
+  
+  console.log('🔄 [CAMPAIGN_DETAILS_DEBUG] RefactoredCampaignDetailsPage render:', {
+    renderCount: renderCountRef.current,
+    campaignId,
+    campaignTypeFromQuery,
+    timestamp: new Date().toISOString(),
+    renderTrigger: renderCountRef.current > 5 ? '⚠️ POTENTIAL_INFINITE_LOOP' : 'normal'
+  });
+
+  if (renderCountRef.current > 10) {
+    console.error('🚨 [CAMPAIGN_DETAILS_DEBUG] INFINITE LOOP DETECTED - RefactoredCampaignDetailsPage rendered more than 10 times!', {
+      renderCount: renderCountRef.current,
+      dataLoadCalls: dataLoadCallCountRef.current,
+      resetCalls: resetCallCountRef.current,
+      campaignId,
+      campaignTypeFromQuery
+    });
+  }
+
   // Centralized state management - no more scattered useState calls
   const { campaign, loading, error } = useCampaignData();
   const { generatedDomains, dnsCampaignItems, httpCampaignItems, totalDomainCount } = useDomainData();
@@ -39,16 +64,15 @@ export default function RefactoredCampaignDetailsPage() {
   const { filters, pagination } = useTableState();
   const actionLoading = useActionLoading();
 
-  // Centralized state actions
-  const { 
-    updateFilters, 
-    updatePagination, 
-    updateFromWebSocket,
-    updateStreamingStats,
-    reset 
-  } = useCampaignDetailsStore();
+  // 🔧 FIX: Use stable store references to prevent infinite loops
+  const updateFilters = useCampaignDetailsStore(state => state.updateFilters);
+  const updatePagination = useCampaignDetailsStore(state => state.updatePagination);
+  const updateFromWebSocket = useCampaignDetailsStore(state => state.updateFromWebSocket);
+  const updateStreamingStats = useCampaignDetailsStore(state => state.updateStreamingStats);
+  const reset = useCampaignDetailsStore(state => state.reset);
 
-  // Campaign operations hook - encapsulates all API operations
+  // 🔍 DIAGNOSTIC: Track function creation patterns
+  const campaignOperations = useCampaignOperations(campaignId);
   const {
     loadCampaignData,
     startPhase,
@@ -56,7 +80,29 @@ export default function RefactoredCampaignDetailsPage() {
     resumeCampaign,
     stopCampaign,
     downloadDomains
-  } = useCampaignOperations(campaignId);
+  } = campaignOperations;
+
+  // Track if loadCampaignData function is being recreated
+  const loadCampaignDataRef = useRef(loadCampaignData);
+  if (loadCampaignDataRef.current !== loadCampaignData) {
+    console.log('🔍 [CAMPAIGN_DETAILS_DEBUG] loadCampaignData function recreated:', {
+      renderCount: renderCountRef.current,
+      previousFunction: loadCampaignDataRef.current.toString().slice(0, 100),
+      newFunction: loadCampaignData.toString().slice(0, 100),
+      timestamp: new Date().toISOString()
+    });
+    loadCampaignDataRef.current = loadCampaignData;
+  }
+
+  // Track if reset function is being recreated
+  const resetRef = useRef(reset);
+  if (resetRef.current !== reset) {
+    console.log('🔍 [CAMPAIGN_DETAILS_DEBUG] reset function recreated:', {
+      renderCount: renderCountRef.current,
+      timestamp: new Date().toISOString()
+    });
+    resetRef.current = reset;
+  }
 
   // WebSocket stream manager reference
   const streamManagerRef = useRef(getWebSocketStreamManager());
@@ -64,6 +110,19 @@ export default function RefactoredCampaignDetailsPage() {
 
   // Initialize campaign data - single effect replaces 25+ useEffect hooks
   useEffect(() => {
+    console.log('🔍 [CAMPAIGN_DETAILS_DEBUG] useEffect triggered:', {
+      renderCount: renderCountRef.current,
+      campaignId,
+      campaignTypeFromQuery,
+      deps: {
+        campaignId,
+        campaignTypeFromQuery,
+        loadCampaignDataRef: loadCampaignDataRef.current === loadCampaignData ? 'same' : 'different',
+        resetRef: resetRef.current === reset ? 'same' : 'different'
+      },
+      timestamp: new Date().toISOString()
+    });
+
     if (!campaignId) {
       console.error('❌ [Refactored Page] No campaign ID provided');
       return;
@@ -74,11 +133,29 @@ export default function RefactoredCampaignDetailsPage() {
       return;
     }
 
-    console.log('🚀 [Refactored Page] Initializing campaign details page:', {
+    dataLoadCallCountRef.current += 1;
+    resetCallCountRef.current += 1;
+
+    console.log('🚀 [CAMPAIGN_DETAILS_DEBUG] Executing useEffect logic:', {
+      renderCount: renderCountRef.current,
+      dataLoadCallCount: dataLoadCallCountRef.current,
+      resetCallCount: resetCallCountRef.current,
       campaignId,
       campaignTypeFromQuery,
       timestamp: new Date().toISOString()
     });
+
+    if (dataLoadCallCountRef.current > 5) {
+      console.error('🚨 [CAMPAIGN_DETAILS_DEBUG] USEEFFECT LOOP DETECTED - useEffect called more than 5 times!', {
+        renderCount: renderCountRef.current,
+        dataLoadCallCount: dataLoadCallCountRef.current,
+        resetCallCount: resetCallCountRef.current,
+        functionRecreationAnalysis: {
+          loadCampaignDataRecreated: loadCampaignDataRef.current !== loadCampaignData,
+          resetRecreated: resetRef.current !== reset
+        }
+      });
+    }
 
     // Reset store state for new campaign
     reset();
@@ -88,10 +165,9 @@ export default function RefactoredCampaignDetailsPage() {
 
     return () => {
       // Cleanup on unmount
-      console.log('🧹 [Refactored Page] Cleaning up campaign details page');
-      reset();
+      console.log('🧹 [CAMPAIGN_DETAILS_DEBUG] Cleaning up useEffect');
     };
-  }, [campaignId, campaignTypeFromQuery, loadCampaignData, reset]);
+  }, [campaignId, campaignTypeFromQuery, reset]);
 
   // WebSocket integration for real-time domain streaming
   useEffect(() => {

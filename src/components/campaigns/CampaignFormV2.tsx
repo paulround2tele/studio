@@ -154,7 +154,7 @@ function needsHttpPersona(campaignType?: CampaignSelectedType | null): boolean {
 function needsDnsPersona(campaignType?: CampaignSelectedType | null): boolean {
   return campaignType === 'dns_validation';
 }
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import { FormErrorSummary } from '@/components/ui/form-field-error';
 import { type FormErrorState } from '@/lib/utils/errorHandling';
 
@@ -188,6 +188,29 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
   const router = useRouter();
   const { toast } = useToast();
   const searchParams = useSearchParams();
+
+  // 🔍 DIAGNOSTIC: Render counting for infinite loop detection
+  const renderCountRef = useRef(0);
+  const formStateChangeCountRef = useRef(0);
+  const clearErrorsCallCountRef = useRef(0);
+  
+  renderCountRef.current += 1;
+  
+  console.log('🔄 [FORM_DEBUG] CampaignFormV2 render:', {
+    renderCount: renderCountRef.current,
+    isEditing,
+    campaignId: campaignToEdit?.id,
+    timestamp: new Date().toISOString(),
+    renderTrigger: renderCountRef.current > 5 ? '⚠️ POTENTIAL_INFINITE_LOOP' : 'normal'
+  });
+
+  if (renderCountRef.current > 10) {
+    console.error('🚨 [FORM_DEBUG] INFINITE LOOP DETECTED - CampaignFormV2 rendered more than 10 times!', {
+      renderCount: renderCountRef.current,
+      formStateChanges: formStateChangeCountRef.current,
+      clearErrorsCalls: clearErrorsCallCountRef.current
+    });
+  }
 
   // Enhanced error handling state
   const [formFieldErrors, setFormFieldErrors] = useState<FormErrorState>({});
@@ -772,20 +795,76 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
     }
   }, [toast, router, isEditing, campaignToEdit, sourceCampaigns]);
 
-  // Clear errors when form values change
+  // 🔍 DIAGNOSTIC: Track clearFormErrors function recreation
   const clearFormErrors = useCallback(() => {
+    clearErrorsCallCountRef.current += 1;
+    
+    console.log('🧹 [FORM_DEBUG] clearFormErrors called:', {
+      callCount: clearErrorsCallCountRef.current,
+      hasFieldErrors: Object.keys(formFieldErrors).length > 0,
+      hasMainError: !!formMainError,
+      formFieldErrorsKeys: Object.keys(formFieldErrors),
+      renderCount: renderCountRef.current,
+      timestamp: new Date().toISOString()
+    });
+
+    if (clearErrorsCallCountRef.current > 5) {
+      console.warn('⚠️ [FORM_DEBUG] clearFormErrors called more than 5 times - potential loop source:', {
+        callCount: clearErrorsCallCountRef.current,
+        renderCount: renderCountRef.current,
+        stackTrace: new Error().stack?.split('\n').slice(1, 6)
+      });
+    }
+
     if (Object.keys(formFieldErrors).length > 0 || formMainError) {
       setFormFieldErrors({});
       setFormMainError(null);
     }
   }, [formFieldErrors, formMainError]);
 
-  // Watch for form changes to clear errors
-  React.useEffect(() => {
-    const subscription = form.watch(() => {
+  // 🔍 DIAGNOSTIC: Track form watch subscription cycles
+  useEffect(() => {
+    console.log('🔍 [FORM_DEBUG] Setting up form.watch subscription:', {
+      renderCount: renderCountRef.current,
+      clearErrorsCallCount: clearErrorsCallCountRef.current,
+      hasExistingSubscription: 'checking...',
+      timestamp: new Date().toISOString()
+    });
+
+    const subscription = form.watch((data, { name, type }) => {
+      formStateChangeCountRef.current += 1;
+      
+      console.log('📝 [FORM_DEBUG] Form state changed via watch:', {
+        changeCount: formStateChangeCountRef.current,
+        fieldName: name,
+        changeType: type,
+        renderCount: renderCountRef.current,
+        clearErrorsCallCount: clearErrorsCallCountRef.current,
+        willCallClearErrors: true,
+        timestamp: new Date().toISOString()
+      });
+
+      if (formStateChangeCountRef.current > 15) {
+        console.error('🚨 [FORM_DEBUG] FORM STATE CHANGE LOOP DETECTED!', {
+          changeCount: formStateChangeCountRef.current,
+          renderCount: renderCountRef.current,
+          clearErrorsCallCount: clearErrorsCallCountRef.current,
+          lastChangedField: name,
+          changeType: type
+        });
+      }
+
       clearFormErrors();
     });
-    return () => subscription?.unsubscribe?.();
+
+    return () => {
+      console.log('🧹 [FORM_DEBUG] Cleaning up form.watch subscription:', {
+        renderCount: renderCountRef.current,
+        formStateChanges: formStateChangeCountRef.current,
+        clearErrorsCalls: clearErrorsCallCountRef.current
+      });
+      subscription?.unsubscribe?.();
+    };
   }, [form, clearFormErrors]);
 
   // Memoized persona requirements to prevent unnecessary recalculations

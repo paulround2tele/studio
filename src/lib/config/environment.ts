@@ -61,21 +61,25 @@ function getAutomaticApiUrl(): string {
   
   const { hostname, port, protocol } = window.location;
   
-  // Development environment detection
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    // If frontend is on port 3000 (Next.js dev), backend is on 8080
-    if (port === '3000') {
-      return 'http://localhost:8080';
-    }
-    // If no port or port 80, assume backend is also on same host with standard backend port
-    if (!port || port === '80') {
-      return `${protocol}//localhost:8080`;
-    }
+  // Development environment detection - covers localhost and external IPs
+  if (port === '3000') {
+    // If frontend is on port 3000 (Next.js dev), backend is always on 8080
+    // This works for both localhost:3000 and 192.168.1.40:3000
+    return `${protocol}//${hostname}:8080`;
   }
   
-  // For other environments, try to infer backend URL
-  // This maintains the automatic detection principle
-  return `${protocol}//${hostname}${port && port !== '80' && port !== '443' ? ':8080' : ''}`;
+  // If localhost without specific port, use standard backend port
+  if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
+    return `${protocol}//${hostname}:8080`;
+  }
+  
+  // For production or other environments, use same origin or standard ports
+  if (!port || port === '80' || port === '443') {
+    return `${protocol}//${hostname}`;
+  }
+  
+  // Fallback: assume backend is on port 8080 for development
+  return `${protocol}//${hostname}:8080`;
 }
 
 // Environment-specific configurations
@@ -93,7 +97,7 @@ const environments: Record<string, EnvironmentConfig> = {
     },
     websocket: {
       url: process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || (typeof window !== 'undefined' ?
-        `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v2/ws` :
+        `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:8080/api/v2/ws` :
         '/api/v2/ws'),
       reconnectAttempts: 5,
       reconnectDelay: 2000,
@@ -217,6 +221,13 @@ function getCurrentEnvironment(): string {
       return 'production';
     }
     // For any other port on localhost, assume development
+    return 'development';
+  }
+  
+  // Check for development indicators on any hostname
+  const port = window.location.port;
+  // If port 3000, assume development (Next.js dev server) regardless of hostname
+  if (port === '3000') {
     return 'development';
   }
   

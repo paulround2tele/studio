@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -98,27 +100,35 @@ func (m *SecurityMiddleware) EnhancedCORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
 
-		// Define allowed origins for production
-		productionOrigins := []string{
-			"https://domainflow.com",
-			"https://app.domainflow.com",
+		// Get allowed origins from environment variable
+		corsOrigins := os.Getenv("CORS_ORIGINS")
+		var allowedOrigins []string
+		
+		if corsOrigins != "" {
+			// Parse comma-separated origins from environment variable
+			allowedOrigins = strings.Split(corsOrigins, ",")
+			// Trim whitespace from each origin
+			for i, origin := range allowedOrigins {
+				allowedOrigins[i] = strings.TrimSpace(origin)
+			}
+		} else {
+			// Fallback to default origins if CORS_ORIGINS not set
+			allowedOrigins = []string{
+				"http://localhost:3000",
+				"https://domainflow.com",
+				"https://app.domainflow.com",
+			}
 		}
 
 		// Check if origin is allowed
 		isAllowed := false
 
-		// Allow any localhost origin for development
 		if origin != "" {
-			// Check for localhost origins (development)
-			if len(origin) >= 16 && origin[:16] == "http://localhost" {
-				isAllowed = true
-			} else {
-				// Check production origins
-				for _, allowed := range productionOrigins {
-					if origin == allowed {
-						isAllowed = true
-						break
-					}
+			// Check against configured allowed origins
+			for _, allowed := range allowedOrigins {
+				if origin == allowed {
+					isAllowed = true
+					break
 				}
 			}
 		}

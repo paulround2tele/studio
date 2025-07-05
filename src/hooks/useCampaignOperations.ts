@@ -22,16 +22,15 @@ import { useCampaignDetailsStore } from '@/lib/stores/campaignDetailsStore';
 export const useCampaignOperations = (campaignId: string) => {
   const { toast } = useToast();
   
-  const {
-    setCampaign,
-    setLoading,
-    setError,
-    updateFromAPI,
-    setActionLoading,
-    campaign,
-    loading,
-    error,
-  } = useCampaignDetailsStore();
+  // 🔧 FIX: Use stable store references to prevent infinite loops
+  const setCampaign = useCampaignDetailsStore(state => state.setCampaign);
+  const setLoading = useCampaignDetailsStore(state => state.setLoading);
+  const setError = useCampaignDetailsStore(state => state.setError);
+  const updateFromAPI = useCampaignDetailsStore(state => state.updateFromAPI);
+  const setActionLoading = useCampaignDetailsStore(state => state.setActionLoading);
+  const campaign = useCampaignDetailsStore(state => state.campaign);
+  const loading = useCampaignDetailsStore(state => state.loading);
+  const error = useCampaignDetailsStore(state => state.error);
 
   // Load campaign data from API
   const loadCampaignData = useCallback(async (showLoadingSpinner = true) => {
@@ -51,7 +50,7 @@ export const useCampaignOperations = (campaignId: string) => {
 
       // Handle different response structures from backend
       if (Array.isArray(rawResponse)) {
-        campaignData = rawResponse.find(item => 
+        campaignData = rawResponse.find(item =>
           item && typeof item === 'object' && 'id' in item && item.id === campaignId
         ) || rawResponse[0] || null;
       } else if (rawResponse && typeof rawResponse === 'object') {
@@ -96,7 +95,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } finally {
       if (showLoadingSpinner) setLoading(false);
     }
-  }, [campaignId, setCampaign, setLoading, setError, toast]);
+  }, [campaignId, setCampaign, setLoading, setError]);
 
   // Load domain data based on campaign type
   const loadDomainData = useCallback(async (campaignData: CampaignViewModel) => {
@@ -187,7 +186,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } finally {
       setActionLoading(actionKey, false);
     }
-  }, [campaign, campaignId, setActionLoading, toast, loadCampaignData]);
+  }, [campaign, campaignId, setActionLoading, toast]);
 
   // Pause campaign
   const pauseCampaign = useCallback(async () => {
@@ -218,7 +217,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } finally {
       setActionLoading('control-pause', false);
     }
-  }, [campaignId, setActionLoading, toast, loadCampaignData]);
+  }, [campaignId, setActionLoading, toast]);
 
   // Resume campaign
   const resumeCampaign = useCallback(async () => {
@@ -249,7 +248,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } finally {
       setActionLoading('control-resume', false);
     }
-  }, [campaignId, setActionLoading, toast, loadCampaignData]);
+  }, [campaignId, setActionLoading, toast]);
 
   // Stop/cancel campaign
   const stopCampaign = useCallback(async () => {
@@ -280,7 +279,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } finally {
       setActionLoading('control-stop', false);
     }
-  }, [campaignId, setActionLoading, toast, loadCampaignData]);
+  }, [campaignId, setActionLoading, toast]);
 
   // Download domains utility
   const downloadDomains = useCallback((domains: string[], fileNamePrefix: string) => {
