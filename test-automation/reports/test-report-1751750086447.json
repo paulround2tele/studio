@@ -1,0 +1,1045 @@
+{
+  "summary": {
+    "startTime": 1751749962878,
+    "endTime": 1751750086447,
+    "duration": 123569,
+    "totalLogs": 52,
+    "totalErrors": 2,
+    "totalWarnings": 0,
+    "totalPhases": 1,
+    "completedPhases": 0,
+    "failedPhases": 1
+  },
+  "phases": [
+    {
+      "name": "initialization",
+      "description": "Setting up test environment",
+      "startTime": 1751749962882,
+      "endTime": 1751750086446,
+      "status": "failed",
+      "logs": [
+        {
+          "timestamp": 1751749962882,
+          "elapsed": 4,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Starting phase: initialization",
+          "data": {
+            "description": "Setting up test environment"
+          },
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749962919,
+          "elapsed": 41,
+          "level": "info",
+          "category": "SERVERS",
+          "message": "Starting application servers",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749962919,
+          "elapsed": 41,
+          "level": "info",
+          "category": "SERVER",
+          "message": "Starting backend server",
+          "data": {
+            "command": "cd /home/vboxuser/studio/backend && ./bin/apiserver"
+          },
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749962924,
+          "elapsed": 46,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 1 for backend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749963034,
+          "elapsed": 156,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check failed for backend: fetch failed",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749966038,
+          "elapsed": 3160,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 2 for backend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749966072,
+          "elapsed": 3194,
+          "level": "success",
+          "category": "SERVER",
+          "message": "backend server is ready (attempt 2)",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749966072,
+          "elapsed": 3194,
+          "level": "success",
+          "category": "SERVER",
+          "message": "backend server started successfully",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749966072,
+          "elapsed": 3194,
+          "level": "info",
+          "category": "SERVER",
+          "message": "Starting frontend server",
+          "data": {
+            "command": "npm run dev"
+          },
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749966077,
+          "elapsed": 3199,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 1 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749966084,
+          "elapsed": 3206,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check failed for frontend: fetch failed",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749969087,
+          "elapsed": 6209,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 2 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749974088,
+          "elapsed": 11210,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check failed for frontend: The operation was aborted due to timeout",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749977098,
+          "elapsed": 14220,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 3 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749980455,
+          "elapsed": 17577,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 4 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749983604,
+          "elapsed": 20726,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 5 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749986865,
+          "elapsed": 23987,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 6 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749990020,
+          "elapsed": 27142,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 7 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749993289,
+          "elapsed": 30411,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 8 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749996571,
+          "elapsed": 33693,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 9 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751749999796,
+          "elapsed": 36918,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 10 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750002992,
+          "elapsed": 40114,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 11 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750006166,
+          "elapsed": 43288,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 12 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750009342,
+          "elapsed": 46464,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 13 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750012560,
+          "elapsed": 49682,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 14 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750015781,
+          "elapsed": 52903,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 15 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750018927,
+          "elapsed": 56049,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 16 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750022054,
+          "elapsed": 59176,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 17 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750025216,
+          "elapsed": 62338,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 18 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750028337,
+          "elapsed": 65459,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 19 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750031586,
+          "elapsed": 68708,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 20 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750034767,
+          "elapsed": 71889,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 21 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750038031,
+          "elapsed": 75153,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 22 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750041307,
+          "elapsed": 78429,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 23 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750044511,
+          "elapsed": 81633,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 24 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750047697,
+          "elapsed": 84819,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 25 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750050907,
+          "elapsed": 88029,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 26 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750054064,
+          "elapsed": 91186,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 27 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750057295,
+          "elapsed": 94417,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 28 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750060462,
+          "elapsed": 97584,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 29 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750063619,
+          "elapsed": 100741,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 30 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750067024,
+          "elapsed": 104146,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 31 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750070234,
+          "elapsed": 107356,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 32 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750073436,
+          "elapsed": 110558,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 33 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750076531,
+          "elapsed": 113653,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 34 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750079832,
+          "elapsed": 116954,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 35 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750083272,
+          "elapsed": 120394,
+          "level": "debug",
+          "category": "SERVER",
+          "message": "Health check attempt 36 for frontend",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750086438,
+          "elapsed": 123560,
+          "level": "error",
+          "category": "SERVERS",
+          "message": "Failed to start servers: frontend server did not become ready within 120000ms after 36 attempts",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750086446,
+          "elapsed": 123568,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Completed phase: initialization",
+          "data": {
+            "status": "failed",
+            "duration": 123564,
+            "summary": {
+              "error": "frontend server did not become ready within 120000ms after 36 attempts"
+            }
+          },
+          "phase": "initialization"
+        }
+      ],
+      "errors": [
+        {
+          "timestamp": 1751750086438,
+          "elapsed": 123560,
+          "level": "error",
+          "category": "SERVERS",
+          "message": "Failed to start servers: frontend server did not become ready within 120000ms after 36 attempts",
+          "data": null,
+          "phase": "initialization"
+        }
+      ],
+      "screenshots": [],
+      "duration": 123564,
+      "summary": {
+        "error": "frontend server did not become ready within 120000ms after 36 attempts"
+      }
+    }
+  ],
+  "logs": [
+    {
+      "timestamp": 1751749962881,
+      "elapsed": 3,
+      "level": "info",
+      "category": "SUITE",
+      "message": "Starting Domainflow Test Suite execution",
+      "data": null,
+      "phase": "global"
+    },
+    {
+      "timestamp": 1751749962882,
+      "elapsed": 4,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Starting phase: initialization",
+      "data": {
+        "description": "Setting up test environment"
+      },
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749962919,
+      "elapsed": 41,
+      "level": "info",
+      "category": "SERVERS",
+      "message": "Starting application servers",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749962919,
+      "elapsed": 41,
+      "level": "info",
+      "category": "SERVER",
+      "message": "Starting backend server",
+      "data": {
+        "command": "cd /home/vboxuser/studio/backend && ./bin/apiserver"
+      },
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749962924,
+      "elapsed": 46,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 1 for backend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749963034,
+      "elapsed": 156,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check failed for backend: fetch failed",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749966038,
+      "elapsed": 3160,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 2 for backend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749966072,
+      "elapsed": 3194,
+      "level": "success",
+      "category": "SERVER",
+      "message": "backend server is ready (attempt 2)",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749966072,
+      "elapsed": 3194,
+      "level": "success",
+      "category": "SERVER",
+      "message": "backend server started successfully",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749966072,
+      "elapsed": 3194,
+      "level": "info",
+      "category": "SERVER",
+      "message": "Starting frontend server",
+      "data": {
+        "command": "npm run dev"
+      },
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749966077,
+      "elapsed": 3199,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 1 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749966084,
+      "elapsed": 3206,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check failed for frontend: fetch failed",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749969087,
+      "elapsed": 6209,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 2 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749974088,
+      "elapsed": 11210,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check failed for frontend: The operation was aborted due to timeout",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749977098,
+      "elapsed": 14220,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 3 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749980455,
+      "elapsed": 17577,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 4 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749983604,
+      "elapsed": 20726,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 5 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749986865,
+      "elapsed": 23987,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 6 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749990020,
+      "elapsed": 27142,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 7 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749993289,
+      "elapsed": 30411,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 8 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749996571,
+      "elapsed": 33693,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 9 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751749999796,
+      "elapsed": 36918,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 10 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750002992,
+      "elapsed": 40114,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 11 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750006166,
+      "elapsed": 43288,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 12 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750009342,
+      "elapsed": 46464,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 13 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750012560,
+      "elapsed": 49682,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 14 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750015781,
+      "elapsed": 52903,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 15 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750018927,
+      "elapsed": 56049,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 16 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750022054,
+      "elapsed": 59176,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 17 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750025216,
+      "elapsed": 62338,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 18 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750028337,
+      "elapsed": 65459,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 19 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750031586,
+      "elapsed": 68708,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 20 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750034767,
+      "elapsed": 71889,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 21 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750038031,
+      "elapsed": 75153,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 22 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750041307,
+      "elapsed": 78429,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 23 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750044511,
+      "elapsed": 81633,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 24 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750047697,
+      "elapsed": 84819,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 25 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750050907,
+      "elapsed": 88029,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 26 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750054064,
+      "elapsed": 91186,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 27 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750057295,
+      "elapsed": 94417,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 28 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750060462,
+      "elapsed": 97584,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 29 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750063619,
+      "elapsed": 100741,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 30 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750067024,
+      "elapsed": 104146,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 31 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750070234,
+      "elapsed": 107356,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 32 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750073436,
+      "elapsed": 110558,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 33 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750076531,
+      "elapsed": 113653,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 34 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750079832,
+      "elapsed": 116954,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 35 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750083272,
+      "elapsed": 120394,
+      "level": "debug",
+      "category": "SERVER",
+      "message": "Health check attempt 36 for frontend",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750086438,
+      "elapsed": 123560,
+      "level": "error",
+      "category": "SERVERS",
+      "message": "Failed to start servers: frontend server did not become ready within 120000ms after 36 attempts",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750086446,
+      "elapsed": 123568,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Completed phase: initialization",
+      "data": {
+        "status": "failed",
+        "duration": 123564,
+        "summary": {
+          "error": "frontend server did not become ready within 120000ms after 36 attempts"
+        }
+      },
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750086446,
+      "elapsed": 123568,
+      "level": "error",
+      "category": "SUITE",
+      "message": "Test suite execution failed: frontend server did not become ready within 120000ms after 36 attempts",
+      "data": null,
+      "phase": "global"
+    },
+    {
+      "timestamp": 1751750086446,
+      "elapsed": 123568,
+      "level": "info",
+      "category": "CLEANUP",
+      "message": "Cleaning up test environment",
+      "data": null,
+      "phase": "global"
+    }
+  ],
+  "config": {
+    "app": {
+      "frontend": "http://localhost:3000",
+      "backend": "http://localhost:8080",
+      "loginUrl": "http://localhost:3000/login",
+      "campaignsUrl": "http://localhost:3000/campaigns",
+      "dashboardUrl": "http://localhost:3000/dashboard"
+    },
+    "auth": {
+      "username": "admin@fntel.com",
+      "password": "admin123"
+    },
+    "browser": {
+      "headless": false,
+      "devtools": false,
+      "slowMo": 50,
+      "defaultViewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "mobileViewport": {
+        "width": 375,
+        "height": 667
+      },
+      "tabletViewport": {
+        "width": 768,
+        "height": 1024
+      }
+    },
+    "servers": {
+      "captureServerLogs": true,
+      "skipServerStart": false,
+      "backend": {
+        "command": "cd /home/vboxuser/studio/backend && ./bin/apiserver",
+        "cwd": "/home/vboxuser/studio/backend",
+        "port": 8080,
+        "healthEndpoint": "http://localhost:8080/api/v2/health"
+      },
+      "frontend": {
+        "command": "npm run dev",
+        "cwd": "/home/vboxuser/studio",
+        "port": 3000,
+        "healthEndpoint": "http://localhost:3000/api/health"
+      }
+    },
+    "testing": {
+      "maxCampaigns": 5,
+      "retryAttempts": 3,
+      "retryDelay": 2000,
+      "screenshotOnError": true,
+      "validateNetwork": true
+    },
+    "timeouts": {
+      "default": 60000,
+      "navigation": 30000,
+      "selector": 10000,
+      "action": 5000,
+      "serverStart": 120000,
+      "websocket": 15000,
+      "networkRequest": 10000
+    },
+    "output": {
+      "base": "./test-automation",
+      "logs": "./test-automation/logs",
+      "reports": "./test-automation/reports",
+      "screenshots": "./test-automation/screenshots",
+      "serverLogs": "./test-automation/server-logs",
+      "performance": "./test-automation/performance"
+    }
+  }
+}

@@ -1,0 +1,2277 @@
+{
+  "summary": {
+    "startTime": 1751750534454,
+    "endTime": 1751750593519,
+    "duration": 59065,
+    "totalLogs": 106,
+    "totalErrors": 28,
+    "totalWarnings": 7,
+    "totalPhases": 2,
+    "completedPhases": 1,
+    "failedPhases": 1
+  },
+  "phases": [
+    {
+      "name": "initialization",
+      "description": "Setting up test environment",
+      "startTime": 1751750534457,
+      "endTime": 1751750540172,
+      "status": "completed",
+      "logs": [
+        {
+          "timestamp": 1751750534457,
+          "elapsed": 3,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Starting phase: initialization",
+          "data": {
+            "description": "Setting up test environment"
+          },
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750534469,
+          "elapsed": 15,
+          "level": "info",
+          "category": "BROWSER",
+          "message": "Initializing browser environment",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750540026,
+          "elapsed": 5572,
+          "level": "info",
+          "category": "WEBSOCKET",
+          "message": "Starting WebSocket monitoring",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750540171,
+          "elapsed": 5717,
+          "level": "success",
+          "category": "BROWSER",
+          "message": "Browser initialized successfully",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750540172,
+          "elapsed": 5718,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Completed phase: initialization",
+          "data": {
+            "status": "completed",
+            "duration": 5715,
+            "summary": {
+              "serversCaptured": false,
+              "browserReady": true
+            }
+          },
+          "phase": "initialization"
+        }
+      ],
+      "errors": [],
+      "screenshots": [],
+      "duration": 5715,
+      "summary": {
+        "serversCaptured": false,
+        "browserReady": true
+      }
+    },
+    {
+      "name": "authentication",
+      "description": "Testing login flow and session validation",
+      "startTime": 1751750540173,
+      "endTime": 1751750593515,
+      "status": "failed",
+      "logs": [
+        {
+          "timestamp": 1751750540173,
+          "elapsed": 5719,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Starting phase: authentication",
+          "data": {
+            "description": "Testing login flow and session validation"
+          },
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750540350,
+          "elapsed": 5896,
+          "level": "info",
+          "category": "NAVIGATION",
+          "message": "Navigating to: http://localhost:3000/login login-page",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750549512,
+          "elapsed": 15058,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750549650,
+          "elapsed": 15196,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:29.589Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Initialized with configuration {\n  \"sessionCheckTimeout\": 15000,\n  \"maxRetries\": 2\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550184,
+          "elapsed": 15730,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.120Z] [6r7a8kev] [DEBUG] [WEBSOCKET] Service initialized {\n  \"url\": \"\",\n  \"reconnectInterval\": 10000,\n  \"maxReconnectAttempts\": 5\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550487,
+          "elapsed": 16033,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.414Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Starting session check",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550488,
+          "elapsed": 16034,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.415Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Started loading: auth.session_check {\n  \"description\": \"Checking session...\",\n  \"timeout\": 15000\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550489,
+          "elapsed": 16035,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.420Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.session_check\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550493,
+          "elapsed": 16039,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.431Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Checking current user session",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550504,
+          "elapsed": 16050,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.433Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Cookie state before session check {\n  \"hasSessionCookie\": false,\n  \"cookieValue\": \"none\",\n  \"allCookies\": [],\n  \"cookieCount\": 0\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550523,
+          "elapsed": 16069,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.433Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Making getCurrentUser API call",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550523,
+          "elapsed": 16069,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[log] [DIAGNOSTIC] getCurrentUser API call details: JSHandle@object",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550613,
+          "elapsed": 16159,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.494Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Starting session check",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550614,
+          "elapsed": 16160,
+          "level": "warn",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:30.500Z] [6r7a8kev] [WARN] [LOADING_STORE] Operation auth.session_check is already loading",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550623,
+          "elapsed": 16169,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.502Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Checking current user session",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550623,
+          "elapsed": 16169,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.551Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Cookie state before session check {\n  \"hasSessionCookie\": false,\n  \"cookieValue\": \"none\",\n  \"allCookies\": [],\n  \"cookieCount\": 0\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550645,
+          "elapsed": 16191,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.554Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Making getCurrentUser API call",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550646,
+          "elapsed": 16192,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[log] [DIAGNOSTIC] getCurrentUser API call details: JSHandle@object",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550892,
+          "elapsed": 16438,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550940,
+          "elapsed": 16486,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.845Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750550951,
+          "elapsed": 16497,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:30.871Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551074,
+          "elapsed": 16620,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551255,
+          "elapsed": 16801,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551263,
+          "elapsed": 16809,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551263,
+          "elapsed": 16809,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:355:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1249:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1873:30)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551276,
+          "elapsed": 16822,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "[DIAGNOSTIC] getCurrentUser failed: JSHandle@object",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551276,
+          "elapsed": 16822,
+          "level": "warn",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:31.194Z] [6r7a8kev] [WARN] [AUTH_SERVICE] Session check failed unexpectedly {\n  \"error\": \"Authentication required\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551276,
+          "elapsed": 16822,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:31.194Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Session check completed - no valid session",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551276,
+          "elapsed": 16822,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:31.194Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Component unmounted, skipping session check state update",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551277,
+          "elapsed": 16823,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:31.196Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Stopped loading: auth.session_check {\n  \"duration\": 781,\n  \"status\": \"succeeded\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551277,
+          "elapsed": 16823,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:31.205Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.session_check\",\n      \"status\": \"succeeded\",\n      \"isLoading\": false\n    }\n  ]\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551303,
+          "elapsed": 16849,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:31.235Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551304,
+          "elapsed": 16850,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:31.235Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551864,
+          "elapsed": 17410,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551866,
+          "elapsed": 17412,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551866,
+          "elapsed": 17412,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:355:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1249:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1873:30)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551869,
+          "elapsed": 17415,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "[DIAGNOSTIC] getCurrentUser failed: JSHandle@object",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551869,
+          "elapsed": 17415,
+          "level": "warn",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:31.803Z] [6r7a8kev] [WARN] [AUTH_SERVICE] Session check failed unexpectedly {\n  \"error\": \"Authentication required\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551874,
+          "elapsed": 17420,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:31.803Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Session check completed - no valid session",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551875,
+          "elapsed": 17421,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:31.803Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Component unmounted, skipping session check state update",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551875,
+          "elapsed": 17421,
+          "level": "warn",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:31.803Z] [6r7a8kev] [WARN] [LOADING_STORE] Attempted to stop non-loading operation: auth.session_check",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551875,
+          "elapsed": 17421,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[log] ⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation: JSHandle@object",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551934,
+          "elapsed": 17480,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[verbose] [DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750553524,
+          "elapsed": 19070,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[log] [Fast Refresh] done in NaNms",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750554654,
+          "elapsed": 20200,
+          "level": "error",
+          "category": "SCREENSHOT",
+          "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750554655,
+          "elapsed": 20201,
+          "level": "success",
+          "category": "NAVIGATION",
+          "message": "Navigated to: http://localhost:3000/login",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750554655,
+          "elapsed": 20201,
+          "level": "debug",
+          "category": "SELECTOR",
+          "message": "Waiting for: form",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750555302,
+          "elapsed": 20848,
+          "level": "debug",
+          "category": "SELECTOR",
+          "message": "Found: form",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750555303,
+          "elapsed": 20849,
+          "level": "info",
+          "category": "INTERACTION",
+          "message": "Typing in: input[name=\"username\"], input[type=\"email\"], input[name=\"email\"] username",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750555303,
+          "elapsed": 20849,
+          "level": "debug",
+          "category": "SELECTOR",
+          "message": "Waiting for: input[name=\"username\"], input[type=\"email\"], input[name=\"email\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750555688,
+          "elapsed": 21234,
+          "level": "debug",
+          "category": "SELECTOR",
+          "message": "Found: input[name=\"username\"], input[type=\"email\"], input[name=\"email\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750558985,
+          "elapsed": 24531,
+          "level": "error",
+          "category": "SCREENSHOT",
+          "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750558985,
+          "elapsed": 24531,
+          "level": "success",
+          "category": "INTERACTION",
+          "message": "Typed in: input[name=\"username\"], input[type=\"email\"], input[name=\"email\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750558985,
+          "elapsed": 24531,
+          "level": "info",
+          "category": "INTERACTION",
+          "message": "Typing in: input[name=\"password\"], input[type=\"password\"] password",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750558985,
+          "elapsed": 24531,
+          "level": "debug",
+          "category": "SELECTOR",
+          "message": "Waiting for: input[name=\"password\"], input[type=\"password\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750559316,
+          "elapsed": 24862,
+          "level": "debug",
+          "category": "SELECTOR",
+          "message": "Found: input[name=\"password\"], input[type=\"password\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750561732,
+          "elapsed": 27278,
+          "level": "error",
+          "category": "SCREENSHOT",
+          "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750561732,
+          "elapsed": 27278,
+          "level": "success",
+          "category": "INTERACTION",
+          "message": "Typed in: input[name=\"password\"], input[type=\"password\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750561732,
+          "elapsed": 27278,
+          "level": "info",
+          "category": "INTERACTION",
+          "message": "Clicking: button[type=\"submit\"] login-submit",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750561733,
+          "elapsed": 27279,
+          "level": "debug",
+          "category": "SELECTOR",
+          "message": "Waiting for: button[type=\"submit\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562063,
+          "elapsed": 27609,
+          "level": "debug",
+          "category": "SELECTOR",
+          "message": "Found: button[type=\"submit\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562857,
+          "elapsed": 28403,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:42.804Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Form submission started {\n  \"email\": \"admin@fntel.com\",\n  \"passwordLength\": 8\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562858,
+          "elapsed": 28404,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[info] [2025-07-05T21:22:42.805Z] [6r7a8kev] [INFO] [AUTH_UI] Login with UI started {\n  \"email\": \"admin@fntel.com\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562858,
+          "elapsed": 28404,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:42.805Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Started loading: auth.login {\n  \"description\": \"Signing in...\",\n  \"timeout\": 30000\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562858,
+          "elapsed": 28404,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:42.806Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.login\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562858,
+          "elapsed": 28404,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[info] [2025-07-05T21:22:42.806Z] [6r7a8kev] [INFO] [AUTH_CONTEXT] Login attempt started {\n  \"email\": \"admin@fntel.com\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562860,
+          "elapsed": 28406,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[info] [2025-07-05T21:22:42.806Z] [6r7a8kev] [INFO] [AUTH_SERVICE] Login attempt started {\n  \"email\": \"admin@fntel.com\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562865,
+          "elapsed": 28411,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:42.808Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750562865,
+          "elapsed": 28411,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:42.809Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563157,
+          "elapsed": 28703,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563207,
+          "elapsed": 28753,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563213,
+          "elapsed": 28759,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563215,
+          "elapsed": 28761,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:43.065528877Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:43.065528877Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563216,
+          "elapsed": 28762,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:43.138Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Retrying login after delay {\n  \"attempt\": 1,\n  \"retryDelay\": 1000\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563490,
+          "elapsed": 29036,
+          "level": "error",
+          "category": "SCREENSHOT",
+          "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563493,
+          "elapsed": 29039,
+          "level": "success",
+          "category": "INTERACTION",
+          "message": "Clicked: button[type=\"submit\"]",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563630,
+          "elapsed": 29176,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[log] [Fast Refresh] rebuilding",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563755,
+          "elapsed": 29301,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[log] [Fast Refresh] done in 298ms",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564497,
+          "elapsed": 30043,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564498,
+          "elapsed": 30044,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564499,
+          "elapsed": 30045,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564499,
+          "elapsed": 30045,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:44.373448149Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:44.373448149Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564499,
+          "elapsed": 30045,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:44.427Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Retrying login after delay {\n  \"attempt\": 2,\n  \"retryDelay\": 2000\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564824,
+          "elapsed": 30370,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[log] [Fast Refresh] rebuilding",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750565043,
+          "elapsed": 30589,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[log] [Fast Refresh] done in 367ms",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566773,
+          "elapsed": 32319,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566910,
+          "elapsed": 32456,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:46.813Z] [6r7a8kev] [ERROR] [AUTH_SERVICE] Login failed after all retries {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"maxRetries\": 2\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "warn",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:46.816Z] [6r7a8kev] [WARN] [AUTH_CONTEXT] Login failed {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "warn",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:46.816Z] [6r7a8kev] [WARN] [AUTH_UI] Login with UI failed {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:46.816Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Stopped loading: auth.login {\n  \"duration\": 4011,\n  \"status\": \"failed\",\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566918,
+          "elapsed": 32464,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:46.816Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.login\",\n      \"status\": \"failed\",\n      \"isLoading\": false\n    }\n  ]\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750567024,
+          "elapsed": 32570,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[debug] [2025-07-05T21:22:46.928Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Login result received {\n  \"success\": false,\n  \"hasError\": true\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750567026,
+          "elapsed": 32572,
+          "level": "warn",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:46.928Z] [6r7a8kev] [WARN] [LOGIN_FORM] Login failed {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750567245,
+          "elapsed": 32791,
+          "level": "debug",
+          "category": "CONSOLE",
+          "message": "[verbose] [DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750593515,
+          "elapsed": 59061,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Completed phase: authentication",
+          "data": {
+            "status": "failed",
+            "duration": 53342,
+            "summary": {
+              "error": "Navigation timeout of 30000 ms exceeded"
+            }
+          },
+          "phase": "authentication"
+        }
+      ],
+      "errors": [
+        {
+          "timestamp": 1751750550892,
+          "elapsed": 16438,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551074,
+          "elapsed": 16620,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551255,
+          "elapsed": 16801,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551263,
+          "elapsed": 16809,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551263,
+          "elapsed": 16809,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:355:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1249:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1873:30)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551276,
+          "elapsed": 16822,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "[DIAGNOSTIC] getCurrentUser failed: JSHandle@object",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551864,
+          "elapsed": 17410,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551866,
+          "elapsed": 17412,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551866,
+          "elapsed": 17412,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:355:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1249:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1873:30)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750551869,
+          "elapsed": 17415,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "[DIAGNOSTIC] getCurrentUser failed: JSHandle@object",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750554654,
+          "elapsed": 20200,
+          "level": "error",
+          "category": "SCREENSHOT",
+          "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750558985,
+          "elapsed": 24531,
+          "level": "error",
+          "category": "SCREENSHOT",
+          "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750561732,
+          "elapsed": 27278,
+          "level": "error",
+          "category": "SCREENSHOT",
+          "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563157,
+          "elapsed": 28703,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563207,
+          "elapsed": 28753,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563213,
+          "elapsed": 28759,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563215,
+          "elapsed": 28761,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:43.065528877Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:43.065528877Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750563490,
+          "elapsed": 29036,
+          "level": "error",
+          "category": "SCREENSHOT",
+          "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564497,
+          "elapsed": 30043,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564498,
+          "elapsed": 30044,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564499,
+          "elapsed": 30045,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750564499,
+          "elapsed": 30045,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:44.373448149Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:44.373448149Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566773,
+          "elapsed": 32319,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566910,
+          "elapsed": 32456,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "API_CLIENT_DEBUG - Non-network error:",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750566917,
+          "elapsed": 32463,
+          "level": "error",
+          "category": "CONSOLE",
+          "message": "[2025-07-05T21:22:46.813Z] [6r7a8kev] [ERROR] [AUTH_SERVICE] Login failed after all retries {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"maxRetries\": 2\n}",
+          "data": null,
+          "phase": "authentication"
+        }
+      ],
+      "screenshots": [],
+      "duration": 53342,
+      "summary": {
+        "error": "Navigation timeout of 30000 ms exceeded"
+      }
+    }
+  ],
+  "logs": [
+    {
+      "timestamp": 1751750534457,
+      "elapsed": 3,
+      "level": "info",
+      "category": "SUITE",
+      "message": "Starting Domainflow Test Suite execution",
+      "data": null,
+      "phase": "global"
+    },
+    {
+      "timestamp": 1751750534457,
+      "elapsed": 3,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Starting phase: initialization",
+      "data": {
+        "description": "Setting up test environment"
+      },
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750534469,
+      "elapsed": 15,
+      "level": "info",
+      "category": "BROWSER",
+      "message": "Initializing browser environment",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750540026,
+      "elapsed": 5572,
+      "level": "info",
+      "category": "WEBSOCKET",
+      "message": "Starting WebSocket monitoring",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750540171,
+      "elapsed": 5717,
+      "level": "success",
+      "category": "BROWSER",
+      "message": "Browser initialized successfully",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750540172,
+      "elapsed": 5718,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Completed phase: initialization",
+      "data": {
+        "status": "completed",
+        "duration": 5715,
+        "summary": {
+          "serversCaptured": false,
+          "browserReady": true
+        }
+      },
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750540173,
+      "elapsed": 5719,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Starting phase: authentication",
+      "data": {
+        "description": "Testing login flow and session validation"
+      },
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750540350,
+      "elapsed": 5896,
+      "level": "info",
+      "category": "NAVIGATION",
+      "message": "Navigating to: http://localhost:3000/login login-page",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750549512,
+      "elapsed": 15058,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750549650,
+      "elapsed": 15196,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:29.589Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Initialized with configuration {\n  \"sessionCheckTimeout\": 15000,\n  \"maxRetries\": 2\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550184,
+      "elapsed": 15730,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.120Z] [6r7a8kev] [DEBUG] [WEBSOCKET] Service initialized {\n  \"url\": \"\",\n  \"reconnectInterval\": 10000,\n  \"maxReconnectAttempts\": 5\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550487,
+      "elapsed": 16033,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.414Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Starting session check",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550488,
+      "elapsed": 16034,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.415Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Started loading: auth.session_check {\n  \"description\": \"Checking session...\",\n  \"timeout\": 15000\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550489,
+      "elapsed": 16035,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.420Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.session_check\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550493,
+      "elapsed": 16039,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.431Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Checking current user session",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550504,
+      "elapsed": 16050,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.433Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Cookie state before session check {\n  \"hasSessionCookie\": false,\n  \"cookieValue\": \"none\",\n  \"allCookies\": [],\n  \"cookieCount\": 0\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550523,
+      "elapsed": 16069,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.433Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Making getCurrentUser API call",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550523,
+      "elapsed": 16069,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[log] [DIAGNOSTIC] getCurrentUser API call details: JSHandle@object",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550613,
+      "elapsed": 16159,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.494Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Starting session check",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550614,
+      "elapsed": 16160,
+      "level": "warn",
+      "category": "CONSOLE",
+      "message": "[2025-07-05T21:22:30.500Z] [6r7a8kev] [WARN] [LOADING_STORE] Operation auth.session_check is already loading",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550623,
+      "elapsed": 16169,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.502Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Checking current user session",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550623,
+      "elapsed": 16169,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.551Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Cookie state before session check {\n  \"hasSessionCookie\": false,\n  \"cookieValue\": \"none\",\n  \"allCookies\": [],\n  \"cookieCount\": 0\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550645,
+      "elapsed": 16191,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.554Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Making getCurrentUser API call",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550646,
+      "elapsed": 16192,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[log] [DIAGNOSTIC] getCurrentUser API call details: JSHandle@object",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550892,
+      "elapsed": 16438,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550940,
+      "elapsed": 16486,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.845Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750550951,
+      "elapsed": 16497,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:30.871Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551074,
+      "elapsed": 16620,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551255,
+      "elapsed": 16801,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "API_CLIENT_DEBUG - Non-network error:",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551263,
+      "elapsed": 16809,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551263,
+      "elapsed": 16809,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:355:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1249:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1873:30)\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551276,
+      "elapsed": 16822,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "[DIAGNOSTIC] getCurrentUser failed: JSHandle@object",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551276,
+      "elapsed": 16822,
+      "level": "warn",
+      "category": "CONSOLE",
+      "message": "[2025-07-05T21:22:31.194Z] [6r7a8kev] [WARN] [AUTH_SERVICE] Session check failed unexpectedly {\n  \"error\": \"Authentication required\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551276,
+      "elapsed": 16822,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:31.194Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Session check completed - no valid session",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551276,
+      "elapsed": 16822,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:31.194Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Component unmounted, skipping session check state update",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551277,
+      "elapsed": 16823,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:31.196Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Stopped loading: auth.session_check {\n  \"duration\": 781,\n  \"status\": \"succeeded\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551277,
+      "elapsed": 16823,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:31.205Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.session_check\",\n      \"status\": \"succeeded\",\n      \"isLoading\": false\n    }\n  ]\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551303,
+      "elapsed": 16849,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:31.235Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551304,
+      "elapsed": 16850,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:31.235Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551864,
+      "elapsed": 17410,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "API_CLIENT_DEBUG - Non-network error:",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551866,
+      "elapsed": 17412,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551866,
+      "elapsed": 17412,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:355:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1249:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1873:30)\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551869,
+      "elapsed": 17415,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "[DIAGNOSTIC] getCurrentUser failed: JSHandle@object",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551869,
+      "elapsed": 17415,
+      "level": "warn",
+      "category": "CONSOLE",
+      "message": "[2025-07-05T21:22:31.803Z] [6r7a8kev] [WARN] [AUTH_SERVICE] Session check failed unexpectedly {\n  \"error\": \"Authentication required\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551874,
+      "elapsed": 17420,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:31.803Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Session check completed - no valid session",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551875,
+      "elapsed": 17421,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:31.803Z] [6r7a8kev] [DEBUG] [AUTH_CONTEXT] Component unmounted, skipping session check state update",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551875,
+      "elapsed": 17421,
+      "level": "warn",
+      "category": "CONSOLE",
+      "message": "[2025-07-05T21:22:31.803Z] [6r7a8kev] [WARN] [LOADING_STORE] Attempted to stop non-loading operation: auth.session_check",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551875,
+      "elapsed": 17421,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[log] ⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation: JSHandle@object",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750551934,
+      "elapsed": 17480,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[verbose] [DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750553524,
+      "elapsed": 19070,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[log] [Fast Refresh] done in NaNms",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750554654,
+      "elapsed": 20200,
+      "level": "error",
+      "category": "SCREENSHOT",
+      "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750554655,
+      "elapsed": 20201,
+      "level": "success",
+      "category": "NAVIGATION",
+      "message": "Navigated to: http://localhost:3000/login",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750554655,
+      "elapsed": 20201,
+      "level": "debug",
+      "category": "SELECTOR",
+      "message": "Waiting for: form",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750555302,
+      "elapsed": 20848,
+      "level": "debug",
+      "category": "SELECTOR",
+      "message": "Found: form",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750555303,
+      "elapsed": 20849,
+      "level": "info",
+      "category": "INTERACTION",
+      "message": "Typing in: input[name=\"username\"], input[type=\"email\"], input[name=\"email\"] username",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750555303,
+      "elapsed": 20849,
+      "level": "debug",
+      "category": "SELECTOR",
+      "message": "Waiting for: input[name=\"username\"], input[type=\"email\"], input[name=\"email\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750555688,
+      "elapsed": 21234,
+      "level": "debug",
+      "category": "SELECTOR",
+      "message": "Found: input[name=\"username\"], input[type=\"email\"], input[name=\"email\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750558985,
+      "elapsed": 24531,
+      "level": "error",
+      "category": "SCREENSHOT",
+      "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750558985,
+      "elapsed": 24531,
+      "level": "success",
+      "category": "INTERACTION",
+      "message": "Typed in: input[name=\"username\"], input[type=\"email\"], input[name=\"email\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750558985,
+      "elapsed": 24531,
+      "level": "info",
+      "category": "INTERACTION",
+      "message": "Typing in: input[name=\"password\"], input[type=\"password\"] password",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750558985,
+      "elapsed": 24531,
+      "level": "debug",
+      "category": "SELECTOR",
+      "message": "Waiting for: input[name=\"password\"], input[type=\"password\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750559316,
+      "elapsed": 24862,
+      "level": "debug",
+      "category": "SELECTOR",
+      "message": "Found: input[name=\"password\"], input[type=\"password\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750561732,
+      "elapsed": 27278,
+      "level": "error",
+      "category": "SCREENSHOT",
+      "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750561732,
+      "elapsed": 27278,
+      "level": "success",
+      "category": "INTERACTION",
+      "message": "Typed in: input[name=\"password\"], input[type=\"password\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750561732,
+      "elapsed": 27278,
+      "level": "info",
+      "category": "INTERACTION",
+      "message": "Clicking: button[type=\"submit\"] login-submit",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750561733,
+      "elapsed": 27279,
+      "level": "debug",
+      "category": "SELECTOR",
+      "message": "Waiting for: button[type=\"submit\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562063,
+      "elapsed": 27609,
+      "level": "debug",
+      "category": "SELECTOR",
+      "message": "Found: button[type=\"submit\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562857,
+      "elapsed": 28403,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:42.804Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Form submission started {\n  \"email\": \"admin@fntel.com\",\n  \"passwordLength\": 8\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562858,
+      "elapsed": 28404,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[info] [2025-07-05T21:22:42.805Z] [6r7a8kev] [INFO] [AUTH_UI] Login with UI started {\n  \"email\": \"admin@fntel.com\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562858,
+      "elapsed": 28404,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:42.805Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Started loading: auth.login {\n  \"description\": \"Signing in...\",\n  \"timeout\": 30000\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562858,
+      "elapsed": 28404,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:42.806Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.login\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562858,
+      "elapsed": 28404,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[info] [2025-07-05T21:22:42.806Z] [6r7a8kev] [INFO] [AUTH_CONTEXT] Login attempt started {\n  \"email\": \"admin@fntel.com\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562860,
+      "elapsed": 28406,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[info] [2025-07-05T21:22:42.806Z] [6r7a8kev] [INFO] [AUTH_SERVICE] Login attempt started {\n  \"email\": \"admin@fntel.com\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562865,
+      "elapsed": 28411,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:42.808Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750562865,
+      "elapsed": 28411,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:42.809Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563157,
+      "elapsed": 28703,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563207,
+      "elapsed": 28753,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "API_CLIENT_DEBUG - Non-network error:",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563213,
+      "elapsed": 28759,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563215,
+      "elapsed": 28761,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:43.065528877Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:43.065528877Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563216,
+      "elapsed": 28762,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:43.138Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Retrying login after delay {\n  \"attempt\": 1,\n  \"retryDelay\": 1000\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563490,
+      "elapsed": 29036,
+      "level": "error",
+      "category": "SCREENSHOT",
+      "message": "Failed to take screenshot: png screenshots do not support 'quality'.",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563493,
+      "elapsed": 29039,
+      "level": "success",
+      "category": "INTERACTION",
+      "message": "Clicked: button[type=\"submit\"]",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563630,
+      "elapsed": 29176,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[log] [Fast Refresh] rebuilding",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750563755,
+      "elapsed": 29301,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[log] [Fast Refresh] done in 298ms",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750564497,
+      "elapsed": 30043,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750564498,
+      "elapsed": 30044,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "API_CLIENT_DEBUG - Non-network error:",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750564499,
+      "elapsed": 30045,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750564499,
+      "elapsed": 30045,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:44.373448149Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:44.373448149Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750564499,
+      "elapsed": 30045,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:44.427Z] [6r7a8kev] [DEBUG] [AUTH_SERVICE] Retrying login after delay {\n  \"attempt\": 2,\n  \"retryDelay\": 2000\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750564824,
+      "elapsed": 30370,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[log] [Fast Refresh] rebuilding",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750565043,
+      "elapsed": 30589,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[log] [Fast Refresh] done in 367ms",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566773,
+      "elapsed": 32319,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566910,
+      "elapsed": 32456,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "API_CLIENT_DEBUG - Non-network error:",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566917,
+      "elapsed": 32463,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Attempt: 1, URL: http://localhost:8080/auth/login, Method: POST",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566917,
+      "elapsed": 32463,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"stack\": \"Error: {\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:241:35)\\n    at async AuthService.login (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1292:34)\\n    at async AuthProvider.useCallback[login] [as login] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1948:32)\\n    at async useAuthUI.useCallback[loginWithUI] (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:37:32)\\n    at async handleSubmit (http://localhost:3000/_next/static/chunks/_26fcb79c._.js:674:28)\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566917,
+      "elapsed": 32463,
+      "level": "error",
+      "category": "CONSOLE",
+      "message": "[2025-07-05T21:22:46.813Z] [6r7a8kev] [ERROR] [AUTH_SERVICE] Login failed after all retries {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\",\n  \"maxRetries\": 2\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566917,
+      "elapsed": 32463,
+      "level": "warn",
+      "category": "CONSOLE",
+      "message": "[2025-07-05T21:22:46.816Z] [6r7a8kev] [WARN] [AUTH_CONTEXT] Login failed {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566917,
+      "elapsed": 32463,
+      "level": "warn",
+      "category": "CONSOLE",
+      "message": "[2025-07-05T21:22:46.816Z] [6r7a8kev] [WARN] [AUTH_UI] Login with UI failed {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566917,
+      "elapsed": 32463,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:46.816Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Stopped loading: auth.login {\n  \"duration\": 4011,\n  \"status\": \"failed\",\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750566918,
+      "elapsed": 32464,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:46.816Z] [6r7a8kev] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.login\",\n      \"status\": \"failed\",\n      \"isLoading\": false\n    }\n  ]\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750567024,
+      "elapsed": 32570,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[debug] [2025-07-05T21:22:46.928Z] [6r7a8kev] [DEBUG] [LOGIN_FORM] Login result received {\n  \"success\": false,\n  \"hasError\": true\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750567026,
+      "elapsed": 32572,
+      "level": "warn",
+      "category": "CONSOLE",
+      "message": "[2025-07-05T21:22:46.928Z] [6r7a8kev] [WARN] [LOGIN_FORM] Login failed {\n  \"error\": \"{\\n  \\\"code\\\": \\\"UNAUTHORIZED\\\",\\n  \\\"message\\\": \\\"Invalid email or password\\\",\\n  \\\"timestamp\\\": \\\"2025-07-05T21:22:46.643321647Z\\\",\\n  \\\"path\\\": \\\"/auth/login\\\"\\n}\"\n}",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750567245,
+      "elapsed": 32791,
+      "level": "debug",
+      "category": "CONSOLE",
+      "message": "[verbose] [DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq)",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750593515,
+      "elapsed": 59061,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Completed phase: authentication",
+      "data": {
+        "status": "failed",
+        "duration": 53342,
+        "summary": {
+          "error": "Navigation timeout of 30000 ms exceeded"
+        }
+      },
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750593518,
+      "elapsed": 59064,
+      "level": "error",
+      "category": "SUITE",
+      "message": "Test suite execution failed: Navigation timeout of 30000 ms exceeded",
+      "data": null,
+      "phase": "global"
+    },
+    {
+      "timestamp": 1751750593518,
+      "elapsed": 59064,
+      "level": "info",
+      "category": "CLEANUP",
+      "message": "Cleaning up test environment",
+      "data": null,
+      "phase": "global"
+    }
+  ],
+  "config": {
+    "app": {
+      "frontend": "http://localhost:3000",
+      "backend": "http://localhost:8080",
+      "loginUrl": "http://localhost:3000/login",
+      "campaignsUrl": "http://localhost:3000/campaigns",
+      "dashboardUrl": "http://localhost:3000/dashboard"
+    },
+    "auth": {
+      "username": "admin@fntel.com",
+      "password": "admin123"
+    },
+    "browser": {
+      "headless": false,
+      "devtools": false,
+      "slowMo": 50,
+      "defaultViewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "mobileViewport": {
+        "width": 375,
+        "height": 667
+      },
+      "tabletViewport": {
+        "width": 768,
+        "height": 1024
+      }
+    },
+    "servers": {
+      "captureServerLogs": false,
+      "skipServerStart": true,
+      "backend": {
+        "command": "cd /home/vboxuser/studio/backend && ./bin/apiserver",
+        "cwd": "/home/vboxuser/studio/backend",
+        "port": 8080,
+        "healthEndpoint": "http://localhost:8080/api/v2/health"
+      },
+      "frontend": {
+        "command": "npm run dev",
+        "cwd": "/home/vboxuser/studio",
+        "port": 3000,
+        "healthEndpoint": "http://localhost:3000/api/health"
+      }
+    },
+    "testing": {
+      "maxCampaigns": 5,
+      "retryAttempts": 3,
+      "retryDelay": 2000,
+      "screenshotOnError": true,
+      "validateNetwork": true
+    },
+    "timeouts": {
+      "default": 60000,
+      "navigation": 30000,
+      "selector": 10000,
+      "action": 5000,
+      "serverStart": 120000,
+      "websocket": 15000,
+      "networkRequest": 10000
+    },
+    "output": {
+      "base": "./test-automation",
+      "logs": "./test-automation/logs",
+      "reports": "./test-automation/reports",
+      "screenshots": "./test-automation/screenshots",
+      "serverLogs": "./test-automation/server-logs",
+      "performance": "./test-automation/performance"
+    }
+  }
+}

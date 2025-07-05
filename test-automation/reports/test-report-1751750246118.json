@@ -1,0 +1,359 @@
+{
+  "summary": {
+    "startTime": 1751750144675,
+    "endTime": 1751750246118,
+    "duration": 101443,
+    "totalLogs": 13,
+    "totalErrors": 1,
+    "totalWarnings": 0,
+    "totalPhases": 2,
+    "completedPhases": 1,
+    "failedPhases": 1
+  },
+  "phases": [
+    {
+      "name": "initialization",
+      "description": "Setting up test environment",
+      "startTime": 1751750144680,
+      "endTime": 1751750151810,
+      "status": "completed",
+      "logs": [
+        {
+          "timestamp": 1751750144680,
+          "elapsed": 5,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Starting phase: initialization",
+          "data": {
+            "description": "Setting up test environment"
+          },
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750144698,
+          "elapsed": 23,
+          "level": "info",
+          "category": "BROWSER",
+          "message": "Initializing browser environment",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750151684,
+          "elapsed": 7009,
+          "level": "info",
+          "category": "WEBSOCKET",
+          "message": "Starting WebSocket monitoring",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750151808,
+          "elapsed": 7133,
+          "level": "success",
+          "category": "BROWSER",
+          "message": "Browser initialized successfully",
+          "data": null,
+          "phase": "initialization"
+        },
+        {
+          "timestamp": 1751750151810,
+          "elapsed": 7135,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Completed phase: initialization",
+          "data": {
+            "status": "completed",
+            "duration": 7130,
+            "summary": {
+              "serversCaptured": false,
+              "browserReady": true
+            }
+          },
+          "phase": "initialization"
+        }
+      ],
+      "errors": [],
+      "screenshots": [],
+      "duration": 7130,
+      "summary": {
+        "serversCaptured": false,
+        "browserReady": true
+      }
+    },
+    {
+      "name": "authentication",
+      "description": "Testing login flow and session validation",
+      "startTime": 1751750151811,
+      "endTime": 1751750246116,
+      "status": "failed",
+      "logs": [
+        {
+          "timestamp": 1751750151811,
+          "elapsed": 7136,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Starting phase: authentication",
+          "data": {
+            "description": "Testing login flow and session validation"
+          },
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750152046,
+          "elapsed": 7371,
+          "level": "info",
+          "category": "NAVIGATION",
+          "message": "Navigating to: http://localhost:3000/login login-page",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750184082,
+          "elapsed": 39407,
+          "level": "info",
+          "category": "NAVIGATION",
+          "message": "Navigating to: http://localhost:3000/login login-page",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750216086,
+          "elapsed": 71411,
+          "level": "info",
+          "category": "NAVIGATION",
+          "message": "Navigating to: http://localhost:3000/login login-page",
+          "data": null,
+          "phase": "authentication"
+        },
+        {
+          "timestamp": 1751750246116,
+          "elapsed": 101441,
+          "level": "info",
+          "category": "PHASE",
+          "message": "Completed phase: authentication",
+          "data": {
+            "status": "failed",
+            "duration": 94305,
+            "summary": {
+              "error": "Navigation timeout of 30000 ms exceeded"
+            }
+          },
+          "phase": "authentication"
+        }
+      ],
+      "errors": [],
+      "screenshots": [],
+      "duration": 94305,
+      "summary": {
+        "error": "Navigation timeout of 30000 ms exceeded"
+      }
+    }
+  ],
+  "logs": [
+    {
+      "timestamp": 1751750144680,
+      "elapsed": 5,
+      "level": "info",
+      "category": "SUITE",
+      "message": "Starting Domainflow Test Suite execution",
+      "data": null,
+      "phase": "global"
+    },
+    {
+      "timestamp": 1751750144680,
+      "elapsed": 5,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Starting phase: initialization",
+      "data": {
+        "description": "Setting up test environment"
+      },
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750144698,
+      "elapsed": 23,
+      "level": "info",
+      "category": "BROWSER",
+      "message": "Initializing browser environment",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750151684,
+      "elapsed": 7009,
+      "level": "info",
+      "category": "WEBSOCKET",
+      "message": "Starting WebSocket monitoring",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750151808,
+      "elapsed": 7133,
+      "level": "success",
+      "category": "BROWSER",
+      "message": "Browser initialized successfully",
+      "data": null,
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750151810,
+      "elapsed": 7135,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Completed phase: initialization",
+      "data": {
+        "status": "completed",
+        "duration": 7130,
+        "summary": {
+          "serversCaptured": false,
+          "browserReady": true
+        }
+      },
+      "phase": "initialization"
+    },
+    {
+      "timestamp": 1751750151811,
+      "elapsed": 7136,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Starting phase: authentication",
+      "data": {
+        "description": "Testing login flow and session validation"
+      },
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750152046,
+      "elapsed": 7371,
+      "level": "info",
+      "category": "NAVIGATION",
+      "message": "Navigating to: http://localhost:3000/login login-page",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750184082,
+      "elapsed": 39407,
+      "level": "info",
+      "category": "NAVIGATION",
+      "message": "Navigating to: http://localhost:3000/login login-page",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750216086,
+      "elapsed": 71411,
+      "level": "info",
+      "category": "NAVIGATION",
+      "message": "Navigating to: http://localhost:3000/login login-page",
+      "data": null,
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750246116,
+      "elapsed": 101441,
+      "level": "info",
+      "category": "PHASE",
+      "message": "Completed phase: authentication",
+      "data": {
+        "status": "failed",
+        "duration": 94305,
+        "summary": {
+          "error": "Navigation timeout of 30000 ms exceeded"
+        }
+      },
+      "phase": "authentication"
+    },
+    {
+      "timestamp": 1751750246117,
+      "elapsed": 101442,
+      "level": "error",
+      "category": "SUITE",
+      "message": "Test suite execution failed: Navigation timeout of 30000 ms exceeded",
+      "data": null,
+      "phase": "global"
+    },
+    {
+      "timestamp": 1751750246118,
+      "elapsed": 101443,
+      "level": "info",
+      "category": "CLEANUP",
+      "message": "Cleaning up test environment",
+      "data": null,
+      "phase": "global"
+    }
+  ],
+  "config": {
+    "app": {
+      "frontend": "http://localhost:3000",
+      "backend": "http://localhost:8080",
+      "loginUrl": "http://localhost:3000/login",
+      "campaignsUrl": "http://localhost:3000/campaigns",
+      "dashboardUrl": "http://localhost:3000/dashboard"
+    },
+    "auth": {
+      "username": "admin@fntel.com",
+      "password": "admin123"
+    },
+    "browser": {
+      "headless": false,
+      "devtools": false,
+      "slowMo": 50,
+      "defaultViewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "mobileViewport": {
+        "width": 375,
+        "height": 667
+      },
+      "tabletViewport": {
+        "width": 768,
+        "height": 1024
+      }
+    },
+    "servers": {
+      "captureServerLogs": true,
+      "skipServerStart": true,
+      "backend": {
+        "command": "cd /home/vboxuser/studio/backend && ./bin/apiserver",
+        "cwd": "/home/vboxuser/studio/backend",
+        "port": 8080,
+        "healthEndpoint": "http://localhost:8080/api/v2/health"
+      },
+      "frontend": {
+        "command": "npm run dev",
+        "cwd": "/home/vboxuser/studio",
+        "port": 3000,
+        "healthEndpoint": "http://localhost:3000/api/health"
+      }
+    },
+    "testing": {
+      "maxCampaigns": 5,
+      "retryAttempts": 3,
+      "retryDelay": 2000,
+      "screenshotOnError": true,
+      "validateNetwork": true
+    },
+    "timeouts": {
+      "default": 60000,
+      "navigation": 30000,
+      "selector": 10000,
+      "action": 5000,
+      "serverStart": 120000,
+      "websocket": 15000,
+      "networkRequest": 10000
+    },
+    "output": {
+      "base": "./test-automation",
+      "logs": "./test-automation/logs",
+      "reports": "./test-automation/reports",
+      "screenshots": "./test-automation/screenshots",
+      "serverLogs": "./test-automation/server-logs",
+      "performance": "./test-automation/performance"
+    }
+  }
+}
