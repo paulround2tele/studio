@@ -410,10 +410,23 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
       <CardContent>
         {filteredAndSortedDomains.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            {domainDetails.length === 0 ? 
-              'No domains to display yet.' : 
+            {domainDetails.length === 0 ? (
+              <div className="space-y-2">
+                <p>No domains to display yet.</p>
+                {campaign.status === 'pending' || campaign.status === 'running' ? (
+                  <p className="text-sm">
+                    {campaign.campaignType === 'domain_generation'
+                      ? 'Domain generation is in progress...'
+                      : 'Campaign processing is starting...'
+                    }
+                  </p>
+                ) : (
+                  <p className="text-sm">Domains will appear here as they are processed.</p>
+                )}
+              </div>
+            ) : (
               'No domains match the current filters.'
-            }
+            )}
           </div>
         ) : (
           <>

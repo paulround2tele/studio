@@ -76,15 +76,71 @@ func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Q
 }
 
 func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Querier, id uuid.UUID) error {
-	query := `DELETE FROM campaigns WHERE id = $1`
-	result, err := exec.ExecContext(ctx, query, id)
+	// First check if campaign exists
+	var exists bool
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM campaigns WHERE id = $1)`
+	err := exec.GetContext(ctx, &exists, checkQuery, id)
 	if err != nil {
 		return err
 	}
+	if !exists {
+		return store.ErrNotFound
+	}
+
+	// Delete related records first to avoid foreign key constraint violations
+	// Order matters: delete leaf nodes first, then parent nodes
+	
+	// 1. Delete HTTP keyword validation results (no foreign dependencies)
+	_, err = exec.ExecContext(ctx, `DELETE FROM http_keyword_results WHERE http_keyword_campaign_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete HTTP keyword results: %w", err)
+	}
+
+	// 2. Delete DNS validation results (no foreign dependencies)
+	_, err = exec.ExecContext(ctx, `DELETE FROM dns_validation_results WHERE dns_campaign_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete DNS validation results: %w", err)
+	}
+
+	// 3. Delete generated domains (no foreign dependencies)
+	_, err = exec.ExecContext(ctx, `DELETE FROM generated_domains WHERE domain_generation_campaign_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete generated domains: %w", err)
+	}
+
+	// 4. Delete campaign jobs
+	_, err = exec.ExecContext(ctx, `DELETE FROM campaign_jobs WHERE campaign_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete campaign jobs: %w", err)
+	}
+
+	// 5. Delete campaign parameter tables
+	_, err = exec.ExecContext(ctx, `DELETE FROM http_keyword_campaign_params WHERE campaign_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete HTTP keyword campaign params: %w", err)
+	}
+
+	_, err = exec.ExecContext(ctx, `DELETE FROM dns_validation_params WHERE campaign_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete DNS validation params: %w", err)
+	}
+
+	_, err = exec.ExecContext(ctx, `DELETE FROM domain_generation_campaign_params WHERE campaign_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete domain generation params: %w", err)
+	}
+
+	// 6. Finally, delete the campaign itself
+	result, err := exec.ExecContext(ctx, `DELETE FROM campaigns WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete campaign: %w", err)
+	}
+
 	rowsAffected, err := result.RowsAffected()
 	if err == nil && rowsAffected == 0 {
 		return store.ErrNotFound
 	}
+
 	return err
 }
 

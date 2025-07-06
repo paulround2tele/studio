@@ -44,7 +44,7 @@ export default function RefactoredCampaignDetailsPage() {
   const campaignId = params.id as string;
   const campaignTypeFromQuery = searchParams.get('type') as CampaignType | null;
 
-  // 🔧 CRITICAL FIX: Early return for missing campaign type to prevent loops
+  // 🔧 CRITICAL FIX: Early return for missing campaign ID
   if (!campaignId) {
     console.error('❌ [Refactored Page] No campaign ID provided');
     return (
@@ -62,23 +62,9 @@ export default function RefactoredCampaignDetailsPage() {
     );
   }
 
+  // 🔧 ENHANCED: If campaign type is missing, try to load campaign data first to get the type
   if (!campaignTypeFromQuery) {
-    console.error('❌ [Refactored Page] No campaign type provided in URL');
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Campaign Error" icon={Briefcase} />
-        <div className="text-center py-10">
-          <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-          <h2 className="text-lg font-semibold mb-2">Missing Campaign Type</h2>
-          <p className="text-muted-foreground mb-4">
-            Campaign type is required in the URL. Please access this page from the campaigns list.
-          </p>
-          <Button onClick={() => router.push('/campaigns')}>
-            Back to Campaigns
-          </Button>
-        </div>
-      </div>
-    );
+    console.warn('⚠️ [Refactored Page] No campaign type provided in URL, will attempt to load from API');
   }
 
   // Initialization tracking
@@ -133,9 +119,9 @@ export default function RefactoredCampaignDetailsPage() {
     // Reset store state for new campaign
     reset();
 
-    // Load initial campaign data
+    // Load initial campaign data - this will fetch campaign info including type
     loadCampaignData(true);
-  }, [campaignId, campaignTypeFromQuery, reset, loadCampaignData]);
+  }, [campaignId, reset, loadCampaignData]);
 
   // 🔧 CRITICAL FIX: Memoize WebSocket conditions to prevent unnecessary effect runs
   const webSocketConditions = useMemo(() => {
@@ -275,15 +261,22 @@ export default function RefactoredCampaignDetailsPage() {
     );
   }
 
-  // Loading state
+  // Loading state with improved messaging for new campaigns
   if (loading && !campaign) {
     return (
       <div className="space-y-6">
         <PageHeader title="Loading Campaign..." icon={Briefcase} />
         <div className="space-y-6">
-          <div className="h-32 bg-muted rounded-lg animate-pulse" />
-          <div className="h-48 bg-muted rounded-lg animate-pulse" />
-          <div className="h-64 bg-muted rounded-lg animate-pulse" />
+          <div className="text-center py-8">
+            <div className="space-y-4">
+              <div className="h-32 bg-muted rounded-lg animate-pulse" />
+              <div className="h-48 bg-muted rounded-lg animate-pulse" />
+              <div className="h-64 bg-muted rounded-lg animate-pulse" />
+              <p className="text-muted-foreground mt-4">
+                Setting up your campaign monitoring dashboard...
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );

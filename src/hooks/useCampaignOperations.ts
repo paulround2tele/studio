@@ -13,7 +13,8 @@ import {
   startCampaignPhase,
   pauseCampaign as pauseCampaignAPI,
   resumeCampaign as resumeCampaignAPI,
-  stopCampaign as stopCampaignAPI
+  stopCampaign as stopCampaignAPI,
+  deleteCampaign as deleteCampaignAPI
 } from '@/lib/api-client/client';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import type { CampaignType, Campaign, CampaignViewModel, GeneratedDomainBackend, CampaignValidationItem } from '@/lib/types';
@@ -360,6 +361,39 @@ export const useCampaignOperations = (campaignId: string) => {
     });
   }, [campaign?.name, toast]);
 
+  // Delete campaign
+  const deleteCampaign = useCallback(async () => {
+    if (!campaignId) return;
+
+    useCampaignDetailsStore.getState().setActionLoading('control-delete', true);
+
+    try {
+      const response = await deleteCampaignAPI(campaignId);
+      
+      if (response && typeof response === 'object' && 'success' in response && response.success) {
+        toast({
+          title: "Campaign Deleted",
+          description: (response as { message?: string }).message || 'Campaign deleted successfully'
+        });
+        // Note: Don't reload campaign data since campaign is deleted
+        return true;
+      } else {
+        throw new Error('Failed to delete campaign');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete campaign';
+      toast({
+        title: "Error Deleting Campaign",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      useCampaignDetailsStore.getState().setActionLoading('control-delete', false);
+    }
+  }, [campaignId, toast]);
+
   return {
     // State
     campaign,
@@ -372,6 +406,7 @@ export const useCampaignOperations = (campaignId: string) => {
     pauseCampaign: pauseCampaign,
     resumeCampaign,
     stopCampaign,
+    deleteCampaign,
     downloadDomains,
   };
 };

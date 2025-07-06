@@ -63,23 +63,31 @@ const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
   const phasesForType = CAMPAIGN_PHASES_ORDERED[selectedType];
   if (!phasesForType || phasesForType.length === 0) return 0;
 
-  if (campaign.currentPhase === "Completed") return 100;
+  // Use progressPercentage first, then progress, then calculate based on items
+  let progressValue = campaign.progressPercentage ?? campaign.progress ?? 0;
+  
+  // If no direct progress, try to calculate from processed vs total items
+  if (progressValue === 0 && campaign.totalItems && campaign.processedItems) {
+    progressValue = Math.floor((campaign.processedItems / campaign.totalItems) * 100);
+  }
+
+  if (campaign.currentPhase === "Completed" || campaign.status === "completed") return 100;
   
   if (campaign.phaseStatus === "Paused" || campaign.phaseStatus === "Failed" || campaign.currentPhase === "Idle") {
     // For paused or failed, progress reflects where it stopped. For Idle, it's 0.
     const currentPhaseIndexInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
-     if(campaign.currentPhase === "Idle" || currentPhaseIndexInType === -1) return 0;
+     if(campaign.currentPhase === "Idle" || currentPhaseIndexInType === -1) return Math.max(0, progressValue);
 
     const completedPhasesProgress = (currentPhaseIndexInType / phasesForType.length) * 100;
-    const currentPhaseProgressContribution = ((campaign.progress || 0) / phasesForType.length);
+    const currentPhaseProgressContribution = (progressValue / phasesForType.length);
     return Math.min(100, Math.floor(completedPhasesProgress + currentPhaseProgressContribution));
   }
 
   const currentPhaseIndexInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
-  if (currentPhaseIndexInType === -1) return 0; // Should not happen if not Idle/Failed/Paused
+  if (currentPhaseIndexInType === -1) return Math.max(0, progressValue); // Fallback to direct progress value
 
   const completedPhasesProgress = (currentPhaseIndexInType / phasesForType.length) * 100;
-  const currentPhaseProgressContribution = ((campaign.progress || 0) / phasesForType.length);
+  const currentPhaseProgressContribution = (progressValue / phasesForType.length);
 
   return Math.min(100, Math.floor(completedPhasesProgress + currentPhaseProgressContribution));
 };
@@ -122,8 +130,12 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
 
   // Memoize action handlers to prevent re-creation on every render
   const handleDeleteCampaign = useCallback(() => {
-    if (campaign.id) onDeleteCampaign(campaign.id);
-  }, [onDeleteCampaign, campaign.id]);
+    // Prevent multiple delete attempts if already loading
+    if (loadingStates.isDeleting || anyActionLoading || !campaign.id) {
+      return;
+    }
+    onDeleteCampaign(campaign.id);
+  }, [onDeleteCampaign, campaign.id, loadingStates.isDeleting, anyActionLoading]);
 
   const handlePauseCampaign = useCallback(() => {
     if (campaign.id) onPauseCampaign?.(campaign.id);
@@ -217,8 +229,16 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
                   {(showActions.showPause || showActions.showResume || showActions.showStop) && <DropdownMenuSeparator />}
 
                   <AlertDialogTrigger asChild>
-                    <DropdownMenuItem className="text-destructive hover:!bg-destructive hover:!text-destructive-foreground focus:!bg-destructive focus:!text-destructive-foreground" disabled={anyActionLoading} onSelect={(e) => e.preventDefault()}>
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    <DropdownMenuItem className="text-destructive hover:!bg-destructive hover:!text-destructive-foreground focus:!bg-destructive focus:!text-destructive-foreground" disabled={anyActionLoading || loadingStates.isDeleting} onSelect={(e) => e.preventDefault()}>
+                      {loadingStates.isDeleting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </>
+                      )}
                     </DropdownMenuItem>
                   </AlertDialogTrigger>
                 </DropdownMenuContent>
@@ -244,7 +264,7 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
             <CalendarDays className="mr-1.5 h-3.5 w-3.5" /> Created: {formattedDate}
           </div>
           <Button asChild size="sm" variant="outline" disabled={anyActionLoading}>
-            <Link href={`/campaigns/${campaign.id}`} aria-disabled={anyActionLoading}>
+            <Link href={`/campaigns/${campaign.id}?type=${campaign.campaignType || campaign.selectedType || 'domain_generation'}`} aria-disabled={anyActionLoading}>
               View Dashboard <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -259,9 +279,20 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDeleteCampaign} className={buttonVariants({ variant: "destructive" })}>
-            Delete Campaign
+          <AlertDialogCancel disabled={loadingStates.isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteCampaign}
+            disabled={loadingStates.isDeleting || anyActionLoading}
+            className={buttonVariants({ variant: "destructive" })}
+          >
+            {loadingStates.isDeleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              "Delete Campaign"
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

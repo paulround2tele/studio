@@ -112,41 +112,6 @@ components:
             required:
                 - results
             type: object
-        BulkDeleteRequest:
-            description: Request to bulk delete campaigns
-            properties:
-                campaignIds:
-                    description: Array of campaign UUIDs to delete
-                    items:
-                        format: uuid
-                        type: string
-                    minItems: 1
-                    type: array
-            required:
-                - campaignIds
-            type: object
-        BulkDeleteResponse:
-            description: Response for bulk delete operation
-            properties:
-                errors:
-                    description: List of error messages for failed deletions
-                    items:
-                        description: Error message for failed deletions
-                        type: string
-                    type: array
-                failedDeletions:
-                    description: Number of campaigns that failed to delete
-                    type: integer
-                message:
-                    description: Operation result message
-                    type: string
-                successfulDeletions:
-                    description: Number of campaigns successfully deleted
-                    type: integer
-                totalRequested:
-                    description: Total number of campaigns requested for deletion
-                    type: integer
-            type: object
         Campaign:
             description: Campaign information
             properties:
@@ -2615,47 +2580,6 @@ paths:
             tags:
                 - Auth
     /campaigns:
-        delete:
-            description: Permanently deletes multiple campaigns and all their associated data
-            operationId: bulkDeleteCampaigns
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkDeleteRequest'
-                required: true
-            responses:
-                "200":
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/BulkDeleteResponse'
-                    description: Campaigns bulk delete completed
-                "400":
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ErrorResponse'
-                    description: Bad request
-                "401":
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ErrorResponse'
-                    description: Unauthorized
-                "500":
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ErrorResponse'
-                    description: Internal server error
-                default:
-                    description: ""
-            security:
-                - sessionAuth: []
-            summary: Bulk delete campaigns
-            tags:
-                - Campaigns
         get:
             description: Lists all campaigns with pagination and filtering support
             operationId: listCampaigns

@@ -6,7 +6,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { CampaignViewModel } from '@/lib/types';
 import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff, Trash2, Loader2 } from 'lucide-react';
-import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react';
+import { useEffect, useState, useCallback, useRef, lazy, Suspense, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
@@ -281,13 +281,8 @@ function CampaignsPageContent() {
     };
   }, []);
 
-  // Subscribe to campaign state changes
-  useStateSubscription('campaigns', (updatedCampaigns) => {
-    console.log('[CampaignsPage] State subscription triggered with:', updatedCampaigns);
-    if (Array.isArray(updatedCampaigns)) {
-      setCampaigns(updatedCampaigns);
-    }
-  });
+  // REMOVED: State subscription was causing duplicate updates and conflicts with direct API loading
+  // WebSocket and API calls handle all state updates directly
 
   const loadCampaignsData = useCallback(async (showLoadingSpinner = true, signal?: AbortSignal) => {
     const loadStartTime = Date.now();
@@ -618,7 +613,7 @@ function CampaignsPageContent() {
         setGlobalLoading('campaigns_load', false);
       }
     }
-  }, [toast]);
+  }, [campaigns.length, toast, isGlobalLoading, setGlobalLoading, isMountedRef]);
 
 
   useEffect(() => {
@@ -762,8 +757,7 @@ function CampaignsPageContent() {
       
       await confirmUpdate(updateId);
       toast({ title: `Campaign ${action}ed`, description: `Campaign ${action}ed successfully` });
-      // Refresh campaigns to get latest state
-      loadCampaignsData(false);
+      // REMOVED: Redundant refresh - WebSocket updates handle state changes
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : `Failed to ${action} campaign`;
       await rollbackUpdate(updateId, errorMessage);
@@ -774,8 +768,30 @@ function CampaignsPageContent() {
     }
   };
 
-  // Filter campaigns first (needed by bulk handlers)
+  // FIXED: Add debugging and null-safe filtering logic
   const filteredCampaigns = campaigns.filter(campaign => {
+    // DEBUGGING: Log campaign statuses to identify filtering issues
+    if (campaigns.length > 0 && Math.random() < 0.1) { // Sample logging
+      console.log('[CAMPAIGNS_FILTER_DEBUG] Campaign filtering:', {
+        campaignId: campaign.id,
+        rawStatus: campaign.status,
+        normalizedStatus: normalizeStatus(campaign.status),
+        activeTab,
+        isActiveStatusResult: isActiveStatus(normalizeStatus(campaign.status)),
+        willBeFiltered: activeTab === "all" ? true :
+          activeTab === "active" ? isActiveStatus(normalizeStatus(campaign.status)) :
+          activeTab === "paused" ? normalizeStatus(campaign.status) === "paused" :
+          activeTab === "completed" ? normalizeStatus(campaign.status) === "completed" :
+          activeTab === "failed" ? normalizeStatus(campaign.status) === "failed" : true
+      });
+    }
+
+    // FIXED: Null-safe status normalization
+    if (!campaign || !campaign.status) {
+      console.warn('[CAMPAIGNS_FILTER_DEBUG] Campaign with missing status:', campaign);
+      return activeTab === "all"; // Show invalid campaigns only on "all" tab
+    }
+    
     // Normalize campaign status to ensure consistency
     const status = normalizeStatus(campaign.status);
     
@@ -784,6 +800,18 @@ function CampaignsPageContent() {
     if (activeTab === "completed") return status === "completed";
     if (activeTab === "failed") return status === "failed";
     return true; // 'all'
+  });
+
+  // DEBUGGING: Log filtering results
+  console.log('[CAMPAIGNS_FILTER_DEBUG] Filtering results:', {
+    totalCampaigns: campaigns.length,
+    filteredCampaigns: filteredCampaigns.length,
+    activeTab,
+    sampleCampaignStatuses: campaigns.slice(0, 3).map(c => ({
+      id: c.id,
+      status: c.status,
+      normalized: normalizeStatus(c.status)
+    }))
   });
 
   const countActive = campaigns.filter(c => isActiveStatus(normalizeStatus(c.status))).length;
@@ -848,12 +876,21 @@ function CampaignsPageContent() {
         description: `${campaignsToDelete.length} campaigns deleted: ${campaignNames}${campaignsToDelete.length > 3 ? '...' : ''}`,
       });
 
-      // Refresh campaigns to ensure consistency with backend
-      loadCampaignsData(false);
+      // REMOVED: Redundant refresh - optimistic update already handled this
 
     } catch (error: unknown) {
-      // Rollback optimistic update on error
-      loadCampaignsData(false);
+      // FIXED: Proper rollback without unnecessary API calls
+      // Restore campaigns from previous state instead of making API call
+      setCampaigns(prev => {
+        const restoredCampaigns = [...prev];
+        campaignsToDelete.forEach(id => {
+          const originalCampaign = campaigns.find(c => c.id === id);
+          if (originalCampaign && !restoredCampaigns.find(c => c.id === id)) {
+            restoredCampaigns.push(originalCampaign);
+          }
+        });
+        return restoredCampaigns;
+      });
       
       const errorMessage = error instanceof Error ? error.message : "Failed to delete campaigns.";
       toast({
@@ -980,58 +1017,67 @@ function CampaignsPageContent() {
             </Card>
           ))}
         </div>
-      ) :
-      filteredCampaigns.length === 0 ? (
-         <div className="text-center py-10 border-2 border-dashed rounded-lg mt-6">
-            <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-lg font-medium">
-                {activeTab === "all" ? "No campaigns found" : `No ${activeTab} campaigns found`}
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-                {activeTab === "all" ? "Get started by creating your first campaign." : `There are no campaigns currently in the "${activeTab}" state.`}
-            </p>
-            <div className="mt-6">
-              <Button asChild><Link href="/campaigns/new"><PlusCircle className="mr-2 h-4 w-4" /> Create New Campaign</Link></Button>
-            </div>
-          </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCampaigns.map(campaign => (
-            <Suspense key={campaign.id} fallback={<ComponentLoader />}>
-              <CampaignListItem
-                  campaign={campaign}
-                  onDeleteCampaign={() => campaign.id && handleDeleteCampaign(campaign.id)}
-                  onPauseCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'pause')}
-                  onResumeCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'resume')}
-                  onStopCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'stop')}
-                  isActionLoading={actionLoading}
-                  isSelected={campaign.id ? selectedCampaigns.has(campaign.id) : false}
-                  onSelect={handleSelectCampaign}
-              />
-            </Suspense>
-          ))}
-        </div>
+        // FIXED: Always show campaigns if we have them, regardless of other conditions
+        filteredCampaigns.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredCampaigns.map(campaign => (
+              <Suspense key={campaign.id} fallback={<ComponentLoader />}>
+                <CampaignListItem
+                    campaign={campaign}
+                    onDeleteCampaign={() => campaign.id && handleDeleteCampaign(campaign.id)}
+                    onPauseCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'pause')}
+                    onResumeCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'resume')}
+                    onStopCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'stop')}
+                    isActionLoading={actionLoading}
+                    isSelected={campaign.id ? selectedCampaigns.has(campaign.id) : false}
+                    onSelect={handleSelectCampaign}
+                />
+              </Suspense>
+            ))}
+          </div>
+        ) : (
+          // FIXED: Only show empty state if we definitely have no campaigns and finished loading
+          <div className="text-center py-10 border-2 border-dashed rounded-lg mt-6">
+             <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
+             <h3 className="mt-2 text-lg font-medium">
+                 {activeTab === "all" ? "No campaigns found" : `No ${activeTab} campaigns found`}
+             </h3>
+             <p className="mt-1 text-sm text-muted-foreground">
+                 {activeTab === "all" ? "Get started by creating your first campaign." : `There are no campaigns currently in the "${activeTab}" state.`}
+             </p>
+             <div className="mt-6">
+               <Button asChild><Link href="/campaigns/new"><PlusCircle className="mr-2 h-4 w-4" /> Create New Campaign</Link></Button>
+             </div>
+           </div>
+        )
       )}
-     {/* Campaign Progress Monitors for active campaigns */}
-     {campaigns.filter(c => isActiveStatus(normalizeStatus(c.status))).map(campaign => {
-       console.log(`[CampaignsPage] Rendering progress monitor for campaign ${campaign.id}`);
-       return (
-         <div key={`monitor-${campaign.id}`} className="mb-4">
-           <Suspense fallback={<ComponentLoader />}>
-             <CampaignProgressMonitor
-               campaign={campaign}
-               onCampaignUpdate={(updates) => {
-                 console.log(`[CampaignsPage] Progress monitor update for ${campaign.id}:`, updates);
-                 // INFINITE LOOP PREVENTION: Avoid triggering state updates that cause re-renders
-                 setCampaigns(prev => prev.map(c =>
-                   c.id === campaign.id ? { ...c, ...updates } : c
-                 ));
-               }}
-             />
-           </Suspense>
-         </div>
-       );
-     })}
+     {/* FIXED: Memoized Campaign Progress Monitors to prevent infinite re-renders */}
+     {useMemo(() => {
+       const activeCampaigns = campaigns.filter(c => isActiveStatus(normalizeStatus(c.status)));
+       console.log(`[CampaignsPage] Rendering ${activeCampaigns.length} progress monitors`);
+       
+       return activeCampaigns.map(campaign => {
+         const handleCampaignUpdate = (updates: Partial<CampaignViewModel>) => {
+           console.log(`[CampaignsPage] Progress monitor update for ${campaign.id}:`, updates);
+           // FIXED: Debounced state update to prevent rapid re-renders
+           setCampaigns(prev => prev.map(c =>
+             c.id === campaign.id ? { ...c, ...updates } : c
+           ));
+         };
+
+         return (
+           <div key={`monitor-${campaign.id}`} className="mb-4">
+             <Suspense fallback={<ComponentLoader />}>
+               <CampaignProgressMonitor
+                 campaign={campaign}
+                 onCampaignUpdate={handleCampaignUpdate}
+               />
+             </Suspense>
+           </div>
+         );
+       });
+     }, [campaigns])}
    </>
  );
 }

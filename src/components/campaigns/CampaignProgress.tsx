@@ -211,13 +211,24 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
         </div>
       </TooltipProvider>
 
-      {campaign.phaseStatus === 'InProgress' && campaign.currentPhase !== "Idle" && (
+      {(campaign.phaseStatus === 'InProgress' || campaign.phaseStatus === 'Succeeded') && campaign.currentPhase !== "Idle" && campaign.currentPhase !== "Completed" && (
         <div className="mt-4">
           <div className="flex justify-between text-sm mb-1">
-            <span>Current Phase Progress ({campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})</span>
+            <span>
+              {campaign.phaseStatus === 'Succeeded' ? 'Phase Completed' : 'Current Phase Progress'}
+              ({campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})
+            </span>
             <span>{campaign.progress}%</span>
           </div>
-          <Progress value={campaign.progress} className="w-full h-3 [&>div]:bg-gradient-to-r [&>div]:from-blue-400 [&>div]:to-blue-600" />
+          <Progress
+            value={campaign.progress}
+            className={cn(
+              "w-full h-3 [&>div]:bg-gradient-to-r transition-all duration-500",
+              campaign.phaseStatus === 'Succeeded' && campaign.progress === 100
+                ? "[&>div]:from-blue-500 [&>div]:to-blue-600" // Keep blue when completed
+                : "[&>div]:from-blue-400 [&>div]:to-blue-600"  // Standard blue during progress
+            )}
+          />
         </div>
       )}
        {campaign.currentPhase === "Completed" && (

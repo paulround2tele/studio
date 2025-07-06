@@ -439,23 +439,33 @@ export class ApiClient {
 
   async getCurrentUser() {
     try {
-      // DIAGNOSTIC: Log API client state before request
-      const effectiveBackendUrl = this.getEffectiveBackendUrl();
-      const finalBaseUrl = this.getEffectiveBaseUrl('/me');
-      
-      console.log('[DIAGNOSTIC] getCurrentUser API call details:', {
-        effectiveBackendUrl,
-        finalBaseUrl,
-        timestamp: new Date().toISOString(),
-        userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'SSR'
-      });
+      // DIAGNOSTIC: Log API client state before request (only in debug mode)
+      if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+        const effectiveBackendUrl = this.getEffectiveBackendUrl();
+        const finalBaseUrl = this.getEffectiveBaseUrl('/me');
+        
+        console.debug('[DIAGNOSTIC] getCurrentUser API call details:', {
+          effectiveBackendUrl,
+          finalBaseUrl,
+          timestamp: new Date().toISOString(),
+          userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'SSR'
+        });
+      }
 
       return await this.request<GetOperationResponse<ApiPaths['/me']['get']>>(
         '/me',
         'GET'
       );
     } catch (error) {
-      // DIAGNOSTIC: Enhanced error logging
+      // Handle 401 responses gracefully for authentication checks (before logging)
+      if (error instanceof Error && error.message.includes('401')) {
+        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
+          console.debug('API_CLIENT_DEBUG - Authentication check: No valid session (401)');
+        }
+        return null;
+      }
+
+      // Only log non-401 errors as actual errors
       console.error('[DIAGNOSTIC] getCurrentUser failed:', {
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
         errorType: error instanceof Error ? error.constructor.name : typeof error,
@@ -464,13 +474,6 @@ export class ApiClient {
         finalBaseUrl: this.getEffectiveBaseUrl('/me')
       });
 
-      // Handle 401 responses gracefully for authentication checks
-      if (error instanceof Error && error.message.includes('401')) {
-        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG === 'true') {
-          console.debug('API_CLIENT_DEBUG - Authentication check: No valid session (401)');
-        }
-        return null;
-      }
       // Re-throw other errors
       throw error;
     }
@@ -1006,6 +1009,8 @@ export const startCampaignPhase = (campaignId: string) => apiClient.startCampaig
 export const pauseCampaign = (campaignId: string) => apiClient.pauseCampaign(campaignId);
 export const resumeCampaign = (campaignId: string) => apiClient.resumeCampaign(campaignId);
 export const stopCampaign = (campaignId: string) => apiClient.cancelCampaign(campaignId);
+export const deleteCampaign = (campaignId: string) => apiClient.deleteCampaign(campaignId);
+export const bulkDeleteCampaigns = (data: OperationRequestBody<ApiPaths['/campaigns']['delete']>) => apiClient.bulkDeleteCampaigns(data);
 
 // Chain campaign method - assuming this creates a follow-up campaign
 export const chainCampaign = async (_campaignId: string) => {

@@ -152,6 +152,14 @@ type BulkDeleteResult struct {
 	Errors               []string    `json:"errors,omitempty"`
 }
 
+// CampaignDependencyInfo provides information about campaign dependencies
+type CampaignDependencyInfo struct {
+	Campaign           models.Campaign   `json:"campaign"`
+	DependentCampaigns []models.Campaign `json:"dependentCampaigns"`
+	HasDependencies    bool              `json:"hasDependencies"`
+	CanDelete          bool              `json:"canDelete"`
+}
+
 // --- Service Interfaces ---
 
 // CampaignOrchestratorService defines the interface for managing the lifecycle of all campaigns.
@@ -183,6 +191,7 @@ type CampaignOrchestratorService interface {
 	SetCampaignErrorStatus(ctx context.Context, campaignID uuid.UUID, errorMessage string) error
 	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.CampaignStatusEnum) error
 	HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error
+	GetCampaignDependencies(ctx context.Context, campaignID uuid.UUID) (*CampaignDependencyInfo, error)
 }
 
 // DomainGenerationService defines the interface for domain generation campaign logic.

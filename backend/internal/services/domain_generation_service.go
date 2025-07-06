@@ -21,6 +21,14 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 type WorkerCoordinationService struct {
 	db       *sqlx.DB
 	workerID string
@@ -832,8 +840,25 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 	// Apply SI-005 memory optimization before intensive generation
 	s.optimizeMemoryUsage(nil, campaignID) // Pre-generation cleanup
 
+	// Enhanced logging for debugging domain generation
+	log.Printf("ProcessGenerationCampaignBatch: About to generate domains for campaign %s", campaignID)
+	log.Printf("ProcessGenerationCampaignBatch: Generation parameters - CurrentOffset: %d, OptimizedBatchSize: %d, TotalPossible: %d",
+		genParams.CurrentOffset, optimizedBatchSize, genParams.TotalPossibleCombinations)
+	log.Printf("ProcessGenerationCampaignBatch: Pattern details - Type: %s, VarLength: %d, CharSet: %s, ConstantString: %v, TLD: %s",
+		genParams.PatternType, genParams.VariableLength, genParams.CharacterSet,
+		func() string { if genParams.ConstantString != nil { return *genParams.ConstantString } else { return "nil" } }(), genParams.TLD)
+
 	// Use optimized batch size for generation
 	generatedDomainsSlice, nextGeneratorOffsetAbsolute, genErr := domainGen.GenerateBatch(genParams.CurrentOffset, optimizedBatchSize)
+
+	// Enhanced logging for generation results
+	log.Printf("ProcessGenerationCampaignBatch: Domain generation completed for campaign %s", campaignID)
+	log.Printf("ProcessGenerationCampaignBatch: Generated %d domains, NextOffset: %d, Error: %v",
+		len(generatedDomainsSlice), nextGeneratorOffsetAbsolute, genErr)
+	
+	if len(generatedDomainsSlice) > 0 {
+		log.Printf("ProcessGenerationCampaignBatch: Sample generated domains: %v", generatedDomainsSlice[:min(3, len(generatedDomainsSlice))])
+	}
 
 	// Apply memory optimization after generation (SI-005 integration)
 	if genErr == nil && len(generatedDomainsSlice) > 0 {
@@ -852,6 +877,27 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			log.Printf("Error updating campaign %s to failed after batch generation error: %v", campaignID, errUpdate)
 		}
 		return true, 0, opErr
+	}
+
+	// Check if no domains were generated but no error occurred
+	if len(generatedDomainsSlice) == 0 {
+		log.Printf("ProcessGenerationCampaignBatch: WARNING - No domains generated for campaign %s but no error occurred", campaignID)
+		log.Printf("ProcessGenerationCampaignBatch: This might indicate offset %d has reached total possible combinations %d",
+			genParams.CurrentOffset, genParams.TotalPossibleCombinations)
+		
+		// Check if we've actually exhausted all possibilities
+		if genParams.CurrentOffset >= genParams.TotalPossibleCombinations {
+			log.Printf("ProcessGenerationCampaignBatch: Campaign %s has exhausted all possible domains for this pattern", campaignID)
+			// Mark campaign as completed since we've generated all possible domains
+			campaign.Status = models.CampaignStatusCompleted
+			campaign.ProgressPercentage = models.Float64Ptr(100.0)
+			now := time.Now().UTC()
+			campaign.CompletedAt = &now
+			if errUpdate := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdate != nil {
+				log.Printf("Error updating campaign %s to completed after exhausting possibilities: %v", campaignID, errUpdate)
+			}
+			return true, 0, nil
+		}
 	}
 
 	nowTime := time.Now().UTC()
@@ -876,6 +922,15 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		processedInThisBatch = len(generatedDomainsToStore)
 		log.Printf("ProcessGenerationCampaignBatch: Saved %d domains for campaign %s.", processedInThisBatch, campaignID)
 
+		// Real-time streaming: Broadcast each domain individually as it's generated
+		for i, domain := range generatedDomainsToStore {
+			if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+				message := websocket.CreateDomainGeneratedMessage(campaignID.String(), domain.ID.String(), domain.DomainName, int(domain.OffsetIndex), len(generatedDomainsToStore))
+				broadcaster.BroadcastToCampaign(campaignID.String(), message)
+				log.Printf("ProcessGenerationCampaignBatch: Streamed domain %d/%d: %s for campaign %s", i+1, len(generatedDomainsToStore), domain.DomainName, campaignID)
+			}
+		}
+
 		// Broadcast domain generation progress via WebSocket
 		newProcessedItems := processedItems + int64(processedInThisBatch)
 		targetDomains := int64(genParams.NumDomainsToGenerate)
@@ -883,6 +938,8 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			targetDomains = genParams.TotalPossibleCombinations
 		}
 		websocket.BroadcastDomainGeneration(campaignID.String(), newProcessedItems, targetDomains)
+		
+		log.Printf("ProcessGenerationCampaignBatch: Real-time streaming completed for %d domains in campaign %s", processedInThisBatch, campaignID)
 	}
 
 	if errUpdateOffset := s.campaignStore.UpdateDomainGenerationParamsOffset(ctx, querier, campaignID, nextGeneratorOffsetAbsolute); errUpdateOffset != nil {
@@ -946,65 +1003,90 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		log.Printf("ProcessGenerationCampaignBatch: Updated global offset for config hash %s to %d for campaign %s", configHashStringForUpdate, nextGeneratorOffsetAbsolute, campaignID)
 	}
 
-	// Ensure pointers are not nil before operating on them. They should be initialized when campaign is created/fetched.
-	if campaign.ProcessedItems == nil {
-		campaign.ProcessedItems = models.Int64Ptr(0)
-	}
-	*campaign.ProcessedItems += int64(processedInThisBatch)
-
-	if campaign.ProgressPercentage == nil {
-		campaign.ProgressPercentage = models.Float64Ptr(0.0)
-	}
-
-	currentProcessedItemsVal := *campaign.ProcessedItems // Use the updated value
-
-	if genParams.NumDomainsToGenerate > 0 {
-		*campaign.ProgressPercentage = (float64(currentProcessedItemsVal) / float64(genParams.NumDomainsToGenerate)) * 100
-	} else {
-		if genParams.TotalPossibleCombinations > 0 {
-			*campaign.ProgressPercentage = (float64(genParams.CurrentOffset) / float64(genParams.TotalPossibleCombinations)) * 100
-		} else {
-			*campaign.ProgressPercentage = 100.0
-		}
-	}
-	if *campaign.ProgressPercentage > 100.0 {
-		*campaign.ProgressPercentage = 100.0
-	}
-
-	if (genParams.NumDomainsToGenerate > 0 && currentProcessedItemsVal >= int64(genParams.NumDomainsToGenerate)) ||
-		(genParams.CurrentOffset >= genParams.TotalPossibleCombinations) {
-		campaign.Status = models.CampaignStatusCompleted
-		campaign.ProgressPercentage = models.Float64Ptr(100.0)
-		campaign.CompletedAt = &nowTime
-		done = true
-		log.Printf("ProcessGenerationCampaignBatch: Campaign %s completed. Processed: %d. Target: %d. Global Offset: %d. Total Possible: %d",
-			campaignID, campaign.ProcessedItems, genParams.NumDomainsToGenerate, genParams.CurrentOffset, genParams.TotalPossibleCombinations)
-
-		// Broadcast campaign completion via WebSocket
-		websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "domain_generation")
-	} else {
-		done = false
-
-		// Broadcast campaign progress update via WebSocket
-		progressPercent := 0.0
-		if campaign.ProgressPercentage != nil {
-			progressPercent = *campaign.ProgressPercentage
-		}
-		websocket.BroadcastCampaignProgress(campaignID.String(), progressPercent, "running", "domain_generation")
-	}
-
-	if errUpdateCampaign := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCampaign != nil {
-		opErr = fmt.Errorf("failed to update campaign %s status/progress: %w", campaignID, errUpdateCampaign)
-		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
-		return false, processedInThisBatch, opErr
-	}
-
+	// Calculate new progress values
 	currentProcessedItems := int64(0)
 	if campaign.ProcessedItems != nil {
 		currentProcessedItems = *campaign.ProcessedItems
 	}
+	newProcessedItems := currentProcessedItems + int64(processedInThisBatch)
+
+	// Calculate progress percentage
+	var progressPercentage float64
+	var targetItems int64
+
+	if genParams.NumDomainsToGenerate > 0 {
+		targetItems = int64(genParams.NumDomainsToGenerate)
+		progressPercentage = (float64(newProcessedItems) / float64(targetItems)) * 100
+	} else {
+		targetItems = genParams.TotalPossibleCombinations
+		if genParams.TotalPossibleCombinations > 0 {
+			progressPercentage = (float64(genParams.CurrentOffset) / float64(genParams.TotalPossibleCombinations)) * 100
+		} else {
+			progressPercentage = 100.0
+		}
+	}
+	if progressPercentage > 100.0 {
+		progressPercentage = 100.0
+	}
+
+	// Check if campaign is completed
+	if (genParams.NumDomainsToGenerate > 0 && newProcessedItems >= int64(genParams.NumDomainsToGenerate)) ||
+		(genParams.CurrentOffset >= genParams.TotalPossibleCombinations) {
+		
+		// Campaign is completed - update to 100% and set completed status
+		if errUpdateProgress := s.campaignStore.UpdateCampaignProgress(ctx, querier, campaignID, newProcessedItems, targetItems, 100.0); errUpdateProgress != nil {
+			opErr = fmt.Errorf("failed to update campaign %s final progress: %w", campaignID, errUpdateProgress)
+			log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+			return false, processedInThisBatch, opErr
+		}
+
+		// Mark campaign as completed
+		campaign.Status = models.CampaignStatusCompleted
+		campaign.ProgressPercentage = models.Float64Ptr(100.0)
+		campaign.ProcessedItems = models.Int64Ptr(newProcessedItems)
+		campaign.TotalItems = models.Int64Ptr(targetItems)
+		campaign.CompletedAt = &nowTime
+		done = true
+
+		if errUpdateCampaign := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCampaign != nil {
+			opErr = fmt.Errorf("failed to update campaign %s completion status: %w", campaignID, errUpdateCampaign)
+			log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+			return false, processedInThisBatch, opErr
+		}
+
+		log.Printf("ProcessGenerationCampaignBatch: Campaign %s completed. Processed: %d. Target: %d. Global Offset: %d. Total Possible: %d",
+			campaignID, newProcessedItems, genParams.NumDomainsToGenerate, genParams.CurrentOffset, genParams.TotalPossibleCombinations)
+
+		// Broadcast campaign completion via WebSocket
+		websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "domain_generation")
+	} else {
+		// Campaign is still running - update progress using dedicated method
+		if errUpdateProgress := s.campaignStore.UpdateCampaignProgress(ctx, querier, campaignID, newProcessedItems, targetItems, progressPercentage); errUpdateProgress != nil {
+			opErr = fmt.Errorf("failed to update campaign %s progress: %w", campaignID, errUpdateProgress)
+			log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+			return false, processedInThisBatch, opErr
+		}
+
+		// Update local campaign object to reflect the changes
+		campaign.ProcessedItems = models.Int64Ptr(newProcessedItems)
+		campaign.TotalItems = models.Int64Ptr(targetItems)
+		campaign.ProgressPercentage = models.Float64Ptr(progressPercentage)
+		campaign.Status = models.CampaignStatusRunning
+		done = false
+
+		log.Printf("ProcessGenerationCampaignBatch: Campaign %s progress updated. Processed: %d/%d (%.2f%%)",
+			campaignID, newProcessedItems, targetItems, progressPercentage)
+
+		// Broadcast campaign progress update via WebSocket
+		websocket.BroadcastCampaignProgress(campaignID.String(), progressPercentage, "running", "domain_generation")
+	}
+
+	finalProcessedItems := int64(0)
+	if campaign.ProcessedItems != nil {
+		finalProcessedItems = *campaign.ProcessedItems
+	}
 	log.Printf("ProcessGenerationCampaignBatch: Finished batch for campaignID %s. ProcessedInBatch: %d, DoneForJob: %t, CampaignProcessedItems: %d, NewCampaignGlobalOffset: %d",
-		campaignID, processedInThisBatch, done, currentProcessedItems, genParams.CurrentOffset)
+		campaignID, processedInThisBatch, done, finalProcessedItems, genParams.CurrentOffset)
 
 	return done, processedInThisBatch, opErr
 }

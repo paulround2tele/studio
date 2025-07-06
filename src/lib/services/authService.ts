@@ -103,8 +103,20 @@ class AuthService {
       }
 
       return null;
-    } catch (_error) {
-      // Just return null on any error - keep it simple
+    } catch (error) {
+      // Don't log 401 errors as they're expected when not authenticated
+      const isAuthError = error instanceof Error && (
+        error.message.includes('401') ||
+        error.message.includes('Unauthorized') ||
+        error.message.includes('Authentication required')
+      );
+      
+      if (!isAuthError) {
+        logger.warn('AUTH_SERVICE', 'Session check failed', {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+      
       return null;
     }
   }

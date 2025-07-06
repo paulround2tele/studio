@@ -265,7 +265,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
     assignedDnsPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedDnsPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
     proxyAssignmentMode: isEditing && campaignToEdit ? (campaignToEdit.proxyAssignment?.mode as "none" | "single" | "rotate_active" || 'none') : 'none',
     assignedProxyId: isEditing && campaignToEdit ? ((campaignToEdit.proxyAssignment?.mode === 'single' && campaignToEdit.proxyAssignment.proxyId) ? campaignToEdit.proxyAssignment.proxyId : CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
-    launchSequence: false,
+    launchSequence: true, // ✅ AUTOMATIC PHASE TRIGGERING: Default to true for automatic campaign orchestration
   }), [isEditing, campaignToEdit, preselectedType]);
 
   const form = useForm<CampaignFormValues>({
@@ -561,77 +561,12 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             console.log('🔍 [CAMPAIGN_FORM_DEBUG] Domain generation campaign created without launch sequence - domains may auto-generate');
           }
           
-          // 🔧 CRITICAL FIX: Wait for campaign completion if it's domain generation
-          if (data.selectedType === 'domain_generation') {
-            console.log('🔄 [CAMPAIGN_FORM_DEBUG] Domain generation campaign created, checking completion status...');
-            
-            // Poll campaign status to wait for auto-generation completion
-            let statusCheckAttempts = 0;
-            const maxStatusChecks = 10; // Maximum 30 seconds (3s intervals)
-            
-            const checkCampaignStatus = async (): Promise<void> => {
-              try {
-                statusCheckAttempts++;
-                console.log(`🔍 [CAMPAIGN_FORM_DEBUG] Status check attempt ${statusCheckAttempts}/${maxStatusChecks}`);
-                
-                const statusResponse = await apiClient.getCampaignById(campaign.id);
-                let campaignStatus = null;
-                
-                // Handle different response structures
-                if (Array.isArray(statusResponse)) {
-                  campaignStatus = statusResponse[0]?.status;
-                } else if (statusResponse && typeof statusResponse === 'object') {
-                  // Handle the actual API response structure
-                  const responseObj = statusResponse as any;
-                  if (responseObj.campaign?.status) {
-                    campaignStatus = responseObj.campaign.status;
-                  } else if (responseObj.status) {
-                    campaignStatus = responseObj.status;
-                  } else if (responseObj.data?.status) {
-                    campaignStatus = responseObj.data.status;
-                  }
-                }
-                
-                console.log(`📊 [CAMPAIGN_FORM_DEBUG] Campaign status: ${campaignStatus}`);
-                
-                if (campaignStatus === 'completed') {
-                  console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign auto-generation completed, navigating...');
-                  const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
-                  router.push(redirectUrl);
-                  return;
-                }
-                
-                if (campaignStatus === 'failed') {
-                  console.log('❌ [CAMPAIGN_FORM_DEBUG] Campaign failed during auto-generation');
-                  const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
-                  router.push(redirectUrl);
-                  return;
-                }
-                
-                // Continue polling if still pending/running and we haven't exceeded max attempts
-                if (statusCheckAttempts < maxStatusChecks && ['pending', 'running', 'queued'].includes(campaignStatus)) {
-                  setTimeout(checkCampaignStatus, 3000); // Check again in 3 seconds
-                } else {
-                  // Max attempts reached or unknown status, navigate anyway
-                  console.log('⏰ [CAMPAIGN_FORM_DEBUG] Max status checks reached or unknown status, navigating...');
-                  const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
-                  router.push(redirectUrl);
-                }
-              } catch (error) {
-                console.error('❌ [CAMPAIGN_FORM_DEBUG] Error checking campaign status:', error);
-                // Navigate on error to prevent getting stuck
-                const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
-                router.push(redirectUrl);
-              }
-            };
-            
-            // Start status polling after a brief delay
-            setTimeout(checkCampaignStatus, 1000);
-          } else {
-            // For non-domain-generation campaigns, navigate immediately
-            const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
-            router.push(redirectUrl);
-          }
+          // 🔧 UX FIX: Navigate immediately to metrics page for real-time monitoring
+          // The metrics page has WebSocket integration for live progress tracking
+          console.log('🚀 [CAMPAIGN_FORM_DEBUG] Campaign created successfully, navigating to metrics page for real-time monitoring');
+          
+          const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
+          router.push(redirectUrl);
         } else {
           const errorMessage = "Failed to create campaign. Please check your inputs and try again.";
           setFormMainError(errorMessage);

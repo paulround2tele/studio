@@ -46,6 +46,33 @@ const getFirstPhase = (campaignType: CampaignType): CampaignType => {
   return campaignType;
 };
 
+// ✅ CAMPAIGN ORCHESTRATION PIPELINE: Define the sequential workflow
+const getNextPhaseConfig = (completedPhase: CampaignType | undefined): {
+  phaseType: CampaignType;
+  displayName: string;
+  icon: LucideIcon;
+} | null => {
+  switch (completedPhase) {
+    case 'domain_generation':
+      return {
+        phaseType: 'dns_validation',
+        displayName: 'DNS Validation',
+        icon: CheckCircle
+      };
+    case 'dns_validation':
+      return {
+        phaseType: 'http_keyword_validation',
+        displayName: 'HTTP Keyword Validation',
+        icon: CheckCircle
+      };
+    case 'http_keyword_validation':
+      // Final phase - no next phase
+      return null;
+    default:
+      return null;
+  }
+};
+
 export const CampaignControls: React.FC<CampaignControlsProps> = ({
   campaign,
   actionLoading,
@@ -58,14 +85,48 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   const renderPhaseButtons = () => {
     // 🔧 CRITICAL FIX: Match backend behavior - domain generation auto-completes
     
-    // Campaign completed - show completion message (no start button needed)
+    // Campaign completed - show next phase button or completion message
     if (campaign.status === "completed") {
-      return (
-        <p className="text-lg font-semibold text-green-500 flex items-center gap-2">
-          <CheckCircle className="h-6 w-6" />
-          Campaign Completed Successfully!
-        </p>
-      );
+      // ✅ AUTOMATIC PHASE PROGRESSION: Show next phase buttons when campaign completes
+      const nextPhaseConfig = getNextPhaseConfig(campaign.campaignType);
+      
+      if (nextPhaseConfig) {
+        return (
+          <div className="text-center space-y-3">
+            <p className="text-lg font-semibold text-green-500 flex items-center justify-center gap-2">
+              <CheckCircle className="h-6 w-6" />
+              {campaign.campaignType ? phaseDisplayNames[campaign.campaignType] : 'Campaign'} Completed!
+            </p>
+            
+            <PhaseGateButton
+              label={`Start ${nextPhaseConfig.displayName}`}
+              onClick={() => onStartPhase(nextPhaseConfig.phaseType)}
+              Icon={nextPhaseConfig.icon}
+              variant="default"
+              isLoading={actionLoading[`phase-${nextPhaseConfig.phaseType}`]}
+              disabled={!!actionLoading[`phase-${nextPhaseConfig.phaseType}`]}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            />
+            
+            <p className="text-xs text-muted-foreground">
+              Continue the campaign orchestration pipeline
+            </p>
+          </div>
+        );
+      } else {
+        // Final phase completed - show completion message
+        return (
+          <div className="text-center space-y-2">
+            <p className="text-lg font-semibold text-green-500 flex items-center justify-center gap-2">
+              <CheckCircle className="h-6 w-6" />
+              Campaign Orchestration Complete!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              All phases of the campaign pipeline have been successfully executed.
+            </p>
+          </div>
+        );
+      }
     }
     
     // Campaign failed - show retry option only for non-domain-generation campaigns

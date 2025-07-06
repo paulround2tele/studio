@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/fntelecomllc/studio/backend/internal/utils"
@@ -1004,6 +1005,11 @@ func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, ca
 }
 
 func (s *campaignOrchestratorServiceImpl) DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error {
+	return s.deleteCampaignWithDependencies(ctx, campaignID, false)
+}
+
+// deleteCampaignWithDependencies handles campaign deletion with dependency awareness
+func (s *campaignOrchestratorServiceImpl) deleteCampaignWithDependencies(ctx context.Context, campaignID uuid.UUID, skipDependencyCheck bool) error {
 	var opErr error
 	var querier store.Querier
 	isSQL := s.db != nil
@@ -1046,12 +1052,39 @@ func (s *campaignOrchestratorServiceImpl) DeleteCampaign(ctx context.Context, ca
 		return opErr
 	}
 
-	// Check if campaign can be deleted (not running)
-	if campaign.Status == models.CampaignStatusRunning || campaign.Status == models.CampaignStatusQueued {
-		opErr = fmt.Errorf("cannot delete campaign %s: campaign is %s", campaignID, campaign.Status)
+	// Check if campaign can be deleted (only prevent deletion of actively running campaigns)
+	if campaign.Status == models.CampaignStatusRunning {
+		opErr = fmt.Errorf("cannot delete campaign %s: campaign is actively running", campaignID)
 		return opErr
 	}
 
+	// Find and delete dependent campaigns first (following the orchestration chain)
+	if !skipDependencyCheck {
+		dependentCampaigns, err := s.findDependentCampaigns(ctx, querier, campaignID, campaign.CampaignType)
+		if err != nil {
+			opErr = fmt.Errorf("failed to find dependent campaigns for %s: %w", campaignID, err)
+			return opErr
+		}
+
+		// Delete dependent campaigns recursively (in reverse dependency order)
+		for _, depID := range dependentCampaigns {
+			log.Printf("Deleting dependent campaign %s of %s", depID, campaignID)
+			if err := s.deleteCampaignWithDependencies(ctx, depID, true); err != nil {
+				opErr = fmt.Errorf("failed to delete dependent campaign %s: %w", depID, err)
+				return opErr
+			}
+		}
+	}
+
+	// Handle domain generation pattern offset reset logic BEFORE deleting the campaign
+	if campaign.CampaignType == models.CampaignTypeDomainGeneration {
+		if err := s.handleDomainGenerationOffsetOnDeletion(ctx, querier, campaignID, campaign); err != nil {
+			log.Printf("Warning: Failed to handle domain generation offset on deletion for campaign %s: %v", campaignID, err)
+			// Don't fail the deletion operation for offset handling errors
+		}
+	}
+
+	// Delete the campaign itself
 	if err := s.campaignStore.DeleteCampaign(ctx, querier, campaignID); err != nil {
 		opErr = fmt.Errorf("DeleteCampaign: delete campaign %s failed: %w", campaignID, err)
 		return opErr
@@ -1061,6 +1094,61 @@ func (s *campaignOrchestratorServiceImpl) DeleteCampaign(ctx context.Context, ca
 	s.logAuditEvent(ctx, querier, campaign, "Campaign Deleted", fmt.Sprintf("Campaign %s was deleted", campaign.Name))
 
 	return nil
+}
+
+// findDependentCampaigns finds campaigns that depend on the given campaign
+func (s *campaignOrchestratorServiceImpl) findDependentCampaigns(ctx context.Context, querier store.Querier, campaignID uuid.UUID, campaignType models.CampaignTypeEnum) ([]uuid.UUID, error) {
+	var dependentIDs []uuid.UUID
+	
+	switch campaignType {
+	case models.CampaignTypeDomainGeneration:
+		// Find DNS campaigns that use this domain generation campaign as source
+		dnsFilter := store.ListCampaignsFilter{Type: models.CampaignTypeDNSValidation}
+		dnsCampaigns, err := s.campaignStore.ListCampaigns(ctx, querier, dnsFilter)
+		if err != nil {
+			return nil, err
+		}
+		
+		for _, dnsCampaign := range dnsCampaigns {
+			if dnsCampaign != nil {
+				// Check if this DNS campaign references our domain generation campaign
+				dnsParams, err := s.campaignStore.GetDNSValidationParams(ctx, querier, dnsCampaign.ID)
+				if err == nil && dnsParams.SourceGenerationCampaignID != nil && *dnsParams.SourceGenerationCampaignID == campaignID {
+					dependentIDs = append(dependentIDs, dnsCampaign.ID)
+					
+					// Also find HTTP campaigns that depend on this DNS campaign
+					httpDependents, err := s.findDependentCampaigns(ctx, querier, dnsCampaign.ID, models.CampaignTypeDNSValidation)
+					if err == nil {
+						dependentIDs = append(dependentIDs, httpDependents...)
+					}
+				}
+			}
+		}
+		
+	case models.CampaignTypeDNSValidation:
+		// Find HTTP campaigns that use this DNS campaign as source
+		httpFilter := store.ListCampaignsFilter{Type: models.CampaignTypeHTTPKeywordValidation}
+		httpCampaigns, err := s.campaignStore.ListCampaigns(ctx, querier, httpFilter)
+		if err != nil {
+			return nil, err
+		}
+		
+		for _, httpCampaign := range httpCampaigns {
+			if httpCampaign != nil {
+				// Check if this HTTP campaign references our DNS campaign
+				httpParams, err := s.campaignStore.GetHTTPKeywordParams(ctx, querier, httpCampaign.ID)
+				if err == nil && httpParams.SourceCampaignID == campaignID {
+					dependentIDs = append(dependentIDs, httpCampaign.ID)
+				}
+			}
+		}
+		
+	case models.CampaignTypeHTTPKeywordValidation:
+		// HTTP campaigns are leaf nodes in the dependency chain
+		// No other campaigns depend on HTTP campaigns
+	}
+	
+	return dependentIDs, nil
 }
 
 // BulkDeleteCampaigns deletes multiple campaigns at once with proper transaction handling and error aggregation
@@ -1210,6 +1298,39 @@ func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Cont
 
 // Legacy campaign creation methods (kept for backward compatibility)
 
+// GetCampaignDependencies returns information about campaigns that depend on the given campaign
+func (s *campaignOrchestratorServiceImpl) GetCampaignDependencies(ctx context.Context, campaignID uuid.UUID) (*CampaignDependencyInfo, error) {
+	var querier store.Querier
+	if s.db != nil {
+		querier = s.db
+	}
+	
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, querier, campaignID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get campaign %s: %w", campaignID, err)
+	}
+	
+	dependentIDs, err := s.findDependentCampaigns(ctx, querier, campaignID, campaign.CampaignType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find dependent campaigns: %w", err)
+	}
+	
+	var dependentCampaigns []models.Campaign
+	for _, depID := range dependentIDs {
+		depCampaign, err := s.campaignStore.GetCampaignByID(ctx, querier, depID)
+		if err == nil && depCampaign != nil {
+			dependentCampaigns = append(dependentCampaigns, *depCampaign)
+		}
+	}
+	
+	return &CampaignDependencyInfo{
+		Campaign:           *campaign,
+		DependentCampaigns: dependentCampaigns,
+		HasDependencies:    len(dependentCampaigns) > 0,
+		CanDelete:          campaign.Status != models.CampaignStatusRunning,
+	}, nil
+}
+
 // HandleCampaignCompletion creates and queues the next campaign in the chain
 // when a campaign completes. Domain generation -> DNS -> HTTP.
 // Only creates the next campaign if the original campaign has launch_sequence=true.
@@ -1286,5 +1407,109 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 	default:
 		log.Printf("[DEBUG] Campaign %s type %s is not configured for auto-chaining", campaignID, campaign.CampaignType)
 	}
+	return nil
+}
+
+// handleDomainGenerationOffsetOnDeletion implements the correct offset reset logic:
+// Only reset the offset when the very last campaign for that pattern is deleted.
+// The offset tracks the highest point ever reached for that pattern, regardless of campaign deletions.
+func (s *campaignOrchestratorServiceImpl) handleDomainGenerationOffsetOnDeletion(ctx context.Context, querier store.Querier, campaignID uuid.UUID, campaign *models.Campaign) error {
+	log.Printf("[INFO] HandleDomainGenerationOffsetOnDeletion: Processing offset logic for campaign %s deletion", campaignID)
+	
+	// Get the domain generation parameters for this campaign
+	domainGenParams, err := s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
+	if err != nil {
+		log.Printf("[ERROR] Failed to get domain generation params for campaign %s: %v", campaignID, err)
+		return fmt.Errorf("failed to get domain generation params: %w", err)
+	}
+	
+	// Generate the config hash for this pattern
+	hashResult, hashErr := domainexpert.GenerateDomainGenerationConfigHash(*domainGenParams)
+	if hashErr != nil {
+		log.Printf("[ERROR] Failed to generate config hash for campaign %s: %v", campaignID, hashErr)
+		return fmt.Errorf("failed to generate config hash: %w", hashErr)
+	}
+	configHashString := hashResult.HashString
+	
+	log.Printf("[INFO] Campaign %s uses pattern config hash: %s", campaignID, configHashString)
+	
+	// Find all other campaigns that use the same pattern (excluding the one being deleted)
+	filter := store.ListCampaignsFilter{
+		Type: models.CampaignTypeDomainGeneration,
+		// We don't exclude the current campaign here because we want to count it
+	}
+	
+	allDomainGenCampaigns, err := s.campaignStore.ListCampaigns(ctx, querier, filter)
+	if err != nil {
+		log.Printf("[ERROR] Failed to list domain generation campaigns: %v", err)
+		return fmt.Errorf("failed to list domain generation campaigns: %w", err)
+	}
+	
+	// Count campaigns with the same pattern (excluding the one being deleted)
+	campaignsWithSamePattern := 0
+	for _, existingCampaign := range allDomainGenCampaigns {
+		if existingCampaign != nil && existingCampaign.ID != campaignID {
+			// Get params for each campaign and check if it has the same config hash
+			existingParams, err := s.campaignStore.GetDomainGenerationParams(ctx, querier, existingCampaign.ID)
+			if err != nil {
+				log.Printf("[WARN] Failed to get params for campaign %s, skipping: %v", existingCampaign.ID, err)
+				continue
+			}
+			
+			existingHashResult, hashErr := domainexpert.GenerateDomainGenerationConfigHash(*existingParams)
+			if hashErr != nil {
+				log.Printf("[WARN] Failed to generate hash for campaign %s, skipping: %v", existingCampaign.ID, hashErr)
+				continue
+			}
+			
+			if existingHashResult.HashString == configHashString {
+				campaignsWithSamePattern++
+				log.Printf("[INFO] Found campaign %s with same pattern (hash: %s)", existingCampaign.ID, configHashString)
+			}
+		}
+	}
+	
+	log.Printf("[INFO] Found %d other campaigns using the same pattern as campaign %s", campaignsWithSamePattern, campaignID)
+	
+	// Only reset the offset if this is the LAST campaign with this pattern
+	if campaignsWithSamePattern == 0 {
+		log.Printf("[INFO] Campaign %s is the LAST campaign using pattern %s - RESETTING offset to 0", campaignID, configHashString)
+		
+		// Convert the normalized params to JSON for storage
+		configDetailsBytes, err := json.Marshal(hashResult.NormalizedParams)
+		if err != nil {
+			log.Printf("[ERROR] Failed to marshal config details for pattern %s: %v", configHashString, err)
+			return fmt.Errorf("failed to marshal config details: %w", err)
+		}
+		
+		// Reset the global offset for this pattern to 0
+		resetConfigState := &models.DomainGenerationConfigState{
+			ConfigHash:    configHashString,
+			LastOffset:    0,
+			ConfigDetails: configDetailsBytes,
+			UpdatedAt:     time.Now().UTC(),
+		}
+		
+		// Use the config manager if available, otherwise fall back to direct store access
+		if s.domainGenService != nil {
+			// Get the domain generation service to access its config manager
+			// Since we can't access the config manager directly, we'll use the store directly
+			if err := s.campaignStore.CreateOrUpdateDomainGenerationConfigState(ctx, querier, resetConfigState); err != nil {
+				log.Printf("[ERROR] Failed to reset offset for pattern %s: %v", configHashString, err)
+				return fmt.Errorf("failed to reset offset for pattern %s: %w", configHashString, err)
+			}
+		} else {
+			if err := s.campaignStore.CreateOrUpdateDomainGenerationConfigState(ctx, querier, resetConfigState); err != nil {
+				log.Printf("[ERROR] Failed to reset offset for pattern %s: %v", configHashString, err)
+				return fmt.Errorf("failed to reset offset for pattern %s: %w", configHashString, err)
+			}
+		}
+		
+		log.Printf("[SUCCESS] Successfully reset offset to 0 for pattern %s after deleting last campaign %s", configHashString, campaignID)
+	} else {
+		log.Printf("[INFO] Campaign %s is NOT the last campaign using pattern %s - PRESERVING offset (keeping highest value reached)", campaignID, configHashString)
+		log.Printf("[INFO] Remaining %d campaigns will continue using the current offset for pattern %s", campaignsWithSamePattern, configHashString)
+	}
+	
 	return nil
 }
