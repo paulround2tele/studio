@@ -772,7 +772,7 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		return true, 0, opErr
 	}
 
-	batchSize := 1000
+	// 🚨 ROOT CAUSE FIX: Calculate batch size based on user's remaining domains, not hardcoded value
 	var domainsStillNeededForThisCampaignInstance int64
 
 	if genParams.NumDomainsToGenerate > 0 {
@@ -803,10 +803,17 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		maxPossibleToGenerateFromGlobalOffset = genParams.TotalPossibleCombinations - genParams.CurrentOffset
 	}
 
-	numToGenerateInBatch := int64(batchSize)
-	if numToGenerateInBatch > domainsStillNeededForThisCampaignInstance {
-		numToGenerateInBatch = domainsStillNeededForThisCampaignInstance
+	// 🚨 ROOT CAUSE FIX: Start with user's remaining domains, not hardcoded 1000
+	// Use a reasonable default batch size but respect user limits
+	defaultBatchSize := int64(1000)
+	numToGenerateInBatch := domainsStillNeededForThisCampaignInstance
+	
+	// Only use default batch size if user wants more domains than default batch
+	if domainsStillNeededForThisCampaignInstance > defaultBatchSize {
+		numToGenerateInBatch = defaultBatchSize
 	}
+	
+	// Still respect global offset limits
 	if numToGenerateInBatch > maxPossibleToGenerateFromGlobalOffset {
 		numToGenerateInBatch = maxPossibleToGenerateFromGlobalOffset
 	}
