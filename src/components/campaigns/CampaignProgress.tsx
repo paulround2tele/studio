@@ -211,26 +211,27 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
         </div>
       </TooltipProvider>
 
-      {(campaign.phaseStatus === 'InProgress' || campaign.phaseStatus === 'Succeeded') && campaign.currentPhase !== "Idle" && campaign.currentPhase !== "Completed" && (
+      {((campaign.phaseStatus === 'InProgress' || campaign.phaseStatus === 'Succeeded') && campaign.currentPhase !== "Idle" && campaign.currentPhase !== "Completed") || campaign.currentPhase === "Completed" ? (
         <div className="mt-4">
           <div className="flex justify-between text-sm mb-1">
             <span>
-              {campaign.phaseStatus === 'Succeeded' ? 'Phase Completed' : 'Current Phase Progress'}
-              ({campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})
+              {campaign.currentPhase === "Completed" ? 'Campaign Completed' :
+               campaign.phaseStatus === 'Succeeded' ? 'Phase Completed' : 'Current Phase Progress'}
+              {campaign.currentPhase !== "Completed" && `(${campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})`}
             </span>
-            <span>{campaign.progress}%</span>
+            <span>{campaign.currentPhase === "Completed" ? '100' : campaign.progress}%</span>
           </div>
           <Progress
-            value={campaign.progress}
+            value={campaign.currentPhase === "Completed" ? 100 : campaign.progress}
             className={cn(
               "w-full h-3 [&>div]:bg-gradient-to-r transition-all duration-500",
-              campaign.phaseStatus === 'Succeeded' && campaign.progress === 100
+              (campaign.phaseStatus === 'Succeeded' && campaign.progress === 100) || campaign.currentPhase === "Completed"
                 ? "[&>div]:from-blue-500 [&>div]:to-blue-600" // Keep blue when completed
                 : "[&>div]:from-blue-400 [&>div]:to-blue-600"  // Standard blue during progress
             )}
           />
         </div>
-      )}
+      ) : null}
        {campaign.currentPhase === "Completed" && (
         <div className="mt-4 text-center p-4 bg-green-50 dark:bg-green-900/30 rounded-md border border-green-200 dark:border-green-700">
           <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400 mx-auto mb-2"/>

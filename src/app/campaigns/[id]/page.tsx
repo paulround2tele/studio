@@ -124,11 +124,12 @@ export default function RefactoredCampaignDetailsPage() {
   }, [campaignId, reset, loadCampaignData]);
 
   // 🔧 CRITICAL FIX: Memoize WebSocket conditions to prevent unnecessary effect runs
+  // 🚨 ROOT CAUSE FIX: Remove 'completed' status to stop WebSocket polling after campaign completion
   const webSocketConditions = useMemo(() => {
     return {
       shouldConnect: !!(campaign &&
         campaign.campaignType === 'domain_generation' &&
-        ['pending', 'running', 'completed'].includes(campaign.status || '')),
+        ['pending', 'running'].includes(campaign.status || '')),
       campaignId: campaign?.id,
       campaignType: campaign?.campaignType,
       status: campaign?.status
