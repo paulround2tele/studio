@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv" // For parsing limit/offset
+	"strings"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/config" // For ProxyToProxyConfigEntry
@@ -28,7 +29,7 @@ type CreateProxyRequest struct {
 	Name        string                   `json:"name" validate:"required,min=1,max=255"`
 	Description string                   `json:"description,omitempty"`
 	Protocol    models.ProxyProtocolEnum `json:"protocol" validate:"required,oneof=http https socks5 socks4"`
-	Address     string                   `json:"address" validate:"required,hostname_port"`
+	Address     string                   `json:"address" validate:"required,hostname_port_or_url"`
 	Username    string                   `json:"username,omitempty"`
 	Password    string                   `json:"password,omitempty"`
 	CountryCode string                   `json:"countryCode,omitempty"`
@@ -39,7 +40,7 @@ type UpdateProxyRequest struct {
 	Name        *string                   `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
 	Description *string                   `json:"description,omitempty"`
 	Protocol    *models.ProxyProtocolEnum `json:"protocol,omitempty" validate:"omitempty,oneof=http https socks5 socks4"`
-	Address     *string                   `json:"address,omitempty" validate:"omitempty,hostname_port"`
+	Address     *string                   `json:"address,omitempty" validate:"omitempty,hostname_port_or_url"`
 	Username    *string                   `json:"username,omitempty"`
 	Password    *string                   `json:"password,omitempty"`
 	CountryCode *string                   `json:"countryCode,omitempty"`
@@ -217,7 +218,15 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 	if err := h.ProxyStore.CreateProxy(c.Request.Context(), querier, proxy); err != nil {
 		opErr = err
 		log.Printf("Error creating proxy: %v", err)
-		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to create proxy")
+		
+		// Check if this is a duplicate/unique constraint error
+		errStr := err.Error()
+		if strings.Contains(errStr, "already exists") || strings.Contains(errStr, "unique constraint") || strings.Contains(errStr, "duplicate") {
+			// Handle duplicate gracefully - return 409 Conflict instead of 500
+			respondWithErrorGin(c, http.StatusConflict, fmt.Sprintf("Proxy with address '%s' already exists", req.Address))
+		} else {
+			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to create proxy")
+		}
 		return
 	}
 

@@ -70,24 +70,26 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
    * Calculate health metrics from proxy data
    */
   const calculateHealthMetrics = useCallback((proxyData: ExtendedProxy[]): ProxyHealthMetrics => {
-    const totalProxies = proxyData.length;
-    const activeProxies = proxyData.filter(p => p.isEnabled && p.isHealthy).length;
-    const failedProxies = proxyData.filter(p => p.isEnabled && !p.isHealthy).length;
+    // Ensure proxyData is always an array
+    const safeProxyData = Array.isArray(proxyData) ? proxyData : [];
+    const totalProxies = safeProxyData.length;
+    const activeProxies = safeProxyData.filter(p => p.isEnabled && p.isHealthy).length;
+    const failedProxies = safeProxyData.filter(p => p.isEnabled && !p.isHealthy).length;
     const testingProxies = 0; // OpenAPI doesn't have testing status
-    const disabledProxies = proxyData.filter(p => !p.isEnabled).length;
+    const disabledProxies = safeProxyData.filter(p => !p.isEnabled).length;
 
-    const proxiesWithLatency = proxyData.filter(p => p.latencyMs && p.latencyMs > 0);
+    const proxiesWithLatency = safeProxyData.filter(p => p.latencyMs && p.latencyMs > 0);
     const averageResponseTime = proxiesWithLatency.length > 0
       ? proxiesWithLatency.reduce((sum, p) => sum + (p.latencyMs || 0), 0) / proxiesWithLatency.length
       : 0;
 
-    const totalTests = proxyData.reduce((sum, p) => {
+    const totalTests = safeProxyData.reduce((sum, p) => {
       const successCount = p.successCount || 0;
       const failureCount = p.failureCount || 0;
       return sum + successCount + failureCount;
     }, 0);
     
-    const totalSuccesses = proxyData.reduce((sum, p) => {
+    const totalSuccesses = safeProxyData.reduce((sum, p) => {
       const successCount = p.successCount || 0;
       return sum + successCount;
     }, 0);
@@ -137,8 +139,10 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       const response: ProxiesListResponse = await getProxies();
       
       if (response.status === 'success' && response.data) {
-        setProxies(response.data as ExtendedProxy[]);
-        const metrics = calculateHealthMetrics(response.data as ExtendedProxy[]);
+        // Ensure data is always an array
+        const proxiesArray = Array.isArray(response.data) ? response.data : [];
+        setProxies(proxiesArray as ExtendedProxy[]);
+        const metrics = calculateHealthMetrics(proxiesArray as ExtendedProxy[]);
         setHealthMetrics(metrics);
         setLastRefresh(new Date());
       } else {

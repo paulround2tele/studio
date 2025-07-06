@@ -1181,4 +1181,5 @@ func addPersonaSchemas(spec *openapi3.T) {
 			},
 		},
 	}
+
 }

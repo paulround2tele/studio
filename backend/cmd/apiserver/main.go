@@ -158,7 +158,7 @@ func main() {
 			pmCfg.TestTimeout = 30 * time.Second
 		}
 	}
-	proxyMgr := proxymanager.NewProxyManager(appConfig.Proxies, pmCfg)
+	proxyMgr := proxymanager.NewProxyManager(appConfig.Proxies, pmCfg, proxyStore, db)
 	log.Println("ProxyManager initialized.")
 
 	httpValSvc := httpvalidator.NewHTTPValidator(appConfig)

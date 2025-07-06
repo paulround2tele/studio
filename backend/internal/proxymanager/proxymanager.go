@@ -3,6 +3,7 @@ package proxymanager
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,7 +16,9 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/constants"
+	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
+	"github.com/google/uuid"
 )
 
 // Constants, ProxyTestResult, TestProxy, ProxyStatus, ProxyManager struct, NewProxyManager,
@@ -139,9 +142,11 @@ type ProxyManager struct {
        currentIndex       int
        healthCheckTimeout time.Duration
        config             config.ProxyManagerConfig
+       proxyStore         store.ProxyStore
+       db                 store.Querier
 }
 
-func NewProxyManager(entries []config.ProxyConfigEntry, cfg config.ProxyManagerConfig) *ProxyManager {
+func NewProxyManager(entries []config.ProxyConfigEntry, cfg config.ProxyManagerConfig, proxyStore store.ProxyStore, db store.Querier) *ProxyManager {
        if cfg.InitialHealthCheckTimeout <= 0 {
                cfg.InitialHealthCheckTimeout = defaultInitialHealthCheckTimeout
        }
@@ -155,6 +160,8 @@ func NewProxyManager(entries []config.ProxyConfigEntry, cfg config.ProxyManagerC
                currentIndex:      0,
                healthCheckTimeout: cfg.InitialHealthCheckTimeout,
                config:            cfg,
+               proxyStore:        proxyStore,
+               db:                db,
        }
 	log.Printf("ProxyManager: Initializing with %d proxy entries.", len(entries))
 	supportedProxies := make([]*ProxyStatus, 0, len(entries))
@@ -235,13 +242,21 @@ func performSingleProxyCheck(ctx context.Context, proxyEntry config.ProxyConfigE
 		return result
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		_, copyErr := io.ReadAll(io.LimitReader(resp.Body, 512))
-		if copyErr != nil {
-			result.Error = "failed to read small part of health check response body: " + copyErr.Error()
+	if resp.StatusCode == http.StatusOK {
+		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		if readErr != nil {
+			result.Error = "failed to read health check response body: " + readErr.Error()
 			return result
 		}
-		result.Success = true
+		// Actually validate the response like TestProxy does
+		var ipResponse struct {
+			Origin string `json:"origin"`
+		}
+		if err := json.Unmarshal(body, &ipResponse); err == nil && ipResponse.Origin != "" {
+			result.Success = true
+		} else {
+			result.Error = "health check got invalid response from httpbin.org: " + string(body)
+		}
 	} else {
 		result.Error = fmt.Sprintf("health check request returned status %d", resp.StatusCode)
 	}
@@ -487,6 +502,9 @@ func (pm *ProxyManager) ForceCheckProxiesAsync(idsToCheck []string) {
 						// Broadcast proxy status change via WebSocket
 						websocket.BroadcastProxyStatus(proxyStatus.ProxyConfigEntry.ID, "healthy", "")
 					}
+					
+					// Update database health status
+					pm.syncHealthStatusToDatabase(proxyStatus.ProxyConfigEntry.ID, true, checkResult.DurationMs)
 				} else {
 					proxyStatus.IsHealthy = false
 					proxyStatus.LastFailure = time.Now()
@@ -503,6 +521,9 @@ func (pm *ProxyManager) ForceCheckProxiesAsync(idsToCheck []string) {
 							proxyStatus.ConsecutiveFailures = 1
 						}
 					}
+					
+					// Update database health status
+					pm.syncHealthStatusToDatabase(proxyStatus.ProxyConfigEntry.ID, false, checkResult.DurationMs)
 				}
 				pm.mu.Unlock()
 			}(ps)
@@ -596,4 +617,32 @@ func IsProxyRelatedError(errStr string, proxyAddress string) bool {
 		}
 	}
 	return false
+}
+
+// syncHealthStatusToDatabase updates the proxy health status in the database
+func (pm *ProxyManager) syncHealthStatusToDatabase(proxyID string, isHealthy bool, latencyMs int64) {
+	if pm.proxyStore == nil || pm.db == nil {
+		return // Skip database sync if store is not available
+	}
+	
+	proxyUUID, err := uuid.Parse(proxyID)
+	if err != nil {
+		log.Printf("ProxyManager: syncHealthStatusToDatabase - Invalid proxy ID format '%s': %v", proxyID, err)
+		return
+	}
+	
+	var latency sql.NullInt32
+	if latencyMs > 0 {
+		latency = sql.NullInt32{Int32: int32(latencyMs), Valid: true}
+	}
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	err = pm.proxyStore.UpdateProxyHealth(ctx, pm.db, proxyUUID, isHealthy, latency, time.Now())
+	if err != nil {
+		log.Printf("ProxyManager: Failed to sync health status to database for proxy ID '%s': %v", proxyID, err)
+	} else {
+		log.Printf("ProxyManager: Successfully synced health status (healthy=%t) to database for proxy ID '%s'", isHealthy, proxyID)
+	}
 }

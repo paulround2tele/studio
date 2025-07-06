@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -221,7 +222,7 @@ function PersonasPageContent() {
         let errorCount = 0;
 
         for (const item of itemsToImport) {
-            const personaTypeForImport = item.personaType || activeTab; 
+            const personaTypeForImport = item.personaType || activeTab;
             if (item.personaType && personaTypeForImport !== activeTab) {
                 toast({ title: "Import Error", description: `Mismatched persona type in file for item: ${item.name || 'Unknown'}. Skipping. Active tab is ${activeTab}.`, variant: "destructive" });
                 errorCount++;
@@ -393,11 +394,11 @@ function PersonasPageContent() {
         icon={Users}
         actionButtons={
           <div className="flex gap-2">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleImportFile} 
-              accept=".json" 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportFile}
+              accept=".json"
               className="hidden"
               aria-label={`Import ${activeTab.toUpperCase()} persona file`}
             />

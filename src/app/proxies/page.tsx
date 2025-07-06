@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import PageHeader from '@/components/shared/PageHeader';
 import ProxyListItem from '@/components/proxies/ProxyListItem';
 import ProxyForm from '@/components/proxies/ProxyForm';
@@ -13,9 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity } from 'lucide-react';
+import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
 import type { Proxy, ProxiesListResponse, ProxyActionResponse, ProxyDeleteResponse, UpdateProxyPayload } from '@/lib/types';
-import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy } from '@/lib/services/proxyService.production';
+import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
+import type { ProxyCreationPayload } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';
 import {
@@ -40,6 +41,7 @@ function ProxiesPageContent() {
 
   const [proxyToDelete, setProxyToDelete] = useState<Proxy | null>(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { toast } = useToast();
 
@@ -58,7 +60,9 @@ function ProxiesPageContent() {
     try {
       const response: ProxiesListResponse = await getProxies();
       if (response.status === 'success' && response.data) {
-        setProxies(response.data);
+        // Ensure data is always an array
+        const proxiesArray = Array.isArray(response.data) ? response.data : [];
+        setProxies(proxiesArray);
       } else {
         toast({ title: "Error Loading Proxies", description: response.message || "Failed to load proxies.", variant: "destructive" });
       }
@@ -193,8 +197,76 @@ function ProxiesPageContent() {
       setPageActionLoading(null);
     }
   };
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const lines = content.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+        let importedCount = 0;
+        let errorCount = 0;
+
+        for (const line of lines) {
+          const match = line.match(/^(\d+\.\d+\.\d+\.\d+):(\d+)$/);
+          if (!match) {
+            errorCount++;
+            continue;
+          }
+
+          const [, ip, port] = match;
+          const payload: ProxyCreationPayload = {
+            name: `Proxy ${ip}:${port}`,
+            description: `Imported proxy from file`,
+            protocol: 'http' as const,
+            address: `${ip}:${port}`,
+            isEnabled: true
+          };
+
+          try {
+            const response = await createProxy(payload);
+            if (response.status === 'success') {
+              importedCount++;
+            } else {
+              errorCount++;
+              if (response.message?.includes('already exists')) {
+                // Skip duplicate error message for cleaner UI
+                continue;
+              }
+              console.warn(`Failed to import proxy ${ip}:${port}:`, response.message);
+            }
+          } catch (error) {
+            errorCount++;
+            console.error(`Error importing proxy ${ip}:${port}:`, error);
+          }
+        }
+
+        if (importedCount > 0) {
+          toast({ title: "Import Successful", description: `${importedCount} proxy(ies) imported successfully.` });
+          fetchProxiesData(false);
+        }
+        if (errorCount > 0) {
+          toast({
+            title: "Import Notice",
+            description: `${errorCount} proxy(ies) were skipped (duplicates or invalid format).`,
+            variant: importedCount > 0 ? "default" : "destructive"
+          });
+        }
+      } catch (error: unknown) {
+        console.error("File import error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        toast({ title: "Import Failed", description: "Could not parse proxy file: " + errorMessage, variant: "destructive" });
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsText(file);
+  };
   
-  const activeProxiesCount = proxies.filter(p => p.isEnabled).length;
+  const activeProxiesCount = Array.isArray(proxies) ? proxies.filter(p => p.isEnabled).length : 0;
 
   return (
     <>
@@ -204,13 +276,24 @@ function ProxiesPageContent() {
         icon={ShieldCheck}
         actionButtons={
           <div className="flex gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportFile}
+              accept=".txt"
+              className="hidden"
+              aria-label="Import proxy list file"
+            />
+            <Button onClick={() => fileInputRef.current?.click()} variant="outline" disabled={!!pageActionLoading}>
+              <UploadCloud className="mr-2 h-4 w-4" /> Import Proxies
+            </Button>
             <Button onClick={handleAddProxy} disabled={!!pageActionLoading}>
               <PlusCircle className="mr-2" /> Add New Proxy
             </Button>
-            <Button onClick={handleTestAllProxies} variant="outline" disabled={!!pageActionLoading || proxies.length === 0} isLoading={pageActionLoading === 'testAll'}>
+            <Button onClick={handleTestAllProxies} variant="outline" disabled={!!pageActionLoading || !Array.isArray(proxies) || proxies.length === 0} isLoading={pageActionLoading === 'testAll'}>
               <TestTubeDiagonal className={cn("mr-2", pageActionLoading === 'testAll' && "animate-ping")}/> Test All
             </Button>
-            <Button onClick={handleCleanProxies} variant="outline" disabled={!!pageActionLoading || proxies.length === 0} isLoading={pageActionLoading === 'clean'}>
+            <Button onClick={handleCleanProxies} variant="outline" disabled={!!pageActionLoading || !Array.isArray(proxies) || proxies.length === 0} isLoading={pageActionLoading === 'clean'}>
               <Sparkles className={cn("mr-2", pageActionLoading === 'clean' && "animate-pulse")} /> Clean Failed
             </Button>
           </div>
@@ -224,7 +307,7 @@ function ProxiesPageContent() {
         <CardContent>
             {loading ? <Skeleton className="h-6 w-1/2"/> : 
                 <p className="text-muted-foreground">
-                    <span className="font-semibold text-primary">{activeProxiesCount}</span> out of <span className="font-semibold">{proxies.length}</span> configured proxies are currently <span className={cn(activeProxiesCount > 0 ? "text-green-600" : "text-muted-foreground")}>active</span>.
+                    <span className="font-semibold text-primary">{activeProxiesCount}</span> out of <span className="font-semibold">{Array.isArray(proxies) ? proxies.length : 0}</span> configured proxies are currently <span className={cn(activeProxiesCount > 0 ? "text-green-600" : "text-muted-foreground")}>active</span>.
                 </p>
             }
         </CardContent>
@@ -237,7 +320,7 @@ function ProxiesPageContent() {
             <Card key={i}><CardContent className="p-4"><Skeleton className="h-12 w-full" /></CardContent></Card>
           ))}
         </div>
-      ) : proxies.length === 0 ? (
+      ) : !Array.isArray(proxies) || proxies.length === 0 ? (
         <Card className="text-center py-10 shadow-sm">
           <CardHeader>
              <ShieldCheck className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -279,7 +362,7 @@ function ProxiesPageContent() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {proxies.map(proxy => (
+                        {Array.isArray(proxies) && proxies.map(proxy => (
                           <ProxyListItem
                             key={proxy.id}
                             proxy={proxy}
@@ -289,20 +372,20 @@ function ProxiesPageContent() {
                             onToggleStatus={handleToggleProxyStatus}
                             isLoading={actionLoading[`test-${proxy.id}`] || actionLoading[`toggle-${proxy.id}`] || actionLoading[`delete-${proxy.id}`]}
                           />
-                        ))}
+                        )) || []}
                       </TableBody>
                     </Table>
                   </TabsContent>
                   <TabsContent value="bulkOperations">
-                    <BulkOperations 
-                      proxies={proxies}
+                    <BulkOperations
+                      proxies={Array.isArray(proxies) ? proxies : []}
                       onProxiesUpdate={() => fetchProxiesData(false)}
                       disabled={pageActionLoading !== null}
                     />
                   </TabsContent>
                   <TabsContent value="proxyTesting">
-                    <ProxyTesting 
-                      proxies={proxies} 
+                    <ProxyTesting
+                      proxies={Array.isArray(proxies) ? proxies : []}
                       onProxiesUpdate={() => fetchProxiesData(false)}
                       disabled={pageActionLoading !== null}
                     />

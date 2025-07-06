@@ -54,9 +54,52 @@ class ProxyService {
   async getProxies(): Promise<ProxiesListResponse> {
     try {
       const result = await apiClient.listProxies();
+      
+      // Backend wraps response in APIResponse format: { success: true, data: Proxy[], requestId: string }
+      let proxiesData: any[] = [];
+      
+      if (result && typeof result === 'object') {
+        // Check if it's wrapped in APIResponse format
+        if ('data' in result && Array.isArray((result as any).data)) {
+          proxiesData = (result as any).data;
+        } else if (Array.isArray(result)) {
+          // Direct array response
+          proxiesData = result as any[];
+        }
+      }
+      
+      // Transform SQL null types to simple values for React
+      const cleanedProxies = proxiesData.map((proxy: any) => ({
+        id: proxy.id,
+        name: proxy.name || "",
+        description: (proxy.description?.String !== undefined ? proxy.description.String : proxy.description) || "",
+        address: proxy.address || "",
+        protocol: proxy.protocol || "http",
+        username: (proxy.username?.String !== undefined ? proxy.username.String : proxy.username) || "",
+        host: (proxy.host?.String !== undefined ? proxy.host.String : proxy.host) || "",
+        port: (proxy.port?.Int32 !== undefined ? proxy.port.Int32 : proxy.port) || null,
+        isEnabled: proxy.isEnabled || false,
+        isHealthy: proxy.isHealthy || false,
+        lastStatus: (proxy.lastStatus?.String !== undefined ? proxy.lastStatus.String : proxy.lastStatus) || "",
+        lastCheckedAt: (proxy.lastCheckedAt?.Time !== undefined ? proxy.lastCheckedAt.Time : proxy.lastCheckedAt) || null,
+        latencyMs: (proxy.latencyMs?.Int32 !== undefined ? proxy.latencyMs.Int32 : proxy.latencyMs) || null,
+        city: (proxy.city?.String !== undefined ? proxy.city.String : proxy.city) || "",
+        countryCode: (proxy.countryCode?.String !== undefined ? proxy.countryCode.String : proxy.countryCode) || "",
+        provider: (proxy.provider?.String !== undefined ? proxy.provider.String : proxy.provider) || "",
+        createdAt: proxy.createdAt,
+        updatedAt: proxy.updatedAt,
+        // Frontend expects these fields - status should reflect both enabled state AND health
+        status: !proxy.isEnabled ? 'Disabled' : (proxy.isHealthy ? 'Active' : 'Failed'),
+        lastTested: (proxy.lastCheckedAt?.Time !== undefined ? proxy.lastCheckedAt.Time : proxy.lastCheckedAt) || null,
+        successCount: 0,
+        failureCount: 0,
+        lastError: (proxy.lastStatus?.String !== undefined ? proxy.lastStatus.String : proxy.lastStatus) || "",
+        notes: ""
+      }));
+      
       return {
         status: 'success',
-        data: result as Proxy[],
+        data: cleanedProxies,
         message: 'Proxies retrieved successfully'
       };
     } catch (error) {
@@ -283,9 +326,56 @@ export const getProxyStatuses = () => proxyService.getProxyStatuses();
 
 // Bulk operations for backward compatibility
 export const testAllProxies = forceAllProxiesHealthCheck;
-export const cleanProxies = async (): Promise<{ status: 'error'; message: string }> => {
-  console.warn('cleanProxies bulk operation not yet implemented in V2 API');
-  return { status: 'error' as const, message: 'Bulk proxy cleanup not yet available' };
+export const cleanProxies = async (): Promise<{ status: 'success' | 'error'; message: string }> => {
+  try {
+    // Get all proxies and filter for unhealthy ones
+    const response = await proxyService.getProxies();
+    
+    if (response.status !== 'success' || !response.data) {
+      return { status: 'error', message: 'Failed to fetch proxies for cleaning' };
+    }
+
+    // Filter for unhealthy proxies (not isHealthy)
+    const unhealthyProxies = response.data.filter(proxy => !proxy.isHealthy);
+
+    if (unhealthyProxies.length === 0) {
+      return { status: 'success', message: 'No unhealthy proxies found to clean' };
+    }
+
+    let deletedCount = 0;
+    let errorCount = 0;
+
+    // Delete each unhealthy proxy
+    for (const proxy of unhealthyProxies) {
+      try {
+        if (!proxy.id) {
+          errorCount++;
+          console.error(`Proxy missing ID, skipping:`, proxy);
+          continue;
+        }
+        await proxyService.deleteProxy(proxy.id);
+        deletedCount++;
+      } catch (error) {
+        errorCount++;
+        console.error(`Failed to delete proxy ${proxy.id}:`, error);
+      }
+    }
+
+    if (deletedCount > 0) {
+      const message = errorCount > 0
+        ? `Cleaned ${deletedCount} failed proxies (${errorCount} errors)`
+        : `Successfully cleaned ${deletedCount} failed proxies`;
+      return { status: 'success', message };
+    } else {
+      return { status: 'error', message: `Failed to clean proxies (${errorCount} errors)` };
+    }
+  } catch (error) {
+    console.error('Error cleaning failed proxies:', error);
+    return {
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Unknown error occurred while cleaning proxies'
+    };
+  }
 };
 
 export default proxyService;

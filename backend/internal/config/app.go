@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -120,33 +119,11 @@ func Load(mainConfigPath string) (*AppConfig, error) {
 	// WorkerConfig defaults are applied within ConvertJSONToAppConfig
 	// HTTPValidator defaults (like DefaultUserAgent, MaxBodyReadBytes) applied in ConvertJSONToHTTPConfig
 
-	configDir := filepath.Dir(mainConfigPath)
-	if mainConfigPath == "" || filepath.Base(mainConfigPath) == mainConfigPath {
-		cwd, _ := os.Getwd()
-		configDir = cwd
-	}
-
-	var loadErr error
-	appConfig.DNSPersonas, loadErr = LoadDNSPersonas(configDir)
-	if loadErr != nil {
-		log.Printf("Config Notice: DNS Personas: %v", loadErr)
-		appConfig.DNSPersonas = []DNSPersona{}
-	}
-	appConfig.HTTPPersonas, loadErr = LoadHTTPPersonas(configDir)
-	if loadErr != nil {
-		log.Printf("Config Notice: HTTP Personas: %v", loadErr)
-		appConfig.HTTPPersonas = []HTTPPersona{}
-	}
-	appConfig.Proxies, loadErr = LoadProxies(configDir)
-	if loadErr != nil {
-		log.Printf("Config Notice: Proxies: %v", loadErr)
-		appConfig.Proxies = []ProxyConfigEntry{}
-	}
-	appConfig.KeywordSets, loadErr = LoadKeywordSets(configDir)
-	if loadErr != nil {
-		log.Printf("Config Notice: Keyword Sets: %v", loadErr)
-		appConfig.KeywordSets = []KeywordSet{}
-	}
+	// All personas, proxies, and keyword sets are now managed via database only - no JSON fallbacks
+	appConfig.DNSPersonas = []DNSPersona{}
+	appConfig.HTTPPersonas = []HTTPPersona{}
+	appConfig.Proxies = []ProxyConfigEntry{}
+	appConfig.KeywordSets = []KeywordSet{}
 
 	return appConfig, originalLoadError
 }

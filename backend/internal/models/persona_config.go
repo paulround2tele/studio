@@ -1,8 +1,6 @@
 package models
 
-import (
-	"net"
-)
+import ()
 
 // HttpPersonaConfig defines structured configuration for HTTP personas
 type HttpPersonaConfig struct {
@@ -52,7 +50,7 @@ type CookieHandling struct {
 
 // DnsPersonaConfig defines structured configuration for DNS personas
 type DnsPersonaConfig struct {
-	Resolvers                  []net.IP           `json:"resolvers" validate:"required,min=1"`
+	Resolvers                  []string           `json:"resolvers" validate:"required,min=1"`
 	UseSystemResolvers         bool               `json:"useSystemResolvers"`
 	QueryTimeoutSeconds        int                `json:"queryTimeoutSeconds" validate:"min=1,max=60"`
 	MaxDomainsPerRequest       int                `json:"maxDomainsPerRequest" validate:"min=1,max=1000"`
