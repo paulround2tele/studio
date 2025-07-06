@@ -1,0 +1,12 @@
+[
+  {
+    "timestamp": "2025-07-06T15:29:27.930Z",
+    "type": "stderr",
+    "data": "npm error Missing script: \"dev\"\nnpm error\nnpm error To see a list of scripts, run:\nnpm error   npm run\n"
+  },
+  {
+    "timestamp": "2025-07-06T15:29:27.932Z",
+    "type": "stderr",
+    "data": "npm error A complete log of this run can be found in: /home/vboxuser/.npm/_logs/2025-07-06T15_29_27_756Z-debug-0.log\n"
+  }
+]

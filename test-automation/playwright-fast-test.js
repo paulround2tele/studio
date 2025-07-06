@@ -284,13 +284,24 @@ class PlaywrightDomainFlowTester {
     this.page = await this.context.newPage();
     this.wsMonitor = new PlaywrightWebSocketMonitor(this.page, this.logger);
 
-    // ENHANCED: Comprehensive console logging
+    // ENHANCED: Comprehensive console logging with campaign-specific filtering
     this.page.on('console', msg => {
       const level = msg.type();
       const text = msg.text();
       const location = msg.location();
       
       this.logger.logBrowser(level, text, `${location.url}:${location.lineNumber}:${location.columnNumber}`);
+      
+      // Enhanced logging for campaign-related console messages
+      if (this.enhancedLoggingActive || this.campaignCreationStartTime) {
+        if (text.toLowerCase().includes('campaign') ||
+            text.toLowerCase().includes('create') ||
+            text.toLowerCase().includes('button') ||
+            text.toLowerCase().includes('form') ||
+            text.toLowerCase().includes('submit')) {
+          this.logger.info(`🎯 CAMPAIGN CONSOLE: [${level.toUpperCase()}] ${text}`);
+        }
+      }
       
       // Also log to main logger for critical messages
       if (level === 'error') {
@@ -300,19 +311,29 @@ class PlaywrightDomainFlowTester {
       }
     });
 
-    // ENHANCED: Network request/response logging
+    // ENHANCED: Network request/response logging - START EARLY for campaign navigation
     if (CONFIG.captureNetworkLogs) {
       this.page.on('request', request => {
-        // Log all requests during campaign creation period
-        if (this.campaignCreationStartTime) {
+        // Log all requests during campaign creation period OR when looking for create campaign button
+        if (this.campaignCreationStartTime || this.enhancedLoggingActive) {
           this.logger.logNetwork(request);
+          
+          // Special logging for campaign-related API calls
+          if (request.url().includes('/campaigns') || request.url().includes('/api/')) {
+            this.logger.info(`🌐 CAMPAIGN API REQUEST: ${request.method()} ${request.url()}`);
+          }
         }
       });
 
       this.page.on('response', response => {
-        // Log all responses during campaign creation period
-        if (this.campaignCreationStartTime) {
+        // Log all responses during campaign creation period OR when looking for create campaign button
+        if (this.campaignCreationStartTime || this.enhancedLoggingActive) {
           this.logger.logNetwork(response.request(), response);
+          
+          // Special logging for campaign-related API responses
+          if (response.url().includes('/campaigns') || response.url().includes('/api/')) {
+            this.logger.info(`🌐 CAMPAIGN API RESPONSE: ${response.status()} ${response.url()}`);
+          }
         }
       });
     }
@@ -390,46 +411,169 @@ class PlaywrightDomainFlowTester {
     }
   }
 
-  // FAST CAMPAIGN NAVIGATION - Correct selectors
+  // FAST CAMPAIGN NAVIGATION - Enhanced logging and button detection
   async testCampaignNavigation() {
     this.logger.info('=== CAMPAIGN NAVIGATION TEST ===');
     
+    // Activate enhanced logging for button detection
+    this.enhancedLoggingActive = true;
+    this.logger.info('🔍 ENHANCED LOGGING ACTIVATED - Tracking create campaign button detection');
+    
     try {
-      // CORRECTED: Look for actual buttons/links from campaigns page
+      // Take screenshot before button detection
+      await this.takeScreenshot('before-button-detection');
+      
+      // ENHANCED: More comprehensive button detection with detailed logging
+      this.logger.info('🎯 STEP 1: Analyzing page for create campaign buttons...');
+      
+      // Strategy 1: Look for specific Create New Campaign buttons
       const createNewCampaignButton = this.page.locator('a[href="/campaigns/new"]:has-text("Create New Campaign")');
       const viewDashboardLinks = this.page.locator('a:has-text("View Dashboard")');
       
       const createButtonCount = await createNewCampaignButton.count();
       const dashboardLinksCount = await viewDashboardLinks.count();
       
-      this.logger.info(`Found: ${createButtonCount} create buttons, ${dashboardLinksCount} view dashboard links`);
+      this.logger.info(`🔍 BUTTON DETECTION RESULTS:`);
+      this.logger.info(`   Create New Campaign buttons: ${createButtonCount}`);
+      this.logger.info(`   View Dashboard links: ${dashboardLinksCount}`);
       
-      if (dashboardLinksCount > 0) {
-        this.logger.info('Found existing campaigns, clicking View Dashboard...');
-        await viewDashboardLinks.first().click();
-      } else if (createButtonCount > 0) {
-        this.logger.info('No campaigns, clicking Create New Campaign...');
+      // ENHANCED: Alternative button detection strategies
+      const alternativeSelectors = [
+        'a[href="/campaigns/new"]',
+        'button:has-text("Create")',
+        'button:has-text("New Campaign")',
+        '[data-testid="create-campaign"]',
+        '.create-campaign-button'
+      ];
+      
+      this.logger.info('🔍 STEP 2: Trying alternative button selectors...');
+      for (const selector of alternativeSelectors) {
+        const count = await this.page.locator(selector).count();
+        this.logger.info(`   ${selector}: ${count} elements found`);
+      }
+      
+      // ENHANCED: DOM analysis for button detection debugging
+      const buttonAnalysis = await this.page.evaluate(() => {
+        const allButtons = document.querySelectorAll('button, a');
+        const buttonData = Array.from(allButtons).map((btn, index) => ({
+          index,
+          tagName: btn.tagName,
+          text: btn.textContent?.trim() || '',
+          href: btn.href || '',
+          className: btn.className || '',
+          id: btn.id || '',
+          visible: btn.offsetParent !== null,
+          enabled: !btn.disabled
+        }));
+        
+        // Filter for campaign-related buttons
+        const campaignButtons = buttonData.filter(btn =>
+          btn.text.toLowerCase().includes('campaign') ||
+          btn.text.toLowerCase().includes('create') ||
+          btn.href.includes('/campaigns/new') ||
+          btn.className.includes('campaign')
+        );
+        
+        return {
+          totalButtons: buttonData.length,
+          campaignRelatedButtons: campaignButtons,
+          allVisibleButtons: buttonData.filter(btn => btn.visible).slice(0, 10) // First 10 visible buttons for analysis
+        };
+      });
+      
+      this.logger.info('🔍 STEP 3: DOM Button Analysis Results:', {
+        totalButtons: buttonAnalysis.totalButtons,
+        campaignButtonsFound: buttonAnalysis.campaignRelatedButtons.length,
+        campaignButtons: buttonAnalysis.campaignRelatedButtons
+      });
+      
+      if (buttonAnalysis.campaignRelatedButtons.length === 0) {
+        this.logger.warn('⚠️  No campaign-related buttons found in DOM analysis');
+        this.logger.info('📋 Sample of visible buttons:', buttonAnalysis.allVisibleButtons);
+      }
+      
+      this.logger.info('🎯 STEP 4: Determining navigation strategy...');
+      
+      // ALWAYS prioritize creating new campaigns for testing purposes
+      if (createButtonCount > 0) {
+        this.logger.info('✅ Found Create New Campaign button, clicking to test creation flow...');
+        await this.takeScreenshot('before-create-click');
         await createNewCampaignButton.click();
+        this.logger.info('🎯 Create New Campaign button clicked');
+      } else if (dashboardLinksCount > 0) {
+        this.logger.info('✅ No create button found, clicking View Dashboard as fallback...');
+        await this.takeScreenshot('before-dashboard-click');
+        await viewDashboardLinks.first().click();
+        this.logger.info('🎯 Dashboard link clicked');
       } else {
-        // Try alternative selectors
+        this.logger.warn('⚠️  Primary buttons not found, trying alternatives...');
+        
+        // Try alternative selectors with enhanced logging
         const altCreateButton = this.page.locator('a[href="/campaigns/new"]');
-        if (await altCreateButton.count() > 0) {
+        const altCreateButtonCount = await altCreateButton.count();
+        
+        if (altCreateButtonCount > 0) {
+          this.logger.info(`✅ Found ${altCreateButtonCount} alternative create button(s)`);
+          await this.takeScreenshot('before-alt-create-click');
           await altCreateButton.first().click();
-          this.logger.info('Used alternative create button');
+          this.logger.info('🎯 Alternative create button clicked');
         } else {
-          throw new Error('No navigation options found');
+          // Final fallback: try any button with "create" text
+          const anyCreateButton = this.page.locator('button:has-text("Create"), a:has-text("Create")');
+          const anyCreateCount = await anyCreateButton.count();
+          
+          if (anyCreateCount > 0) {
+            this.logger.info(`✅ Found ${anyCreateCount} generic create button(s)`);
+            await this.takeScreenshot('before-generic-create-click');
+            await anyCreateButton.first().click();
+            this.logger.info('🎯 Generic create button clicked');
+          } else {
+            await this.takeScreenshot('no-buttons-found');
+            throw new Error('No navigation options found after comprehensive search');
+          }
         }
       }
       
-      // FAST: Wait for navigation
-      await this.page.waitForLoadState('domcontentloaded');
-      await this.takeScreenshot('navigation-complete');
+      this.logger.info('🎯 STEP 5: Waiting for navigation to complete...');
       
-      return true;
+      // ENHANCED: Wait for navigation with timeout and error handling
+      try {
+        await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+        
+        // Additional wait for React hydration
+        await this.page.waitForTimeout(2000);
+        
+        await this.takeScreenshot('navigation-complete');
+        this.logger.success('✅ Navigation completed successfully');
+        
+        // Check if we ended up on the right page
+        const currentUrl = this.page.url();
+        this.logger.info(`📍 Current URL after navigation: ${currentUrl}`);
+        
+        if (currentUrl.includes('/campaigns/new')) {
+          this.logger.success('✅ Successfully navigated to campaign creation page');
+        } else if (currentUrl.includes('/campaigns/')) {
+          this.logger.success('✅ Successfully navigated to campaign page');
+        } else {
+          this.logger.warn('⚠️  Navigation may not have worked as expected');
+        }
+        
+        return true;
+        
+      } catch (navigationError) {
+        this.logger.error('❌ Navigation timeout or error:', navigationError.message);
+        await this.takeScreenshot('navigation-timeout');
+        return false;
+      }
+      
     } catch (error) {
-      this.logger.error('Navigation failed:', error.message);
+      this.logger.error('❌ Navigation test failed:', error.message);
       await this.takeScreenshot('navigation-error');
       return false;
+    } finally {
+      // Deactivate enhanced logging after navigation test
+      this.enhancedLoggingActive = false;
+      this.logger.info('🔍 Enhanced logging deactivated after navigation test');
     }
   }
 
@@ -439,7 +583,9 @@ class PlaywrightDomainFlowTester {
     
     // Mark start of campaign creation for enhanced logging
     this.campaignCreationStartTime = Date.now();
+    this.enhancedLoggingActive = true;
     this.logger.info('🎯 ENHANCED LOGGING ACTIVE - Capturing all browser and network activity');
+    this.logger.info('📊 Console and network logs will now capture ALL campaign-related activity');
     
     await this.page.goto(`${CONFIG.frontendUrl}/campaigns/new`, { waitUntil: 'networkidle' });
     
@@ -717,14 +863,21 @@ class PlaywrightDomainFlowTester {
         this.logger.info(`Final submit button state - enabled: ${isEnabled}`);
         
         if (isEnabled) {
-          // Set up navigation promise before clicking
-          const navigationPromise = this.page.waitForLoadState('domcontentloaded', { timeout: 15000 });
+          // Set up navigation promise before clicking - wait for campaign page
+          const navigationPromise = this.page.waitForFunction(() => {
+            return window.location.href.includes('/campaigns/') &&
+                   !window.location.href.includes('/campaigns/new') &&
+                   window.location.href.match(/\/campaigns\/[a-f0-9-]{36}/);
+          }, { timeout: 20000 });
           
-          // Click and wait for navigation
+          // Click and wait for navigation to campaign-specific page
           await bestButton.click();
           await navigationPromise;
           
-          this.logger.success('Form submitted successfully');
+          // Additional wait for page to fully load
+          await this.page.waitForTimeout(2000);
+          
+          this.logger.success('Form submitted successfully and navigated to campaign page');
         } else {
           this.logger.error('Submit button found but disabled');
           return false;

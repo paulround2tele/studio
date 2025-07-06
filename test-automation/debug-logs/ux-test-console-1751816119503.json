@@ -1,0 +1,1479 @@
+[
+  {
+    "timestamp": "2025-07-06T15:32:33.977Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:16383:53"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.093Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:34.071Z] [z97j7tjk] [DEBUG] [AUTH_SERVICE] Initialized with configuration {\n  \"sessionCheckTimeout\": 15000,\n  \"maxRetries\": 2\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.376Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:34.349Z] [z97j7tjk] [DEBUG] [WEBSOCKET] Service initialized {\n  \"url\": \"\",\n  \"reconnectInterval\": 10000,\n  \"maxReconnectAttempts\": 5\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.665Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔗 WebSocket connected",
+    "location": ":10:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.756Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"isrManifest\",\"data\":{\"/dashboard\":true,\"/campaigns\":true,\"/login\":true}}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.832Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"turbopack-connected\",\"data\":{\"sessionId\":5688489843871145}}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.833Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"sync\",\"errors\":[],\"warnings\":[],\"hash\":\"\",\"versionInfo\":{\"staleness\":\"stale-patch\",\"expec",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.836Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:34.813Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.842Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:34.817Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.977Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "location": "http://localhost:8080/me:0:0"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.981Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:34.984Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "location": "http://localhost:8080/me:0:0"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.000Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"25\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.063Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.094Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "API_CLIENT_DEBUG - Non-network error:",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1225:31"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.124Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1225:31"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.125Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:243:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:359:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1234:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1842:30)\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1225:31"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.125Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "[DIAGNOSTIC] getCurrentUser failed: {errorMessage: Authentication required, errorType: Error, timestamp: 2025-07-06T15:32:35.087Z, effectiveBaseUrl: http://localhost:8080, finalBaseUrl: http://localhost:8080}",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1225:31"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.125Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"26\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.174Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "API_CLIENT_DEBUG - Non-network error:",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1225:31"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.177Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "  Attempt: 1, URL: http://localhost:8080/me, Method: GET",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1225:31"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.183Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "  Error Details: {\n  \"name\": \"Error\",\n  \"message\": \"Authentication required\",\n  \"stack\": \"Error: Authentication required\\n    at ApiClient.request (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:243:35)\\n    at async ApiClient.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:359:20)\\n    at async AuthService.getCurrentUser (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1234:30)\\n    at async AuthProvider.useCallback[checkSession] (http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1842:30)\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1225:31"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.184Z",
+    "phase": "authentication",
+    "level": "error",
+    "message": "[DIAGNOSTIC] getCurrentUser failed: {errorMessage: Authentication required, errorType: Error, timestamp: 2025-07-06T15:32:35.153Z, effectiveBaseUrl: http://localhost:8080, finalBaseUrl: http://localhost:8080}",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1225:31"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.678Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.786Z",
+    "phase": "authentication",
+    "level": "verbose",
+    "message": "[DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o",
+    "location": "http://localhost:3000/login:0:0"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.802Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"27\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.858Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.903Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"28\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:35.941Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:36.090Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"29\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:36.154Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:36.186Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"30\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:36.259Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:36.356Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"31\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:36.742Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:36.787Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"32\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.127Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.125Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] Form submission started {\n  \"email\": \"test@example.com\",\n  \"passwordLength\": 11\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.129Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "[2025-07-06T15:32:37.126Z] [z97j7tjk] [INFO] [AUTH_UI] Login with UI started {\n  \"email\": \"test@example.com\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.130Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.128Z] [z97j7tjk] [DEBUG] [LOADING_STORE] Started loading: auth.login {\n  \"description\": \"Signing in...\",\n  \"timeout\": 30000\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.134Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.129Z] [z97j7tjk] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.login\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.135Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "[2025-07-06T15:32:37.132Z] [z97j7tjk] [INFO] [AUTH_CONTEXT] Login attempt started {\n  \"email\": \"test@example.com\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.136Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "[2025-07-06T15:32:37.132Z] [z97j7tjk] [INFO] [AUTH_SERVICE] Login attempt started {\n  \"email\": \"test@example.com\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.141Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.138Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.141Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.139Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] Showing auth loading screen",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.317Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.315Z] [z97j7tjk] [DEBUG] [AUTH_SERVICE] User adapted successfully {\n  \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\",\n  \"email\": \"test@example.com\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.322Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "[2025-07-06T15:32:37.315Z] [z97j7tjk] [INFO] [AUTH_SERVICE] Login successful {\n  \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\",\n  \"attempt\": 1\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.322Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "[2025-07-06T15:32:37.315Z] [z97j7tjk] [INFO] [AUTH_CONTEXT] Login successful {\n  \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.322Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "[2025-07-06T15:32:37.315Z] [z97j7tjk] [INFO] [AUTH_UI] Login with UI successful",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.322Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.316Z] [z97j7tjk] [DEBUG] [LOADING_STORE] Stopped loading: auth.login {\n  \"duration\": 188,\n  \"status\": \"succeeded\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.322Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.316Z] [z97j7tjk] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"auth.login\",\n      \"status\": \"succeeded\",\n      \"isLoading\": false\n    }\n  ]\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.323Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.317Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] User already authenticated - showing redirect screen",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.323Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.317Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] User already authenticated - showing redirect screen",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.422Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.418Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] Login result received {\n  \"success\": true,\n  \"hasError\": false\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.422Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "[2025-07-06T15:32:37.419Z] [z97j7tjk] [INFO] [LOGIN_FORM] Login successful - redirecting",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.471Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.424Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] User already authenticated - showing redirect screen",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.471Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:37.426Z] [z97j7tjk] [DEBUG] [LOGIN_FORM] User already authenticated - showing redirect screen",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.497Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:37.568Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"33\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:38.051Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:38.124Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"34\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:38.334Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"isrManifest\",\"data\":{\"/campaigns\":true,\"/login\":true}}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:38.440Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"isrManifest\",\"data\":{\"/campaigns\":true,\"/login\":true,\"/dashboard\":true}}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:38.562Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:38.585Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"35\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.031Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[2025-07-06T15:32:39.023Z] [ProductionReadinessCheck] 🏁 Initial system check on authentication ready",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.031Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[HealthService] Cache miss, fetching health status...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3207:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.031Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] Auto-detecting backend URL...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3111:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.031Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] ENVIRONMENT_DETECTION:",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3063:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.032Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  NODE_ENV: development",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3064:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.034Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  window.location.origin: http://localhost:3000",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3065:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.035Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  window.location.host: localhost:3000",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3066:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.036Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  🛠️ DEVELOPMENT_MODE: Starting port detection",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3071:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.045Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:39.032Z] [z97j7tjk] [DEBUG] [LOADING_STORE] Started loading: data.fetch {\n  \"description\": \"Loading dashboard activity\",\n  \"timeout\": 30000\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.054Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:39.034Z] [z97j7tjk] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 1,\n  \"newOperations\": [\n    {\n      \"operation\": \"data.fetch\",\n      \"status\": \"loading\",\n      \"isLoading\": true\n    }\n  ]\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.194Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[AppLayout] Cleaning up global WebSocket services",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:5226:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.202Z",
+    "phase": "authentication",
+    "level": "info",
+    "message": "[2025-07-06T15:32:39.045Z] [z97j7tjk] [INFO] [WEBSOCKET] Disconnecting all connections",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.202Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[2025-07-06T15:32:39.047Z] [ProductionReadinessCheck] 🏁 Initial system check on authentication ready",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.202Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[HealthService] Cache miss, fetching health status...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3207:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.202Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] Auto-detecting backend URL...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3111:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.202Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] ENVIRONMENT_DETECTION:",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3063:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.202Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  NODE_ENV: development",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3064:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.202Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  window.location.origin: http://localhost:3000",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3065:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.202Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  window.location.host: localhost:3000",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3066:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.204Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  🛠️ DEVELOPMENT_MODE: Starting port detection",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3071:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.204Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:39.072Z] [z97j7tjk] [WARN] [LOADING_STORE] Operation data.fetch is already loading",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:970:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.343Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[2025-07-06T15:32:39.331Z] [ProductionReadinessCheck] 🏁 Initial system check on authentication ready",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.350Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[HealthService] Cache miss, fetching health status...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3207:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.352Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] Auto-detecting backend URL...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3111:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.353Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] ENVIRONMENT_DETECTION:",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3063:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.356Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  NODE_ENV: development",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3064:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.364Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  window.location.origin: http://localhost:3000",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3065:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.366Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  window.location.host: localhost:3000",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3066:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.366Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  🛠️ DEVELOPMENT_MODE: Starting port detection",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3071:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.366Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:39.348Z] [z97j7tjk] [WARN] [LOADING_STORE] Operation data.fetch is already loading",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:970:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.367Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[WebSocketService] getConnectionStatus returning: {}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:2554:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.446Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[2025-07-06T15:32:39.376Z] [ProductionReadinessCheck] 🏁 Initial system check on authentication ready",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.452Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[HealthService] Cache miss, fetching health status...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3207:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.453Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] Auto-detecting backend URL...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3111:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.453Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] ENVIRONMENT_DETECTION:",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3063:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.453Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  NODE_ENV: development",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3064:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.454Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  window.location.origin: http://localhost:3000",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3065:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.455Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  window.location.host: localhost:3000",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3066:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.455Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  🛠️ DEVELOPMENT_MODE: Starting port detection",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3071:12"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.459Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:39.455Z] [z97j7tjk] [WARN] [LOADING_STORE] Operation data.fetch is already loading",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:970:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.489Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.507Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "✅ [HealthService] Backend detected at http://localhost:8080",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3090:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.513Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] HEALTH_URL_CONSTRUCTION:",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3215:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.513Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Detected backend URL: http://localhost:8080",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3216:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.513Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Final health URL: http://localhost:8080/health",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3217:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.513Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Environment: development",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3218:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.513Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Calling backend /health directly (bypassing nginx)",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3219:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.518Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "✅ [HealthService] Backend detected at http://localhost:8080",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3090:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.518Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] HEALTH_URL_CONSTRUCTION:",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3215:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.518Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Detected backend URL: http://localhost:8080",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3216:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.518Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Final health URL: http://localhost:8080/health",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3217:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.518Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Environment: development",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3218:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.518Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Calling backend /health directly (bypassing nginx)",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3219:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.528Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "✅ [HealthService] Backend detected at http://localhost:8080",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3090:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.529Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] HEALTH_URL_CONSTRUCTION:",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3215:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.529Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Detected backend URL: http://localhost:8080",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3216:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.529Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Final health URL: http://localhost:8080/health",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3217:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.529Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Environment: development",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3218:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.530Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Calling backend /health directly (bypassing nginx)",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3219:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.544Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "✅ [HealthService] Backend detected at http://localhost:8080",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3090:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.544Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🔍 [HealthService] HEALTH_URL_CONSTRUCTION:",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3215:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.544Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Detected backend URL: http://localhost:8080",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3216:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.544Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Final health URL: http://localhost:8080/health",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3217:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.544Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Environment: development",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3218:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.544Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  Calling backend /health directly (bypassing nginx)",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3219:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.544Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"36\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.545Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.599Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"37\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.777Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🩺 [HealthService] Health response: 200 OK",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3228:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.778Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  URL: http://localhost:8080/health",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3229:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.778Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  OK: true",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3230:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.778Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🩺 [HealthService] Health response: 200 OK",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3228:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.778Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  URL: http://localhost:8080/health",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3229:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.778Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  OK: true",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3230:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.828Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🩺 [HealthService] Health response: 200 OK",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3228:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.829Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  URL: http://localhost:8080/health",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3229:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.833Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  OK: true",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3230:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.867Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "🩺 [HealthService] Health response: 200 OK",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3228:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.867Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  URL: http://localhost:8080/health",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3229:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.868Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "  OK: true",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3230:20"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.868Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:39.840Z] [z97j7tjk] [DEBUG] [LOADING_STORE] Stopped loading: data.fetch {\n  \"duration\": 808,\n  \"status\": \"succeeded\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:39.868Z",
+    "phase": "authentication",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:39.843Z] [z97j7tjk] [DEBUG] [LOADING_STORE] Operations changed {\n  \"activeCount\": 0,\n  \"newOperations\": [\n    {\n      \"operation\": \"data.fetch\",\n      \"status\": \"succeeded\",\n      \"isLoading\": false\n    }\n  ]\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.029Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:39.998Z] [z97j7tjk] [WARN] [LOADING_STORE] Attempted to stop non-loading operation: data.fetch",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:970:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.029Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation: {operation: data.fetch, hasLoadingState: true, isCurrentlyLoading: false, operationStartTime: 1751815959032, currentTime: 1751815960002}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1590:24"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.030Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:40.004Z] [z97j7tjk] [WARN] [LOADING_STORE] Attempted to stop non-loading operation: data.fetch",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:970:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.030Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation: {operation: data.fetch, hasLoadingState: true, isCurrentlyLoading: false, operationStartTime: 1751815959032, currentTime: 1751815960004}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1590:24"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.030Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:40.027Z] [z97j7tjk] [WARN] [LOADING_STORE] Attempted to stop non-loading operation: data.fetch",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:970:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.030Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "⚠️ [LOADING_STORE_DEBUG] Attempted to stop non-loading operation: {operation: data.fetch, hasLoadingState: true, isCurrentlyLoading: false, operationStartTime: 1751815959032, currentTime: 1751815960027}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:1590:24"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.113Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[HealthService] Health check cached for 1 hour",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3245:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.115Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[2025-07-06T15:32:40.062Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.117Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[WebSocketService] getConnectionStatus returning: {}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:2554:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.120Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:40.062Z] [ProductionReadinessCheck] ⚠️ WebSocket connectivity check - no active persistent connections",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.120Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[HealthService] Health check cached for 1 hour",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3245:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.120Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[2025-07-06T15:32:40.065Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.120Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[WebSocketService] getConnectionStatus returning: {}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:2554:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.120Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:40.065Z] [ProductionReadinessCheck] ⚠️ WebSocket connectivity check - no active persistent connections",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.120Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[HealthService] Health check cached for 1 hour",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3245:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.120Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[2025-07-06T15:32:40.065Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.121Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[WebSocketService] getConnectionStatus returning: {}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:2554:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.121Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:40.072Z] [ProductionReadinessCheck] ⚠️ WebSocket connectivity check - no active persistent connections",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.134Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[HealthService] Health check cached for 1 hour",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3245:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.136Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[2025-07-06T15:32:40.081Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.136Z",
+    "phase": "authentication",
+    "level": "log",
+    "message": "[WebSocketService] getConnectionStatus returning: {}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:2554:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.136Z",
+    "phase": "authentication",
+    "level": "warning",
+    "message": "[2025-07-06T15:32:40.081Z] [ProductionReadinessCheck] ⚠️ WebSocket connectivity check - no active persistent connections",
+    "location": "http://localhost:3000/_next/static/chunks/src_dde06c07._.js:3414:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.734Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.740Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"38\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.941Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:41.043Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"39\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:41.170Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:41.227Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"40\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:41.268Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"isrManifest\",\"data\":{\"/campaigns\":true,\"/login\":true,\"/dashboard\":true}}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:42.078Z",
+    "phase": "navigation",
+    "level": "info",
+    "message": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "location": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:16383:53"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:42.389Z",
+    "phase": "navigation",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:42.295Z] [1sgr5rbl] [DEBUG] [AUTH_SERVICE] Initialized with configuration {\n  \"sessionCheckTimeout\": 15000,\n  \"maxRetries\": 2\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:42.389Z",
+    "phase": "navigation",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:42.309Z] [1sgr5rbl] [DEBUG] [WEBSOCKET] Service initialized {\n  \"url\": \"\",\n  \"reconnectInterval\": 10000,\n  \"maxReconnectAttempts\": 5\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:42.955Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "[AppLayout] Cleaning up global WebSocket services",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:5226:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:42.967Z",
+    "phase": "navigation",
+    "level": "info",
+    "message": "[2025-07-06T15:32:42.888Z] [1sgr5rbl] [INFO] [WEBSOCKET] Disconnecting all connections",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:43.330Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "[AppLayout] Cleaning up global WebSocket services",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:5226:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:43.332Z",
+    "phase": "navigation",
+    "level": "info",
+    "message": "[2025-07-06T15:32:43.323Z] [1sgr5rbl] [INFO] [WEBSOCKET] Disconnecting all connections",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:43.402Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "[AppLayout] Cleaning up global WebSocket services",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:5226:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:43.403Z",
+    "phase": "navigation",
+    "level": "info",
+    "message": "[2025-07-06T15:32:43.373Z] [1sgr5rbl] [INFO] [WEBSOCKET] Disconnecting all connections",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:967:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:43.860Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "[WebSocketService] getConnectionStatus returning: {}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:2554:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:44.856Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "🔗 WebSocket connected",
+    "location": ":10:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.076Z",
+    "phase": "navigation",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:45.030Z] [1sgr5rbl] [DEBUG] [AUTH_SERVICE] User adapted successfully {\n  \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\",\n  \"email\": \"test@example.com\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.078Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"isrManifest\",\"data\":{\"/campaigns\":true,\"/login\":true,\"/dashboard\":true,\"/campaigns/new\":t",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.080Z",
+    "phase": "navigation",
+    "level": "warning",
+    "message": "[useCampaignFormData] Failed to load campaigns: {success: true, data: Object, requestId: 8ebd4b77-4ddc-4690-91c0-0c402ecadc34}",
+    "location": "http://localhost:3000/_next/static/chunks/src_182de56b._.js:2797:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.081Z",
+    "phase": "navigation",
+    "level": "warning",
+    "message": "[useCampaignFormData] Failed to load campaigns: {success: true, data: Object, requestId: d93fc83a-0069-4ac8-8c4f-4137b94a94ce}",
+    "location": "http://localhost:3000/_next/static/chunks/src_182de56b._.js:2797:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.081Z",
+    "phase": "navigation",
+    "level": "debug",
+    "message": "[2025-07-06T15:32:45.055Z] [1sgr5rbl] [DEBUG] [AUTH_SERVICE] User adapted successfully {\n  \"userId\": \"d5bd1dee-03c1-473f-a6f5-43fd4ebb2982\",\n  \"email\": \"test@example.com\"\n}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:964:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.084Z",
+    "phase": "navigation",
+    "level": "warning",
+    "message": "[useCampaignFormData] Failed to load campaigns: {success: true, data: Object, requestId: c2036f92-ecaa-4e6a-8572-27c405148b7e}",
+    "location": "http://localhost:3000/_next/static/chunks/src_182de56b._.js:2797:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.084Z",
+    "phase": "navigation",
+    "level": "warning",
+    "message": "[useCampaignFormData] Failed to load campaigns: {success: true, data: Object, requestId: 591aa520-3b87-4b3d-9d1a-3d1008d55479}",
+    "location": "http://localhost:3000/_next/static/chunks/src_182de56b._.js:2797:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.085Z",
+    "phase": "navigation",
+    "level": "warning",
+    "message": "[useCampaignFormData] Failed to load campaigns: {success: true, data: Object, requestId: 59f836a8-447b-4173-afac-b2919caf9713}",
+    "location": "http://localhost:3000/_next/static/chunks/src_182de56b._.js:2797:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.086Z",
+    "phase": "navigation",
+    "level": "warning",
+    "message": "[useCampaignFormData] Failed to load campaigns: {success: true, data: Object, requestId: 3b9ad1b5-cadb-4f25-a8ba-a733ff0c16ae}",
+    "location": "http://localhost:3000/_next/static/chunks/src_182de56b._.js:2797:28"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.378Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"turbopack-connected\",\"data\":{\"sessionId\":5688489843871145}}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.386Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"sync\",\"errors\":[],\"warnings\":[],\"hash\":\"\",\"versionInfo\":{\"staleness\":\"stale-patch\",\"expec",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.387Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.387Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"41\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.392Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.399Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"42\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.401Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.408Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"43\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.408Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.440Z",
+    "phase": "navigation",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"44\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:46.892Z",
+    "phase": "campaign_creation_ux_test",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:46.995Z",
+    "phase": "campaign_creation_ux_test",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"45\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:33:18.584Z",
+    "phase": "progress_bar_ux_test",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"building\"}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:33:18.642Z",
+    "phase": "progress_bar_ux_test",
+    "level": "log",
+    "message": "📡 WebSocket message: {\"action\":\"built\",\"hash\":\"46\",\"errors\":[],\"warnings\":[]}",
+    "location": ":15:18"
+  },
+  {
+    "timestamp": "2025-07-06T15:33:43.792Z",
+    "phase": "progress_bar_ux_test",
+    "level": "log",
+    "message": "[WebSocketService] getConnectionStatus returning: {}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:2554:16"
+  },
+  {
+    "timestamp": "2025-07-06T15:34:43.795Z",
+    "phase": "realtime_updates_test",
+    "level": "log",
+    "message": "[WebSocketService] getConnectionStatus returning: {}",
+    "location": "http://localhost:3000/_next/static/chunks/src_160dfe3c._.js:2554:16"
+  }
+]

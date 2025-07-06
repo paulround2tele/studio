@@ -1,0 +1,90 @@
+{
+  "testSummary": {
+    "duration": 78351,
+    "phases": [
+      "initialization",
+      "authentication",
+      "navigation",
+      "campaign_creation_ux_test",
+      "progress_bar_ux_test",
+      "realtime_updates_test"
+    ],
+    "totalLogs": 37,
+    "consoleMessages": 308,
+    "networkRequests": 0,
+    "timingMeasurements": 2,
+    "websocketMessages": 0
+  },
+  "criticalFindings": [],
+  "performanceMetrics": {
+    "navigation": {
+      "timings": [
+        {
+          "timestamp": "2025-07-06T15:37:34.238Z",
+          "phase": "navigation",
+          "action": "navigation_to_creation",
+          "duration": 9260,
+          "details": null
+        }
+      ],
+      "averageTime": 9260
+    },
+    "api": {
+      "timings": [],
+      "averageTime": 0
+    }
+  },
+  "uxVerification": {
+    "immediateNavigation": {
+      "detected": true,
+      "navigationTime": null,
+      "blockingDetected": false
+    },
+    "progressBarFix": {
+      "detected": false,
+      "staysBlueAt100": false,
+      "progressBarLogs": [
+        {
+          "timestamp": "2025-07-06T15:37:29.731Z",
+          "phase": "navigation",
+          "level": "log",
+          "message": "[CampaignsPage] Rendering 0 progress monitors",
+          "location": "http://localhost:3000/_next/static/chunks/src_d21669a1._.js:3894:28"
+        },
+        {
+          "timestamp": "2025-07-06T15:37:29.732Z",
+          "phase": "navigation",
+          "level": "log",
+          "message": "[CampaignsPage] Rendering 0 progress monitors",
+          "location": "http://localhost:3000/_next/static/chunks/src_d21669a1._.js:3894:28"
+        },
+        {
+          "timestamp": "2025-07-06T15:37:30.167Z",
+          "phase": "navigation",
+          "level": "log",
+          "message": "[CampaignsPage] Rendering 0 progress monitors",
+          "location": "http://localhost:3000/_next/static/chunks/src_d21669a1._.js:3894:28"
+        },
+        {
+          "timestamp": "2025-07-06T15:37:30.167Z",
+          "phase": "navigation",
+          "level": "log",
+          "message": "[CampaignsPage] Rendering 0 progress monitors",
+          "location": "http://localhost:3000/_next/static/chunks/src_d21669a1._.js:3894:28"
+        }
+      ]
+    },
+    "realTimeUpdates": {
+      "detected": false,
+      "websocketConnected": false,
+      "domainUpdatesReceived": 0
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "MEDIUM",
+      "action": "Check WebSocket Connection",
+      "details": "Real-time updates may not be working properly"
+    }
+  ]
+}

@@ -1,0 +1,245 @@
+[
+  {
+    "timestamp": "2025-07-06T15:32:29.565Z",
+    "elapsed": 2,
+    "level": "info",
+    "message": "🔄 TEST PHASE: INITIALIZATION",
+    "data": null,
+    "phase": "initialization"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:29.565Z",
+    "elapsed": 2,
+    "level": "info",
+    "message": "🚀 Initializing UX Fix Verification Test",
+    "data": null,
+    "phase": "initialization"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:32.699Z",
+    "elapsed": 3136,
+    "level": "success",
+    "message": "✅ UX Fix test environment initialized",
+    "data": null,
+    "phase": "initialization"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:32.700Z",
+    "elapsed": 3137,
+    "level": "info",
+    "message": "🔄 TEST PHASE: AUTHENTICATION",
+    "data": null,
+    "phase": "authentication"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:32.700Z",
+    "elapsed": 3137,
+    "level": "info",
+    "message": "🔐 Starting login process",
+    "data": null,
+    "phase": "authentication"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:36.699Z",
+    "elapsed": 7136,
+    "level": "info",
+    "message": "📸 Screenshot: 001-login-page-1751815956148.png",
+    "data": null,
+    "phase": "authentication"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:38.774Z",
+    "elapsed": 9211,
+    "level": "timing",
+    "message": "⏱️  login_complete: 6074ms",
+    "data": null,
+    "phase": "authentication"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.638Z",
+    "elapsed": 11075,
+    "level": "info",
+    "message": "📸 Screenshot: 002-login-success-1751815958776.png",
+    "data": null,
+    "phase": "authentication"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.639Z",
+    "elapsed": 11076,
+    "level": "success",
+    "message": "✅ Login completed",
+    "data": null,
+    "phase": "authentication"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.640Z",
+    "elapsed": 11077,
+    "level": "info",
+    "message": "🔄 TEST PHASE: NAVIGATION",
+    "data": null,
+    "phase": "navigation"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:40.641Z",
+    "elapsed": 11078,
+    "level": "info",
+    "message": "🧭 Navigating to campaign creation",
+    "data": null,
+    "phase": "navigation"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.781Z",
+    "elapsed": 16218,
+    "level": "timing",
+    "message": "⏱️  navigation_to_creation: 5140ms",
+    "data": null,
+    "phase": "navigation"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:46.845Z",
+    "elapsed": 17282,
+    "level": "info",
+    "message": "📸 Screenshot: 003-creation-form-loaded-1751815965784.png",
+    "data": null,
+    "phase": "navigation"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:46.847Z",
+    "elapsed": 17284,
+    "level": "success",
+    "message": "✅ Campaign creation page loaded",
+    "data": null,
+    "phase": "navigation"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:46.848Z",
+    "elapsed": 17285,
+    "level": "info",
+    "message": "🔄 TEST PHASE: CAMPAIGN_CREATION_UX_TEST",
+    "data": null,
+    "phase": "campaign_creation_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:46.848Z",
+    "elapsed": 17285,
+    "level": "info",
+    "message": "🎯 TESTING UX FIXES - Campaign Creation Flow",
+    "data": null,
+    "phase": "campaign_creation_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:32:46.848Z",
+    "elapsed": 17285,
+    "level": "info",
+    "message": "🔍 ENHANCED MONITORING ACTIVE - Tracking all campaign creation activity",
+    "data": null,
+    "phase": "campaign_creation_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:33:18.091Z",
+    "elapsed": 48528,
+    "level": "error",
+    "message": "❌ Campaign creation UX test failed:",
+    "data": "page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"tldsInput\"]')\u001b[22m\n",
+    "phase": "campaign_creation_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:33:18.565Z",
+    "elapsed": 49002,
+    "level": "info",
+    "message": "📸 Screenshot: 004-campaign-creation-error-1751815998092.png",
+    "data": null,
+    "phase": "campaign_creation_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:33:18.566Z",
+    "elapsed": 49003,
+    "level": "info",
+    "message": "🔄 TEST PHASE: PROGRESS_BAR_UX_TEST",
+    "data": null,
+    "phase": "progress_bar_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:33:18.566Z",
+    "elapsed": 49003,
+    "level": "info",
+    "message": "📊 TESTING PROGRESS BAR UX FIX",
+    "data": null,
+    "phase": "progress_bar_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:33:18.566Z",
+    "elapsed": 49003,
+    "level": "info",
+    "message": "🔄 Starting progress bar monitoring...",
+    "data": null,
+    "phase": "progress_bar_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:34:18.884Z",
+    "elapsed": 109321,
+    "level": "info",
+    "message": "📊 Progress bar monitoring completed. Captured 0 states",
+    "data": null,
+    "phase": "progress_bar_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:34:18.884Z",
+    "elapsed": 109321,
+    "level": "info",
+    "message": "📊 Progress Bar UX Analysis:",
+    "data": {
+      "totalStates": 0,
+      "completedStates": 0,
+      "blueCompletedStates": 0,
+      "fixWorking": false,
+      "fixVerified": false
+    },
+    "phase": "progress_bar_ux_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:34:18.884Z",
+    "elapsed": 109321,
+    "level": "info",
+    "message": "🔄 TEST PHASE: REALTIME_UPDATES_TEST",
+    "data": null,
+    "phase": "realtime_updates_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:34:18.885Z",
+    "elapsed": 109322,
+    "level": "info",
+    "message": "📡 TESTING REAL-TIME UPDATES",
+    "data": null,
+    "phase": "realtime_updates_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:35:19.215Z",
+    "elapsed": 169652,
+    "level": "info",
+    "message": "📡 Real-time Updates Analysis:",
+    "data": {
+      "websocketMessages": 16,
+      "domainUpdatesDetected": 0,
+      "realTimeWorking": false,
+      "averageUpdateRate": 0
+    },
+    "phase": "realtime_updates_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:35:19.501Z",
+    "elapsed": 169938,
+    "level": "info",
+    "message": "📸 Screenshot: 005-final-comprehensive-state-1751816119215.png",
+    "data": null,
+    "phase": "realtime_updates_test"
+  },
+  {
+    "timestamp": "2025-07-06T15:35:19.501Z",
+    "elapsed": 169938,
+    "level": "success",
+    "message": "🎉 COMPREHENSIVE UX TEST COMPLETED",
+    "data": null,
+    "phase": "realtime_updates_test"
+  }
+]

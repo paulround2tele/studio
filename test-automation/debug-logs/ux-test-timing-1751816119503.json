@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2025-07-06T15:32:38.774Z",
+    "phase": "authentication",
+    "action": "login_complete",
+    "duration": 6074,
+    "details": null
+  },
+  {
+    "timestamp": "2025-07-06T15:32:45.781Z",
+    "phase": "navigation",
+    "action": "navigation_to_creation",
+    "duration": 5140,
+    "details": null
+  }
+]
