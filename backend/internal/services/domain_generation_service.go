@@ -1259,34 +1259,93 @@ func NewConfigManagerWithConfig(db *sqlx.DB, campaignStore interface{}, stateCoo
 
 // GetDomainGenerationConfig gets domain generation configuration by hash (signature corrected)
 func (cm *ConfigManager) GetDomainGenerationConfig(ctx context.Context, configHash string) (*models.DomainGenerationConfigState, error) {
-	// Implementation for getting domain generation config
-	config := &models.DomainGenerationConfigState{
-		ConfigHash:  configHash,
-		LastOffset:  0,
-		ConfigState: &models.DomainGenerationConfigState{LastOffset: 0},
+	if cm.db == nil {
+		return nil, fmt.Errorf("database connection is nil")
 	}
-	return config, nil
+
+	// Query for existing configuration state by hash
+	query := `
+		SELECT config_hash, last_offset, config_details, updated_at
+		FROM domain_generation_config_states
+		WHERE config_hash = $1
+	`
+	
+	var configState models.DomainGenerationConfigState
+	err := cm.db.QueryRowContext(ctx, query, configHash).Scan(
+		&configState.ConfigHash,
+		&configState.LastOffset,
+		&configState.ConfigDetails,
+		&configState.UpdatedAt,
+	)
+	
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// No existing config found, return nil (not an error)
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to query domain generation config state: %w", err)
+	}
+	
+	// Set the ConfigState field to point to itself for backward compatibility
+	configState.ConfigState = &configState
+	
+	return &configState, nil
 }
 
 // UpdateDomainGenerationConfig updates domain generation configuration with atomic update function
 func (cm *ConfigManager) UpdateDomainGenerationConfig(ctx context.Context, configHash string, updateFn func(currentState *models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error)) (*models.DomainGenerationConfigState, error) {
-	// Get current state
+	if cm.db == nil {
+		return nil, fmt.Errorf("database connection is nil")
+	}
+
+	// Start a transaction for atomic update
+	tx, err := cm.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	// Get current state within transaction
 	currentState, err := cm.GetDomainGenerationConfig(ctx, configHash)
 	if err != nil {
-		// Create new state if not found
-		currentState = &models.DomainGenerationConfigState{
-			ConfigHash: configHash,
-			LastOffset: 0,
-		}
+		return nil, fmt.Errorf("failed to get current state: %w", err)
 	}
 
 	// Apply update function
 	updatedState, err := updateFn(currentState)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update function failed: %w", err)
 	}
 
-	// In a real implementation, this would save to database
-	// For now, return the updated state
+	// Save updated state to database
+	upsertQuery := `
+		INSERT INTO domain_generation_config_states (config_hash, last_offset, config_details, updated_at)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (config_hash)
+		DO UPDATE SET
+			last_offset = EXCLUDED.last_offset,
+			config_details = EXCLUDED.config_details,
+			updated_at = EXCLUDED.updated_at
+	`
+	
+	_, err = tx.ExecContext(ctx, upsertQuery,
+		updatedState.ConfigHash,
+		updatedState.LastOffset,
+		updatedState.ConfigDetails,
+		updatedState.UpdatedAt,
+	)
+	
+	if err != nil {
+		return nil, fmt.Errorf("failed to save updated config state: %w", err)
+	}
+
+	log.Printf("ConfigManager: Successfully updated config hash %s to offset %d", configHash, updatedState.LastOffset)
+	
 	return updatedState, nil
 }
