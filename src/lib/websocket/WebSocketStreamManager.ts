@@ -261,22 +261,50 @@ export class WebSocketStreamManagerImpl implements WebSocketStreamManager {
 
   private handleMessage(event: MessageEvent): void {
     try {
-      const message: StreamingMessage = JSON.parse(event.data);
+      // Handle concatenated JSON messages from backend
+      const rawData = event.data.trim();
       
-      // Update sequence number for ordering
-      if (message.sequenceNumber && message.sequenceNumber > this.lastSequenceNumber) {
-        this.lastSequenceNumber = message.sequenceNumber;
+      // Split by newlines and filter out empty lines
+      const jsonLines = rawData.split('\n').filter((line: string) => line.trim());
+      
+      // If no newlines, try to split by }{ pattern (concatenated JSON objects)
+      let messages: string[] = jsonLines;
+      if (jsonLines.length === 1 && jsonLines[0].includes('}{')) {
+        // Split concatenated JSON objects
+        const parts = jsonLines[0].split('}{');
+        messages = parts.map((part: string, index: number) => {
+          if (index === 0) return part + '}';
+          if (index === parts.length - 1) return '{' + part;
+          return '{' + part + '}';
+        });
       }
 
-      console.log(`📥 [WebSocket] Received message:`, {
-        type: message.type,
-        campaignId: message.campaignId,
-        sequenceNumber: message.sequenceNumber,
-        timestamp: message.timestamp,
-      });
+      // Parse each JSON message
+      for (const messageData of messages) {
+        if (!messageData.trim()) continue;
+        
+        try {
+          const message: StreamingMessage = JSON.parse(messageData);
+          
+          // Update sequence number for ordering
+          if (message.sequenceNumber && message.sequenceNumber > this.lastSequenceNumber) {
+            this.lastSequenceNumber = message.sequenceNumber;
+          }
 
-      // Queue message for processing
-      this.messageQueue.push(message);
+          console.log(`📥 [WebSocket] Received message:`, {
+            type: message.type,
+            campaignId: message.campaignId,
+            sequenceNumber: message.sequenceNumber,
+            timestamp: message.timestamp,
+          });
+
+          // Queue message for processing
+          this.messageQueue.push(message);
+        } catch (parseError) {
+          console.error('❌ [WebSocket] Failed to parse individual message:', parseError, messageData);
+        }
+      }
+      
       this.processMessageQueue();
 
     } catch (error) {

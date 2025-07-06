@@ -22,29 +22,22 @@ import { useCampaignDetailsStore } from '@/lib/stores/campaignDetailsStore';
 export const useCampaignOperations = (campaignId: string) => {
   const { toast } = useToast();
   
-  // 🔧 FIX: Use stable store references to prevent infinite loops
-  const setCampaign = useCampaignDetailsStore(state => state.setCampaign);
-  const setLoading = useCampaignDetailsStore(state => state.setLoading);
-  const setError = useCampaignDetailsStore(state => state.setError);
-  const updateFromAPI = useCampaignDetailsStore(state => state.updateFromAPI);
-  const setActionLoading = useCampaignDetailsStore(state => state.setActionLoading);
+  // 🔧 CRITICAL FIX: Access store functions directly without subscriptions
   const campaign = useCampaignDetailsStore(state => state.campaign);
   const loading = useCampaignDetailsStore(state => state.loading);
   const error = useCampaignDetailsStore(state => state.error);
 
-  // Load campaign data from API
+  // 🔧 CRITICAL FIX: Create stable loadCampaignData function without dependency cycles
   const loadCampaignData = useCallback(async (showLoadingSpinner = true) => {
     if (!campaignId) {
-      setError('Campaign ID is required');
+      useCampaignDetailsStore.getState().setError('Campaign ID is required');
       return;
     }
 
-    if (showLoadingSpinner) setLoading(true);
-    setError(null);
+    if (showLoadingSpinner) useCampaignDetailsStore.getState().setLoading(true);
+    useCampaignDetailsStore.getState().setError(null);
 
     try {
-      console.log(`🔍 [Campaign Operations] Loading campaign data for ${campaignId}`);
-      
       const rawResponse = await getCampaignById(campaignId);
       let campaignData: Campaign | null = null;
 
@@ -73,32 +66,88 @@ export const useCampaignOperations = (campaignId: string) => {
 
       if (campaignData) {
         const viewModel = transformCampaignToViewModel(campaignData);
-        setCampaign(viewModel);
+        useCampaignDetailsStore.getState().setCampaign(viewModel);
         
         // Load domain data based on campaign type
         await loadDomainData(viewModel);
-        
-        console.log(`✅ [Campaign Operations] Successfully loaded campaign ${campaignId}`);
       } else {
         throw new Error('Campaign not found in response');
       }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load campaign';
-      console.error(`❌ [Campaign Operations] Error loading campaign ${campaignId}:`, error);
-      setError(errorMessage);
+      useCampaignDetailsStore.getState().setError(errorMessage);
       toast({
         title: "Error Loading Campaign",
         description: errorMessage,
         variant: "destructive"
       });
     } finally {
-      if (showLoadingSpinner) setLoading(false);
+      if (showLoadingSpinner) useCampaignDetailsStore.getState().setLoading(false);
     }
-  }, [campaignId, setCampaign, setLoading, setError]);
+  }, [campaignId, toast]);
 
-  // Load domain data based on campaign type
+  // Extract domains from different response structures
+  const extractDomainsFromResponse = useCallback((response: unknown): GeneratedDomainBackend[] => {
+    console.log('🔍 [Domain Extraction] Parsing response:', { response, type: typeof response });
+    
+    if (Array.isArray(response)) {
+      console.log('✅ [Domain Extraction] Direct array response:', response.length, 'domains');
+      return response as GeneratedDomainBackend[];
+    }
+    
+    if (response && typeof response === 'object') {
+      const responseObj = response as Record<string, unknown>;
+      
+      // Check for standard API wrapper with success/data structure
+      if (responseObj.success && responseObj.data && typeof responseObj.data === 'object') {
+        const dataObj = responseObj.data as Record<string, unknown>;
+        
+        // Handle double-nested data structure: response.data.data
+        if (Array.isArray(dataObj.data)) {
+          console.log('✅ [Domain Extraction] Double-nested response.data.data:', dataObj.data.length, 'domains');
+          return dataObj.data as GeneratedDomainBackend[];
+        }
+        
+        // Handle single-nested: response.data (direct array)
+        if (Array.isArray(dataObj)) {
+          console.log('✅ [Domain Extraction] Single-nested response.data:', dataObj.length, 'domains');
+          return dataObj as GeneratedDomainBackend[];
+        }
+      }
+      
+      // Fallback: Try various possible key names
+      const possibleKeys = ['data', 'domains', 'generated_domains', 'results', 'items'];
+      for (const key of possibleKeys) {
+        const nested = responseObj[key];
+        if (Array.isArray(nested)) {
+          console.log('✅ [Domain Extraction] Found domains at key:', key, ':', nested.length, 'domains');
+          return nested as GeneratedDomainBackend[];
+        }
+        
+        // Handle nested object with data array
+        if (nested && typeof nested === 'object') {
+          const nestedObj = nested as Record<string, unknown>;
+          if (Array.isArray(nestedObj.data)) {
+            console.log('✅ [Domain Extraction] Found domains at', key + '.data:', nestedObj.data.length, 'domains');
+            return nestedObj.data as GeneratedDomainBackend[];
+          }
+        }
+      }
+    }
+    
+    console.warn('⚠️ [Domain Extraction] No domains found in response structure');
+    return [];
+  }, []);
+
+  // 🔧 CRITICAL FIX: Load domain data with direct store access and enhanced logging
   const loadDomainData = useCallback(async (campaignData: CampaignViewModel) => {
+    console.log('🔍 [Domain Loading] Starting for campaign:', {
+      id: campaignId,
+      type: campaignData.campaignType,
+      status: campaignData.status
+    });
+
     try {
       const updates: {
         generatedDomains?: GeneratedDomainBackend[];
@@ -107,55 +156,57 @@ export const useCampaignOperations = (campaignId: string) => {
       } = {};
 
       if (campaignData.campaignType === 'domain_generation') {
+        console.log('📡 [Domain Loading] Fetching generated domains...');
         const domainsResponse = await getGeneratedDomainsForCampaign(campaignId, { limit: 1000, cursor: 0 });
+        console.log('📡 [Domain Loading] Raw API response:', domainsResponse);
+        
         const domains = extractDomainsFromResponse(domainsResponse);
         updates.generatedDomains = domains as GeneratedDomainBackend[];
+        
+        console.log('✅ [Domain Loading] Extracted domains:', {
+          count: domains.length,
+          sampleDomains: domains.slice(0, 3).map(d => d.domainName)
+        });
       }
 
       if (campaignData.campaignType === 'dns_validation') {
+        console.log('📡 [Domain Loading] Fetching DNS validation items...');
         const dnsResponse = await getDnsCampaignDomains(campaignId, { limit: 1000, cursor: '0' });
         const dnsItems = Array.isArray(dnsResponse?.data) ? dnsResponse.data : [];
         updates.dnsCampaignItems = dnsItems as CampaignValidationItem[];
+        console.log('✅ [Domain Loading] DNS items loaded:', dnsItems.length);
       }
 
       if (campaignData.campaignType === 'http_keyword_validation') {
+        console.log('📡 [Domain Loading] Fetching HTTP validation items...');
         const httpResponse = await getHttpCampaignItems(campaignId, { limit: 1000, cursor: '0' });
         const httpItems = Array.isArray(httpResponse?.data) ? httpResponse.data : [];
         updates.httpCampaignItems = httpItems as CampaignValidationItem[];
+        console.log('✅ [Domain Loading] HTTP items loaded:', httpItems.length);
       }
 
-      updateFromAPI(updates);
+      // 🔧 Direct store access to avoid dependency cycles
+      console.log('💾 [Domain Loading] Updating store with:', {
+        generatedDomainsCount: updates.generatedDomains?.length || 0,
+        dnsItemsCount: updates.dnsCampaignItems?.length || 0,
+        httpItemsCount: updates.httpCampaignItems?.length || 0
+      });
+      
+      useCampaignDetailsStore.getState().updateFromAPI(updates);
+      
+      console.log('✅ [Domain Loading] Store updated successfully');
       
     } catch (error) {
-      console.error(`❌ [Campaign Operations] Error loading domain data:`, error);
+      console.error(`❌ [Domain Loading] Error loading domain data:`, error);
     }
-  }, [campaignId, updateFromAPI]);
-
-  // Extract domains from different response structures
-  const extractDomainsFromResponse = useCallback((response: unknown): GeneratedDomainBackend[] => {
-    if (Array.isArray(response)) {
-      return response as GeneratedDomainBackend[];
-    }
-    
-    if (response && typeof response === 'object') {
-      const possibleKeys = ['data', 'domains', 'generated_domains', 'results', 'items'];
-      for (const key of possibleKeys) {
-        const nested = (response as Record<string, unknown>)[key];
-        if (Array.isArray(nested)) {
-          return nested as GeneratedDomainBackend[];
-        }
-      }
-    }
-    
-    return [];
-  }, []);
+  }, [campaignId, extractDomainsFromResponse]);
 
   // Start campaign phase
   const startPhase = useCallback(async (phaseToStart: CampaignType) => {
     if (!campaign || !campaignId) return;
 
     const actionKey = `phase-${phaseToStart}`;
-    setActionLoading(actionKey, true);
+    useCampaignDetailsStore.getState().setActionLoading(actionKey, true);
 
     try {
       console.log(`🚀 [Campaign Operations] Starting phase ${phaseToStart} for campaign ${campaignId}`);
@@ -184,15 +235,15 @@ export const useCampaignOperations = (campaignId: string) => {
         variant: "destructive"
       });
     } finally {
-      setActionLoading(actionKey, false);
+      useCampaignDetailsStore.getState().setActionLoading(actionKey, false);
     }
-  }, [campaign, campaignId, setActionLoading, toast]);
+  }, [campaign, campaignId, toast, loadCampaignData]);
 
   // Pause campaign
   const pauseCampaign = useCallback(async () => {
     if (!campaignId) return;
 
-    setActionLoading('control-pause', true);
+    useCampaignDetailsStore.getState().setActionLoading('control-pause', true);
 
     try {
       const response = await pauseCampaignAPI(campaignId);
@@ -215,15 +266,15 @@ export const useCampaignOperations = (campaignId: string) => {
         variant: "destructive"
       });
     } finally {
-      setActionLoading('control-pause', false);
+      useCampaignDetailsStore.getState().setActionLoading('control-pause', false);
     }
-  }, [campaignId, setActionLoading, toast]);
+  }, [campaignId, toast, loadCampaignData]);
 
   // Resume campaign
   const resumeCampaign = useCallback(async () => {
     if (!campaignId) return;
 
-    setActionLoading('control-resume', true);
+    useCampaignDetailsStore.getState().setActionLoading('control-resume', true);
 
     try {
       const response = await resumeCampaignAPI(campaignId);
@@ -246,15 +297,15 @@ export const useCampaignOperations = (campaignId: string) => {
         variant: "destructive"
       });
     } finally {
-      setActionLoading('control-resume', false);
+      useCampaignDetailsStore.getState().setActionLoading('control-resume', false);
     }
-  }, [campaignId, setActionLoading, toast]);
+  }, [campaignId, toast, loadCampaignData]);
 
   // Stop/cancel campaign
   const stopCampaign = useCallback(async () => {
     if (!campaignId) return;
 
-    setActionLoading('control-stop', true);
+    useCampaignDetailsStore.getState().setActionLoading('control-stop', true);
 
     try {
       const response = await stopCampaignAPI(campaignId);
@@ -277,9 +328,9 @@ export const useCampaignOperations = (campaignId: string) => {
         variant: "destructive"
       });
     } finally {
-      setActionLoading('control-stop', false);
+      useCampaignDetailsStore.getState().setActionLoading('control-stop', false);
     }
-  }, [campaignId, setActionLoading, toast]);
+  }, [campaignId, toast, loadCampaignData]);
 
   // Download domains utility
   const downloadDomains = useCallback((domains: string[], fileNamePrefix: string) => {

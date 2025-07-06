@@ -1,0 +1,214 @@
+{
+  "metrics": [
+    {
+      "timestamp": 1751752610532,
+      "label": "pre-login",
+      "performance": {
+        "Timestamp": 1021.890392,
+        "Documents": 2,
+        "Frames": 1,
+        "JSEventListeners": 0,
+        "Nodes": 8,
+        "LayoutCount": 1,
+        "RecalcStyleCount": 0,
+        "LayoutDuration": 0.000366,
+        "RecalcStyleDuration": 0,
+        "ScriptDuration": 0,
+        "TaskDuration": 0.00431,
+        "JSHeapUsedSize": 591448,
+        "JSHeapTotalSize": 2007040
+      },
+      "memory": {
+        "jsHeapSizeLimit": 2190000000
+      },
+      "timing": {
+        "navigationStart": 1751752609724,
+        "domContentLoaded": 12,
+        "loadComplete": 13
+      },
+      "url": "about:blank"
+    },
+    {
+      "timestamp": 1751752629527,
+      "label": "post-login",
+      "performance": {
+        "Timestamp": 1040.463893,
+        "Documents": 2,
+        "Frames": 1,
+        "JSEventListeners": 595,
+        "Nodes": 386,
+        "LayoutCount": 78,
+        "RecalcStyleCount": 300,
+        "LayoutDuration": 0.526904,
+        "RecalcStyleDuration": 0.179489,
+        "ScriptDuration": 1.957476,
+        "TaskDuration": 4.980615,
+        "JSHeapUsedSize": 11331844,
+        "JSHeapTotalSize": 27578368
+      },
+      "memory": {
+        "jsHeapSizeLimit": 2172649472
+      },
+      "timing": {
+        "navigationStart": 1751752610551,
+        "domContentLoaded": 1014,
+        "loadComplete": 1691
+      },
+      "url": "http://localhost:3000/dashboard"
+    },
+    {
+      "timestamp": 1751752750749,
+      "label": "pre-login",
+      "performance": {
+        "Timestamp": 1162.087439,
+        "Documents": 6,
+        "Frames": 1,
+        "JSEventListeners": 1000,
+        "Nodes": 1952,
+        "LayoutCount": 277,
+        "RecalcStyleCount": 2145,
+        "LayoutDuration": 0.946295,
+        "RecalcStyleDuration": 1.249835,
+        "ScriptDuration": 16.532037,
+        "TaskDuration": 34.502375,
+        "JSHeapUsedSize": 37194192,
+        "JSHeapTotalSize": 52482048
+      },
+      "memory": {
+        "jsHeapSizeLimit": 2172649472
+      },
+      "timing": {
+        "navigationStart": 1751752746628,
+        "domContentLoaded": 735,
+        "loadComplete": 1653
+      },
+      "url": "http://localhost:3000/login?redirect=%2Fcampaigns"
+    },
+    {
+      "timestamp": 1751752768658,
+      "label": "post-login",
+      "performance": {
+        "Timestamp": 1179.746784,
+        "Documents": 7,
+        "Frames": 1,
+        "JSEventListeners": 1151,
+        "Nodes": 2446,
+        "LayoutCount": 338,
+        "RecalcStyleCount": 2432,
+        "LayoutDuration": 0.976545,
+        "RecalcStyleDuration": 1.430948,
+        "ScriptDuration": 18.562079,
+        "TaskDuration": 38.53632,
+        "JSHeapUsedSize": 38833124,
+        "JSHeapTotalSize": 47763456
+      },
+      "memory": {
+        "jsHeapSizeLimit": 2172649472
+      },
+      "timing": {
+        "navigationStart": 1751752750757,
+        "domContentLoaded": 684,
+        "loadComplete": 878
+      },
+      "url": "http://localhost:3000/dashboard"
+    },
+    {
+      "timestamp": 1751752785453,
+      "label": "responsive-mobile",
+      "performance": {
+        "Timestamp": 1196.853596,
+        "Documents": 8,
+        "Frames": 1,
+        "JSEventListeners": 1085,
+        "Nodes": 3194,
+        "LayoutCount": 354,
+        "RecalcStyleCount": 2477,
+        "LayoutDuration": 1.019623,
+        "RecalcStyleDuration": 1.675762,
+        "ScriptDuration": 21.317005,
+        "TaskDuration": 43.406512,
+        "JSHeapUsedSize": 42126824,
+        "JSHeapTotalSize": 62181376
+      },
+      "memory": {
+        "jsHeapSizeLimit": 2172649472
+      },
+      "timing": {
+        "navigationStart": 1751752778699,
+        "domContentLoaded": 452,
+        "loadComplete": 1103
+      },
+      "url": "http://localhost:3000/campaigns"
+    },
+    {
+      "timestamp": 1751752787962,
+      "label": "responsive-tablet",
+      "performance": {
+        "Timestamp": 1199.36923,
+        "Documents": 8,
+        "Frames": 1,
+        "JSEventListeners": 1099,
+        "Nodes": 3271,
+        "LayoutCount": 361,
+        "RecalcStyleCount": 2535,
+        "LayoutDuration": 1.026089,
+        "RecalcStyleDuration": 1.699846,
+        "ScriptDuration": 21.397238,
+        "TaskDuration": 43.775734,
+        "JSHeapUsedSize": 45198328,
+        "JSHeapTotalSize": 62181376
+      },
+      "memory": {
+        "jsHeapSizeLimit": 2172649472
+      },
+      "timing": {
+        "navigationStart": 1751752778699,
+        "domContentLoaded": 452,
+        "loadComplete": 1103
+      },
+      "url": "http://localhost:3000/campaigns"
+    },
+    {
+      "timestamp": 1751752790007,
+      "label": "responsive-desktop",
+      "performance": {
+        "Timestamp": 1201.415529,
+        "Documents": 8,
+        "Frames": 1,
+        "JSEventListeners": 1116,
+        "Nodes": 3354,
+        "LayoutCount": 368,
+        "RecalcStyleCount": 2588,
+        "LayoutDuration": 1.03765,
+        "RecalcStyleDuration": 1.819312,
+        "ScriptDuration": 21.43033,
+        "TaskDuration": 44.318911,
+        "JSHeapUsedSize": 42062960,
+        "JSHeapTotalSize": 62181376
+      },
+      "memory": {
+        "jsHeapSizeLimit": 2172649472
+      },
+      "timing": {
+        "navigationStart": 1751752778699,
+        "domContentLoaded": 452,
+        "loadComplete": 1103
+      },
+      "url": "http://localhost:3000/campaigns"
+    }
+  ],
+  "baselines": {},
+  "summary": {
+    "totalSamples": 7,
+    "memory": {
+      "min": 0,
+      "max": 0,
+      "avg": 0
+    },
+    "taskDuration": {
+      "min": 0.00431,
+      "max": 44.318911,
+      "avg": 29.932111000000003
+    }
+  }
+}

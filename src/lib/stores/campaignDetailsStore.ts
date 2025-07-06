@@ -384,36 +384,74 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
   }))
 );
 
-// Selector hooks for optimized subscriptions
-export const useCampaignData = () => useCampaignDetailsStore(
-  (state) => ({
-    campaign: state.campaign,
-    loading: state.loading,
-    error: state.error,
-  })
-);
+// 🔧 CRITICAL FIX: Stable selector hooks to prevent object recreation
+import { useMemo } from 'react';
 
-export const useDomainData = () => useCampaignDetailsStore(
-  (state) => ({
-    generatedDomains: state.generatedDomains,
-    dnsCampaignItems: state.dnsCampaignItems,
-    httpCampaignItems: state.httpCampaignItems,
-    totalDomainCount: state.totalDomainCount,
-  })
-);
+export const useCampaignData = () => {
+  const campaign = useCampaignDetailsStore(state => state.campaign);
+  const loading = useCampaignDetailsStore(state => state.loading);
+  const error = useCampaignDetailsStore(state => state.error);
+  
+  return useMemo(() => ({ campaign, loading, error }), [campaign, loading, error]);
+};
+
+export const useDomainData = () => {
+  const generatedDomains = useCampaignDetailsStore(state => state.generatedDomains);
+  const dnsCampaignItems = useCampaignDetailsStore(state => state.dnsCampaignItems);
+  const httpCampaignItems = useCampaignDetailsStore(state => state.httpCampaignItems);
+  const totalDomainCount = useCampaignDetailsStore(state => state.totalDomainCount);
+  
+  return useMemo(() => ({
+    generatedDomains,
+    dnsCampaignItems,
+    httpCampaignItems,
+    totalDomainCount,
+  }), [generatedDomains, dnsCampaignItems, httpCampaignItems, totalDomainCount]);
+};
 
 export const useStreamingStats = () => useCampaignDetailsStore(
   (state) => state.streamingStats
 );
 
-export const useTableState = () => useCampaignDetailsStore(
-  (state) => ({
-    filters: state.filters,
-    pagination: state.pagination,
-    selectedDomains: state.selectedDomains,
-  })
-);
+export const useTableState = () => {
+  const filters = useCampaignDetailsStore(state => state.filters);
+  const pagination = useCampaignDetailsStore(state => state.pagination);
+  const selectedDomains = useCampaignDetailsStore(state => state.selectedDomains);
+  
+  return useMemo(() => ({
+    filters,
+    pagination,
+    selectedDomains,
+  }), [filters, pagination, selectedDomains]);
+};
 
 export const useActionLoading = () => useCampaignDetailsStore(
   (state) => state.actionLoading
 );
+
+// 🔧 CRITICAL FIX: Stable store action references that don't recreate on every access
+export const useCampaignDetailsActions = () => {
+  const setCampaign = useCampaignDetailsStore(state => state.setCampaign);
+  const setLoading = useCampaignDetailsStore(state => state.setLoading);
+  const setError = useCampaignDetailsStore(state => state.setError);
+  const updateFromAPI = useCampaignDetailsStore(state => state.updateFromAPI);
+  const updateFilters = useCampaignDetailsStore(state => state.updateFilters);
+  const updatePagination = useCampaignDetailsStore(state => state.updatePagination);
+  const setActionLoading = useCampaignDetailsStore(state => state.setActionLoading);
+  const updateFromWebSocket = useCampaignDetailsStore(state => state.updateFromWebSocket);
+  const updateStreamingStats = useCampaignDetailsStore(state => state.updateStreamingStats);
+  const reset = useCampaignDetailsStore(state => state.reset);
+
+  return useMemo(() => ({
+    setCampaign,
+    setLoading,
+    setError,
+    updateFromAPI,
+    updateFilters,
+    updatePagination,
+    setActionLoading,
+    updateFromWebSocket,
+    updateStreamingStats,
+    reset,
+  }), [setCampaign, setLoading, setError, updateFromAPI, updateFilters, updatePagination, setActionLoading, updateFromWebSocket, updateStreamingStats, reset]);
+};

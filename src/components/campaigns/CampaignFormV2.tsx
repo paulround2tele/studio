@@ -189,29 +189,6 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
   const { toast } = useToast();
   const searchParams = useSearchParams();
 
-  // 🔍 DIAGNOSTIC: Render counting for infinite loop detection
-  const renderCountRef = useRef(0);
-  const formStateChangeCountRef = useRef(0);
-  const clearErrorsCallCountRef = useRef(0);
-  
-  renderCountRef.current += 1;
-  
-  console.log('🔄 [FORM_DEBUG] CampaignFormV2 render:', {
-    renderCount: renderCountRef.current,
-    isEditing,
-    campaignId: campaignToEdit?.id,
-    timestamp: new Date().toISOString(),
-    renderTrigger: renderCountRef.current > 5 ? '⚠️ POTENTIAL_INFINITE_LOOP' : 'normal'
-  });
-
-  if (renderCountRef.current > 10) {
-    console.error('🚨 [FORM_DEBUG] INFINITE LOOP DETECTED - CampaignFormV2 rendered more than 10 times!', {
-      renderCount: renderCountRef.current,
-      formStateChanges: formStateChangeCountRef.current,
-      clearErrorsCalls: clearErrorsCallCountRef.current
-    });
-  }
-
   // Enhanced error handling state
   const [formFieldErrors, setFormFieldErrors] = useState<FormErrorState>({});
   const [formMainError, setFormMainError] = useState<string | null>(null);
@@ -225,68 +202,74 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
     error: dataLoadError
   } = useCampaignFormData(isEditing);
 
-  const preselectedType = !isEditing ? (searchParams.get('type') as CampaignSelectedType | null) : null;
+  // 🔧 CRITICAL FIX: Memoize preselected type to prevent infinite re-renders
+  const preselectedType = useMemo(() => {
+    return !isEditing ? (searchParams.get('type') as CampaignSelectedType | null) : null;
+  }, [isEditing, searchParams]);
+
+  // 🔧 CRITICAL FIX: Memoize default values to prevent infinite re-renders
+  const defaultValues = useMemo(() => ({
+    name: isEditing && campaignToEdit ? campaignToEdit.name : "",
+    description: isEditing && campaignToEdit ? (campaignToEdit.description || "") : "",
+    selectedType: isEditing && campaignToEdit ? campaignToEdit.selectedType : (preselectedType && Object.values(CAMPAIGN_SELECTED_TYPES).includes(preselectedType) ? preselectedType : undefined),
+    domainSourceSelectionMode: isEditing && campaignToEdit ?
+      (campaignToEdit.domainSourceConfig?.type === 'current_campaign_output' ? 'campaign_output' as const : (campaignToEdit.domainSourceConfig?.type as DomainSourceSelectionMode || getDefaultSourceMode(campaignToEdit.selectedType))) :
+      getDefaultSourceMode(preselectedType),
+    sourceCampaignId: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourceCampaignId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
+    sourcePhase: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourcePhase as CampaignPhase) : undefined,
+    uploadedDomainsFile: null,
+    uploadedDomainsContentCache: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.type === 'upload' ? campaignToEdit.domainSourceConfig.uploadedDomains : []) : [],
+    initialDomainsToProcessCount: isEditing && campaignToEdit ? campaignToEdit.initialDomainsToProcessCount : 100,
+    
+    generationPattern: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.generationPattern as DomainGenerationPattern || "prefix_variable") : "prefix_variable",
+    constantPart: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.constantPart || "") : "business",
+    allowedCharSet: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.allowedCharSet || "abcdefghijklmnopqrstuvwxyz0123456789") : "abcdefghijklmnopqrstuvwxyz0123456789",
+    tldsInput: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.tlds?.join(', ') || ".com") : ".com",
+    prefixVariableLength: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.prefixVariableLength === undefined ? undefined : Number(campaignToEdit.domainGenerationConfig.prefixVariableLength)) : 3,
+    suffixVariableLength: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.suffixVariableLength === undefined ? undefined : Number(campaignToEdit.domainGenerationConfig.suffixVariableLength)) : 0,
+    maxDomainsToGenerate: isEditing && campaignToEdit ? campaignToEdit.domainGenerationConfig?.maxDomainsToGenerate : 1000,
+    domainGenerationOffset: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.domainGenerationOffset || 0) : 0,
+    
+    targetKeywordsInput: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.targetKeywords?.join(', ') || "") : "telecom, voip, saas",
+    scrapingRateLimitRequests: isEditing && campaignToEdit ? campaignToEdit.leadGenerationSpecificConfig?.scrapingRateLimit?.requests : 1,
+    scrapingRateLimitPer: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.scrapingRateLimit?.per as "second" | "minute" || 'second') : 'second',
+    requiresJavaScriptRendering: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.requiresJavaScriptRendering || false) : false,
+
+    rotationIntervalSeconds: isEditing && campaignToEdit ? Number(
+      campaignToEdit.dnsValidationParams?.rotationIntervalSeconds ??
+      campaignToEdit.httpKeywordValidationParams?.rotationIntervalSeconds ??
+      300
+    ) : 300,
+    processingSpeedPerMinute: isEditing && campaignToEdit ? Number(
+      campaignToEdit.dnsValidationParams?.processingSpeedPerMinute ??
+      campaignToEdit.httpKeywordValidationParams?.processingSpeedPerMinute ??
+      60
+    ) : 60,
+    batchSize: isEditing && campaignToEdit ? Number(
+      campaignToEdit.dnsValidationParams?.batchSize ??
+      campaignToEdit.httpKeywordValidationParams?.batchSize ??
+      10
+    ) : 10,
+    retryAttempts: isEditing && campaignToEdit ? Number(
+      campaignToEdit.dnsValidationParams?.retryAttempts ??
+      campaignToEdit.httpKeywordValidationParams?.retryAttempts ??
+      3
+    ) : 3,
+    targetHttpPorts: isEditing && campaignToEdit ? (
+      Array.isArray(campaignToEdit.httpKeywordValidationParams?.targetHttpPorts)
+        ? campaignToEdit.httpKeywordValidationParams.targetHttpPorts
+        : [80, 443]
+    ) : [80, 443],
+    
+    assignedHttpPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedHttpPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
+    assignedDnsPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedDnsPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
+    proxyAssignmentMode: isEditing && campaignToEdit ? (campaignToEdit.proxyAssignment?.mode as "none" | "single" | "rotate_active" || 'none') : 'none',
+    assignedProxyId: isEditing && campaignToEdit ? ((campaignToEdit.proxyAssignment?.mode === 'single' && campaignToEdit.proxyAssignment.proxyId) ? campaignToEdit.proxyAssignment.proxyId : CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
+    launchSequence: false,
+  }), [isEditing, campaignToEdit, preselectedType]);
 
   const form = useForm<CampaignFormValues>({
-    defaultValues: {
-      name: isEditing && campaignToEdit ? campaignToEdit.name : "",
-      description: isEditing && campaignToEdit ? (campaignToEdit.description || "") : "",
-      selectedType: isEditing && campaignToEdit ? campaignToEdit.selectedType : (preselectedType && Object.values(CAMPAIGN_SELECTED_TYPES).includes(preselectedType) ? preselectedType : undefined),
-      domainSourceSelectionMode: isEditing && campaignToEdit ? 
-        (campaignToEdit.domainSourceConfig?.type === 'current_campaign_output' ? 'campaign_output' as const : (campaignToEdit.domainSourceConfig?.type as DomainSourceSelectionMode || getDefaultSourceMode(campaignToEdit.selectedType))) : 
-        getDefaultSourceMode(preselectedType),
-      sourceCampaignId: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourceCampaignId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
-      sourcePhase: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourcePhase as CampaignPhase) : undefined,
-      uploadedDomainsFile: null,
-      uploadedDomainsContentCache: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.type === 'upload' ? campaignToEdit.domainSourceConfig.uploadedDomains : []) : [],
-      initialDomainsToProcessCount: isEditing && campaignToEdit ? campaignToEdit.initialDomainsToProcessCount : 100,
-      
-      generationPattern: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.generationPattern as DomainGenerationPattern || "prefix_variable") : "prefix_variable",
-      constantPart: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.constantPart || "") : "business",
-      allowedCharSet: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.allowedCharSet || "abcdefghijklmnopqrstuvwxyz0123456789") : "abcdefghijklmnopqrstuvwxyz0123456789",
-      tldsInput: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.tlds?.join(', ') || ".com") : ".com",
-      prefixVariableLength: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.prefixVariableLength === undefined ? undefined : Number(campaignToEdit.domainGenerationConfig.prefixVariableLength)) : 3,
-      suffixVariableLength: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.suffixVariableLength === undefined ? undefined : Number(campaignToEdit.domainGenerationConfig.suffixVariableLength)) : 0,
-      maxDomainsToGenerate: isEditing && campaignToEdit ? campaignToEdit.domainGenerationConfig?.maxDomainsToGenerate : 1000,
-      domainGenerationOffset: isEditing && campaignToEdit ? (campaignToEdit.domainGenerationConfig?.domainGenerationOffset || 0) : 0, // 🔧 PHASE 4: Default offset 0
-      
-      targetKeywordsInput: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.targetKeywords?.join(', ') || "") : "telecom, voip, saas",
-      scrapingRateLimitRequests: isEditing && campaignToEdit ? campaignToEdit.leadGenerationSpecificConfig?.scrapingRateLimit?.requests : 1,
-      scrapingRateLimitPer: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.scrapingRateLimit?.per as "second" | "minute" || 'second') : 'second',
-      requiresJavaScriptRendering: isEditing && campaignToEdit ? (campaignToEdit.leadGenerationSpecificConfig?.requiresJavaScriptRendering || false) : false,
-
-      rotationIntervalSeconds: isEditing && campaignToEdit ? Number(
-        campaignToEdit.dnsValidationParams?.rotationIntervalSeconds ??
-        campaignToEdit.httpKeywordValidationParams?.rotationIntervalSeconds ??
-        300
-      ) : 300,
-      processingSpeedPerMinute: isEditing && campaignToEdit ? Number(
-        campaignToEdit.dnsValidationParams?.processingSpeedPerMinute ??
-        campaignToEdit.httpKeywordValidationParams?.processingSpeedPerMinute ??
-        60
-      ) : 60,
-      batchSize: isEditing && campaignToEdit ? Number(
-        campaignToEdit.dnsValidationParams?.batchSize ??
-        campaignToEdit.httpKeywordValidationParams?.batchSize ??
-        10
-      ) : 10,
-      retryAttempts: isEditing && campaignToEdit ? Number(
-        campaignToEdit.dnsValidationParams?.retryAttempts ??
-        campaignToEdit.httpKeywordValidationParams?.retryAttempts ??
-        3
-      ) : 3,
-      targetHttpPorts: isEditing && campaignToEdit ? (
-        Array.isArray(campaignToEdit.httpKeywordValidationParams?.targetHttpPorts)
-          ? campaignToEdit.httpKeywordValidationParams.targetHttpPorts
-          : [80, 443]
-      ) : [80, 443],
-      
-      assignedHttpPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedHttpPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
-      assignedDnsPersonaId: isEditing && campaignToEdit ? (campaignToEdit.assignedDnsPersonaId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
-      proxyAssignmentMode: isEditing && campaignToEdit ? (campaignToEdit.proxyAssignment?.mode as "none" | "single" | "rotate_active" || 'none') : 'none',
-      assignedProxyId: isEditing && campaignToEdit ? ((campaignToEdit.proxyAssignment?.mode === 'single' && campaignToEdit.proxyAssignment.proxyId) ? campaignToEdit.proxyAssignment.proxyId : CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
-      launchSequence: false,
-    },
+    defaultValues,
     mode: "onChange"
   });
 
@@ -511,95 +494,21 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         });
         return;
       } else {
-        // Enhanced diagnostic logging for campaign creation flow
-        const creationStartTime = Date.now();
-        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Starting campaign creation process:', {
-          payload: unifiedPayload,
-          selectedType: data.selectedType,
-          campaignName: data.name,
-          creationStartTime,
-          timestamp: new Date().toISOString()
-        });
-        
-        const apiCallStartTime = Date.now();
         const response = await apiClient.createCampaign(unifiedPayload);
-        const apiCallDuration = Date.now() - apiCallStartTime;
-        
-        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Campaign creation API response received:', {
-          response,
-          responseType: typeof response,
-          responseKeys: response ? Object.keys(response) : null,
-          apiCallDuration,
-          timeSinceCreationStart: Date.now() - creationStartTime,
-          timestamp: new Date().toISOString()
-        });
 
-        // 🔧 COMPREHENSIVE FIX: Handle ALL possible response structures
+        // 🔧 SIMPLIFIED: Handle response structures without excessive logging
         let campaign;
         
-        // 🔍 ENHANCED DIAGNOSTIC: Comprehensive response analysis with JSON serialization
-        const responseAnalysis = {
-          responseType: typeof response,
-          isArray: Array.isArray(response),
-          isNull: response === null,
-          isUndefined: response === undefined,
-          hasKeys: response && typeof response === 'object' ? Object.keys(response) : null,
-          arrayLength: Array.isArray(response) ? response.length : undefined,
-          rawResponseJSON: (() => {
-            try {
-              return JSON.stringify(response, null, 2);
-            } catch (e) {
-              return `JSON stringify failed: ${e instanceof Error ? e.message : String(e)}`;
-            }
-          })(),
-          timestamp: new Date().toISOString()
-        };
-        
-        console.log('🔧 [CAMPAIGN_FORM_DEBUG] COMPREHENSIVE response analysis:', responseAnalysis);
-        
-        // 🔍 STRATEGY 1: Check if response is an array
         if (Array.isArray(response)) {
-          console.log('🔧 [STRATEGY_1] Response is ARRAY - analyzing elements...');
-          
-          const elementAnalysis = response.map((item, index) => {
-            if (item && typeof item === 'object') {
-              return {
-                index,
-                type: typeof item,
-                keys: Object.keys(item),
-                hasId: 'id' in item,
-                idValue: item.id,
-                serialized: JSON.stringify(item, null, 2).substring(0, 300)
-              };
-            }
-            return { index, type: typeof item, value: item };
-          });
-          
-          console.log('🔧 [STRATEGY_1] Array elements analysis:', elementAnalysis);
-          
-          // Find first valid campaign object
           campaign = response.find(item =>
             item &&
             typeof item === 'object' &&
             'id' in item &&
             item.id
           ) || response[0];
-          
-          console.log('🔧 [STRATEGY_1] Selected campaign from array:', {
-            selectedIndex: campaign ? response.indexOf(campaign) : -1,
-            campaignId: campaign?.id,
-            campaignName: campaign?.name
-          });
-          
-        // 🔍 STRATEGY 2: Check if response is direct object with ID
         } else if (response && typeof response === 'object' && 'id' in response) {
-          console.log('🔧 [STRATEGY_2] Response is DIRECT OBJECT with ID');
           campaign = response;
-          
-        // 🔍 STRATEGY 3: Check if response is wrapper object containing campaign
         } else if (response && typeof response === 'object') {
-          console.log('🔧 [STRATEGY_3] Response is OBJECT - searching for nested campaign...');
-          
           const possibleKeys = ['campaign', 'data', 'result', 'payload', 'campaign_data'];
           let foundCampaign = null;
           
@@ -609,64 +518,14 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               const nestedObj = responseAsRecord[key] as Record<string, unknown>;
               if ('id' in nestedObj && nestedObj.id) {
                 foundCampaign = nestedObj;
-                console.log(`🔧 [STRATEGY_3] Found campaign in response.${key}:`, {
-                  id: foundCampaign.id,
-                  name: foundCampaign.name,
-                  keys: Object.keys(foundCampaign)
-                });
                 break;
               }
             }
           }
-          
-          if (!foundCampaign) {
-            // Try to find any nested object with an id
-            const searchNested = (obj: Record<string, unknown>, path = ''): { campaign: Record<string, unknown>; path: string } | null => {
-              for (const [key, value] of Object.entries(obj)) {
-                if (value && typeof value === 'object' && 'id' in value && (value as Record<string, unknown>).id) {
-                  return { campaign: value as Record<string, unknown>, path: `${path}.${key}` };
-                }
-                if (value && typeof value === 'object' && !Array.isArray(value)) {
-                  const nested = searchNested(value as Record<string, unknown>, `${path}.${key}`);
-                  if (nested) return nested;
-                }
-              }
-              return null;
-            };
-            
-            const nestedResult = searchNested(response as Record<string, unknown>);
-            if (nestedResult) {
-              foundCampaign = nestedResult.campaign;
-              console.log(`🔧 [STRATEGY_3] Found campaign at path ${nestedResult.path}:`, {
-                id: foundCampaign.id,
-                name: foundCampaign.name
-              });
-            }
-          }
-          
           campaign = foundCampaign;
-          
-        // 🔍 STRATEGY 4: Unexpected structure
         } else {
-          console.error('🔧 [STRATEGY_4] UNEXPECTED response structure - cannot extract campaign');
           campaign = null;
         }
-        
-        console.log('🌐 [CAMPAIGN_FORM_DEBUG] Final campaign processing result:', {
-          campaign,
-          campaignId: campaign?.id,
-          campaignName: campaign?.name,
-          campaignStatus: campaign?.status,
-          hasValidId: !!(campaign?.id),
-          campaignData: campaign ? {
-            id: campaign.id,
-            name: campaign.name,
-            campaignType: campaign.campaignType,
-            status: campaign.status,
-            createdAt: campaign.createdAt
-          } : null,
-          timestamp: new Date().toISOString()
-        });
         
         if (campaign && campaign.id) {
           console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign creation successful - starting post-creation flow:', {
@@ -676,8 +535,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             campaignStatus: campaign.status,
             launchSequence: data.launchSequence,
             selectedType: data.selectedType,
-            willStartSequence: data.launchSequence && data.selectedType === 'domain_generation',
-            totalCreationTime: Date.now() - creationStartTime
+            willStartSequence: data.launchSequence && data.selectedType === 'domain_generation'
           });
 
           toast({
@@ -686,6 +544,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             variant: "default"
           });
           
+          // 🔧 CRITICAL FIX: Handle auto-completed domain generation campaigns
           if (data.launchSequence && data.selectedType === 'domain_generation') {
             console.log('🚀 [CAMPAIGN_FORM_DEBUG] Starting campaign sequence...');
             try {
@@ -695,60 +554,85 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                 startSequenceDuration: Date.now() - startSequenceTime
               });
             } catch (e) {
-              console.error('❌ [CAMPAIGN_FORM_DEBUG] Failed to start campaign sequence:', e);
+              console.error('❌ [CAMPAIGN_FORM_DEBUG] Failed to start campaign sequence (might be auto-completed):', e);
+              // Don't fail the creation flow if start fails due to auto-completion
             }
+          } else if (data.selectedType === 'domain_generation') {
+            console.log('🔍 [CAMPAIGN_FORM_DEBUG] Domain generation campaign created without launch sequence - domains may auto-generate');
           }
           
-          // 🔍 RACE CONDITION DIAGNOSTIC: Add delay to test if immediate navigation causes issues
-          const navigationPrepTime = Date.now();
-          console.log('🧭 [CAMPAIGN_FORM_DEBUG] Preparing navigation after campaign creation:', {
-            campaignId: campaign.id,
-            campaignName: campaign.name,
-            selectedType: data.selectedType,
-            targetUrl: `/campaigns/${campaign.id}?type=${data.selectedType}`,
-            timeSinceCreation: Date.now() - creationStartTime,
-            navigationPrepTime,
-            willAddDelay: true,
-            timestamp: new Date().toISOString()
-          });
-          
-          const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
-          
-          // 🔍 RACE CONDITION TEST: Add small delay to see if immediate navigation is the issue
-          console.log('⏱️ [CAMPAIGN_FORM_DEBUG] Adding 500ms delay before navigation to test race condition hypothesis...');
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          const navigationStartTime = Date.now();
-          console.log('✅ [CAMPAIGN_FORM_DEBUG] Starting navigation to campaign page:', {
-            redirectUrl,
-            navigationStartTime,
-            totalTimeBeforeNavigation: navigationStartTime - creationStartTime,
-            campaignShouldExist: true
-          });
-          
-          router.push(redirectUrl);
-          
-          // Add additional delay before refresh to ensure navigation completes
-          setTimeout(() => {
-            console.log('🔄 [CAMPAIGN_FORM_DEBUG] Triggering router refresh after navigation:', {
-              refreshTime: Date.now(),
-              totalProcessTime: Date.now() - creationStartTime
-            });
-            router.refresh();
-          }, 100);
+          // 🔧 CRITICAL FIX: Wait for campaign completion if it's domain generation
+          if (data.selectedType === 'domain_generation') {
+            console.log('🔄 [CAMPAIGN_FORM_DEBUG] Domain generation campaign created, checking completion status...');
+            
+            // Poll campaign status to wait for auto-generation completion
+            let statusCheckAttempts = 0;
+            const maxStatusChecks = 10; // Maximum 30 seconds (3s intervals)
+            
+            const checkCampaignStatus = async (): Promise<void> => {
+              try {
+                statusCheckAttempts++;
+                console.log(`🔍 [CAMPAIGN_FORM_DEBUG] Status check attempt ${statusCheckAttempts}/${maxStatusChecks}`);
+                
+                const statusResponse = await apiClient.getCampaignById(campaign.id);
+                let campaignStatus = null;
+                
+                // Handle different response structures
+                if (Array.isArray(statusResponse)) {
+                  campaignStatus = statusResponse[0]?.status;
+                } else if (statusResponse && typeof statusResponse === 'object') {
+                  // Handle the actual API response structure
+                  const responseObj = statusResponse as any;
+                  if (responseObj.campaign?.status) {
+                    campaignStatus = responseObj.campaign.status;
+                  } else if (responseObj.status) {
+                    campaignStatus = responseObj.status;
+                  } else if (responseObj.data?.status) {
+                    campaignStatus = responseObj.data.status;
+                  }
+                }
+                
+                console.log(`📊 [CAMPAIGN_FORM_DEBUG] Campaign status: ${campaignStatus}`);
+                
+                if (campaignStatus === 'completed') {
+                  console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign auto-generation completed, navigating...');
+                  const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
+                  router.push(redirectUrl);
+                  return;
+                }
+                
+                if (campaignStatus === 'failed') {
+                  console.log('❌ [CAMPAIGN_FORM_DEBUG] Campaign failed during auto-generation');
+                  const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
+                  router.push(redirectUrl);
+                  return;
+                }
+                
+                // Continue polling if still pending/running and we haven't exceeded max attempts
+                if (statusCheckAttempts < maxStatusChecks && ['pending', 'running', 'queued'].includes(campaignStatus)) {
+                  setTimeout(checkCampaignStatus, 3000); // Check again in 3 seconds
+                } else {
+                  // Max attempts reached or unknown status, navigate anyway
+                  console.log('⏰ [CAMPAIGN_FORM_DEBUG] Max status checks reached or unknown status, navigating...');
+                  const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
+                  router.push(redirectUrl);
+                }
+              } catch (error) {
+                console.error('❌ [CAMPAIGN_FORM_DEBUG] Error checking campaign status:', error);
+                // Navigate on error to prevent getting stuck
+                const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
+                router.push(redirectUrl);
+              }
+            };
+            
+            // Start status polling after a brief delay
+            setTimeout(checkCampaignStatus, 1000);
+          } else {
+            // For non-domain-generation campaigns, navigate immediately
+            const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
+            router.push(redirectUrl);
+          }
         } else {
-          console.error('❌ [CAMPAIGN_FORM_DEBUG] Campaign creation failed - invalid response:', {
-            response,
-            expectedStructure: 'Should have campaign.id',
-            actualStructure: response ? Object.keys(response) : 'null/undefined',
-            possibleCauses: [
-              'API returned different structure than expected',
-              'Campaign creation failed on backend',
-              'Response parsing issue'
-            ],
-            timestamp: new Date().toISOString()
-          });
-          
           const errorMessage = "Failed to create campaign. Please check your inputs and try again.";
           setFormMainError(errorMessage);
           setFormFieldErrors({});
@@ -795,68 +679,15 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
     }
   }, [toast, router, isEditing, campaignToEdit, sourceCampaigns]);
 
-  // 🔧 CRITICAL FIX: Stable clearFormErrors function without dependencies
-  const clearFormErrors = useCallback(() => {
-    clearErrorsCallCountRef.current += 1;
+  // 🔧 CRITICAL FIX: Stable form submission handler without clearFormErrors dependency cycle
+  const handleFormSubmit = useCallback(async (data: CampaignFormValues) => {
+    // Clear errors at the start of submission - directly inline to avoid dependency cycles
+    setFormFieldErrors({});
+    setFormMainError(null);
     
-    console.log('🧹 [FORM_DEBUG] clearFormErrors called:', {
-      callCount: clearErrorsCallCountRef.current,
-      renderCount: renderCountRef.current,
-      timestamp: new Date().toISOString()
-    });
-
-    if (clearErrorsCallCountRef.current > 5) {
-      console.warn('⚠️ [FORM_DEBUG] clearFormErrors called more than 5 times - potential loop source:', {
-        callCount: clearErrorsCallCountRef.current,
-        renderCount: renderCountRef.current
-      });
-    }
-
-    // Use functional state updates to avoid dependencies
-    setFormFieldErrors(current => Object.keys(current).length > 0 ? {} : current);
-    setFormMainError(current => current ? null : current);
-  }, []); // No dependencies - this is the key fix
-
-  // 🔧 CRITICAL FIX: Stable form watch subscription without unstable dependencies
-  useEffect(() => {
-    console.log('🔍 [FORM_DEBUG] Setting up form.watch subscription:', {
-      renderCount: renderCountRef.current,
-      clearErrorsCallCount: clearErrorsCallCountRef.current,
-      timestamp: new Date().toISOString()
-    });
-
-    const subscription = form.watch((data, { name, type }) => {
-      formStateChangeCountRef.current += 1;
-      
-      console.log('📝 [FORM_DEBUG] Form state changed via watch:', {
-        changeCount: formStateChangeCountRef.current,
-        fieldName: name,
-        changeType: type,
-        renderCount: renderCountRef.current,
-        timestamp: new Date().toISOString()
-      });
-
-      if (formStateChangeCountRef.current > 15) {
-        console.error('🚨 [FORM_DEBUG] FORM STATE CHANGE LOOP DETECTED!', {
-          changeCount: formStateChangeCountRef.current,
-          renderCount: renderCountRef.current,
-          lastChangedField: name,
-          changeType: type
-        });
-      }
-
-      clearFormErrors();
-    });
-
-    return () => {
-      console.log('🧹 [FORM_DEBUG] Cleaning up form.watch subscription:', {
-        renderCount: renderCountRef.current,
-        formStateChanges: formStateChangeCountRef.current,
-        clearErrorsCalls: clearErrorsCallCountRef.current
-      });
-      subscription?.unsubscribe?.();
-    };
-  }, [form]); // Only form as dependency - clearFormErrors is now stable
+    // Proceed with original onSubmit logic
+    await onSubmit(data);
+  }, [onSubmit]);
 
   // Memoized persona requirements to prevent unnecessary recalculations
   const needsHttp = useMemo(() => needsHttpPersona(selectedCampaignType), [selectedCampaignType]);
@@ -912,7 +743,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit as SubmitHandler<CampaignFormValues>)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(handleFormSubmit as SubmitHandler<CampaignFormValues>)} className="space-y-8">
               {/* Form Error Summary */}
               <FormErrorSummary 
                 errors={formFieldErrors}

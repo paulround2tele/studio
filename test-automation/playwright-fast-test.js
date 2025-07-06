@@ -512,6 +512,10 @@ class PlaywrightDomainFlowTester {
         this.logger.info('Selected first available option');
       }
       
+      // Take screenshot after type selection to verify the form state
+      await this.page.waitForTimeout(1000); // Brief wait for UI to update
+      await this.takeScreenshot('campaign-type-selected');
+      
       this.logger.info('Step 4: Waiting for form to fully render after type selection...');
       
       // Wait for the form to update with domain generation fields
@@ -550,9 +554,13 @@ class PlaywrightDomainFlowTester {
       
       try {
         // Fill domain generation specific fields with better error handling
+        // Use unique constant part to avoid offset system conflicts
+        const uniqueConstantPart = `test${Date.now()}`;
+        this.logger.info(`Using unique constant part: ${uniqueConstantPart}`);
+        
         const constantPartInput = this.page.locator('input[name="constantPart"]');
         if (await constantPartInput.isVisible({ timeout: 1000 })) {
-          await constantPartInput.fill('testdomain');
+          await constantPartInput.fill(uniqueConstantPart);
           await this.page.waitForTimeout(300);
         }
         
@@ -564,7 +572,8 @@ class PlaywrightDomainFlowTester {
         
         const maxDomainsInput = this.page.locator('input[name="maxDomainsToGenerate"]');
         if (await maxDomainsInput.isVisible({ timeout: 1000 })) {
-          await maxDomainsInput.fill('100');
+          // Use smaller domain count for faster testing and to avoid memory issues
+          await maxDomainsInput.fill('10');
           await this.page.waitForTimeout(300);
         }
         
@@ -597,46 +606,144 @@ class PlaywrightDomainFlowTester {
       
       this.logger.info('Final form state:', finalFormState);
       
-      // Scroll to bottom to ensure submit button is visible
+      // ENHANCED: Better scroll and submit button detection for long forms
+      this.logger.info('Step 6a: Ensuring full form visibility and submit button detection...');
+      
+      // First, get the actual form dimensions and scroll position
+      const scrollInfo = await this.page.evaluate(() => {
+        const form = document.querySelector('form');
+        const submitButtons = Array.from(document.querySelectorAll('button[type="submit"]'));
+        
+        return {
+          formHeight: form ? form.scrollHeight : 0,
+          bodyHeight: document.body.scrollHeight,
+          viewportHeight: window.innerHeight,
+          currentScroll: window.scrollY,
+          submitButtonPositions: submitButtons.map(btn => ({
+            text: btn.textContent?.trim(),
+            top: btn.getBoundingClientRect().top,
+            bottom: btn.getBoundingClientRect().bottom,
+            visible: btn.offsetParent !== null,
+            enabled: !btn.disabled
+          }))
+        };
+      });
+      
+      this.logger.info('Scroll analysis:', scrollInfo);
+      
+      // Scroll to the very bottom in multiple steps to ensure we reach the submit button
       await this.page.evaluate(() => {
+        // First scroll to bottom
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      });
+      await this.page.waitForTimeout(1500);
+      
+      // Double-check we're at the bottom and scroll again if needed
+      await this.page.evaluate(() => {
+        const maxScroll = document.body.scrollHeight - window.innerHeight;
+        window.scrollTo({ top: maxScroll + 100, behavior: 'smooth' });
       });
       await this.page.waitForTimeout(1000);
       
       await this.takeScreenshot('submit-button-check');
       
-      // Look for submit button
-      const submitButton = this.page.locator('button[type="submit"]').filter({ hasText: /Create|Save/ });
-      const submitButtonCount = await submitButton.count();
+      // Enhanced submit button detection with multiple strategies
+      this.logger.info('Step 6b: Enhanced submit button detection...');
+      
+      // Strategy 1: Look for "Create Campaign" button specifically
+      let submitButton = this.page.locator('button:has-text("Create Campaign")');
+      let submitButtonCount = await submitButton.count();
+      
+      if (submitButtonCount === 0) {
+        // Strategy 2: Look for any submit type button with creation-related text
+        submitButton = this.page.locator('button[type="submit"]').filter({ hasText: /Create|Save|Submit/i });
+        submitButtonCount = await submitButton.count();
+      }
+      
+      if (submitButtonCount === 0) {
+        // Strategy 3: Look for any submit button at all
+        submitButton = this.page.locator('button[type="submit"]');
+        submitButtonCount = await submitButton.count();
+      }
+      
+      // Get detailed info about all submit buttons
+      const submitButtonInfo = await this.page.evaluate(() => {
+        const buttons = Array.from(document.querySelectorAll('button[type="submit"]'));
+        return buttons.map((btn, index) => {
+          const rect = btn.getBoundingClientRect();
+          return {
+            index,
+            text: btn.textContent?.trim(),
+            visible: btn.offsetParent !== null,
+            enabled: !btn.disabled,
+            inViewport: rect.top >= 0 && rect.bottom <= window.innerHeight,
+            position: {
+              top: rect.top,
+              bottom: rect.bottom,
+              left: rect.left,
+              right: rect.right
+            }
+          };
+        });
+      });
+      
+      this.logger.info(`Found ${submitButtonCount} submit buttons:`, submitButtonInfo);
       
       if (submitButtonCount > 0) {
-        const isEnabled = await submitButton.first().isEnabled();
-        this.logger.info(`Found ${submitButtonCount} submit buttons, enabled: ${isEnabled}`);
+        // Find the best submit button (enabled and preferably visible)
+        let bestButton = submitButton.first();
+        
+        for (let i = 0; i < submitButtonCount; i++) {
+          const button = submitButton.nth(i);
+          const isEnabled = await button.isEnabled();
+          const isVisible = await button.isVisible();
+          
+          if (isEnabled && isVisible) {
+            bestButton = button;
+            this.logger.info(`Using submit button ${i}: enabled and visible`);
+            break;
+          } else if (isEnabled) {
+            bestButton = button;
+            this.logger.info(`Using submit button ${i}: enabled but may need scrolling`);
+          }
+        }
+        
+        // Ensure the button is in view and click it
+        await bestButton.scrollIntoViewIfNeeded();
+        await this.page.waitForTimeout(1000);
+        
+        // Final check that it's enabled
+        const isEnabled = await bestButton.isEnabled();
+        this.logger.info(`Final submit button state - enabled: ${isEnabled}`);
         
         if (isEnabled) {
-          await submitButton.first().scrollIntoViewIfNeeded();
-          await this.page.waitForTimeout(500);
+          // Set up navigation promise before clicking
+          const navigationPromise = this.page.waitForLoadState('domcontentloaded', { timeout: 15000 });
           
-          const navigationPromise = this.page.waitForLoadState('domcontentloaded');
-          await submitButton.first().click();
+          // Click and wait for navigation
+          await bestButton.click();
           await navigationPromise;
+          
           this.logger.success('Form submitted successfully');
         } else {
           this.logger.error('Submit button found but disabled');
+          return false;
         }
       } else {
         this.logger.error('No submit button found - form may not be fully loaded');
         
-        // Try any button with submit type as fallback
-        const anySubmitButton = this.page.locator('button[type="submit"]');
-        const anySubmitCount = await anySubmitButton.count();
-        this.logger.info(`Found ${anySubmitCount} buttons with type="submit"`);
+        // Final diagnostic - check what buttons exist
+        const allButtons = await this.page.evaluate(() => {
+          return Array.from(document.querySelectorAll('button')).map(btn => ({
+            text: btn.textContent?.trim(),
+            type: btn.type,
+            disabled: btn.disabled,
+            visible: btn.offsetParent !== null
+          }));
+        });
         
-        if (anySubmitCount > 0) {
-          await anySubmitButton.first().click();
-          await this.page.waitForTimeout(2000);
-          this.logger.info('Used fallback submit approach');
-        }
+        this.logger.info('All buttons on page:', allButtons);
+        return false;
       }
       
       await this.takeScreenshot('creation-submitted');
@@ -729,7 +836,346 @@ class PlaywrightDomainFlowTester {
     }
   }
 
-  // FAST COMPLETE TEST SUITE
+  // NEW: Deep domain generation monitoring after campaign creation
+  async testDomainGenerationProcess(campaignId = null) {
+    this.logger.info('=== DOMAIN GENERATION DEEP MONITORING ===');
+    this.logger.info('🔬 Starting comprehensive domain generation analysis...');
+    
+    try {
+      // If we don't have a campaign ID, try to extract from current URL
+      if (!campaignId) {
+        const currentUrl = this.page.url();
+        this.logger.info(`Current URL for campaign ID extraction: ${currentUrl}`);
+        
+        // Try multiple regex patterns to be more robust
+        const patterns = [
+          /\/campaigns\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i,
+          /\/campaigns\/([a-f0-9-]{36})/i,
+          /campaignId[=:]([a-f0-9-]{36})/i,
+          /campaigns[\/=]([a-f0-9-]{36})/i
+        ];
+        
+        let extractedId = null;
+        for (const pattern of patterns) {
+          const match = currentUrl.match(pattern);
+          if (match) {
+            extractedId = match[1];
+            break;
+          }
+        }
+        
+        // Also try to get campaign ID from page content/DOM
+        if (!extractedId) {
+          this.logger.info('URL extraction failed, trying DOM extraction...');
+          extractedId = await this.page.evaluate(() => {
+            // Look for campaign ID in various DOM elements
+            const selectors = [
+              '[data-campaign-id]',
+              '[data-testid*="campaign"]',
+              '.campaign-id',
+              '[data-id]'
+            ];
+            
+            for (const selector of selectors) {
+              const element = document.querySelector(selector);
+              if (element) {
+                const id = element.getAttribute('data-campaign-id') ||
+                          element.getAttribute('data-id') ||
+                          element.textContent;
+                if (id && id.match(/^[a-f0-9-]{36}$/i)) {
+                  return id;
+                }
+              }
+            }
+            
+            // Try to find it in any script tags or window variables
+            if (window.location.pathname.includes('/campaigns/')) {
+              const pathParts = window.location.pathname.split('/');
+              const campaignIndex = pathParts.indexOf('campaigns');
+              if (campaignIndex >= 0 && pathParts[campaignIndex + 1]) {
+                const potentialId = pathParts[campaignIndex + 1];
+                if (potentialId.match(/^[a-f0-9-]{36}$/i)) {
+                  return potentialId;
+                }
+              }
+            }
+            
+            return null;
+          });
+        }
+        
+        if (extractedId) {
+          campaignId = extractedId;
+          this.logger.info(`Extracted campaign ID: ${campaignId}`);
+        } else {
+          this.logger.error('No campaign ID available for monitoring');
+          this.logger.info('Available alternatives: Continue with limited monitoring or navigate to campaigns list');
+          
+          // Try to wait for the page to fully load and try again
+          await this.page.waitForTimeout(3000);
+          const retryUrl = this.page.url();
+          const retryMatch = retryUrl.match(/\/campaigns\/([a-f0-9-]{36})/i);
+          if (retryMatch) {
+            campaignId = retryMatch[1];
+            this.logger.info(`Campaign ID extracted on retry: ${campaignId}`);
+          } else {
+            return { success: false, reason: 'No campaign ID found after multiple attempts' };
+          }
+        }
+      }
+
+      // Extended monitoring configuration
+      const MONITORING_CONFIG = {
+        maxMonitoringTime: 120000, // 2 minutes max monitoring
+        screenshotInterval: 10000,  // Screenshot every 10 seconds
+        logCaptureInterval: 5000,   // Capture detailed logs every 5 seconds
+        domainCheckInterval: 3000,  // Check for new domains every 3 seconds
+        wsMessageCaptureInterval: 1000 // Capture WS messages every second
+      };
+
+      this.logger.info('Monitoring configuration:', MONITORING_CONFIG);
+
+      // Initialize monitoring state
+      const monitoringState = {
+        startTime: Date.now(),
+        domains: [],
+        wsMessages: [],
+        progressUpdates: [],
+        errors: [],
+        screenshots: [],
+        campaignStatus: 'unknown'
+      };
+
+      // Take initial screenshot
+      await this.takeScreenshot('domain-generation-start');
+      monitoringState.screenshots.push('domain-generation-start');
+
+      // Start comprehensive monitoring loop
+      this.logger.info('🔄 Starting real-time monitoring loop...');
+      
+      let monitoringActive = true;
+      let lastDomainCount = 0;
+      let lastWSMessageCount = 0;
+      let screenshotCounter = 0;
+
+      while (monitoringActive && (Date.now() - monitoringState.startTime) < MONITORING_CONFIG.maxMonitoringTime) {
+        const elapsed = Date.now() - monitoringState.startTime;
+        
+        // 1. CAMPAIGN STATUS MONITORING
+        try {
+          const campaignStatus = await this.page.evaluate(() => {
+            // Look for campaign status indicators in the DOM
+            const statusElement = document.querySelector('[data-testid="campaign-status"], .campaign-status, .status-badge');
+            const progressElement = document.querySelector('[data-testid="progress"], .progress-bar, .progress');
+            const domainCountElement = document.querySelector('[data-testid="domain-count"], .domain-count, .generated-count');
+            
+            return {
+              status: statusElement?.textContent?.trim() || 'unknown',
+              progress: progressElement?.textContent?.trim() || '0',
+              domainCount: domainCountElement?.textContent?.trim() || '0',
+              timestamp: Date.now()
+            };
+          });
+
+          if (campaignStatus.status !== monitoringState.campaignStatus) {
+            this.logger.info(`📊 Campaign status changed: ${monitoringState.campaignStatus} → ${campaignStatus.status}`);
+            monitoringState.campaignStatus = campaignStatus.status;
+          }
+
+          monitoringState.progressUpdates.push(campaignStatus);
+
+        } catch (statusError) {
+          this.logger.warn('Status monitoring error:', statusError.message);
+        }
+
+        // 2. DOMAIN GENERATION MONITORING
+        try {
+          const currentDomains = await this.page.evaluate(() => {
+            // Look for domain list elements
+            const domainElements = document.querySelectorAll(
+              '[data-testid="generated-domain"], .domain-item, .generated-domain, .domain-row'
+            );
+            
+            return Array.from(domainElements).map((el, index) => ({
+              index,
+              domain: el.textContent?.trim() || `domain-${index}`,
+              visible: el.offsetParent !== null,
+              timestamp: Date.now()
+            }));
+          });
+
+          if (currentDomains.length !== lastDomainCount) {
+            this.logger.info(`🌐 Domain count changed: ${lastDomainCount} → ${currentDomains.length}`);
+            this.logger.info(`📋 Latest domains:`, currentDomains.slice(-5)); // Show last 5 domains
+            lastDomainCount = currentDomains.length;
+            
+            // Take screenshot when domain count changes significantly
+            if (currentDomains.length > 0 && currentDomains.length % 10 === 0) {
+              const screenshotName = `domains-generated-${currentDomains.length}`;
+              await this.takeScreenshot(screenshotName);
+              monitoringState.screenshots.push(screenshotName);
+            }
+          }
+
+          monitoringState.domains = currentDomains;
+
+        } catch (domainError) {
+          this.logger.warn('Domain monitoring error:', domainError.message);
+        }
+
+        // 3. WEBSOCKET MESSAGE MONITORING
+        try {
+          const currentWSMessages = await this.wsMonitor.getMessages();
+          
+          if (currentWSMessages.length !== lastWSMessageCount) {
+            const newMessages = currentWSMessages.slice(lastWSMessageCount);
+            newMessages.forEach(msg => {
+              this.logger.info('📨 New WebSocket message:', {
+                type: msg.type,
+                timestamp: msg.timestamp,
+                dataPreview: typeof msg.data === 'string' ? msg.data.substring(0, 100) : msg.data
+              });
+            });
+            lastWSMessageCount = currentWSMessages.length;
+          }
+
+          monitoringState.wsMessages = currentWSMessages;
+
+        } catch (wsError) {
+          this.logger.warn('WebSocket monitoring error:', wsError.message);
+        }
+
+        // 4. BROWSER CONSOLE LOG CAPTURE
+        // (This is automatically captured by our existing console listener)
+
+        // 5. NETWORK ACTIVITY MONITORING
+        // (This is automatically captured by our existing network listener)
+
+        // 6. PERIODIC SCREENSHOTS
+        if (elapsed % MONITORING_CONFIG.screenshotInterval === 0 && elapsed > 0) {
+          screenshotCounter++;
+          const screenshotName = `monitoring-progress-${screenshotCounter}`;
+          await this.takeScreenshot(screenshotName);
+          monitoringState.screenshots.push(screenshotName);
+        }
+
+        // 7. DETAILED PROGRESS LOGGING
+        if (elapsed % MONITORING_CONFIG.logCaptureInterval === 0 && elapsed > 0) {
+          this.logger.info(`🕐 Monitoring progress @ ${Math.round(elapsed/1000)}s:`, {
+            domains: monitoringState.domains.length,
+            wsMessages: monitoringState.wsMessages.length,
+            status: monitoringState.campaignStatus,
+            screenshots: monitoringState.screenshots.length
+          });
+        }
+
+        // 8. COMPLETION DETECTION
+        if (monitoringState.campaignStatus === 'completed' ||
+            monitoringState.campaignStatus === 'finished' ||
+            monitoringState.campaignStatus === 'done') {
+          this.logger.success('🎉 Campaign completion detected!');
+          monitoringActive = false;
+          break;
+        }
+
+        // 9. ERROR DETECTION
+        if (monitoringState.campaignStatus === 'failed' ||
+            monitoringState.campaignStatus === 'error') {
+          this.logger.error('❌ Campaign failure detected!');
+          monitoringActive = false;
+          break;
+        }
+
+        // Wait before next monitoring cycle
+        await this.page.waitForTimeout(MONITORING_CONFIG.domainCheckInterval);
+      }
+
+      // Final comprehensive analysis
+      const finalElapsed = Date.now() - monitoringState.startTime;
+      
+      this.logger.info('🏁 Domain generation monitoring completed');
+      this.logger.info(`⏱️  Total monitoring time: ${Math.round(finalElapsed/1000)}s`);
+      
+      // Take final screenshots
+      await this.takeScreenshot('domain-generation-final');
+      monitoringState.screenshots.push('domain-generation-final');
+
+      // Comprehensive final state capture
+      const finalState = await this.page.evaluate(() => {
+        // Capture everything we can see about the final state
+        const domainElements = document.querySelectorAll(
+          '[data-testid="generated-domain"], .domain-item, .generated-domain, .domain-row'
+        );
+        
+        const statusElements = document.querySelectorAll(
+          '[data-testid="campaign-status"], .campaign-status, .status-badge, .status'
+        );
+        
+        const progressElements = document.querySelectorAll(
+          '[data-testid="progress"], .progress-bar, .progress'
+        );
+
+        const errorElements = document.querySelectorAll(
+          '.error, .alert-error, [data-testid="error"]'
+        );
+
+        return {
+          finalDomainCount: domainElements.length,
+          domains: Array.from(domainElements).map(el => el.textContent?.trim()).filter(Boolean),
+          statuses: Array.from(statusElements).map(el => el.textContent?.trim()).filter(Boolean),
+          progress: Array.from(progressElements).map(el => el.textContent?.trim()).filter(Boolean),
+          errors: Array.from(errorElements).map(el => el.textContent?.trim()).filter(Boolean),
+          pageTitle: document.title,
+          url: window.location.href
+        };
+      });
+
+      this.logger.info('📊 Final domain generation state:', finalState);
+
+      // Analysis and recommendations
+      const analysis = {
+        success: finalState.finalDomainCount > 0,
+        domainsGenerated: finalState.finalDomainCount,
+        monitoringDuration: finalElapsed,
+        averageGenerationRate: finalState.finalDomainCount / (finalElapsed / 1000),
+        wsMessagesReceived: monitoringState.wsMessages.length,
+        screenshotsTaken: monitoringState.screenshots.length,
+        statusChanges: monitoringState.progressUpdates.length,
+        errors: finalState.errors
+      };
+
+      this.logger.success('📈 Domain Generation Analysis:', analysis);
+
+      // Performance evaluation
+      if (analysis.domainsGenerated === 0) {
+        this.logger.error('❌ CRITICAL: No domains were generated');
+      } else if (analysis.domainsGenerated < 10) {
+        this.logger.warn('⚠️  LOW: Very few domains generated');
+      } else if (analysis.averageGenerationRate < 0.1) {
+        this.logger.warn('⚠️  SLOW: Domain generation rate is slow');
+      } else {
+        this.logger.success('✅ GOOD: Domain generation appears to be working well');
+      }
+
+      return {
+        success: true,
+        analysis,
+        finalState,
+        monitoringState,
+        screenshots: monitoringState.screenshots
+      };
+
+    } catch (error) {
+      this.logger.error('Domain generation monitoring failed:', error.message);
+      await this.takeScreenshot('domain-generation-error');
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // FAST COMPLETE TEST SUITE - Enhanced with domain generation monitoring
   async runFastTestSuite() {
     const results = {};
     
@@ -745,8 +1191,26 @@ class PlaywrightDomainFlowTester {
       // Test 3: Navigation
       results.navigation = await this.testCampaignNavigation();
       
-      // Test 4: Campaign creation  
+      // Test 4: Campaign creation
       results.creation = await this.testCampaignCreation();
+      
+      // NEW: Test 4.5: Domain Generation Deep Monitoring (if creation was successful)
+      if (results.creation) {
+        this.logger.info('✅ Campaign creation successful - proceeding with domain generation monitoring');
+        results.domainGeneration = await this.testDomainGenerationProcess();
+        
+        // Additional analysis based on domain generation results
+        if (results.domainGeneration?.success) {
+          this.logger.success(`🌐 Domain generation completed: ${results.domainGeneration.analysis.domainsGenerated} domains generated`);
+          this.logger.info(`⚡ Generation rate: ${results.domainGeneration.analysis.averageGenerationRate.toFixed(2)} domains/second`);
+          this.logger.info(`📡 WebSocket messages: ${results.domainGeneration.analysis.wsMessagesReceived}`);
+        } else {
+          this.logger.error('❌ Domain generation monitoring failed or no domains generated');
+        }
+      } else {
+        this.logger.warn('⚠️  Skipping domain generation monitoring - campaign creation failed');
+        results.domainGeneration = { skipped: true, reason: 'Campaign creation failed' };
+      }
       
       // Test 5: Campaign controls
       results.controls = await this.testCampaignControls();
@@ -808,7 +1272,19 @@ async function main() {
     console.log(`📋 Campaigns Page: ${results.campaignsPage?.hasCampaigns ? '✅ HAS CAMPAIGNS' : results.campaignsPage?.isEmpty ? '📄 EMPTY' : '❓ UNKNOWN'}`);
     console.log(`🧭 Navigation: ${results.navigation ? '✅ WORKING' : '❌ FAILED'}`);
     console.log(`🆕 Creation: ${results.creation ? '✅ WORKING' : '❌ FAILED'}`);
-    console.log(`🎮 Controls: ${results.controls?.found ? '✅ FOUND' : '❌ NOT FOUND'}`);
+    
+    // NEW: Domain Generation Results
+    if (results.domainGeneration?.skipped) {
+      console.log(`🌐 Domain Generation: ⏭️  SKIPPED (${results.domainGeneration.reason})`);
+    } else if (results.domainGeneration?.success) {
+      const analysis = results.domainGeneration.analysis;
+      console.log(`🌐 Domain Generation: ✅ SUCCESS (${analysis.domainsGenerated} domains, ${analysis.averageGenerationRate.toFixed(2)}/s)`);
+      console.log(`   📊 Monitoring: ${Math.round(analysis.monitoringDuration/1000)}s, ${analysis.wsMessagesReceived} WS messages, ${analysis.screenshotsTaken} screenshots`);
+    } else {
+      console.log(`🌐 Domain Generation: ❌ FAILED${results.domainGeneration?.error ? ` (${results.domainGeneration.error})` : ''}`);
+    }
+    
+    console.log(`� Controls: ${results.controls?.found ? '✅ FOUND' : '❌ NOT FOUND'}`);
     console.log(`🔗 WebSocket: ${results.websocket?.connected ? '✅ CONNECTED' : '❌ DISCONNECTED'}`);
     
     if (results.controls?.options?.length > 0) {

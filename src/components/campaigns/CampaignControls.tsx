@@ -56,20 +56,22 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   className
 }) => {
   const renderPhaseButtons = () => {
-    // Campaign completed - show completion message
+    // 🔧 CRITICAL FIX: Match backend behavior - domain generation auto-completes
+    
+    // Campaign completed - show completion message (no start button needed)
     if (campaign.status === "completed") {
       return (
         <p className="text-lg font-semibold text-green-500 flex items-center gap-2">
           <CheckCircle className="h-6 w-6" />
-          Campaign Completed!
+          Campaign Completed Successfully!
         </p>
       );
     }
     
-    // Campaign failed - show retry option
+    // Campaign failed - show retry option only for non-domain-generation campaigns
     if (campaign.status === "failed") {
-      const failedPhaseName = campaign.campaignType 
-        ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType) 
+      const failedPhaseName = campaign.campaignType
+        ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType)
         : 'Unknown Phase';
       
       return (
@@ -82,39 +84,73 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
               Error: {campaign.errorMessage}
             </p>
           )}
-          <PhaseGateButton
-            label={`Retry ${failedPhaseName}`}
-            onClick={() => campaign.campaignType && onStartPhase(campaign.campaignType)}
-            Icon={RefreshCw}
-            variant="destructive"
-            isLoading={actionLoading[`phase-${campaign.campaignType}`]}
-            disabled={!!actionLoading[`phase-${campaign.campaignType}`]}
-          />
+          {/* Only show retry for campaigns that can be manually restarted */}
+          {campaign.campaignType !== 'domain_generation' && (
+            <PhaseGateButton
+              label={`Retry ${failedPhaseName}`}
+              onClick={() => campaign.campaignType && onStartPhase(campaign.campaignType)}
+              Icon={RefreshCw}
+              variant="destructive"
+              isLoading={actionLoading[`phase-${campaign.campaignType}`]}
+              disabled={!!actionLoading[`phase-${campaign.campaignType}`]}
+            />
+          )}
         </div>
       );
     }
     
     // Campaign paused - show resume option
     if (campaign.status === "paused") {
-      const pausedPhaseName = campaign.campaignType 
-        ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType) 
+      const pausedPhaseName = campaign.campaignType
+        ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType)
         : 'Unknown Phase';
       
       return (
-        <PhaseGateButton 
-          label={`Resume ${pausedPhaseName}`} 
-          onClick={onResumeCampaign} 
-          Icon={PlayCircle} 
-          isLoading={actionLoading['control-resume']} 
-          disabled={!!actionLoading['control-resume']} 
+        <PhaseGateButton
+          label={`Resume ${pausedPhaseName}`}
+          onClick={onResumeCampaign}
+          Icon={PlayCircle}
+          isLoading={actionLoading['control-resume']}
+          disabled={!!actionLoading['control-resume']}
         />
       );
     }
     
-    // Campaign pending - show start button
+    // Campaign queued - show queued status
+    if (campaign.status === "queued") {
+      const queuedPhaseName = campaign.campaignType
+        ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType)
+        : 'Unknown Phase';
+      
+      return (
+        <p className="text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          {queuedPhaseName} is queued to start...
+        </p>
+      );
+    }
+    
+    // Campaign running - show progress text
+    if (campaign.status === "running") {
+      const currentPhaseName = campaign.campaignType
+        ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType)
+        : 'Unknown Phase';
+      
+      const progressText = campaign.progressPercentage ? `(${campaign.progressPercentage}%)` : '';
+      
+      return (
+        <p className="text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          {currentPhaseName} in progress {progressText}...
+        </p>
+      );
+    }
+    
+    // Campaign pending - show start button only for non-auto campaigns
     if (campaign.status === "pending") {
       const selectedType = campaign.campaignType;
-      if (selectedType) {
+      if (selectedType && selectedType !== 'domain_generation') {
+        // Only show manual start for DNS and HTTP campaigns
         const firstPhase = getFirstPhase(selectedType);
         const phaseDisplayName = phaseDisplayNames[firstPhase] || firstPhase;
         const PhaseIcon = phaseIcons[firstPhase] || Play;
@@ -128,43 +164,46 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
             disabled={!!actionLoading[`phase-${firstPhase}`]}
           />
         );
+      } else if (selectedType === 'domain_generation') {
+        // Domain generation auto-starts, show processing message
+        return (
+          <p className="text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            Domain generation processing...
+          </p>
+        );
       }
-    }
-    
-    // Campaign running - show progress text
-    if (campaign.status === "running") {
-      const currentPhaseName = campaign.campaignType 
-        ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType) 
-        : 'Unknown Phase';
-      
-      const progressText = `(${campaign.progressPercentage || 0}%)`;
-      
-      return (
-        <p className="text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
-          <RefreshCw className="h-4 w-4 animate-spin" />
-          Current phase: {currentPhaseName} is in progress {progressText}...
-        </p>
-      );
     }
     
     return null;
   };
 
   const renderCampaignControlButtons = () => {
-    if (!campaign || 
-        campaign.status === 'completed' || 
-        campaign.status === 'pending' || 
-        campaign.status === 'failed') {
+    // 🔧 CRITICAL FIX: Show control buttons for active campaigns, hide for completed
+    
+    // Hide buttons for terminal states (completed, failed, cancelled)
+    if (!campaign ||
+        campaign.status === 'completed' ||
+        campaign.status === 'failed' ||
+        campaign.status === 'cancelled') {
+      return null;
+    }
+    
+    // Show control buttons for active states (running, paused, queued)
+    const isActiveState = ['running', 'paused', 'queued'].includes(campaign.status || '');
+    
+    if (!isActiveState) {
       return null;
     }
     
     return (
       <div className="flex gap-2 justify-center">
+        {/* Pause button - only for running campaigns */}
         {campaign.status === 'running' && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onPauseCampaign} 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onPauseCampaign}
             disabled={actionLoading['control-pause']}
             className="flex items-center gap-2"
           >
@@ -176,11 +215,12 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
           </Button>
         )}
         
+        {/* Resume button - only for paused campaigns */}
         {campaign.status === 'paused' && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onResumeCampaign} 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onResumeCampaign}
             disabled={actionLoading['control-resume']}
             className="flex items-center gap-2"
           >
@@ -192,16 +232,17 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
           </Button>
         )}
         
-        {(campaign.status === 'running' || campaign.status === 'paused') && (
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={onStopCampaign} 
+        {/* Stop/Cancel button - for running, paused, and queued campaigns */}
+        {(campaign.status === 'running' || campaign.status === 'paused' || campaign.status === 'queued') && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={onStopCampaign}
             disabled={actionLoading['control-stop']}
             className="flex items-center gap-2"
           >
             <StopCircle className="h-4 w-4" />
-            Cancel
+            {campaign.status === 'queued' ? 'Cancel' : 'Stop'}
             {actionLoading['control-stop'] && (
               <RefreshCw className="h-3 w-3 animate-spin ml-1" />
             )}
