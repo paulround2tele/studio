@@ -3,7 +3,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import PhaseGateButton from '@/components/campaigns/PhaseGateButton';
+import PhaseConfigurationPanel from '@/components/campaigns/PhaseConfigurationPanel';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -82,6 +83,20 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   onStopCampaign,
   className
 }) => {
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [selectedPhaseType, setSelectedPhaseType] = useState<CampaignType | null>(null);
+
+  // Handle opening the configuration dialog
+  const handleConfigurePhase = (phaseType: CampaignType) => {
+    setSelectedPhaseType(phaseType);
+    setConfigDialogOpen(true);
+  };
+
+  // Handle phase started from dialog
+  const handlePhaseStarted = (campaignId: string) => {
+    // Refresh the parent page or navigate to the new campaign
+    window.location.reload();
+  };
   const renderPhaseButtons = () => {
     // 🔧 CRITICAL FIX: Match backend behavior - domain generation auto-completes
     
@@ -99,8 +114,8 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
             </p>
             
             <PhaseGateButton
-              label={`Start ${nextPhaseConfig.displayName}`}
-              onClick={() => onStartPhase(nextPhaseConfig.phaseType)}
+              label={`Configure ${nextPhaseConfig.displayName}`}
+              onClick={() => handleConfigurePhase(nextPhaseConfig.phaseType)}
               Icon={nextPhaseConfig.icon}
               variant="default"
               isLoading={actionLoading[`phase-${nextPhaseConfig.phaseType}`]}
@@ -109,7 +124,7 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
             />
             
             <p className="text-xs text-muted-foreground">
-              Continue the campaign orchestration pipeline
+              Configure personas, proxies, and tuning parameters for the next phase
             </p>
           </div>
         );
@@ -314,25 +329,38 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   };
 
   return (
-    <Card className={cn("shadow-lg", className)}>
-      <CardHeader>
-        <CardTitle>Campaign Actions</CardTitle>
-        <CardDescription>
-          Control campaign execution and monitor progress
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="flex flex-col items-center justify-center min-h-[80px] space-y-3">
-        {renderPhaseButtons()}
-        {renderCampaignControlButtons()}
+    <>
+      <Card className={cn("shadow-lg", className)}>
+        <CardHeader>
+          <CardTitle>Campaign Actions</CardTitle>
+          <CardDescription>
+            Control campaign execution and monitor progress
+          </CardDescription>
+        </CardHeader>
         
-        {/* API endpoint information */}
-        <div className="text-xs text-muted-foreground pt-2 text-center">
-          <p>Phase Trigger API: POST /api/v2/campaigns/{campaign.id}/start</p>
-          <p>Control APIs: /pause, /resume, /cancel</p>
-        </div>
-      </CardContent>
-    </Card>
+        <CardContent className="flex flex-col items-center justify-center min-h-[80px] space-y-3">
+          {renderPhaseButtons()}
+          {renderCampaignControlButtons()}
+          
+          {/* API endpoint information */}
+          <div className="text-xs text-muted-foreground pt-2 text-center">
+            <p>Phase Trigger API: POST /api/v2/campaigns/{campaign.id}/start</p>
+            <p>Control APIs: /pause, /resume, /cancel</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Phase Configuration Panel */}
+      {selectedPhaseType && (
+        <PhaseConfigurationPanel
+          isOpen={configDialogOpen}
+          onClose={() => setConfigDialogOpen(false)}
+          sourceCampaign={campaign}
+          phaseType={selectedPhaseType}
+          onPhaseStarted={handlePhaseStarted}
+        />
+      )}
+    </>
   );
 };
 

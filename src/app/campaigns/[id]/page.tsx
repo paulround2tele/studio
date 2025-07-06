@@ -303,53 +303,57 @@ export default function RefactoredCampaignDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Campaign Header - Basic info and refresh */}
-      <CampaignHeader 
-        campaign={campaign}
-        loading={loading}
-        onRefresh={() => loadCampaignData(true)}
-      />
+    <div className="min-h-screen w-full max-w-none p-6 space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Campaign Header - Basic info and refresh */}
+        <CampaignHeader
+          campaign={campaign}
+          loading={loading}
+          onRefresh={() => loadCampaignData(true)}
+        />
 
-      {/* Campaign Progress - Original progress component */}
-      <CampaignProgress campaign={campaign} />
+        {/* Campaign Progress - Original progress component */}
+        <CampaignProgress campaign={campaign} />
 
-      {/* Campaign Metrics - Real-time statistics */}
-      <CampaignMetrics 
-        campaign={campaign}
-        totalDomains={totalDomainCount}
-        streamingStats={streamingStats}
-      />
+        {/* Campaign Metrics - Real-time statistics */}
+        <CampaignMetrics
+          campaign={campaign}
+          totalDomains={totalDomainCount}
+          streamingStats={streamingStats}
+          className="w-full"
+        />
 
-      {/* Campaign Controls - Start/pause/resume/stop */}
-      <CampaignControls
-        campaign={campaign}
-        actionLoading={actionLoading}
-        onStartPhase={startPhase}
-        onPauseCampaign={pauseCampaign}
-        onResumeCampaign={resumeCampaign}
-        onStopCampaign={stopCampaign}
-      />
+        {/* Campaign Controls - Start/pause/resume/stop */}
+        <CampaignControls
+          campaign={campaign}
+          actionLoading={actionLoading}
+          onStartPhase={startPhase}
+          onPauseCampaign={pauseCampaign}
+          onResumeCampaign={resumeCampaign}
+          onStopCampaign={stopCampaign}
+        />
 
-      {/* Domain Streaming Table - High-performance virtual table */}
-      <DomainStreamingTable
-        campaign={campaign}
-        generatedDomains={generatedDomains}
-        dnsCampaignItems={dnsCampaignItems}
-        httpCampaignItems={httpCampaignItems}
-        totalDomains={totalDomainCount}
-        loading={loading}
-        filters={filters}
-        pagination={pagination}
-        onFiltersChange={updateFilters}
-        onPaginationChange={updatePagination}
-        onDownloadDomains={downloadDomains}
-      />
+        {/* Domain Streaming Table - High-performance virtual table */}
+        <DomainStreamingTable
+          campaign={campaign}
+          generatedDomains={generatedDomains}
+          dnsCampaignItems={dnsCampaignItems}
+          httpCampaignItems={httpCampaignItems}
+          totalDomains={totalDomainCount}
+          loading={loading}
+          filters={filters}
+          pagination={pagination}
+          onFiltersChange={updateFilters}
+          onPaginationChange={updatePagination}
+          onDownloadDomains={downloadDomains}
+          className="w-full"
+        />
 
-      {/* Content Similarity View - Original component for lead analysis */}
-      {campaign.campaignType === 'http_keyword_validation' && campaign.status === 'completed' && (
-        <ContentSimilarityView campaign={campaign} />
-      )}
+        {/* Content Similarity View - Original component for lead analysis */}
+        {campaign.campaignType === 'http_keyword_validation' && campaign.status === 'completed' && (
+          <ContentSimilarityView campaign={campaign} />
+        )}
+      </div>
     </div>
   );
 }

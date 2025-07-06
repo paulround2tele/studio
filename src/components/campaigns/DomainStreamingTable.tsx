@@ -110,13 +110,13 @@ const DomainTableRow = React.memo<{
   style?: React.CSSProperties;
 }>(function DomainTableRow({ domain, style }) {
   return (
-    <TableRow key={domain.id} style={style} className="h-12">
+    <TableRow key={domain.id} style={style} className="h-12 hover:bg-muted/50 transition-colors">
       <TableCell className="font-medium truncate w-[35%]" title={domain.domainName}>
-        <a 
-          href={`http://${domain.domainName}`} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="hover:underline text-primary flex items-center"
+        <a
+          href={`http://${domain.domainName}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline text-foreground hover:text-blue-400 flex items-center font-mono text-sm transition-colors"
         >
           {domain.domainName}
           <ExternalLink className="inline-block ml-1 h-3 w-3 opacity-70" />
@@ -327,12 +327,12 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
   }
 
   return (
-    <Card className={cn("shadow-lg", className)}>
-      <CardHeader className="pb-3">
+    <Card className={cn("shadow-xl border-2", className)}>
+      <CardHeader className="pb-4 bg-gradient-to-r from-card to-muted/20">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Campaign Domain Details ({filteredAndSortedDomains.length})</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl font-bold">Campaign Domain Details ({filteredAndSortedDomains.length})</CardTitle>
+            <CardDescription className="text-base mt-1">
               Real-time status of domains processed in this campaign
             </CardDescription>
           </div>
@@ -341,7 +341,7 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
             variant="outline"
             size="sm"
             onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow"
           >
             <Filter className="h-4 w-4" />
             Filters
@@ -431,15 +431,15 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
         ) : (
           <>
             {/* Virtual scrolling table */}
-            <ScrollArea ref={scrollAreaRef} className="h-[400px] border rounded-md">
+            <ScrollArea ref={scrollAreaRef} className="h-[600px] border-2 rounded-lg shadow-inner">
               <Table>
-                <TableHeader className="sticky top-0 bg-background z-10">
-                  <TableRow>
-                    <TableHead className="w-[35%]">Domain</TableHead>
-                    <TableHead className="text-center w-[20%]">DNS Status</TableHead>
-                    <TableHead className="text-center w-[20%]">HTTP Status</TableHead>
-                    <TableHead className="text-center w-[15%]">Lead Status</TableHead>
-                    <TableHead className="text-center w-[10%]">Lead Score</TableHead>
+                <TableHeader className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 border-b-2">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[35%] font-semibold text-base">Domain</TableHead>
+                    <TableHead className="text-center w-[20%] font-semibold text-base">DNS Status</TableHead>
+                    <TableHead className="text-center w-[20%] font-semibold text-base">HTTP Status</TableHead>
+                    <TableHead className="text-center w-[15%] font-semibold text-base">Lead Status</TableHead>
+                    <TableHead className="text-center w-[10%] font-semibold text-base">Lead Score</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -454,72 +454,74 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
             </ScrollArea>
 
             {/* Pagination Controls */}
-            <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Rows per page:</span>
-                <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}>
-                  <SelectTrigger className="w-[70px] h-8 text-xs">
-                    <SelectValue placeholder={pagination.pageSize} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[25, 50, 100, 250].map(size => (
-                      <SelectItem key={size} value={String(size)} className="text-xs">
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span>
-                  Showing {filteredAndSortedDomains.length > 0 ? startItem : 0}-{endItem} of {filteredAndSortedDomains.length}
-                </span>
-              </div>
+            <div className="mt-6 p-4 bg-gradient-to-r from-muted/10 to-muted/5 rounded-lg border">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <span className="font-medium">Rows per page:</span>
+                  <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}>
+                    <SelectTrigger className="w-[80px] h-9 text-sm shadow-sm">
+                      <SelectValue placeholder={pagination.pageSize} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[25, 50, 100, 250].map(size => (
+                        <SelectItem key={size} value={String(size)} className="text-sm">
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="font-medium">
+                    Showing {filteredAndSortedDomains.length > 0 ? startItem : 0}-{endItem} of {filteredAndSortedDomains.length}
+                  </span>
+                </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToPreviousPage}
-                  disabled={pagination.currentPage === 1}
-                  className="h-8"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Previous</span>
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Page {pagination.currentPage} of {totalPages > 0 ? totalPages : 1}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToNextPage}
-                  disabled={pagination.currentPage === totalPages || totalPages === 0}
-                  className="h-8"
-                >
-                  <span className="hidden sm:inline">Next</span>
-                  <ChevronRight className="h-4 w-4 ml-1 sm:ml-2" />
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToPreviousPage}
+                    disabled={pagination.currentPage === 1}
+                    className="h-9 shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Previous</span>
+                  </Button>
+                  <span className="text-sm text-muted-foreground font-medium px-3 py-1 bg-background rounded border">
+                    Page {pagination.currentPage} of {totalPages > 0 ? totalPages : 1}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToNextPage}
+                    disabled={pagination.currentPage === totalPages || totalPages === 0}
+                    className="h-9 shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight className="h-4 w-4 ml-1 sm:ml-2" />
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Download Actions */}
-            <div className="mt-6 flex flex-wrap justify-end gap-2">
+            <div className="mt-6 flex flex-wrap justify-end gap-3 p-4 bg-gradient-to-r from-muted/20 to-muted/10 rounded-lg border">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadFiltered}
                 disabled={filteredAndSortedDomains.length === 0}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200"
               >
                 <Download className="h-4 w-4" />
                 Export Filtered ({filteredAndSortedDomains.length})
               </Button>
               
               <Button
-                variant="outline"
+                variant="default"
                 size="sm"
                 onClick={handleDownloadAll}
                 disabled={domainDetails.length === 0}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200"
               >
                 <Download className="h-4 w-4" />
                 Export All ({domainDetails.length})

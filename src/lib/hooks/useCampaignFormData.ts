@@ -2,14 +2,17 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { CampaignViewModel, HttpPersona, DnsPersona } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 import { getPersonas } from "@/lib/services/personaService";
+import { getProxies } from "@/lib/services/proxyService.production";
 import { apiClient } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
 type Campaign = components['schemas']['Campaign'];
+type Proxy = components['schemas']['Proxy'];
 
 interface CampaignFormData {
   httpPersonas: HttpPersona[];
   dnsPersonas: DnsPersona[];
+  proxies: Proxy[];
   sourceCampaigns: CampaignViewModel[];
   isLoading: boolean;
   error: string | null;
@@ -23,6 +26,7 @@ interface CampaignFormData {
 export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
   const [httpPersonas, setHttpPersonas] = useState<HttpPersona[]>([]);
   const [dnsPersonas, setDnsPersonas] = useState<DnsPersona[]>([]);
+  const [proxies, setProxies] = useState<Proxy[]>([]);
   const [sourceCampaigns, setSourceCampaigns] = useState<CampaignViewModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +38,10 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
 
     try {
       // Use Promise.allSettled to prevent one failed request from blocking others
-      const [httpResult, dnsResult, campaignsResult] = await Promise.allSettled([
+      const [httpResult, dnsResult, proxiesResult, campaignsResult] = await Promise.allSettled([
         getPersonas('http'),
         getPersonas('dns'),
+        getProxies(),
         apiClient.listCampaigns()
       ]);
 
@@ -52,8 +57,16 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       if (dnsResult.status === 'fulfilled' && dnsResult.value.status === 'success' && dnsResult.value.data) {
         setDnsPersonas(dnsResult.value.data as DnsPersona[]);
       } else {
-        console.warn('[useCampaignFormData] Failed to load DNS personas:', 
+        console.warn('[useCampaignFormData] Failed to load DNS personas:',
           dnsResult.status === 'rejected' ? dnsResult.reason : dnsResult.value);
+      }
+
+      // Process proxies result
+      if (proxiesResult.status === 'fulfilled' && proxiesResult.value.status === 'success' && proxiesResult.value.data) {
+        setProxies(proxiesResult.value.data as Proxy[]);
+      } else {
+        console.warn('[useCampaignFormData] Failed to load proxies:',
+          proxiesResult.status === 'rejected' ? proxiesResult.reason : proxiesResult.value);
       }
 
       // Process campaigns result
@@ -71,11 +84,11 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       }
 
       // Check if any critical failures occurred
-      const failures = [httpResult, dnsResult, campaignsResult].filter(
+      const failures = [httpResult, dnsResult, proxiesResult, campaignsResult].filter(
         result => result.status === 'rejected'
       );
 
-      if (failures.length === 3) {
+      if (failures.length === 4) {
         // All requests failed
         setError('Failed to load form data. Please check your connection and try again.');
       } else if (failures.length > 0) {
@@ -101,19 +114,20 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
   }, [fetchData]); // Only refetch if fetchData function changes (which it won't due to empty deps)
 
   // Memoize active personas for better performance in selects
-  const activeHttpPersonas = useMemo(() => 
-    httpPersonas.filter(p => p.status === 'Active'), 
+  const activeHttpPersonas = useMemo(() =>
+    httpPersonas.filter(p => !p.status || p.status === 'Active' || p.status === 'active' || p.status === 'enabled'),
     [httpPersonas]
   );
 
-  const activeDnsPersonas = useMemo(() => 
-    dnsPersonas.filter(p => p.status === 'Active'), 
+  const activeDnsPersonas = useMemo(() =>
+    dnsPersonas.filter(p => !p.status || p.status === 'Active' || p.status === 'active' || p.status === 'enabled'),
     [dnsPersonas]
   );
 
   return {
     httpPersonas: activeHttpPersonas,
     dnsPersonas: activeDnsPersonas,
+    proxies,
     sourceCampaigns,
     isLoading,
     error,

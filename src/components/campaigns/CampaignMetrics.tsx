@@ -73,18 +73,18 @@ export const CampaignMetrics: React.FC<CampaignMetricsProps> = ({
   const avgProcessingRate = campaign.avgProcessingRate || 0;
 
   return (
-    <Card className={cn("shadow-lg", className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5" />
+    <Card className={cn("shadow-xl border-2 bg-gradient-to-br from-card to-muted/10", className)}>
+      <CardHeader className="pb-4 bg-gradient-to-r from-card to-muted/20 border-b">
+        <CardTitle className="flex items-center gap-3 text-xl font-bold">
+          <BarChart3 className="h-6 w-6 text-primary" />
           Campaign Metrics
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-base mt-1">
           Real-time progress and performance statistics
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8 p-6">
         {/* Main Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
@@ -104,47 +104,47 @@ export const CampaignMetrics: React.FC<CampaignMetricsProps> = ({
         </div>
 
         {/* Key Metrics Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {/* Total Domains */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Target className="h-4 w-4" />
-              <span className="text-xs">Total Domains</span>
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-xl border shadow-sm">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              <span className="text-sm font-medium">Total Domains</span>
             </div>
-            <div className="text-lg font-semibold">
+            <div className="text-2xl font-bold text-foreground">
               {formatNumber(totalDomains || processedItems)}
             </div>
           </div>
 
           {/* Success Count */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-xs">Successful</span>
+          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-xl border shadow-sm">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span className="text-sm font-medium">Successful</span>
             </div>
-            <div className="text-lg font-semibold text-green-600">
+            <div className="text-2xl font-bold text-green-700 dark:text-green-400">
               {formatNumber(successfulItems)}
             </div>
           </div>
 
           {/* Failed Count */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <XCircle className="h-4 w-4 text-red-500" />
-              <span className="text-xs">Failed</span>
+          <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-4 rounded-xl border shadow-sm">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <XCircle className="h-5 w-5 text-red-600" />
+              <span className="text-sm font-medium">Failed</span>
             </div>
-            <div className="text-lg font-semibold text-red-600">
+            <div className="text-2xl font-bold text-red-700 dark:text-red-400">
               {formatNumber(failedItems)}
             </div>
           </div>
 
           {/* Duration */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span className="text-xs">Duration</span>
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-xl border shadow-sm">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <Clock className="h-5 w-5 text-purple-600" />
+              <span className="text-sm font-medium">Duration</span>
             </div>
-            <div className="text-lg font-semibold">
+            <div className="text-2xl font-bold text-foreground">
               {duration}
             </div>
           </div>
