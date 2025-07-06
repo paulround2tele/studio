@@ -129,7 +129,7 @@ export default function RefactoredCampaignDetailsPage() {
     return {
       shouldConnect: !!(campaign &&
         campaign.campaignType === 'domain_generation' &&
-        ['pending', 'running'].includes(campaign.status || '')),
+        ['pending', 'queued', 'running'].includes(campaign.status || '')),
       campaignId: campaign?.id,
       campaignType: campaign?.campaignType,
       status: campaign?.status
