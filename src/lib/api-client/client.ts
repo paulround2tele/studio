@@ -597,6 +597,21 @@ export class ApiClient {
     );
   }
 
+  // CAMPAIGN DOMAIN GENERATION PATTERN OFFSET API METHOD
+  async getCampaignDomainGenerationPatternOffset(data: {
+    patternType: string;
+    variableLength: number;
+    characterSet: string;
+    constantString: string;
+    tld: string;
+  }) {
+    return this.request<{ currentOffset: number }>(
+      '/campaigns/domain-generation/pattern-offset',
+      'POST',
+      { body: data }
+    );
+  }
+
   // PERSONA API METHODS
   async listPersonas() {
     return this.request<GetOperationResponse<ApiPaths['/personas']['get']>>(

@@ -19,9 +19,9 @@ func TestEncryptionService(t *testing.T) {
 
 	t.Run("EncryptDecryptField", func(t *testing.T) {
 		testCases := []string{
-			"sensitive data",
-			"user@example.com",
-			"password123",
+			"test data",
+			"sample text",
+			"123456789",
 			"",
 			"very long string with special characters !@#$%^&*()_+-=[]{}|;':\",./<>?",
 		}
@@ -53,8 +53,8 @@ func TestEncryptionService(t *testing.T) {
 	t.Run("EncryptDecryptBytes", func(t *testing.T) {
 		testCases := [][]byte{
 			[]byte("byte data"),
-			[]byte{0x00, 0x01, 0x02, 0x03},
-			[]byte{},
+			{0x00, 0x01, 0x02, 0x03},
+			{},
 			make([]byte, 1024), // 1KB of zeros
 		}
 

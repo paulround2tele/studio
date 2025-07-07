@@ -1,0 +1,92 @@
+[
+  {
+    "timestamp": "2025-07-07T10:14:41.259Z",
+    "type": "frontend-stdout",
+    "data": "> domainflow-frontend@1.0.0 dev\n> next dev --turbo -p 3000",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:14:45.000Z",
+    "type": "frontend-stdout",
+    "data": "\u001b[1m\u001b[38;2;173;127;168m▲ Next.js 15.3.3\u001b[39m\u001b[22m (Turbopack)",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:14:45.001Z",
+    "type": "frontend-stdout",
+    "data": "- Local:        http://localhost:3000\n   - Network:      http://192.168.1.40:3000\n   - Environments: .env\n\n \u001b[32m\u001b[1m✓\u001b[22m\u001b[39m Starting...",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:14:50.211Z",
+    "type": "frontend-stdout",
+    "data": "\u001b[37m\u001b[1m○\u001b[22m\u001b[39m Compiling middleware ...",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:14:51.640Z",
+    "type": "frontend-stdout",
+    "data": "\u001b[32m\u001b[1m✓\u001b[22m\u001b[39m Compiled middleware in 1938ms",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:14:52.297Z",
+    "type": "frontend-stdout",
+    "data": "\u001b[32m\u001b[1m✓\u001b[22m\u001b[39m Ready in 7.5s",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:03.828Z",
+    "type": "frontend-stdout",
+    "data": "[MIDDLEWARE] Session-based security check for: /login\n[MIDDLEWARE] Public/static route allowed: /login",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:04.389Z",
+    "type": "frontend-stdout",
+    "data": "\u001b[37m\u001b[1m○\u001b[22m\u001b[39m Compiling /login ...",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:24.664Z",
+    "type": "frontend-stdout",
+    "data": "\u001b[32m\u001b[1m✓\u001b[22m\u001b[39m Compiled /login in 20.8s",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:25.917Z",
+    "type": "frontend-stdout",
+    "data": "[2025-07-07T10:15:25.916Z] [qbl5q7ar] [DEBUG] [AUTH_SERVICE] Initialized with configuration {\n  \"sessionCheckTimeout\": 15000,\n  \"maxRetries\": 2\n}",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:25.961Z",
+    "type": "frontend-stdout",
+    "data": "GET /login \u001b[32m200\u001b[39m in 22097ms",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:28.294Z",
+    "type": "frontend-stdout",
+    "data": "\u001b[37m\u001b[1m○\u001b[22m\u001b[39m Compiling /favicon.ico ...",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:35.710Z",
+    "type": "frontend-stdout",
+    "data": "[MIDDLEWARE] Session-based security check for: /dashboard\n[MIDDLEWARE] Session auth check: {\n  pathname: '/dashboard',\n  hasSessionCookie: true,\n  sessionCookieValue: 'present'\n}\n[MIDDLEWARE] Valid session cookie found\n[MIDDLEWARE] Session authentication verified, allowing access to: /dashboard",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:39.996Z",
+    "type": "frontend-stdout",
+    "data": "GET /favicon.ico?favicon.56766c03.ico \u001b[32m200\u001b[39m in 10487ms",
+    "source": "next-dev-server"
+  },
+  {
+    "timestamp": "2025-07-07T10:15:40.025Z",
+    "type": "frontend-stdout",
+    "data": "GET /favicon.ico \u001b[32m200\u001b[39m in 12249ms",
+    "source": "next-dev-server"
+  }
+]

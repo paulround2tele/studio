@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
@@ -20,12 +21,15 @@ import (
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
 type CampaignOrchestratorAPIHandler struct {
 	orchestratorService services.CampaignOrchestratorService
-	// No direct store access needed here, orchestrator service handles it.
+	campaignStore       store.CampaignStore // Direct access needed for pattern offset queries
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
-func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService) *CampaignOrchestratorAPIHandler {
-	return &CampaignOrchestratorAPIHandler{orchestratorService: orchService}
+func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService, campaignStore store.CampaignStore) *CampaignOrchestratorAPIHandler {
+	return &CampaignOrchestratorAPIHandler{
+		orchestratorService: orchService,
+		campaignStore:       campaignStore,
+	}
 }
 
 // RegisterCampaignOrchestrationRoutes registers all campaign orchestration related routes.
@@ -66,6 +70,9 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	group.GET("/:campaignId/results/generated-domains", h.getGeneratedDomains)
 	group.GET("/:campaignId/results/dns-validation", h.getDNSValidationResults)
 	group.GET("/:campaignId/results/http-keyword", h.getHTTPKeywordResults)
+
+	// Domain generation utilities - session-based auth
+	group.POST("/domain-generation/pattern-offset", h.getPatternOffset)
 }
 
 // --- Unified Campaign Creation Handler ---
@@ -616,4 +623,100 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 		"message":     message,
 		"campaign_id": campaignID,
 	})
+}
+
+// PatternOffsetRequest represents the request to get pattern offset
+type PatternOffsetRequest struct {
+	PatternType     string `json:"patternType" binding:"required" validate:"oneof=prefix suffix both"`
+	VariableLength  int    `json:"variableLength" binding:"required,min=1"`
+	CharacterSet    string `json:"characterSet" binding:"required"`
+	ConstantString  string `json:"constantString" binding:"required"`
+	TLD             string `json:"tld" binding:"required"`
+}
+
+// PatternOffsetResponse represents the pattern offset response
+type PatternOffsetResponse struct {
+	PatternType                string `json:"patternType"`
+	VariableLength             int    `json:"variableLength"`
+	CharacterSet               string `json:"characterSet"`
+	ConstantString             string `json:"constantString"`
+	TLD                        string `json:"tld"`
+	CurrentOffset              int64  `json:"currentOffset"`
+	TotalPossibleCombinations  int64  `json:"totalPossibleCombinations"`
+}
+
+// getPatternOffset handles POST /campaigns/domain-generation/pattern-offset
+// Uses existing domain_generation_config_states system to get current offset for a pattern
+func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
+	var req PatternOffsetRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid request: %v", err)})
+		return
+	}
+
+	// Calculate total possible combinations using domain generator
+	domainGen, err := domainexpert.NewDomainGenerator(
+		domainexpert.CampaignPatternType(req.PatternType),
+		req.VariableLength,
+		req.CharacterSet,
+		req.ConstantString,
+		req.TLD,
+	)
+	if err != nil {
+		log.Printf("Error creating domain generator: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create domain generator"})
+		return
+	}
+
+	totalCombinations := domainGen.GetTotalCombinations()
+
+	// Convert request to DomainGenerationCampaignParams for hash generation
+	// Use exact same approach as domain generation service for consistency
+	params := models.DomainGenerationCampaignParams{
+		PatternType:    req.PatternType,
+		VariableLength: req.VariableLength,
+		CharacterSet:   req.CharacterSet,
+		ConstantString: models.StringPtr(req.ConstantString), // Use models.StringPtr like domain generation service
+		TLD:            req.TLD,
+		// Other fields are not used for hashing
+	}
+
+	// Generate config hash using existing system
+	hashResult, err := domainexpert.GenerateDomainGenerationConfigHash(params)
+	if err != nil {
+		log.Printf("ERROR [Pattern Offset]: Failed to generate config hash for pattern %+v: %v", req, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate pattern hash"})
+		return
+	}
+
+	log.Printf("DEBUG [Pattern Offset]: Generated hash %s for pattern: Type=%s, VarLen=%d, CharSet=%s, ConstStr=%s, TLD=%s",
+		hashResult.HashString, req.PatternType, req.VariableLength, req.CharacterSet, req.ConstantString, req.TLD)
+
+	// Get current offset from existing global offset tracking system
+	currentOffset := int64(0)
+	configState, err := h.campaignStore.GetDomainGenerationConfigStateByHash(c.Request.Context(), nil, hashResult.HashString)
+	if err != nil {
+		if err != store.ErrNotFound {
+			log.Printf("ERROR [Pattern Offset]: Database error getting config state for hash %s: %v", hashResult.HashString, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get pattern offset"})
+			return
+		}
+		// If no state exists yet, offset remains 0
+		log.Printf("DEBUG [Pattern Offset]: No existing config state found for hash %s - returning offset 0", hashResult.HashString)
+	} else {
+		currentOffset = configState.LastOffset
+		log.Printf("DEBUG [Pattern Offset]: Found existing config state for hash %s with offset %d", hashResult.HashString, currentOffset)
+	}
+
+	response := PatternOffsetResponse{
+		PatternType:               req.PatternType,
+		VariableLength:            req.VariableLength,
+		CharacterSet:              req.CharacterSet,
+		ConstantString:            req.ConstantString,
+		TLD:                       req.TLD,
+		CurrentOffset:             currentOffset,
+		TotalPossibleCombinations: totalCombinations,
+	}
+
+	c.JSON(http.StatusOK, response)
 }

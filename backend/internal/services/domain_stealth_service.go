@@ -297,7 +297,7 @@ func (s *domainStealthServiceImpl) applyWeightedShuffle(domains []*RandomizedDom
 }
 
 // applyInterleavedShuffle mixes domains from different pattern spaces for maximum stealth
-func (s *domainStealthServiceImpl) applyInterleavedShuffle(domains []*RandomizedDomain, config *StealthConfig) error {
+func (s *domainStealthServiceImpl) applyInterleavedShuffle(domains []*RandomizedDomain, _ *StealthConfig) error {
 	// Classify domains by pattern type
 	patternGroups := make(map[string][]*RandomizedDomain)
 	for _, domain := range domains {

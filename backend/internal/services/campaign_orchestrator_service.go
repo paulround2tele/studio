@@ -1413,7 +1413,7 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 // handleDomainGenerationOffsetOnDeletion implements the correct offset reset logic:
 // Only reset the offset when the very last campaign for that pattern is deleted.
 // The offset tracks the highest point ever reached for that pattern, regardless of campaign deletions.
-func (s *campaignOrchestratorServiceImpl) handleDomainGenerationOffsetOnDeletion(ctx context.Context, querier store.Querier, campaignID uuid.UUID, campaign *models.Campaign) error {
+func (s *campaignOrchestratorServiceImpl) handleDomainGenerationOffsetOnDeletion(ctx context.Context, querier store.Querier, campaignID uuid.UUID, _ *models.Campaign) error {
 	log.Printf("[INFO] HandleDomainGenerationOffsetOnDeletion: Processing offset logic for campaign %s deletion", campaignID)
 	
 	// Get the domain generation parameters for this campaign

@@ -48,6 +48,10 @@ type CampaignStore interface {
 	GetDomainGenerationConfigStateByHash(ctx context.Context, exec Querier, configHash string) (*models.DomainGenerationConfigState, error)
 	CreateOrUpdateDomainGenerationConfigState(ctx context.Context, exec Querier, state *models.DomainGenerationConfigState) error
 
+	// Methods for pattern reference counting and cleanup
+	CountCampaignsWithPatternHash(ctx context.Context, exec Querier, patternHash string) (int, error)
+	CleanupUnusedPatternConfigState(ctx context.Context, exec Querier, patternHash string) error
+
 	CreateGeneratedDomains(ctx context.Context, exec Querier, domains []*models.GeneratedDomain) error
 	GetGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error)
 	CountGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID) (int64, error)

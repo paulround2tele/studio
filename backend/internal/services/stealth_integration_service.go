@@ -255,7 +255,7 @@ func (s *stealthIntegrationServiceImpl) getDomainsForHTTPValidation(ctx context.
 }
 
 // performStealthDNSValidation performs DNS validation with stealth considerations
-func (s *stealthIntegrationServiceImpl) performStealthDNSValidation(ctx context.Context, campaignID uuid.UUID, domain *RandomizedDomain) error {
+func (s *stealthIntegrationServiceImpl) performStealthDNSValidation(_ context.Context, _ uuid.UUID, domain *RandomizedDomain) error {
 	// This would integrate with the existing DNS validation logic
 	// For now, just log the stealth validation attempt
 	log.Printf("StealthIntegration: Performing stealth DNS validation for domain %s (original offset: %d, validation order: %d)", 
@@ -268,7 +268,7 @@ func (s *stealthIntegrationServiceImpl) performStealthDNSValidation(ctx context.
 }
 
 // performStealthHTTPValidation performs HTTP validation with stealth considerations
-func (s *stealthIntegrationServiceImpl) performStealthHTTPValidation(ctx context.Context, campaignID uuid.UUID, domain *RandomizedDomain) error {
+func (s *stealthIntegrationServiceImpl) performStealthHTTPValidation(_ context.Context, _ uuid.UUID, domain *RandomizedDomain) error {
 	// This would integrate with the existing HTTP validation logic
 	// For now, just log the stealth validation attempt
 	log.Printf("StealthIntegration: Performing stealth HTTP validation for domain %s (original offset: %d, validation order: %d)", 

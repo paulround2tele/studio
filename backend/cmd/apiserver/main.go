@@ -253,7 +253,7 @@ func main() {
 	)
 	log.Println("Main APIHandler initialized.")
 
-	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(campaignOrchestratorSvc)
+	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(campaignOrchestratorSvc, campaignStore)
 	log.Println("CampaignOrchestratorAPIHandler initialized.")
 
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)

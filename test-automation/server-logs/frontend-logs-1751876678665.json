@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": "2025-07-07T08:21:05.339Z",
+    "type": "stdout",
+    "data": "\n> domainflow-frontend@1.0.0 dev\n> next dev --turbo -p 3000\n\n"
+  },
+  {
+    "timestamp": "2025-07-07T08:21:07.276Z",
+    "type": "stderr",
+    "data": " ⨯ Failed to start server\n"
+  },
+  {
+    "timestamp": "2025-07-07T08:21:07.295Z",
+    "type": "stderr",
+    "data": "Error: listen EADDRINUSE: address already in use :::3000\n    at <unknown> (Error: listen EADDRINUSE: address already in use :::3000)\n    at new Promise (<anonymous>) {\n  code: 'EADDRINUSE',\n  errno: -98,\n  syscall: 'listen',\n  address: '::',\n  port: 3000\n}\n"
+  },
+  {
+    "timestamp": "2025-07-07T08:21:07.396Z",
+    "type": "stdout",
+    "data": "\u001b[?25h\n"
+  }
+]

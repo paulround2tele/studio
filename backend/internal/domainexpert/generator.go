@@ -180,13 +180,34 @@ func (dg *DomainGenerator) WithMemoryConfig(config *MemoryEfficiencyConfig) *Dom
 
 // GenerateBatch generates a batch of domains starting from the given offset
 func (dg *DomainGenerator) GenerateBatch(startOffset int64, batchSize int) ([]string, int64, error) {
-	domains := make([]string, 0, batchSize)
+	if batchSize <= 0 {
+		return []string{}, startOffset, nil
+	}
 
-	for i := 0; i < batchSize; i++ {
-		domain := fmt.Sprintf("%s%d.%s", dg.ConstantString, startOffset+int64(i), dg.TLD)
+	// Validate startOffset is within bounds
+	if startOffset >= dg.totalCombinations {
+		return []string{}, startOffset, fmt.Errorf("start offset %d exceeds total combinations %d", startOffset, dg.totalCombinations)
+	}
+
+	// Calculate actual domains to generate (don't exceed total combinations)
+	remainingCombinations := dg.totalCombinations - startOffset
+	actualBatchSize := int64(batchSize)
+	if actualBatchSize > remainingCombinations {
+		actualBatchSize = remainingCombinations
+	}
+
+	domains := make([]string, 0, actualBatchSize)
+
+	// Generate each domain using the proper offset-based logic
+	for i := int64(0); i < actualBatchSize; i++ {
+		currentOffset := startOffset + i
+		domain, err := dg.GenerateDomainAtOffset(currentOffset)
+		if err != nil {
+			return domains, startOffset + i, fmt.Errorf("failed to generate domain at offset %d: %w", currentOffset, err)
+		}
 		domains = append(domains, domain)
 	}
 
-	nextOffset := startOffset + int64(batchSize)
+	nextOffset := startOffset + actualBatchSize
 	return domains, nextOffset, nil
 }

@@ -1,5 +1,7 @@
-import React, { memo } from 'react';
-import { Control, UseFormWatch } from 'react-hook-form';
+import React, { memo, useEffect, useState, useMemo } from 'react';
+import { Control, UseFormWatch, UseFormSetValue } from 'react-hook-form';
+import { apiClient } from '@/lib/api-client/client';
+import type { components } from '@/lib/api-client/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -26,7 +28,6 @@ interface CampaignFormValues {
   prefixVariableLength?: number;
   suffixVariableLength?: number;
   maxDomainsToGenerate?: number;
-  domainGenerationOffset?: number; // 🔧 PHASE 4: Backend offset support
   targetKeywordsInput?: string;
   scrapingRateLimitRequests?: number;
   scrapingRateLimitPer?: 'second' | 'minute';
@@ -46,6 +47,7 @@ interface CampaignFormValues {
 interface DomainGenerationConfigProps {
   control: Control<CampaignFormValues>;
   watch: UseFormWatch<CampaignFormValues>;
+  setValue: UseFormSetValue<CampaignFormValues>;
   totalPossible: number;
   calculationDetails?: {
     pattern: string;
@@ -67,15 +69,109 @@ interface DomainGenerationConfigProps {
 const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
   control,
   watch,
+  setValue,
   totalPossible,
   calculationDetails,
   calculationWarning,
   isCalculationSafe,
   amount
 }) => {
-  
-  // Watch the generation pattern to conditionally show suffix input
+  // Watch form values for pattern offset calculation
   const generationPattern = watch("generationPattern");
+  const constantPart = watch("constantPart");
+  const allowedCharSet = watch("allowedCharSet");
+  const tldsInput = watch("tldsInput");
+  const prefixVariableLength = watch("prefixVariableLength");
+  
+  // State for displaying current offset from backend
+  const [currentOffset, setCurrentOffset] = useState<{
+    value: number;
+    isLoading: boolean;
+    error: string | null;
+  }>({
+    value: 0,
+    isLoading: false,
+    error: null
+  });
+
+  // Pattern signature for backend matching
+  const patternSignature = useMemo(() => {
+    if (!generationPattern || !constantPart || !allowedCharSet || !tldsInput) {
+      return null;
+    }
+    
+    const patternTypeMap = {
+      "prefix_variable": "prefix",
+      "suffix_variable": "suffix",
+      "both_variable": "both",
+      "constant_only": "prefix"
+    } as const;
+    
+    const tlds = tldsInput.split(',').map(tld => tld.trim()).filter(tld => tld.length > 0);
+    const primaryTld = tlds[0] || '.com';
+    const variableLength = prefixVariableLength || 3;
+    
+    return {
+      patternType: patternTypeMap[generationPattern],
+      variableLength,
+      characterSet: allowedCharSet,
+      constantString: constantPart,
+      tld: primaryTld,
+    };
+  }, [generationPattern, constantPart, allowedCharSet, tldsInput, prefixVariableLength]);
+
+  // Fetch current offset for this pattern from backend using dedicated endpoint
+  useEffect(() => {
+    if (!patternSignature) {
+      setCurrentOffset({ value: 0, isLoading: false, error: null });
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchCurrentOffset() {
+      setCurrentOffset(prev => ({ ...prev, isLoading: true, error: null }));
+
+      try {
+        // Call the dedicated pattern offset endpoint via apiClient
+        const data = await apiClient.getCampaignDomainGenerationPatternOffset(patternSignature);
+
+        if (cancelled) return;
+        
+        if (!cancelled) {
+          setCurrentOffset({
+            value: data.currentOffset || 0,
+            isLoading: false,
+            error: null
+          });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setCurrentOffset({
+            value: 0,
+            isLoading: false,
+            error: err instanceof Error ? err.message : 'Failed to fetch offset'
+          });
+        }
+      }
+    }
+
+    fetchCurrentOffset();
+    return () => { cancelled = true; };
+  }, [patternSignature]);
+
+  // Check if campaign params exactly match our pattern
+  function isExactPatternMatch(params: any, signature: typeof patternSignature): boolean {
+    if (!params || !signature) return false;
+    
+    return (
+      params.patternType === signature.patternType &&
+      params.variableLength === signature.variableLength &&
+      params.characterSet === signature.characterSet &&
+      params.constantString === signature.constantString &&
+      params.tld === signature.tld
+    );
+  }
   
   // Determine if suffix variable length input should be shown
   const showSuffixInput = generationPattern === 'both_variable' || generationPattern === 'suffix_variable';
@@ -238,26 +334,27 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
           </FormItem>
         )} />
 
-        {/* 🔧 PHASE 4: Backend Offset Parameter for Domain Generation Deduplication */}
-        <FormField control={control} name="domainGenerationOffset" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Generation Offset</FormLabel>
-            <FormControl>
-              <Input
-                type="number"
-                min="0"
-                placeholder="0"
-                {...field}
-                title="Start generation from this offset to avoid duplicates from previous campaigns with the same pattern"
-              />
-            </FormControl>
-            <div className="text-xs text-muted-foreground mt-1">
-              Start domain generation from this offset to prevent duplicates across campaigns with the same pattern.
-              Use 0 for new patterns, or set to the end of previous campaigns to continue where they left off.
+        {/* Current Offset Display (Read-Only) */}
+        <div className="p-3 rounded-md bg-blue-50 border border-blue-200">
+          <div className="text-sm font-medium text-blue-700 mb-2">
+            Current Offset for This Pattern
+            {currentOffset.isLoading && (
+              <span className="ml-2 text-xs text-blue-600">(loading...)</span>
+            )}
+          </div>
+          <div className="text-2xl font-bold text-blue-800 mb-1">
+            {currentOffset.value.toLocaleString()}
+          </div>
+          {currentOffset.error && (
+            <div className="text-xs text-red-500 mb-2">
+              <strong>Error:</strong> {currentOffset.error}
             </div>
-            <FormMessage />
-          </FormItem>
-        )} />
+          )}
+          <div className="text-xs text-blue-600">
+            ℹ️ Domain generation will resume from this offset for this exact pattern combination.
+            This value is automatically managed by the backend.
+          </div>
+        </div>
 
         {/* Performance-aware domain calculation display */}
         {totalPossible > 0 && (

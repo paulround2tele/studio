@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings" // For ListCampaigns dynamic query
 	"time"
 
@@ -125,6 +126,28 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 		return fmt.Errorf("failed to delete DNS validation params: %w", err)
 	}
 
+	// Get domain generation params before deletion to calculate pattern hash for cleanup
+	var patternHash string
+	domainGenParams, getParamsErr := s.GetDomainGenerationParams(ctx, exec, id)
+	if getParamsErr == nil && domainGenParams != nil {
+		// Calculate pattern hash for cleanup
+		tempParams := models.DomainGenerationCampaignParams{
+			PatternType:    domainGenParams.PatternType,
+			VariableLength: domainGenParams.VariableLength,
+			CharacterSet:   domainGenParams.CharacterSet,
+			ConstantString: domainGenParams.ConstantString,
+			TLD:            domainGenParams.TLD,
+		}
+		// Simple hash calculation (matches domain generation service approach)
+		patternHash = fmt.Sprintf("%x",
+			fmt.Sprintf("%s|%d|%s|%s|%s",
+				tempParams.PatternType,
+				tempParams.VariableLength,
+				tempParams.CharacterSet,
+				func() string { if tempParams.ConstantString != nil { return *tempParams.ConstantString } else { return "" } }(),
+				tempParams.TLD))
+	}
+
 	_, err = exec.ExecContext(ctx, `DELETE FROM domain_generation_campaign_params WHERE campaign_id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete domain generation params: %w", err)
@@ -139,6 +162,14 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 	rowsAffected, err := result.RowsAffected()
 	if err == nil && rowsAffected == 0 {
 		return store.ErrNotFound
+	}
+
+	// 7. Clean up unused pattern config state if this was the last campaign using this pattern
+	if patternHash != "" {
+		if cleanupErr := s.CleanupUnusedPatternConfigState(ctx, exec, patternHash); cleanupErr != nil {
+			log.Printf("Warning: failed to cleanup pattern config state %s: %v", patternHash, cleanupErr)
+			// Don't fail the deletion for cleanup errors, just log
+		}
 	}
 
 	return err
@@ -329,6 +360,12 @@ func (s *campaignStorePostgres) GetDomainGenerationConfigStateByHash(ctx context
 	state := &models.DomainGenerationConfigState{}
 	query := `SELECT config_hash, last_offset, config_details, updated_at
 			  FROM domain_generation_config_states WHERE config_hash = $1`
+	
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+	
 	err := exec.GetContext(ctx, state, query, configHash)
 	if err == sql.ErrNoRows {
 		return nil, store.ErrNotFound
@@ -777,6 +814,67 @@ func (s *campaignStorePostgres) GetDomainsForHTTPValidation(ctx context.Context,
 	       ORDER BY dvr.domain_name ASC LIMIT $4`
 	err := exec.SelectContext(ctx, &dnsResults, query, httpKeywordCampaignID, sourceCampaignID, lastDomainName, limit)
 	return dnsResults, err
+}
+
+// Helper method to count campaigns using the same pattern configuration
+func (s *campaignStorePostgres) CountCampaignsWithPatternHash(ctx context.Context, exec store.Querier, patternHash string) (int, error) {
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+	
+	query := `
+		SELECT COUNT(DISTINCT dgcp.campaign_id)
+		FROM domain_generation_campaign_params dgcp
+		INNER JOIN campaigns c ON c.id = dgcp.campaign_id
+		WHERE c.campaign_type = 'domain_generation'
+		AND (
+			-- Calculate hash from pattern params and compare
+			md5(
+				CONCAT(
+					COALESCE(dgcp.pattern_type, ''), '|',
+					COALESCE(dgcp.variable_length::text, ''), '|',
+					COALESCE(dgcp.character_set, ''), '|',
+					COALESCE(dgcp.constant_string, ''), '|',
+					COALESCE(dgcp.tld, '')
+				)
+			) = $1
+		)
+	`
+	
+	var count int
+	err := exec.GetContext(ctx, &count, query, patternHash)
+	return count, err
+}
+
+// Helper method to clean up unused pattern config states
+func (s *campaignStorePostgres) CleanupUnusedPatternConfigState(ctx context.Context, exec store.Querier, patternHash string) error {
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+	
+	// Check if any campaigns are still using this pattern
+	count, err := s.CountCampaignsWithPatternHash(ctx, exec, patternHash)
+	if err != nil {
+		return fmt.Errorf("failed to count campaigns with pattern hash %s: %w", patternHash, err)
+	}
+	
+	// If no campaigns are using this pattern, delete the config state
+	if count == 0 {
+		query := `DELETE FROM domain_generation_config_states WHERE config_hash = $1`
+		result, err := exec.ExecContext(ctx, query, patternHash)
+		if err != nil {
+			return fmt.Errorf("failed to delete unused pattern config state %s: %w", patternHash, err)
+		}
+		
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected > 0 {
+			log.Printf("Cleaned up unused pattern config state: %s", patternHash)
+		}
+	}
+	
+	return nil
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)
