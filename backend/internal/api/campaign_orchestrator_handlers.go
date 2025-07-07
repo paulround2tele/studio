@@ -56,7 +56,7 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	group.POST("/:campaignId/cancel", h.cancelCampaign)
 
 	// Campaign modification routes - session-based auth
-	// group.PUT("/:campaignId", h.updateCampaign)
+	group.PUT("/:campaignId", h.updateCampaign)
 
 	// Campaign deletion routes - session-based auth
 	group.DELETE("/:campaignId", h.deleteCampaign)
@@ -158,6 +158,85 @@ func (h *CampaignOrchestratorAPIHandler) validateCampaignRequest(req services.Cr
 		return fmt.Errorf("unsupported campaign type: %s", req.CampaignType)
 	}
 	return nil
+}
+
+// updateCampaign updates an existing campaign's configuration for DNS validation transition
+func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
+	campaignIDStr := c.Param("campaignId")
+	campaignID, err := uuid.Parse(campaignIDStr)
+	if err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid campaign ID format", []ErrorDetail{
+				{
+					Field:   "campaignId",
+					Code:    ErrorCodeValidation,
+					Message: "Campaign ID must be a valid UUID",
+				},
+			})
+		return
+	}
+
+	var req services.UpdateCampaignRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		var validationErrors []ErrorDetail
+		validationErrors = append(validationErrors, ErrorDetail{
+			Field:   "body",
+			Code:    ErrorCodeValidation,
+			Message: "Invalid request payload: " + err.Error(),
+		})
+		respondWithValidationErrorGin(c, validationErrors)
+		return
+	}
+
+	// Validate struct if validator is available
+	if validate != nil {
+		if err := validate.Struct(req); err != nil {
+			var validationErrors []ErrorDetail
+			validationErrors = append(validationErrors, ErrorDetail{
+				Code:    ErrorCodeValidation,
+				Message: "Validation failed: " + err.Error(),
+			})
+			respondWithValidationErrorGin(c, validationErrors)
+			return
+		}
+	}
+
+	// Update campaign using the orchestrator service
+	campaign, err := h.orchestratorService.UpdateCampaign(c.Request.Context(), campaignID, req)
+	if err != nil {
+		log.Printf("Error updating campaign %s: %v", campaignIDStr, err)
+		
+		// Differentiate error types based on error message
+		if err.Error() == "record not found" {
+			respondWithDetailedErrorGin(c, http.StatusNotFound, ErrorCodeNotFound,
+				"Campaign not found", nil)
+		} else if err.Error() == "campaign cannot be updated" || err.Error() == "invalid campaign state" {
+			respondWithDetailedErrorGin(c, http.StatusConflict, ErrorCodeInvalidState,
+				"Campaign is in an invalid state for update", []ErrorDetail{
+					{
+						Code:    ErrorCodeInvalidState,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+						},
+					},
+				})
+		} else {
+			respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
+				"Failed to update campaign", []ErrorDetail{
+					{
+						Code:    ErrorCodeInternalServer,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+						},
+					},
+				})
+		}
+		return
+	}
+
+	respondWithJSONGin(c, http.StatusOK, campaign)
 }
 
 // --- Campaign Information Handlers ---

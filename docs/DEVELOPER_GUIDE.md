@@ -1,549 +1,770 @@
-# DomainFlow Developer Guide
+# DomainFlow V3.0 Developer Guide
 
-## Table of Contents
+## Overview
 
-1. [Development Environment Setup](#development-environment-setup)
-2. [Architecture Overview](#architecture-overview)
-3. [Phase 2 Implementation Guide](#phase-2-implementation-guide)
-4. [Authentication System Development](#authentication-system-development)
-5. [Backend Development](#backend-development)
-6. [Frontend Development](#frontend-development)
-7. [Database Development](#database-development)
-8. [API Development](#api-development)
-9. [Testing Guidelines](#testing-guidelines)
-10. [Security Development](#security-development)
-11. [Deployment & DevOps](#deployment--devops)
-12. [Contributing Guidelines](#contributing-guidelines)
-13. [Troubleshooting Development Issues](#troubleshooting-development-issues)
+DomainFlow V3.0 is a production-ready domain intelligence platform built with a modern tech stack. This guide provides comprehensive information for developers working on the platform.
 
-## Development Environment Setup
+## Technology Stack
 
-### Prerequisites
+### Frontend
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript (strict mode)
+- **UI Library**: Custom components with shadcn/ui
+- **State Management**: React Context + Zustand for complex state
+- **Styling**: Tailwind CSS with custom design system
+- **API Client**: Type-safe OpenAPI-generated client
+- **Real-time**: WebSocket integration for live updates
 
-#### Required Software
-- **Node.js**: 18.x LTS or higher
-- **Go**: 1.21 or higher
-- **PostgreSQL**: 14 or higher
-- **Docker**: 20.10+ (optional but recommended)
-- **Git**: 2.20+
-
-#### Development Tools
-- **IDE**: VS Code (recommended) with extensions:
-  - Go extension
-  - TypeScript and JavaScript
-  - PostgreSQL extension
-  - Docker extension
-  - GitLens
-- **Database Client**: pgAdmin, DBeaver, or similar
-- **API Testing**: Postman, Insomnia, or curl
-- **Version Control**: Git with GitHub/GitLab
-
-### Local Development Setup
-
-#### 1. Clone Repository
-```bash
-git clone https://github.com/yourusername/domainflow.git
-cd domainflow
-```
-
-#### 2. Environment Configuration
-```bash
-# Copy environment template
-cp .env.example .env.development
-
-# Edit development configuration
-nano .env.development
-```
-
-**Development Environment Variables:**
-```bash
-# Environment
-ENV=development
-NODE_ENV=development
-
-# Database
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=domainflow_dev
-DB_USER=domainflow_dev
-DB_PASSWORD=dev_password
-
-# API Configuration
-API_KEY=dev_api_key_12345
-SERVER_PORT=8080
-LOG_LEVEL=DEBUG
-
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:8080
-NEXT_PUBLIC_WS_URL=ws://localhost:8080
-NEXT_PUBLIC_ENABLE_DEBUG=true
-
-# Security (relaxed for development)
-CORS_ORIGINS=http://localhost:3000,http://localhost:8080
-ENABLE_SECURE_HEADERS=false
-```
-
-#### 3. Database Setup
-```bash
-# Start PostgreSQL (if not running)
-sudo systemctl start postgresql
-
-# Create development database
-sudo -u postgres createdb domainflow_dev
-sudo -u postgres createuser domainflow_dev
-
-# Set password and permissions
-sudo -u postgres psql -c "ALTER USER domainflow_dev PASSWORD 'dev_password';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE domainflow_dev TO domainflow_dev;"
-
-# Run migrations
-cd backend
-go run cmd/migrate/main.go up
-```
-
-#### 4. Backend Setup
-```bash
-cd backend
-
-# Install dependencies
-go mod download
-
-# Build the application
-go build -o bin/domainflow-apiserver cmd/apiserver/main.go
-
-# Run development server
-go run cmd/apiserver/main.go
-```
-
-#### 5. Frontend Setup
-```bash
-cd frontend  # or root directory if frontend is in root
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-#### 6. Verify Installation
-```bash
-# Check backend health
-curl http://localhost:8080/ping
-
-# Check frontend
-open http://localhost:3000
-
-# Check database connection
-psql -h localhost -U domainflow_dev -d domainflow_dev -c "SELECT version();"
-```
-
-### Docker Development Environment
-
-#### Using Docker Compose
-```bash
-# Start development environment
-docker-compose -f docker-compose.dev.yml up -d
-
-# View logs
-docker-compose -f docker-compose.dev.yml logs -f
-
-# Stop environment
-docker-compose -f docker-compose.dev.yml down
-```
-
-#### Development Docker Configuration
-```yaml
-# docker-compose.dev.yml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:14
-    environment:
-      POSTGRES_DB: domainflow_dev
-      POSTGRES_USER: domainflow_dev
-      POSTGRES_PASSWORD: dev_password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    ports:
-      - "8080:8080"
-    environment:
-      - ENV=development
-      - DB_HOST=postgres
-    volumes:
-      - ./backend:/app
-    depends_on:
-      - postgres
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:8080
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      - backend
-
-volumes:
-  postgres_dev_data:
-```
-
-## Architecture Overview
-
-### System Architecture
-
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[Next.js App] --> B[React Components]
-        B --> C[Auth Context]
-        B --> D[API Client]
-        B --> E[State Management]
-    end
-    
-    subgraph "Backend Layer"
-        F[Gin Router] --> G[Middleware Stack]
-        G --> H[Auth Middleware]
-        G --> I[CORS Middleware]
-        G --> J[Logging Middleware]
-        H --> K[Route Handlers]
-        K --> L[Service Layer]
-        L --> M[Repository Layer]
-    end
-    
-    subgraph "Data Layer"
-        N[(PostgreSQL)]
-        O[Redis Cache]
-        P[File Storage]
-    end
-    
-    A --> F
-    M --> N
-    L --> O
-    L --> P
-```
-
-### Technology Stack
-
-#### Backend Technologies
+### Backend
 - **Language**: Go 1.21+
-- **Web Framework**: Gin
-- **Database**: PostgreSQL 14+
-- **ORM**: GORM v2
-- **Authentication**: Custom JWT + Sessions
-- **Caching**: Redis (optional)
-- **Logging**: Zap
-- **Testing**: Testify, Ginkgo
+- **Framework**: Gin web framework
+- **Database**: PostgreSQL with pgx driver
+- **Authentication**: Session-based with secure cookies
+- **API**: OpenAPI 3.0 specification
+- **Background Jobs**: Worker pool architecture
+- **Real-time**: WebSocket broadcasting
 
-#### Frontend Technologies
-- **Framework**: Next.js 15+
-- **Language**: TypeScript
-- **UI Library**: React 18+
-- **Styling**: Tailwind CSS
-- **Components**: Radix UI
-- **State Management**: React Context + Hooks
-- **Forms**: React Hook Form + Zod
-- **Testing**: Jest, React Testing Library
-
-#### Development Tools
-- **Build Tools**: Go modules, npm/yarn
-- **Linting**: golangci-lint, ESLint
-- **Formatting**: gofmt, Prettier
-- **Type Checking**: TypeScript
-- **API Documentation**: Swagger/OpenAPI
-- **Database Migrations**: golang-migrate
-
-### Project Structure
+## Project Structure
 
 ```
 domainflow/
-├── backend/                    # Go backend application
-│   ├── cmd/                   # Application entry points
-│   │   ├── apiserver/         # Main API server
-│   │   ├── migrate/           # Database migration tool
-│   │   └── worker/            # Background worker
-│   ├── internal/              # Private application code
-│   │   ├── auth/              # Authentication system
-│   │   ├── handlers/          # HTTP handlers
-│   │   ├── middleware/        # HTTP middleware
-│   │   ├── models/            # Data models
-│   │   ├── repositories/      # Data access layer
-│   │   ├── services/          # Business logic
-│   │   └── utils/             # Utility functions
-│   ├── database/              # Database files
-│   │   ├── migrations/        # SQL migration files
-│   │   └── schema.sql         # Database schema
-│   ├── docs/                  # Backend documentation
-│   ├── scripts/               # Build and deployment scripts
-│   └── tests/                 # Test files
-├── frontend/                  # Next.js frontend (or in root)
+├── frontend/
 │   ├── src/
-│   │   ├── app/               # Next.js app directory
-│   │   ├── components/        # React components
-│   │   ├── contexts/          # React contexts
-│   │   ├── hooks/             # Custom hooks
-│   │   ├── lib/               # Utility libraries
-│   │   └── types/             # TypeScript types
-│   ├── public/                # Static assets
-│   └── tests/                 # Frontend tests
-├── docs/                      # Project documentation
-├── scripts/                   # Project scripts
-├── docker/                    # Docker configurations
-└── .github/                   # GitHub workflows
+│   │   ├── app/                 # Next.js App Router pages
+│   │   ├── components/          # React components
+│   │   │   ├── campaigns/       # Campaign-related components
+│   │   │   ├── ui/             # Reusable UI components
+│   │   │   └── ...
+│   │   ├── lib/                # Utilities and services
+│   │   │   ├── api-client/     # Generated API client
+│   │   │   ├── hooks/          # Custom React hooks
+│   │   │   └── types/          # TypeScript definitions
+│   │   └── contexts/           # React context providers
+│   ├── public/                 # Static assets
+│   └── package.json
+├── backend/
+│   ├── cmd/                    # Application entry points
+│   │   └── apiserver/          # Main API server
+│   ├── internal/               # Internal packages
+│   │   ├── api/               # HTTP handlers
+│   │   ├── services/          # Business logic
+│   │   ├── store/             # Data access layer
+│   │   ├── models/            # Data models
+│   │   └── middleware/        # HTTP middleware
+│   ├── api/                   # OpenAPI specifications
+│   ├── database/              # Database migrations
+│   └── go.mod
+└── docs/                      # Documentation
 ```
 
-## Phase 2 Implementation Guide
+## Development Setup
 
-### **Phase 2 Status Overview**
-DomainFlow has successfully completed **Phase 2a Foundation**, **Phase 2b Security**, and **Phase 2c Performance** implementations. This section provides developers with comprehensive guidance on working with these enhanced capabilities.
+### Prerequisites
 
-#### **Implementation Documentation**
-- 📄 [Phase 2a & 2b Verification Report](./PHASE_2A_2B_VERIFICATION_REPORT.md) - Complete verification of foundation and security implementations
-- 📄 [Phase 2c Implementation Summary](./PHASE_2C_IMPLEMENTATION_SUMMARY.md) - Performance optimization implementation details
-- 📄 [Phase 2 Integration Summary](./PHASE_2_INTEGRATION_SUMMARY.md) - Cross-phase integration verification
-- 📄 [Tactical Plans Directory](./tactical_plans/README.md) - Individual implementation specifications
+- **Node.js**: 18.0+ (LTS recommended)
+- **Go**: 1.21+
+- **PostgreSQL**: 15+
+- **Git**: Latest version
 
-### **Phase 2a Foundation - Developer Guide**
+### Environment Setup
 
-#### **Transaction Management (SI-001)**
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd domainflow
+   ```
+
+2. **Set up environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Start PostgreSQL:**
+   ```bash
+   # Using Docker
+   docker run --name domainflow-postgres \
+     -e POSTGRES_DB=domainflow \
+     -e POSTGRES_USER=domainflow \
+     -e POSTGRES_PASSWORD=your_password \
+     -p 5432:5432 -d postgres:15-alpine
+   ```
+
+### Backend Development
+
+1. **Install dependencies:**
+   ```bash
+   cd backend
+   go mod download
+   ```
+
+2. **Run database migrations:**
+   ```bash
+   go run cmd/migrate/main.go
+   ```
+
+3. **Start the backend server:**
+   ```bash
+   go run cmd/apiserver/main.go
+   ```
+
+   The backend will be available at `http://localhost:8080`
+
+### Frontend Development
+
+1. **Install dependencies:**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. **Generate API client:**
+   ```bash
+   npm run generate-api-client
+   ```
+
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+   The frontend will be available at `http://localhost:3000`
+
+## Development Workflow
+
+### Code Organization
+
+#### Frontend Components
+
+**Component Structure:**
+```typescript
+// src/components/campaigns/CampaignCard.tsx
+interface CampaignCardProps {
+  campaign: Campaign;
+  onAction: (action: string) => void;
+}
+
+export const CampaignCard: React.FC<CampaignCardProps> = ({
+  campaign,
+  onAction
+}) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{campaign.name}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Component content */}
+      </CardContent>
+    </Card>
+  );
+};
+```
+
+**Custom Hooks:**
+```typescript
+// src/lib/hooks/useCampaignData.ts
+export const useCampaignData = (campaignId: string) => {
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Fetch campaign data
+  }, [campaignId]);
+  
+  return { campaign, loading };
+};
+```
+
+#### Backend Services
+
+**Service Pattern:**
 ```go
-// Use the enhanced TransactionManager for all campaign operations
-func (s *CampaignService) UpdateCampaign(ctx context.Context, campaignID string, updates CampaignUpdates) error {
-    return s.txManager.SafeCampaignTransaction(ctx, &CampaignTransactionOptions{
-        Operation:  "update_campaign",
-        CampaignID: campaignID,
-        MaxRetries: 3,
-        Timeout:    30 * time.Second,
-    }, func(tx *sqlx.Tx) error {
-        // Your business logic here
-        return s.store.UpdateCampaign(ctx, tx, campaignID, updates)
-    })
+// internal/services/campaign_service.go
+type CampaignService interface {
+    CreateCampaign(ctx context.Context, req CreateCampaignRequest) (*Campaign, error)
+    GetCampaign(ctx context.Context, id uuid.UUID) (*Campaign, error)
+    StartCampaign(ctx context.Context, id uuid.UUID) error
+}
+
+type campaignService struct {
+    store CampaignStore
+    logger *slog.Logger
+}
+
+func (s *campaignService) CreateCampaign(ctx context.Context, req CreateCampaignRequest) (*Campaign, error) {
+    // Implementation
 }
 ```
 
-**Best Practices**:
-- Always use `SafeCampaignTransaction` for campaign operations
-- Set appropriate timeouts for long-running operations
-- Use retry logic for transient failures
-- Log transaction metrics for performance analysis
-
-#### **State Management (SI-002)**
+**API Handlers:**
 ```go
-// Campaign status management with validation
-type CampaignStatus string
-
-const (
-    CampaignStatusDraft     CampaignStatus = "draft"
-    CampaignStatusReady     CampaignStatus = "ready"
-    CampaignStatusRunning   CampaignStatus = "running"
-    CampaignStatusPaused    CampaignStatus = "paused"
-    CampaignStatusCompleted CampaignStatus = "completed"
-    CampaignStatusCancelled CampaignStatus = "cancelled"
-    CampaignStatusFailed    CampaignStatus = "failed"
-)
-
-// State transition validation
-func (s *CampaignService) ValidateStateTransition(from, to CampaignStatus) error {
-    // Implement state transition rules
-}
-```
-
-**Development Guidelines**:
-- Use enum types for all status fields
-- Implement state transition validation
-- Include business status separate from operational status
-- Audit all state changes
-
-#### **Concurrency Control (BF-002)**
-```go
-// Safe concurrent processing with proper locking
-func (s *CampaignWorkerService) ProcessConcurrentJobs(ctx context.Context, jobIDs []string) error {
-    var wg sync.WaitGroup
-    errChan := make(chan error, len(jobIDs))
-    
-    for _, jobID := range jobIDs {
-        wg.Add(1)
-        go func(id string) {
-            defer wg.Done()
-            if err := s.ProcessSingleJob(ctx, id); err != nil {
-                errChan <- err
-            }
-        }(jobID)
-    }
-    
-    wg.Wait()
-    // Handle errors...
-}
-```
-
-### **Phase 2b Security - Developer Guide**
-
-#### **Authorization Context (BL-006)**
-```go
-// Include authorization context in all operations
-func (s *AuthService) LogAuthorizationDecision(ctx context.Context, decision AuthorizationDecision) error {
-    return s.auditService.LogWithContext(ctx, AuditLog{
-        Action:               decision.Action,
-        EntityType:          decision.ResourceType,
-        EntityID:            decision.ResourceID,
-        AuthorizationContext: decision.Context,
-        UserID:              decision.UserID,
-        Decision:            decision.Result,
-    })
-}
-```
-
-**Security Development Practices**:
-- Always log authorization decisions with full context
-- Include request metadata in authorization context
-- Track policy evaluation for security investigations
-- Correlate authorization events with performance metrics
-
-#### **API Authorization (BL-005)**
-```go
-// Endpoint-level authorization middleware
-func (m *AuthMiddleware) CheckEndpointAuthorization() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        userID := extractUserID(c)
-        endpoint := c.FullPath()
-        method := c.Request.Method
-        
-        result, err := m.authService.CheckEndpointAccess(c.Request.Context(), EndpointAuthRequest{
-            UserID:          userID,
-            EndpointPattern: endpoint,
-            HTTPMethod:      method,
-            ResourceID:      c.Param("id"),
-        })
-        
-        if err != nil || result.Decision != "allow" {
-            c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
-            c.Abort()
-            return
-        }
-        
-        c.Next()
-    }
-}
-```
-
-#### **Input Validation (BL-007)**
-```go
-// Comprehensive input validation
-type CampaignCreateRequest struct {
-    Name        string    `json:"name" validate:"required,min=3,max=100"`
-    Description string    `json:"description" validate:"max=500"`
-    DomainCount int       `json:"domain_count" validate:"required,min=1,max=10000"`
-    Status      string    `json:"status" validate:"required,oneof=draft ready"`
-}
-
+// internal/api/campaign_handlers.go
 func (h *CampaignHandler) CreateCampaign(c *gin.Context) {
-    var req CampaignCreateRequest
+    var req CreateCampaignRequest
     if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
     
-    if err := h.validator.Struct(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "validation failed", "details": err.Error()})
+    campaign, err := h.service.CreateCampaign(c.Request.Context(), req)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
     
-    // Process validated request...
+    c.JSON(http.StatusCreated, campaign)
 }
 ```
 
+### API Development
 
-#### **Response Time Optimization (PF-002)**
-```go
-// Response time middleware for all endpoints
-func (m *ResponseTimeMiddleware) TrackResponseTime() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        start := time.Now()
-        
-        c.Next()
-        
-        duration := time.Since(start)
-        m.recordResponseTime(ResponseTimeMetric{
-            Endpoint:     c.FullPath(),
-            Method:       c.Request.Method,
-            Duration:     duration,
-            StatusCode:   c.Writer.Status(),
-            PayloadSize:  c.Writer.Size(),
-        })
-        
-        // Alert on slow responses
-        if duration > m.slowThreshold {
-            m.alerting.SendSlowResponseAlert(c.FullPath(), duration)
-        }
-    }
+#### OpenAPI Specification
+
+All APIs are defined using OpenAPI 3.0 specifications:
+
+```yaml
+# api/campaigns/spec.go
+paths:
+  /campaigns:
+    post:
+      summary: Create a new campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCampaignRequest'
+      responses:
+        '201':
+          description: Campaign created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign'
+```
+
+#### Type Safety
+
+**Generated Types:**
+```typescript
+// Generated from OpenAPI spec
+export interface Campaign {
+  id: string;
+  name: string;
+  status: CampaignStatus;
+  campaignType: CampaignType;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCampaignRequest {
+  name: string;
+  campaignType: CampaignType;
+  // Additional fields based on campaign type
 }
 ```
 
-#### **Caching Implementation (PF-004)**
+### Database Development
+
+#### Migrations
+
+**Migration Structure:**
+```sql
+-- database/migrations/001_create_campaigns.up.sql
+CREATE TABLE campaigns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'draft',
+    campaign_type VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_campaigns_status ON campaigns(status);
+CREATE INDEX idx_campaigns_type ON campaigns(campaign_type);
+```
+
+#### Data Access
+
+**Store Pattern:**
 ```go
-// Intelligent caching with invalidation
-func (s *CampaignService) GetCampaignWithCache(ctx context.Context, campaignID string) (*Campaign, error) {
-    cacheKey := fmt.Sprintf("campaign:%s", campaignID)
+// internal/store/campaign_store.go
+type CampaignStore interface {
+    Create(ctx context.Context, campaign *Campaign) error
+    GetByID(ctx context.Context, id uuid.UUID) (*Campaign, error)
+    Update(ctx context.Context, campaign *Campaign) error
+    List(ctx context.Context, filter ListFilter) ([]*Campaign, error)
+}
+
+type postgresqlCampaignStore struct {
+    db *sqlx.DB
+}
+
+func (s *postgresqlCampaignStore) Create(ctx context.Context, campaign *Campaign) error {
+    query := `
+        INSERT INTO campaigns (name, status, campaign_type)
+        VALUES ($1, $2, $3)
+        RETURNING id, created_at, updated_at`
     
-    // Try cache first
-    if cached, found := s.cache.Get(cacheKey); found {
-        s.metrics.IncrementCacheHit("campaign")
-        return cached.(*Campaign), nil
+    return s.db.QueryRowxContext(ctx, query,
+        campaign.Name,
+        campaign.Status,
+        campaign.CampaignType,
+    ).StructScan(campaign)
+}
+```
+
+## Testing
+
+### Frontend Testing
+
+**Component Tests:**
+```typescript
+// src/components/__tests__/CampaignCard.test.tsx
+import { render, screen } from '@testing-library/react';
+import { CampaignCard } from '../CampaignCard';
+
+describe('CampaignCard', () => {
+  it('renders campaign information', () => {
+    const campaign = {
+      id: '1',
+      name: 'Test Campaign',
+      status: 'running'
+    };
+    
+    render(<CampaignCard campaign={campaign} onAction={jest.fn()} />);
+    
+    expect(screen.getByText('Test Campaign')).toBeInTheDocument();
+    expect(screen.getByText('running')).toBeInTheDocument();
+  });
+});
+```
+
+**Hook Tests:**
+```typescript
+// src/lib/hooks/__tests__/useCampaignData.test.ts
+import { renderHook } from '@testing-library/react';
+import { useCampaignData } from '../useCampaignData';
+
+describe('useCampaignData', () => {
+  it('fetches campaign data', async () => {
+    const { result, waitForNextUpdate } = renderHook(() =>
+      useCampaignData('campaign-id')
+    );
+    
+    expect(result.current.loading).toBe(true);
+    
+    await waitForNextUpdate();
+    
+    expect(result.current.loading).toBe(false);
+    expect(result.current.campaign).toBeDefined();
+  });
+});
+```
+
+### Backend Testing
+
+**Service Tests:**
+```go
+// internal/services/campaign_service_test.go
+func TestCampaignService_CreateCampaign(t *testing.T) {
+    store := &mockCampaignStore{}
+    service := NewCampaignService(store, slog.Default())
+    
+    req := CreateCampaignRequest{
+        Name: "Test Campaign",
+        CampaignType: "domain_generation",
     }
     
-    // Cache miss - fetch from database
-    campaign, err := s.store.GetCampaign(ctx, campaignID)
+    campaign, err := service.CreateCampaign(context.Background(), req)
+    
+    assert.NoError(t, err)
+    assert.Equal(t, "Test Campaign", campaign.Name)
+    assert.Equal(t, "draft", campaign.Status)
+}
+```
+
+**Integration Tests:**
+```go
+// internal/api/campaign_handlers_test.go
+func TestCampaignHandlers_CreateCampaign(t *testing.T) {
+    router := setupTestRouter()
+    
+    body := `{"name": "Test Campaign", "campaignType": "domain_generation"}`
+    req, _ := http.NewRequest("POST", "/api/v2/campaigns", strings.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    
+    w := httptest.NewRecorder()
+    router.ServeHTTP(w, req)
+    
+    assert.Equal(t, http.StatusCreated, w.Code)
+    
+    var campaign Campaign
+    err := json.Unmarshal(w.Body.Bytes(), &campaign)
+    assert.NoError(t, err)
+    assert.Equal(t, "Test Campaign", campaign.Name)
+}
+```
+
+## Debugging
+
+### Frontend Debugging
+
+**Browser DevTools:**
+- Use React Developer Tools for component inspection
+- Check Network tab for API requests
+- Use Console for logging and debugging
+
+**Environment Variables:**
+```bash
+# .env.local
+NEXT_PUBLIC_DEBUG=true
+NEXT_PUBLIC_API_DEBUG=true
+```
+
+**Logging:**
+```typescript
+// src/lib/utils/logger.ts
+export const logger = {
+  debug: (message: string, data?: any) => {
+    if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
+      console.log(`[DEBUG] ${message}`, data);
+    }
+  },
+  error: (message: string, error?: Error) => {
+    console.error(`[ERROR] ${message}`, error);
+  }
+};
+```
+
+### Backend Debugging
+
+**Structured Logging:**
+```go
+// internal/logging/logger.go
+func NewLogger() *slog.Logger {
+    return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+        Level: slog.LevelDebug,
+    }))
+}
+
+// Usage in services
+logger.Info("Creating campaign",
+    slog.String("name", req.Name),
+    slog.String("type", req.CampaignType),
+)
+```
+
+**Debugging Tools:**
+- Use Delve debugger for Go: `dlv debug cmd/apiserver/main.go`
+- Database query logging with pgx
+- HTTP request/response logging middleware
+
+## Performance
+
+### Frontend Optimization
+
+**Code Splitting:**
+```typescript
+// Dynamic imports for large components
+const CampaignDetails = dynamic(() => import('./CampaignDetails'), {
+  loading: () => <LoadingSpinner />
+});
+```
+
+**Memoization:**
+```typescript
+// Expensive computations
+const processedData = useMemo(() => {
+  return expensiveDataProcessing(rawData);
+}, [rawData]);
+
+// Component memoization
+export const CampaignCard = React.memo<CampaignCardProps>(({ campaign }) => {
+  // Component implementation
+});
+```
+
+### Backend Optimization
+
+**Database Optimization:**
+```go
+// Connection pooling
+config := pgxpool.Config{
+    MaxConns: 30,
+    MinConns: 5,
+    MaxConnLifetime: time.Hour,
+    MaxConnIdleTime: time.Minute * 30,
+}
+
+// Query optimization
+query := `
+    SELECT c.*, COUNT(d.id) as domain_count
+    FROM campaigns c
+    LEFT JOIN domains d ON c.id = d.campaign_id
+    WHERE c.status = $1
+    GROUP BY c.id
+    ORDER BY c.created_at DESC
+    LIMIT $2 OFFSET $3`
+```
+
+**Caching Strategy:**
+```go
+// Redis caching for frequently accessed data
+func (s *campaignService) GetCampaign(ctx context.Context, id uuid.UUID) (*Campaign, error) {
+    // Check cache first
+    cached, err := s.cache.Get(ctx, "campaign:"+id.String())
+    if err == nil {
+        var campaign Campaign
+        json.Unmarshal(cached, &campaign)
+        return &campaign, nil
+    }
+    
+    // Fetch from database
+    campaign, err := s.store.GetByID(ctx, id)
     if err != nil {
         return nil, err
     }
     
-    // Cache with TTL
-    s.cache.Set(cacheKey, campaign, 10*time.Minute)
-    s.metrics.IncrementCacheMiss("campaign")
+    // Cache the result
+    data, _ := json.Marshal(campaign)
+    s.cache.Set(ctx, "campaign:"+id.String(), data, time.Hour)
     
     return campaign, nil
 }
 ```
 
-### **Development Workflow with Phase 2**
+## Security
 
-#### **Required Testing Pattern**
+### Authentication
+
+**Session Management:**
 ```go
-func TestCampaignOperationWithAllPhases(t *testing.T) {
-    // Phase 2a: Transaction setup
-    txManager := NewTransactionManager(testDB)
-    
-    // Phase 2b: Authorization context
-    authService := NewAuthService(testDB)
-    userID := createTestUser(t)
-    
-    // Phase 2c: Performance metrics
-    perfMonitor := NewQueryPerformanceMonitor(testDB, nil)
-    
-    // Test the integrated operation
-    service := &CampaignService{
-        txManager:          txManager,
-        authService:        authService,
-        performanceMonitor: perfMonitor,
+// Secure session configuration
+sessions.Config{
+    CookieName:     "domainflow_session",
+    CookieHTTPOnly: true,
+    CookieSecure:   true,
+    CookieSameSite: http.SameSiteStrictMode,
+    CookieMaxAge:   24 * time.Hour,
+}
+```
+
+### Input Validation
+
+**Request Validation:**
+```go
+// Struct tags for validation
+type CreateCampaignRequest struct {
+    Name         string `json:"name" validate:"required,min=1,max=255"`
+    CampaignType string `json:"campaignType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation"`
+}
+
+// Middleware validation
+func validateRequest(v *validator.Validate) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        // Validation logic
     }
-    
-    // Execute operation and verify all phases work together
-    err := service.CreateCampaign(ctx, CreateCampaignRequest{
-        Name:        "Test Campaign",
-        Description: "Integration test",
-        UserID:      userID,
-    })
-    
+}
+```
+
+### Data Protection
+
+**Sensitive Data Handling:**
+```go
+// Environment variable protection
+func getRequiredEnv(key string) string {
+    value := os.Getenv(key)
+    if value == "" {
+        log.Fatalf("Required environment variable %s is not set", key)
+    }
+    return value
+}
+
+// Password hashing
+func hashPassword(password string) (string, error) {
+    bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+    return string(bytes), err
+}
+```
+
+## Deployment
+
+### Build Process
+
+**Frontend Build:**
+```bash
+# Production build
+npm run build
+
+# Build with type checking
+npm run build:check
+
+# Analyze bundle size
+npm run analyze
+```
+
+**Backend Build:**
+```bash
+# Production binary
+go build -ldflags="-w -s" -o bin/apiserver cmd/apiserver/main.go
+
+# Cross-platform builds
+GOOS=linux GOARCH=amd64 go build -o bin/apiserver-linux cmd/apiserver/main.go
+```
+
+### Docker Configuration
+
+**Multi-stage Dockerfile:**
+```dockerfile
+# Build stage
+FROM node:18-alpine AS frontend-builder
+WORKDIR /app
+COPY frontend/package*.json ./
+RUN npm ci --only=production
+COPY frontend/ ./
+RUN npm run build
+
+FROM golang:1.21-alpine AS backend-builder
+WORKDIR /app
+COPY backend/go.* ./
+RUN go mod download
+COPY backend/ ./
+RUN go build -o apiserver cmd/apiserver/main.go
+
+# Production stage
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /app
+COPY --from=backend-builder /app/apiserver .
+COPY --from=frontend-builder /app/dist ./static/
+CMD ["./apiserver"]
+```
+
+### Environment Configuration
+
+**Production Environment:**
+```bash
+# .env.production
+NODE_ENV=production
+NEXT_PUBLIC_API_URL=https://api.domainflow.com
+DATABASE_URL=postgresql://user:pass@db:5432/domainflow
+SESSION_SECRET=your-secret-key
+GIN_MODE=release
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Database Connection:**
+```bash
+# Check PostgreSQL connection
+psql -h localhost -U domainflow -d domainflow -c "SELECT version();"
+
+# View active connections
+SELECT * FROM pg_stat_activity WHERE datname = 'domainflow';
+```
+
+**API Issues:**
+```bash
+# Health check
+curl http://localhost:8080/health
+
+# Check logs
+docker logs domainflow-backend
+
+# Debug mode
+GIN_MODE=debug go run cmd/apiserver/main.go
+```
+
+**Frontend Issues:**
+```bash
+# Clear Next.js cache
+rm -rf .next
+
+# Check build errors
+npm run build -- --debug
+
+# Analyze bundle
+npm run analyze
+```
+
+### Performance Monitoring
+
+**Metrics Collection:**
+```go
+// Prometheus metrics
+var (
+    httpDuration = prometheus.NewHistogramVec(
+        prometheus.HistogramOpts{
+            Name: "http_request_duration_seconds",
+            Help: "Duration of HTTP requests.",
+        },
+        []string{"method", "route", "status_code"},
+    )
+)
+
+// Middleware for metrics
+func metricsMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        start := time.Now()
+        c.Next()
+        duration := time.Since(start)
+        
+        httpDuration.WithLabelValues(
+            c.Request.Method,
+            c.FullPath(),
+            fmt.Sprintf("%d", c.Writer.Status()),
+        ).Observe(duration.Seconds())
+    }
+}
+```
+
+## Contributing
+
+### Code Standards
+
+**TypeScript Standards:**
+- Use strict TypeScript configuration
+- Prefer interfaces over types for object shapes
+- Use proper error handling with try/catch
+- Follow naming conventions (camelCase for variables, PascalCase for components)
+
+**Go Standards:**
+- Follow effective Go guidelines
+- Use gofmt and golint
+- Handle errors explicitly
+- Use context.Context for cancellation
+- Write comprehensive tests
+
+### Pull Request Process
+
+1. Create feature branch from main
+2. Implement changes with tests
+3. Update documentation if needed
+4. Run linting and tests
+5. Create pull request with description
+6. Address review feedback
+7. Merge after approval
+
+### Git Workflow
+
+```bash
+# Create feature branch
+git checkout -b feature/campaign-improvements
+
+# Make changes and commit
+git add .
+git commit -m "feat: improve campaign performance"
+
+# Push and create PR
+git push origin feature/campaign-improvements
+```
+
+---
+
+This developer guide provides the foundation for contributing to DomainFlow V3.0. For specific implementation details, refer to the codebase and inline documentation.
+
+**DomainFlow V3.0 Stable** - Advanced Domain Intelligence Platform

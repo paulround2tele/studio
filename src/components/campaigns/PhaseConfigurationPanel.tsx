@@ -20,6 +20,7 @@ import { Loader2, CheckCircle, Globe, Wifi, ShieldCheck, Settings, X } from 'luc
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from '@/lib/api-client/client';
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
+import { useAuth } from '@/contexts/AuthContext';
 import type { components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -74,6 +75,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
   onPhaseStarted
 }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load personas and proxies data
@@ -113,39 +115,74 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
     try {
       setIsSubmitting(true);
 
-      // Build campaign payload based on phase type
-      let payload: CreateCampaignRequest;
+      // ✅ FIX: Validate authentication
+      if (!user?.id) {
+        toast({
+          title: "Authentication Required",
+          description: "You must be logged in to start DNS validation. Please log in and try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // ✅ FIX: Validate source campaign
+      if (!sourceCampaign?.id) {
+        toast({
+          title: "Invalid Source Campaign",
+          description: "Source campaign is invalid. Please refresh the page and try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Build update payload based on phase type - using UpdateCampaignRequest structure
+      let updatePayload: {
+        personaIds?: string[];
+        adHocKeywords?: string[];
+        proxyPoolId?: string;
+        rotationIntervalSeconds?: number;
+        processingSpeedPerMinute?: number;
+        batchSize?: number;
+        retryAttempts?: number;
+        targetHttpPorts?: number[];
+      };
 
       if (phaseType === 'dns_validation') {
         // Validate required DNS fields
         if (!data.assignedDnsPersonaId || data.assignedDnsPersonaId === CampaignFormConstants.NONE_VALUE_PLACEHOLDER) {
           toast({
             title: "Validation Error",
-            description: "DNS persona is required for DNS validation campaigns.",
+            description: "DNS persona is required for DNS validation.",
             variant: "destructive"
           });
           return;
         }
 
-        payload = {
-          campaignType: 'dns_validation',
-          name: data.name,
-          description: data.description,
-          dnsValidationParams: {
-            sourceCampaignId: sourceCampaign.id!,
-            personaIds: [data.assignedDnsPersonaId],
-            rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
-            processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
-            batchSize: Number(data.batchSize),
-            retryAttempts: Number(data.retryAttempts),
-          },
+        // ✅ FIX: Validate persona UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(data.assignedDnsPersonaId)) {
+          toast({
+            title: "Invalid Persona Selection",
+            description: "Selected persona is invalid. Please refresh the page and try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // ✅ ORCHESTRATION FIX: Update existing campaign instead of creating new one
+        updatePayload = {
+          personaIds: [data.assignedDnsPersonaId],
+          rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
+          processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
+          batchSize: Number(data.batchSize),
+          retryAttempts: Number(data.retryAttempts),
         };
       } else if (phaseType === 'http_keyword_validation') {
         // Validate required HTTP fields
         if (!data.assignedHttpPersonaId || data.assignedHttpPersonaId === CampaignFormConstants.NONE_VALUE_PLACEHOLDER) {
           toast({
             title: "Validation Error",
-            description: "HTTP persona is required for HTTP keyword validation campaigns.",
+            description: "HTTP persona is required for HTTP keyword validation.",
             variant: "destructive"
           });
           return;
@@ -154,7 +191,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         if (!data.targetKeywordsInput?.trim()) {
           toast({
             title: "Validation Error",
-            description: "At least one keyword is required for HTTP keyword validation campaigns.",
+            description: "At least one keyword is required for HTTP keyword validation.",
             variant: "destructive"
           });
           return;
@@ -166,91 +203,120 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
           .map((k: string) => k.trim())
           .filter((k: string) => k.length > 0);
 
-        payload = {
-          campaignType: 'http_keyword_validation',
-          name: data.name,
-          description: data.description,
-          httpKeywordParams: {
-            sourceCampaignId: sourceCampaign.id!,
-            adHocKeywords: adHocKeywords,
-            personaIds: [data.assignedHttpPersonaId],
-            proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER)
-              ? data.assignedProxyId
-              : undefined,
-            rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
-            processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
-            batchSize: Number(data.batchSize),
-            retryAttempts: Number(data.retryAttempts),
-            targetHttpPorts: data.targetHttpPorts,
-          },
+        // ✅ FIX: Validate HTTP persona UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(data.assignedHttpPersonaId)) {
+          toast({
+            title: "Invalid Persona Selection",
+            description: "Selected HTTP persona is invalid. Please refresh the page and try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // ✅ ORCHESTRATION FIX: Update existing campaign instead of creating new one
+        updatePayload = {
+          adHocKeywords: adHocKeywords,
+          personaIds: [data.assignedHttpPersonaId],
+          proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER)
+            ? data.assignedProxyId
+            : undefined,
+          rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
+          processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
+          batchSize: Number(data.batchSize),
+          retryAttempts: Number(data.retryAttempts),
+          targetHttpPorts: data.targetHttpPorts,
         };
       } else {
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 
-      // Create the campaign
-      const response = await apiClient.createCampaign(payload);
+      // ✅ FIX: Enhanced logging for debugging
+      console.log('[PhaseConfiguration] Updating campaign for DNS validation:', {
+        campaignId: sourceCampaign.id,
+        phaseType: phaseType,
+        updatePayload: updatePayload,
+        hasDnsPersona: phaseType === 'dns_validation' && (updatePayload.personaIds?.length || 0) > 0,
+        hasHttpPersona: phaseType === 'http_keyword_validation' && (updatePayload.personaIds?.length || 0) > 0,
+      });
 
-      // Extract campaign from response
-      let campaign;
-      if (Array.isArray(response)) {
-        campaign = response.find(item =>
-          item &&
-          typeof item === 'object' &&
-          'id' in item &&
-          item.id
-        ) || response[0];
-      } else if (response && typeof response === 'object' && 'id' in response) {
-        campaign = response;
-      } else if (response && typeof response === 'object') {
-        const possibleKeys = ['campaign', 'data', 'result', 'payload', 'campaign_data'];
-        let foundCampaign = null;
+      // ✅ ORCHESTRATION FIX: Update existing campaign instead of creating new one
+      // Using direct request method to bypass OpenAPI type issues until types are regenerated
+      const updatedCampaign = await (apiClient as any).request(
+        `/campaigns/${sourceCampaign.id}`,
+        'PUT',
+        { body: updatePayload }
+      );
+
+      if (updatedCampaign && (updatedCampaign.id || sourceCampaign.id)) {
+        const campaignId = updatedCampaign.id || sourceCampaign.id;
         
-        for (const key of possibleKeys) {
-          const responseAsRecord = response as Record<string, unknown>;
-          if (key in responseAsRecord && responseAsRecord[key] && typeof responseAsRecord[key] === 'object') {
-            const nestedObj = responseAsRecord[key] as Record<string, unknown>;
-            if ('id' in nestedObj && nestedObj.id) {
-              foundCampaign = nestedObj;
-              break;
-            }
-          }
-        }
-        campaign = foundCampaign;
-      }
-
-      if (campaign && campaign.id) {
         toast({
-          title: "Phase Started Successfully",
-          description: `${phaseDisplayNames[phaseType]} campaign "${campaign.name}" has been created and started.`,
+          title: "DNS Validation Started Successfully",
+          description: `${phaseDisplayNames[phaseType]} has been configured and started on the existing campaign.`,
           variant: "default"
         });
 
-        // Start the campaign automatically
+        // Start the campaign for the new phase
         try {
-          await apiClient.startCampaign(campaign.id);
+          await apiClient.startCampaign(campaignId);
         } catch (e) {
           console.warn('Campaign may have auto-started:', e);
         }
 
-        // Close panel and notify parent
+        // Close panel and notify parent with the same campaign ID (not creating new campaign)
         onClose();
-        onPhaseStarted(campaign.id);
+        onPhaseStarted(campaignId);
       } else {
-        throw new Error("Failed to extract campaign ID from response");
+        throw new Error("Failed to update campaign for DNS validation");
       }
     } catch (error: unknown) {
       console.error('[PhaseConfiguration] Campaign creation error:', error);
       
+      // ✅ FIX: Enhanced error handling with specific error messages
+      let errorTitle = "Error Starting Phase";
+      let errorDescription = "Failed to start the next phase. Please try again.";
+      
       if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+        
+        if (errorMessage.includes('400') || errorMessage.includes('validation')) {
+          errorTitle = "Validation Error";
+          if (errorMessage.includes('dnsvalidationparams required')) {
+            errorDescription = "DNS validation parameters are missing. Please check your configuration.";
+          } else if (errorMessage.includes('personaids')) {
+            errorDescription = "Invalid persona selection. Please select a valid DNS persona.";
+          } else if (errorMessage.includes('sourcecampaignid')) {
+            errorDescription = "Source campaign is invalid. Please select a valid completed domain generation campaign.";
+          } else if (errorMessage.includes('userid')) {
+            errorDescription = "User authentication failed. Please log in again.";
+          } else {
+            errorDescription = "Invalid configuration. Please check your settings and try again.";
+          }
+        } else if (errorMessage.includes('401') || errorMessage.includes('unauthorized') || errorMessage.includes('403')) {
+          errorTitle = "Authentication Error";
+          errorDescription = "You are not authorized to create campaigns. Please log in again.";
+        } else if (errorMessage.includes('404')) {
+          errorTitle = "Not Found";
+          errorDescription = "Source campaign not found. Please refresh and try again.";
+        } else if (errorMessage.includes('409')) {
+          errorTitle = "Conflict";
+          errorDescription = "Campaign cannot be started. Please check the campaign status.";
+        } else if (errorMessage.includes('500')) {
+          errorTitle = "Server Error";
+          errorDescription = "Server error. Please try again later.";
+        } else {
+          errorDescription = error.message || errorDescription;
+        }
+        
         toast({
-          title: "Error Starting Phase",
-          description: error.message || "Failed to start the next phase. Please try again.",
+          title: errorTitle,
+          description: errorDescription,
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Error Starting Phase",
+          title: errorTitle,
           description: "An unexpected error occurred. Please try again.",
           variant: "destructive"
         });
@@ -258,7 +324,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
     } finally {
       setIsSubmitting(false);
     }
-  }, [sourceCampaign.id, phaseType, toast, onClose, onPhaseStarted]);
+  }, [sourceCampaign.id, phaseType, toast, onClose, onPhaseStarted, user?.id]);
 
   // Reset form when panel opens/closes
   React.useEffect(() => {

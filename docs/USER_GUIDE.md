@@ -1,899 +1,489 @@
-# DomainFlow User Guide
+# DomainFlow V3.0 User Guide
 
-## Table of Contents
+## Overview
 
-1. [Getting Started](#getting-started)
-2. [Authentication & Account Management](#authentication--account-management)
-3. [Dashboard Overview](#dashboard-overview)
-4. [Campaign Management](#campaign-management)
-5. [Persona Management](#persona-management)
-6. [Proxy Management](#proxy-management)
-7. [Results & Analytics](#results--analytics)
-8. [User Management](#user-management)
-9. [Security Features](#security-features)
-10. [Troubleshooting](#troubleshooting)
-11. [Best Practices](#best-practices)
+Welcome to DomainFlow V3.0, the advanced domain intelligence platform designed for comprehensive domain analysis and validation. This guide will walk you through all features and capabilities of the platform.
+
+DomainFlow V3.0 provides a streamlined multi-phase campaign orchestration system that allows you to:
+- Generate intelligent domain variations
+- Validate domain availability through DNS analysis
+- Perform HTTP-based keyword scanning and analysis
+- Monitor campaign progress in real-time
+- Analyze results with detailed metrics and insights
 
 ## Getting Started
 
-### Welcome to DomainFlow
+### Initial Setup
 
-DomainFlow is a comprehensive domain analysis and campaign management platform that helps you discover, analyze, and monitor domain names at scale. This guide will walk you through all the features and help you get the most out of the platform.
+After installation, you'll need to configure the following components before running your first campaign:
+
+1. **Personas**: User agent profiles that define how requests appear to target servers
+2. **Proxies**: Network routing configurations for distributed analysis
+3. **Campaign Configuration**: Target domains and analysis parameters
 
 ### First Login
 
-1. **Access the Platform**
-   - Open your web browser
-   - Navigate to your DomainFlow instance URL
-   - You'll see the secure login page
+1. Navigate to the DomainFlow web interface (typically `http://localhost:3000`)
+2. Log in with your credentials
+3. You'll see the main dashboard with campaign overview
 
-2. **Initial Login**
-   - Use the credentials provided by your administrator
-   - If this is a new installation, use the default admin credentials:
-     - Email: `admin@domainflow.local`
-     - Password: `TempPassword123!`
-   - **Important**: Change your password immediately after first login
-
-3. **Account Setup**
-   - Complete your profile information
-   - Set up multi-factor authentication (recommended)
-   - Review your account settings
-
-### Interface Overview
-
-The DomainFlow interface consists of several key areas:
-
-- **Navigation Bar**: Access to main features (Campaigns, Personas, Proxies)
-- **Dashboard**: Overview of your activities and system status
-- **Sidebar**: Quick access to recent items and shortcuts
-- **Main Content Area**: Where you'll work with campaigns and data
-- **User Menu**: Account settings, logout, and help
-
-## Authentication & Account Management
-
-### Secure Login Process
-
-DomainFlow implements enterprise-grade security for user authentication:
-
-#### Login Features
-- **Secure Session Management**: Your session is protected with industry-standard security
-- **Brute Force Protection**: Account lockout after failed attempts
-- **CAPTCHA Integration**: Additional security after multiple failed attempts
-- **Remember Me**: Optional extended session duration
-
-#### Login Process
-1. Enter your email address
-2. Enter your password
-3. Complete CAPTCHA if prompted
-4. Click "Sign in Securely"
-
-#### Account Lockout
-If you enter incorrect credentials multiple times:
-- After 3 failed attempts: CAPTCHA required
-- After 5 failed attempts: Account locked for 15 minutes
-- Contact your administrator if you're locked out repeatedly
-
-### Password Management
-
-#### Password Requirements
-Your password must meet these security requirements:
-- Minimum 12 characters
-- At least one uppercase letter (A-Z)
-- At least one lowercase letter (a-z)
-- At least one number (0-9)
-- At least one special character (!@#$%^&*)
-- Cannot contain common words or personal information
-
-#### Changing Your Password
-1. Click your profile icon in the top right
-2. Select "Account Settings"
-3. Go to the "Security" tab
-4. Click "Change Password"
-5. Enter your current password
-6. Enter your new password twice
-7. Click "Update Password"
-
-### Multi-Factor Authentication (MFA)
-
-#### Setting Up MFA
-1. Go to Account Settings → Security
-2. Click "Enable Multi-Factor Authentication"
-3. Choose your preferred method:
-   - **Authenticator App** (recommended): Google Authenticator, Authy, etc.
-   - **SMS**: Text message to your phone
-   - **Email**: Email verification code
-
-#### Using MFA
-After entering your password, you'll be prompted for:
-- 6-digit code from your authenticator app
-- SMS code sent to your phone
-- Email verification code
-
-#### Backup Codes
-- Generate backup codes when setting up MFA
-- Store them securely (password manager recommended)
-- Use if you lose access to your primary MFA method
-
-### Account Settings
-
-#### Profile Information
-- **Name**: Your display name
-- **Email**: Login email (contact admin to change)
-- **Avatar**: Upload a profile picture
-- **Timezone**: Set your local timezone for accurate timestamps
-- **Language**: Choose your preferred interface language
-
-#### Security Settings
-- **Password**: Change your password
-- **MFA**: Enable/disable multi-factor authentication
-- **Sessions**: View and manage active sessions
-- **API Keys**: Generate keys for programmatic access
-
-#### Notification Preferences
-- **Email Notifications**: Campaign completion, security alerts
-- **In-App Notifications**: Real-time updates and messages
-- **Frequency**: Choose notification frequency (immediate, daily, weekly)
-
-## Dashboard Overview
+## User Interface Overview
 
 ### Main Dashboard
 
-The dashboard provides an at-a-glance view of your DomainFlow activities:
+The dashboard provides:
+- **Campaign Overview**: Active and completed campaigns
+- **System Status**: Health indicators for all services
+- **Quick Actions**: Buttons to create new campaigns or configure settings
+- **Recent Activity**: Latest campaign results and updates
 
-#### Key Metrics
-- **Active Campaigns**: Number of currently running campaigns
-- **Total Domains Analyzed**: Cumulative count of analyzed domains
-- **Success Rate**: Percentage of successful domain validations
-- **Recent Activity**: Latest campaign results and system events
+### Navigation Menu
 
-#### Quick Actions
-- **New Campaign**: Start a new domain analysis campaign
-- **View Results**: Access your latest campaign results
-- **Manage Personas**: Configure analysis personas
-- **System Status**: Check system health and performance
+- **Campaigns**: Main campaign management interface
+- **Personas**: User agent profile management
+- **Proxies**: Network configuration management
+- **Settings**: System configuration and preferences
 
-#### Recent Activity Feed
-- Campaign status updates
-- Completed analyses
-- System notifications
-- Security events (for administrators)
+## Multi-Phase Campaign Orchestration
 
-### Campaign Status Overview
+DomainFlow V3.0 uses a sophisticated three-phase campaign system where each phase builds upon the previous one. Unlike traditional systems that require separate campaigns for each phase, DomainFlow maintains a single campaign lifecycle with user-controlled progression.
 
-#### Campaign States
-- **Draft**: Campaign created but not started
-- **Running**: Currently executing domain analysis
-- **Paused**: Temporarily stopped (can be resumed)
-- **Completed**: Finished successfully
-- **Failed**: Encountered errors during execution
-- **Cancelled**: Manually stopped by user
+### Phase 1: Domain Generation
 
-#### Progress Indicators
-- **Progress Bar**: Visual representation of completion percentage
-- **Domains Processed**: Number of domains analyzed
-- **Estimated Time**: Remaining time to completion
-- **Success/Failure Counts**: Real-time statistics
+**Purpose**: Generate intelligent domain variations based on your target domain.
 
-### System Health Indicators
+**Process**:
+1. Enter your target domain (e.g., `example.com`)
+2. Configure generation parameters:
+   - **Mutation Types**: Character substitution, addition, deletion
+   - **TLD Variations**: Alternative top-level domains
+   - **Subdomain Generation**: www, mail, ftp, etc.
+   - **Keyword Insertion**: Common typos and variations
+3. Set generation limits and filters
+4. Start the generation phase
 
-#### Service Status
-- **Backend API**: Core application services
-- **Database**: Data storage and retrieval
-- **Proxy Services**: External connectivity
-- **Queue System**: Background job processing
+**Output**: A list of generated domain variations with similarity scores.
 
-#### Performance Metrics
-- **Response Time**: Average API response time
-- **Throughput**: Requests processed per minute
-- **Error Rate**: Percentage of failed requests
-- **Resource Usage**: CPU, memory, and storage utilization
+**What to Expect**:
+- Domain variations appear in real-time as they're generated
+- Each domain shows its similarity score to the original
+- Generation typically completes within 1-5 minutes depending on scope
+- You can filter and sort results by various criteria
+
+### Phase 2: DNS Validation
+
+**Purpose**: Validate which generated domains are actually registered and reachable.
+
+**Process**:
+1. Review the generated domains from Phase 1
+2. Configure DNS validation parameters:
+   - **Timeout Settings**: How long to wait for DNS responses
+   - **Record Types**: A, AAAA, MX, NS records to check
+   - **Validation Depth**: Basic or comprehensive DNS checking
+3. Transition to DNS validation phase
+4. Monitor validation progress
+
+**Output**: Domain registration status, IP addresses, and DNS record information.
+
+**What to Expect**:
+- DNS queries execute in parallel for faster processing
+- Results update in real-time showing registered vs. unregistered domains
+- Validation typically takes 2-10 minutes depending on the number of domains
+- Detailed DNS information is collected for registered domains
+
+### Phase 3: HTTP Analysis
+
+**Purpose**: Perform keyword-based analysis on live domains to identify content and potential threats.
+
+**Process**:
+1. Review validated domains from Phase 2
+2. Configure HTTP analysis parameters:
+   - **Keywords**: Terms to search for in page content
+   - **User Agents**: Personas to use for requests
+   - **Proxy Configuration**: Network routing options
+   - **Request Limits**: Rate limiting and timeout settings
+3. Transition to HTTP analysis phase
+4. Monitor scanning progress
+
+**Output**: Page content analysis, keyword matches, and threat indicators.
+
+**What to Expect**:
+- HTTP requests are distributed across configured proxies
+- Page content is analyzed for keyword matches in real-time
+- Screenshots and content samples are captured
+- Analysis duration varies based on domain count and response times
+
+### Phase Transitions
+
+**Key Concept**: DomainFlow uses campaign updates, not new campaign creation, for phase transitions. This maintains data continuity and allows for comprehensive analysis across all phases.
+
+**Transitioning Between Phases**:
+1. Complete the current phase
+2. Review results and apply any necessary filters
+3. Click "Configure Next Phase" or similar transition button
+4. Adjust parameters for the upcoming phase
+5. Confirm transition to begin the next phase
+
+The same campaign ID is maintained throughout all phases, ensuring all data remains connected and accessible.
+
+## Personas Management
+
+Personas define how DomainFlow appears to target servers during HTTP analysis. Proper persona configuration is crucial for effective analysis.
+
+### Creating Personas
+
+1. Navigate to **Personas** in the main menu
+2. Click **Create New Persona**
+3. Configure persona details:
+   - **Name**: Descriptive name for the persona
+   - **User Agent**: Browser identification string
+   - **Accept Headers**: Content type preferences
+   - **Language Headers**: Preferred languages
+   - **Custom Headers**: Additional HTTP headers
+
+### Pre-configured Personas
+
+DomainFlow includes several pre-configured personas:
+- **Desktop Chrome**: Modern desktop browser
+- **Mobile Safari**: iOS mobile browser
+- **Desktop Firefox**: Firefox desktop browser
+- **Bot Crawler**: Search engine crawler simulation
+
+### Best Practices for Personas
+
+- **Rotate Personas**: Use different personas for different domains to avoid detection
+- **Match Target Audience**: Choose personas that match your target domain's typical visitors
+- **Update Regularly**: Keep user agent strings current with latest browser versions
+- **Test Personas**: Verify personas work correctly before large campaigns
+
+## Proxy Management
+
+Proxies distribute your requests across multiple IP addresses and geographic locations, improving success rates and avoiding rate limiting.
+
+### Proxy Configuration
+
+1. Navigate to **Proxies** in the main menu
+2. Add proxy endpoints:
+   - **HTTP Proxies**: Standard HTTP proxy servers
+   - **SOCKS Proxies**: SOCKS4/5 proxy servers
+   - **Residential Proxies**: Home IP address proxies
+   - **Datacenter Proxies**: Server-based proxy IPs
+
+### Proxy Health Monitoring
+
+DomainFlow automatically monitors proxy health:
+- **Status Indicators**: Green (healthy), Yellow (degraded), Red (failed)
+- **Response Times**: Average response time measurements
+- **Success Rates**: Percentage of successful requests
+- **Geographic Location**: Proxy server locations
+
+### Proxy Best Practices
+
+- **Use Multiple Providers**: Don't rely on a single proxy service
+- **Monitor Performance**: Regularly check proxy health and performance
+- **Rotate Proxies**: Distribute requests across multiple proxies
+- **Geographic Diversity**: Use proxies from different regions
 
 ## Campaign Management
 
 ### Creating a New Campaign
 
-#### Campaign Types
-1. **Domain Generation Campaign**: Generate domain variations
-2. **DNS Validation Campaign**: Validate domain DNS records
-3. **HTTP Analysis Campaign**: Analyze HTTP responses and content
-
-#### Step-by-Step Campaign Creation
-
-**Step 1: Basic Information**
-1. Click "New Campaign" from the dashboard
+1. Click **New Campaign** from the dashboard
 2. Enter campaign details:
-   - **Name**: Descriptive campaign name
-   - **Description**: Purpose and goals
-   - **Type**: Select campaign type
-   - **Priority**: Set execution priority (Low, Normal, High)
-
-**Step 2: Domain Configuration**
-1. **Input Method**: Choose how to provide domains
-   - **Manual Entry**: Type domains directly
-   - **File Upload**: Upload CSV or text file
-   - **Keyword Generation**: Generate from keywords
-
-2. **Domain List**: 
-   - Enter one domain per line
-   - Supports wildcards (*.example.com)
-   - Maximum 10,000 domains per campaign
-
-**Step 3: Analysis Configuration**
-1. **Personas**: Select analysis personas to use
-2. **Proxies**: Choose proxy configuration (optional)
-3. **Validation Rules**: Set custom validation criteria
-4. **Output Format**: Choose result format (JSON, CSV, XML)
-
-**Step 4: Execution Settings**
-1. **Concurrency**: Number of parallel analyses (1-50)
-2. **Timeout**: Maximum time per domain analysis
-3. **Retry Logic**: Number of retry attempts for failures
-4. **Rate Limiting**: Requests per second limit
-
-**Step 5: Review and Launch**
-1. Review all settings
-2. Estimate execution time and resources
-3. Click "Start Campaign" to begin
-
-### Managing Running Campaigns
-
-#### Campaign Controls
-- **Pause**: Temporarily stop execution
-- **Resume**: Continue paused campaign
-- **Stop**: Permanently halt campaign
-- **Clone**: Create copy with same settings
-- **Export**: Download results in various formats
-
-#### Real-Time Monitoring
-- **Live Progress**: Watch domains being processed
-- **Success/Failure Rates**: Monitor analysis quality
-- **Performance Metrics**: Track speed and efficiency
-- **Error Logs**: View detailed error information
-
-#### Campaign Modification
-- **Add Domains**: Append additional domains to running campaign
-- **Adjust Settings**: Modify concurrency and timeout values
-- **Change Personas**: Switch analysis configurations
-- **Update Proxies**: Modify proxy settings
-
-### Campaign Results
-
-#### Results Dashboard
-- **Summary Statistics**: Overview of campaign performance
-- **Domain Status**: Breakdown by analysis result
-- **Timeline View**: Chronological analysis progress
-- **Error Analysis**: Detailed failure information
-
-#### Data Export Options
-1. **CSV Export**: Spreadsheet-compatible format
-2. **JSON Export**: Machine-readable structured data
-3. **PDF Report**: Human-readable summary report
-4. **API Access**: Programmatic result retrieval
-
-#### Result Filtering and Search
-- **Status Filter**: Show only successful/failed analyses
-- **Date Range**: Filter by analysis time
-- **Domain Search**: Find specific domains
-- **Custom Filters**: Advanced filtering options
-
-## Persona Management
-
-### Understanding Personas
-
-Personas define how DomainFlow analyzes domains. Each persona contains:
-- **User Agent**: Browser identification string
-- **Request Headers**: HTTP headers to send
-- **Validation Rules**: Criteria for success/failure
-- **Timeout Settings**: Maximum wait times
-- **Retry Logic**: How to handle failures
-
-### Default Personas
-
-#### Standard Web Browser
-- Simulates a typical web browser
-- Standard user agent and headers
-- Basic validation rules
-- Suitable for general web analysis
-
-#### Mobile Browser
-- Simulates mobile device access
-- Mobile-specific user agent
-- Responsive design validation
-- Mobile-optimized timeouts
-
-#### Search Engine Bot
-- Simulates search engine crawler
-- Bot-specific user agent
-- SEO-focused validation
-- Extended timeout for large pages
-
-#### Security Scanner
-- Security-focused analysis
-- Minimal headers for stealth
-- Security vulnerability checks
-- Aggressive timeout settings
-
-### Creating Custom Personas
-
-#### Basic Configuration
-1. Navigate to "Personas" in the main menu
-2. Click "Create New Persona"
-3. Enter persona details:
-   - **Name**: Descriptive persona name
-   - **Description**: Purpose and use case
-   - **Category**: Organize personas by type
-
-#### HTTP Configuration
-1. **User Agent**: Browser identification string
-   ```
-   Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
-   ```
-
-2. **Request Headers**: Additional HTTP headers
-   ```
-   Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-   Accept-Language: en-US,en;q=0.5
-   Accept-Encoding: gzip, deflate
-   ```
-
-3. **Cookies**: Predefined cookies to send
-4. **Authentication**: Basic auth or custom headers
-
-#### Validation Rules
-1. **HTTP Status Codes**: Expected response codes (200, 301, etc.)
-2. **Content Validation**: Required text or patterns
-3. **Response Time**: Maximum acceptable response time
-4. **Content Length**: Minimum/maximum content size
-5. **SSL/TLS**: Certificate validation requirements
-
-#### Advanced Settings
-1. **Timeout Configuration**:
-   - Connection timeout: 30 seconds
-   - Read timeout: 60 seconds
-   - Total timeout: 120 seconds
-
-2. **Retry Logic**:
-   - Maximum retries: 3
-   - Retry delay: 5 seconds
-   - Exponential backoff: enabled
-
-3. **Proxy Settings**:
-   - Use proxy: yes/no
-   - Proxy rotation: enabled/disabled
-   - Proxy validation: required/optional
-
-### Persona Testing
-
-#### Test Configuration
-1. Select persona to test
-2. Enter test domain(s)
-3. Choose validation criteria
-4. Run test analysis
-
-#### Test Results
-- **HTTP Response**: Status code and headers
-- **Content Analysis**: Page content and structure
-- **Performance Metrics**: Response time and size
-- **Validation Results**: Pass/fail for each rule
-
-#### Troubleshooting Personas
-- **Connection Issues**: Check proxy and network settings
-- **Validation Failures**: Review validation rules
-- **Timeout Problems**: Adjust timeout values
-- **Authentication Errors**: Verify credentials and headers
-
-## Proxy Management
-
-### Understanding Proxies
-
-Proxies provide several benefits for domain analysis:
-- **IP Rotation**: Avoid rate limiting and blocking
-- **Geographic Distribution**: Analyze from different locations
-- **Anonymity**: Hide your real IP address
-- **Load Distribution**: Spread requests across multiple endpoints
-
-### Proxy Types
-
-#### HTTP Proxies
-- Standard HTTP proxy protocol
-- Suitable for web traffic analysis
-- Easy to configure and use
-- Good performance for most use cases
-
-#### SOCKS Proxies
-- More flexible than HTTP proxies
-- Support for any protocol
-- Better for complex applications
-- Higher overhead but more reliable
-
-#### Residential Proxies
-- Real residential IP addresses
-- Less likely to be blocked
-- Higher cost but better success rates
-- Ideal for sensitive analysis
-
-#### Datacenter Proxies
-- Fast and reliable
-- Lower cost than residential
-- May be blocked by some sites
-- Good for bulk analysis
-
-### Adding Proxy Configurations
-
-#### Manual Proxy Entry
-1. Navigate to "Proxies" in the main menu
-2. Click "Add New Proxy"
-3. Enter proxy details:
-   - **Name**: Descriptive proxy name
-   - **Type**: HTTP, SOCKS4, or SOCKS5
-   - **Host**: Proxy server hostname or IP
-   - **Port**: Proxy server port number
-   - **Username/Password**: Authentication credentials (if required)
-
-#### Bulk Proxy Import
-1. Prepare proxy list in CSV format:
-   ```csv
-   name,type,host,port,username,password
-   Proxy1,HTTP,proxy1.example.com,8080,user1,pass1
-   Proxy2,SOCKS5,proxy2.example.com,1080,user2,pass2
-   ```
-
-2. Click "Import Proxies"
-3. Upload your CSV file
-4. Review and confirm import
-
-#### Proxy Provider Integration
-1. Select supported proxy provider
-2. Enter API credentials
-3. Configure automatic proxy rotation
-4. Set refresh intervals
-
-### Proxy Testing and Validation
-
-#### Automatic Testing
-- **Connection Test**: Verify proxy connectivity
-- **Speed Test**: Measure response time
-- **Anonymity Test**: Confirm IP masking
-- **Reliability Test**: Check uptime and stability
-
-#### Manual Testing
-1. Select proxy to test
-2. Enter test URL
-3. Run connectivity test
-4. Review test results:
-   - **Status**: Online/Offline
-   - **Response Time**: Latency in milliseconds
-   - **IP Address**: Detected external IP
-   - **Location**: Geographic location
-
-#### Proxy Health Monitoring
-- **Uptime Tracking**: Monitor proxy availability
-- **Performance Metrics**: Track speed and reliability
-- **Error Rates**: Monitor failure percentages
-- **Automatic Removal**: Disable failed proxies
-
-### Proxy Rotation Strategies
-
-#### Round Robin
-- Use proxies in sequential order
-- Simple and predictable
-- Good for even load distribution
-
-#### Random Selection
-- Choose proxies randomly
-- Unpredictable pattern
-- Good for avoiding detection
-
-#### Weighted Selection
-- Assign weights based on performance
-- Prefer faster, more reliable proxies
-- Optimize for success rates
-
-#### Geographic Rotation
-- Rotate based on target location
-- Use local proxies for regional analysis
-- Improve accuracy and reduce latency
-
-## Results & Analytics
-
-### Understanding Results
-
-#### Result Categories
-1. **Successful Analysis**: Domain analyzed successfully
-2. **Failed Analysis**: Analysis failed due to errors
-3. **Timeout**: Analysis exceeded time limit
-4. **Blocked**: Request was blocked or filtered
-5. **Invalid Domain**: Domain format or DNS issues
-
-#### Result Data Structure
-Each analyzed domain includes:
-- **Domain Name**: The analyzed domain
-- **Status Code**: HTTP response status
-- **Response Time**: Time to complete analysis
-- **Content Length**: Size of response content
-- **IP Address**: Resolved IP address
-- **Server Information**: Web server details
-- **SSL Certificate**: Certificate information
-- **Error Details**: Failure reason (if applicable)
-
-### Analytics Dashboard
-
-#### Performance Metrics
-- **Success Rate**: Percentage of successful analyses
-- **Average Response Time**: Mean analysis duration
-- **Throughput**: Domains analyzed per minute
-- **Error Distribution**: Breakdown of failure types
-
-#### Geographic Analysis
-- **IP Geolocation**: Geographic distribution of domains
-- **Server Locations**: Where domains are hosted
-- **Regional Performance**: Success rates by region
-- **Latency Mapping**: Response times by location
-
-#### Temporal Analysis
-- **Analysis Timeline**: When domains were processed
-- **Performance Trends**: Changes in success rates over time
-- **Peak Usage**: Busiest analysis periods
-- **Seasonal Patterns**: Long-term usage trends
-
-### Data Visualization
-
-#### Charts and Graphs
-1. **Success Rate Pie Chart**: Visual breakdown of results
-2. **Response Time Histogram**: Distribution of analysis times
-3. **Timeline Graph**: Analysis progress over time
-4. **Geographic Heat Map**: Global distribution of domains
-
-#### Interactive Features
-- **Drill-Down**: Click charts to see detailed data
-- **Filtering**: Apply filters to focus on specific data
-- **Zoom**: Examine specific time periods
-- **Export**: Save charts as images or data
-
-### Reporting
-
-#### Automated Reports
-1. **Daily Summary**: Daily analysis statistics
-2. **Weekly Report**: Comprehensive weekly overview
-3. **Monthly Analysis**: Long-term trends and patterns
-4. **Custom Reports**: User-defined reporting schedules
-
-#### Report Formats
-- **PDF Reports**: Professional formatted documents
-- **Excel Spreadsheets**: Data analysis and manipulation
-- **CSV Files**: Raw data for external processing
-- **JSON Data**: Machine-readable structured format
-
-#### Report Customization
-- **Data Selection**: Choose which metrics to include
-- **Time Periods**: Define reporting timeframes
-- **Formatting**: Customize layout and styling
-- **Distribution**: Email reports to stakeholders
-
-### Data Export and Integration
-
-#### Export Options
-1. **Full Dataset**: Complete analysis results
-2. **Filtered Data**: Subset based on criteria
-3. **Summary Statistics**: Aggregated metrics only
-4. **Raw Logs**: Detailed execution logs
-
-#### Integration APIs
-- **REST API**: Programmatic access to results
-- **Webhooks**: Real-time result notifications
-- **Database Connectors**: Direct database integration
-- **Third-Party Tools**: Integration with analytics platforms
-
-## User Management
-
-DomainFlow uses session-based authentication for simplified user management.
-
-### Account Management
-
-#### User Accounts
-All users have equal access to the system once authenticated:
-- **Session-Based Access**: Simple login/logout with secure sessions
-- **Account Settings**: Update profile information and passwords
-- **Multi-Factor Authentication**: Optional MFA for enhanced security
-
-#### Account Security
-- **Password Management**: Change your password anytime
-- **Session Management**: Sessions automatically expire for security
-- **Login History**: Review your recent login activity
-- **Security Events**: Monitor account access
-
-### Profile Management
-
-#### Updating Your Profile
-1. Click on your profile in the top-right corner
-2. Select "Profile Settings"
-3. Update your information:
-   - **First Name**: Your first name
-   - **Last Name**: Your last name
-   - **Email**: Your login email
-4. Save changes
-
-#### Changing Your Password
-1. Go to Profile Settings
-2. Click "Change Password"
-3. Enter your current password
-4. Enter and confirm your new password
-5. Save changes
-
-## Security Features
-
-### Account Security
-
-#### Password Security
-- **Strong Password Requirements**: Enforced complexity rules
-- **Password History**: Prevent reuse of recent passwords
-- **Password Expiration**: Optional password aging policies
-- **Breach Detection**: Check passwords against known breaches
-
-#### Session Security
-- **Secure Cookies**: HTTP-only, secure, SameSite cookies
-- **Session Timeout**: Automatic logout after inactivity
-- **Concurrent Sessions**: Limit simultaneous logins
-- **Session Monitoring**: Track active sessions
-
-#### Multi-Factor Authentication
-- **TOTP Support**: Time-based one-time passwords
-- **Backup Codes**: Emergency access codes
-- **Device Trust**: Remember trusted devices
-- **MFA Enforcement**: Require MFA for sensitive operations
-
-### System Security
-
-#### Audit Logging
-All security-relevant events are logged:
-- **Authentication Events**: Logins, logouts, failures
-- **Session Events**: Session creation, expiration, termination
-- **Administrative Actions**: System configuration changes
-- **Data Access**: Campaign creation, result viewing
-- **System Events**: Service starts, stops, errors
-
-#### Security Monitoring
-- **Failed Login Detection**: Monitor brute force attempts
-- **Anomaly Detection**: Identify unusual access patterns
-- **Geographic Monitoring**: Track login locations
-- **Device Fingerprinting**: Identify new devices
-
-#### Incident Response
-- **Automatic Lockouts**: Lock accounts after failed attempts
-- **Alert Generation**: Notify administrators of security events
-- **Forensic Logging**: Detailed logs for investigation
-- **Recovery Procedures**: Account recovery and restoration
-
-### Data Security
-
-#### Encryption
-- **Data at Rest**: Database encryption for sensitive data
-- **Data in Transit**: TLS encryption for all communications
-- **Key Management**: Secure encryption key storage
-- **Certificate Management**: SSL/TLS certificate lifecycle
-
-#### Data Privacy
-- **Data Minimization**: Collect only necessary information
-- **Data Retention**: Automatic deletion of old data
-- **Data Anonymization**: Remove personally identifiable information
-- **Privacy Controls**: User control over personal data
-
-#### Compliance
-- **GDPR Compliance**: European data protection regulation
-- **SOC 2**: Security and availability controls
-- **ISO 27001**: Information security management
-- **Industry Standards**: Compliance with relevant standards
-
-### Security Best Practices
-
-#### For Users
-1. **Use Strong Passwords**: Follow password requirements
-2. **Enable MFA**: Add extra security layer
-3. **Monitor Sessions**: Review active sessions regularly
-4. **Report Suspicious Activity**: Contact administrators immediately
-5. **Keep Software Updated**: Use latest browser versions
-6. **Secure Your Devices**: Use device locks and encryption
-
-#### For Administrators
-1. **Regular Security Reviews**: Audit user accounts and session activity
-2. **Monitor Security Logs**: Review audit logs regularly
-3. **Update Security Policies**: Keep policies current
-4. **Security Training**: Educate users on security practices
-5. **Incident Response Planning**: Prepare for security incidents
-6. **Backup and Recovery**: Maintain secure backups
+   - **Campaign Name**: Descriptive name for tracking
+   - **Target Domain**: Primary domain to analyze
+   - **Description**: Campaign purpose and notes
+3. Configure Phase 1 (Domain Generation) parameters
+4. Click **Create Campaign** to begin
+
+### Campaign Dashboard
+
+Each campaign has a dedicated dashboard showing:
+- **Phase Progress**: Current phase and completion status
+- **Real-time Results**: Live updates as data is processed
+- **Metrics Overview**: Key statistics and performance indicators
+- **Action Controls**: Buttons to pause, resume, or transition phases
+
+### Campaign Controls
+
+**Pause/Resume**: Temporarily stop and restart campaign processing
+**Phase Transition**: Move to the next campaign phase
+**Export Results**: Download results in various formats
+**Clone Campaign**: Create a copy with similar settings
+**Archive Campaign**: Move completed campaigns to archive
+
+## Real-Time Monitoring
+
+### Live Progress Updates
+
+DomainFlow provides real-time updates through WebSocket connections:
+- **Progress Bars**: Visual completion indicators
+- **Live Counters**: Real-time statistics updates
+- **Status Messages**: Detailed progress information
+- **Error Notifications**: Immediate alert for issues
+
+### Performance Metrics
+
+Monitor campaign performance with detailed metrics:
+- **Processing Speed**: Domains processed per minute
+- **Success Rates**: Percentage of successful operations
+- **Error Rates**: Failed operations and reasons
+- **Resource Usage**: CPU, memory, and network utilization
+
+### Alert System
+
+Configure alerts for important events:
+- **Campaign Completion**: Notification when phases complete
+- **Error Thresholds**: Alerts when error rates exceed limits
+- **Performance Issues**: Warnings for slow processing
+- **System Health**: Notifications for service issues
+
+## Results Analysis
+
+### Domain Generation Results
+
+**Generated Domains**: Complete list of domain variations
+- **Similarity Scores**: How closely variations match the original
+- **Mutation Types**: What changes were made to create variations
+- **Categories**: Grouping by mutation type or pattern
+
+**Filtering Options**:
+- Filter by similarity score threshold
+- Group by mutation type
+- Sort by various criteria
+- Export filtered results
+
+### DNS Validation Results
+
+**Registration Status**: Which domains are registered vs. available
+- **IP Addresses**: Resolved IP addresses for registered domains
+- **DNS Records**: A, AAAA, MX, NS, and other record types
+- **Hosting Providers**: Identified hosting services
+- **Geographic Location**: Server locations
+
+**Analysis Features**:
+- Identify hosting patterns
+- Group domains by IP ranges
+- Detect suspicious hosting arrangements
+- Export DNS data for further analysis
+
+### HTTP Analysis Results
+
+**Content Analysis**: Detailed analysis of domain content
+- **Keyword Matches**: Found keywords and their context
+- **Page Titles**: HTML title tags
+- **Content Snippets**: Sample content from pages
+- **Screenshots**: Visual captures of pages
+
+**Threat Detection**:
+- **Phishing Indicators**: Signs of phishing attempts
+- **Malware Signatures**: Known malicious content patterns
+- **Brand Impersonation**: Unauthorized use of trademarks
+- **Suspicious Redirects**: Unexpected page redirections
+
+### Export and Reporting
+
+**Export Formats**:
+- **CSV**: Spreadsheet-compatible format
+- **JSON**: Structured data format
+- **PDF Report**: Formatted analysis report
+- **XML**: Structured markup format
+
+**Report Contents**:
+- Executive summary
+- Detailed findings by phase
+- Risk assessments
+- Recommended actions
+
+## Advanced Features
+
+### Bulk Campaign Management
+
+Create and manage multiple campaigns simultaneously:
+- **Batch Creation**: Create multiple campaigns from domain lists
+- **Bulk Operations**: Start, stop, or configure multiple campaigns
+- **Resource Allocation**: Distribute processing power across campaigns
+- **Priority Management**: Set campaign processing priorities
+
+### Custom Keywords
+
+Configure specialized keyword lists for HTTP analysis:
+- **Brand Terms**: Company names and trademarks
+- **Product Names**: Specific products or services
+- **Sensitive Terms**: Terms indicating threats or violations
+- **Technical Terms**: Technology-specific vocabulary
+
+### Integration Options
+
+**API Access**: Programmatic access to DomainFlow functionality
+- **RESTful API**: Standard HTTP API for integration
+- **WebSocket Streams**: Real-time data streaming
+- **Webhook Notifications**: Event-driven notifications
+- **Client Libraries**: SDKs for popular programming languages
+
+**Third-party Integrations**:
+- **Threat Intelligence Feeds**: External threat data sources
+- **SIEM Systems**: Security information and event management
+- **Ticketing Systems**: Automated incident creation
+- **Email Notifications**: Alert distribution
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### Login Problems
+**Campaign Won't Start**:
+- Verify personas are configured correctly
+- Check proxy connectivity and health
+- Ensure sufficient system resources
+- Review campaign configuration for errors
 
-**Issue: "Invalid credentials" error**
-- **Cause**: Incorrect email or password
-- **Solution**: 
-  1. Verify email address spelling
-  2. Check caps lock status
-  3. Use password reset if needed
-  4. Contact administrator if account is locked
+**Slow Performance**:
+- Increase proxy pool size
+- Adjust concurrent request limits
+- Check network connectivity
+- Monitor system resource usage
 
-**Issue: Account locked message**
-- **Cause**: Too many failed login attempts
-- **Solution**:
-  1. Wait 15 minutes for automatic unlock
-  2. Contact administrator for immediate unlock
-  3. Use password reset to change password
-  4. Enable MFA to prevent future lockouts
-
-**Issue: CAPTCHA not loading**
-- **Cause**: Browser or network issues
-- **Solution**:
-  1. Refresh the page
-  2. Clear browser cache and cookies
-  3. Disable ad blockers temporarily
-  4. Try a different browser
-
-#### Campaign Issues
-
-**Issue: Campaign stuck in "Starting" status**
-- **Cause**: System resource constraints or configuration issues
-- **Solution**:
-  1. Wait a few minutes for system processing
-  2. Check system status on dashboard
-  3. Restart campaign if still stuck
-  4. Contact administrator if problem persists
-
-**Issue: High failure rate in campaign results**
-- **Cause**: Network issues, proxy problems, or invalid domains
-- **Solution**:
-  1. Check proxy configuration and status
-  2. Verify domain list for invalid entries
-  3. Adjust timeout settings
-  4. Review persona configuration
-
-**Issue: Campaign running very slowly**
-- **Cause**: High concurrency, slow proxies, or system load
-- **Solution**:
-  1. Reduce concurrency setting
-  2. Check proxy performance
-  3. Monitor system resources
-  4. Consider running during off-peak hours
-
-#### Performance Issues
-
-**Issue: Slow page loading**
-- **Cause**: Network latency, server load, or browser issues
-- **Solution**:
-  1. Check internet connection
-  2. Clear browser cache
-  3. Disable browser extensions
-  4. Try accessing during off-peak hours
-
-**Issue: Timeout errors**
-- **Cause**: Network connectivity or server overload
-- **Solution**:
-  1. Refresh the page
-  2. Check network connection
-  3. Wait and try again later
-  4. Contact administrator if persistent
+**High Error Rates**:
+- Review proxy quality and reliability
+- Check for rate limiting from target servers
+- Verify persona configurations
+- Adjust request timing and delays
 
 ### Error Messages
 
-#### Authentication Errors
-- **AUTH_INVALID_CREDENTIALS**: Wrong email or password
-- **AUTH_ACCOUNT_LOCKED**: Account temporarily locked
-- **AUTH_SESSION_EXPIRED**: Session timed out, please login again
-- **AUTH_MFA_REQUIRED**: Multi-factor authentication needed
-- **AUTH_INSUFFICIENT_PERMISSIONS**: Access denied
+**"DNS Resolution Failed"**:
+- Network connectivity issues
+- DNS server problems
+- Invalid domain names
+- Firewall blocking DNS queries
 
-#### Campaign Errors
-- **CAMPAIGN_INVALID_DOMAIN**: Domain format is invalid
-- **CAMPAIGN_QUOTA_EXCEEDED**: Campaign limit reached
-- **CAMPAIGN_PROXY_FAILED**: Proxy connection failed
-- **CAMPAIGN_TIMEOUT**: Campaign execution timed out
-- **CAMPAIGN_RESOURCE_LIMIT**: System resource limit reached
+**"HTTP Request Timeout"**:
+- Target server not responding
+- Proxy connectivity issues
+- Network latency problems
+- Server overload
 
-#### System Errors
-- **SYSTEM_MAINTENANCE**: System under maintenance
-- **SYSTEM_OVERLOAD**: System temporarily overloaded
-- **SYSTEM_DATABASE_ERROR**: Database connection issue
-- **SYSTEM_NETWORK_ERROR**: Network connectivity problem
-
-### Getting Help
-
-#### Self-Service Resources
-1. **Documentation**: Comprehensive user guides and tutorials
-2. **FAQ**: Frequently asked questions and answers
-3. **Video Tutorials**: Step-by-step video guides
-4. **Knowledge Base**: Searchable help articles
-
-#### Support Channels
-1. **In-App Help**: Click the help icon for contextual assistance
-2. **Support Email**: Contact support team directly
-3. **Community Forum**: Ask questions and share experiences
-4. **Live Chat**: Real-time support during business hours
-
-#### Reporting Issues
-When reporting issues, include:
-1. **Error Message**: Exact error text or screenshot
-2. **Steps to Reproduce**: What you were doing when error occurred
-3. **Browser Information**: Browser type and version
-4. **Account Information**: Your username (never include passwords)
-5. **Time of Issue**: When the problem occurred
-
-## Best Practices
-
-### Campaign Management
-
-#### Planning Campaigns
-1. **Define Objectives**: Clear goals for domain analysis
-2. **Prepare Domain Lists**: Clean, validated domain lists
-3. **Choose Appropriate Personas**: Match personas to analysis goals
-4. **Configure Proxies**: Select reliable proxy configurations
-5. **Set Realistic Timeframes**: Allow adequate time for completion
-
-#### Optimizing Performance
-1. **Batch Processing**: Group similar domains together
-2. **Optimal Concurrency**: Balance speed with system resources
-3. **Proxy Rotation**: Use multiple proxies for better performance
-4. **Monitor Progress**: Watch campaigns and adjust as needed
-5. **Learn from Results**: Analyze outcomes to improve future campaigns
-
-#### Resource Management
-1. **Quota Awareness**: Monitor usage against limits
-2. **Efficient Scheduling**: Run large campaigns during off-peak hours
-3. **Resource Sharing**: Coordinate with team members
-4. **Clean Up**: Remove old campaigns and data regularly
-
-### Security Best Practices
-
-#### Account Security
-1. **Strong Passwords**: Use unique, complex passwords
-2. **Enable MFA**: Add multi-factor authentication
-3. **Regular Reviews**: Check account activity regularly
-4. **Secure Devices**: Keep devices updated and secure
-5. **Logout Properly**: Always logout when finished
-
-#### Data Protection
-1. **Minimize Data Collection**: Only analyze necessary domains
-2. **Secure Storage**: Use encrypted storage for sensitive data
-3. **Regular Cleanup**: Delete old data that's no longer needed
-4. **Access Control**: Share data only with authorized users
-5. **Backup Important Data**: Maintain secure backups
-
-### Collaboration
-
-#### Team Coordination
-1. **Shared Resources**: Use team personas and proxies
-2. **Communication**: Keep team informed of activities
-3. **Resource Scheduling**: Coordinate large campaigns
-4. **Knowledge Sharing**: Share insights and best practices
-5. **Documentation**: Document processes and procedures
-
-#### Project Management
-1. **Campaign Naming**: Use descriptive, consistent names
-2. **Progress Tracking**: Monitor campaign status regularly
-3. **Result Sharing**: Share relevant results with stakeholders
-4. **Timeline Management**: Plan campaigns with realistic schedules
-5. **Quality Control**: Review results for accuracy and completeness
+**"Proxy Authentication Failed"**:
+- Incorrect proxy credentials
+- Expired proxy subscription
+- IP address not whitelisted
+- Proxy server maintenance
 
 ### Performance Optimization
 
-#### System Efficiency
-1. **Optimal Settings**: Use recommended configuration values
-2. **Resource Monitoring**: Watch system performance metrics
-3. **Load Balancing**: Distribute work across available resources
-4. **Maintenance Windows**: Schedule maintenance during low usage
-5. **Capacity Planning**: Plan for growth and peak usage
+**System Requirements**:
+- Ensure adequate CPU resources
+- Provide sufficient RAM for concurrent operations
+- Use SSD storage for better I/O performance
+- Maintain stable network connectivity
 
-#### Analysis Quality
-1. **Persona Selection**: Choose appropriate analysis personas
-2. **Validation Rules**: Set meaningful validation criteria
-3. **Error Handling**: Configure appropriate retry logic
-4. **Result Verification**: Spot-check results for accuracy
-5. **Continuous Improvement**: Refine processes based on experience
+**Configuration Tuning**:
+- Adjust worker pool sizes
+- Optimize database connection pools
+- Configure appropriate timeouts
+- Balance concurrent request limits
+
+## Best Practices
+
+### Campaign Planning
+
+**Define Clear Objectives**:
+- Identify specific analysis goals
+- Determine required data types
+- Set realistic scope and timelines
+- Plan resource allocation
+
+**Target Domain Selection**:
+- Choose representative domains
+- Consider domain variations already known
+- Include relevant TLD variations
+- Account for internationalized domains
+
+### Security Considerations
+
+**Responsible Usage**:
+- Respect robots.txt files
+- Implement appropriate rate limiting
+- Avoid overwhelming target servers
+- Follow legal and ethical guidelines
+
+**Data Protection**:
+- Secure sensitive analysis results
+- Implement access controls
+- Regular backup of campaign data
+- Comply with privacy regulations
+
+### Operational Excellence
+
+**Regular Maintenance**:
+- Monitor system health regularly
+- Update proxy configurations
+- Refresh persona user agents
+- Review and clean old campaigns
+
+**Documentation**:
+- Document campaign purposes and findings
+- Maintain configuration standards
+- Track performance metrics over time
+- Record lessons learned
+
+## Support and Resources
+
+### Documentation
+
+- **Installation Guide**: Detailed setup instructions
+- **Developer Guide**: Technical documentation for customization
+- **Architecture Guide**: System design and technical details
+- **API Documentation**: Complete API reference
+
+### Getting Help
+
+**Technical Support**:
+- Review error logs for detailed diagnostic information
+- Check system health indicators on the dashboard
+- Consult troubleshooting guides in documentation
+- Contact support team for complex issues
+
+**Community Resources**:
+- User forums and discussion boards
+- Knowledge base and FAQ
+- Video tutorials and training materials
+- Best practices and case studies
+
+### Updates and Maintenance
+
+**Software Updates**:
+- Regular platform updates with new features
+- Security patches and bug fixes
+- Performance improvements
+- Extended integration support
+
+**Maintenance Windows**:
+- Scheduled maintenance notifications
+- Minimal downtime procedures
+- Backup and recovery processes
+- Version migration guides
 
 ---
 
-This user guide provides comprehensive information for using DomainFlow effectively and securely. For additional help or specific questions not covered in this guide, please contact your system administrator or the DomainFlow support team.
+## Conclusion
 
-Remember to keep this guide handy as a reference while using the platform, and don't hesitate to explore the features to discover new ways to optimize your domain analysis workflows.
+DomainFlow V3.0 provides a comprehensive platform for domain intelligence and analysis. By following this user guide, you'll be able to effectively utilize all features of the platform to achieve your domain analysis objectives.
+
+**Key Takeaways**:
+- Plan your campaigns carefully with clear objectives
+- Configure personas and proxies appropriately for your use case
+- Monitor campaigns in real-time and respond to issues quickly
+- Analyze results thoroughly to extract meaningful insights
+- Follow best practices for security and responsible usage
+
+**Next Steps**:
+1. Configure your personas and proxy settings
+2. Create your first test campaign with a small domain set
+3. Familiarize yourself with the interface and workflow
+4. Gradually increase campaign scope as you gain experience
+5. Explore advanced features and integrations as needed
+
+**DomainFlow V3.0 Stable** - Advanced Domain Intelligence Platform
+
+For additional support and resources, refer to the other documentation files or contact the support team.

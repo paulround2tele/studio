@@ -1,407 +1,729 @@
-# DomainFlow Installation Guide
+# DomainFlow V3.0 Installation Guide
 
-This guide provides step-by-step instructions for installing DomainFlow in a production environment using the automated deployment pipeline.
+## Overview
 
-## Table of Contents
+This guide provides step-by-step instructions for installing and configuring DomainFlow V3.0 in various environments. DomainFlow V3.0 is designed for production deployment with containerized services and comprehensive configuration management.
 
-1. [Prerequisites](#prerequisites)
-2. [Quick Installation](#quick-installation)
-3. [Manual Installation](#manual-installation)
-4. [Post-Installation Configuration](#post-installation-configuration)
-5. [SSL Certificate Setup](#ssl-certificate-setup)
-6. [Troubleshooting](#troubleshooting)
+## System Requirements
 
-## Prerequisites
+### Minimum Requirements
 
-### System Requirements
+**Production Environment:**
+- **CPU**: 4 cores (2.4 GHz or higher)
+- **Memory**: 8 GB RAM
+- **Storage**: 50 GB SSD storage
+- **Network**: Stable internet connection with SSL/TLS support
 
-**Minimum Hardware Requirements:**
-- **CPU**: 2 cores (4 cores recommended)
-- **RAM**: 4GB (8GB recommended)
-- **Storage**: 20GB (50GB recommended)
-- **Network**: 1Gbps connection
+**Development Environment:**
+- **CPU**: 2 cores (2.0 GHz or higher)
+- **Memory**: 4 GB RAM
+- **Storage**: 20 GB available space
+- **Network**: Internet connection for package downloads
 
-**Supported Operating Systems:**
-- Ubuntu 18.04, 20.04, 22.04, 24.04
-- CentOS 7, 8, 9 (including Rocky Linux, AlmaLinux)
-- Debian 10, 11, 12
-- Amazon Linux 2, 2023
+### Software Dependencies
 
-### Access Requirements
+**Required Software:**
+- **Docker**: 20.0+ and Docker Compose 2.0+
+- **PostgreSQL**: 15+ (for database)
+- **Node.js**: 18.0+ LTS (for frontend development)
+- **Go**: 1.21+ (for backend development)
 
-- Root or sudo access to the server
-- Internet connectivity for downloading packages
-- SSH access to the server
+**Optional Software:**
+- **Redis**: 7.0+ (for caching and session storage)
+- **Nginx**: Latest (for reverse proxy in production)
 
-## Quick Installation
+## Installation Methods
 
-The quickest way to install DomainFlow is using the automated installer:
+### Method 1: Docker Compose (Recommended)
 
-### 1. Download the Installation Package
+This is the recommended installation method for both development and production environments.
 
+#### 1. Download and Setup
+
+**Clone the Repository:**
 ```bash
-# Clone the repository
-git clone https://github.com/fntelecomllc/studio.git
+git clone https://github.com/fntelecomllc/studio
 cd studio
-
-# Or download and extract the release package
-wget https://github.com/fntelecomllc/studio/releases/latest/download/domainflow.tar.gz
-tar -xzf domainflow.tar.gz
-cd domainflow
 ```
 
-### 2. Run the Automated Installer
-
+**Copy Environment Configuration:**
 ```bash
-# Make the installer executable
-chmod +x install.sh
-
-# Run the installer with sudo
-sudo ./install.sh
+cp .env.example .env
 ```
 
-The installer will:
-- Detect your operating system
-- Install all required dependencies
-- Configure the database
-- Set up services
-- Configure security
-- Set up monitoring and backups
-- Perform a health check
+#### 2. Configure Environment Variables
 
-### 3. Access Your Application
-
-Once installation is complete, you can access DomainFlow at:
-- **HTTP**: `http://your-server-ip`
-- **Health Check**: `http://your-server-ip/health`
-
-## Manual Installation
-
-If you prefer to install components manually or need to customize the installation:
-
-### 1. Install Dependencies
+Edit the `.env` file with your configuration:
 
 ```bash
-# Run the dependency setup script
-sudo ./scripts/deploy/setup-dependencies.sh
+# .env
+# ============================================================================
+# DomainFlow V3.0 Configuration
+# ============================================================================
+
+# Environment
+NODE_ENV=production
+GIN_MODE=release
+
+# Frontend Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8080
+
+# Backend Configuration
+HOST=0.0.0.0
+PORT=8080
+
+# Database Configuration
+DATABASE_HOST=postgres
+DATABASE_PORT=5432
+DATABASE_NAME=domainflow
+DATABASE_USER=domainflow
+DATABASE_PASSWORD=secure_password_here
+DATABASE_SSL_MODE=disable
+
+# Session Configuration
+SESSION_SECRET=generate_a_secure_random_string_here
+SESSION_MAX_AGE=86400
+
+# Security Configuration
+BCRYPT_COST=12
+PASSWORD_MIN_LENGTH=12
+
+# Rate Limiting
+RATE_LIMIT_REQUESTS_PER_MINUTE=60
+RATE_LIMIT_BURST_SIZE=10
+
+# Worker Configuration
+WORKER_POOL_SIZE=10
+MAX_CONCURRENT_CAMPAIGNS=5
+
+# Logging Configuration
+LOG_LEVEL=info
+LOG_FORMAT=json
+
+# Health Check Configuration
+HEALTH_CHECK_INTERVAL=30s
+HEALTH_CHECK_TIMEOUT=10s
 ```
 
-### 2. Setup Database
+#### 3. Start Services
 
+**Start all services:**
 ```bash
-# Configure PostgreSQL for production
-sudo ./scripts/deploy/setup-database.sh
+docker-compose up -d
 ```
 
-### 3. Configure Services
-
+**View service status:**
 ```bash
-# Set up systemd services
-sudo ./scripts/deploy/setup-services.sh
+docker-compose ps
 ```
 
-### 4. Configure nginx
-
+**View logs:**
 ```bash
-# Set up reverse proxy
-sudo ./scripts/deploy/setup-nginx.sh
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f backend
+docker-compose logs -f frontend
 ```
 
-### 5. Configure Security
+#### 4. Initialize Database
 
+**Run database migrations:**
 ```bash
-# Set up firewall and fail2ban
-sudo ./scripts/deploy/setup-firewall.sh
+docker-compose exec backend ./apiserver migrate
 ```
 
-### 6. Setup SSL (Optional)
-
+**Create initial admin user (optional):**
 ```bash
-# Prepare SSL configuration
-sudo ./scripts/deploy/setup-ssl.sh
+docker-compose exec backend ./apiserver create-admin \
+  --email admin@domainflow.local \
+  --password TempPassword123!
 ```
 
-### 7. Configure Monitoring
+#### 5. Verify Installation
 
+**Check service health:**
 ```bash
-# Set up health monitoring
-sudo ./scripts/deploy/setup-monitoring.sh
+curl http://localhost:8080/health
+curl http://localhost:3000
 ```
 
-### 8. Configure Backups
+**Access the application:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8080
+- Health Check: http://localhost:8080/health
 
+### Method 2: Manual Installation
+
+For custom deployments or development environments.
+
+#### 1. Database Setup
+
+**Install PostgreSQL:**
 ```bash
-# Set up automated backups
-sudo ./scripts/deploy/setup-backup.sh
+# Ubuntu/Debian
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# CentOS/RHEL
+sudo yum install postgresql-server postgresql-contrib
+
+# macOS
+brew install postgresql
 ```
 
-## Post-Installation Configuration
+**Create Database:**
+```sql
+-- Connect as postgres user
+sudo -u postgres psql
 
-### 1. Verify Installation
-
-Check that all services are running:
-
-```bash
-# Check service status
-sudo systemctl status domainflow.target
-
-# Run health check
-sudo /opt/domainflow/scripts/ops/health-check.sh
+-- Create database and user
+CREATE DATABASE domainflow;
+CREATE USER domainflow WITH PASSWORD 'secure_password';
+GRANT ALL PRIVILEGES ON DATABASE domainflow TO domainflow;
+\q
 ```
 
-### 2. Configure Domain Name (Optional)
+#### 2. Backend Installation
 
-If you have a domain name, update the nginx configuration:
-
+**Install Go (if not installed):**
 ```bash
-# Edit nginx configuration
-sudo nano /etc/nginx/sites-available/domainflow
+# Download and install Go 1.21+
+wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
 
-# Update server_name directive
-server_name your-domain.com www.your-domain.com;
-
-# Test and reload nginx
-sudo nginx -t
-sudo systemctl reload nginx
+# Add to PATH
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-### 3. Configure Environment Variables
-
-Review and update the production environment file:
-
+**Build Backend:**
 ```bash
-# Edit environment configuration
-sudo nano /opt/domainflow/config/.env.production
-
-# Update any necessary settings
-# - CORS_ORIGINS: Add your domain
-# - API settings as needed
+cd backend
+go mod download
+go build -o bin/apiserver cmd/apiserver/main.go
 ```
 
-### 4. Set Up Monitoring Alerts (Optional)
-
-Configure email alerts for monitoring:
-
+**Run Database Migrations:**
 ```bash
-# Edit alert configuration
-sudo nano /opt/domainflow/monitoring/scripts/alert-manager.sh
-
-# Update ALERT_EMAIL variable
-ALERT_EMAIL="admin@your-domain.com"
+./bin/apiserver migrate --config config.yaml
 ```
 
-## SSL Certificate Setup
-
-### Option 1: Let's Encrypt (Recommended)
-
-For automatic SSL certificate management:
-
+**Start Backend Service:**
 ```bash
-# Install SSL certificate for your domain
-sudo /opt/domainflow/scripts/ssl/install-certificate.sh your-domain.com admin@your-domain.com
+./bin/apiserver --config config.yaml
 ```
 
-This will:
-- Obtain a free SSL certificate from Let's Encrypt
-- Configure nginx for HTTPS
-- Set up automatic renewal
+#### 3. Frontend Installation
 
-### Option 2: Custom Certificate
-
-If you have your own SSL certificate:
-
+**Install Node.js (if not installed):**
 ```bash
-# Copy your certificate files
-sudo cp your-certificate.crt /etc/nginx/ssl/domainflow.crt
-sudo cp your-private-key.key /etc/nginx/ssl/domainflow.key
+# Using NodeSource repository
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
-# Set proper permissions
-sudo chmod 644 /etc/nginx/ssl/domainflow.crt
-sudo chmod 600 /etc/nginx/ssl/domainflow.key
-
-# Enable HTTPS configuration
-sudo ln -sf /etc/nginx/sites-available/domainflow-ssl /etc/nginx/sites-enabled/domainflow-ssl
-sudo rm -f /etc/nginx/sites-enabled/domainflow
-
-# Test and reload nginx
-sudo nginx -t
-sudo systemctl reload nginx
+# Or using NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 18
+nvm use 18
 ```
 
-## Service Management
-
-### Starting and Stopping Services
-
+**Build Frontend:**
 ```bash
-# Start all DomainFlow services
-sudo systemctl start domainflow.target
+cd frontend
+npm install
+npm run build
+```
 
-# Stop all DomainFlow services
-sudo systemctl stop domainflow.target
+**Start Frontend Service:**
+```bash
+npm start
+```
 
-# Restart all services
-sudo systemctl restart domainflow.target
+### Method 3: Production Deployment
+
+For production environments with high availability and scalability.
+
+#### 1. Infrastructure Setup
+
+**Recommended Architecture:**
+```
+Load Balancer (Nginx) → Frontend (Next.js) → Backend (Go) → Database (PostgreSQL)
+                                     ↓
+                                Cache (Redis)
+```
+
+#### 2. SSL/TLS Configuration
+
+**Generate SSL Certificate:**
+```bash
+# Using Let's Encrypt
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.com
+```
+
+**Nginx Configuration:**
+```nginx
+# /etc/nginx/sites-available/domainflow
+server {
+    listen 443 ssl;
+    server_name your-domain.com;
+    
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+    
+    # Frontend
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+    
+    # Backend API
+    location /api/ {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # WebSocket support
+    location /ws {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    server_name your-domain.com;
+    return 301 https://$server_name$request_uri;
+}
+```
+
+#### 3. Systemd Service Configuration
+
+**Backend Service:**
+```ini
+# /etc/systemd/system/domainflow-backend.service
+[Unit]
+Description=DomainFlow Backend Service
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=domainflow
+WorkingDirectory=/opt/domainflow
+ExecStart=/opt/domainflow/bin/apiserver
+Restart=always
+RestartSec=5
+Environment=GIN_MODE=release
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Frontend Service:**
+```ini
+# /etc/systemd/system/domainflow-frontend.service
+[Unit]
+Description=DomainFlow Frontend Service
+After=network.target
+
+[Service]
+Type=simple
+User=domainflow
+WorkingDirectory=/opt/domainflow/frontend
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Enable and Start Services:**
+```bash
+sudo systemctl enable domainflow-backend
+sudo systemctl enable domainflow-frontend
+sudo systemctl start domainflow-backend
+sudo systemctl start domainflow-frontend
 
 # Check status
-sudo systemctl status domainflow.target
+sudo systemctl status domainflow-backend
+sudo systemctl status domainflow-frontend
 ```
 
-### Individual Service Management
+## Configuration
 
-```bash
-# Backend service
-sudo systemctl start domainflow-backend
-sudo systemctl stop domainflow-backend
-sudo systemctl restart domainflow-backend
+### Environment Variables
 
-# Frontend service
-sudo systemctl start domainflow-frontend
-sudo systemctl stop domainflow-frontend
-sudo systemctl restart domainflow-frontend
+**Core Configuration:**
+- `NODE_ENV`: Environment mode (development/production)
+- `GIN_MODE`: Gin framework mode (debug/release)
+- `HOST`: Server bind address
+- `PORT`: Server port number
+
+**Database Configuration:**
+- `DATABASE_HOST`: PostgreSQL host
+- `DATABASE_PORT`: PostgreSQL port
+- `DATABASE_NAME`: Database name
+- `DATABASE_USER`: Database username
+- `DATABASE_PASSWORD`: Database password
+- `DATABASE_SSL_MODE`: SSL mode (disable/require/verify-full)
+
+**Security Configuration:**
+- `SESSION_SECRET`: Session encryption key (generate random string)
+- `BCRYPT_COST`: Password hashing cost (12-14 recommended)
+- `PASSWORD_MIN_LENGTH`: Minimum password length
+
+### Database Configuration
+
+**Connection Pooling:**
+```yaml
+# config.yaml
+database:
+  host: localhost
+  port: 5432
+  name: domainflow
+  user: domainflow
+  password: secure_password
+  ssl_mode: disable
+  max_connections: 30
+  min_connections: 5
+  max_connection_lifetime: 1h
+  max_connection_idle_time: 30m
 ```
 
-### Viewing Logs
+**Performance Tuning:**
+```sql
+-- PostgreSQL configuration recommendations
+-- /etc/postgresql/15/main/postgresql.conf
 
-```bash
-# View all DomainFlow logs
-sudo journalctl -u domainflow.target -f
+# Memory
+shared_buffers = 256MB
+effective_cache_size = 1GB
+work_mem = 4MB
 
-# View backend logs
-sudo journalctl -u domainflow-backend -f
+# Connections
+max_connections = 100
 
-# View frontend logs
-sudo journalctl -u domainflow-frontend -f
+# Performance
+random_page_cost = 1.1
+effective_io_concurrency = 200
 
-# View nginx logs
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+# Logging
+log_statement = 'mod'
+log_duration = on
+log_min_duration_statement = 1000
 ```
 
-## Backup and Restore
+### Security Configuration
 
-### Manual Backup
+**Session Security:**
+```yaml
+session:
+  secret: "generate-secure-random-string"
+  max_age: 86400  # 24 hours
+  secure: true    # HTTPS only
+  http_only: true
+  same_site: strict
+```
 
+**Rate Limiting:**
+```yaml
+rate_limit:
+  requests_per_minute: 60
+  burst_size: 10
+  cleanup_interval: 1m
+```
+
+**Password Policy:**
+```yaml
+password:
+  min_length: 12
+  require_uppercase: true
+  require_lowercase: true
+  require_numbers: true
+  require_symbols: true
+  bcrypt_cost: 12
+```
+
+## Post-Installation Setup
+
+### 1. Initial Configuration
+
+**Create Admin User:**
 ```bash
+# Using Docker
+docker-compose exec backend ./apiserver create-admin \
+  --email admin@your-domain.com \
+  --password YourSecurePassword123!
+
+# Manual installation
+./bin/apiserver create-admin \
+  --email admin@your-domain.com \
+  --password YourSecurePassword123!
+```
+
+**Verify Installation:**
+```bash
+# Health checks
+curl http://localhost:8080/health
+curl http://localhost:8080/ping
+
+# Database connectivity
+curl http://localhost:8080/health/db
+
+# Frontend availability
+curl http://localhost:3000
+```
+
+### 2. Security Hardening
+
+**Update Default Passwords:**
+1. Change default database passwords
+2. Generate secure session secrets
+3. Configure SSL/TLS certificates
+4. Enable firewall rules
+
+**Firewall Configuration:**
+```bash
+# UFW (Ubuntu)
+sudo ufw allow 22/tcp      # SSH
+sudo ufw allow 80/tcp      # HTTP
+sudo ufw allow 443/tcp     # HTTPS
+sudo ufw enable
+
+# iptables
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+```
+
+### 3. Monitoring Setup
+
+**Log Configuration:**
+```yaml
+logging:
+  level: info
+  format: json
+  output: /var/log/domainflow/app.log
+  max_size: 100MB
+  max_files: 10
+  compress: true
+```
+
+**Health Monitoring:**
+```bash
+# Create monitoring script
+cat > /opt/domainflow/scripts/health-check.sh << 'EOF'
+#!/bin/bash
+if curl -s http://localhost:8080/health | grep -q "healthy"; then
+    echo "$(date): DomainFlow is healthy"
+else
+    echo "$(date): DomainFlow health check failed"
+    systemctl restart domainflow-backend
+fi
+EOF
+
+# Add to crontab
+echo "*/5 * * * * /opt/domainflow/scripts/health-check.sh >> /var/log/domainflow/health.log" | crontab -
+```
+
+## Backup and Recovery
+
+### Database Backup
+
+**Automated Backup Script:**
+```bash
+#!/bin/bash
+# /opt/domainflow/scripts/backup.sh
+
+BACKUP_DIR="/opt/domainflow/backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+DB_NAME="domainflow"
+
+# Create backup directory
+mkdir -p $BACKUP_DIR
+
 # Create database backup
-sudo /opt/domainflow/scripts/ops/backup.sh
+pg_dump -h localhost -U domainflow $DB_NAME | gzip > $BACKUP_DIR/domainflow_$DATE.sql.gz
 
-# Create application backup
-sudo /opt/domainflow/scripts/ops/backup-application.sh
+# Remove backups older than 30 days
+find $BACKUP_DIR -name "domainflow_*.sql.gz" -mtime +30 -delete
+
+echo "Backup completed: domainflow_$DATE.sql.gz"
 ```
 
-### Restore from Backup
-
+**Schedule Backups:**
 ```bash
-# List available backups
-ls -la /opt/domainflow/backups/database/daily/
-ls -la /opt/domainflow/backups/application/daily/
+# Add to crontab
+echo "0 2 * * * /opt/domainflow/scripts/backup.sh" | crontab -
+```
+
+### Recovery Process
+
+**Restore from Backup:**
+```bash
+# Stop services
+sudo systemctl stop domainflow-backend domainflow-frontend
 
 # Restore database
-sudo /opt/domainflow/scripts/ops/restore.sh database /path/to/backup.sql.gz
+gunzip -c /opt/domainflow/backups/domainflow_YYYYMMDD_HHMMSS.sql.gz | \
+  psql -h localhost -U domainflow domainflow
 
-# Restore application files
-sudo /opt/domainflow/scripts/ops/restore.sh application /path/to/backup.tar.gz
+# Start services
+sudo systemctl start domainflow-backend domainflow-frontend
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### Services Won't Start
-
+**Service Won't Start:**
 ```bash
-# Check service status
-sudo systemctl status domainflow-backend
-sudo systemctl status domainflow-frontend
+# Check logs
+sudo journalctl -u domainflow-backend -f
+sudo journalctl -u domainflow-frontend -f
 
-# Check logs for errors
-sudo journalctl -u domainflow-backend --since "10 minutes ago"
-
-# Check database connectivity
-sudo -u postgres psql -c "\l"
+# Check port availability
+sudo netstat -tlnp | grep :8080
+sudo netstat -tlnp | grep :3000
 ```
 
-#### Database Connection Issues
-
+**Database Connection Issues:**
 ```bash
+# Test database connectivity
+psql -h localhost -U domainflow -d domainflow -c "SELECT version();"
+
 # Check PostgreSQL status
 sudo systemctl status postgresql
-
-# Test database connection
-sudo -u domainflow psql -h localhost -d domainflow_production -c "SELECT 1;"
-
-# Check database configuration
-sudo cat /opt/domainflow/config/.env.production | grep DB_
 ```
 
-#### nginx Configuration Issues
-
+**Memory Issues:**
 ```bash
-# Test nginx configuration
-sudo nginx -t
+# Check memory usage
+free -h
+ps aux --sort=-%mem | head
 
-# Check nginx status
-sudo systemctl status nginx
-
-# Check nginx error logs
-sudo tail -20 /var/log/nginx/error.log
+# Check disk space
+df -h
 ```
 
-#### High Resource Usage
+### Performance Optimization
 
+**Database Optimization:**
+```sql
+-- Analyze table statistics
+ANALYZE;
+
+-- Reindex if needed
+REINDEX DATABASE domainflow;
+
+-- Check slow queries
+SELECT query, mean_time, calls 
+FROM pg_stat_statements 
+ORDER BY mean_time DESC 
+LIMIT 10;
+```
+
+**Application Optimization:**
 ```bash
-# Check system resources
-sudo /opt/domainflow/scripts/ops/health-check.sh
+# Monitor Go application
+go tool pprof http://localhost:8080/debug/pprof/profile
 
-# Check process usage
-top -p $(pgrep -d',' domainflow)
-
-# Check disk usage
-df -h /opt/domainflow
+# Monitor Node.js application
+npm install -g clinic
+clinic doctor -- npm start
 ```
+
+## Updating DomainFlow
+
+### Update Process
+
+**Docker Deployment:**
+```bash
+# Pull latest images
+docker-compose pull
+
+# Stop services
+docker-compose down
+
+# Start with new images
+docker-compose up -d
+
+# Run migrations if needed
+docker-compose exec backend ./apiserver migrate
+```
+
+**Manual Deployment:**
+```bash
+# Backup current installation
+cp -r /opt/domainflow /opt/domainflow.backup
+
+# Stop services
+sudo systemctl stop domainflow-backend domainflow-frontend
+
+# Update code
+git pull origin main
+
+# Build new binaries
+cd backend && go build -o bin/apiserver cmd/apiserver/main.go
+cd frontend && npm install && npm run build
+
+# Run migrations
+./bin/apiserver migrate
+
+# Start services
+sudo systemctl start domainflow-backend domainflow-frontend
+```
+
+## Support
 
 ### Getting Help
 
-1. **Check the logs**: Most issues can be diagnosed from the application and system logs
-2. **Run health check**: Use the built-in health check script to identify issues
-3. **Review documentation**: Check the operational runbook for common procedures
-4. **Community support**: Visit the project repository for community support
+**Documentation:**
+- [User Guide](USER_GUIDE.md) - End-user documentation
+- [Developer Guide](DEVELOPER_GUIDE.md) - Development information
+- [Architecture Guide](architecture/DOMAINFLOW_V3_ARCHITECTURE.md) - System architecture
 
-### Emergency Procedures
+**Community:**
+- GitHub Issues: Report bugs and request features
+- Documentation: Comprehensive guides and API documentation
 
-#### Stop All Services
+**Commercial Support:**
+- Enterprise support packages available
+- Professional services for custom deployments
+- Training and consulting services
 
-```bash
-sudo systemctl stop domainflow.target nginx
-```
+---
 
-#### Emergency Firewall Disable
+## Conclusion
 
-```bash
-sudo /opt/domainflow/scripts/firewall/emergency-access.sh
-```
+DomainFlow V3.0 is now installed and ready for use. For additional configuration options and advanced features, refer to the other documentation files in this repository.
 
-#### Restore from Backup
+**Next Steps:**
+1. Review the [User Guide](USER_GUIDE.md) for usage instructions
+2. Configure personas and proxies for domain validation
+3. Create your first domain generation campaign
+4. Set up monitoring and alerting for production environments
 
-```bash
-# Stop services
-sudo systemctl stop domainflow.target
-
-# Restore database
-sudo /opt/domainflow/scripts/ops/restore.sh database /path/to/latest/backup.sql.gz
-
-# Start services
-sudo systemctl start domainflow.target
-```
-
-## Next Steps
-
-After successful installation:
-
-1. **Review Security**: Ensure firewall rules meet your requirements
-2. **Set Up Monitoring**: Configure external monitoring if needed
-3. **Plan Backups**: Verify backup schedules meet your requirements
-4. **Document Changes**: Keep track of any customizations made
-5. **Plan Updates**: Schedule regular system and application updates
-
-For ongoing maintenance, refer to the [Operational Runbook](OPERATIONAL_RUNBOOK.md).
+**DomainFlow V3.0 Stable** - Advanced Domain Intelligence Platform

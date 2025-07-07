@@ -515,6 +515,14 @@ export class ApiClient {
     );
   }
 
+  async updateCampaign(campaignId: string, data: OperationRequestBody<ApiPaths['/campaigns/{campaignId}']['put']>) {
+    return this.request<PutOperationResponse<ApiPaths['/campaigns/{campaignId}']['put']>>(
+      `/campaigns/${campaignId}`,
+      'PUT',
+      { body: data }
+    );
+  }
+
   async getCampaignById(campaignId: string) {
     return this.request<GetOperationResponse<ApiPaths['/campaigns/{campaignId}']['get']>>(
       `/campaigns/${campaignId}`, 
