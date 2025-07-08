@@ -13,7 +13,7 @@
 
 import { z } from 'zod';
 import React from 'react';
-import { apiClient } from '@/lib/api-client/client';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
 
 // Feature flag value types
 export type FeatureFlagValue = boolean | string | number | Record<string, unknown>;
@@ -258,8 +258,9 @@ class FeatureFlagsService {
    */
   async fetchFlags(): Promise<void> {
     try {
-      // Use OpenAPI client to fetch feature flags
-      const result = await apiClient.getFeatureFlags();
+      // Use enhanced API client to fetch feature flags
+      const response = await enhancedApiClient.configApi.configFeaturesGet();
+      const result = response.data;
       
       if (!result) {
         throw new Error('No feature flags data received');

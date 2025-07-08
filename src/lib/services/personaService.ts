@@ -1,6 +1,7 @@
 // src/lib/services/personaService.ts
 // Production-ready Persona Service using OpenAPI types directly
-import { apiClient, type components } from '@/lib/api-client/client';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
 type Persona = components["schemas"]["Persona"];
@@ -8,16 +9,16 @@ type CreatePersonaRequest = components["schemas"]["CreatePersonaRequest"];
 type UpdatePersonaRequest = components["schemas"]["UpdatePersonaRequest"];
 type PersonaTestResult = components["schemas"]["PersonaTestResult"];
 
-// API Response wrapper type
-interface ApiResponse<T = unknown> {
-  status: 'success' | 'error';
-  data?: T;
-  message?: string;
-}
+// Import unified API response wrapper
+import type { ApiResponse } from '@/lib/types';
+
+// Import additional OpenAPI persona types
+export type PersonaListResponse = components["schemas"]["PersonaListResponse"];
 
 export async function createPersona(payload: CreatePersonaRequest): Promise<ApiResponse<Persona>> {
   try {
-    const result = await apiClient.createPersona(payload);
+    const response = await enhancedApiClient.personas.personasPost(payload);
+    const result = 'data' in response ? response.data : response;
     return {
       status: 'success',
       data: result,
@@ -33,10 +34,11 @@ export async function createPersona(payload: CreatePersonaRequest): Promise<ApiR
 
 export async function listPersonas(): Promise<ApiResponse<Persona[]>> {
   try {
-    const result = await apiClient.listPersonas();
+    const response = await enhancedApiClient.personas.personasGet();
+    const result = 'data' in response ? response.data : response;
     return {
       status: 'success',
-      data: result.data || [],
+      data: Array.isArray(result) ? result : [],
       message: 'Personas retrieved successfully'
     };
   } catch (error) {
@@ -50,7 +52,8 @@ export async function listPersonas(): Promise<ApiResponse<Persona[]>> {
 
 export async function getPersonaById(personaId: string, _personaType?: 'http' | 'dns'): Promise<ApiResponse<Persona>> {
   try {
-    const result = await apiClient.getPersonaById(personaId);
+    const response = await enhancedApiClient.personas.personasIdGet(personaId);
+    const result = 'data' in response ? response.data : response;
     return {
       status: 'success',
       data: result,
@@ -66,7 +69,8 @@ export async function getPersonaById(personaId: string, _personaType?: 'http' | 
 
 export async function updatePersona(personaId: string, payload: UpdatePersonaRequest, _personaType?: 'http' | 'dns'): Promise<ApiResponse<Persona>> {
   try {
-    const result = await apiClient.updatePersona(personaId, payload);
+    const response = await enhancedApiClient.personas.personasIdPut(personaId, payload);
+    const result = 'data' in response ? response.data : response;
     return {
       status: 'success',
       data: result,
@@ -82,7 +86,7 @@ export async function updatePersona(personaId: string, payload: UpdatePersonaReq
 
 export async function deletePersona(personaId: string, _personaType?: 'http' | 'dns'): Promise<ApiResponse<null>> {
   try {
-    await apiClient.deletePersona(personaId);
+    await enhancedApiClient.personas.personasIdDelete(personaId);
     return {
       status: 'success',
       data: null,
@@ -98,7 +102,8 @@ export async function deletePersona(personaId: string, _personaType?: 'http' | '
 
 export async function testPersona(personaId: string, _personaType?: 'http' | 'dns'): Promise<ApiResponse<PersonaTestResult>> {
   try {
-    const result = await apiClient.testPersona(personaId);
+    const response = await enhancedApiClient.personas.personasIdTestPost(personaId);
+    const result = 'data' in response ? response.data : response;
     return {
       status: 'success',
       data: result,

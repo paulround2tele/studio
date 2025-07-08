@@ -32,9 +32,16 @@ export type {
   CampaignViewModel,
   CampaignSelectedType,
   DomainGenerationPattern,
-  DomainSourceSelectionMode,
-  ApiResponse
+  DomainSourceSelectionMode
 } from './openapi-extensions';
+
+// Unified API Response wrapper for all services
+export interface ApiResponse<T = unknown> {
+  status: 'success' | 'error';
+  data?: T;
+  error?: string;
+  message?: string;
+}
 
 // Legacy type aliases for backwards compatibility - with proper null handling
 export type CampaignPhase = NonNullable<CampaignType>;
@@ -48,23 +55,27 @@ export type DnsPersona = Persona;
 export type HTTPConfigDetails = components["schemas"]["HTTPConfigDetails"];
 export type DNSConfigDetails = components["schemas"]["DNSConfigDetails"];
 
-// Mock types for missing legacy interfaces (to be replaced with proper implementations)
-export interface CampaignValidationItem {
+// Domain validation items - use OpenAPI GeneratedDomain as base with UI extensions
+export interface CampaignValidationItem extends Omit<GeneratedDomain, 'domainName'> {
   id: string;
   domainName: string;
-  domain?: string; // Alternative property name
+  domain?: string; // Alternative property name for compatibility
   status: string;
   validationStatus?: string;
   validatedAt?: string;
 }
 
-
+// UI-specific content analysis input (different from OpenAPI batch extraction)
 export interface AnalyzeContentInput {
   urls: string[];
   content?: string;
   keywords?: string[];
   maxResults?: number;
 }
+
+// OpenAPI keyword extraction types for direct API usage
+export type BatchKeywordExtractionRequest = components["schemas"]["BatchKeywordExtractionRequest"];
+export type KeywordExtractionResult = components["schemas"]["KeywordExtractionAPIResult"];
 
 export type DomainActivityStatus =
   | 'validated'
@@ -104,14 +115,22 @@ export interface DomainDetail {
   leadScanStatus: DomainActivityStatus;
 }
 
-// Auth types (mock for now - should be replaced with proper OpenAPI types)
+// Auth types using OpenAPI base types
+export type LoginRequest = components["schemas"]["LoginRequest"];
+export type LoginResponse = components["schemas"]["LoginResponse"];
+export type RefreshResponse = components["schemas"]["RefreshResponse"];
+export type ChangePasswordRequest = components["schemas"]["ChangePasswordRequest"];
+
+// Session management (extending OpenAPI User type)
 export interface Session {
   id: string;
   userId: string;
   expiresAt: string;
   createdAt: string;
+  user?: User;
 }
 
+// Role and permission types (UI-specific extensions)
 export interface Role {
   id: string;
   name: string;

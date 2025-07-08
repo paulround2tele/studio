@@ -1,164 +1,17 @@
 # AuthApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**authLoginPost**](#authloginpost) | **POST** /auth/login | User login|
-|[**authLogoutPost**](#authlogoutpost) | **POST** /auth/logout | User logout|
-|[**authRefreshPost**](#authrefreshpost) | **POST** /auth/refresh | Refresh session|
-|[**changePasswordPost**](#changepasswordpost) | **POST** /change-password | Change password|
-|[**meGet**](#meget) | **GET** /me | Get current user|
+|[**changePassword**](#changepassword) | **POST** /change-password | Change password|
+|[**getCurrentUser**](#getcurrentuser) | **GET** /me | Get current user|
+|[**login**](#login) | **POST** /auth/login | User login|
+|[**logout**](#logout) | **POST** /auth/logout | User logout|
+|[**refreshSession**](#refreshsession) | **POST** /auth/refresh | Refresh session|
 
-# **authLoginPost**
-> { [key: string]: any; } authLoginPost(githubComFntelecomllcStudioBackendInternalModelsLoginRequest)
-
-Authenticates a user and creates a session
-
-### Example
-
-```typescript
-import {
-    AuthApi,
-    Configuration,
-    GithubComFntelecomllcStudioBackendInternalModelsLoginRequest
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new AuthApi(configuration);
-
-let githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest; //Login credentials
-
-const { status, data } = await apiInstance.authLoginPost(
-    githubComFntelecomllcStudioBackendInternalModelsLoginRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **githubComFntelecomllcStudioBackendInternalModelsLoginRequest** | **GithubComFntelecomllcStudioBackendInternalModelsLoginRequest**| Login credentials | |
-
-
-### Return type
-
-**{ [key: string]: any; }**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-|**400** | Bad Request |  -  |
-|**401** | Unauthorized |  -  |
-|**423** | Locked |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **authLogoutPost**
-> { [key: string]: string; } authLogoutPost()
-
-Invalidates the current session and clears session cookie
-
-### Example
-
-```typescript
-import {
-    AuthApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new AuthApi(configuration);
-
-const { status, data } = await apiInstance.authLogoutPost();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**{ [key: string]: string; }**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **authRefreshPost**
-> { [key: string]: any; } authRefreshPost()
-
-Refreshes the current session
-
-### Example
-
-```typescript
-import {
-    AuthApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new AuthApi(configuration);
-
-const { status, data } = await apiInstance.authRefreshPost();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**{ [key: string]: any; }**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **changePasswordPost**
-> { [key: string]: string; } changePasswordPost(requestBody)
+# **changePassword**
+> StandardAPIResponse changePassword(changePasswordRequest)
 
 Changes the password for the currently authenticated user
 
@@ -167,16 +20,17 @@ Changes the password for the currently authenticated user
 ```typescript
 import {
     AuthApi,
-    Configuration
-} from '@domainflow/api-client';
+    Configuration,
+    ChangePasswordRequest
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
 
-let requestBody: { [key: string]: string; }; //Password change
+let changePasswordRequest: ChangePasswordRequest; //
 
-const { status, data } = await apiInstance.changePasswordPost(
-    requestBody
+const { status, data } = await apiInstance.changePassword(
+    changePasswordRequest
 );
 ```
 
@@ -184,16 +38,16 @@ const { status, data } = await apiInstance.changePasswordPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **requestBody** | **{ [key: string]: string; }**| Password change | |
+| **changePasswordRequest** | **ChangePasswordRequest**|  | |
 
 
 ### Return type
 
-**{ [key: string]: string; }**
+**StandardAPIResponse**
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -204,15 +58,16 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
-|**400** | Bad Request |  -  |
+|**200** | Password changed successfully |  -  |
+|**400** | Bad request |  -  |
 |**401** | Unauthorized |  -  |
-|**500** | Internal Server Error |  -  |
+|**500** | Internal server error |  -  |
+|**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **meGet**
-> GithubComFntelecomllcStudioBackendInternalModelsUser meGet()
+# **getCurrentUser**
+> User getCurrentUser()
 
 Returns information about the currently authenticated user
 
@@ -222,12 +77,12 @@ Returns information about the currently authenticated user
 import {
     AuthApi,
     Configuration
-} from '@domainflow/api-client';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
 
-const { status, data } = await apiInstance.meGet();
+const { status, data } = await apiInstance.getCurrentUser();
 ```
 
 ### Parameters
@@ -236,11 +91,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsUser**
+**User**
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -251,9 +106,159 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**200** | Current user information |  -  |
 |**401** | Unauthorized |  -  |
-|**500** | Internal Server Error |  -  |
+|**500** | Internal server error |  -  |
+|**0** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **login**
+> LoginResponse login(loginRequest)
+
+Authenticates a user and creates a session
+
+### Example
+
+```typescript
+import {
+    AuthApi,
+    Configuration,
+    LoginRequest
+} from 'api-client';
+
+const configuration = new Configuration();
+const apiInstance = new AuthApi(configuration);
+
+let loginRequest: LoginRequest; //
+
+const { status, data } = await apiInstance.login(
+    loginRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **loginRequest** | **LoginRequest**|  | |
+
+
+### Return type
+
+**LoginResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Login successful |  -  |
+|**400** | Bad request |  -  |
+|**401** | Unauthorized |  -  |
+|**500** | Internal server error |  -  |
+|**0** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **logout**
+> StandardAPIResponse logout()
+
+Invalidates the current session and clears session cookie
+
+### Example
+
+```typescript
+import {
+    AuthApi,
+    Configuration
+} from 'api-client';
+
+const configuration = new Configuration();
+const apiInstance = new AuthApi(configuration);
+
+const { status, data } = await apiInstance.logout();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**StandardAPIResponse**
+
+### Authorization
+
+[sessionAuth](../README.md#sessionAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Logout successful |  -  |
+|**500** | Internal server error |  -  |
+|**0** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **refreshSession**
+> RefreshResponse refreshSession()
+
+Refreshes the current session
+
+### Example
+
+```typescript
+import {
+    AuthApi,
+    Configuration
+} from 'api-client';
+
+const configuration = new Configuration();
+const apiInstance = new AuthApi(configuration);
+
+const { status, data } = await apiInstance.refreshSession();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**RefreshResponse**
+
+### Authorization
+
+[sessionAuth](../README.md#sessionAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Session refreshed successfully |  -  |
+|**401** | Unauthorized |  -  |
+|**500** | Internal server error |  -  |
+|**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -1,4 +1,7 @@
-import { apiClient as openApiClient } from '@/lib/api-client/client';
+import { ApiClient } from '@/lib/api-client/client';
+
+// Using manual client for config operations
+const configClient = new ApiClient();
 
 export interface DNSConfig {
   resolvers: string[];
@@ -102,84 +105,84 @@ class SettingsService {
   }
 
   async getDNSConfig(): Promise<DNSConfig> {
-    const response = await openApiClient.getDNSConfig();
+    const response = await configClient.getDNSConfig();
     return response as unknown as DNSConfig;
   }
 
   async updateDNSConfig(cfg: DNSConfig): Promise<void> {
-    await openApiClient.updateDNSConfig(cfg as unknown as Parameters<typeof openApiClient.updateDNSConfig>[0]);
+    await configClient.updateDNSConfig(cfg as any);
   }
 
   async getHTTPConfig(): Promise<HTTPConfig> {
-    const response = await openApiClient.getHTTPConfig();
+    const response = await configClient.getHTTPConfig();
     return response as unknown as HTTPConfig;
   }
 
   async updateHTTPConfig(cfg: HTTPConfig): Promise<void> {
-    await openApiClient.updateHTTPConfig(cfg as unknown as Parameters<typeof openApiClient.updateHTTPConfig>[0]);
+    await configClient.updateHTTPConfig(cfg as any);
   }
 
   async getLoggingConfig(): Promise<LoggingConfig> {
-    const response = await openApiClient.getLoggingConfig();
+    const response = await configClient.getLoggingConfig();
     return response as unknown as LoggingConfig;
   }
 
   async updateLoggingConfig(cfg: LoggingConfig): Promise<void> {
-    await openApiClient.updateLoggingConfig(cfg as unknown as Parameters<typeof openApiClient.updateLoggingConfig>[0]);
+    await configClient.updateLoggingConfig(cfg as any);
   }
 
   async getWorkerConfig(): Promise<WorkerConfig> {
-    const response = await openApiClient.getWorkerConfig();
+    const response = await configClient.getWorkerConfig();
     return response as unknown as WorkerConfig;
   }
 
   async updateWorkerConfig(cfg: WorkerConfig): Promise<void> {
-    await openApiClient.updateWorkerConfig(cfg as unknown as Parameters<typeof openApiClient.updateWorkerConfig>[0]);
+    await configClient.updateWorkerConfig(cfg as any);
   }
 
   async getRateLimiterConfig(): Promise<RateLimiterConfig> {
-    const response = await openApiClient.getRateLimiterConfig();
+    const response = await configClient.getRateLimiterConfig();
     return response as unknown as RateLimiterConfig;
   }
 
   async updateRateLimiterConfig(cfg: RateLimiterConfig): Promise<void> {
-    await openApiClient.updateRateLimiterConfig(cfg as unknown as Parameters<typeof openApiClient.updateRateLimiterConfig>[0]);
+    await configClient.updateRateLimiterConfig(cfg as any);
   }
 
   async getProxyManagerConfig(): Promise<ProxyManagerConfig> {
-    const response = await openApiClient.getProxyManagerConfig();
+    const response = await configClient.getProxyManagerConfig();
     return response as unknown as ProxyManagerConfig;
   }
 
   async updateProxyManagerConfig(cfg: ProxyManagerConfig): Promise<void> {
-    await openApiClient.updateProxyManagerConfig(cfg as unknown as Parameters<typeof openApiClient.updateProxyManagerConfig>[0]);
+    await configClient.updateProxyManagerConfig(cfg as any);
   }
 
   async getServerConfig(): Promise<ServerConfig> {
-    const response = await openApiClient.getServerConfig();
+    const response = await configClient.getServerConfig();
     return response as unknown as ServerConfig;
   }
 
   async updateServerConfig(cfg: Partial<ServerConfig>): Promise<void> {
-    await openApiClient.updateServerConfig(cfg as unknown as Parameters<typeof openApiClient.updateServerConfig>[0]);
+    await configClient.updateServerConfig(cfg as any);
   }
 
   async getAuthConfig(): Promise<AuthConfig> {
-    const response = await openApiClient.getAuthConfig();
+    const response = await configClient.getAuthConfig();
     return response as unknown as AuthConfig;
   }
 
   async updateAuthConfig(cfg: AuthConfig): Promise<void> {
-    await openApiClient.updateAuthConfig(cfg as unknown as Parameters<typeof openApiClient.updateAuthConfig>[0]);
+    await configClient.updateAuthConfig(cfg as any);
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsConfig> {
-    const response = await openApiClient.getFeatureFlags();
+    const response = await configClient.getFeatureFlags();
     return response as unknown as FeatureFlagsConfig;
   }
 
   async updateFeatureFlags(flags: FeatureFlagsConfig): Promise<void> {
-    await openApiClient.updateFeatureFlags(flags as unknown as Parameters<typeof openApiClient.updateFeatureFlags>[0]);
+    await configClient.updateFeatureFlags(flags as any);
   }
 }
 

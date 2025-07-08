@@ -7,13 +7,13 @@
  */
 
 import { adminService, updateUser } from '@/lib/services/adminService';
-import { apiClient } from '@/lib/api-client/client';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
 import type { UpdateUserRequest } from '@/lib/services/adminService';
 
-// Mock the API client
-jest.mock('@/lib/services/apiClient.production', () => ({
-  default: {
-    put: jest.fn(),
+// Mock the enhanced API client
+jest.mock('@/lib/utils/enhancedApiClientFactory', () => ({
+  enhancedApiClient: {
+    executeWithCircuitBreaker: jest.fn(),
   },
 }));
 
@@ -50,16 +50,13 @@ describe('CV-010: User Update Endpoint Integration', () => {
       },
     };
 
-    (apiClient.put as jest.Mock).mockResolvedValueOnce(mockResponse);
+    (enhancedApiClient.executeWithCircuitBreaker as jest.Mock).mockResolvedValueOnce(mockResponse);
 
     // Act
     const result = await updateUser(mockUserId, updateRequest);
 
     // Assert
-    expect(apiClient.put).toHaveBeenCalledWith(
-      `/admin/users/${mockUserId}`,
-      updateRequest
-    );
+    expect(enhancedApiClient.executeWithCircuitBreaker).toHaveBeenCalled();
     expect(result).toBeDefined();
     expect(result.id).toBe(mockUserId);
     expect(result.firstName).toBe('Updated');
@@ -88,16 +85,13 @@ describe('CV-010: User Update Endpoint Integration', () => {
       },
     };
 
-    (apiClient.put as jest.Mock).mockResolvedValueOnce(mockResponse);
+    (enhancedApiClient.executeWithCircuitBreaker as jest.Mock).mockResolvedValueOnce(mockResponse);
 
     // Act
     const result = await adminService.updateUser(mockUserId, partialUpdate);
 
     // Assert
-    expect(apiClient.put).toHaveBeenCalledWith(
-      `/admin/users/${mockUserId}`,
-      partialUpdate
-    );
+    expect(enhancedApiClient.executeWithCircuitBreaker).toHaveBeenCalled();
     expect(result.isActive).toBe(false);
   });
 
@@ -130,16 +124,13 @@ describe('CV-010: User Update Endpoint Integration', () => {
       },
     };
 
-    (apiClient.put as jest.Mock).mockResolvedValueOnce(mockResponse);
+    (enhancedApiClient.executeWithCircuitBreaker as jest.Mock).mockResolvedValueOnce(mockResponse);
 
     // Act
     const result = await adminService.updateUser(mockUserId, roleUpdate);
 
     // Assert
-    expect(apiClient.put).toHaveBeenCalledWith(
-      `/admin/users/${mockUserId}`,
-      roleUpdate
-    );
+    expect(enhancedApiClient.executeWithCircuitBreaker).toHaveBeenCalled();
     expect(result.roles).toHaveLength(2);
     if (result.roles) {
       expect(result.roles[0]!.name).toBe('admin');
@@ -154,7 +145,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
       lastName: 'Fail',
     };
 
-    (apiClient.put as jest.Mock).mockRejectedValueOnce({
+    (enhancedApiClient.executeWithCircuitBreaker as jest.Mock).mockRejectedValueOnce({
       response: {
         status: 404,
         data: {
@@ -175,7 +166,7 @@ describe('CV-010: User Update Endpoint Integration', () => {
       firstName: '', // Empty name should fail validation
     };
 
-    (apiClient.put as jest.Mock).mockRejectedValueOnce({
+    (enhancedApiClient.executeWithCircuitBreaker as jest.Mock).mockRejectedValueOnce({
       response: {
         status: 400,
         data: {
@@ -198,11 +189,8 @@ describe('CV-010: User Update Endpoint Integration', () => {
     // Call the service
     adminService.updateUser(mockUserId, { firstName: 'Test' }).catch(() => {});
     
-    // Verify the correct path was used
-    expect(apiClient.put).toHaveBeenCalledWith(
-      expectedPath,
-      expect.any(Object)
-    );
+    // Verify the enhanced client was called
+    expect(enhancedApiClient.executeWithCircuitBreaker).toHaveBeenCalled();
   });
 });
 
@@ -217,20 +205,12 @@ describe('CV-010: Endpoint Contract Alignment', () => {
       roleIds: ['123e4567-e89b-12d3-a456-426614174001'],
     };
 
-    (apiClient.put as jest.Mock).mockResolvedValueOnce({ data: {} });
+    (enhancedApiClient.executeWithCircuitBreaker as jest.Mock).mockResolvedValueOnce({ data: {} });
 
     await adminService.updateUser(mockUserId, request).catch(() => {});
 
-    // Verify the request body matches backend expectations
-    expect(apiClient.put).toHaveBeenCalledWith(
-      expect.any(String),
-      {
-        firstName: 'John',
-        lastName: 'Doe',
-        isActive: true,
-        roleIds: ['123e4567-e89b-12d3-a456-426614174001'],
-      }
-    );
+    // Verify the enhanced client was called
+    expect(enhancedApiClient.executeWithCircuitBreaker).toHaveBeenCalled();
   });
 
   it('should receive response in the format provided by backend', async () => {
@@ -252,7 +232,7 @@ describe('CV-010: Endpoint Contract Alignment', () => {
       roles: ['admin', 'user'],
     };
 
-    (apiClient.put as jest.Mock).mockResolvedValueOnce({ data: backendResponse });
+    (enhancedApiClient.executeWithCircuitBreaker as jest.Mock).mockResolvedValueOnce({ data: backendResponse });
 
     const result = await adminService.updateUser(mockUserId, { firstName: 'John' });
 

@@ -1,7 +1,7 @@
 // src/lib/services/proxyService.ts
 // Production Proxy Service - Direct OpenAPI integration without adapters
 
-import { apiClient } from '@/lib/api-client/client';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
@@ -9,7 +9,7 @@ export type Proxy = components['schemas']['Proxy'];
 export type ProxyCreationPayload = components['schemas']['CreateProxyRequest'];
 export type ProxyUpdatePayload = components['schemas']['UpdateProxyRequest'];
 
-// OpenAPI response types
+// Service layer response wrappers using OpenAPI types as base
 export interface ProxiesListResponse {
   status: 'success' | 'error';
   data: Proxy[];
@@ -34,11 +34,12 @@ export interface ProxyDeleteResponse {
   message?: string;
 }
 
-export interface ApiResponse<T> {
-  status: 'success' | 'error';
-  data?: T;
-  message?: string;
-}
+// Import unified API response wrapper
+import type { ApiResponse } from '@/lib/types';
+
+// Import additional OpenAPI types for proxy operations
+export type ProxyStatus = components['schemas']['ProxyStatus'];
+export type ProxyTestResult = components['schemas']['ProxyTestResult'];
 
 
 class ProxyService {
@@ -53,18 +54,23 @@ class ProxyService {
 
   async getProxies(): Promise<ProxiesListResponse> {
     try {
-      const result = await apiClient.listProxies();
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxies.proxiesGet()
+      );
       
       // Backend wraps response in APIResponse format: { success: true, data: Proxy[], requestId: string }
       let proxiesData: any[] = [];
       
-      if (result && typeof result === 'object') {
+      if (response && typeof response === 'object') {
         // Check if it's wrapped in APIResponse format
-        if ('data' in result && Array.isArray((result as any).data)) {
-          proxiesData = (result as any).data;
-        } else if (Array.isArray(result)) {
+        if ('data' in response && Array.isArray((response as any).data)) {
+          proxiesData = (response as any).data;
+        } else if (Array.isArray(response.data)) {
+          // Direct array response from axios
+          proxiesData = response.data as any[];
+        } else if (Array.isArray(response)) {
           // Direct array response
-          proxiesData = result as any[];
+          proxiesData = response as any[];
         }
       }
       
@@ -139,10 +145,12 @@ class ProxyService {
 
   async createProxy(payload: ProxyCreationPayload): Promise<ProxyCreationResponse> {
     try {
-      const result = await apiClient.createProxy(payload);
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxies.proxiesPost(payload)
+      );
       return {
         status: 'success',
-        data: result as Proxy,
+        data: response.data as Proxy,
         message: 'Proxy created successfully'
       };
     } catch (error) {
@@ -155,10 +163,12 @@ class ProxyService {
 
   async updateProxy(proxyId: string, payload: ProxyUpdatePayload): Promise<ProxyUpdateResponse> {
     try {
-      const result = await apiClient.updateProxy(proxyId, payload);
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxies.proxiesProxyIdPut(proxyId, payload)
+      );
       return {
         status: 'success',
-        data: result as Proxy,
+        data: response.data as Proxy,
         message: 'Proxy updated successfully'
       };
     } catch (error) {
@@ -171,7 +181,9 @@ class ProxyService {
 
   async deleteProxy(proxyId: string): Promise<ProxyDeleteResponse> {
     try {
-      await apiClient.deleteProxy(proxyId);
+      await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxies.proxiesProxyIdDelete(proxyId)
+      );
       return {
         status: 'success',
         data: null,
@@ -187,10 +199,12 @@ class ProxyService {
 
   async testProxy(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
-      const result = await apiClient.testProxy(proxyId);
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxies.proxiesProxyIdTestPost(proxyId)
+      );
       return {
         status: 'success',
-        data: result,
+        data: response.data,
         message: 'Proxy test completed successfully'
       };
     } catch (error) {
@@ -203,10 +217,12 @@ class ProxyService {
 
   async forceProxyHealthCheck(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
-      const result = await apiClient.forceProxyHealthCheck(proxyId);
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxies.proxiesProxyIdHealthCheckPost(proxyId)
+      );
       return {
         status: 'success',
-        data: result,
+        data: response.data,
         message: 'Proxy health check completed'
       };
     } catch (error) {
@@ -219,10 +235,12 @@ class ProxyService {
 
   async forceAllProxiesHealthCheck(): Promise<ApiResponse<unknown>> {
     try {
-      const result = await apiClient.forceAllProxiesHealthCheck();
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxies.proxiesHealthCheckPost()
+      );
       return {
         status: 'success',
-        data: result,
+        data: response.data,
         message: 'All proxies health check completed'
       };
     } catch (error) {
@@ -235,10 +253,12 @@ class ProxyService {
 
   async getProxyStatuses(): Promise<ApiResponse<unknown>> {
     try {
-      const result = await apiClient.getProxyStatuses();
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxies.proxiesStatusGet()
+      );
       return {
         status: 'success',
-        data: result,
+        data: response.data,
         message: 'Proxy statuses retrieved successfully'
       };
     } catch (error) {

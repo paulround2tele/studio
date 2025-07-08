@@ -200,12 +200,20 @@ export default function ProductionReadinessCheck() {
           details: healthDetails,
           icon: <Database className="h-4 w-4" />
         });
-      } else {
+      } else if (data.status === 'degraded') {
         results.push({
           name: 'API Backend',
           status: 'warning',
-          message: 'Backend API returned non-healthy status',
-          details: `${data.message || 'Check backend logs'} ${data.isCached ? '(Cached)' : ''}`,
+          message: 'Backend API is degraded but functional',
+          details: `${healthDetails} - Some components may be experiencing issues`,
+          icon: <Database className="h-4 w-4" />
+        });
+      } else {
+        results.push({
+          name: 'API Backend',
+          status: 'failed',
+          message: 'Backend API returned unhealthy status',
+          details: `Status: ${data.status} ${data.message || 'Check backend logs'} ${data.isCached ? '(Cached)' : ''}`,
           icon: <Database className="h-4 w-4" />
         });
       }

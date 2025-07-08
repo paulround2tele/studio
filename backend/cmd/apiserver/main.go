@@ -345,22 +345,16 @@ func main() {
 
 	log.Println("Authentication configured for session-only (offline mode)")
 
-	// User routes (authenticated) - aligned with OpenAPI spec
-	authRequiredRoutes := router.Group("/")
-	authRequiredRoutes.Use(authMiddleware.SessionAuth())
-	authRequiredRoutes.Use(securityMiddleware.SessionProtection())
-	{
-		// Current user routes (authenticated users)
-		authRequiredRoutes.GET("/me", authHandler.Me)
-		authRequiredRoutes.POST("/change-password", authHandler.ChangePassword)
-	}
-	log.Println("Registered authenticated user routes: /me, /change-password")
-
 	// Protected routes with session authentication only for /api/v2/* endpoints
 	apiV2 := router.Group("/api/v2")
 	apiV2.Use(authMiddleware.SessionAuth())
 	apiV2.Use(securityMiddleware.SessionProtection())
 	{
+		// User routes (authenticated) - aligned with OpenAPI spec
+		apiV2.GET("/me", authHandler.Me)
+		apiV2.POST("/change-password", authHandler.ChangePassword)
+		log.Println("Registered authenticated user routes: /api/v2/me, /api/v2/change-password")
+
 		// Persona routes (session auth only)
 		personaGroup := apiV2.Group("/personas")
 		{

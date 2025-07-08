@@ -1,36 +1,33 @@
 # KeywordsApi
 
-All URIs are relative to */*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiV2ExtractKeywordsPost**](#apiv2extractkeywordspost) | **POST** /api/v2/extract/keywords | Batch extract keywords|
-|[**apiV2ExtractKeywordsStreamGet**](#apiv2extractkeywordsstreamget) | **GET** /api/v2/extract/keywords/stream | Stream extract keywords|
-|[**apiV2KeywordsSetsGet**](#apiv2keywordssetsget) | **GET** /api/v2/keywords/sets | List keyword sets|
-|[**apiV2KeywordsSetsPost**](#apiv2keywordssetspost) | **POST** /api/v2/keywords/sets | Create keyword set|
-|[**apiV2KeywordsSetsSetIdDelete**](#apiv2keywordssetssetiddelete) | **DELETE** /api/v2/keywords/sets/{setId} | Delete keyword set|
-|[**apiV2KeywordsSetsSetIdGet**](#apiv2keywordssetssetidget) | **GET** /api/v2/keywords/sets/{setId} | Get keyword set|
-|[**apiV2KeywordsSetsSetIdPut**](#apiv2keywordssetssetidput) | **PUT** /api/v2/keywords/sets/{setId} | Update keyword set|
+|[**batchExtractKeywords**](#batchextractkeywords) | **POST** /api/v2/extract/keywords | Batch keyword extraction|
+|[**streamExtractKeywords**](#streamextractkeywords) | **GET** /api/v2/extract/keywords/stream | Streaming keyword extraction|
 
-# **apiV2ExtractKeywordsPost**
-> apiV2ExtractKeywordsPost(body)
+# **batchExtractKeywords**
+> BatchKeywordExtractionResponse batchExtractKeywords(batchKeywordExtractionRequest)
 
+Extracts keywords from multiple URLs in a single batch request
 
 ### Example
 
 ```typescript
 import {
     KeywordsApi,
-    Configuration
-} from '@domainflow/api-client';
+    Configuration,
+    BatchKeywordExtractionRequest
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordsApi(configuration);
 
-let body: object; //
+let batchKeywordExtractionRequest: BatchKeywordExtractionRequest; //
 
-const { status, data } = await apiInstance.apiV2ExtractKeywordsPost(
-    body
+const { status, data } = await apiInstance.batchExtractKeywords(
+    batchKeywordExtractionRequest
 );
 ```
 
@@ -38,152 +35,16 @@ const { status, data } = await apiInstance.apiV2ExtractKeywordsPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
+| **batchKeywordExtractionRequest** | **BatchKeywordExtractionRequest**|  | |
 
 
 ### Return type
 
-void (empty response body)
+**BatchKeywordExtractionResponse**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Extraction results |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2ExtractKeywordsStreamGet**
-> apiV2ExtractKeywordsStreamGet()
-
-
-### Example
-
-```typescript
-import {
-    KeywordsApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordsApi(configuration);
-
-const { status, data } = await apiInstance.apiV2ExtractKeywordsStreamGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Stream started |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2KeywordsSetsGet**
-> Array<KeywordSetResponse> apiV2KeywordsSetsGet()
-
-
-### Example
-
-```typescript
-import {
-    KeywordsApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordsApi(configuration);
-
-const { status, data } = await apiInstance.apiV2KeywordsSetsGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**Array<KeywordSetResponse>**
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | List of sets |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2KeywordsSetsPost**
-> KeywordSetResponse apiV2KeywordsSetsPost(body)
-
-
-### Example
-
-```typescript
-import {
-    KeywordsApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordsApi(configuration);
-
-let body: object; //
-
-const { status, data } = await apiInstance.apiV2KeywordsSetsPost(
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-
-
-### Return type
-
-**KeywordSetResponse**
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -194,13 +55,17 @@ const { status, data } = await apiInstance.apiV2KeywordsSetsPost(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Created |  -  |
+|**200** | Batch extraction results |  -  |
+|**400** | Bad request - Invalid input |  -  |
+|**401** | Unauthorized |  -  |
+|**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **apiV2KeywordsSetsSetIdDelete**
-> apiV2KeywordsSetsSetIdDelete()
+# **streamExtractKeywords**
+> string streamExtractKeywords()
 
+Extracts keywords from a single URL with real-time streaming results
 
 ### Example
 
@@ -208,15 +73,21 @@ const { status, data } = await apiInstance.apiV2KeywordsSetsPost(
 import {
     KeywordsApi,
     Configuration
-} from '@domainflow/api-client';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordsApi(configuration);
 
-let setId: string; // (default to undefined)
+let url: string; //URL to extract keywords from (default to undefined)
+let keywordSetId: string; //UUID of the keyword set to use for extraction (default to undefined)
+let httpPersonaId: string; //Optional UUID of HTTP persona to use (optional) (default to undefined)
+let dnsPersonaId: string; //Optional UUID of DNS persona to use (optional) (default to undefined)
 
-const { status, data } = await apiInstance.apiV2KeywordsSetsSetIdDelete(
-    setId
+const { status, data } = await apiInstance.streamExtractKeywords(
+    url,
+    keywordSetId,
+    httpPersonaId,
+    dnsPersonaId
 );
 ```
 
@@ -224,130 +95,33 @@ const { status, data } = await apiInstance.apiV2KeywordsSetsSetIdDelete(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **setId** | [**string**] |  | defaults to undefined|
+| **url** | [**string**] | URL to extract keywords from | defaults to undefined|
+| **keywordSetId** | [**string**] | UUID of the keyword set to use for extraction | defaults to undefined|
+| **httpPersonaId** | [**string**] | Optional UUID of HTTP persona to use | (optional) defaults to undefined|
+| **dnsPersonaId** | [**string**] | Optional UUID of DNS persona to use | (optional) defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**string**
 
 ### Authorization
 
-[SessionAuth](../README.md#SessionAuth)
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: Not defined
+ - **Accept**: text/event-stream, application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | Deleted |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2KeywordsSetsSetIdGet**
-> KeywordSetResponse apiV2KeywordsSetsSetIdGet()
-
-
-### Example
-
-```typescript
-import {
-    KeywordsApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordsApi(configuration);
-
-let setId: string; // (default to undefined)
-
-const { status, data } = await apiInstance.apiV2KeywordsSetsSetIdGet(
-    setId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **setId** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**KeywordSetResponse**
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Details |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **apiV2KeywordsSetsSetIdPut**
-> KeywordSetResponse apiV2KeywordsSetsSetIdPut(body)
-
-
-### Example
-
-```typescript
-import {
-    KeywordsApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordsApi(configuration);
-
-let setId: string; // (default to undefined)
-let body: object; //
-
-const { status, data } = await apiInstance.apiV2KeywordsSetsSetIdPut(
-    setId,
-    body
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **body** | **object**|  | |
-| **setId** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**KeywordSetResponse**
-
-### Authorization
-
-[SessionAuth](../README.md#SessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Updated |  -  |
+|**200** | Server-sent events stream with keyword extraction results |  -  |
+|**400** | Bad request - Invalid parameters |  -  |
+|**401** | Unauthorized |  -  |
+|**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -896,21 +896,7 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 		return
 	}
 
-	// Calculate total possible combinations using domain generator
-	domainGen, err := domainexpert.NewDomainGenerator(
-		domainexpert.CampaignPatternType(req.PatternType),
-		req.VariableLength,
-		req.CharacterSet,
-		req.ConstantString,
-		req.TLD,
-	)
-	if err != nil {
-		log.Printf("Error creating domain generator: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create domain generator"})
-		return
-	}
-
-	totalCombinations := domainGen.GetTotalCombinations()
+	// Note: We only need the currentOffset for the frontend, not total combinations
 
 	// Convert request to DomainGenerationCampaignParams for hash generation
 	// Use exact same approach as domain generation service for consistency
@@ -950,14 +936,9 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 		log.Printf("DEBUG [Pattern Offset]: Found existing config state for hash %s with offset %d", hashResult.HashString, currentOffset)
 	}
 
-	response := PatternOffsetResponse{
-		PatternType:               req.PatternType,
-		VariableLength:            req.VariableLength,
-		CharacterSet:              req.CharacterSet,
-		ConstantString:            req.ConstantString,
-		TLD:                       req.TLD,
-		CurrentOffset:             currentOffset,
-		TotalPossibleCombinations: totalCombinations,
+	// Return only the currentOffset as expected by frontend
+	response := gin.H{
+		"currentOffset": currentOffset,
 	}
 
 	c.JSON(http.StatusOK, response)

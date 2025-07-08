@@ -1,18 +1,20 @@
 // src/lib/services/configService.ts
 // Production Config Service - Feature flags and configuration management
 
-import { apiClient, type components } from '@/lib/api-client/client';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import type { components } from '@/lib/api-client/types';
 
 // Use generated types
 export type FeatureFlags = components['schemas']['FeatureFlags'];
 
-// Response wrapper types
-export interface ConfigResponse<T = unknown> {
-  status: 'success' | 'error';
-  data?: T;
-  error?: string;
-  message?: string;
-}
+// Import unified API response wrapper
+import type { ApiResponse } from '@/lib/types';
+export type ConfigResponse<T = unknown> = ApiResponse<T>;
+
+// Import additional OpenAPI config types
+export type AuthConfig = components['schemas']['AuthConfig'];
+export type DNSConfig = components['schemas']['DNSConfig'];
+export type HTTPConfig = components['schemas']['HTTPConfig'];
 
 class ConfigService {
   private static instance: ConfigService;
@@ -26,10 +28,12 @@ class ConfigService {
 
   async getFeatureFlags(): Promise<ConfigResponse<FeatureFlags>> {
     try {
-      const result = await apiClient.getFeatureFlags();
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.configApi.configFeaturesGet()
+      );
       return {
         status: 'success',
-        data: result as FeatureFlags,
+        data: response.data as FeatureFlags,
         message: 'Feature flags retrieved successfully'
       };
     } catch (error) {
@@ -42,10 +46,12 @@ class ConfigService {
 
   async updateFeatureFlags(flags: FeatureFlags): Promise<ConfigResponse<FeatureFlags>> {
     try {
-      const result = await apiClient.updateFeatureFlags(flags);
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.configApi.configFeaturesPost(flags)
+      );
       return {
         status: 'success',
-        data: result as FeatureFlags,
+        data: response.data as FeatureFlags,
         message: 'Feature flags updated successfully'
       };
     } catch (error) {

@@ -79,10 +79,4 @@ export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "b
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
 export type CampaignPhase = NonNullable<CampaignSelectedType>;
 
-// API Response wrapper for UI compatibility
-export interface ApiResponse<T = unknown> {
-  status: 'success' | 'error';
-  data?: T;
-  message?: string;
-  errors?: Array<{ field?: string; message: string; }>;
-}
+// Note: ApiResponse moved to main types/index.ts for unified usage across all services

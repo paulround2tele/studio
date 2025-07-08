@@ -2,7 +2,7 @@
 // Pure authentication service with configuration-driven API integration
 // NO HARDCODING - Uses environment-based configuration
 
-import { apiClient } from '@/lib/api-client/client';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
 import type { components } from '@/lib/api-client/types';
 
 type User = components['schemas']['User'];
@@ -11,17 +11,22 @@ import { getLogger } from '@/lib/utils/logger';
 const logger = getLogger();
 
 
-interface LoginCredentials {
-  email: string;
-  password: string;
-  rememberMe?: boolean;
-}
+// Use OpenAPI types for authentication
+export type LoginCredentials = components['schemas']['LoginRequest'] & {
+  rememberMe?: boolean; // UI-specific extension
+};
 
-interface AuthResult {
+export interface AuthResult {
   success: boolean;
   user?: User;
   error?: string;
 }
+
+// Import additional OpenAPI auth types
+export type LoginResponse = components['schemas']['LoginResponse'];
+export type RefreshResponse = components['schemas']['RefreshResponse'];
+export type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
+export type StandardAPIResponse = components['schemas']['StandardAPIResponse'];
 
 /**
  * Pure authentication service with environment-based configuration.
@@ -60,12 +65,12 @@ class AuthService {
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      // Just call the API - simple and straightforward
-      const response = await apiClient.getCurrentUser();
+      // Use enhanced API client with circuit breaker and retry logic
+      const response = await enhancedApiClient.getCurrentUser();
       
       if (response && typeof response === 'object') {
-        // Handle wrapped API response format: { success: true, data: User }
-        const userData = (response as { data?: User })?.data || response;
+        // Extract data from AxiosResponse
+        const userData = 'data' in response ? response.data : response;
         
         // Validate the user data
         if (!userData?.id || !userData?.email) {
@@ -114,32 +119,32 @@ class AuthService {
     // Retry logic with configurable attempts
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
-        const response = await apiClient.login({
+        const response = await enhancedApiClient.login({
           email: credentials.email,
           password: credentials.password,
           rememberMe: credentials.rememberMe
         });
         
-        if (response?.user) {
+        if (response?.data?.user) {
           // Validate the user data
-          if (!response.user?.id || !response.user?.email) {
+          if (!response.data.user?.id || !response.data.user?.email) {
             logger.warn('AUTH_SERVICE', 'Invalid user data in login response', {
               attempt: attempt + 1,
-              hasUser: !!response.user
+              hasUser: !!response.data.user
             });
             return {
               success: false,
               error: 'Invalid login response'
             };
           }
-          
           logger.info('AUTH_SERVICE', 'Login successful', {
-            userId: response.user.id,
+            userId: response.data.user.id,
             attempt: attempt + 1
           });
+          
           return {
             success: true,
-            user: response.user
+            user: response.data.user
           };
         }
         
@@ -195,7 +200,7 @@ class AuthService {
     logger.info('AUTH_SERVICE', 'Logout started');
 
     try {
-      await apiClient.logout();
+      await enhancedApiClient.logout();
       logger.info('AUTH_SERVICE', 'Logout successful');
       return { success: true };
     } catch (error) {
@@ -215,7 +220,7 @@ class AuthService {
     logger.debug('AUTH_SERVICE', 'Session refresh started');
 
     try {
-      await apiClient.refreshSession();
+      await enhancedApiClient.auth.authRefreshPost();
       logger.info('AUTH_SERVICE', 'Session refresh successful');
       return { success: true };
     } catch (error) {
@@ -235,7 +240,7 @@ class AuthService {
     logger.info('AUTH_SERVICE', 'Change password started');
 
     try {
-      await apiClient.changePassword({
+      await enhancedApiClient.auth.changePasswordPost({
         currentPassword,
         newPassword
       });

@@ -1,7 +1,8 @@
 // src/lib/services/proxyPoolService.ts
 // Production Proxy Pool Service - Clean backend integration with generated types
 
-import { apiClient, type components } from '@/lib/api-client/client';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import type { components } from '@/lib/api-client/types';
 
 // Use generated types
 export type ProxyPool = components['schemas']['ProxyPool'];
@@ -9,7 +10,7 @@ export type ProxyPoolCreationPayload = components['schemas']['ProxyPoolRequest']
 export type Proxy = components['schemas']['Proxy'];
 export type ProxyPoolMembership = components['schemas']['ProxyPoolMembership'];
 
-// Response wrapper types
+// Service layer response wrappers using OpenAPI types as base
 export interface ProxyPoolListResponse {
   status: 'success' | 'error';
   data?: ProxyPool[];
@@ -52,6 +53,10 @@ export interface ProxyPoolMembershipResponse {
   message?: string;
 }
 
+// Import additional OpenAPI types for proxy pool operations
+export type ProxyPoolRequest = components['schemas']['ProxyPoolRequest'];
+export type AddProxyToPoolRequest = components['schemas']['AddProxyToPoolRequest'];
+
 class ProxyPoolService {
   private static instance: ProxyPoolService;
 
@@ -64,10 +69,12 @@ class ProxyPoolService {
 
   async listPools(): Promise<ProxyPoolListResponse> {
     try {
-      const result = await apiClient.listProxyPools();
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxyPools.proxyPoolsGet()
+      );
       return {
         status: 'success',
-        data: result as ProxyPool[],
+        data: response.data as ProxyPool[],
         message: 'Proxy pools retrieved successfully'
       };
     } catch (error) {
@@ -107,10 +114,12 @@ class ProxyPoolService {
 
   async createPool(payload: ProxyPoolCreationPayload): Promise<ProxyPoolCreationResponse> {
     try {
-      const result = await apiClient.createProxyPool(payload);
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxyPools.proxyPoolsPost(payload)
+      );
       return {
         status: 'success',
-        data: result as ProxyPool,
+        data: response.data as ProxyPool,
         message: 'Proxy pool created successfully'
       };
     } catch (error) {
@@ -123,10 +132,12 @@ class ProxyPoolService {
 
   async updatePool(poolId: string, payload: ProxyPoolCreationPayload): Promise<ProxyPoolUpdateResponse> {
     try {
-      const result = await apiClient.updateProxyPool(poolId, payload);
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxyPools.proxyPoolsPoolIdPut(poolId, payload)
+      );
       return {
         status: 'success',
-        data: result as ProxyPool,
+        data: response.data as ProxyPool,
         message: 'Proxy pool updated successfully'
       };
     } catch (error) {
@@ -139,7 +150,9 @@ class ProxyPoolService {
 
   async deletePool(poolId: string): Promise<ProxyPoolDeleteResponse> {
     try {
-      await apiClient.deleteProxyPool(poolId);
+      await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxyPools.proxyPoolsPoolIdDelete(poolId)
+      );
       return {
         status: 'success',
         data: { success: true },
@@ -155,10 +168,12 @@ class ProxyPoolService {
 
   async addProxy(poolId: string, proxyId: string, weight?: number): Promise<ProxyPoolMembershipResponse> {
     try {
-      const result = await apiClient.addProxyToPool(poolId, { proxyId, weight });
+      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxyPools.proxyPoolsPoolIdProxiesPost(poolId, { proxyId, weight })
+      );
       return {
         status: 'success',
-        data: result as ProxyPoolMembership,
+        data: response.data as ProxyPoolMembership,
         message: 'Proxy added to pool successfully'
       };
     } catch (error) {
@@ -171,7 +186,9 @@ class ProxyPoolService {
 
   async removeProxy(poolId: string, proxyId: string): Promise<ProxyPoolDeleteResponse> {
     try {
-      await apiClient.removeProxyFromPool(poolId, proxyId);
+      await enhancedApiClient.executeWithCircuitBreaker(() =>
+        enhancedApiClient.proxyPools.proxyPoolsPoolIdProxiesProxyIdDelete(poolId, proxyId)
+      );
       return {
         status: 'success',
         data: { success: true },

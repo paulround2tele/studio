@@ -80,6 +80,7 @@ async function _getAutomaticApiUrl(): Promise<string> {
 }
 
 // Synchronous fallback for immediate usage
+// Returns base URL without /api/v2 prefix - let client routing logic handle path prefixes
 function getSyncApiUrl(): string {
   if (typeof window === 'undefined') {
     return 'http://localhost:8080';
@@ -94,7 +95,7 @@ function getSyncApiUrl(): string {
   if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
     return `${protocol}//${hostname}:8080`;
   }
-  
+
   return `${protocol}//${hostname}`;
 }
 

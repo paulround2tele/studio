@@ -175,20 +175,24 @@ export async function getHealth(forceRefresh: boolean = false): Promise<HealthRe
         throw new Error(`Health check failed with status ${response.status}`);
       }
 
-      const data = await response.json();
+      const response_data = await response.json();
+      
+      // Handle wrapped response format: { success: true, data: { status: "ok", ... } }
+      const healthData = response_data.data || response_data;
       
       // Normalize status to 'ok' for consistency (backend may return 'healthy', 'OK', 'up', etc.)
-      const normalizedStatus = normalizeHealthStatus(data.status);
+      const normalizedStatus = normalizeHealthStatus(healthData.status);
       
-      console.log(`🔍 [HealthService] Raw backend response:`, data);
-      console.log(`🔍 [HealthService] Normalized status: ${data.status} → ${normalizedStatus}`);
+      console.log(`🔍 [HealthService] Raw backend response:`, response_data);
+      console.log(`🔍 [HealthService] Health data:`, healthData);
+      console.log(`🔍 [HealthService] Normalized status: ${healthData.status} → ${normalizedStatus}`);
       
       return {
         status: normalizedStatus,
-        timestamp: data.timestamp || new Date().toISOString(),
-        version: data.version,
-        message: data.message,
-        checks: data.checks,
+        timestamp: healthData.timestamp || new Date().toISOString(),
+        version: healthData.version,
+        message: healthData.message,
+        checks: healthData.components || healthData.checks,
         isCached: false,
         cacheAge: 0
       } as HealthResponse;

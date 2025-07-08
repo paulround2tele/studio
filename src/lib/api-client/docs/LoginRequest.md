@@ -1,25 +1,26 @@
 # LoginRequest
 
+Login credentials
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**email** | **string** |  | [default to undefined]
-**password** | **string** |  | [default to undefined]
-**rememberMe** | **boolean** |  | [optional] [default to undefined]
-**captchaToken** | **string** |  | [optional] [default to undefined]
+**captchaToken** | **string** | CAPTCHA token for bot protection | [optional] [default to undefined]
+**email** | **string** | User email address | [default to undefined]
+**password** | **string** | User password (minimum 6 characters) | [default to undefined]
+**rememberMe** | **boolean** | Whether to remember the user session | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { LoginRequest } from '@domainflow/api-client';
+import { LoginRequest } from 'api-client';
 
 const instance: LoginRequest = {
+    captchaToken,
     email,
     password,
     rememberMe,
-    captchaToken,
 };
 ```
 

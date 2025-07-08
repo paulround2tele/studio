@@ -5,19 +5,15 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**code** | **number** |  | [optional] [default to undefined]
-**message** | **string** |  | [optional] [default to undefined]
-**status** | **string** |  | [optional] [default to undefined]
+**error** | **string** | Error message | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { ErrorResponse } from '@domainflow/api-client';
+import { ErrorResponse } from 'api-client';
 
 const instance: ErrorResponse = {
-    code,
-    message,
-    status,
+    error,
 };
 ```
 

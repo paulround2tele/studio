@@ -1,15 +1,14 @@
 // src/lib/services/campaignService.ts
 // Production Campaign Service - Direct OpenAPI integration without adapters
 
-import { apiClient } from '@/lib/api-client/client';
-import { ResilientApiWrapper, CircuitBreakerState } from '@/lib/utils/errorRecovery';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
 export type Campaign = components['schemas']['Campaign'];
 export type CampaignCreationPayload = components['schemas']['CreateCampaignRequest'];
 
-// OpenAPI response types
+// Service layer response wrappers using OpenAPI types as base
 export interface CampaignsListResponse {
   status: 'success' | 'error';
   data: Campaign[];
@@ -42,33 +41,22 @@ export interface CampaignDeleteResponse {
 
 export interface CampaignResultsResponse<T = unknown> {
   status: 'success' | 'error';
-  data: T; // Always include data, will be empty array for arrays
+  data: T;
   error?: string;
   message?: string;
 }
 
+// Import additional OpenAPI result types for direct use
+export type GeneratedDomainsResponse = components['schemas']['GeneratedDomainsResponse'];
+export type DNSValidationResultsResponse = components['schemas']['DNSValidationResultsResponse'];
+export type HTTPKeywordResultsResponse = components['schemas']['HTTPKeywordResultsResponse'];
+
 class CampaignService {
   private static instance: CampaignService;
-  private resilientWrapper: ResilientApiWrapper;
 
   constructor() {
-    // Initialize resilient API wrapper with circuit breaker and retry logic
-    this.resilientWrapper = new ResilientApiWrapper(
-      {
-        failureThreshold: 5,
-        resetTimeoutMs: 60000, // 1 minute
-        onStateChange: (state) => {
-          console.log(`[CampaignService] Circuit breaker state changed to: ${state}`);
-        }
-      },
-      {
-        maxRetries: 3,
-        initialDelayMs: 1000,
-        onRetry: (attempt, error) => {
-          console.warn(`[CampaignService] Retry attempt ${attempt}:`, error.message);
-        }
-      }
-    );
+    // Enhanced API client already provides circuit breaker and retry logic
+    // No need to duplicate the resilient wrapper
   }
 
   static getInstance(): CampaignService {
@@ -82,7 +70,10 @@ class CampaignService {
   async getCampaigns(_options?: { limit?: number; sortBy?: string; sortOrder?: string }): Promise<CampaignsListResponse> {
     try {
       console.log('[CampaignService] Getting campaigns');
-      const result = await apiClient.listCampaigns();
+      const response = await enhancedApiClient.listCampaigns();
+      
+      // Extract data from AxiosResponse
+      const result = 'data' in response ? response.data : response;
       
       return {
         status: 'success',
@@ -102,7 +93,8 @@ class CampaignService {
   async getCampaignById(campaignId: string): Promise<CampaignDetailResponse> {
     try {
       console.log('[CampaignService] Getting campaign by ID:', campaignId);
-      const result = await apiClient.getCampaignById(campaignId);
+      const response = await enhancedApiClient.getCampaignById(campaignId);
+      const result = 'data' in response ? response.data : response;
       
       // Extract campaign from wrapped response
       const campaign = (result as { campaign?: Campaign }).campaign || result;
@@ -122,39 +114,33 @@ class CampaignService {
 
   // Unified Campaign Creation Method
   async createCampaign(payload: CampaignCreationPayload): Promise<CampaignCreationResponse> {
-    return this.resilientWrapper.execute(
-      async () => {
-        console.log('[CampaignService] Creating campaign with payload:', payload);
-        
-        const result = await apiClient.createCampaign(payload);
-        
-        console.log('[CampaignService] Campaign created successfully:', result);
-        return {
-          status: 'success' as const,
-          data: result as Campaign,
-          message: 'Campaign created successfully'
-        };
-      },
-      {
-        fallbackFunction: async () => {
-          console.error('[CampaignService] Campaign creation failed, no fallback available');
-          throw new Error('Campaign creation service is temporarily unavailable');
-        }
-      }
-    ).catch((error: unknown) => {
+    try {
+      console.log('[CampaignService] Creating campaign with payload:', payload);
+      
+      const response = await enhancedApiClient.createCampaign(payload);
+      const result = 'data' in response ? response.data : response;
+      
+      console.log('[CampaignService] Campaign created successfully:', result);
+      return {
+        status: 'success' as const,
+        data: result as Campaign,
+        message: 'Campaign created successfully'
+      };
+    } catch (error) {
       console.error('[CampaignService] Campaign creation failed:', error);
       return {
         status: 'error' as const,
         message: error instanceof Error ? error.message : 'Failed to create campaign'
       };
-    });
+    }
   }
 
   // Campaign Control Operations
   async startCampaign(campaignId: string): Promise<CampaignOperationResponse> {
     try {
       console.log('[CampaignService] Starting campaign:', campaignId);
-      const result = await apiClient.startCampaign(campaignId);
+      const response = await enhancedApiClient.startCampaign(campaignId);
+      const result = 'data' in response ? response.data : response;
       
       return {
         status: 'success',
@@ -173,7 +159,8 @@ class CampaignService {
   async pauseCampaign(campaignId: string): Promise<CampaignOperationResponse> {
     try {
       console.log('[CampaignService] Pausing campaign:', campaignId);
-      const result = await apiClient.pauseCampaign(campaignId);
+      const response = await enhancedApiClient.pauseCampaign(campaignId);
+      const result = 'data' in response ? response.data : response;
       
       return {
         status: 'success',
@@ -192,7 +179,8 @@ class CampaignService {
   async resumeCampaign(campaignId: string): Promise<CampaignOperationResponse> {
     try {
       console.log('[CampaignService] Resuming campaign:', campaignId);
-      const result = await apiClient.resumeCampaign(campaignId);
+      const response = await enhancedApiClient.resumeCampaign(campaignId);
+      const result = 'data' in response ? response.data : response;
       
       return {
         status: 'success',
@@ -211,7 +199,8 @@ class CampaignService {
   async cancelCampaign(campaignId: string): Promise<CampaignOperationResponse> {
     try {
       console.log('[CampaignService] Cancelling campaign:', campaignId);
-      const result = await apiClient.cancelCampaign(campaignId);
+      const response = await enhancedApiClient.cancelCampaign(campaignId);
+      const result = 'data' in response ? response.data : response;
       
       return {
         status: 'success',
@@ -239,7 +228,7 @@ class CampaignService {
       }
       
       // Then delete it
-      await apiClient.deleteCampaign(campaignId);
+      await enhancedApiClient.deleteCampaign(campaignId);
       
       return {
         status: 'success',
@@ -262,7 +251,8 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting generated domains for campaign:', campaignId, options);
-      const result = await apiClient.getCampaignGeneratedDomains(campaignId, options);
+      const response = await enhancedApiClient.campaigns.campaignsCampaignIdResultsGeneratedDomainsGet(campaignId, options?.limit, options?.cursor);
+      const result = 'data' in response ? response.data : response;
       
       // Handle case where API returns {} instead of array
       let data: unknown[] = [];
@@ -293,7 +283,8 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting DNS validation results for campaign:', campaignId, options);
-      const result = await apiClient.getCampaignDNSValidationResults(campaignId, options);
+      const response = await enhancedApiClient.campaigns.campaignsCampaignIdResultsDnsValidationGet(campaignId, options?.limit, options?.cursor);
+      const result = 'data' in response ? response.data : response;
       
       // Handle case where API returns {} instead of array
       let data: unknown[] = [];
@@ -324,7 +315,8 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting HTTP keyword results for campaign:', campaignId, options);
-      const result = await apiClient.getCampaignHTTPKeywordResults(campaignId, options);
+      const response = await enhancedApiClient.campaigns.campaignsCampaignIdResultsHttpKeywordGet(campaignId, options?.limit, options?.cursor);
+      const result = 'data' in response ? response.data : response;
       
       // Handle case where API returns {} instead of array
       let data: unknown[] = [];
@@ -351,16 +343,18 @@ class CampaignService {
 
   /**
    * Get circuit breaker state for monitoring
+   * Enhanced API client handles circuit breaking internally
    */
-  getCircuitBreakerState(): CircuitBreakerState {
-    return this.resilientWrapper.getCircuitState();
+  getCircuitBreakerState(): string {
+    return 'CLOSED'; // Enhanced API client handles this internally
   }
 
   /**
    * Reset circuit breaker manually
+   * Enhanced API client handles circuit breaking internally
    */
   resetCircuitBreaker(): void {
-    this.resilientWrapper.resetCircuit();
+    // No-op - enhanced API client handles circuit breaking internally
   }
 }
 

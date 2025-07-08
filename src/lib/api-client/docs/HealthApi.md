@@ -1,17 +1,17 @@
 # HealthApi
 
-All URIs are relative to */*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**healthGet**](#healthget) | **GET** /health | Health check|
-|[**healthLiveGet**](#healthliveget) | **GET** /health/live | Liveness check|
-|[**healthReadyGet**](#healthreadyget) | **GET** /health/ready | Readiness check|
-|[**pingGet**](#pingget) | **GET** /ping | Server liveness check|
+|[**getHealthCheck**](#gethealthcheck) | **GET** /health | Basic health check|
+|[**getLivenessCheck**](#getlivenesscheck) | **GET** /health/live | Liveness probe|
+|[**getReadinessCheck**](#getreadinesscheck) | **GET** /health/ready | Readiness probe|
 
-# **healthGet**
-> healthGet()
+# **getHealthCheck**
+> HealthStatus getHealthCheck()
 
+Returns overall health status of the application and its components
 
 ### Example
 
@@ -19,12 +19,12 @@ All URIs are relative to */*
 import {
     HealthApi,
     Configuration
-} from '@domainflow/api-client';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
 
-const { status, data } = await apiInstance.healthGet();
+const { status, data } = await apiInstance.getHealthCheck();
 ```
 
 ### Parameters
@@ -33,137 +33,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **healthLiveGet**
-> healthLiveGet()
-
-
-### Example
-
-```typescript
-import {
-    HealthApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new HealthApi(configuration);
-
-const { status, data } = await apiInstance.healthLiveGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **healthReadyGet**
-> healthReadyGet()
-
-
-### Example
-
-```typescript
-import {
-    HealthApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new HealthApi(configuration);
-
-const { status, data } = await apiInstance.healthReadyGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **pingGet**
-> PingGet200Response pingGet()
-
-Checks if the API server is running and reachable
-
-### Example
-
-```typescript
-import {
-    HealthApi,
-    Configuration
-} from '@domainflow/api-client';
-
-const configuration = new Configuration();
-const apiInstance = new HealthApi(configuration);
-
-const { status, data } = await apiInstance.pingGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**PingGet200Response**
+**HealthStatus**
 
 ### Authorization
 
@@ -178,7 +48,100 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Server is healthy |  -  |
+|**200** | Health status |  -  |
+|**503** | Service degraded |  -  |
+|**0** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getLivenessCheck**
+> SimpleStatus getLivenessCheck()
+
+Checks if the service is alive and running
+
+### Example
+
+```typescript
+import {
+    HealthApi,
+    Configuration
+} from 'api-client';
+
+const configuration = new Configuration();
+const apiInstance = new HealthApi(configuration);
+
+const { status, data } = await apiInstance.getLivenessCheck();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**SimpleStatus**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Service is alive |  -  |
+|**0** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getReadinessCheck**
+> SimpleStatus getReadinessCheck()
+
+Checks if the service is ready to receive traffic
+
+### Example
+
+```typescript
+import {
+    HealthApi,
+    Configuration
+} from 'api-client';
+
+const configuration = new Configuration();
+const apiInstance = new HealthApi(configuration);
+
+const { status, data } = await apiInstance.getReadinessCheck();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**SimpleStatus**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Service is ready |  -  |
+|**503** | Service not ready |  -  |
+|**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

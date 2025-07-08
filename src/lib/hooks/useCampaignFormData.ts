@@ -6,7 +6,7 @@ type HttpPersona = components['schemas']['Persona'] & { personaType: 'http' };
 type DnsPersona = components['schemas']['Persona'] & { personaType: 'dns' };
 import { getPersonas } from "@/lib/services/personaService";
 import { getProxies } from "@/lib/services/proxyService.production";
-import { apiClient } from '@/lib/api-client/client';
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
 type Campaign = components['schemas']['Campaign'];
@@ -45,7 +45,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
         getPersonas('http'),
         getPersonas('dns'),
         getProxies(),
-        apiClient.listCampaigns()
+        enhancedApiClient.listCampaigns()
       ]);
 
       // Process HTTP personas result
@@ -72,18 +72,40 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
           proxiesResult.status === 'rejected' ? proxiesResult.reason : proxiesResult.value);
       }
 
-      // Process campaigns result
-      if (campaignsResult.status === 'fulfilled' && campaignsResult.value.status === 'success' && campaignsResult.value.data) {
-        // Transform OpenAPI campaigns to view models first
-        const campaignViewModels = transformCampaignsToViewModels(campaignsResult.value.data as Campaign[]);
-        // Filter campaigns that can be used as source (only domain_generation and dns_validation)
-        const validSourceCampaigns = campaignViewModels.filter(c =>
-          c.selectedType === 'domain_generation' || c.selectedType === 'dns_validation'
-        );
-        setSourceCampaigns(validSourceCampaigns);
+      // Process campaigns result - enhanced API client returns axios response directly
+      if (campaignsResult.status === 'fulfilled' && campaignsResult.value && campaignsResult.value.data) {
+        // Handle wrapped response format: { success: true, data: { campaigns: [...] } }
+        const responseData = campaignsResult.value.data;
+        let campaignsArray: Campaign[] = [];
+        
+        // Check if data is wrapped with campaigns property
+        if (responseData && typeof responseData === 'object' && 'campaigns' in responseData) {
+          const campaigns = (responseData as any).campaigns;
+          if (Array.isArray(campaigns)) {
+            campaignsArray = campaigns;
+          }
+        }
+        // Check if data is directly an array
+        else if (Array.isArray(responseData)) {
+          campaignsArray = responseData;
+        }
+        
+        if (campaignsArray.length > 0 || (responseData && typeof responseData === 'object')) {
+          // Transform OpenAPI campaigns to view models first
+          const campaignViewModels = transformCampaignsToViewModels(campaignsArray);
+          // Filter campaigns that can be used as source (only domain_generation and dns_validation)
+          const validSourceCampaigns = campaignViewModels.filter(c =>
+            c.selectedType === 'domain_generation' || c.selectedType === 'dns_validation'
+          );
+          setSourceCampaigns(validSourceCampaigns);
+        } else {
+          console.warn('[useCampaignFormData] Campaigns data is not in expected format:', responseData);
+          setSourceCampaigns([]);
+        }
       } else {
         console.warn('[useCampaignFormData] Failed to load campaigns:',
           campaignsResult.status === 'rejected' ? campaignsResult.reason : campaignsResult.value);
+        setSourceCampaigns([]);
       }
 
       // Check if any critical failures occurred

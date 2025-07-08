@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, ChevronLeft, ChevronRight, Percent } from 'lucide-react';
 import Link from 'next/link';
-import { getCampaigns } from '@/lib/api-client/client'; // Updated import path
+import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/campaignDataService';
@@ -221,16 +221,12 @@ export default function LatestActivityTable() {
   const fetchAndProcessData = useCallback(async (showLoadingSpinner = true) => {
     if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading dashboard activity");
     try {
-      const response = await getCampaigns();
+      const response = await enhancedApiClient.listCampaigns();
       const processedActivities: LatestDomainActivity[] = [];
 
-      // Handle the nested response structure: { success: true, data: { success: true, data: [...] } }
-      // Check for success at both levels and ensure we have campaign data
-      const responseAny = response as Record<string, unknown>;
-      if (response && responseAny.success && responseAny.data &&
-          typeof responseAny.data === 'object' && (responseAny.data as Record<string, unknown>).success &&
-          Array.isArray((responseAny.data as Record<string, unknown>).data)) {
-        const campaignsArray = transformCampaignsToViewModels((responseAny.data as Record<string, unknown>).data as Parameters<typeof transformCampaignsToViewModels>[0]);
+      // Handle the AxiosResponse structure: response.data contains the campaigns array directly
+      if (response && response.data && Array.isArray(response.data)) {
+        const campaignsArray = transformCampaignsToViewModels(response.data as Parameters<typeof transformCampaignsToViewModels>[0]);
         
         // Get campaign IDs for rich data fetching
         const campaignIds = campaignsArray

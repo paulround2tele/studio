@@ -39,7 +39,8 @@ import {
 import type { components } from '@/lib/api-client/types';
 
 type Proxy = components['schemas']['Proxy'];
-import type { ProxyUpdateResponse, ProxyDeleteResponse, ApiResponse } from '@/lib/services/proxyService.production';
+import type { ProxyUpdateResponse, ProxyDeleteResponse } from '@/lib/services/proxyService.production';
+import type { ApiResponse } from '@/lib/types';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
