@@ -13,6 +13,24 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * Session refresh response
+ * @export
+ * @interface RefreshResponse
+ */
+export interface RefreshResponse {
+    /**
+     * New session expiration time
+     * @type {string}
+     * @memberof RefreshResponse
+     */
+    'expiresAt'?: string;
+    /**
+     * New session identifier
+     * @type {string}
+     * @memberof RefreshResponse
+     */
+    'sessionId'?: string;
+}
+

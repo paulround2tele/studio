@@ -13,6 +13,18 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * 
+ * @export
+ * @interface ErrorResponse
+ */
+export interface ErrorResponse {
+    /**
+     * Error message
+     * @type {string}
+     * @memberof ErrorResponse
+     */
+    'error'?: string;
+}
+

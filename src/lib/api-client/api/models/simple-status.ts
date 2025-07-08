@@ -13,6 +13,18 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * Simple status response
+ * @export
+ * @interface SimpleStatus
+ */
+export interface SimpleStatus {
+    /**
+     * Status message
+     * @type {string}
+     * @memberof SimpleStatus
+     */
+    'status': string;
+}
+

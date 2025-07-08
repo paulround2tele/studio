@@ -13,6 +13,18 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * Request to force health check on specific proxies
+ * @export
+ * @interface ForceCheckProxiesRequest
+ */
+export interface ForceCheckProxiesRequest {
+    /**
+     * List of proxy IDs to check (empty for all)
+     * @type {Array<string>}
+     * @memberof ForceCheckProxiesRequest
+     */
+    'ids'?: Array<string>;
+}
+

@@ -5102,5 +5102,5 @@ paths:
             tags:
                 - ProxyPools
 servers:
-    - description: Development server
-      url: http://localhost:8080/api/v2
+    - description: API base path
+      url: /api/v2

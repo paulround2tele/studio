@@ -13,6 +13,18 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * 
+ * @export
+ * @interface DeleteProxyPool200Response
+ */
+export interface DeleteProxyPool200Response {
+    /**
+     * Deletion status
+     * @type {boolean}
+     * @memberof DeleteProxyPool200Response
+     */
+    'deleted'?: boolean;
+}
+

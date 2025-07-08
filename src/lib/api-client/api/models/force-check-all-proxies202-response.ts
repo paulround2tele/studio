@@ -13,6 +13,18 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * 
+ * @export
+ * @interface ForceCheckAllProxies202Response
+ */
+export interface ForceCheckAllProxies202Response {
+    /**
+     * Status message
+     * @type {string}
+     * @memberof ForceCheckAllProxies202Response
+     */
+    'message'?: string;
+}
+

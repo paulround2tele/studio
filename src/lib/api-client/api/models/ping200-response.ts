@@ -13,6 +13,24 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * 
+ * @export
+ * @interface Ping200Response
+ */
+export interface Ping200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof Ping200Response
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Ping200Response
+     */
+    'timestamp'?: string;
+}
+

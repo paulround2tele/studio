@@ -13,6 +13,24 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * Rate limiter configuration
+ * @export
+ * @interface RateLimiterConfig
+ */
+export interface RateLimiterConfig {
+    /**
+     * Maximum requests per window
+     * @type {number}
+     * @memberof RateLimiterConfig
+     */
+    'maxRequests': number;
+    /**
+     * Rate limit window in seconds
+     * @type {number}
+     * @memberof RateLimiterConfig
+     */
+    'windowSeconds': number;
+}
+

@@ -13,6 +13,18 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * HTTP/2 settings configuration
+ * @export
+ * @interface HTTP2SettingsConfig
+ */
+export interface HTTP2SettingsConfig {
+    /**
+     * Enable HTTP/2
+     * @type {boolean}
+     * @memberof HTTP2SettingsConfig
+     */
+    'enabled'?: boolean;
+}
+

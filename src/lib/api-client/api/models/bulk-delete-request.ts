@@ -13,6 +13,18 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * Request to bulk delete campaigns
+ * @export
+ * @interface BulkDeleteRequest
+ */
+export interface BulkDeleteRequest {
+    /**
+     * Array of campaign UUIDs to delete
+     * @type {Array<string>}
+     * @memberof BulkDeleteRequest
+     */
+    'campaignIds': Array<string>;
+}
+

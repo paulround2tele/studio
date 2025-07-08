@@ -33,7 +33,7 @@ func GenerateOpenAPISpec() *openapi3.T {
 			},
 		},
 		Servers: openapi3.Servers{
-			{URL: "http://localhost:8080/api/v2", Description: "Development server"},
+			{URL: "/api/v2", Description: "API base path"},
 		},
 	}
 
