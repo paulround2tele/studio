@@ -12,7 +12,7 @@ import type {
 import type { components } from '@/lib/api-client/types';
 
 type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
-type Campaign = components['schemas']['Campaign'];
+type _Campaign = components['schemas']['Campaign']; // Unused
 
 // WebSocket message types aligned with backend contract
 export interface StreamingMessage {

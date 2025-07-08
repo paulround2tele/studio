@@ -1,7 +1,6 @@
 import React, { memo, useEffect, useState, useMemo } from 'react';
 import { Control, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import { apiClient } from '@/lib/api-client/client';
-import type { components } from '@/lib/api-client/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,7 @@ import type { CampaignFormValues } from '../types/CampaignFormTypes';
 interface DomainGenerationConfigProps {
   control: Control<CampaignFormValues>;
   watch: UseFormWatch<CampaignFormValues>;
-  setValue: UseFormSetValue<CampaignFormValues>;
+  _setValue: UseFormSetValue<CampaignFormValues>; // Unused parameter
   totalPossible: number;
   calculationDetails?: {
     pattern: string;
@@ -34,7 +33,7 @@ interface DomainGenerationConfigProps {
 const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
   control,
   watch,
-  setValue,
+  _setValue,
   totalPossible,
   calculationDetails,
   calculationWarning,
@@ -128,19 +127,6 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
     fetchCurrentOffset();
     return () => { cancelled = true; };
   }, [patternSignature]);
-
-  // Check if campaign params exactly match our pattern
-  function isExactPatternMatch(params: any, signature: typeof patternSignature): boolean {
-    if (!params || !signature) return false;
-    
-    return (
-      params.patternType === signature.patternType &&
-      params.variableLength === signature.variableLength &&
-      params.characterSet === signature.characterSet &&
-      params.constantString === signature.constantString &&
-      params.tld === signature.tld
-    );
-  }
   
   // Determine if suffix variable length input should be shown
   const showSuffixInput = generationPattern === 'both_variable' || generationPattern === 'suffix_variable';

@@ -14,8 +14,8 @@ type GeneratedDomainsResponse = components["schemas"]["GeneratedDomainsResponse"
 type DNSValidationResultsResponse = components["schemas"]["DNSValidationResultsResponse"];
 type HTTPKeywordResultsResponse = components["schemas"]["HTTPKeywordResultsResponse"];
 type CampaignDetailsResponse = components["schemas"]["CampaignDetailsResponse"];
-type GeneratedDomain = components["schemas"]["GeneratedDomain"];
-type DNSValidationResult = components["schemas"]["DNSValidationResult"];
+type _GeneratedDomain = components["schemas"]["GeneratedDomain"]; // Unused
+type _DNSValidationResult = components["schemas"]["DNSValidationResult"]; // Unused
 type HTTPKeywordResult = components["schemas"]["HTTPKeywordResult"];
 
 // Rich campaign data with arrays instead of counts

@@ -700,7 +700,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                 <DomainGenerationConfig
                   control={control}
                   watch={watch}
-                  setValue={setValue}
+                  _setValue={setValue}
                   totalPossible={domainCalculation.total}
                   calculationDetails={domainCalculation.details}
                   calculationWarning={domainCalculation.warning}

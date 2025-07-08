@@ -93,7 +93,7 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   };
 
   // Handle phase started from dialog
-  const handlePhaseStarted = (campaignId: string) => {
+  const handlePhaseStarted = (_campaignId: string) => {
     // Refresh the parent page or navigate to the new campaign
     window.location.reload();
   };

@@ -7,11 +7,11 @@
 import type { components } from '@/lib/api-client/types';
 
 // Extract OpenAPI union types
-type CampaignType = components["schemas"]["Campaign"]["campaignType"];
-type CampaignStatus = components["schemas"]["Campaign"]["status"];
-type PersonaType = components["schemas"]["Persona"]["personaType"];
-type ProxyProtocol = components["schemas"]["Proxy"]["protocol"];
-type KeywordRuleType = components["schemas"]["KeywordRule"]["ruleType"];
+type _CampaignType = components["schemas"]["Campaign"]["campaignType"]; // Unused
+type _CampaignStatus = components["schemas"]["Campaign"]["status"]; // Unused
+type _PersonaType = components["schemas"]["Persona"]["personaType"]; // Unused
+type _ProxyProtocol = components["schemas"]["Proxy"]["protocol"]; // Unused
+type _KeywordRuleType = components["schemas"]["KeywordRule"]["ruleType"]; // Unused
 
 // Create enum-like objects for backwards compatibility
 export const ModelsCampaignTypeEnum = {

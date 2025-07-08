@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { useForm, type Control, Controller } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,18 +15,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, CheckCircle, Globe, Wifi, ShieldCheck, Settings, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from '@/lib/api-client/client';
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
 import { useAuth } from '@/contexts/AuthContext';
-import type { components } from '@/lib/api-client/types';
+import type { components as _components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 // Types
-type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
 
 // Constants
 const CampaignFormConstants = {

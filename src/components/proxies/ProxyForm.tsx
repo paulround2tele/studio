@@ -21,8 +21,8 @@ import type { components } from '@/lib/api-client/types';
 
 type Proxy = components['schemas']['Proxy'];
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
-type ProxyProtocol = components['schemas']['Proxy']['protocol'];
-type ProxyStatus = components['schemas']['ProxyStatus'];
+type _ProxyProtocol = components['schemas']['Proxy']['protocol']; // Unused
+type _ProxyStatus = components['schemas']['ProxyStatus']; // Unused
 import { createProxy, updateProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,8 +30,8 @@ import { Loader2 } from "lucide-react";
 const PROXY_PROTOCOLS = ['http', 'https', 'socks4', 'socks5'] as const;
 const INITIAL_PROXY_STATUSES = ['Active', 'Disabled'] as const; // For creating new proxy
 
-type ProxyFormProtocol = typeof PROXY_PROTOCOLS[number];
-type ProxyFormStatus = typeof INITIAL_PROXY_STATUSES[number];
+type _ProxyFormProtocol = typeof PROXY_PROTOCOLS[number]; // Unused
+type _ProxyFormStatus = typeof INITIAL_PROXY_STATUSES[number]; // Unused
 
 // Proxy form schema
 const proxyFormSchema = z.object({

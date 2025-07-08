@@ -4,7 +4,7 @@
 
 import type { components } from '@/lib/api-client/types';
 
-type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
+type _DomainGenerationParams = components['schemas']['DomainGenerationParams']; // Unused
 type DomainGenerationConfig = {
   generationPattern?: string;
   constantPart?: string;

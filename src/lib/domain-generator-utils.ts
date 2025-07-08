@@ -3,7 +3,7 @@
  * @fileOverview Utility functions for deterministic domain generation.
  * This includes generating the Nth character combination and constructing a domain from an index.
  */
-import type { components } from '@/lib/api-client/types';
+import type { components as _components } from '@/lib/api-client/types';
 
 type DomainGenerationConfig = {
   generationPattern?: string;
