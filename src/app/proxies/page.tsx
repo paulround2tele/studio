@@ -117,10 +117,10 @@ function ProxiesPageContent() {
             console.log('[ProxiesPage] WebSocket message received:', standardMessage);
             
             // Route proxy-specific messages
-            if (standardMessage.type === 'proxy_list_update') {
-              handleProxyListUpdate(standardMessage);
-            } else if (standardMessage.type === 'proxy_status_update') {
-              handleProxyStatusUpdate(standardMessage);
+            if (standardMessage.type === 'proxy_list_update' && standardMessage.data !== undefined) {
+              handleProxyListUpdate({ data: standardMessage.data });
+            } else if (standardMessage.type === 'proxy_status_update' && standardMessage.data !== undefined) {
+              handleProxyStatusUpdate({ data: standardMessage.data as { proxyId: string; status: string; health: string } });
             }
           },
           onConnect: () => {
