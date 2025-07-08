@@ -1,14 +1,15 @@
 import type { paths, components } from './types';
 
-// Simplified backend URL detection using environment variables
-const getBackendUrl = (): string => {
-  // If explicitly configured, use it
+// Professional backend URL detection with centralized service integration
+// Uses synchronous fallback for immediate access and async for intelligent caching
+const getSyncBackendUrl = (): string => {
+  // If explicitly configured, use it (highest priority)
   const configured = process.env.NEXT_PUBLIC_API_URL;
   if (configured && configured.trim()) {
     return configured;
   }
   
-  // Auto-detect based on current location (simplified from environment.ts logic)
+  // Optimized fallback logic for synchronous calls
   if (typeof window !== 'undefined') {
     const { hostname, port, protocol } = window.location;
     
@@ -22,18 +23,16 @@ const getBackendUrl = (): string => {
       return `${protocol}//${hostname}:8080`;
     }
     
-    // For production or other environments, use same origin or standard ports
-    if (!port || port === '80' || port === '443') {
-      return `${protocol}//${hostname}`;
-    }
-    
-    // Fallback: assume backend is on port 8080 for development
-    return `${protocol}//${hostname}:8080`;
+    // For production or other environments, use same origin
+    return `${protocol}//${hostname}`;
   }
   
   // SSR fallback
   return 'http://localhost:8080';
 };
+
+// Note: API client uses synchronous detection for immediate usage
+// Centralized backend detection is used by health service and WebSocket service
 
 const constructApiUrl = (baseUrl: string, path: string): URL => {
   const fullPath = `${baseUrl}${path}`;
@@ -196,7 +195,7 @@ export class ApiClient {
    */
   private getEffectiveBackendUrl(): string {
     if (this._detectedBackendUrl === null) {
-      this._detectedBackendUrl = getBackendUrl();
+      this._detectedBackendUrl = getSyncBackendUrl();
     }
     return this._detectedBackendUrl;
   }

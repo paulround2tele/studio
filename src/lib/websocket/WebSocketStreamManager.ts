@@ -11,6 +11,10 @@ export interface StreamEventHandlers {
   onCampaignStatus: (payload: CampaignStatusPayload) => void;
   onError: (error: WebSocketError) => void;
   onConnectionStatus: (status: 'connected' | 'disconnected' | 'reconnecting') => void;
+  // 🚀 WEBSOCKET PUSH MODEL: New handlers for real-time updates
+  onProxyStatusUpdate?: (payload: ProxyStatusPayload) => void;
+  onProxyListUpdate?: (payload: ProxyListPayload) => void;
+  onDashboardActivity?: (payload: DashboardActivityPayload) => void;
 }
 
 export interface DNSValidationPayload {
@@ -46,6 +50,31 @@ export interface CampaignStatusPayload {
   campaignId: string;
   status: 'pending' | 'running' | 'completed' | 'failed' | 'paused';
   reason?: string;
+  timestamp: string;
+}
+
+// 🚀 WEBSOCKET PUSH MODEL: New payload types for real-time updates
+export interface ProxyStatusPayload {
+  proxyId: string;
+  status: string;
+  health: 'healthy' | 'unhealthy';
+  responseTime?: number;
+  timestamp: string;
+}
+
+export interface ProxyListPayload {
+  action: 'create' | 'update' | 'delete';
+  proxyId: string;
+  proxyData?: unknown;
+  timestamp: string;
+}
+
+export interface DashboardActivityPayload {
+  campaignId: string;
+  domainName: string;
+  activity: string;
+  status: string;
+  phase: string;
   timestamp: string;
 }
 
@@ -400,6 +429,26 @@ export class WebSocketStreamManagerImpl implements WebSocketStreamManager {
         case 'proxy_status_update':
         case 'proxy.status':
           console.log(`🔗 [WebSocket] Proxy status update:`, message.data);
+          // 🚀 WEBSOCKET PUSH MODEL: Route proxy status updates to handlers
+          if (message.data && this.handlers && this.handlers.onProxyStatusUpdate) {
+            this.handlers.onProxyStatusUpdate(message.data as ProxyStatusPayload);
+          }
+          break;
+
+        case 'proxy_list_update':
+          console.log(`📋 [WebSocket] Proxy list update:`, message.data);
+          // 🚀 WEBSOCKET PUSH MODEL: Route proxy CRUD updates to handlers
+          if (message.data && this.handlers && this.handlers.onProxyListUpdate) {
+            this.handlers.onProxyListUpdate(message.data as ProxyListPayload);
+          }
+          break;
+
+        case 'dashboard_activity':
+          console.log(`📊 [WebSocket] Dashboard activity:`, message.data);
+          // 🚀 WEBSOCKET PUSH MODEL: Route dashboard activity to handlers
+          if (message.data && this.handlers && this.handlers.onDashboardActivity) {
+            this.handlers.onDashboardActivity(message.data as DashboardActivityPayload);
+          }
           break;
 
         case 'user_notification':

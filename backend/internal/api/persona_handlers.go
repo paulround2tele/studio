@@ -12,6 +12,7 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -230,7 +231,10 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Successfully created persona %s (%s)", persona.ID, persona.Name)
+	// Broadcast persona creation to WebSocket clients
+	websocket.BroadcastPersonaCreated(persona.ID.String(), toPersonaResponse(persona))
+	log.Printf("Successfully created persona %s (%s) and broadcasted", persona.ID, persona.Name)
+	
 	respondWithStandardSuccess(c, http.StatusCreated, toPersonaResponse(persona), "Persona created successfully")
 }
 
@@ -407,7 +411,10 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Successfully updated persona %s (%s)", existingPersona.ID, existingPersona.Name)
+	// Broadcast persona update to WebSocket clients
+	websocket.BroadcastPersonaUpdated(existingPersona.ID.String(), toPersonaResponse(existingPersona))
+	log.Printf("Successfully updated persona %s (%s) and broadcasted", existingPersona.ID, existingPersona.Name)
+	
 	respondWithStandardSuccess(c, http.StatusOK, toPersonaResponse(existingPersona), "Persona updated successfully")
 }
 
@@ -449,7 +456,10 @@ func (h *APIHandler) DeletePersonaGin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Successfully deleted persona %s (%s)", existingPersona.ID, existingPersona.Name)
+	// Broadcast persona deletion to WebSocket clients
+	websocket.BroadcastPersonaDeleted(existingPersona.ID.String())
+	log.Printf("Successfully deleted persona %s (%s) and broadcasted", existingPersona.ID, existingPersona.Name)
+	
 	respondWithStandardSuccess(c, http.StatusOK, nil, "Persona deleted successfully")
 }
 

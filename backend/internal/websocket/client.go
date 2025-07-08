@@ -703,6 +703,269 @@ func BroadcastDomainGeneration(campaignID string, domainsGenerated int64, totalD
 	}
 }
 
+// BroadcastCampaignListUpdate broadcasts campaign list changes to eliminate polling
+func BroadcastCampaignListUpdate(action string, campaignID string, campaignData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastCampaignListUpdate called: action=%s, campaignID=%s",
+		action, campaignID)
+	
+	if broadcaster := GetBroadcaster(); broadcaster != nil {
+		message := CreateCampaignListUpdateMessage(action, campaignID, campaignData)
+		log.Printf("[DIAGNOSTIC] Broadcasting campaign list update: action=%s", action)
+		// Broadcast to all clients subscribed to campaigns (wildcard)
+		broadcaster.BroadcastToCampaign("*", message)
+	} else {
+		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for campaign list update")
+	}
+}
+
+// BroadcastCampaignCreated broadcasts when a new campaign is created
+func BroadcastCampaignCreated(campaignID string, campaignData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastCampaignCreated called: campaignID=%s", campaignID)
+	BroadcastCampaignListUpdate("create", campaignID, campaignData)
+}
+
+// BroadcastCampaignUpdated broadcasts when a campaign is updated
+func BroadcastCampaignUpdated(campaignID string, campaignData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastCampaignUpdated called: campaignID=%s", campaignID)
+	BroadcastCampaignListUpdate("update", campaignID, campaignData)
+}
+
+// BroadcastCampaignDeleted broadcasts when a campaign is deleted
+func BroadcastCampaignDeleted(campaignID string) {
+	log.Printf("[DIAGNOSTIC] BroadcastCampaignDeleted called: campaignID=%s", campaignID)
+	BroadcastCampaignListUpdate("delete", campaignID, nil)
+}
+
+// BroadcastProxyStatusUpdate broadcasts proxy status changes to eliminate polling
+func BroadcastProxyStatusUpdate(proxyID string, status string, health string, responseTime int64) {
+	log.Printf("[DIAGNOSTIC] BroadcastProxyStatusUpdate called: proxyID=%s, status=%s", proxyID, status)
+	
+	// Use legacy format for now (can be updated later to use standardized format)
+	legacyMessage := WebSocketMessage{
+		Type:    "proxy_status_update",
+		Message: "Proxy status updated",
+		Data: map[string]interface{}{
+			"proxyId":      proxyID,
+			"status":       status,
+			"health":       health,
+			"responseTime": responseTime,
+		},
+	}
+	
+	broadcaster := GetBroadcaster()
+	if broadcaster != nil {
+		// Broadcast to all clients (proxy updates are global)
+		broadcaster.BroadcastToCampaign("", legacyMessage)
+	}
+}
+
+// BroadcastProxyCreated broadcasts when a new proxy is created
+func BroadcastProxyCreated(proxyID string, proxyData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastProxyCreated called: proxyID=%s", proxyID)
+	BroadcastProxyListUpdate("create", proxyID, proxyData)
+}
+
+// BroadcastProxyUpdated broadcasts when a proxy is updated
+func BroadcastProxyUpdated(proxyID string, proxyData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastProxyUpdated called: proxyID=%s", proxyID)
+	BroadcastProxyListUpdate("update", proxyID, proxyData)
+}
+
+// BroadcastProxyDeleted broadcasts when a proxy is deleted
+func BroadcastProxyDeleted(proxyID string) {
+	log.Printf("[DIAGNOSTIC] BroadcastProxyDeleted called: proxyID=%s", proxyID)
+	BroadcastProxyListUpdate("delete", proxyID, nil)
+}
+
+// BroadcastProxyListUpdate broadcasts proxy list changes to eliminate polling
+func BroadcastProxyListUpdate(action string, proxyID string, proxyData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastProxyListUpdate called: action=%s, proxyID=%s", action, proxyID)
+	
+	message := WebSocketMessage{
+		Type:    "proxy_list_update",
+		Message: "Proxy list updated",
+		Data: map[string]interface{}{
+			"action":  action,
+			"proxyId": proxyID,
+			"proxy":   proxyData,
+		},
+	}
+	
+	broadcaster := GetBroadcaster()
+	if broadcaster != nil {
+		// Broadcast to all clients (proxy updates are global)
+		broadcaster.BroadcastToCampaign("", message)
+	}
+}
+// PERSONA WEBSOCKET BROADCASTS - Missing functionality identified
+// BroadcastPersonaCreated broadcasts when a new persona is created
+func BroadcastPersonaCreated(personaID string, personaData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastPersonaCreated called: personaID=%s", personaID)
+	BroadcastPersonaListUpdate("create", personaID, personaData)
+}
+
+// BroadcastPersonaUpdated broadcasts when a persona is updated
+func BroadcastPersonaUpdated(personaID string, personaData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastPersonaUpdated called: personaID=%s", personaID)
+	BroadcastPersonaListUpdate("update", personaID, personaData)
+}
+
+// BroadcastPersonaDeleted broadcasts when a persona is deleted
+func BroadcastPersonaDeleted(personaID string) {
+	log.Printf("[DIAGNOSTIC] BroadcastPersonaDeleted called: personaID=%s", personaID)
+	BroadcastPersonaListUpdate("delete", personaID, nil)
+}
+
+// BroadcastPersonaListUpdate broadcasts persona list changes to eliminate polling
+func BroadcastPersonaListUpdate(action string, personaID string, personaData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastPersonaListUpdate called: action=%s, personaID=%s", action, personaID)
+	
+	message := WebSocketMessage{
+		Type:    "persona_list_update",
+		Message: "Persona list updated",
+		Data: map[string]interface{}{
+			"action":    action,
+			"personaId": personaID,
+			"persona":   personaData,
+		},
+	}
+	
+	broadcaster := GetBroadcaster()
+	if broadcaster != nil {
+		// Broadcast to all clients (persona updates are global)
+		broadcaster.BroadcastToCampaign("", message)
+	}
+}
+
+// KEYWORD SET WEBSOCKET BROADCASTS - Missing functionality identified
+// BroadcastKeywordSetCreated broadcasts when a new keyword set is created
+func BroadcastKeywordSetCreated(keywordSetID string, keywordSetData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastKeywordSetCreated called: keywordSetID=%s", keywordSetID)
+	BroadcastKeywordSetListUpdate("create", keywordSetID, keywordSetData)
+}
+
+// BroadcastKeywordSetUpdated broadcasts when a keyword set is updated
+func BroadcastKeywordSetUpdated(keywordSetID string, keywordSetData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastKeywordSetUpdated called: keywordSetID=%s", keywordSetID)
+	BroadcastKeywordSetListUpdate("update", keywordSetID, keywordSetData)
+}
+
+// BroadcastKeywordSetDeleted broadcasts when a keyword set is deleted
+func BroadcastKeywordSetDeleted(keywordSetID string) {
+	log.Printf("[DIAGNOSTIC] BroadcastKeywordSetDeleted called: keywordSetID=%s", keywordSetID)
+	BroadcastKeywordSetListUpdate("delete", keywordSetID, nil)
+}
+
+// BroadcastKeywordSetListUpdate broadcasts keyword set list changes to eliminate polling
+func BroadcastKeywordSetListUpdate(action string, keywordSetID string, keywordSetData interface{}) {
+	log.Printf("[DIAGNOSTIC] BroadcastKeywordSetListUpdate called: action=%s, keywordSetID=%s", action, keywordSetID)
+	
+	message := WebSocketMessage{
+		Type:    "keyword_set_list_update",
+		Message: "Keyword set list updated",
+		Data: map[string]interface{}{
+			"action":       action,
+			"keywordSetId": keywordSetID,
+			"keywordSet":   keywordSetData,
+		},
+	}
+	
+	broadcaster := GetBroadcaster()
+	if broadcaster != nil {
+		// Broadcast to all clients (keyword set updates are global)
+		broadcaster.BroadcastToCampaign("", message)
+	}
+}
+
+
+// BroadcastDashboardActivity broadcasts dashboard activity updates for real-time activity feed
+func BroadcastDashboardActivity(campaignID string, domainName string, activity string, status string, phase string) {
+	log.Printf("[DIAGNOSTIC] BroadcastDashboardActivity called: campaignID=%s, domain=%s, activity=%s", campaignID, domainName, activity)
+	
+	message := WebSocketMessage{
+		Type:    "dashboard_activity",
+		Message: "Dashboard activity updated",
+		Data: map[string]interface{}{
+			"campaignId": campaignID,
+			"domain":     domainName,
+			"activity":   activity,
+			"status":     status,
+			"phase":      phase,
+			"timestamp":  time.Now().Format(time.RFC3339),
+		},
+	}
+	
+	broadcaster := GetBroadcaster()
+	if broadcaster != nil {
+		// Broadcast to all clients (dashboard updates are global)
+		broadcaster.BroadcastToCampaign("", message)
+	}
+}
+
+// BroadcastDomainGenerated broadcasts when a domain is generated for dashboard activity
+func BroadcastDomainGenerated(campaignID string, domainName string, domainCount int) {
+	log.Printf("[DIAGNOSTIC] BroadcastDomainGenerated called: campaignID=%s, domain=%s", campaignID, domainName)
+	BroadcastDashboardActivity(campaignID, domainName, "Domain Generated", "generating", "DomainGeneration")
+}
+
+// BroadcastDNSValidationResult broadcasts DNS validation results for dashboard activity
+func BroadcastDNSValidationResult(campaignID string, domainName string, validationStatus string) {
+	log.Printf("[DIAGNOSTIC] BroadcastDNSValidationResult called: campaignID=%s, domain=%s, status=%s", campaignID, domainName, validationStatus)
+	status := "validated"
+	if validationStatus != "valid" && validationStatus != "success" {
+		status = "not_validated"
+	}
+	BroadcastDashboardActivity(campaignID, domainName, "DNS Validation", status, "DNSValidation")
+}
+
+// BroadcastHTTPValidationResult broadcasts HTTP validation results for dashboard activity
+func BroadcastHTTPValidationResult(campaignID string, domainName string, validationStatus string, leadScore int) {
+	log.Printf("[DIAGNOSTIC] BroadcastHTTPValidationResult called: campaignID=%s, domain=%s, status=%s", campaignID, domainName, validationStatus)
+	status := "scanned"
+	if validationStatus != "valid" && validationStatus != "success" {
+		status = "not_validated"
+	}
+	
+	message := WebSocketMessage{
+		Type:    "dashboard_activity",
+		Message: "HTTP validation and lead scoring completed",
+		Data: map[string]interface{}{
+			"campaignId": campaignID,
+			"domain":     domainName,
+			"activity":   "HTTP Validation & Lead Scan",
+			"status":     status,
+			"phase":      "HTTPValidation",
+			"leadScore":  leadScore,
+			"timestamp":  time.Now().Format(time.RFC3339),
+		},
+	}
+	
+	broadcaster := GetBroadcaster()
+	if broadcaster != nil {
+		broadcaster.BroadcastToCampaign("", message)
+	}
+}
+
+// CreateCampaignListUpdateMessage creates a campaign list update message
+func CreateCampaignListUpdateMessage(action string, campaignID string, campaignData interface{}) WebSocketMessage {
+	data := map[string]interface{}{
+		"action":     action,
+		"campaignId": campaignID,
+	}
+	
+	if campaignData != nil {
+		data["campaign"] = campaignData
+	}
+	
+	return WebSocketMessage{
+		ID:             uuid.New().String(),
+		Timestamp:      time.Now().UTC().Format(time.RFC3339),
+		Type:           "campaign_list_update",
+		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+		Data:           data,
+	}
+}
+
 // BroadcastValidationProgress broadcasts validation progress
 func BroadcastValidationProgress(campaignID string, validationsProcessed int64, totalValidations int64, validationType string) {
 	log.Printf("[DIAGNOSTIC] BroadcastValidationProgress called: campaignID=%s, processed=%d, total=%d, type=%s",

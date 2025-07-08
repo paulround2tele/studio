@@ -58,15 +58,6 @@ export interface CampaignValidationItem {
   validatedAt?: string;
 }
 
-export interface ExtractedContentItem {
-  id: string;
-  url: string;
-  sourceUrl?: string;
-  title?: string;
-  content: string;
-  text: string; // Legacy property for compatibility
-  extractedAt: string;
-}
 
 export interface AnalyzeContentInput {
   urls: string[];

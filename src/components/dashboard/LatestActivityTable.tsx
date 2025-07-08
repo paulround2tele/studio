@@ -16,6 +16,15 @@ import { getCampaigns } from '@/lib/api-client/client'; // Updated import path
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/campaignDataService';
+import { type BaseWebSocketMessage } from '@/lib/websocket/message-handlers';
+import { type DashboardActivityPayload } from '@/lib/websocket/WebSocketStreamManager';
+
+// Type definition for campaign leads
+interface CampaignLead {
+  sourceUrl?: string;
+  name?: string;
+  similarityScore?: number;
+}
 
 const MAX_ITEMS_DISPLAY_INITIAL_LOAD = 200; // Max items to process for the global table initially
 const DEFAULT_PAGE_SIZE_GLOBAL = 50;
@@ -43,9 +52,9 @@ const getCampaignDnsValidatedDomains = (campaign: CampaignViewModel | RichCampai
   return Array.isArray(campaign.dnsValidatedDomains) ? campaign.dnsValidatedDomains : [];
 };
 
-const getCampaignLeads = (campaign: CampaignViewModel | RichCampaignData): Array<any> => {
+const getCampaignLeads = (campaign: CampaignViewModel | RichCampaignData): Array<CampaignLead> => {
   if ('leads' in campaign && Array.isArray(campaign.leads)) {
-    return campaign.leads;
+    return campaign.leads as CampaignLead[];
   }
   return [];
 };
@@ -334,12 +343,89 @@ export default function LatestActivityTable() {
     }
   }, [startLoading, stopLoading]);
 
+  // Handle real-time dashboard activity updates via WebSocket
+  const handleDashboardActivity = useCallback((message: BaseWebSocketMessage) => {
+    const data = message.data as DashboardActivityPayload;
+    if (data && data.campaignId && data.domainName) {
+      console.log('[Dashboard] Received real-time activity:', data);
+      
+      // Create new activity entry
+      const newActivity: LatestDomainActivity = {
+        id: `${data.campaignId}-${data.domainName}-${Date.now()}`,
+        domain: data.domainName,
+        domainName: data.domainName,
+        campaignId: data.campaignId,
+        campaignName: 'Unknown Campaign', // Campaign name not in payload, would need lookup
+        phase: data.phase || 'Unknown',
+        status: (data.status as DomainActivityStatus) || 'pending',
+        timestamp: data.timestamp || new Date().toISOString(),
+        activity: data.activity || 'Domain processing',
+        generatedDate: data.timestamp || new Date().toISOString(),
+        dnsStatus: (data.phase === 'DNSValidation' ? data.status : 'pending') as DomainActivityStatus,
+        httpStatus: (data.phase === 'HTTPValidation' ? data.status : 'pending') as DomainActivityStatus,
+        leadScanStatus: 'pending' as DomainActivityStatus, // Lead info not in this payload
+        leadScore: undefined, // Lead score not in this payload
+        sourceUrl: `http://${data.domainName}`,
+      };
+
+      // Update activity data - add new activity and sort by timestamp
+      setAllActivityData(prevData => {
+        const updatedData = [newActivity, ...prevData]
+          .sort((a, b) => new Date(b.generatedDate).getTime() - new Date(a.generatedDate).getTime())
+          .slice(0, MAX_ITEMS_DISPLAY_INITIAL_LOAD); // Keep within limit
+        return updatedData;
+      });
+    }
+  }, []);
+
   useEffect(() => {
     fetchAndProcessData(); // Initial fetch
-    // CRITICAL FIX: Reduced polling from every 10 seconds to every 5 minutes (300 seconds) to prevent excessive backend requests
-    const intervalId = setInterval(() => fetchAndProcessData(false), 300000); // Poll every 5 minutes without full loading spinner
-    return () => clearInterval(intervalId); // Cleanup on unmount
-  }, []); // Remove fetchAndProcessData dependency to prevent infinite loop
+    
+    let wsCleanup: (() => void) | null = null;
+
+    const connectWebSocket = async () => {
+      try {
+        // Import the WebSocket service dynamically to avoid SSR issues
+        const { websocketService } = await import('@/lib/services/websocketService.simple');
+        
+        console.log('[DashboardActivity] Connecting to WebSocket for dashboard activity updates...');
+        
+        // Connect to WebSocket for dashboard activity updates
+        wsCleanup = websocketService.connect('dashboard-activity', {
+          onMessage: (message: any) => {
+            console.log('[DashboardActivity] WebSocket message received:', message);
+            
+            // Route dashboard activity messages
+            if (message.type === 'dashboard_activity' || message.type === 'campaign_update') {
+              handleDashboardActivity(message);
+            }
+          },
+          onConnect: () => {
+            console.log('[DashboardActivity] WebSocket connected for dashboard activity push updates');
+          },
+          onError: (error: any) => {
+            console.error('[DashboardActivity] WebSocket error:', error);
+          },
+          onDisconnect: () => {
+            console.log('[DashboardActivity] WebSocket disconnected');
+          }
+        });
+        
+      } catch (error) {
+        console.error('[DashboardActivity] Failed to connect WebSocket:', error);
+      }
+    };
+
+    // Connect WebSocket for real-time updates
+    connectWebSocket();
+    
+    return () => {
+      // Cleanup WebSocket connection
+      if (wsCleanup) {
+        wsCleanup();
+      }
+    };
+  }, [fetchAndProcessData, handleDashboardActivity]);
 
   // Pagination logic
   const totalActivities = allActivityData.length; // This is now the length of the capped & sorted list

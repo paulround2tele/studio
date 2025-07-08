@@ -61,7 +61,7 @@ export interface AuthConfig {
 
 export interface WorkerConfig {
   numWorkers: number;
-  pollIntervalSeconds: number;
+  // 🚀 WEBSOCKET PUSH MODEL: Removed pollIntervalSeconds - workers now use WebSocket push events
   errorRetryDelaySeconds?: number;
   maxJobRetries?: number;
   jobProcessingTimeoutMinutes?: number;

@@ -1,5 +1,5 @@
 /* tslint:disable */
-/* eslint-disable */
+ 
 /**
  * DomainFlow API
  * DomainFlow API for domain generation, validation, and campaign management.  This API provides comprehensive functionality for: - Entity management (Personas, Proxies, Keyword Sets) - Configuration management - Ad-hoc keyword extraction - V2 Stateful Campaign Management system - Real-time communication via WebSockets - Comprehensive authentication  **Authentication:** The API uses session-based authentication with HTTP-only cookies:  1. **Session-Based Authentication**: Secure HTTP-only cookie-based sessions with session fingerprinting    - Login via `POST /api/v2/auth/login`    - Session cookies: httpOnly, secure, sameSite=strict    - X-Requested-With header required for CSRF protection on state-changing operations    - Automatic session cleanup and concurrent session management  All RESTful API endpoints under `/api/v2` (excluding `GET /ping`) require valid session authentication.  For WebSocket connections, authentication is provided via session cookies (automatically included by browser). 

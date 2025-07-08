@@ -1176,6 +1176,7 @@ export interface components {
             errorMessage?: string;
             /** Format: date-time */
             estimatedCompletionAt?: string;
+            extractedContent?: components["schemas"]["ExtractedContentItem"][];
             failedItems?: number;
             httpKeywordValidationParams?: components["schemas"]["HTTPKeywordCampaignParams"];
             /** Format: uuid */
@@ -1183,6 +1184,7 @@ export interface components {
             /** Format: date-time */
             lastHeartbeatAt?: string;
             launchSequence?: boolean;
+            leadItems?: components["schemas"]["LeadItem"][];
             leads?: number;
             metadata?: Record<string, never>;
             name?: string;
@@ -1541,6 +1543,20 @@ export interface components {
         ErrorResponse: {
             /** @description Error message */
             error?: string;
+        };
+        ExtractedContentAnalysis: {
+            advancedKeywords?: string[];
+            categories?: string[];
+            sentiment?: string;
+            summary?: string;
+        };
+        ExtractedContentItem: {
+            advancedAnalysis?: components["schemas"]["ExtractedContentAnalysis"];
+            id?: string;
+            previousCampaignId?: string;
+            similarityScore?: number;
+            sourceUrl?: string;
+            text?: string;
         };
         /** @description Feature flag settings */
         FeatureFlags: {
@@ -2005,6 +2021,15 @@ export interface components {
             rules?: components["schemas"]["KeywordRule"][];
             /** Format: date-time */
             updatedAt?: string;
+        };
+        LeadItem: {
+            company?: string;
+            email?: string;
+            id?: string;
+            name?: string;
+            previousCampaignId?: string;
+            similarityScore?: number;
+            sourceUrl?: string;
         };
         /** @description Logging configuration */
         LoggingConfig: {

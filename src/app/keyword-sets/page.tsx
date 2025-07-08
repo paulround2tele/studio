@@ -30,7 +30,56 @@ export default function KeywordSetsPage() {
     }
   }, []);
 
-  useEffect(() => { loadSets(); }, [loadSets]);
+  useEffect(() => {
+    loadSets();
+    
+    let wsCleanup: (() => void) | null = null;
+
+    const connectWebSocket = async () => {
+      try {
+        // Import the WebSocket service dynamically to avoid SSR issues
+        const { websocketService } = await import('@/lib/services/websocketService.simple');
+        
+        console.log('[KeywordSetsPage] Connecting to WebSocket for keyword set updates...');
+        
+        // Connect to WebSocket for keyword set updates
+        wsCleanup = websocketService.connect('keyword-sets', {
+          onMessage: (message: any) => {
+            console.log('[KeywordSetsPage] WebSocket message received:', message);
+            
+            // Route keyword set-specific messages
+            if (message.type === 'keyword_set_list_update') {
+              console.log('[KeywordSetsPage] Keyword set list update detected, refreshing data...');
+              // Refresh the data without loading spinner
+              loadSets();
+            }
+          },
+          onConnect: () => {
+            console.log('[KeywordSetsPage] WebSocket connected for keyword set push updates');
+          },
+          onError: (error: any) => {
+            console.error('[KeywordSetsPage] WebSocket error:', error);
+          },
+          onDisconnect: () => {
+            console.log('[KeywordSetsPage] WebSocket disconnected');
+          }
+        });
+        
+      } catch (error) {
+        console.error('[KeywordSetsPage] Failed to connect WebSocket:', error);
+      }
+    };
+
+    // Connect WebSocket for real-time updates
+    connectWebSocket();
+    
+    return () => {
+      // Cleanup WebSocket connection
+      if (wsCleanup) {
+        wsCleanup();
+      }
+    };
+  }, [loadSets]);
 
   return (
     <StrictProtectedRoute>

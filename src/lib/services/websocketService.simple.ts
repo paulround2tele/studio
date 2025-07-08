@@ -1,78 +1,25 @@
 // src/lib/services/websocketService.simple.ts
-// Configuration-driven WebSocket service for DomainFlow
-// NO HARDCODING - All connection details from environment/config
+// Professional WebSocket service using centralized backend detection
+// Eliminates 429 rate limiting through request consolidation
 
 import { getLogger } from '@/lib/utils/logger';
+import { getBackendUrl } from '@/lib/services/backendDetection';
 
 const logger = getLogger();
 
-// Dynamic WebSocket URL detection (same backend detection logic as API client)
-const detectBackendUrlForWs = async (): Promise<string> => {
-  // In production, backend is same origin
-  if (process.env.NODE_ENV === 'production') {
-    return '';  // Use relative URLs
-  }
-  
-  // In development, try common backend ports (same as API client)
-  if (typeof window !== 'undefined') {
-    const commonPorts = [8080, 3001, 5000, 8000, 4000];
-    const host = window.location.hostname; // Just hostname, not host:port
-    
-    for (const port of commonPorts) {
-      try {
-        const testUrl = `http://${host}:${port}/health`;
-        const response = await fetch(testUrl, {
-          method: 'GET',
-          signal: AbortSignal.timeout(1000) // 1 second timeout
-        });
-        
-        if (response.ok) {
-          console.log(`✅ [WebSocketService] Backend detected at http://${host}:${port}`);
-          return `http://${host}:${port}`;
-        }
-      } catch (_error) {
-        // Continue to next port
-        console.log(`❌ [WebSocketService] No backend found at http://${host}:${port}`);
-        continue;
-      }
-    }
-  }
-  
-  // Fallback: assume same origin (for SSR or if detection fails)
-  console.log('⚠️ [WebSocketService] Backend auto-detection failed, using same origin');
-  return '';
-};
-
-const getBackendUrlForWs = async (): Promise<string> => {
-  // If explicitly configured, use it
-  const configured = process.env.NEXT_PUBLIC_API_URL;
-  if (configured && configured.trim()) {
-    console.log(`🔧 [WebSocketService] Using configured backend URL: ${configured}`);
-    return configured;
-  }
-  
-  // Otherwise, auto-detect
-  console.log('🔍 [WebSocketService] Auto-detecting backend URL...');
-  return await detectBackendUrlForWs();
-};
-
-// Dynamic WebSocket URL construction using backend detection
+// Professional WebSocket URL construction using centralized backend detection
 const getWebSocketUrl = async (): Promise<string> => {
-  // DIAGNOSTIC: Log WebSocket URL construction
-  console.log('🔍 [WebSocketService] URL_CONSTRUCTION:');
-  console.log(`  NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`  NEXT_PUBLIC_WS_URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
-  console.log(`  window available: ${typeof window !== 'undefined'}`);
+  console.log('🔍 [WebSocketService] Constructing WebSocket URL...');
 
-  // If explicitly configured, use it
+  // If explicitly configured, use it (highest priority)
   if (process.env.NEXT_PUBLIC_WS_URL) {
-    console.log(`  ✅ Using configured WebSocket URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
+    console.log(`🔧 [WebSocketService] Using configured WebSocket URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
     return process.env.NEXT_PUBLIC_WS_URL;
   }
 
-  // Get backend URL using same detection as API client
-  const backendUrl = await getBackendUrlForWs();
-  console.log(`  Detected backend URL: ${backendUrl}`);
+  // Use centralized backend detection (no more duplicate port scanning)
+  const backendUrl = await getBackendUrl();
+  console.log(`🔗 [WebSocketService] Backend URL from centralized detection: ${backendUrl}`);
 
   // Construct WebSocket URL from backend URL
   if (backendUrl) {

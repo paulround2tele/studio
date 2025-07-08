@@ -87,7 +87,25 @@ type ProxyStatusPayload struct {
 	ResponseTime int64  `json:"responseTime,omitempty"` // milliseconds
 }
 
+// CampaignListUpdatePayload represents campaign list changes (for eliminating polling)
+type CampaignListUpdatePayload struct {
+	Action     string      `json:"action"`     // "create", "update", "delete", "bulk_update"
+	CampaignID string      `json:"campaignId,omitempty"`
+	Campaign   interface{} `json:"campaign,omitempty"`   // Full campaign data for create/update
+	Campaigns  interface{} `json:"campaigns,omitempty"`  // Multiple campaigns for bulk operations
+}
+
 // Helper functions to create standardized messages
+
+// CreateCampaignListUpdateMessageV2 creates a standardized campaign list update message
+func CreateCampaignListUpdateMessageV2(payload CampaignListUpdatePayload) StandardizedWebSocketMessage {
+	data, _ := json.Marshal(payload)
+	return StandardizedWebSocketMessage{
+		Type:      "campaign.list.update",
+		Timestamp: time.Now(),
+		Data:      data,
+	}
+}
 
 // CreateCampaignProgressMessageV2 creates a standardized campaign progress message
 func CreateCampaignProgressMessageV2(payload CampaignProgressPayload) StandardizedWebSocketMessage {

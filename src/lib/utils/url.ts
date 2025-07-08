@@ -1,61 +1,25 @@
 /**
  * Dynamic URL construction with intelligent backend auto-detection
- * Eliminates hardcoded localhost URLs and works in any environment
+ * Now uses centralized backend detection service to prevent 429 rate limiting
  */
+
+import { getBackendUrl as getCentralizedBackendUrl } from '@/lib/services/backendDetection';
 
 /**
  * Auto-detect backend URL based on environment and availability
+ * @deprecated Use centralized backend detection service instead
  */
 export async function detectBackendUrl(): Promise<string> {
-  // In production, backend is same origin
-  if (process.env.NODE_ENV === 'production') {
-    return '';  // Use relative URLs
-  }
-  
-  // In development, try common backend ports
-  if (typeof window !== 'undefined') {
-    const commonPorts = [8080, 3001, 5000, 8000, 4000];
-    const host = window.location.hostname;
-    
-    for (const port of commonPorts) {
-      try {
-        const testUrl = `http://${host}:${port}/health`;
-        const response = await fetch(testUrl, { 
-          method: 'GET',
-          signal: AbortSignal.timeout(1000) // 1 second timeout
-        });
-        
-        if (response.ok) {
-          console.log(`✅ Backend detected at http://${host}:${port}`);
-          return `http://${host}:${port}`;
-        }
-      } catch (_error) {
-        // Continue to next port
-        console.log(`❌ No backend found at http://${host}:${port}`);
-        continue;
-      }
-    }
-  }
-  
-  // Fallback: assume same origin (for SSR or if detection fails)
-  console.log('⚠️ Backend auto-detection failed, using same origin');
-  return '';
+  console.warn('[DEPRECATED] detectBackendUrl() is deprecated. Use centralized backend detection service.');
+  return await getCentralizedBackendUrl();
 }
 
 /**
  * Get backend URL with smart detection
+ * Now uses centralized service to prevent request flooding
  */
 export async function getBackendUrl(): Promise<string> {
-  // If explicitly configured, use it
-  const configured = process.env.NEXT_PUBLIC_API_URL;
-  if (configured && configured.trim()) {
-    console.log(`🔧 Using configured backend URL: ${configured}`);
-    return configured;
-  }
-  
-  // Otherwise, auto-detect
-  console.log('🔍 Auto-detecting backend URL...');
-  return await detectBackendUrl();
+  return await getCentralizedBackendUrl();
 }
 
 /**

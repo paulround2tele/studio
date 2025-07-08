@@ -7,10 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, UserCheck, Percent, Link as LinkIcon, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
-import type { CampaignViewModel, ExtractedContentItem, AnalyzeContentInput } from '@/lib/types';
+import type { CampaignViewModel, AnalyzeContentInput } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';
+
+type ExtractedContentItem = components['schemas']['ExtractedContentItem'];
+type LeadItem = components['schemas']['LeadItem'];
 
 interface ContentSimilarityViewProps {
   campaign: CampaignViewModel;
@@ -25,28 +29,31 @@ const getSimilarityBadgeVariant = (score: number) => {
 };
 
 export default function ContentSimilarityView({ campaign, onAnalysisComplete }: ContentSimilarityViewProps) {
-  const extractedContent = (campaign as any).extractedContent || [];
-  const leads = Array.isArray((campaign as any).leads) ? (campaign as any).leads : [];
+  // Now using proper generated types from OpenAPI schema
+  const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];
+  const leads: LeadItem[] = Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];
   const { toast } = useToast();
   const [analyzingContentId, setAnalyzingContentId] = useState<string | null>(null);
 
   const handleAnalyzeContent = async (item: ExtractedContentItem) => {
     if (!campaign) return;
+    
+    if (!campaign.id || !item.id) {
+      toast({
+        title: "Analysis Error",
+        description: "Campaign or item ID is missing",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setAnalyzingContentId(item.id);
     try {
       const _analysisInput: AnalyzeContentInput = {
-        urls: [item.url],
-        content: item.text,
-        keywords: item.text.toLowerCase().split(/\s+/).filter(kw => kw.length > 3).slice(0, 5), // Simple existing keywords
+        urls: item.sourceUrl ? [item.sourceUrl] : [],
+        content: item.text || '',
+        keywords: (item.text || '').toLowerCase().split(/\s+/).filter((kw: string) => kw.length > 3).slice(0, 5), // Simple existing keywords
       };
-      if (!campaign.id || !item.id) {
-        toast({
-          title: "Analysis Error",
-          description: "Campaign or item ID is missing",
-          variant: "destructive"
-        });
-        return;
-      }
       // The service will update the mock store, and polling will update the campaign prop
       // Mock content analysis - replace with actual service call when backend is ready
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -141,10 +148,10 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {extractedContent.map((item: any) => (
+                  {extractedContent.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="max-w-xs">
-                        <p className="font-medium truncate" title={item.text}>{item.text.substring(0,100)}{item.text.length > 100 ? "..." : ""}</p>
+                        <p className="font-medium truncate" title={item.text || ''}>{(item.text || '').substring(0,100)}{(item.text || '').length > 100 ? "..." : ""}</p>
                         {item.advancedAnalysis?.summary && <p className="text-xs text-muted-foreground italic mt-1">AI Summary: {item.advancedAnalysis.summary}</p>}
                       </TableCell>
                        <TableCell className="text-xs">
@@ -218,7 +225,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leads.map((lead: any) => (
+                  {leads.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell>
                         <p className="font-medium">{lead.name || 'N/A'}</p>

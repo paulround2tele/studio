@@ -40,8 +40,7 @@ export interface ProxyHealthDetails {
 }
 
 interface UseProxyHealthOptions {
-  autoRefresh?: boolean;
-  refreshInterval?: number;
+  // 🚀 WEBSOCKET PUSH MODEL: Removed autoRefresh and refreshInterval - now uses WebSocket push events
   enableHealthChecks?: boolean;
   healthCheckInterval?: number;
 }
@@ -51,10 +50,9 @@ interface UseProxyHealthOptions {
  */
 export function useProxyHealth(options: UseProxyHealthOptions = {}) {
   const {
-    autoRefresh = true,
-    refreshInterval = 30000, // 30 seconds
-    enableHealthChecks = false,
-    healthCheckInterval = 3600000 // CRITICAL FIX: 1 hour (3600 seconds) instead of 5 minutes
+    // 🚀 WEBSOCKET PUSH MODEL: Removed autoRefresh and refreshInterval - now uses WebSocket push events
+    enableHealthChecks: _enableHealthChecks = false,
+    healthCheckInterval: _healthCheckInterval = 3600000 // CRITICAL FIX: 1 hour (3600 seconds) instead of 5 minutes
   } = options;
 
   const { toast } = useToast();
@@ -257,31 +255,25 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     return Math.round((successCount / totalTests) * 100);
   }, [proxies]);
 
-  // Auto-refresh effect
+  // 🚀 WEBSOCKET PUSH MODEL: Remove polling, use WebSocket events instead
   useEffect(() => {
-    // Initial fetch
+    // Initial fetch only - no polling
     fetchProxyData();
-
-    if (autoRefresh) {
-      const refreshTimer = setInterval(() => {
-        fetchProxyData(true);
-      }, refreshInterval);
-
-      return () => clearInterval(refreshTimer);
-    }
+    console.log('[useProxyHealth] Using WebSocket push model - no polling needed');
     
-    return undefined;
-  }, [fetchProxyData, autoRefresh, refreshInterval]);
+    // Future: WebSocket handler for proxy updates will trigger fetchProxyData
+    // This removes the 30-second polling that was causing rate limiting
+    return () => {}; // No cleanup needed since no polling
+  }, [fetchProxyData]);
 
-  // Health check effect
+  // 🚀 WEBSOCKET PUSH MODEL: Health checks disabled - proxy health updates via WebSocket events
+  // No polling needed - backend will push proxy health status changes in real-time
   useEffect(() => {
-    if (enableHealthChecks) {
-      const healthCheckTimer = setInterval(runHealthChecks, healthCheckInterval);
-      return () => clearInterval(healthCheckTimer);
-    }
-    
-    return undefined;
-  }, [enableHealthChecks, healthCheckInterval, runHealthChecks]);
+    // Future: Health check results will be received via WebSocket proxy_status_update messages
+    // This eliminates the need for polling-based health checks
+    console.log('[useProxyHealth] Health checks via WebSocket push model - no polling needed');
+    return () => {}; // No cleanup needed
+  }, []);
 
   return {
     // Data

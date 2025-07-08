@@ -108,8 +108,8 @@ export function useCampaignWebSocket(
     // Initial check
     checkConnection();
 
-    // RATE LIMIT FIX: Reduced from 1s to 30s to prevent request flooding
-    const interval = setInterval(checkConnection, 30000);
+    // 🚀 WEBSOCKET PUSH MODEL: Reduced to 5 minutes for infrastructure monitoring only
+    const interval = setInterval(checkConnection, 300000); // Check every 5 minutes
 
     return () => {
       clearInterval(interval);
@@ -212,8 +212,8 @@ export function useGlobalWebSocket(
     // Initial check
     checkConnection();
 
-    // RATE LIMIT FIX: Reduced from 1s to 30s to prevent request flooding
-    const interval = setInterval(checkConnection, 30000);
+    // 🚀 WEBSOCKET PUSH MODEL: Reduced to 5 minutes for infrastructure monitoring only
+    const interval = setInterval(checkConnection, 300000); // Check every 5 minutes
 
     return () => {
       clearInterval(interval);
@@ -247,8 +247,8 @@ export function useWebSocketStatus() {
     // Initial update
     updateStatus();
 
-    // RATE LIMIT FIX: Reduced from 1s to 30s to prevent request flooding
-    const interval = setInterval(updateStatus, 30000);
+    // 🚀 WEBSOCKET PUSH MODEL: Reduced to 5 minutes for infrastructure monitoring only
+    const interval = setInterval(updateStatus, 300000); // Check every 5 minutes
 
     return () => clearInterval(interval);
   }, []);

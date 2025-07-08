@@ -1,0 +1,236 @@
+import js from '@eslint/js';
+import typescript from '@typescript-eslint/eslint-plugin';
+import typescriptParser from '@typescript-eslint/parser';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import next from '@next/eslint-plugin-next';
+
+/** @type {import('eslint').Linter.FlatConfig[]} */
+export default [
+  js.configs.recommended,
+  {
+    // Exclude build directories and other files that shouldn't be linted
+    ignores: [
+      '.next/**/*',
+      'node_modules/**/*',
+      'dist/**/*',
+      'build/**/*',
+      '.vercel/**/*',
+      'out/**/*',
+      'coverage/**/*',
+      '*.config.js',
+      '*.config.ts',
+      'next.config.mjs',
+      'jest.setup.ts',
+      'scripts/**/*',
+      '**/__snapshots__/**/*'
+    ]
+  },
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    languageOptions: {
+      parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        React: 'readonly',
+        JSX: 'readonly',
+        
+        // Node.js globals
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        global: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        console: 'readonly',
+        
+        // Browser globals
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        fetch: 'readonly',
+        Response: 'readonly',
+        Request: 'readonly',
+        Headers: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly',
+        WebSocket: 'readonly',
+        Event: 'readonly',
+        EventTarget: 'readonly',
+        MessageEvent: 'readonly',
+        CloseEvent: 'readonly',
+        ErrorEvent: 'readonly',
+        PromiseRejectionEvent: 'readonly',
+        BroadcastChannel: 'readonly',
+        IntersectionObserver: 'readonly',
+        performance: 'readonly',
+        PerformanceNavigationTiming: 'readonly',
+        PerformanceResourceTiming: 'readonly',
+        Image: 'readonly',
+        Element: 'readonly',
+        HTMLElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLButtonElement: 'readonly',
+        HTMLTableElement: 'readonly',
+        HTMLTableSectionElement: 'readonly',
+        HTMLTableRowElement: 'readonly',
+        HTMLTableCellElement: 'readonly',
+        HTMLTableCaptionElement: 'readonly',
+        HTMLTextAreaElement: 'readonly',
+        HTMLFormElement: 'readonly',
+        HTMLFieldSetElement: 'readonly',
+        HTMLLabelElement: 'readonly',
+        HTMLAnchorElement: 'readonly',
+        HTMLSpanElement: 'readonly',
+        HTMLHeadingElement: 'readonly',
+        HTMLParagraphElement: 'readonly',
+        HTMLLIElement: 'readonly',
+        HTMLUListElement: 'readonly',
+        HTMLImageElement: 'readonly',
+        DOMException: 'readonly',
+        
+        // File and Blob APIs
+        File: 'readonly',
+        FileReader: 'readonly',
+        Blob: 'readonly',
+        
+        // Events
+        CustomEvent: 'readonly',
+        KeyboardEvent: 'readonly',
+        
+        // Observers and callbacks
+        ResizeObserverCallback: 'readonly',
+        
+        // Timer functions
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        
+        // Node.js types (for TypeScript)
+        NodeJS: 'readonly',
+        
+        // Module system
+        exports: 'readonly'
+      },
+    },
+    plugins: {
+      '@typescript-eslint': typescript,
+      'react': react,
+      'react-hooks': reactHooks,
+      'jsx-a11y': jsxA11y,
+      '@next/next': next,
+    },
+    rules: {
+      ...typescript.configs.recommended.rules,
+      ...react.configs.recommended.rules,
+      ...reactHooks.configs.recommended.rules,
+      ...next.configs.recommended.rules,
+      ...next.configs['core-web-vitals'].rules,
+      
+      // Custom rules
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_"
+        }
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-require-imports": "off", // Allow require() imports
+      "react/no-unescaped-entities": "warn",
+      "react-hooks/exhaustive-deps": "warn",
+      "react/react-in-jsx-scope": "off", // Not needed in Next.js
+      "react/prop-types": "off", // Using TypeScript for prop validation
+      "no-undef": "error",
+      "no-case-declarations": "off", // Allow let/const in case blocks
+      "no-useless-escape": "warn",
+      "no-redeclare": "warn"
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
+  },
+  {
+    // Test files configuration
+    files: [
+      "**/__tests__/**/*",
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/tests/**/*"
+    ],
+    languageOptions: {
+      globals: {
+        // Jest globals
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        beforeAll: 'readonly',
+        afterEach: 'readonly',
+        afterAll: 'readonly',
+        jest: 'readonly'
+      }
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "react/no-unescaped-entities": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "jsx-a11y/role-supports-aria-props": "off",
+      "no-loss-of-precision": "off"
+    }
+  },
+  {
+    files: [
+      "**/components/ui/**/*",
+      "**/stories/**/*"
+    ],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "react/no-unescaped-entities": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "react-hooks/rules-of-hooks": "off",
+      "jsx-a11y/role-supports-aria-props": "off"
+    }
+  },
+  {
+    // Configuration files (allow CommonJS and relaxed rules)
+    files: ['*.config.js', '*.config.ts', 'tailwind.config.js', 'tailwind.config.ts'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-undef': 'off'
+    }
+  },
+  {
+    // Test automation files (allow all patterns)
+    files: ['test-automation/**/*.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-undef': 'off',
+      'no-useless-escape': 'off'
+    }
+  }
+];

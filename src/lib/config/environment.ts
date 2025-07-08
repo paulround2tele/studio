@@ -52,41 +52,57 @@ export interface EnvironmentConfig {
   };
 }
 
-// Automatic API URL detection for development
-function getAutomaticApiUrl(): string {
+// Professional API URL detection using centralized service (async version for future use)
+async function _getAutomaticApiUrl(): Promise<string> {
+  try {
+    // Use centralized backend detection to prevent 429 rate limiting
+    const { getBackendUrl } = await import('../services/backendDetection');
+    return await getBackendUrl();
+  } catch (error) {
+    console.warn('[Environment] Centralized backend detection failed, using fallback:', error);
+    // Simplified fallback for immediate usage
+    if (typeof window === 'undefined') {
+      return 'http://localhost:8080';
+    }
+    
+    const { hostname, port, protocol } = window.location;
+    
+    if (port === '3000') {
+      return `${protocol}//${hostname}:8080`;
+    }
+    
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
+      return `${protocol}//${hostname}:8080`;
+    }
+    
+    return `${protocol}//${hostname}`;
+  }
+}
+
+// Synchronous fallback for immediate usage
+function getSyncApiUrl(): string {
   if (typeof window === 'undefined') {
-    // SSR: Default to localhost:8080 for development
     return 'http://localhost:8080';
   }
   
   const { hostname, port, protocol } = window.location;
   
-  // Development environment detection - covers localhost and external IPs
   if (port === '3000') {
-    // If frontend is on port 3000 (Next.js dev), backend is always on 8080
-    // This works for both localhost:3000 and 192.168.1.40:3000
     return `${protocol}//${hostname}:8080`;
   }
   
-  // If localhost without specific port, use standard backend port
   if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
     return `${protocol}//${hostname}:8080`;
   }
   
-  // For production or other environments, use same origin or standard ports
-  if (!port || port === '80' || port === '443') {
-    return `${protocol}//${hostname}`;
-  }
-  
-  // Fallback: assume backend is on port 8080 for development
-  return `${protocol}//${hostname}:8080`;
+  return `${protocol}//${hostname}`;
 }
 
 // Environment-specific configurations
 const environments: Record<string, EnvironmentConfig> = {
   development: {
     api: {
-      baseUrl: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || getAutomaticApiUrl(),
+      baseUrl: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || getSyncApiUrl(),
       timeout: 30000,
       retryAttempts: 3,
       retryDelay: 1000,
@@ -430,4 +446,21 @@ export function validateConfiguration(): boolean {
     console.error('Configuration validation failed:', error);
     return false;
   }
+}
+
+// Professional API base URL function for Next.js API routes and compatibility
+export async function getApiBaseUrl(): Promise<string> {
+  try {
+    // Use centralized backend detection for optimal performance
+    const { getBackendUrl } = await import('../services/backendDetection');
+    return await getBackendUrl();
+  } catch (error) {
+    console.warn('[Environment] Centralized detection failed, using sync fallback:', error);
+    return getSyncApiUrl();
+  }
+}
+
+// Synchronous API base URL for immediate usage
+export function getApiBaseUrlSync(): string {
+  return getApiConfig().baseUrl;
 }

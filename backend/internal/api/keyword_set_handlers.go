@@ -12,6 +12,7 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -214,6 +215,10 @@ func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to finalize keyword set creation: "+opErr.Error())
 		return
 	}
+
+	// Broadcast keyword set creation to WebSocket clients
+	websocket.BroadcastKeywordSetCreated(keywordSet.ID.String(), toKeywordSetResponse(keywordSet, createdRulesModels))
+	log.Printf("Successfully created keyword set %s (%s) and broadcasted", keywordSet.ID, keywordSet.Name)
 
 	respondWithJSONGin(c, http.StatusCreated, toKeywordSetResponse(keywordSet, createdRulesModels))
 }
@@ -456,6 +461,10 @@ func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 		return
 	}
 
+	// Broadcast keyword set update to WebSocket clients
+	websocket.BroadcastKeywordSetUpdated(existingSet.ID.String(), toKeywordSetResponse(existingSet, updatedRulesModels))
+	log.Printf("Successfully updated keyword set %s (%s) and broadcasted", existingSet.ID, existingSet.Name)
+
 	respondWithJSONGin(c, http.StatusOK, toKeywordSetResponse(existingSet, updatedRulesModels))
 }
 
@@ -544,6 +553,10 @@ func (h *APIHandler) DeleteKeywordSetGin(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to finalize keyword set deletion: "+opErr.Error())
 		return
 	}
+
+	// Broadcast keyword set deletion to WebSocket clients
+	websocket.BroadcastKeywordSetDeleted(setID.String())
+	log.Printf("Successfully deleted keyword set %s and broadcasted", setID)
 
 	c.Status(http.StatusNoContent)
 }

@@ -1,4 +1,36 @@
-// Health service for direct API calls with circuit breaker pattern and hourly caching
+/**
+ * Professional Health Service Implementation
+ * Uses centralized backend detection with circuit breaker pattern and intelligent caching
+ * Eliminates 429 rate limiting through request consolidation and proper rate limiting
+ */
+
+import { getBackendUrl } from '@/lib/services/backendDetection';
+
+/**
+ * Normalize various health status formats to standardized values
+ */
+function normalizeHealthStatus(status: string | undefined): string {
+  if (!status) return 'unknown';
+  
+  const normalized = status.toLowerCase().trim();
+  
+  // Map common health status responses to 'ok'
+  const healthyStatuses = ['ok', 'healthy', 'up', 'online', 'running', 'good', 'success'];
+  
+  if (healthyStatuses.includes(normalized)) {
+    return 'ok';
+  }
+  
+  // Map common unhealthy statuses
+  const unhealthyStatuses = ['down', 'offline', 'error', 'failed', 'unhealthy', 'bad'];
+  
+  if (unhealthyStatuses.includes(normalized)) {
+    return 'error';
+  }
+  
+  // Return original status if not recognized
+  return normalized;
+}
 
 export interface HealthResponse {
   status: string;
@@ -10,66 +42,9 @@ export interface HealthResponse {
   cacheAge?: number;
 }
 
-// Shared backend URL detection logic (same as API client)
-const detectBackendUrl = async (): Promise<string> => {
-  // DIAGNOSTIC: Log environment detection
-  console.log('🔍 [HealthService] ENVIRONMENT_DETECTION:');
-  console.log(`  NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`  window.location.origin: ${typeof window !== 'undefined' ? window.location.origin : 'SSR'}`);
-  console.log(`  window.location.host: ${typeof window !== 'undefined' ? window.location.host : 'SSR'}`);
-  
-  // In production, backend is same origin
-  if (process.env.NODE_ENV === 'production') {
-    console.log('  ✅ PRODUCTION_MODE: Using relative URLs');
-    return '';  // Use relative URLs
-  }
-  
-  console.log('  🛠️ DEVELOPMENT_MODE: Starting port detection');
-  
-  // In development, try common backend ports
-  if (typeof window !== 'undefined') {
-    const commonPorts = [8080, 3001, 5000, 8000, 4000];
-    const host = window.location.hostname;
-    
-    for (const port of commonPorts) {
-      try {
-        const testUrl = `http://${host}:${port}/health`;
-        const response = await fetch(testUrl, {
-          method: 'GET',
-          signal: AbortSignal.timeout(1000) // 1 second timeout
-        });
-        
-        if (response.ok) {
-          console.log(`✅ [HealthService] Backend detected at http://${host}:${port}`);
-          return `http://${host}:${port}`;
-        }
-      } catch (_error) {
-        // Continue to next port
-        console.log(`❌ [HealthService] No backend found at http://${host}:${port}`);
-        continue;
-      }
-    }
-  }
-  
-  // Fallback: assume same origin (for SSR or if detection fails)
-  console.log('⚠️ [HealthService] Backend auto-detection failed, using same origin');
-  return '';
-};
-
-const getBackendUrl = async (): Promise<string> => {
-  // If explicitly configured, use it
-  const configured = process.env.NEXT_PUBLIC_API_URL;
-  if (configured && configured.trim()) {
-    console.log(`🔧 [HealthService] Using configured backend URL: ${configured}`);
-    return configured;
-  }
-  
-  // Otherwise, auto-detect
-  console.log('🔍 [HealthService] Auto-detecting backend URL...');
-  return await detectBackendUrl();
-};
-
-// RATE LIMIT FIX: Circuit breaker to prevent repeated failed requests
+/**
+ * Circuit breaker to prevent repeated failed requests and 429 rate limiting
+ */
 class HealthCircuitBreaker {
   private failureCount = 0;
   private lastFailureTime = 0;
@@ -88,7 +63,6 @@ class HealthCircuitBreaker {
     }
 
     try {
-      // Add timeout to prevent hanging requests
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Health check timeout')), this.requestTimeout);
       });
@@ -120,11 +94,13 @@ class HealthCircuitBreaker {
   }
 }
 
-// CRITICAL FIX: Health check cache to limit requests to once per hour
+/**
+ * Intelligent health check cache to prevent request flooding
+ */
 class HealthCache {
   private cache: HealthResponse | null = null;
   private cacheTimestamp: number = 0;
-  private readonly cacheExpiryMs = 3600000; // 1 hour (3600 seconds)
+  private readonly cacheExpiryMs = 3600000; // 1 hour
 
   isValid(): boolean {
     if (!this.cache) return false;
@@ -137,7 +113,7 @@ class HealthCache {
       return {
         ...this.cache,
         isCached: true,
-        cacheAge: Math.floor(cacheAge / 1000) // Age in seconds
+        cacheAge: Math.floor(cacheAge / 1000)
       };
     }
     return null;
@@ -159,104 +135,114 @@ class HealthCache {
   }
 }
 
+// Singleton instances
 const circuitBreaker = new HealthCircuitBreaker();
 const healthCache = new HealthCache();
 
-export async function getHealth(forceRefresh = false): Promise<HealthResponse> {
-  // CRITICAL FIX: Check cache first unless force refresh is requested
+/**
+ * Professional health check implementation with intelligent caching and rate limiting protection
+ */
+export async function getHealth(forceRefresh: boolean = false): Promise<HealthResponse> {
+  // Check cache first unless force refresh is requested
   if (!forceRefresh) {
     const cachedResult = healthCache.get();
     if (cachedResult) {
-      console.log(`[HealthService] Returning cached health check (age: ${cachedResult.cacheAge}s)`);
+      console.log(`💾 [HealthService] Returning cached health check (age: ${cachedResult.cacheAge}s)`);
       return cachedResult;
     }
   }
 
-  console.log(`[HealthService] ${forceRefresh ? 'Force refreshing' : 'Cache miss, fetching'} health status...`);
+  console.log(`🔍 [HealthService] ${forceRefresh ? 'Force refreshing' : 'Cache miss, fetching'} health status...`);
 
   try {
     const result = await circuitBreaker.execute(async () => {
-      // Use the same backend detection logic as API client
+      // Use centralized backend detection (no more duplicate port scanning)
       const backendUrl = await getBackendUrl();
-      // Call /health directly on backend, bypassing nginx entirely
       const healthUrl = `${backendUrl}/health`;
-      
-      // DIAGNOSTIC: Log health URL construction
-      console.log('🔍 [HealthService] HEALTH_URL_CONSTRUCTION:');
-      console.log(`  Detected backend URL: ${backendUrl}`);
-      console.log(`  Final health URL: ${healthUrl}`);
-      console.log(`  Environment: ${process.env.NODE_ENV}`);
-      console.log(`  Calling backend /health directly (bypassing nginx)`);
-      
+
+      console.log(`🔗 [HealthService] Checking health at: ${healthUrl}`);
+
       const response = await fetch(healthUrl, {
         method: 'GET',
-        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
         },
+        signal: AbortSignal.timeout(5000) // 5 second timeout
       });
 
-      console.log(`🩺 [HealthService] Health response: ${response.status} ${response.statusText}`);
-      console.log(`  URL: ${response.url}`);
-      console.log(`  OK: ${response.ok}`);
-
       if (!response.ok) {
-        // RATE LIMIT FIX: Don't retry on 429 errors immediately
-        if (response.status === 429) {
-          throw new Error(`Rate limited: ${response.statusText}`);
-        }
-        throw new Error(`Health check failed: ${response.statusText}`);
+        throw new Error(`Health check failed with status ${response.status}`);
       }
 
-      const responseData = await response.json();
+      const data = await response.json();
       
-      // Backend returns wrapped response: { success: true, data: { status: "ok", ... } }
-      // Extract the inner data object to match expected HealthResponse interface
-      return responseData.data || responseData;
+      // Normalize status to 'ok' for consistency (backend may return 'healthy', 'OK', 'up', etc.)
+      const normalizedStatus = normalizeHealthStatus(data.status);
+      
+      console.log(`🔍 [HealthService] Raw backend response:`, data);
+      console.log(`🔍 [HealthService] Normalized status: ${data.status} → ${normalizedStatus}`);
+      
+      return {
+        status: normalizedStatus,
+        timestamp: data.timestamp || new Date().toISOString(),
+        version: data.version,
+        message: data.message,
+        checks: data.checks,
+        isCached: false,
+        cacheAge: 0
+      } as HealthResponse;
     });
 
-    // Cache the successful result
+    // Cache successful result
     healthCache.set(result);
-    console.log(`[HealthService] Health check cached for 1 hour`);
+    console.log(`✅ [HealthService] Health check successful, cached for 1 hour`);
     return result;
 
   } catch (error) {
-    // Don't cache error responses - they should be retryable
-    const errorMessage = error instanceof Error ? error.message : 'Health check failed';
-    const errorResponse = {
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      message: `${errorMessage} (Circuit: ${circuitBreaker.getState()})`,
-    };
-    
-    console.log(`[HealthService] Health check failed: ${errorMessage}`);
-    return errorResponse;
+    console.error(`❌ [HealthService] Health check failed:`, error);
+    throw error;
   }
 }
 
-// Get cached health status without making a request
+/**
+ * Get cached health status without making a request
+ */
 export function getCachedHealth(): HealthResponse | null {
   return healthCache.get();
 }
 
-// Clear health cache (useful for testing)
+/**
+ * Clear health cache (useful for testing or forced refresh)
+ */
 export function clearHealthCache(): void {
   healthCache.clear();
-  console.log(`[HealthService] Health cache cleared`);
+  console.log(`🗑️ [HealthService] Health cache cleared`);
 }
 
-// Get time until next allowed refresh
+/**
+ * Get time until next automatic refresh (in milliseconds)
+ */
 export function getTimeUntilNextRefresh(): number {
   const nextRefresh = healthCache.getNextRefreshTime();
   if (nextRefresh === 0) return 0;
   return Math.max(0, nextRefresh - Date.now());
 }
 
+/**
+ * Get circuit breaker status for debugging
+ */
+export function getCircuitBreakerStatus(): string {
+  return circuitBreaker.getState();
+}
+
+// Export default service object
 const healthService = {
   getHealth,
   getCachedHealth,
   clearHealthCache,
-  getTimeUntilNextRefresh
+  getTimeUntilNextRefresh,
+  getCircuitBreakerStatus
 };
+
 export default healthService;

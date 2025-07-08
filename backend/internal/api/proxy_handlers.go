@@ -16,6 +16,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -244,6 +245,10 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 		return
 	}
 
+	// Broadcast proxy creation to WebSocket clients
+	websocket.BroadcastProxyCreated(proxy.ID.String(), proxy)
+	log.Printf("Proxy created and broadcasted: %s", proxy.ID)
+
 	respondWithJSONGin(c, http.StatusCreated, toProxyResponse(proxy))
 }
 
@@ -387,6 +392,10 @@ func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 		return
 	}
 
+	// Broadcast proxy update to WebSocket clients
+	websocket.BroadcastProxyUpdated(existingProxy.ID.String(), existingProxy)
+	log.Printf("Proxy updated and broadcasted: %s", existingProxy.ID)
+
 	respondWithJSONGin(c, http.StatusOK, toProxyResponse(existingProxy))
 }
 
@@ -469,6 +478,10 @@ func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusInternalServerError, fmt.Sprintf("Failed to delete proxy (audit log error, transaction will be rolled back if SQL): %v", opErr))
 		return
 	}
+
+	// Broadcast proxy deletion to WebSocket clients
+	websocket.BroadcastProxyDeleted(proxyID.String())
+	log.Printf("Proxy deleted and broadcasted: %s", proxyID)
 
 	c.Status(http.StatusNoContent)
 }

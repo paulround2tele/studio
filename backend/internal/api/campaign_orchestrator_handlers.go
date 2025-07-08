@@ -14,6 +14,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
+	"github.com/fntelecomllc/studio/backend/internal/websocket"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -24,15 +25,17 @@ type CampaignOrchestratorAPIHandler struct {
 	domainValidationSvc   services.DomainValidationService    // Domain-centric DNS validation
 	httpKeywordSvc        services.HTTPKeywordCampaignService // Domain-centric HTTP validation
 	campaignStore         store.CampaignStore // Direct access needed for pattern offset queries
+	broadcaster           websocket.Broadcaster  // WebSocket broadcaster for real-time updates
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
-func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService, domainValidationSvc services.DomainValidationService, httpKeywordSvc services.HTTPKeywordCampaignService, campaignStore store.CampaignStore) *CampaignOrchestratorAPIHandler {
+func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService, domainValidationSvc services.DomainValidationService, httpKeywordSvc services.HTTPKeywordCampaignService, campaignStore store.CampaignStore, broadcaster websocket.Broadcaster) *CampaignOrchestratorAPIHandler {
 	return &CampaignOrchestratorAPIHandler{
 		orchestratorService: orchService,
 		domainValidationSvc: domainValidationSvc,
 		httpKeywordSvc:      httpKeywordSvc,
 		campaignStore:       campaignStore,
+		broadcaster:         broadcaster,
 	}
 }
 
@@ -142,6 +145,11 @@ func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 			})
 		return
 	}
+
+	// Broadcast campaign creation to WebSocket clients
+	websocket.BroadcastCampaignCreated(campaign.ID.String(), campaign)
+	log.Printf("Campaign created and broadcasted: %s", campaign.ID)
+
 	respondWithJSONGin(c, http.StatusCreated, campaign)
 }
 
@@ -250,6 +258,10 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 		}
 		return
 	}
+
+	// Broadcast campaign update to WebSocket clients
+	websocket.BroadcastCampaignUpdated(campaignID.String(), campaign)
+	log.Printf("Campaign updated and broadcasted: %s", campaignID)
 
 	respondWithJSONGin(c, http.StatusOK, campaign)
 }
@@ -487,6 +499,12 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 				},
 			})
 		return
+	}
+
+	// Broadcast deletions for successfully deleted campaigns
+	for _, deletedID := range result.DeletedCampaignIDs {
+		websocket.BroadcastCampaignDeleted(deletedID.String())
+		log.Printf("Campaign bulk deleted and broadcasted: %s", deletedID)
 	}
 
 	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
@@ -824,6 +842,14 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 				fmt.Sprintf("Failed to %s campaign", operationName), nil)
 		}
 		return
+	}
+
+	// Broadcast WebSocket events for specific operations
+	switch operationName {
+	case "deleting":
+		// Broadcast campaign deletion to WebSocket clients
+		websocket.BroadcastCampaignDeleted(campaignID.String())
+		log.Printf("Campaign deleted and broadcasted: %s", campaignID)
 	}
 
 	// Different success messages for different operations

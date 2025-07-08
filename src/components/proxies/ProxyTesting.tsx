@@ -70,10 +70,10 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
     healthMetrics, 
     runHealthChecks,
     healthCheckInProgress 
-  } = useProxyHealth({ 
-    autoRefresh: true, 
-    refreshInterval: 10000,
-    enableHealthChecks: false 
+  } = useProxyHealth({
+    autoRefresh: false, // 🚀 WEBSOCKET PUSH MODEL: Disable polling - use WebSocket events instead
+    refreshInterval: 0,  // No polling needed
+    enableHealthChecks: false
   });
 
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null);

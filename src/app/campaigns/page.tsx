@@ -174,6 +174,38 @@ function CampaignsPageContent() {
             
             // Handle different message types
             switch (message.type) {
+              case 'campaign_list_update':
+                // 🚀 NEW: Handle real-time campaign list updates (eliminates polling)
+                console.log('[CampaignsPage] Received campaign list update:', message.data);
+                if (message.data?.action && message.data?.campaignId) {
+                  const { action, campaignId, campaign } = message.data;
+                  
+                  switch (action) {
+                    case 'create':
+                      if (campaign) {
+                        console.log('[CampaignsPage] Adding new campaign via WebSocket');
+                        setCampaigns(prev => [...prev, campaign]);
+                      }
+                      break;
+                      
+                    case 'update':
+                      if (campaign) {
+                        console.log('[CampaignsPage] Updating campaign via WebSocket');
+                        setCampaigns(prev => prev.map(c =>
+                          c.id === campaignId ? { ...c, ...campaign } : c
+                        ));
+                      }
+                      break;
+                      
+                    case 'delete':
+                      console.log('[CampaignsPage] Removing campaign via WebSocket');
+                      setCampaigns(prev => prev.filter(c => c.id !== campaignId));
+                      break;
+                  }
+                }
+                break;
+                
+              case 'campaign_progress':
               case 'progress':
                 // Update campaign progress
                 if (message.campaignId) {
@@ -276,7 +308,7 @@ function CampaignsPageContent() {
         wsCleanup();
       }
     };
-  }, []); // WebSocket should connect once on mount
+  }, [wsConnected]); // Include wsConnected dependency
 
   // MEMORY LEAK FIX: Track component mount status
   useEffect(() => {
@@ -618,7 +650,8 @@ function CampaignsPageContent() {
         setGlobalLoading('campaigns_load', false);
       }
     }
-  }, [campaigns.length, toast, isGlobalLoading, setGlobalLoading, isMountedRef]);
+  }, []); // CRITICAL RATE LIMIT FIX: Remove all dependencies to prevent infinite loop
+  // Note: toast, isGlobalLoading, setGlobalLoading are stable and don't need to be dependencies
 
 
   useEffect(() => {
@@ -631,20 +664,9 @@ function CampaignsPageContent() {
     // Initial load
     loadCampaignsData(true, abortController.signal);
     
-    // 🔧 FIX: Improved interval management - only check mount status
-    const intervalId = setInterval(() => {
-      if (!isMountedRef.current) {
-        console.log('[CampaignsPage] Interval stopped due to unmount');
-        clearInterval(intervalId);
-        return;
-      }
-      console.log('[CampaignsPage] Interval refresh triggered');
-      // Create new AbortController for each interval request
-      const refreshController = new AbortController();
-      loadCampaignsData(false, refreshController.signal);
-    }, 30000); // FIXED: Changed from 5 seconds to 30 seconds to reduce refresh frequency
-    
-    intervalRef.current = intervalId;
+    // 🚀 WEBSOCKET PUSH MODEL: Completely eliminate polling - backend will push updates
+    console.log('[CampaignsPage] Using WebSocket push model - no polling needed');
+    // No more setInterval - all updates will come via WebSocket events
     
     return () => {
       console.log('[CampaignsPage] Cleaning up interval and aborting requests');
@@ -659,7 +681,7 @@ function CampaignsPageContent() {
         abortControllerRef.current = null;
       }
     };
-  }, []); // Initial load effect - should only run once on mount
+  }, []); // CRITICAL RATE LIMIT FIX: Remove loadCampaignsData dependency to prevent infinite loop
 
   // MEMORY LEAK FIX: Cleanup on unmount
   useEffect(() => {
@@ -907,7 +929,7 @@ function CampaignsPageContent() {
       setBulkDeleteLoading(false);
       setGlobalLoading('bulk_delete_campaigns', false);
     }
-  }, [selectedCampaigns, campaigns, toast, setGlobalLoading, loadCampaignsData]);
+  }, [selectedCampaigns, campaigns, toast, setGlobalLoading]);
 
   return (
     <>

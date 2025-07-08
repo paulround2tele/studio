@@ -321,6 +321,39 @@ type Campaign struct {
 	DomainGenerationParams      *DomainGenerationCampaignParams `json:"domainGenerationParams,omitempty"`
 	DNSValidationParams         *DNSValidationCampaignParams    `json:"dnsValidationParams,omitempty"`
 	HTTPKeywordValidationParams *HTTPKeywordCampaignParams      `json:"httpKeywordValidationParams,omitempty"`
+
+	// Content analysis data expected by frontend
+	ExtractedContent *[]ExtractedContentItem `json:"extractedContent,omitempty"`
+	LeadItems        *[]LeadItem             `json:"leadItems,omitempty"`
+}
+
+// ExtractedContentItem represents content extracted and analyzed from domains
+type ExtractedContentItem struct {
+	ID                 string                    `json:"id" validate:"required"`
+	Text               string                    `json:"text" validate:"required"`
+	SimilarityScore    *int                      `json:"similarityScore,omitempty" validate:"omitempty,gte=0,lte=100"`
+	SourceURL          *string                   `json:"sourceUrl,omitempty" validate:"omitempty,url"`
+	PreviousCampaignID *string                   `json:"previousCampaignId,omitempty"`
+	AdvancedAnalysis   *ExtractedContentAnalysis `json:"advancedAnalysis,omitempty"`
+}
+
+// ExtractedContentAnalysis represents AI analysis of extracted content
+type ExtractedContentAnalysis struct {
+	Summary           *string   `json:"summary,omitempty"`
+	AdvancedKeywords  *[]string `json:"advancedKeywords,omitempty"`
+	Categories        *[]string `json:"categories,omitempty"`
+	Sentiment         *string   `json:"sentiment,omitempty" validate:"omitempty,oneof=Positive Negative Neutral"`
+}
+
+// LeadItem represents a lead generated from campaign analysis
+type LeadItem struct {
+	ID                 string  `json:"id" validate:"required"`
+	Name               *string `json:"name,omitempty"`
+	Email              *string `json:"email,omitempty" validate:"omitempty,email"`
+	Company            *string `json:"company,omitempty"`
+	SimilarityScore    *int    `json:"similarityScore,omitempty" validate:"omitempty,gte=0,lte=100"`
+	SourceURL          *string `json:"sourceUrl,omitempty" validate:"omitempty,url"`
+	PreviousCampaignID *string `json:"previousCampaignId,omitempty"`
 }
 
 // DomainGenerationCampaignParams holds parameters for a domain generation campaign

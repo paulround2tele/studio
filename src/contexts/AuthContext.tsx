@@ -105,17 +105,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       checkSession();
     }
     
+    // Capture refs for cleanup to avoid stale reference warnings
+    const currentSessionCheck = sessionCheckRef.current;
+    const currentMinLoadingTime = minLoadingTimeRef.current;
+    
     // Cleanup on unmount
     return () => {
       mountedRef.current = false;
-      if (sessionCheckRef.current) {
-        sessionCheckRef.current.abort();
+      if (currentSessionCheck) {
+        currentSessionCheck.abort();
       }
-      if (minLoadingTimeRef.current) {
-        clearTimeout(minLoadingTimeRef.current);
+      if (currentMinLoadingTime) {
+        clearTimeout(currentMinLoadingTime);
       }
     };
-  }, []); // FIXED: Empty dependency array to prevent infinite loop
+  }, [checkSession]); // Include checkSession dependency
 
   const login = useCallback(async (credentials: { email: string; password: string }) => {
     logger.info('AUTH_CONTEXT', 'Login attempt started', { email: credentials.email });

@@ -144,6 +144,53 @@ function PersonasPageContent() {
 
   useEffect(() => {
     fetchPersonasData(activeTab);
+    
+    let wsCleanup: (() => void) | null = null;
+
+    const connectWebSocket = async () => {
+      try {
+        // Import the WebSocket service dynamically to avoid SSR issues
+        const { websocketService } = await import('@/lib/services/websocketService.simple');
+        
+        console.log('[PersonasPage] Connecting to WebSocket for persona updates...');
+        
+        // Connect to WebSocket for persona updates
+        wsCleanup = websocketService.connect('personas', {
+          onMessage: (message: any) => {
+            console.log('[PersonasPage] WebSocket message received:', message);
+            
+            // Route persona-specific messages
+            if (message.type === 'persona_list_update') {
+              console.log('[PersonasPage] Persona list update detected, refreshing data...');
+              // Refresh the current tab's data without loading spinner
+              fetchPersonasData(activeTab, false);
+            }
+          },
+          onConnect: () => {
+            console.log('[PersonasPage] WebSocket connected for persona push updates');
+          },
+          onError: (error: any) => {
+            console.error('[PersonasPage] WebSocket error:', error);
+          },
+          onDisconnect: () => {
+            console.log('[PersonasPage] WebSocket disconnected');
+          }
+        });
+        
+      } catch (error) {
+        console.error('[PersonasPage] Failed to connect WebSocket:', error);
+      }
+    };
+
+    // Connect WebSocket for real-time updates
+    connectWebSocket();
+    
+    return () => {
+      // Cleanup WebSocket connection
+      if (wsCleanup) {
+        wsCleanup();
+      }
+    };
   }, [activeTab, fetchPersonasData]);
 
   const handleDeletePersona = async (personaId: string, personaType: 'http' | 'dns') => {

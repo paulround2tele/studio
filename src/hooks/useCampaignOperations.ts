@@ -35,66 +35,6 @@ export const useCampaignOperations = (campaignId: string) => {
   const loading = useCampaignDetailsStore(state => state.loading);
   const error = useCampaignDetailsStore(state => state.error);
 
-  // 🔧 CRITICAL FIX: Create stable loadCampaignData function without dependency cycles
-  const loadCampaignData = useCallback(async (showLoadingSpinner = true) => {
-    if (!campaignId) {
-      useCampaignDetailsStore.getState().setError('Campaign ID is required');
-      return;
-    }
-
-    if (showLoadingSpinner) useCampaignDetailsStore.getState().setLoading(true);
-    useCampaignDetailsStore.getState().setError(null);
-
-    try {
-      const rawResponse = await getCampaignById(campaignId);
-      let campaignData: Campaign | null = null;
-
-      // Handle different response structures from backend
-      if (Array.isArray(rawResponse)) {
-        campaignData = rawResponse.find(item =>
-          item && typeof item === 'object' && 'id' in item && item.id === campaignId
-        ) || rawResponse[0] || null;
-      } else if (rawResponse && typeof rawResponse === 'object') {
-        if ('campaign' in rawResponse) {
-          campaignData = rawResponse.campaign as Campaign;
-        } else if ('id' in rawResponse) {
-          campaignData = rawResponse as Campaign;
-        } else {
-          // Check for nested campaign structure
-          const possibleKeys = ['data', 'campaign', 'result', 'payload'];
-          for (const key of possibleKeys) {
-            const nested = (rawResponse as Record<string, unknown>)[key];
-            if (nested && typeof nested === 'object' && 'id' in nested) {
-              campaignData = nested as Campaign;
-              break;
-            }
-          }
-        }
-      }
-
-      if (campaignData) {
-        const viewModel = transformCampaignToViewModel(campaignData);
-        useCampaignDetailsStore.getState().setCampaign(viewModel);
-        
-        // Load domain data based on campaign type
-        await loadDomainData(viewModel);
-      } else {
-        throw new Error('Campaign not found in response');
-      }
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load campaign';
-      useCampaignDetailsStore.getState().setError(errorMessage);
-      toast({
-        title: "Error Loading Campaign",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      if (showLoadingSpinner) useCampaignDetailsStore.getState().setLoading(false);
-    }
-  }, [campaignId, toast]);
-
   // Extract domains from different response structures
   const extractDomainsFromResponse = useCallback((response: unknown): GeneratedDomainBackend[] => {
     console.log('🔍 [Domain Extraction] Parsing response:', { response, type: typeof response });
@@ -208,6 +148,66 @@ export const useCampaignOperations = (campaignId: string) => {
       console.error(`❌ [Domain Loading] Error loading domain data:`, error);
     }
   }, [campaignId, extractDomainsFromResponse]);
+  // 🔧 CRITICAL FIX: Create stable loadCampaignData function with proper dependencies
+  const loadCampaignData = useCallback(async (showLoadingSpinner = true) => {
+    if (!campaignId) {
+      useCampaignDetailsStore.getState().setError('Campaign ID is required');
+      return;
+    }
+
+    if (showLoadingSpinner) useCampaignDetailsStore.getState().setLoading(true);
+    useCampaignDetailsStore.getState().setError(null);
+
+    try {
+      const rawResponse = await getCampaignById(campaignId);
+      let campaignData: Campaign | null = null;
+
+      // Handle different response structures from backend
+      if (Array.isArray(rawResponse)) {
+        campaignData = rawResponse.find(item =>
+          item && typeof item === 'object' && 'id' in item && item.id === campaignId
+        ) || rawResponse[0] || null;
+      } else if (rawResponse && typeof rawResponse === 'object') {
+        if ('campaign' in rawResponse) {
+          campaignData = rawResponse.campaign as Campaign;
+        } else if ('id' in rawResponse) {
+          campaignData = rawResponse as Campaign;
+        } else {
+          // Check for nested campaign structure
+          const possibleKeys = ['data', 'campaign', 'result', 'payload'];
+          for (const key of possibleKeys) {
+            const nested = (rawResponse as Record<string, unknown>)[key];
+            if (nested && typeof nested === 'object' && 'id' in nested) {
+              campaignData = nested as Campaign;
+              break;
+            }
+          }
+        }
+      }
+
+      if (campaignData) {
+        const viewModel = transformCampaignToViewModel(campaignData);
+        useCampaignDetailsStore.getState().setCampaign(viewModel);
+        
+        // Load domain data based on campaign type
+        await loadDomainData(viewModel);
+      } else {
+        throw new Error('Campaign not found in response');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load campaign';
+      useCampaignDetailsStore.getState().setError(errorMessage);
+      toast({
+        title: "Error Loading Campaign",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      if (showLoadingSpinner) useCampaignDetailsStore.getState().setLoading(false);
+    }
+  }, [campaignId, toast, loadDomainData]);
+
 
   // Start campaign phase
   const startPhase = useCallback(async (phaseToStart: CampaignType) => {

@@ -55,10 +55,9 @@ function ProxiesPageContent() {
   const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
   const loading = isOperationLoading(LOADING_OPERATIONS.DATA_FETCH);
   
-  // Initialize proxy health monitoring for future use
-  useProxyHealth({ 
-    autoRefresh: true, 
-    refreshInterval: 30000 
+  // 🚀 WEBSOCKET PUSH MODEL: Disable polling, use WebSocket events instead
+  useProxyHealth({
+    enableHealthChecks: false // Disable health checks - use WebSocket events instead
   });
 
   const fetchProxiesData = useCallback(async (showLoadingSpinner = true) => {
@@ -80,11 +79,77 @@ function ProxiesPageContent() {
     }
   }, [toast, startLoading, stopLoading]);
 
+  // WebSocket handlers for real-time proxy updates
+  const handleProxyListUpdate = useCallback((message: { data: unknown }) => {
+    console.log('[ProxiesPage] Received proxy list update:', message.data);
+    // Refresh proxy list when CRUD operations occur
+    fetchProxiesData(false); // Silent refresh
+  }, [fetchProxiesData]);
+
+  const handleProxyStatusUpdate = useCallback((message: { data: { proxyId: string; status: string; health: string } }) => {
+    console.log('[ProxiesPage] Received proxy status update:', message.data);
+    // Update individual proxy status without full refresh
+    const { proxyId, status: _status, health } = message.data; // Prefix status with _ since we only use health
+    setProxies(current =>
+      current.map(proxy =>
+        proxy.id === proxyId
+          ? { ...proxy, isHealthy: health === 'healthy' }
+          : proxy
+      )
+    );
+  }, []);
+
   useEffect(() => {
     fetchProxiesData();
-    const intervalId = setInterval(() => fetchProxiesData(false), 7000); // Poll for updates
-    return () => clearInterval(intervalId);
-  }, [fetchProxiesData]);
+    
+    let wsCleanup: (() => void) | null = null;
+
+    const connectWebSocket = async () => {
+      try {
+        // Import the WebSocket service dynamically to avoid SSR issues
+        const { websocketService } = await import('@/lib/services/websocketService.simple');
+        
+        console.log('[ProxiesPage] Connecting to WebSocket for proxy updates...');
+        
+        // Connect to WebSocket for proxy updates using the correct method
+        wsCleanup = websocketService.connect('proxies', {
+          onMessage: (standardMessage: { type: string; data?: unknown }) => {
+            console.log('[ProxiesPage] WebSocket message received:', standardMessage);
+            
+            // Route proxy-specific messages
+            if (standardMessage.type === 'proxy_list_update') {
+              handleProxyListUpdate(standardMessage);
+            } else if (standardMessage.type === 'proxy_status_update') {
+              handleProxyStatusUpdate(standardMessage);
+            }
+          },
+          onConnect: () => {
+            console.log('[ProxiesPage] WebSocket connected for proxy push updates');
+          },
+          onError: (error: Error | Event) => {
+            console.error('[ProxiesPage] WebSocket error:', error);
+          },
+          onDisconnect: () => {
+            console.log('[ProxiesPage] WebSocket disconnected');
+          }
+        });
+        
+        console.log('[ProxiesPage] WebSocket connected for proxy push updates');
+        
+      } catch (error) {
+        console.error('[ProxiesPage] Failed to connect WebSocket:', error);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (wsCleanup) {
+        console.log('[ProxiesPage] Cleaning up WebSocket connection');
+        wsCleanup();
+      }
+    };
+  }, [fetchProxiesData, handleProxyListUpdate, handleProxyStatusUpdate]);
 
   const handleAddProxy = () => {
     setEditingProxy(null);

@@ -8,11 +8,17 @@
 export const WebSocketMessageTypes = {
   CAMPAIGN_PROGRESS: 'campaign_progress',
   CAMPAIGN_STATUS: 'campaign_status',
+  CAMPAIGN_LIST_UPDATE: 'campaign_list_update', // NEW: Complete campaign list updates
+  CAMPAIGN_CREATED: 'campaign_created',         // NEW: Single campaign added
+  CAMPAIGN_DELETED: 'campaign_deleted',         // NEW: Single campaign removed
   DOMAIN_GENERATED: 'domain_generated',
   DNS_VALIDATION_RESULT: 'dns_validation_result',
   HTTP_VALIDATION_RESULT: 'http_validation_result',
   SYSTEM_NOTIFICATION: 'system_notification',
   PROXY_STATUS: 'proxy_status',
+  PROXY_LIST_UPDATE: 'proxy_list_update',       // NEW: Proxy CRUD operations
+  PROXY_STATUS_UPDATE: 'proxy_status_update',   // NEW: Proxy status changes
+  DASHBOARD_ACTIVITY: 'dashboard_activity',     // NEW: Real-time dashboard activity updates
   ERROR: 'error'
 } as const;
 
@@ -81,6 +87,9 @@ export interface WebSocketHandlers {
   onHTTPValidationResult?: (message: BaseWebSocketMessage) => void;
   onSystemNotification?: (message: SystemNotificationMessage) => void;
   onProxyStatus?: (message: BaseWebSocketMessage) => void;
+  onProxyListUpdate?: (message: BaseWebSocketMessage) => void;
+  onProxyStatusUpdate?: (message: BaseWebSocketMessage) => void;
+  onDashboardActivity?: (message: BaseWebSocketMessage) => void;
   onError?: (message: ErrorMessage) => void;
   onUnknownMessage?: (message: BaseWebSocketMessage) => void;
 }
@@ -126,6 +135,15 @@ export function routeWebSocketMessage(
       break;
     case WebSocketMessageTypes.PROXY_STATUS:
       handlers.onProxyStatus?.(message);
+      break;
+    case WebSocketMessageTypes.PROXY_LIST_UPDATE:
+      handlers.onProxyListUpdate?.(message);
+      break;
+    case WebSocketMessageTypes.PROXY_STATUS_UPDATE:
+      handlers.onProxyStatusUpdate?.(message);
+      break;
+    case WebSocketMessageTypes.DASHBOARD_ACTIVITY:
+      handlers.onDashboardActivity?.(message);
       break;
     case WebSocketMessageTypes.ERROR:
       handlers.onError?.(message as ErrorMessage);
@@ -376,6 +394,18 @@ export function createValidatedWebSocketHandlers(
     
     onProxyStatus: customHandlers.onProxyStatus || ((message) => {
       console.log('[WebSocket] Proxy status:', message.data);
+    }),
+    
+    onProxyListUpdate: customHandlers.onProxyListUpdate || ((message) => {
+      console.log('[WebSocket] Proxy list update:', message.data);
+    }),
+    
+    onProxyStatusUpdate: customHandlers.onProxyStatusUpdate || ((message) => {
+      console.log('[WebSocket] Proxy status update:', message.data);
+    }),
+    
+    onDashboardActivity: customHandlers.onDashboardActivity || ((message) => {
+      console.log('[WebSocket] Dashboard activity:', message.data);
     }),
     
     // Error handler with automatic tracking

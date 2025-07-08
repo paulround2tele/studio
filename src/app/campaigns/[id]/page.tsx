@@ -80,7 +80,7 @@ export default function RefactoredCampaignDetailsPage() {
     if (campaignOperations.loadCampaignData) {
       campaignOperations.loadCampaignData(force);
     }
-  }, [campaignOperations.loadCampaignData]);
+  }, [campaignOperations]);
 
   // 🔧 CRITICAL FIX: Initialize campaign data with stable dependencies
   useEffect(() => {
@@ -109,7 +109,7 @@ export default function RefactoredCampaignDetailsPage() {
       campaignType: campaign?.campaignType,
       status: campaign?.status
     };
-  }, [campaign?.id, campaign?.campaignType, campaign?.status]);
+  }, [campaign]);
 
   // WebSocket integration for real-time domain streaming
   useEffect(() => {
