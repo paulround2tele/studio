@@ -29,9 +29,10 @@ type campaignOrchestratorServiceImpl struct {
 	campaignJobStore store.CampaignJobStore
 
 	// Specialized services
-	domainGenService   DomainGenerationService
-	dnsService         DNSCampaignService
-	httpKeywordService HTTPKeywordCampaignService
+	domainGenService       DomainGenerationService
+	dnsService             DNSCampaignService
+	httpKeywordService     HTTPKeywordCampaignService
+	domainValidationService DomainValidationService
 
 	// State machine for campaign status transitions
 	stateMachine *CampaignStateMachine
@@ -43,21 +44,23 @@ func NewCampaignOrchestratorService(
 	db *sqlx.DB,
 	cs store.CampaignStore, ps store.PersonaStore, ks store.KeywordStore, as store.AuditLogStore, cjs store.CampaignJobStore,
 	dgs DomainGenerationService, dNSService DNSCampaignService, hkService HTTPKeywordCampaignService,
+	dvs DomainValidationService,
 	apm *communication.AsyncPatternManager,
 ) CampaignOrchestratorService {
 	return &campaignOrchestratorServiceImpl{
-		db:                 db,
-		campaignStore:      cs,
-		personaStore:       ps,
-		keywordStore:       ks,
-		auditLogStore:      as,
-		auditLogger:        utils.NewAuditLogger(as),
-		campaignJobStore:   cjs,
-		domainGenService:   dgs,
-		dnsService:         dNSService,
-		httpKeywordService: hkService,
-		stateMachine:       NewCampaignStateMachine(),
-		asyncManager:       apm,
+		db:                      db,
+		campaignStore:           cs,
+		personaStore:            ps,
+		keywordStore:            ks,
+		auditLogStore:           as,
+		auditLogger:             utils.NewAuditLogger(as),
+		campaignJobStore:        cjs,
+		domainGenService:        dgs,
+		dnsService:              dNSService,
+		httpKeywordService:      hkService,
+		domainValidationService: dvs,
+		stateMachine:            NewCampaignStateMachine(),
+		asyncManager:            apm,
 	}
 }
 

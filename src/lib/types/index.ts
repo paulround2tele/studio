@@ -1,311 +1,107 @@
-// src/lib/types/index.ts
-// Configuration-driven type definitions for DomainFlow
-// NO HARDCODING - All values come from configuration or environment
-
 /**
- * Configuration-driven User type that adapts to different environments
- * Uses OpenAPI spec as baseline but allows for environment customization
+ * Type exports - mapping legacy type names to OpenAPI types
+ * This file provides compatibility layer for existing imports
  */
-export interface User {
-  // Core required fields (from OpenAPI User schema)
-  id: string;
-  email: string;
-  emailVerified: boolean;
-  firstName: string;
-  lastName: string;
-  isActive: boolean;
-  isLocked: boolean;
-  lastLoginAt: string | null;
-  mustChangePassword: boolean;
-  mfaEnabled: boolean;
-  createdAt: string;
-  updatedAt: string;
-  
-  // Extended fields that may vary by environment
-  lastLoginIp?: string;
-  mfaLastUsedAt?: string;
-  
-  // Future extensibility - allows additional properties from config
-  [key: string]: unknown;
-}
 
-/**
- * Generic API response wrapper that adapts to different response formats
- */
-export interface ApiResponse<T = unknown> {
-  status: 'success' | 'error';
-  message?: string;
-  data?: T;
-  error?: string;
-  metadata?: {
-    page?: PaginationInfo;
-    [key: string]: unknown;
-  };
-}
+// Re-export OpenAPI types with legacy names for compatibility
+export type { components } from '@/lib/api-client/types';
 
-/**
- * Configurable pagination interface
- */
-export interface PaginationInfo {
-  current: number;
-  total: number;
-  pageSize: number;
-  count: number;
-}
+// Core OpenAPI types re-exported
+import type { components } from '@/lib/api-client/types';
 
-/**
- * Authentication state interface with environment-aware configuration
- */
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
+export type Campaign = components["schemas"]["Campaign"];
+export type User = components["schemas"]["User"];
+export type Persona = components["schemas"]["Persona"];
+export type PersonaResponse = components["schemas"]["Persona"];
+export type Proxy = components["schemas"]["Proxy"];
+export type ProxyStatus = components["schemas"]["ProxyStatus"];
+export type GeneratedDomain = components["schemas"]["GeneratedDomain"];
+export type DNSValidationResult = components["schemas"]["DNSValidationResult"];
+export type HTTPKeywordResult = components["schemas"]["HTTPKeywordResult"];
 
-/**
- * Configurable authentication credentials
- */
-export interface LoginCredentials {
-  email: string;
-  password: string;
-  rememberMe?: boolean;
-  captchaToken?: string; // Environment-dependent
-}
+// Type aliases for enum values
+export type CampaignType = Campaign["campaignType"];
+export type CampaignStatus = Campaign["status"];
+export type PersonaType = Persona["personaType"];
+export type ProxyProtocol = Proxy["protocol"];
 
-/**
- * Campaign types from OpenAPI schema
- */
-export type CampaignType = 
-  | 'domain_generation'
-  | 'dns_validation'
-  | 'http_keyword_validation';
-
-/**
- * Campaign status from OpenAPI schema
- */
-export type CampaignStatus = 
-  | 'pending'
-  | 'queued'
-  | 'running'
-  | 'pausing'
-  | 'paused'
-  | 'completed'
-  | 'failed'
-  | 'archived'
-  | 'cancelled';
-
-/**
- * Environment-configurable Campaign interface
- */
-export interface Campaign {
-  id: string;
-  name: string;
-  campaignType: CampaignType;
-  status: CampaignStatus;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  startedAt?: string;
-  completedAt?: string;
-  lastHeartbeatAt?: string;
-  estimatedCompletionAt?: string;
-  errorMessage?: string;
-  
-  // Progress tracking
-  totalItems?: number;
-  processedItems?: number;
-  successfulItems?: number;
-  failedItems?: number;
-  progressPercentage?: number;
-  avgProcessingRate?: number;
-  
-  // Extensible metadata
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Persona types from OpenAPI schema
- */
-export type PersonaType = 'dns' | 'http';
-
-/**
- * Configurable Persona interface
- */
-export interface Persona {
-  id: string;
-  name: string;
-  description?: string;
-  personaType: PersonaType;
-  isEnabled: boolean;
-  configDetails: Record<string, unknown>; // Type-specific config
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Proxy protocol types from OpenAPI schema
- */
-export type ProxyProtocol = 'http' | 'https' | 'socks5' | 'socks4';
-
-/**
- * Environment-configurable Proxy interface
- */
-export interface Proxy {
-  id: string;
-  name: string;
-  description?: string;
-  protocol: ProxyProtocol;
-  address: string;
-  host?: string;
-  port?: number;
-  username?: string;
-  password?: string; // Masked in responses
-  countryCode?: string;
-  city?: string;
-  provider?: string;
-  isEnabled: boolean;
-  isHealthy?: boolean;
-  lastCheckedAt?: string;
-  lastStatus?: string;
-  latencyMs?: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * WebSocket connection status interface
- */
-export interface WebSocketConnectionStatus {
-  connectionKey: string;
-  status: 'connected' | 'connecting' | 'disconnected' | 'error';
-  isOperational: boolean;
-  isTestConnection: boolean;
-  lastConnected?: Date;
-  lastError?: string;
-  retryCount?: number;
-}
-
-/**
- * Error types for better error handling
- */
-export interface AppError {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-  timestamp: string;
-}
-
-/**
- * Configuration interface for runtime configuration
- */
-export interface AppConfig {
-  api: {
-    baseUrl: string;
-    timeout: number;
-    retryAttempts: number;
-  };
-  websocket: {
-    url: string;
-    reconnectInterval: number;
-    maxReconnectAttempts: number;
-  };
-  features: {
-    enableDebugMode: boolean;
-    enableRealTimeUpdates: boolean;
-    enableAnalytics: boolean;
-    enableOfflineMode: boolean;
-  };
-  // Extensible for environment-specific config
-  [key: string]: unknown;
-}
-
-/**
- * Loading operation identifiers - configurable per environment
- */
-export const LOADING_OPERATIONS = {
-  LOGIN: 'auth.login',
-  LOGOUT: 'auth.logout',
-  SESSION_CHECK: 'auth.session_check',
-  CAMPAIGN_CREATE: 'campaign.create',
-  CAMPAIGN_START: 'campaign.start',
-  CAMPAIGN_PAUSE: 'campaign.pause',
-  WEBSOCKET_CONNECT: 'websocket.connect',
-  // Extensible for new operations
-} as const;
-
-export type LoadingOperation = typeof LOADING_OPERATIONS[keyof typeof LOADING_OPERATIONS];
-
-/**
- * Re-export commonly used types for convenience
- */
+// Re-export from openapi-extensions for UI-specific types
 export type {
-  // Standard types that might be extended
-  ComponentProps,
-  ReactNode,
-  MouseEvent,
-  FormEvent,
-  ChangeEvent,
-} from 'react';
+  CampaignViewModel,
+  CampaignSelectedType,
+  DomainGenerationPattern,
+  DomainSourceSelectionMode,
+  ApiResponse
+} from './openapi-extensions';
 
-/**
- * Utility type for making all properties optional
- */
-export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+// Legacy type aliases for backwards compatibility
+export type CampaignPhase = CampaignType;
+export type CampaignPhaseStatus = CampaignStatus;
 
-/**
- * Utility type for making specific properties required
- */
-export type RequiredBy<T, K extends keyof T> = T & Required<Pick<T, K>>;
+// Persona type aliases
+export type HttpPersona = PersonaResponse;
+export type DnsPersona = PersonaResponse;
+export type PersonaStatus = components["schemas"]["Persona"]["status"];
 
-/**
- * Environment-aware type guards
- */
-export const isUser = (obj: unknown): obj is User => {
-  return obj !== null && typeof obj === 'object' &&
-         typeof (obj as Record<string, unknown>).id === 'string' &&
-         typeof (obj as Record<string, unknown>).email === 'string';
-};
+// Configuration details from OpenAPI
+export type HTTPConfigDetails = components["schemas"]["HTTPConfigDetails"];
+export type DNSConfigDetails = components["schemas"]["DNSConfigDetails"];
 
-export const isCampaign = (obj: unknown): obj is Campaign => {
-  return obj !== null && typeof obj === 'object' &&
-         typeof (obj as Record<string, unknown>).id === 'string' &&
-         typeof (obj as Record<string, unknown>).name === 'string';
-};
+// Mock types for missing legacy interfaces (to be replaced with proper implementations)
+export interface CampaignValidationItem {
+  id: string;
+  domainName: string;
+  status: string;
+  validatedAt?: string;
+}
 
-export const isApiResponse = <T>(obj: unknown): obj is ApiResponse<T> => {
-  return obj !== null && typeof obj === 'object' &&
-         ['success', 'error'].includes((obj as Record<string, unknown>).status as string);
-};
+export interface ExtractedContentItem {
+  id: string;
+  url: string;
+  title?: string;
+  content: string;
+  extractedAt: string;
+}
 
-/**
- * Configuration validation helpers
- */
-export const validateConfig = (config: Partial<AppConfig>): config is AppConfig => {
-  return !!(
-    config.api?.baseUrl &&
-    config.websocket?.url &&
-    typeof config.features === 'object'
-  );
-};
+export interface AnalyzeContentInput {
+  urls: string[];
+  keywords?: string[];
+  maxResults?: number;
+}
 
-// Export default configuration schema for validation
-export const DEFAULT_CONFIG_SCHEMA: AppConfig = {
-  api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || '',
-    timeout: 30000,
-    retryAttempts: 3,
-  },
-  websocket: {
-    url: process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ?
-      `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v2/ws` :
-      '/api/v2/ws'),
-    reconnectInterval: 5000,
-    maxReconnectAttempts: 10,
-  },
-  features: {
-    enableDebugMode: process.env.NODE_ENV === 'development',
-    enableRealTimeUpdates: true,
-    enableAnalytics: process.env.NODE_ENV === 'production',
-    enableOfflineMode: false,
-  },
-};
+export interface DomainActivityStatus {
+  domain: string;
+  status: string;
+  lastActivity: string;
+}
+
+export interface LatestDomainActivity {
+  domain: string;
+  activity: string;
+  timestamp: string;
+  campaignId: string;
+}
+
+// Auth types (mock for now - should be replaced with proper OpenAPI types)
+export interface Session {
+  id: string;
+  userId: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Permission {
+  id: string;
+  resource: string;
+  action: string;
+  description?: string;
+  createdAt: string;
+}

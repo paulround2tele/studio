@@ -391,8 +391,8 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 		return nil
 	}
 	stmt, err := exec.PrepareNamedContext(ctx, `INSERT INTO generated_domains
-		(id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at)
-		VALUES (:id, :domain_generation_campaign_id, :domain_name, :source_keyword, :source_pattern, :tld, :offset_index, :generated_at, :created_at)`)
+		(id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, http_status, http_title, http_keywords, lead_score)
+		VALUES (:id, :domain_generation_campaign_id, :domain_name, :source_keyword, :source_pattern, :tld, :offset_index, :generated_at, :created_at, :dns_status, :http_status, :http_title, :http_keywords, :lead_score)`)
 	if err != nil {
 		return err
 	}
@@ -408,6 +408,18 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 		if domain.CreatedAt.IsZero() {
 			domain.CreatedAt = time.Now().UTC()
 		}
+		// Set initial status values for new domains
+		if domain.DNSStatus == nil {
+			pending := models.DomainDNSStatusPending
+			domain.DNSStatus = &pending
+		}
+		if domain.HTTPStatus == nil {
+			pending := models.DomainHTTPStatusPending
+			domain.HTTPStatus = &pending
+		}
+		if !domain.LeadScore.Valid {
+			domain.LeadScore = sql.NullFloat64{Float64: 0.0, Valid: true}
+		}
 		_, err := stmt.ExecContext(ctx, domain)
 		if err != nil {
 			return err
@@ -419,7 +431,7 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 func (s *campaignStorePostgres) GetGeneratedDomainsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error) {
 	domains := []*models.GeneratedDomain{}
 	// lastOffsetIndex = -1 can indicate to fetch the first page
-	query := `SELECT id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at
+	query := `SELECT id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, dns_ip, http_status, http_status_code, http_title, http_keywords, lead_score, last_validated_at
 			  FROM generated_domains
 			  WHERE domain_generation_campaign_id = $1 AND offset_index >= $2
 			  ORDER BY offset_index ASC

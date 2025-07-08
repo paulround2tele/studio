@@ -68,6 +68,9 @@ func GenerateOpenAPISpec() *openapi3.T {
 	config.AddKeywordExtractionPaths(spec)
 	config.AddUtilityPaths(spec)
 
+	// Clean up unwanted sql.Null* and uuid.NullUUID schemas
+	cleanupSqlNullSchemas(spec)
+
 	return spec
 }
 
@@ -167,4 +170,90 @@ func ValidateSpec() error {
 	spec := GenerateOpenAPISpec()
 	loader := openapi3.NewLoader()
 	return loader.ResolveRefsIn(spec, nil)
+}
+// cleanupSqlNullSchemas removes sql.Null* and uuid.NullUUID schemas and their references
+func cleanupSqlNullSchemas(spec *openapi3.T) {
+	// List of sql.Null* schema names to remove
+	sqlNullSchemas := []string{
+		"NullString", "NullInt32", "NullInt64", "NullFloat64", 
+		"NullBool", "NullTime", "NullUUID",
+	}
+	
+	// Remove the schemas themselves
+	for _, schemaName := range sqlNullSchemas {
+		delete(spec.Components.Schemas, schemaName)
+	}
+	
+	// Replace references to sql.Null* types with inline primitive types
+	for _, schema := range spec.Components.Schemas {
+		replaceNullReferences(schema)
+	}
+}
+
+// replaceNullReferences recursively replaces $ref to sql.Null* types with inline primitive types
+func replaceNullReferences(schemaRef *openapi3.SchemaRef) {
+	if schemaRef == nil {
+		return
+	}
+	
+	// Handle $ref replacements
+	if schemaRef.Ref != "" {
+		switch schemaRef.Ref {
+		case "#/components/schemas/NullString":
+			schemaRef.Ref = ""
+			schemaRef.Value = &openapi3.Schema{Type: &openapi3.Types{"string"}}
+		case "#/components/schemas/NullInt32", "#/components/schemas/NullInt64":
+			schemaRef.Ref = ""
+			schemaRef.Value = &openapi3.Schema{Type: &openapi3.Types{"integer"}}
+		case "#/components/schemas/NullFloat64":
+			schemaRef.Ref = ""
+			schemaRef.Value = &openapi3.Schema{Type: &openapi3.Types{"number"}}
+		case "#/components/schemas/NullBool":
+			schemaRef.Ref = ""
+			schemaRef.Value = &openapi3.Schema{Type: &openapi3.Types{"boolean"}}
+		case "#/components/schemas/NullTime":
+			schemaRef.Ref = ""
+			schemaRef.Value = &openapi3.Schema{
+				Type:   &openapi3.Types{"string"},
+				Format: "date-time",
+			}
+		case "#/components/schemas/NullUUID":
+			schemaRef.Ref = ""
+			schemaRef.Value = &openapi3.Schema{
+				Type:   &openapi3.Types{"string"},
+				Format: "uuid",
+			}
+		}
+	}
+	
+	// If this is not a reference, recursively process the schema
+	if schemaRef.Value != nil {
+		schema := schemaRef.Value
+		
+		// Process properties
+		for _, propSchemaRef := range schema.Properties {
+			replaceNullReferences(propSchemaRef)
+		}
+		
+		// Process array items
+		if schema.Items != nil {
+			replaceNullReferences(schema.Items)
+		}
+		
+		// Process additional properties
+		if schema.AdditionalProperties.Schema != nil {
+			replaceNullReferences(schema.AdditionalProperties.Schema)
+		}
+		
+		// Process allOf, anyOf, oneOf
+		for _, schemaRef := range schema.AllOf {
+			replaceNullReferences(schemaRef)
+		}
+		for _, schemaRef := range schema.AnyOf {
+			replaceNullReferences(schemaRef)
+		}
+		for _, schemaRef := range schema.OneOf {
+			replaceNullReferences(schemaRef)
+		}
+	}
 }

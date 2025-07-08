@@ -30,13 +30,13 @@ export interface CampaignControlsProps {
   className?: string;
 }
 
-const phaseDisplayNames: Record<CampaignType, string> = {
+const phaseDisplayNames: Record<string, string> = {
   domain_generation: "Domain Generation",
   dns_validation: "DNS Validation",
   http_keyword_validation: "HTTP Validation",
 };
 
-const phaseIcons: Record<CampaignType, LucideIcon> = {
+const phaseIcons: Record<string, LucideIcon> = {
   domain_generation: Play,
   dns_validation: CheckCircle,
   http_keyword_validation: CheckCircle,
@@ -228,8 +228,8 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
       if (selectedType && selectedType !== 'domain_generation') {
         // Only show manual start for DNS and HTTP campaigns
         const firstPhase = getFirstPhase(selectedType);
-        const phaseDisplayName = phaseDisplayNames[firstPhase] || firstPhase;
-        const PhaseIcon = phaseIcons[firstPhase] || Play;
+        const phaseDisplayName = firstPhase ? (phaseDisplayNames[firstPhase] || firstPhase) : 'Unknown';
+        const PhaseIcon = firstPhase ? (phaseIcons[firstPhase] || Play) : Play;
         
         return (
           <PhaseGateButton

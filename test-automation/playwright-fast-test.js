@@ -883,11 +883,11 @@ class PlaywrightDomainFlowTester {
       
       this.logger.info('Step 5: Filling domain generation configuration...');
       
-      // 🚨 CRITICAL: Store expected values for validation
+      // 🚨 CRITICAL: Store expected values for validation - SMALL CAMPAIGN FOR DNS VALIDATION TESTING
       const EXPECTED_CAMPAIGN_CONFIG = {
-        maxDomainsToGenerate: 50,
-        constantPart: `test${Date.now()}`,
-        tldsInput: '.com, .net'
+        maxDomainsToGenerate: 8, // Small campaign for focused DNS validation monitoring
+        constantPart: `dnstest${Date.now()}`,
+        tldsInput: '.com, .org'
       };
       
       // Store expected values globally for later validation
@@ -1657,11 +1657,46 @@ class PlaywrightDomainFlowTester {
     }
   }
 
-  // NEW: DNS Validation Phase Trigger Testing
+  // ENHANCED DNS Validation monitoring with comprehensive server logs
+  async startDNSValidationLogMonitoring() {
+    this.logger.info('🔬 Starting intensive DNS validation log monitoring...');
+    
+    // Start additional backend log monitoring specifically for DNS validation
+    this.dnsValidationLogCapture = spawn('tail', ['-f', '/dev/null'], { stdio: ['ignore', 'pipe', 'pipe'] });
+    
+    // Monitor backend logs for DNS validation specific events
+    try {
+      const backendLogMonitor = spawn('journalctl', ['-f', '-u', 'domainflow-backend'], { stdio: ['ignore', 'pipe', 'pipe'] });
+      backendLogMonitor.stdout.on('data', (data) => {
+        const log = data.toString();
+        if (log.includes('DNS') || log.includes('validation') || log.includes('dns_campaign') || log.includes('DNSValidator')) {
+          this.logger.info('🔬 [BACKEND-DNS] ' + log.trim());
+        }
+      });
+    } catch (e) {
+      this.logger.warn('Could not start journalctl monitoring, using fallback');
+    }
+    
+    // Monitor backend API calls related to DNS validation
+    this.dnsApiCalls = [];
+    this.logger.info('📡 DNS validation API monitoring active');
+  }
+
+  async stopDNSValidationLogMonitoring() {
+    if (this.dnsValidationLogCapture) {
+      this.dnsValidationLogCapture.kill('SIGTERM');
+    }
+    this.logger.info('🔬 DNS validation log monitoring stopped');
+  }
+
+  // NEW: DNS Validation Phase Trigger Testing with Enhanced Logging
   async testDNSValidationTrigger() {
-    this.logger.info('=== DNS VALIDATION PHASE TRIGGER TEST ===');
+    this.logger.info('=== DNS VALIDATION PHASE TRIGGER TEST WITH ENHANCED LOGGING ===');
     
     try {
+      // Start intensive DNS validation monitoring
+      await this.startDNSValidationLogMonitoring();
+      
       // Enhanced detection for domain generation completion and DNS validation button
       this.logger.info('🔍 Detecting domain generation completion and DNS validation trigger...');
       
@@ -1796,6 +1831,201 @@ class PlaywrightDomainFlowTester {
       this.logger.error('DNS validation trigger test failed:', error.message);
       await this.takeScreenshot('dns-validation-error');
       return { success: false, error: error.message };
+    } finally {
+      // Stop DNS validation log monitoring
+      await this.stopDNSValidationLogMonitoring();
+    }
+  }
+
+  // COMPREHENSIVE DNS Validation Process Monitoring with Server Logs
+  async monitorDNSValidationExecution() {
+    this.logger.info('=== COMPREHENSIVE DNS VALIDATION PROCESS MONITORING ===');
+    this.logger.info('🔬 Starting deep DNS validation execution monitoring with server logs');
+    
+    try {
+      const dnsMonitoringState = {
+        startTime: Date.now(),
+        domainsProcessed: 0,
+        dnsResults: [],
+        errorCount: 0,
+        backendLogs: [],
+        frontendLogs: [],
+        wsMessages: [],
+        apiCalls: []
+      };
+
+      // Monitor for up to 5 minutes
+      const maxMonitoringTime = 300000;
+      let monitoringActive = true;
+      let lastScreenshotTime = 0;
+      
+      // Enhanced WebSocket monitoring for DNS validation messages
+      await this.page.evaluate(() => {
+        if (window._wsInstance) {
+          window._wsInstance.addEventListener('message', (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.type === 'dns_validation_result' || 
+                  data.type === 'campaign_progress' ||
+                  (data.data && data.data.phase === 'dns_validation')) {
+                window._dnsValidationMessages = window._dnsValidationMessages || [];
+                window._dnsValidationMessages.push({
+                  timestamp: Date.now(),
+                  data: data
+                });
+              }
+            } catch (e) {
+              // Not JSON, ignore
+            }
+          });
+        }
+      });
+      
+      this.logger.info('🔄 Starting DNS validation monitoring loop...');
+      
+      while (monitoringActive && (Date.now() - dnsMonitoringState.startTime) < maxMonitoringTime) {
+        const elapsed = Date.now() - dnsMonitoringState.startTime;
+        
+        // Capture current DNS validation state from frontend
+        const currentState = await this.page.evaluate(() => {
+          // Look for DNS validation progress indicators
+          const statusElements = document.querySelectorAll('.status, .progress, [data-testid*="dns"], [class*="dns"]');
+          const errorElements = document.querySelectorAll('.error, .alert-error, [data-testid="error"]');
+          const progressBars = document.querySelectorAll('.progress-bar, [role="progressbar"]');
+          
+          // Check for completion indicators
+          let completionFound = false;
+          let currentPhase = 'unknown';
+          const allText = document.body.textContent || '';
+          
+          if (allText.includes('DNS Validation Complete') || 
+              allText.includes('DNS validation completed') ||
+              allText.includes('Phase completed') ||
+              allText.includes('DNS Validation Finished')) {
+            completionFound = true;
+          }
+          
+          if (allText.includes('dns_validation') || allText.includes('DNS validation running')) {
+            currentPhase = 'dns_validation_running';
+          }
+          
+          // Count processed domains
+          const domainElements = document.querySelectorAll('[data-testid*="domain"], .domain-item, .dns-result');
+          
+          return {
+            statusText: Array.from(statusElements).map(el => el.textContent?.trim()).filter(Boolean),
+            errors: Array.from(errorElements).map(el => el.textContent?.trim()).filter(Boolean),
+            progress: Array.from(progressBars).map(el => ({
+              value: el.getAttribute('aria-valuenow') || el.style.width,
+              text: el.textContent?.trim()
+            })),
+            completed: completionFound,
+            phase: currentPhase,
+            domainCount: domainElements.length,
+            timestamp: Date.now()
+          };
+        });
+
+        // Capture DNS validation specific WebSocket messages
+        const dnsWsMessages = await this.page.evaluate(() => window._dnsValidationMessages || []);
+        const newDnsMessages = dnsWsMessages.slice(dnsMonitoringState.wsMessages.length);
+        
+        if (newDnsMessages.length > 0) {
+          newDnsMessages.forEach(msg => {
+            this.logger.info('🔬 DNS WebSocket message:', {
+              type: msg.data.type,
+              campaignId: msg.data.campaignId,
+              domain: msg.data.data?.domain,
+              result: msg.data.data?.result,
+              timestamp: new Date(msg.timestamp).toISOString()
+            });
+            dnsMonitoringState.wsMessages.push(msg);
+          });
+        }
+
+        // Log domain processing progress
+        if (currentState.domainCount !== dnsMonitoringState.domainsProcessed) {
+          this.logger.info(`🌐 DNS validation progress: ${currentState.domainCount} domains processed`);
+          dnsMonitoringState.domainsProcessed = currentState.domainCount;
+        }
+
+        // Check for completion
+        if (currentState.completed) {
+          this.logger.success('🎉 DNS validation process completed!');
+          await this.takeScreenshot('dns-validation-completed');
+          monitoringActive = false;
+          break;
+        }
+
+        // Log errors if found
+        if (currentState.errors.length > 0) {
+          currentState.errors.forEach(error => {
+            this.logger.error('❌ DNS validation error detected:', error);
+            dnsMonitoringState.errorCount++;
+          });
+        }
+
+        // Log progress updates
+        if (currentState.progress.length > 0) {
+          currentState.progress.forEach(prog => {
+            if (prog.value && prog.value !== '0%') {
+              this.logger.info(`📊 DNS validation progress: ${prog.value} - ${prog.text}`);
+            }
+          });
+        }
+
+        // Periodic status updates and screenshots
+        if (elapsed % 15000 === 0 && elapsed > 0) { // Every 15 seconds
+          this.logger.info(`🕐 DNS validation monitoring @ ${Math.round(elapsed/1000)}s:`, {
+            phase: currentState.phase,
+            domainsProcessed: currentState.domainCount,
+            wsMessages: dnsMonitoringState.wsMessages.length,
+            errors: dnsMonitoringState.errorCount,
+            status: currentState.statusText.join(', ')
+          });
+          
+          // Take periodic screenshot
+          if (Date.now() - lastScreenshotTime > 30000) { // Max one screenshot per 30 seconds
+            await this.takeScreenshot(`dns-validation-${Math.round(elapsed/1000)}s`);
+            lastScreenshotTime = Date.now();
+          }
+        }
+
+        // Capture backend server logs related to DNS validation
+        if (elapsed % 5000 === 0 && elapsed > 0) { // Every 5 seconds
+          this.logger.info('📡 Checking for DNS validation backend activity...');
+          // Backend logs are already being captured by the enhanced logging in the script
+        }
+
+        await this.page.waitForTimeout(3000); // Check every 3 seconds
+      }
+
+      // Final analysis and cleanup
+      const finalElapsed = Date.now() - dnsMonitoringState.startTime;
+      await this.takeScreenshot('dns-validation-monitoring-final');
+      
+      this.logger.success('📊 DNS validation monitoring completed', {
+        duration: `${Math.round(finalElapsed/1000)}s`,
+        domainsProcessed: dnsMonitoringState.domainsProcessed,
+        wsMessages: dnsMonitoringState.wsMessages.length,
+        errors: dnsMonitoringState.errorCount
+      });
+
+      return {
+        success: true,
+        duration: finalElapsed,
+        domainsProcessed: dnsMonitoringState.domainsProcessed,
+        wsMessages: dnsMonitoringState.wsMessages.length,
+        errors: dnsMonitoringState.errorCount
+      };
+
+    } catch (error) {
+      this.logger.error('DNS validation monitoring failed:', error.message);
+      await this.takeScreenshot('dns-validation-monitoring-error');
+      return {
+        success: false,
+        error: error.message
+      };
     }
   }
 

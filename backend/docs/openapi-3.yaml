@@ -148,91 +148,73 @@ components:
                     type: integer
             type: object
         Campaign:
-            description: Campaign information
             properties:
                 avgProcessingRate:
-                    description: Average processing rate
                     type: number
+                businessStatus:
+                    type: string
                 campaignType:
-                    description: Type of campaign
-                    enum:
-                        - domain_generation
-                        - dns_validation
-                        - http_keyword_validation
                     type: string
                 completedAt:
-                    description: Campaign completion timestamp
                     format: date-time
                     type: string
                 createdAt:
-                    description: Campaign creation timestamp
                     format: date-time
                     type: string
+                currentPhase:
+                    type: string
+                dnsValidatedDomains:
+                    type: integer
+                dnsValidationParams:
+                    $ref: '#/components/schemas/DNSValidationCampaignParams'
+                domainGenerationParams:
+                    $ref: '#/components/schemas/DomainGenerationCampaignParams'
+                domains:
+                    type: integer
                 errorMessage:
-                    description: Error message if campaign failed
                     type: string
                 estimatedCompletionAt:
-                    description: Estimated completion timestamp
                     format: date-time
                     type: string
                 failedItems:
-                    description: Number of failed items
-                    minimum: 0
                     type: integer
+                httpKeywordValidationParams:
+                    $ref: '#/components/schemas/HTTPKeywordCampaignParams'
                 id:
-                    description: Campaign unique identifier
                     format: uuid
                     type: string
                 lastHeartbeatAt:
-                    description: Last heartbeat timestamp
                     format: date-time
                     type: string
+                launchSequence:
+                    type: boolean
+                leads:
+                    type: integer
                 metadata:
-                    description: Additional campaign metadata
                     type: object
                 name:
-                    description: Campaign name
+                    type: string
+                phaseStatus:
                     type: string
                 processedItems:
-                    description: Number of items processed
-                    minimum: 0
                     type: integer
+                progress:
+                    type: number
                 progressPercentage:
-                    description: Campaign progress percentage
-                    maximum: 100
-                    minimum: 0
                     type: number
                 startedAt:
-                    description: Campaign start timestamp
                     format: date-time
                     type: string
                 status:
-                    description: Campaign status
-                    enum:
-                        - pending
-                        - queued
-                        - running
-                        - pausing
-                        - paused
-                        - completed
-                        - failed
-                        - archived
-                        - cancelled
                     type: string
                 successfulItems:
-                    description: Number of successfully processed items
-                    minimum: 0
                     type: integer
                 totalItems:
-                    description: Total number of items to process
-                    minimum: 0
                     type: integer
                 updatedAt:
-                    description: Campaign last update timestamp
                     format: date-time
                     type: string
                 userId:
-                    description: User ID who created the campaign
                     format: uuid
                     type: string
             type: object
@@ -315,6 +297,8 @@ components:
                         - preserve
                         - ignore
                         - custom
+                        - clear
+                        - session_only
                     type: string
             type: object
         CreateCampaignRequest:
@@ -512,6 +496,71 @@ components:
                     description: Use system DNS resolvers
                     type: boolean
             type: object
+        DNSConfigDetails:
+            description: DNS persona configuration details
+            properties:
+                concurrentQueriesPerDomain:
+                    description: Concurrent queries per domain
+                    type: integer
+                maxConcurrentGoroutines:
+                    description: Maximum concurrent goroutines
+                    type: integer
+                maxDomainsPerRequest:
+                    description: Maximum domains per request
+                    type: integer
+                queryDelayMaxMs:
+                    description: Maximum query delay in milliseconds
+                    type: integer
+                queryDelayMinMs:
+                    description: Minimum query delay in milliseconds
+                    type: integer
+                queryTimeoutSeconds:
+                    description: Query timeout in seconds
+                    type: integer
+                rateLimitBurst:
+                    description: Rate limit burst size
+                    type: integer
+                rateLimitDps:
+                    description: Rate limit in domains per second
+                    type: number
+                resolverStrategy:
+                    description: Resolver selection strategy
+                    enum:
+                        - round_robin
+                        - random
+                        - weighted
+                        - priority
+                    type: string
+                resolvers:
+                    description: DNS resolver addresses
+                    items:
+                        type: string
+                    type: array
+                useSystemResolvers:
+                    description: Whether to use system resolvers
+                    type: boolean
+            type: object
+        DNSValidationCampaignParams:
+            properties:
+                batchSize:
+                    type: integer
+                metadata:
+                    type: object
+                personaIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                processingSpeedPerMinute:
+                    type: integer
+                retryAttempts:
+                    type: integer
+                rotationIntervalSeconds:
+                    type: integer
+                sourceGenerationCampaignId:
+                    format: uuid
+                    type: string
+            type: object
         DNSValidationResult:
             description: DNS validation result information
             properties:
@@ -684,6 +733,31 @@ components:
                 - sourceCampaignId
                 - personaIds
             type: object
+        DomainGenerationCampaignParams:
+            properties:
+                characterSet:
+                    type: string
+                constantString:
+                    type: string
+                createdAt:
+                    format: date-time
+                    type: string
+                currentOffset:
+                    type: integer
+                numDomainsToGenerate:
+                    type: integer
+                patternType:
+                    type: string
+                tld:
+                    type: string
+                totalPossibleCombinations:
+                    type: integer
+                updatedAt:
+                    format: date-time
+                    type: string
+                variableLength:
+                    type: integer
+            type: object
         DomainGenerationParams:
             description: Parameters for domain generation campaigns
             properties:
@@ -700,9 +774,9 @@ components:
                 patternType:
                     description: Pattern type for domain generation
                     enum:
-                        - prefix
-                        - suffix
-                        - both
+                        - prefix_variable
+                        - suffix_variable
+                        - both_variable
                     type: string
                 tld:
                     description: Top-level domain
@@ -756,6 +830,17 @@ components:
                     description: Record creation timestamp
                     format: date-time
                     type: string
+                dnsIp:
+                    description: DNS resolved IP address
+                    type: string
+                dnsStatus:
+                    description: DNS validation status
+                    enum:
+                        - pending
+                        - ok
+                        - error
+                        - timeout
+                    type: string
                 domainName:
                     description: Generated domain name
                     type: string
@@ -767,10 +852,34 @@ components:
                     description: Generation campaign ID
                     format: uuid
                     type: string
+                httpKeywords:
+                    description: HTTP keywords found
+                    type: string
+                httpStatus:
+                    description: HTTP validation status
+                    enum:
+                        - pending
+                        - ok
+                        - error
+                        - timeout
+                    type: string
+                httpStatusCode:
+                    description: HTTP response status code
+                    type: integer
+                httpTitle:
+                    description: HTTP page title
+                    type: string
                 id:
                     description: Domain unique identifier
                     format: uuid
                     type: string
+                lastValidatedAt:
+                    description: Last validation timestamp
+                    format: date-time
+                    type: string
+                leadScore:
+                    description: Lead quality score
+                    type: number
                 offsetIndex:
                     description: Offset index in generation space
                     type: integer
@@ -859,6 +968,105 @@ components:
                     description: List of User-Agent strings to rotate through
                     items:
                         type: string
+                    type: array
+            type: object
+        HTTPConfigDetails:
+            description: HTTP persona configuration details
+            properties:
+                allowedStatusCodes:
+                    description: Allowed HTTP status codes
+                    items:
+                        type: integer
+                    type: array
+                cookieHandling:
+                    oneOf:
+                        - $ref: '#/components/schemas/HTTPCookieHandling'
+                followRedirects:
+                    description: Whether to follow redirects
+                    type: boolean
+                headerOrder:
+                    description: Order of HTTP headers
+                    items:
+                        type: string
+                    type: array
+                headers:
+                    additionalProperties:
+                        type: string
+                    description: HTTP headers
+                    type: object
+                notes:
+                    description: Configuration notes
+                    type: string
+                rateLimitBurst:
+                    description: Rate limit burst size
+                    type: integer
+                rateLimitDps:
+                    description: Rate limit in requests per second
+                    type: number
+                requestTimeoutSeconds:
+                    description: Request timeout in seconds
+                    type: integer
+                userAgent:
+                    description: User agent string
+                    type: string
+            type: object
+        HTTPCookieHandling:
+            description: HTTP cookie handling configuration
+            properties:
+                mode:
+                    description: Cookie handling mode
+                    enum:
+                        - preserve
+                        - ignore
+                        - custom
+                    type: string
+            type: object
+        HTTPKeywordCampaignParams:
+            properties:
+                adHocKeywords:
+                    items:
+                        type: string
+                    type: array
+                batchSize:
+                    type: integer
+                keywordSetIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                lastProcessedDomainName:
+                    type: string
+                metadata:
+                    type: object
+                personaIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                processingSpeedPerMinute:
+                    type: integer
+                proxyIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                proxyPoolId:
+                    format: uuid
+                    type: string
+                proxySelectionStrategy:
+                    type: string
+                retryAttempts:
+                    type: integer
+                rotationIntervalSeconds:
+                    type: integer
+                sourceCampaignId:
+                    format: uuid
+                    type: string
+                sourceType:
+                    type: string
+                targetHttpPorts:
+                    items:
+                        type: integer
                     type: array
             type: object
         HTTPKeywordResult:
@@ -1046,6 +1254,13 @@ components:
                 allowInsecureTls:
                     description: Allow insecure TLS connections
                     type: boolean
+                allowedStatusCodes:
+                    description: Allowed HTTP status codes
+                    items:
+                        maximum: 599
+                        minimum: 100
+                        type: integer
+                    type: array
                 cookieHandling:
                     oneOf:
                         - $ref: '#/components/schemas/CookieHandling'
@@ -1054,6 +1269,9 @@ components:
                     type: boolean
                 fetchBodyForKeywords:
                     description: Fetch response body for keyword scanning
+                    type: boolean
+                followRedirects:
+                    description: Whether to follow HTTP redirects
                     type: boolean
                 headerOrder:
                     description: Order of HTTP headers
@@ -1076,6 +1294,9 @@ components:
                 http2Settings:
                     oneOf:
                         - $ref: '#/components/schemas/HTTP2SettingsConfig'
+                insecureSkipVerify:
+                    description: Skip TLS certificate verification
+                    type: boolean
                 loadImages:
                     description: Load images in headless browser
                     type: boolean
@@ -1215,40 +1436,27 @@ components:
                 - count
             type: object
         KeywordRule:
-            description: Keyword rule information
             properties:
                 category:
-                    description: Category for organizing related rules
                     type: string
                 contextChars:
-                    description: Number of context characters to include around matches
                     type: integer
                 createdAt:
-                    description: Rule creation timestamp
                     format: date-time
                     type: string
                 id:
-                    description: Rule unique identifier
                     format: uuid
                     type: string
                 isCaseSensitive:
-                    description: Whether pattern matching is case sensitive
                     type: boolean
                 keywordSetId:
-                    description: Parent keyword set ID
                     format: uuid
                     type: string
                 pattern:
-                    description: Pattern to match against content
                     type: string
                 ruleType:
-                    description: Type of rule pattern matching
-                    enum:
-                        - string
-                        - regex
                     type: string
                 updatedAt:
-                    description: Rule last update timestamp
                     format: date-time
                     type: string
             type: object
@@ -1281,37 +1489,25 @@ components:
                 - pattern
                 - ruleType
             type: object
-        KeywordSetResponse:
-            description: Keyword set information with rules
+        KeywordSet:
             properties:
                 createdAt:
-                    description: Keyword set creation timestamp
                     format: date-time
                     type: string
                 description:
-                    description: Keyword set description
                     type: string
                 id:
-                    description: Keyword set unique identifier
                     format: uuid
                     type: string
                 isEnabled:
-                    description: Whether the keyword set is enabled
                     type: boolean
                 name:
-                    description: Keyword set name
                     type: string
-                ruleCount:
-                    description: Number of rules in the set
-                    minimum: 0
-                    type: integer
                 rules:
-                    description: List of keyword rules in the set
                     items:
                         $ref: '#/components/schemas/KeywordRule'
                     type: array
                 updatedAt:
-                    description: Keyword set last update timestamp
                     format: date-time
                     type: string
             type: object
@@ -1412,12 +1608,45 @@ components:
                     oneOf:
                         - $ref: '#/components/schemas/PageInfo'
             type: object
+        Persona:
+            properties:
+                configDetails:
+                    type: object
+                createdAt:
+                    format: date-time
+                    type: string
+                description:
+                    type: string
+                id:
+                    format: uuid
+                    type: string
+                isEnabled:
+                    type: boolean
+                lastError:
+                    type: string
+                lastTested:
+                    format: date-time
+                    type: string
+                name:
+                    type: string
+                personaType:
+                    type: string
+                status:
+                    type: string
+                tags:
+                    items:
+                        type: string
+                    type: array
+                updatedAt:
+                    format: date-time
+                    type: string
+            type: object
         PersonaListResponse:
             description: Response for persona list
             properties:
                 data:
                     items:
-                        $ref: '#/components/schemas/PersonaResponse'
+                        $ref: '#/components/schemas/Persona'
                     type: array
                 message:
                     description: Response message
@@ -1425,42 +1654,6 @@ components:
                 status:
                     enum:
                         - success
-                    type: string
-            type: object
-        PersonaResponse:
-            description: Persona response with structured configuration
-            properties:
-                configDetails:
-                    description: Type-specific configuration details
-                    oneOf:
-                        - $ref: '#/components/schemas/HttpPersonaConfig'
-                        - $ref: '#/components/schemas/DnsPersonaConfig'
-                createdAt:
-                    description: Persona creation timestamp
-                    format: date-time
-                    type: string
-                description:
-                    description: Persona description
-                    type: string
-                id:
-                    description: Persona unique identifier
-                    format: uuid
-                    type: string
-                isEnabled:
-                    description: Whether the persona is enabled
-                    type: boolean
-                name:
-                    description: Persona name
-                    type: string
-                personaType:
-                    description: Type of persona
-                    enum:
-                        - dns
-                        - http
-                    type: string
-                updatedAt:
-                    description: Persona last update timestamp
-                    format: date-time
                     type: string
             type: object
         PersonaTestResult:
@@ -1498,70 +1691,63 @@ components:
                     type: string
             type: object
         Proxy:
-            description: Proxy configuration and status information
             properties:
                 address:
-                    description: Proxy address
                     type: string
                 city:
-                    description: Proxy city location
                     type: string
                 countryCode:
-                    description: Proxy country code
                     type: string
                 createdAt:
-                    description: Proxy creation timestamp
                     format: date-time
                     type: string
                 description:
-                    description: Proxy description
                     type: string
+                failureCount:
+                    type: integer
                 host:
-                    description: Proxy hostname or IP
                     type: string
                 id:
-                    description: Proxy unique identifier
                     format: uuid
                     type: string
+                inputPassword:
+                    type: string
+                inputUsername:
+                    type: string
                 isEnabled:
-                    description: Whether the proxy is enabled
                     type: boolean
                 isHealthy:
-                    description: Whether the proxy is healthy
                     type: boolean
                 lastCheckedAt:
-                    description: Last health check timestamp
                     format: date-time
                     type: string
+                lastError:
+                    type: string
                 lastStatus:
-                    description: Last status message
+                    type: string
+                lastTested:
+                    format: date-time
                     type: string
                 latencyMs:
-                    description: Last measured latency in milliseconds
                     type: integer
                 name:
-                    description: Proxy name
+                    type: string
+                notes:
                     type: string
                 port:
-                    description: Proxy port number
                     type: integer
                 protocol:
-                    description: Proxy protocol
-                    enum:
-                        - http
-                        - https
-                        - socks5
-                        - socks4
                     type: string
                 provider:
-                    description: Proxy provider
                     type: string
+                status:
+                    type: string
+                successCount:
+                    type: integer
                 updatedAt:
-                    description: Proxy last update timestamp
                     format: date-time
                     type: string
                 username:
-                    description: Proxy username
                     type: string
             type: object
         ProxyManagerConfig:
@@ -1589,70 +1775,51 @@ components:
                 - testTimeoutSeconds
             type: object
         ProxyPool:
-            description: Proxy pool configuration and status information
             properties:
                 createdAt:
-                    description: Pool creation timestamp
                     format: date-time
                     type: string
                 description:
-                    description: Proxy pool description
                     type: string
                 healthCheckEnabled:
-                    description: Whether health checks are enabled
                     type: boolean
                 healthCheckIntervalSeconds:
-                    description: Health check interval in seconds
                     type: integer
                 id:
-                    description: Proxy pool unique identifier
                     format: uuid
                     type: string
                 isEnabled:
-                    description: Whether the proxy pool is enabled
                     type: boolean
                 maxRetries:
-                    description: Maximum retry attempts
                     type: integer
                 name:
-                    description: Proxy pool name
                     type: string
                 poolStrategy:
-                    description: Pool selection strategy
                     type: string
                 proxies:
-                    description: List of proxies in the pool
                     items:
                         $ref: '#/components/schemas/Proxy'
                     type: array
                 timeoutSeconds:
-                    description: Timeout in seconds
                     type: integer
                 updatedAt:
-                    description: Pool last update timestamp
                     format: date-time
                     type: string
             type: object
         ProxyPoolMembership:
-            description: Proxy pool membership information
             properties:
                 addedAt:
-                    description: Timestamp when proxy was added to pool
                     format: date-time
                     type: string
                 isActive:
-                    description: Whether the membership is active
                     type: boolean
                 poolId:
-                    description: Pool ID
                     format: uuid
                     type: string
                 proxyId:
-                    description: Proxy ID
                     format: uuid
                     type: string
                 weight:
-                    description: Weight for proxy selection
                     type: integer
             type: object
         ProxyPoolRequest:
@@ -1958,47 +2125,44 @@ components:
                     type: string
             type: object
         User:
-            description: User information
             properties:
+                avatarUrl:
+                    type: string
                 createdAt:
-                    description: Account creation timestamp
                     format: date-time
                     type: string
                 email:
-                    description: User email address
-                    format: email
                     type: string
                 emailVerified:
-                    description: Whether the user email is verified
                     type: boolean
                 firstName:
-                    description: User first name
                     type: string
                 id:
-                    description: User unique identifier
                     format: uuid
                     type: string
                 isActive:
-                    description: Whether the user account is active
                     type: boolean
                 isLocked:
-                    description: Whether the user account is locked
                     type: boolean
                 lastLoginAt:
-                    description: Last login timestamp
                     format: date-time
                     type: string
+                lastLoginIp:
+                    items:
+                        type: object
+                    type: array
                 lastName:
-                    description: User last name
                     type: string
                 mfaEnabled:
-                    description: Whether multi-factor authentication is enabled
                     type: boolean
+                mfaLastUsedAt:
+                    format: date-time
+                    type: string
                 mustChangePassword:
-                    description: Whether the user must change their password
                     type: boolean
+                name:
+                    type: string
                 updatedAt:
-                    description: Account last update timestamp
                     format: date-time
                     type: string
             type: object
@@ -3247,6 +3411,118 @@ paths:
             summary: Start campaign
             tags:
                 - Campaigns
+    /campaigns/{campaignId}/validate-dns:
+        post:
+            description: Triggers domain-centric DNS validation for all domains in a completed domain generation campaign
+            operationId: validateDNSForCampaign
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignOperationResponse'
+                    description: DNS validation started successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign is in an invalid state for this operation
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Validate DNS for campaign domains
+            tags:
+                - Campaigns
+    /campaigns/{campaignId}/validate-http:
+        post:
+            description: Triggers domain-centric HTTP keyword validation for all domains in a completed DNS validation campaign
+            operationId: validateHTTPForCampaign
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CampaignOperationResponse'
+                    description: HTTP keyword validation started successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "409":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign is in an invalid state for this operation
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Validate HTTP for campaign domains
+            tags:
+                - Campaigns
     /change-password:
         post:
             description: Changes the password for the currently authenticated user
@@ -3457,7 +3733,7 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: '#/components/schemas/KeywordSetResponse'
+                                    $ref: '#/components/schemas/KeywordSet'
                                 type: array
                     description: Keyword sets retrieved successfully
                 "400":
@@ -3499,7 +3775,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/KeywordSetResponse'
+                                $ref: '#/components/schemas/KeywordSet'
                     description: Keyword set created successfully
                 "400":
                     content:
@@ -3594,7 +3870,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/KeywordSetResponse'
+                                $ref: '#/components/schemas/KeywordSet'
                     description: Keyword set retrieved successfully
                 "400":
                     content:
@@ -3649,7 +3925,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/KeywordSetResponse'
+                                $ref: '#/components/schemas/KeywordSet'
                     description: Keyword set updated successfully
                 "400":
                     content:
@@ -3797,7 +4073,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/PersonaResponse'
+                                $ref: '#/components/schemas/Persona'
                     description: Persona created successfully
                 "400":
                     content:
@@ -3896,7 +4172,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/PersonaResponse'
+                                $ref: '#/components/schemas/Persona'
                     description: Persona retrieved successfully
                 "400":
                     content:
@@ -3951,7 +4227,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/PersonaResponse'
+                                $ref: '#/components/schemas/Persona'
                     description: Persona updated successfully
                 "400":
                     content:
@@ -4051,7 +4327,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/PersonaResponse'
+                                $ref: '#/components/schemas/Persona'
                     description: DNS persona retrieved successfully
                 "400":
                     content:
@@ -4101,7 +4377,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/PersonaResponse'
+                                $ref: '#/components/schemas/Persona'
                     description: HTTP persona retrieved successfully
                 "400":
                     content:

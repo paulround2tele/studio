@@ -1,7 +1,11 @@
 package proxypools
 
 import (
+	"reflect"
+	
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // AddProxyPoolPaths adds proxy pool-related paths to the OpenAPI specification
@@ -492,93 +496,8 @@ func addProxyPoolSchemas(spec *openapi3.T) {
 		},
 	}
 
-	// ProxyPool schema
-	spec.Components.Schemas["ProxyPool"] = &openapi3.SchemaRef{
-		Value: &openapi3.Schema{
-			Type:        &openapi3.Types{"object"},
-			Description: "Proxy pool configuration and status information",
-			Properties: map[string]*openapi3.SchemaRef{
-				"id": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "Proxy pool unique identifier",
-					},
-				},
-				"name": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy pool name",
-					},
-				},
-				"description": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy pool description",
-					},
-				},
-				"isEnabled": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the proxy pool is enabled",
-					},
-				},
-				"poolStrategy": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Pool selection strategy",
-					},
-				},
-				"healthCheckEnabled": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether health checks are enabled",
-					},
-				},
-				"healthCheckIntervalSeconds": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Description: "Health check interval in seconds",
-					},
-				},
-				"maxRetries": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Description: "Maximum retry attempts",
-					},
-				},
-				"timeoutSeconds": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Description: "Timeout in seconds",
-					},
-				},
-				"proxies": {
-					Value: &openapi3.Schema{
-						Type: &openapi3.Types{"array"},
-						Items: &openapi3.SchemaRef{
-							Ref: "#/components/schemas/Proxy",
-						},
-						Description: "List of proxies in the pool",
-					},
-				},
-				"createdAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Pool creation timestamp",
-					},
-				},
-				"updatedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Pool last update timestamp",
-					},
-				},
-			},
-		},
-	}
+	// Auto-generate ProxyPool schema from Go struct
+	utils.AddStructSchema(spec, reflect.TypeOf(models.ProxyPool{}), "ProxyPool")
 
 	// AddProxyToPoolRequest schema
 	spec.Components.Schemas["AddProxyToPoolRequest"] = &openapi3.SchemaRef{
@@ -606,46 +525,6 @@ func addProxyPoolSchemas(spec *openapi3.T) {
 		},
 	}
 
-	// ProxyPoolMembership schema
-	spec.Components.Schemas["ProxyPoolMembership"] = &openapi3.SchemaRef{
-		Value: &openapi3.Schema{
-			Type:        &openapi3.Types{"object"},
-			Description: "Proxy pool membership information",
-			Properties: map[string]*openapi3.SchemaRef{
-				"poolId": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "Pool ID",
-					},
-				},
-				"proxyId": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "Proxy ID",
-					},
-				},
-				"weight": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Description: "Weight for proxy selection",
-					},
-				},
-				"isActive": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the membership is active",
-					},
-				},
-				"addedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Timestamp when proxy was added to pool",
-					},
-				},
-			},
-		},
-	}
+	// Auto-generate ProxyPoolMembership schema from Go struct
+	utils.AddStructSchema(spec, reflect.TypeOf(models.ProxyPoolMembership{}), "ProxyPoolMembership")
 }

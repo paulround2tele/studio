@@ -3,7 +3,9 @@
  * Maps between frontend and backend campaign status representations
  */
 
-import { CampaignStatus } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type CampaignStatus = NonNullable<components['schemas']['Campaign']['status']>;
 
 // Define the actual status values used by the system
 export const CAMPAIGN_STATUSES = {

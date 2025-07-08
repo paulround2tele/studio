@@ -3,7 +3,9 @@
 
 import CampaignFormV2, { type CampaignViewModel } from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
-import type { Campaign } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type Campaign = components['schemas']['Campaign'];
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';

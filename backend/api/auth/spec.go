@@ -1,7 +1,11 @@
 package auth
 
 import (
+	"reflect"
+	
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // AddAuthPaths adds authentication-related paths to the OpenAPI specification
@@ -413,90 +417,6 @@ func addAuthSchemas(spec *openapi3.T) {
 		},
 	}
 
-	// User schema
-	spec.Components.Schemas["User"] = &openapi3.SchemaRef{
-		Value: &openapi3.Schema{
-			Type:        &openapi3.Types{"object"},
-			Description: "User information",
-			Properties: map[string]*openapi3.SchemaRef{
-				"id": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "User unique identifier",
-					},
-				},
-				"email": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "email",
-						Description: "User email address",
-					},
-				},
-				"firstName": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "User first name",
-					},
-				},
-				"lastName": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "User last name",
-					},
-				},
-				"isActive": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the user account is active",
-					},
-				},
-				"isLocked": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the user account is locked",
-					},
-				},
-				"emailVerified": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the user email is verified",
-					},
-				},
-				"mustChangePassword": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the user must change their password",
-					},
-				},
-				"mfaEnabled": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether multi-factor authentication is enabled",
-					},
-				},
-				"createdAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Account creation timestamp",
-					},
-				},
-				"updatedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Account last update timestamp",
-					},
-				},
-				"lastLoginAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Last login timestamp",
-					},
-				},
-			},
-		},
-	}
+	// Auto-generate User schema from Go struct
+	utils.AddStructSchema(spec, reflect.TypeOf(models.User{}), "User")
 }

@@ -1,6 +1,9 @@
 import { useMemo, useCallback } from 'react';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { CampaignSelectedType, DomainGenerationPattern } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+import type { DomainGenerationPattern } from '@/lib/types/openapi-extensions';
+
+type CampaignSelectedType = components['schemas']['Campaign']['campaignType'];
 
 /**
  * Performance-optimized hook for domain calculation with safeguards

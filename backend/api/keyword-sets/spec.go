@@ -1,7 +1,11 @@
 package keywordsets
 
 import (
+	"reflect"
+	
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // AddKeywordSetPaths adds keyword set-related paths to the OpenAPI specification
@@ -43,7 +47,7 @@ func addCreateKeywordSetPath(spec *openapi3.T) {
 		Content: map[string]*openapi3.MediaType{
 			"application/json": {
 				Schema: &openapi3.SchemaRef{
-					Ref: "#/components/schemas/KeywordSetResponse",
+					Ref: "#/components/schemas/KeywordSet",
 				},
 			},
 		},
@@ -174,7 +178,7 @@ func addListKeywordSetsPath(spec *openapi3.T) {
 					Value: &openapi3.Schema{
 						Type: &openapi3.Types{"array"},
 						Items: &openapi3.SchemaRef{
-							Ref: "#/components/schemas/KeywordSetResponse",
+							Ref: "#/components/schemas/KeywordSet",
 						},
 					},
 				},
@@ -254,7 +258,7 @@ func addGetKeywordSetPath(spec *openapi3.T) {
 		Content: map[string]*openapi3.MediaType{
 			"application/json": {
 				Schema: &openapi3.SchemaRef{
-					Ref: "#/components/schemas/KeywordSetResponse",
+					Ref: "#/components/schemas/KeywordSet",
 				},
 			},
 		},
@@ -312,7 +316,7 @@ func addUpdateKeywordSetPath(spec *openapi3.T) {
 		Content: map[string]*openapi3.MediaType{
 			"application/json": {
 				Schema: &openapi3.SchemaRef{
-					Ref: "#/components/schemas/KeywordSetResponse",
+					Ref: "#/components/schemas/KeywordSet",
 				},
 			},
 		},
@@ -552,137 +556,9 @@ func addKeywordSetSchemas(spec *openapi3.T) {
 		},
 	}
 
-	// KeywordRule schema
-	spec.Components.Schemas["KeywordRule"] = &openapi3.SchemaRef{
-		Value: &openapi3.Schema{
-			Type:        &openapi3.Types{"object"},
-			Description: "Keyword rule information",
-			Properties: map[string]*openapi3.SchemaRef{
-				"id": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "Rule unique identifier",
-					},
-				},
-				"keywordSetId": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "Parent keyword set ID",
-					},
-				},
-				"pattern": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Pattern to match against content",
-					},
-				},
-				"ruleType": {
-					Value: &openapi3.Schema{
-						Type: &openapi3.Types{"string"},
-						Enum: []interface{}{"string", "regex"},
-						Description: "Type of rule pattern matching",
-					},
-				},
-				"isCaseSensitive": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether pattern matching is case sensitive",
-					},
-				},
-				"category": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Category for organizing related rules",
-					},
-				},
-				"contextChars": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Description: "Number of context characters to include around matches",
-					},
-				},
-				"createdAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Rule creation timestamp",
-					},
-				},
-				"updatedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Rule last update timestamp",
-					},
-				},
-			},
-		},
-	}
+	// Auto-generate KeywordRule schema from Go struct
+	utils.AddStructSchema(spec, reflect.TypeOf(models.KeywordRule{}), "KeywordRule")
 
-	// KeywordSetResponse schema
-	spec.Components.Schemas["KeywordSetResponse"] = &openapi3.SchemaRef{
-		Value: &openapi3.Schema{
-			Type:        &openapi3.Types{"object"},
-			Description: "Keyword set information with rules",
-			Properties: map[string]*openapi3.SchemaRef{
-				"id": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "Keyword set unique identifier",
-					},
-				},
-				"name": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Keyword set name",
-					},
-				},
-				"description": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Keyword set description",
-					},
-				},
-				"isEnabled": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the keyword set is enabled",
-					},
-				},
-				"rules": {
-					Value: &openapi3.Schema{
-						Type: &openapi3.Types{"array"},
-						Items: &openapi3.SchemaRef{
-							Ref: "#/components/schemas/KeywordRule",
-						},
-						Description: "List of keyword rules in the set",
-					},
-				},
-				"ruleCount": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Min:         &[]float64{0}[0],
-						Description: "Number of rules in the set",
-					},
-				},
-				"createdAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Keyword set creation timestamp",
-					},
-				},
-				"updatedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Keyword set last update timestamp",
-					},
-				},
-			},
-		},
-	}
+	// Auto-generate KeywordSet schema from Go struct
+	utils.AddStructSchema(spec, reflect.TypeOf(models.KeywordSet{}), "KeywordSet")
 }

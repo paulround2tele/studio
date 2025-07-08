@@ -1,7 +1,9 @@
 // src/lib/stores/auth.ts
 // Simple auth store that just re-exports the context hook for compatibility
 import { useAuth as useAuthContext } from '@/contexts/AuthContext';
-import type { User } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type User = components['schemas']['User'];
 
 export interface LoginCredentials {
   email: string;

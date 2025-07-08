@@ -3,45 +3,13 @@
 // NO HARDCODING - Uses environment-based configuration
 
 import { apiClient } from '@/lib/api-client/client';
-import type { User } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
+
+type User = components['schemas']['User'];
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
 
-type GeneratedUser = components['schemas']['User'];
-
-// Type adapter to convert generated OpenAPI User to manual User type
-function adaptUser(generatedUser: GeneratedUser): User | null {
-  if (!generatedUser?.id || !generatedUser?.email) {
-    logger.warn('AUTH_SERVICE', 'Invalid user data received', { generatedUser });
-    return null;
-  }
-  
-  const adaptedUser: User = {
-    id: generatedUser.id as User['id'],
-    email: generatedUser.email,
-    emailVerified: generatedUser.emailVerified ?? false,
-    firstName: generatedUser.firstName ?? '',
-    lastName: generatedUser.lastName ?? '',
-    isActive: generatedUser.isActive ?? true,
-    isLocked: generatedUser.isLocked ?? false,
-    lastLoginAt: generatedUser.lastLoginAt as User['lastLoginAt'],
-    lastLoginIp: undefined, // Not in generated type yet
-    mustChangePassword: generatedUser.mustChangePassword ?? false,
-    mfaEnabled: generatedUser.mfaEnabled ?? false,
-    mfaLastUsedAt: undefined, // Not in generated type yet
-    createdAt: (generatedUser.createdAt ?? new Date().toISOString()) as User['createdAt'],
-    updatedAt: (generatedUser.updatedAt ?? new Date().toISOString()) as User['updatedAt']
-  };
-
-  logger.debug('AUTH_SERVICE', 'User adapted successfully', { 
-    userId: adaptedUser.id, 
-    email: adaptedUser.email 
-  });
-
-  return adaptedUser;
-}
 
 interface LoginCredentials {
   email: string;
@@ -97,9 +65,20 @@ class AuthService {
       
       if (response && typeof response === 'object') {
         // Handle wrapped API response format: { success: true, data: User }
-        const userData = (response as { data?: GeneratedUser })?.data || response;
-        const adaptedUser = adaptUser(userData as GeneratedUser);
-        return adaptedUser;
+        const userData = (response as { data?: User })?.data || response;
+        
+        // Validate the user data
+        if (!userData?.id || !userData?.email) {
+          logger.warn('AUTH_SERVICE', 'Invalid user data received', { userData });
+          return null;
+        }
+        
+        logger.debug('AUTH_SERVICE', 'User retrieved successfully', {
+          userId: userData.id,
+          email: userData.email
+        });
+        
+        return userData as User;
       }
 
       return null;
@@ -142,17 +121,26 @@ class AuthService {
         });
         
         if (response?.user) {
-          const adaptedUser = adaptUser(response.user);
-          if (adaptedUser) {
-            logger.info('AUTH_SERVICE', 'Login successful', {
-              userId: adaptedUser.id,
-              attempt: attempt + 1
+          // Validate the user data
+          if (!response.user?.id || !response.user?.email) {
+            logger.warn('AUTH_SERVICE', 'Invalid user data in login response', {
+              attempt: attempt + 1,
+              hasUser: !!response.user
             });
             return {
-              success: true,
-              user: adaptedUser
+              success: false,
+              error: 'Invalid login response'
             };
           }
+          
+          logger.info('AUTH_SERVICE', 'Login successful', {
+            userId: response.user.id,
+            attempt: attempt + 1
+          });
+          return {
+            success: true,
+            user: response.user
+          };
         }
         
         logger.warn('AUTH_SERVICE', 'Login failed - invalid response', { 

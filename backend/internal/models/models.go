@@ -18,6 +18,29 @@ const (
 	CampaignTypeHTTPKeywordValidation CampaignTypeEnum = "http_keyword_validation"
 )
 
+// CampaignPhaseEnum defines the current phase of a campaign
+type CampaignPhaseEnum string
+
+const (
+	CampaignPhaseSetup        CampaignPhaseEnum = "setup"
+	CampaignPhaseGeneration   CampaignPhaseEnum = "generation"
+	CampaignPhaseDNSValidation CampaignPhaseEnum = "dns_validation"
+	CampaignPhaseHTTPValidation CampaignPhaseEnum = "http_validation"
+	CampaignPhaseAnalysis     CampaignPhaseEnum = "analysis"
+	CampaignPhaseCleanup      CampaignPhaseEnum = "cleanup"
+)
+
+// CampaignPhaseStatusEnum defines the status of a campaign phase
+type CampaignPhaseStatusEnum string
+
+const (
+	CampaignPhaseStatusPending    CampaignPhaseStatusEnum = "not_started"
+	CampaignPhaseStatusInProgress CampaignPhaseStatusEnum = "in_progress"
+	CampaignPhaseStatusPaused     CampaignPhaseStatusEnum = "paused"
+	CampaignPhaseStatusSucceeded  CampaignPhaseStatusEnum = "completed"
+	CampaignPhaseStatusFailed     CampaignPhaseStatusEnum = "failed"
+)
+
 // CampaignStatusEnum defines the status of a campaign
 type CampaignStatusEnum string
 
@@ -49,6 +72,26 @@ const (
 	ProxyProtocolHTTPS  ProxyProtocolEnum = "https"
 	ProxyProtocolSOCKS5 ProxyProtocolEnum = "socks5"
 	ProxyProtocolSOCKS4 ProxyProtocolEnum = "socks4"
+)
+
+// ProxyStatusEnum defines the status of a proxy
+type ProxyStatusEnum string
+
+const (
+	ProxyStatusActive   ProxyStatusEnum = "Active"
+	ProxyStatusDisabled ProxyStatusEnum = "Disabled"
+	ProxyStatusTesting  ProxyStatusEnum = "Testing"
+	ProxyStatusFailed   ProxyStatusEnum = "Failed"
+)
+
+// PersonaStatusEnum defines the status of a persona
+type PersonaStatusEnum string
+
+const (
+	PersonaStatusActive   PersonaStatusEnum = "Active"
+	PersonaStatusDisabled PersonaStatusEnum = "Disabled"
+	PersonaStatusTesting  PersonaStatusEnum = "Testing"
+	PersonaStatusFailed   PersonaStatusEnum = "Failed"
 )
 
 // KeywordRuleTypeEnum defines the type of keyword rule
@@ -118,7 +161,7 @@ type DNSConfigDetails struct {
 	UseSystemResolvers         bool           `json:"useSystemResolvers"`
 	QueryTimeoutSeconds        int            `json:"queryTimeoutSeconds" validate:"gte=0"`
 	MaxDomainsPerRequest       int            `json:"maxDomainsPerRequest" validate:"gt=0"`
-	ResolverStrategy           string         `json:"resolverStrategy" validate:"omitempty,oneof=random_rotation sequential_failover specific_order weighted_rotation"`
+	ResolverStrategy           string         `json:"resolverStrategy" validate:"omitempty,oneof=round_robin random weighted priority"`
 	ResolversWeighted          map[string]int `json:"resolversWeighted,omitempty"`
 	ResolversPreferredOrder    []string       `json:"resolversPreferredOrder,omitempty"`
 	ConcurrentQueriesPerDomain int            `json:"concurrentQueriesPerDomain" validate:"gt=0"`
@@ -144,7 +187,7 @@ type HTTP2Settings struct {
 
 // HTTPCookieHandling specifies how cookies should be managed
 type HTTPCookieHandling struct {
-	Mode string `json:"mode,omitempty" validate:"omitempty,oneof=session none ignore"`
+	Mode string `json:"mode,omitempty" validate:"omitempty,oneof=preserve ignore custom"`
 }
 
 // HTTPConfigDetails holds configuration specific to HTTP personas (from JSONB/Map)
@@ -165,14 +208,20 @@ type HTTPConfigDetails struct {
 
 // Persona represents a DNS or HTTP persona
 type Persona struct {
-	ID            uuid.UUID       `db:"id" json:"id"`
-	Name          string          `db:"name" json:"name" validate:"required"`
-	PersonaType   PersonaTypeEnum `db:"persona_type" json:"personaType" validate:"required,oneof=dns http"`
-	Description   sql.NullString  `db:"description" json:"description,omitempty"`
-	ConfigDetails json.RawMessage `db:"config_details" json:"configDetails" validate:"required"` // Keep as RawMessage for DB compatibility
-	IsEnabled     bool            `db:"is_enabled" json:"isEnabled"`
-	CreatedAt     time.Time       `db:"created_at" json:"createdAt"`
-	UpdatedAt     time.Time       `db:"updated_at" json:"updatedAt"`
+	ID            uuid.UUID        `db:"id" json:"id"`
+	Name          string           `db:"name" json:"name" validate:"required"`
+	PersonaType   PersonaTypeEnum  `db:"persona_type" json:"personaType" validate:"required,oneof=dns http"`
+	Description   sql.NullString   `db:"description" json:"description,omitempty"`
+	ConfigDetails json.RawMessage  `db:"config_details" json:"configDetails" validate:"required"` // Keep as RawMessage for DB compatibility
+	IsEnabled     bool             `db:"is_enabled" json:"isEnabled"`
+	Status        *PersonaStatusEnum `db:"status" json:"status,omitempty"` // Frontend expects this field
+	CreatedAt     time.Time        `db:"created_at" json:"createdAt"`
+	UpdatedAt     time.Time        `db:"updated_at" json:"updatedAt"`
+
+	// Frontend-expected properties
+	LastTested    *time.Time `db:"last_tested" json:"lastTested,omitempty"`
+	LastError     *string    `db:"last_error" json:"lastError,omitempty"`
+	Tags          *[]string  `db:"tags" json:"tags,omitempty"`
 }
 
 // Proxy represents a proxy server configuration
@@ -196,6 +245,14 @@ type Proxy struct {
 	Provider      sql.NullString     `db:"provider" json:"provider,omitempty"`
 	CreatedAt     time.Time          `db:"created_at" json:"createdAt"`
 	UpdatedAt     time.Time          `db:"updated_at" json:"updatedAt"`
+
+	// Frontend-expected fields
+	Status       *ProxyStatusEnum `db:"status" json:"status,omitempty"`                 // Frontend expects this enum field
+	Notes        sql.NullString   `db:"notes" json:"notes,omitempty"`                   // Proxy notes/comments
+	SuccessCount sql.NullInt32    `db:"success_count" json:"successCount,omitempty"`    // Count of successful operations
+	FailureCount sql.NullInt32    `db:"failure_count" json:"failureCount,omitempty"`    // Count of failed operations
+	LastTested   sql.NullTime     `db:"last_tested" json:"lastTested,omitempty"`        // Last test timestamp
+	LastError    sql.NullString   `db:"last_error" json:"lastError,omitempty"`          // Last error message
 
 	// Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash
 	InputUsername sql.NullString `json:"inputUsername,omitempty"` // For API input, to be parsed from/into Address or used for PasswordHash
@@ -252,6 +309,15 @@ type Campaign struct {
 	LastHeartbeatAt       *time.Time `db:"last_heartbeat_at" json:"lastHeartbeatAt,omitempty"`
 	BusinessStatus        *string    `db:"business_status" json:"businessStatus,omitempty"`
 
+	// Frontend-expected properties
+	CurrentPhase        *CampaignPhaseEnum       `db:"current_phase" json:"currentPhase,omitempty"`
+	PhaseStatus         *CampaignPhaseStatusEnum `db:"phase_status" json:"phaseStatus,omitempty"`
+	Progress            *float64                 `db:"progress" json:"progress,omitempty" validate:"omitempty,gte=0,lte=100"`
+	Domains             *int64                   `db:"domains" json:"domains,omitempty"`
+	Leads               *int64                   `db:"leads" json:"leads,omitempty"`
+	DNSValidatedDomains *int64                   `db:"dns_validated_domains" json:"dnsValidatedDomains,omitempty"`
+
+	// Direct access to campaign parameters (flattened for frontend convenience)
 	DomainGenerationParams      *DomainGenerationCampaignParams `json:"domainGenerationParams,omitempty"`
 	DNSValidationParams         *DNSValidationCampaignParams    `json:"dnsValidationParams,omitempty"`
 	HTTPKeywordValidationParams *HTTPKeywordCampaignParams      `json:"httpKeywordValidationParams,omitempty"`
@@ -260,7 +326,7 @@ type Campaign struct {
 // DomainGenerationCampaignParams holds parameters for a domain generation campaign
 type DomainGenerationCampaignParams struct {
 	CampaignID                uuid.UUID `db:"campaign_id" json:"-"`
-	PatternType               string    `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix suffix both"`
+	PatternType               string    `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix_variable suffix_variable both_variable"`
 	VariableLength            int       `db:"variable_length" json:"variableLength" validate:"gt=0"`
 	CharacterSet              string    `db:"character_set" json:"characterSet" validate:"required"`
 	ConstantString            *string   `db:"constant_string" json:"constantString,omitempty" validate:"omitempty"`
@@ -291,17 +357,47 @@ type DomainGenerationConfigState struct {
 	ConfigState   *DomainGenerationConfigState `json:"configState,omitempty"`
 }
 
+// DomainDNSStatusEnum defines DNS validation status for domains
+type DomainDNSStatusEnum string
+
+const (
+	DomainDNSStatusPending DomainDNSStatusEnum = "pending"
+	DomainDNSStatusOK      DomainDNSStatusEnum = "ok"
+	DomainDNSStatusError   DomainDNSStatusEnum = "error"
+	DomainDNSStatusTimeout DomainDNSStatusEnum = "timeout"
+)
+
+// DomainHTTPStatusEnum defines HTTP validation status for domains
+type DomainHTTPStatusEnum string
+
+const (
+	DomainHTTPStatusPending DomainHTTPStatusEnum = "pending"
+	DomainHTTPStatusOK      DomainHTTPStatusEnum = "ok"
+	DomainHTTPStatusError   DomainHTTPStatusEnum = "error"
+	DomainHTTPStatusTimeout DomainHTTPStatusEnum = "timeout"
+)
+
 // GeneratedDomain represents a domain name generated by a campaign
 type GeneratedDomain struct {
-	ID                   uuid.UUID      `db:"id" json:"id" firestore:"id"`
-	GenerationCampaignID uuid.UUID      `db:"domain_generation_campaign_id" json:"generationCampaignId" firestore:"generationCampaignId" validate:"required"`
-	DomainName           string         `db:"domain_name" json:"domainName" firestore:"domainName" validate:"required,hostname_rfc1123"`
-	OffsetIndex          int64          `db:"offset_index" json:"offsetIndex" firestore:"offsetIndex" validate:"gte=0"` // Absolute offset in the total possible generation space for this config
-	GeneratedAt          time.Time      `db:"generated_at" json:"generatedAt" firestore:"generatedAt"`
-	SourceKeyword        sql.NullString `db:"source_keyword" json:"sourceKeyword,omitempty" firestore:"sourceKeyword,omitempty"`
-	SourcePattern        sql.NullString `db:"source_pattern" json:"sourcePattern,omitempty" firestore:"sourcePattern,omitempty"`
-	TLD                  sql.NullString `db:"tld" json:"tld,omitempty" firestore:"tld,omitempty"`
-	CreatedAt            time.Time      `db:"created_at" json:"createdAt" firestore:"createdAt"`
+	ID                   uuid.UUID            `db:"id" json:"id" firestore:"id"`
+	GenerationCampaignID uuid.UUID            `db:"domain_generation_campaign_id" json:"generationCampaignId" firestore:"generationCampaignId" validate:"required"`
+	DomainName           string               `db:"domain_name" json:"domainName" firestore:"domainName" validate:"required,hostname_rfc1123"`
+	OffsetIndex          int64                `db:"offset_index" json:"offsetIndex" firestore:"offsetIndex" validate:"gte=0"` // Absolute offset in the total possible generation space for this config
+	GeneratedAt          time.Time            `db:"generated_at" json:"generatedAt" firestore:"generatedAt"`
+	SourceKeyword        sql.NullString       `db:"source_keyword" json:"sourceKeyword,omitempty" firestore:"sourceKeyword,omitempty"`
+	SourcePattern        sql.NullString       `db:"source_pattern" json:"sourcePattern,omitempty" firestore:"sourcePattern,omitempty"`
+	TLD                  sql.NullString       `db:"tld" json:"tld,omitempty" firestore:"tld,omitempty"`
+	CreatedAt            time.Time            `db:"created_at" json:"createdAt" firestore:"createdAt"`
+	
+	// Domain-centric validation status fields
+	DNSStatus            *DomainDNSStatusEnum `db:"dns_status" json:"dnsStatus,omitempty" firestore:"dnsStatus,omitempty"`
+	DNSIP                sql.NullString       `db:"dns_ip" json:"dnsIp,omitempty" firestore:"dnsIp,omitempty"`
+	HTTPStatus           *DomainHTTPStatusEnum `db:"http_status" json:"httpStatus,omitempty" firestore:"httpStatus,omitempty"`
+	HTTPStatusCode       sql.NullInt32        `db:"http_status_code" json:"httpStatusCode,omitempty" firestore:"httpStatusCode,omitempty"`
+	HTTPTitle            sql.NullString       `db:"http_title" json:"httpTitle,omitempty" firestore:"httpTitle,omitempty"`
+	HTTPKeywords         sql.NullString       `db:"http_keywords" json:"httpKeywords,omitempty" firestore:"httpKeywords,omitempty"`
+	LeadScore            sql.NullFloat64      `db:"lead_score" json:"leadScore,omitempty" firestore:"leadScore,omitempty"`
+	LastValidatedAt      sql.NullTime         `db:"last_validated_at" json:"lastValidatedAt,omitempty" firestore:"lastValidatedAt,omitempty"`
 }
 
 // DNSValidationCampaignParams holds parameters for a DNS validation campaign
@@ -484,9 +580,9 @@ type ResourceUtilizationMetric struct {
 type DomainPatternType string
 
 const (
-	PatternTypePrefix DomainPatternType = "prefix"
-	PatternTypeSuffix DomainPatternType = "suffix"
-	PatternTypeBoth   DomainPatternType = "both"
+	PatternTypePrefixVariable DomainPatternType = "prefix_variable"
+	PatternTypeSuffixVariable DomainPatternType = "suffix_variable"
+	PatternTypeBothVariable   DomainPatternType = "both_variable"
 )
 
 // DereferenceGeneratedDomainSlice converts a slice of *GeneratedDomain to []GeneratedDomain.

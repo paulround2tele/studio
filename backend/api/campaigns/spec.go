@@ -1,7 +1,11 @@
 package campaigns
 
 import (
+	"reflect"
+	
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // AddCampaignPaths adds campaign-related paths to the OpenAPI specification
@@ -14,6 +18,8 @@ func AddCampaignPaths(spec *openapi3.T) {
 	addPauseCampaignPath(spec)
 	addResumeCampaignPath(spec)
 	addCancelCampaignPath(spec)
+	addValidateDNSPath(spec)
+	addValidateHTTPPath(spec)
 	addDeleteCampaignPath(spec)
 	addBulkDeleteCampaignsPath(spec)
 	addGetGeneratedDomainsPath(spec)
@@ -477,6 +483,98 @@ func addCancelCampaignPath(spec *openapi3.T) {
 
 	spec.Paths.Set("/campaigns/{campaignId}/cancel", &openapi3.PathItem{
 		Post: cancelOp,
+	})
+}
+
+// addValidateDNSPath adds the domain-centric DNS validation endpoint
+func addValidateDNSPath(spec *openapi3.T) {
+	validateOp := &openapi3.Operation{
+		OperationID: "validateDNSForCampaign",
+		Summary:     "Validate DNS for campaign domains",
+		Description: "Triggers domain-centric DNS validation for all domains in a completed domain generation campaign",
+		Tags:        []string{"Campaigns"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
+		Parameters: openapi3.Parameters{
+			{
+				Value: &openapi3.Parameter{
+					Name:        "campaignId",
+					In:          "path",
+					Required:    true,
+					Description: "Campaign UUID",
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type:   &openapi3.Types{"string"},
+							Format: "uuid",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	validateOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"DNS validation started successfully"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/CampaignOperationResponse",
+				},
+			},
+		},
+	})
+
+	addCampaignOperationErrorResponses(validateOp)
+
+	spec.Paths.Set("/campaigns/{campaignId}/validate-dns", &openapi3.PathItem{
+		Post: validateOp,
+	})
+}
+
+// addValidateHTTPPath adds the domain-centric HTTP keyword validation endpoint
+func addValidateHTTPPath(spec *openapi3.T) {
+	validateOp := &openapi3.Operation{
+		OperationID: "validateHTTPForCampaign",
+		Summary:     "Validate HTTP for campaign domains",
+		Description: "Triggers domain-centric HTTP keyword validation for all domains in a completed DNS validation campaign",
+		Tags:        []string{"Campaigns"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
+		Parameters: openapi3.Parameters{
+			{
+				Value: &openapi3.Parameter{
+					Name:        "campaignId",
+					In:          "path",
+					Required:    true,
+					Description: "Campaign UUID",
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type:   &openapi3.Types{"string"},
+							Format: "uuid",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	validateOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"HTTP keyword validation started successfully"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/CampaignOperationResponse",
+				},
+			},
+		},
+	})
+
+	addCampaignOperationErrorResponses(validateOp)
+
+	spec.Paths.Set("/campaigns/{campaignId}/validate-http", &openapi3.PathItem{
+		Post: validateOp,
 	})
 }
 
@@ -1081,7 +1179,7 @@ func addCampaignSchemas(spec *openapi3.T) {
 				"patternType": {
 					Value: &openapi3.Schema{
 						Type: &openapi3.Types{"string"},
-						Enum: []interface{}{"prefix", "suffix", "both"},
+						Enum: []interface{}{"prefix_variable", "suffix_variable", "both_variable"},
 						Description: "Pattern type for domain generation",
 					},
 				},
@@ -1289,153 +1387,682 @@ func addCampaignSchemas(spec *openapi3.T) {
 		},
 	}
 
-	// Campaign schema
-	spec.Components.Schemas["Campaign"] = &openapi3.SchemaRef{
+	// Auto-generate Campaign schema from Go struct
+	utils.AddStructSchema(spec, reflect.TypeOf(models.Campaign{}), "Campaign")
+
+	// Add core entity schemas
+	addCoreEntitySchemas(spec)
+	
+	// Add configuration detail schemas
+	addConfigurationSchemas(spec)
+	
+	// Add enum schemas
+	addEnumSchemas(spec)
+	
+	// Response schemas
+	addResponseSchemas(spec)
+}
+
+// addCoreEntitySchemas adds core entity schemas (Persona, Proxy, KeywordSet, etc.)
+func addCoreEntitySchemas(spec *openapi3.T) {
+	// Persona schema
+	spec.Components.Schemas["Persona"] = &openapi3.SchemaRef{
 		Value: &openapi3.Schema{
 			Type:        &openapi3.Types{"object"},
-			Description: "Campaign information",
+			Description: "DNS or HTTP persona configuration",
 			Properties: map[string]*openapi3.SchemaRef{
 				"id": {
 					Value: &openapi3.Schema{
 						Type:        &openapi3.Types{"string"},
 						Format:      "uuid",
-						Description: "Campaign unique identifier",
+						Description: "Persona unique identifier",
 					},
 				},
 				"name": {
 					Value: &openapi3.Schema{
 						Type:        &openapi3.Types{"string"},
-						Description: "Campaign name",
+						Description: "Persona name",
 					},
 				},
-				"campaignType": {
+				"personaType": {
 					Value: &openapi3.Schema{
 						Type: &openapi3.Types{"string"},
-						Enum: []interface{}{
-							"domain_generation", "dns_validation", "http_keyword_validation",
-						},
-						Description: "Type of campaign",
+						Enum: []interface{}{"dns", "http"},
+						Description: "Type of persona",
+					},
+				},
+				"description": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Persona description",
+					},
+				},
+				"configDetails": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"object"},
+						Description: "Persona configuration details",
+					},
+				},
+				"isEnabled": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether persona is enabled",
 					},
 				},
 				"status": {
 					Value: &openapi3.Schema{
 						Type: &openapi3.Types{"string"},
-						Enum: []interface{}{
-							"pending", "queued", "running", "pausing", "paused",
-							"completed", "failed", "archived", "cancelled",
-						},
-						Description: "Campaign status",
+						Enum: []interface{}{"Active", "Disabled", "Testing", "Failed"},
+						Description: "Persona status",
 					},
 				},
-				"userId": {
+				"lastTested": {
 					Value: &openapi3.Schema{
 						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "User ID who created the campaign",
+						Format:      "date-time",
+						Description: "Last test timestamp",
+					},
+				},
+				"lastError": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Last error message",
+					},
+				},
+				"tags": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type: &openapi3.Types{"string"},
+							},
+						},
+						Description: "Persona tags",
 					},
 				},
 				"createdAt": {
 					Value: &openapi3.Schema{
 						Type:        &openapi3.Types{"string"},
 						Format:      "date-time",
-						Description: "Campaign creation timestamp",
+						Description: "Creation timestamp",
 					},
 				},
 				"updatedAt": {
 					Value: &openapi3.Schema{
 						Type:        &openapi3.Types{"string"},
 						Format:      "date-time",
-						Description: "Campaign last update timestamp",
-					},
-				},
-				"startedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Campaign start timestamp",
-					},
-				},
-				"completedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Campaign completion timestamp",
-					},
-				},
-				"progressPercentage": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"number"},
-						Min:         &[]float64{0}[0],
-						Max:         &[]float64{100}[0],
-						Description: "Campaign progress percentage",
-					},
-				},
-				"totalItems": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Min:         &[]float64{0}[0],
-						Description: "Total number of items to process",
-					},
-				},
-				"processedItems": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Min:         &[]float64{0}[0],
-						Description: "Number of items processed",
-					},
-				},
-				"successfulItems": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Min:         &[]float64{0}[0],
-						Description: "Number of successfully processed items",
-					},
-				},
-				"failedItems": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Min:         &[]float64{0}[0],
-						Description: "Number of failed items",
-					},
-				},
-				"errorMessage": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Error message if campaign failed",
-					},
-				},
-				"metadata": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"object"},
-						Description: "Additional campaign metadata",
-					},
-				},
-				"estimatedCompletionAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Estimated completion timestamp",
-					},
-				},
-				"avgProcessingRate": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"number"},
-						Description: "Average processing rate",
-					},
-				},
-				"lastHeartbeatAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Last heartbeat timestamp",
+						Description: "Last update timestamp",
 					},
 				},
 			},
 		},
 	}
 
-	// Response schemas
-	addResponseSchemas(spec)
+	// Proxy schema
+	spec.Components.Schemas["Proxy"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Proxy server configuration",
+			Properties: map[string]*openapi3.SchemaRef{
+				"id": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "uuid",
+						Description: "Proxy unique identifier",
+					},
+				},
+				"name": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Proxy name",
+					},
+				},
+				"description": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Proxy description",
+					},
+				},
+				"address": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Full proxy address",
+					},
+				},
+				"protocol": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+						Enum: []interface{}{"http", "https", "socks5", "socks4"},
+						Description: "Proxy protocol",
+					},
+				},
+				"host": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Proxy hostname or IP",
+					},
+				},
+				"port": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Proxy port number",
+					},
+				},
+				"isEnabled": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether proxy is enabled",
+					},
+				},
+				"isHealthy": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether proxy is healthy",
+					},
+				},
+				"status": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+						Enum: []interface{}{"Active", "Disabled", "Testing", "Failed"},
+						Description: "Proxy status",
+					},
+				},
+				"lastStatus": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Last known status",
+					},
+				},
+				"lastCheckedAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Last health check timestamp",
+					},
+				},
+				"latencyMs": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Last measured latency in milliseconds",
+					},
+				},
+				"city": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Proxy city location",
+					},
+				},
+				"countryCode": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Proxy country code",
+					},
+				},
+				"provider": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Proxy provider",
+					},
+				},
+				"notes": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Proxy notes or comments",
+					},
+				},
+				"successCount": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Count of successful operations",
+					},
+				},
+				"failureCount": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Count of failed operations",
+					},
+				},
+				"lastTested": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Last test timestamp",
+					},
+				},
+				"lastError": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Last error message",
+					},
+				},
+				"createdAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Creation timestamp",
+					},
+				},
+				"updatedAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Last update timestamp",
+					},
+				},
+			},
+		},
+	}
+
+	// KeywordSet schema
+	spec.Components.Schemas["KeywordSet"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Collection of keyword rules",
+			Properties: map[string]*openapi3.SchemaRef{
+				"id": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "uuid",
+						Description: "KeywordSet unique identifier",
+					},
+				},
+				"name": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "KeywordSet name",
+					},
+				},
+				"description": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "KeywordSet description",
+					},
+				},
+				"isEnabled": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether keyword set is enabled",
+					},
+				},
+				"rules": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Ref: "#/components/schemas/KeywordRule",
+						},
+						Description: "Keyword rules in this set",
+					},
+				},
+				"createdAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Creation timestamp",
+					},
+				},
+				"updatedAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Last update timestamp",
+					},
+				},
+			},
+		},
+	}
+
+	// KeywordRule schema
+	spec.Components.Schemas["KeywordRule"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Specific rule within a KeywordSet",
+			Properties: map[string]*openapi3.SchemaRef{
+				"id": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "uuid",
+						Description: "KeywordRule unique identifier",
+					},
+				},
+				"keywordSetId": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "uuid",
+						Description: "Parent KeywordSet ID",
+					},
+				},
+				"pattern": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Keyword pattern",
+					},
+				},
+				"ruleType": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+						Enum: []interface{}{"string", "regex"},
+						Description: "Type of keyword rule",
+					},
+				},
+				"isCaseSensitive": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether pattern matching is case sensitive",
+					},
+				},
+				"category": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Rule category",
+					},
+				},
+				"contextChars": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Number of context characters to capture",
+					},
+				},
+				"createdAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Creation timestamp",
+					},
+				},
+				"updatedAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Last update timestamp",
+					},
+				},
+			},
+		},
+	}
+
+	// ProxyPool schema
+	spec.Components.Schemas["ProxyPool"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Proxy pool configuration",
+			Properties: map[string]*openapi3.SchemaRef{
+				"id": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "uuid",
+						Description: "ProxyPool unique identifier",
+					},
+				},
+				"name": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "ProxyPool name",
+					},
+				},
+				"description": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "ProxyPool description",
+					},
+				},
+				"isEnabled": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether proxy pool is enabled",
+					},
+				},
+				"poolStrategy": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+						Enum: []interface{}{"round_robin", "random", "weighted", "failover"},
+						Description: "Proxy selection strategy",
+					},
+				},
+				"healthCheckEnabled": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether health checks are enabled",
+					},
+				},
+				"healthCheckIntervalSeconds": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Health check interval in seconds",
+					},
+				},
+				"maxRetries": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Maximum retry attempts",
+					},
+				},
+				"timeoutSeconds": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Timeout in seconds",
+					},
+				},
+				"proxies": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Ref: "#/components/schemas/Proxy",
+						},
+						Description: "Proxies in this pool",
+					},
+				},
+				"createdAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Creation timestamp",
+					},
+				},
+				"updatedAt": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "date-time",
+						Description: "Last update timestamp",
+					},
+				},
+			},
+		},
+	}
+}
+
+// addConfigurationSchemas adds configuration detail schemas
+func addConfigurationSchemas(spec *openapi3.T) {
+	// DNSConfigDetails schema
+	spec.Components.Schemas["DNSConfigDetails"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "DNS persona configuration details",
+			Properties: map[string]*openapi3.SchemaRef{
+				"resolvers": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type: &openapi3.Types{"string"},
+							},
+						},
+						Description: "DNS resolver addresses",
+					},
+				},
+				"useSystemResolvers": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether to use system resolvers",
+					},
+				},
+				"queryTimeoutSeconds": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Query timeout in seconds",
+					},
+				},
+				"maxDomainsPerRequest": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Maximum domains per request",
+					},
+				},
+				"resolverStrategy": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+						Enum: []interface{}{"round_robin", "random", "weighted", "priority"},
+						Description: "Resolver selection strategy",
+					},
+				},
+				"concurrentQueriesPerDomain": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Concurrent queries per domain",
+					},
+				},
+				"queryDelayMinMs": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Minimum query delay in milliseconds",
+					},
+				},
+				"queryDelayMaxMs": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Maximum query delay in milliseconds",
+					},
+				},
+				"maxConcurrentGoroutines": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Maximum concurrent goroutines",
+					},
+				},
+				"rateLimitDps": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"number"},
+						Description: "Rate limit in domains per second",
+					},
+				},
+				"rateLimitBurst": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Rate limit burst size",
+					},
+				},
+			},
+		},
+	}
+
+	// HTTPConfigDetails schema
+	spec.Components.Schemas["HTTPConfigDetails"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "HTTP persona configuration details",
+			Properties: map[string]*openapi3.SchemaRef{
+				"userAgent": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "User agent string",
+					},
+				},
+				"headers": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"object"},
+						AdditionalProperties: openapi3.AdditionalProperties{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: &openapi3.Types{"string"},
+								},
+							},
+						},
+						Description: "HTTP headers",
+					},
+				},
+				"headerOrder": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type: &openapi3.Types{"string"},
+							},
+						},
+						Description: "Order of HTTP headers",
+					},
+				},
+				"cookieHandling": {
+					Value: &openapi3.Schema{
+						OneOf: []*openapi3.SchemaRef{
+							{Ref: "#/components/schemas/HTTPCookieHandling"},
+						},
+					},
+				},
+				"requestTimeoutSeconds": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Request timeout in seconds",
+					},
+				},
+				"followRedirects": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether to follow redirects",
+					},
+				},
+				"allowedStatusCodes": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type: &openapi3.Types{"integer"},
+							},
+						},
+						Description: "Allowed HTTP status codes",
+					},
+				},
+				"rateLimitDps": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"number"},
+						Description: "Rate limit in requests per second",
+					},
+				},
+				"rateLimitBurst": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Rate limit burst size",
+					},
+				},
+				"notes": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Configuration notes",
+					},
+				},
+			},
+		},
+	}
+
+	// HTTPCookieHandling schema
+	spec.Components.Schemas["HTTPCookieHandling"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "HTTP cookie handling configuration",
+			Properties: map[string]*openapi3.SchemaRef{
+				"mode": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+						Enum: []interface{}{"preserve", "ignore", "custom"},
+						Description: "Cookie handling mode",
+					},
+				},
+			},
+		},
+	}
+}
+
+// addEnumSchemas adds enum-related schemas
+func addEnumSchemas(spec *openapi3.T) {
+	// No additional enum schemas needed as they're inline in the entity schemas
 }
 
 // addResponseSchemas adds response-related schemas
@@ -1668,6 +2295,61 @@ spec.Components.Schemas["GeneratedDomain"] = &openapi3.SchemaRef{
 					Type:        &openapi3.Types{"string"},
 					Format:      "date-time",
 					Description: "Record creation timestamp",
+				},
+			},
+			"dnsStatus": {
+				Value: &openapi3.Schema{
+					Type: &openapi3.Types{"string"},
+					Enum: []interface{}{
+						"pending", "ok", "error", "timeout",
+					},
+					Description: "DNS validation status",
+				},
+			},
+			"dnsIp": {
+				Value: &openapi3.Schema{
+					Type:        &openapi3.Types{"string"},
+					Description: "DNS resolved IP address",
+				},
+			},
+			"httpStatus": {
+				Value: &openapi3.Schema{
+					Type: &openapi3.Types{"string"},
+					Enum: []interface{}{
+						"pending", "ok", "error", "timeout",
+					},
+					Description: "HTTP validation status",
+				},
+			},
+			"httpStatusCode": {
+				Value: &openapi3.Schema{
+					Type:        &openapi3.Types{"integer"},
+					Description: "HTTP response status code",
+				},
+			},
+			"httpTitle": {
+				Value: &openapi3.Schema{
+					Type:        &openapi3.Types{"string"},
+					Description: "HTTP page title",
+				},
+			},
+			"httpKeywords": {
+				Value: &openapi3.Schema{
+					Type:        &openapi3.Types{"string"},
+					Description: "HTTP keywords found",
+				},
+			},
+			"leadScore": {
+				Value: &openapi3.Schema{
+					Type:        &openapi3.Types{"number"},
+					Description: "Lead quality score",
+				},
+			},
+			"lastValidatedAt": {
+				Value: &openapi3.Schema{
+					Type:        &openapi3.Types{"string"},
+					Format:      "date-time",
+					Description: "Last validation timestamp",
 				},
 			},
 		},

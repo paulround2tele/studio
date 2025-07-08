@@ -26,9 +26,8 @@ import { apiClient } from '@/lib/api-client/client';
 // Import OpenAPI types to replace missing custom types
 type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
 type CampaignSelectedType = components['schemas']['CreateCampaignRequest']['campaignType'];
-type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable" | "constant_only";
+type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
 type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-type CampaignPhase = "domain_generation" | "dns_validation" | "http_keyword_validation" | "completed" | "idle";
 
 // Base campaign type from OpenAPI
 type BaseCampaign = components['schemas']['Campaign'];
@@ -40,7 +39,7 @@ type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
 export interface CampaignViewModel extends Omit<BaseCampaign, 'dnsValidationParams' | 'httpKeywordParams' | 'domainGenerationParams' | 'failedItems' | 'processedItems' | 'successfulItems' | 'totalItems' | 'metadata'> {
   description?: string;
   selectedType?: CampaignSelectedType;
-  currentPhase?: CampaignPhase;
+  currentPhase?: components['schemas']['Campaign']['currentPhase'];
   
   // Flexible parameter types that can handle both OpenAPI and legacy formats
   dnsValidationParams?: DnsValidationParams | Record<string, unknown>;
@@ -105,11 +104,11 @@ interface CampaignFormValues {
   selectedType: CampaignSelectedType;
   domainSourceSelectionMode: DomainSourceSelectionMode;
   sourceCampaignId?: string;
-  sourcePhase?: CampaignPhase;
+  sourcePhase?: components['schemas']['Campaign']['currentPhase'];
   uploadedDomainsFile?: File | null;
   uploadedDomainsContentCache?: string[];
   initialDomainsToProcessCount?: number;
-  generationPattern: DomainGenerationPattern;
+  generationPattern: "prefix_variable" | "suffix_variable" | "both_variable";
   constantPart: string;
   allowedCharSet: string;
   tldsInput: string;
@@ -214,7 +213,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
       (campaignToEdit.domainSourceConfig?.type === 'current_campaign_output' ? 'campaign_output' as const : (campaignToEdit.domainSourceConfig?.type as DomainSourceSelectionMode || getDefaultSourceMode(campaignToEdit.selectedType))) :
       getDefaultSourceMode(preselectedType),
     sourceCampaignId: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourceCampaignId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
-    sourcePhase: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourcePhase as CampaignPhase) : undefined,
+    sourcePhase: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourcePhase as components['schemas']['Campaign']['currentPhase']) : undefined,
     uploadedDomainsFile: null,
     uploadedDomainsContentCache: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.type === 'upload' ? campaignToEdit.domainSourceConfig.uploadedDomains : []) : [],
     initialDomainsToProcessCount: isEditing && campaignToEdit ? campaignToEdit.initialDomainsToProcessCount : 100,
@@ -342,18 +341,16 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           }
 
           // Map frontend pattern types to backend pattern types
-          const mapPatternType = (frontendPattern: DomainGenerationPattern): "prefix" | "suffix" | "both" => {
+          const mapPatternType = (frontendPattern: DomainGenerationPattern): "prefix_variable" | "suffix_variable" | "both_variable" => {
             switch (frontendPattern) {
               case "prefix_variable":
-                return "prefix";
+                return "prefix_variable";
               case "suffix_variable":
-                return "suffix";
+                return "suffix_variable";
               case "both_variable":
-                return "both";
-              case "constant_only":
-                return "prefix"; // Default to prefix for constant-only patterns
+                return "both_variable";
               default:
-                return "prefix";
+                return "prefix_variable";
             }
           };
 

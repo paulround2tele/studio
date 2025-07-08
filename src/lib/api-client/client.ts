@@ -568,7 +568,21 @@ export class ApiClient {
 
   async cancelCampaign(campaignId: string) {
     return this.request<PostOperationResponse<ApiPaths['/campaigns/{campaignId}/cancel']['post']>>(
-      `/campaigns/${campaignId}/cancel`, 
+      `/campaigns/${campaignId}/cancel`,
+      'POST'
+    );
+  }
+
+  async validateDNSForCampaign(campaignId: string) {
+    return this.request<PostOperationResponse<ApiPaths['/campaigns/{campaignId}/validate-dns']['post']>>(
+      `/campaigns/${campaignId}/validate-dns`,
+      'POST'
+    );
+  }
+
+  async validateHTTPForCampaign(campaignId: string) {
+    return this.request<PostOperationResponse<ApiPaths['/campaigns/{campaignId}/validate-http']['post']>>(
+      `/campaigns/${campaignId}/validate-http`,
       'POST'
     );
   }
@@ -1034,6 +1048,8 @@ export const resumeCampaign = (campaignId: string) => apiClient.resumeCampaign(c
 export const stopCampaign = (campaignId: string) => apiClient.cancelCampaign(campaignId);
 export const deleteCampaign = (campaignId: string) => apiClient.deleteCampaign(campaignId);
 export const bulkDeleteCampaigns = (data: OperationRequestBody<ApiPaths['/campaigns']['delete']>) => apiClient.bulkDeleteCampaigns(data);
+export const validateDNSForCampaign = (campaignId: string) => apiClient.validateDNSForCampaign(campaignId);
+export const validateHTTPForCampaign = (campaignId: string) => apiClient.validateHTTPForCampaign(campaignId);
 
 // Chain campaign method - assuming this creates a follow-up campaign
 export const chainCampaign = async (_campaignId: string) => {

@@ -28,7 +28,10 @@ import {
   HelpCircle,
   Percent
 } from 'lucide-react';
-import type { CampaignViewModel, GeneratedDomain, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
+import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type GeneratedDomain = components['schemas']['GeneratedDomain'];
 import { cn } from '@/lib/utils';
 
 // Table filter interface
@@ -162,19 +165,18 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
-  // Helper function to get domain status from validation items
-  const getDomainStatus = useCallback((domainName: string, items: CampaignValidationItem[]): DomainActivityStatus => {
-    const item = items.find(item => item.domainName === domainName || item.domain === domainName);
-    if (!item) return 'n_a';
+  // Helper function to convert backend status to frontend DomainActivityStatus
+  const convertBackendStatus = useCallback((backendStatus?: string): DomainActivityStatus => {
+    if (!backendStatus) return 'n_a';
     
-    const status = (item.validationStatus || item.status || '').toString().toLowerCase();
-    
-    switch (status) {
+    switch (backendStatus.toLowerCase()) {
+      case 'ok':
       case 'valid':
       case 'resolved':
       case 'validated':
       case 'succeeded':
         return 'validated';
+      case 'error':
       case 'invalid':
       case 'unresolved':
       case 'failed':
@@ -183,10 +185,21 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
       case 'processing':
       case 'queued':
         return 'pending';
+      case 'timeout':
+        return 'failed';
       default:
         return 'not_validated';
     }
   }, []);
+
+  // Legacy helper function for backward compatibility with validation items
+  const getDomainStatusFromValidation = useCallback((domainName: string, items: CampaignValidationItem[]): DomainActivityStatus => {
+    const item = items.find(item => item.domainName === domainName || item.domain === domainName);
+    if (!item) return 'n_a';
+    
+    const status = (item.validationStatus || item.status || '').toString().toLowerCase();
+    return convertBackendStatus(status);
+  }, [convertBackendStatus]);
 
   // Convert domains to unified format with memoization for performance
   const domainDetails = useMemo((): DomainDetail[] => {
@@ -194,11 +207,12 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
 
     if (campaign.campaignType === 'domain_generation') {
       domains = generatedDomains.map(domain => ({
-        id: domain.id,
-        domainName: domain.domainName,
+        id: domain.id || '',
+        domainName: domain.domainName || '',
         generatedDate: domain.generatedAt,
-        dnsStatus: getDomainStatus(domain.domainName, dnsCampaignItems),
-        httpStatus: getDomainStatus(domain.domainName, httpCampaignItems),
+        // Use new domain-centric status fields, fallback to legacy lookup if needed
+        dnsStatus: domain.dnsStatus ? convertBackendStatus(domain.dnsStatus) : getDomainStatusFromValidation(domain.domainName || '', dnsCampaignItems),
+        httpStatus: domain.httpStatus ? convertBackendStatus(domain.httpStatus) : getDomainStatusFromValidation(domain.domainName || '', httpCampaignItems),
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
     } else if (campaign.campaignType === 'dns_validation') {
@@ -206,8 +220,8 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
         id: item.id,
         domainName: item.domainName || item.domain,
         generatedDate: campaign.createdAt,
-        dnsStatus: getDomainStatus(item.domainName || item.domain, dnsCampaignItems),
-        httpStatus: getDomainStatus(item.domainName || item.domain, httpCampaignItems),
+        dnsStatus: getDomainStatusFromValidation(item.domainName || item.domain, dnsCampaignItems),
+        httpStatus: getDomainStatusFromValidation(item.domainName || item.domain, httpCampaignItems),
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
     } else if (campaign.campaignType === 'http_keyword_validation') {
@@ -215,14 +229,14 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
         id: item.id,
         domainName: item.domainName || item.domain,
         generatedDate: campaign.createdAt,
-        dnsStatus: getDomainStatus(item.domainName || item.domain, dnsCampaignItems),
-        httpStatus: getDomainStatus(item.domainName || item.domain, httpCampaignItems),
+        dnsStatus: getDomainStatusFromValidation(item.domainName || item.domain, dnsCampaignItems),
+        httpStatus: getDomainStatusFromValidation(item.domainName || item.domain, httpCampaignItems),
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
     }
 
     return domains;
-  }, [campaign, generatedDomains, dnsCampaignItems, httpCampaignItems, getDomainStatus]);
+  }, [campaign, generatedDomains, dnsCampaignItems, httpCampaignItems, convertBackendStatus, getDomainStatusFromValidation]);
 
   // Apply filters and sorting with memoization
   const filteredAndSortedDomains = useMemo(() => {

@@ -200,6 +200,9 @@ func main() {
 	)
 	log.Println("HTTPKeywordCampaignService initialized.")
 
+	domainValidationSvc := services.NewDomainValidationService(db, campaignStore, personaStore)
+	log.Println("DomainValidationService initialized.")
+
 	mq := communication.NewSimpleQueue(100)
 	es := communication.NewInMemoryEventStore()
 	asyncMgr := communication.NewAsyncPatternManager(mq, es, nil)
@@ -219,6 +222,7 @@ func main() {
 		domainGenSvc,
 		dnsCampaignSvc,
 		httpKeywordCampaignSvc,
+		domainValidationSvc,
 		asyncMgr,
 	)
 	log.Println("CampaignOrchestratorService initialized.")
@@ -253,7 +257,7 @@ func main() {
 	)
 	log.Println("Main APIHandler initialized.")
 
-	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(campaignOrchestratorSvc, campaignStore)
+	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(campaignOrchestratorSvc, domainValidationSvc, httpKeywordCampaignSvc, campaignStore)
 	log.Println("CampaignOrchestratorAPIHandler initialized.")
 
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)

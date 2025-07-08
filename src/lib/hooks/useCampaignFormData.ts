@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { CampaignViewModel, HttpPersona, DnsPersona } from '@/lib/types';
+import type { CampaignViewModel } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
+
+type HttpPersona = components['schemas']['Persona'] & { personaType: 'http' };
+type DnsPersona = components['schemas']['Persona'] & { personaType: 'dns' };
 import { getPersonas } from "@/lib/services/personaService";
 import { getProxies } from "@/lib/services/proxyService.production";
 import { apiClient } from '@/lib/api-client/client';

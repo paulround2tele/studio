@@ -20,14 +20,18 @@ import (
 
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
 type CampaignOrchestratorAPIHandler struct {
-	orchestratorService services.CampaignOrchestratorService
-	campaignStore       store.CampaignStore // Direct access needed for pattern offset queries
+	orchestratorService   services.CampaignOrchestratorService
+	domainValidationSvc   services.DomainValidationService    // Domain-centric DNS validation
+	httpKeywordSvc        services.HTTPKeywordCampaignService // Domain-centric HTTP validation
+	campaignStore         store.CampaignStore // Direct access needed for pattern offset queries
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
-func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService, campaignStore store.CampaignStore) *CampaignOrchestratorAPIHandler {
+func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService, domainValidationSvc services.DomainValidationService, httpKeywordSvc services.HTTPKeywordCampaignService, campaignStore store.CampaignStore) *CampaignOrchestratorAPIHandler {
 	return &CampaignOrchestratorAPIHandler{
 		orchestratorService: orchService,
+		domainValidationSvc: domainValidationSvc,
+		httpKeywordSvc:      httpKeywordSvc,
 		campaignStore:       campaignStore,
 	}
 }
@@ -58,6 +62,10 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	group.POST("/:campaignId/pause", h.pauseCampaign)
 	group.POST("/:campaignId/resume", h.resumeCampaign)
 	group.POST("/:campaignId/cancel", h.cancelCampaign)
+	
+	// Domain-centric validation routes - session-based auth
+	group.POST("/:campaignId/validate-dns", h.validateDNSForCampaign)
+	group.POST("/:campaignId/validate-http", h.validateHTTPForCampaign)
 
 	// Campaign modification routes - session-based auth
 	group.PUT("/:campaignId", h.updateCampaign)
@@ -566,6 +574,214 @@ func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 	}
 
 	respondWithJSONGin(c, http.StatusOK, resp)
+}
+
+// validateDNSForCampaign triggers domain-centric DNS validation for all domains in a campaign.
+func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) {
+	campaignIDStr := c.Param("campaignId")
+	campaignID, err := uuid.Parse(campaignIDStr)
+	if err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid campaign ID format", []ErrorDetail{
+				{
+					Field:   "campaignId",
+					Code:    ErrorCodeValidation,
+					Message: "Campaign ID must be a valid UUID",
+				},
+			})
+		return
+	}
+
+	log.Printf("INFO [DNS Validation]: Starting domain-centric DNS validation for campaign %s", campaignID)
+
+	// For now, we'll need to provide persona IDs. In a production system, these could be:
+	// 1. Retrieved from campaign configuration if it was a DNS validation campaign
+	// 2. Retrieved from system defaults
+	// 3. Made configurable via request body
+	// For this fix, we'll use an empty slice to let the service handle defaults
+	var personaIDs []uuid.UUID
+
+	// Use the domain-centric validation service to validate all domains for this campaign
+	if err := h.domainValidationSvc.StartDNSValidation(c.Request.Context(), campaignID, personaIDs); err != nil {
+		log.Printf("ERROR [DNS Validation]: Failed to start DNS validation for campaign %s: %v", campaignIDStr, err)
+
+		// Handle different error types
+		if err.Error() == "record not found" || err.Error() == "campaign not found" {
+			respondWithDetailedErrorGin(c, http.StatusNotFound, ErrorCodeNotFound,
+				"Campaign not found", nil)
+		} else if err.Error() == "no domains found for campaign" {
+			respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+				"No domains found for DNS validation", []ErrorDetail{
+					{
+						Code:    ErrorCodeValidation,
+						Message: "Campaign must have generated domains before DNS validation can be performed",
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+						},
+					},
+				})
+		} else {
+			respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
+				"Failed to start DNS validation", []ErrorDetail{
+					{
+						Code:    ErrorCodeInternalServer,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+						},
+					},
+				})
+		}
+		return
+	}
+
+	log.Printf("SUCCESS [DNS Validation]: DNS validation started successfully for campaign %s", campaignID)
+
+	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
+		"message":     "DNS validation started successfully",
+		"campaign_id": campaignID,
+		"status":      "validation_in_progress",
+	})
+}
+
+// validateHTTPForCampaign triggers domain-centric HTTP keyword validation for all domains in a campaign.
+func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context) {
+	campaignIDStr := c.Param("campaignId")
+	campaignID, err := uuid.Parse(campaignIDStr)
+	if err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid campaign ID format", []ErrorDetail{
+				{
+					Field:   "campaignId",
+					Code:    ErrorCodeValidation,
+					Message: "Campaign ID must be a valid UUID",
+				},
+			})
+		return
+	}
+
+	log.Printf("INFO [HTTP Validation]: Starting domain-centric HTTP keyword validation for campaign %s", campaignID)
+
+	// For domain-centric HTTP validation, we need to create a new HTTP keyword campaign
+	// that sources from the completed DNS validation campaign
+	// The request body could contain persona IDs and keyword configuration
+	type HTTPValidationRequest struct {
+		PersonaIDs               []uuid.UUID `json:"personaIds" validate:"required,min=1,dive,uuid"`
+		KeywordSetIDs            []uuid.UUID `json:"keywordSetIds,omitempty" validate:"omitempty,dive,uuid"`
+		AdHocKeywords            []string    `json:"adHocKeywords,omitempty" validate:"omitempty,dive,min=1"`
+		ProxyPoolID              *uuid.UUID  `json:"proxyPoolId,omitempty"`
+		ProcessingSpeedPerMinute *int        `json:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=0"`
+		BatchSize                *int        `json:"batchSize,omitempty" validate:"omitempty,gt=0"`
+		RetryAttempts            *int        `json:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
+		TargetHTTPPorts          []int       `json:"targetHttpPorts,omitempty" validate:"omitempty,dive,gt=0,lte=65535"`
+	}
+
+	var req HTTPValidationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid request body", []ErrorDetail{
+				{
+					Field:   "body",
+					Code:    ErrorCodeValidation,
+					Message: "Invalid request payload: " + err.Error(),
+				},
+			})
+		return
+	}
+
+	// Validate required fields
+	if len(req.PersonaIDs) == 0 {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Persona IDs required", []ErrorDetail{
+				{
+					Field:   "personaIds",
+					Code:    ErrorCodeValidation,
+					Message: "At least one persona ID is required for HTTP keyword validation",
+				},
+			})
+		return
+	}
+
+	if len(req.KeywordSetIDs) == 0 && len(req.AdHocKeywords) == 0 {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Keywords required", []ErrorDetail{
+				{
+					Field:   "keywords",
+					Code:    ErrorCodeValidation,
+					Message: "Either keyword set IDs or ad-hoc keywords must be provided",
+				},
+			})
+		return
+	}
+
+	// Create HTTP keyword campaign request
+	createReq := services.CreateHTTPKeywordCampaignRequest{
+		Name:                     fmt.Sprintf("HTTP Validation for Campaign %s", campaignIDStr),
+		SourceCampaignID:         campaignID,
+		KeywordSetIDs:            req.KeywordSetIDs,
+		AdHocKeywords:            req.AdHocKeywords,
+		PersonaIDs:               req.PersonaIDs,
+		ProxyPoolID:              req.ProxyPoolID,
+		ProxySelectionStrategy:   "round_robin", // Default strategy
+		RotationIntervalSeconds:  0,             // Default
+		ProcessingSpeedPerMinute: derefIntPtr(req.ProcessingSpeedPerMinute, 60),
+		BatchSize:                derefIntPtr(req.BatchSize, 20),
+		RetryAttempts:            derefIntPtr(req.RetryAttempts, 1),
+		TargetHTTPPorts:          req.TargetHTTPPorts,
+		UserID:                   uuid.Nil, // Would be extracted from session in real implementation
+	}
+
+	// Create the HTTP keyword campaign using the service
+	httpCampaign, err := h.httpKeywordSvc.CreateCampaign(c.Request.Context(), createReq)
+	if err != nil {
+		log.Printf("ERROR [HTTP Validation]: Failed to create HTTP keyword campaign for source %s: %v", campaignIDStr, err)
+
+		// Handle different error types
+		if err.Error() == "record not found" || err.Error() == "campaign not found" {
+			respondWithDetailedErrorGin(c, http.StatusNotFound, ErrorCodeNotFound,
+				"Source campaign not found", nil)
+		} else if err.Error() == "no domains found for campaign" {
+			respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+				"No domains found for HTTP validation", []ErrorDetail{
+					{
+						Code:    ErrorCodeValidation,
+						Message: "Source campaign must have DNS validation results before HTTP validation can be performed",
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+						},
+					},
+				})
+		} else {
+			respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
+				"Failed to start HTTP validation", []ErrorDetail{
+					{
+						Code:    ErrorCodeInternalServer,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+						},
+					},
+				})
+		}
+		return
+	}
+
+	log.Printf("SUCCESS [HTTP Validation]: HTTP keyword validation campaign created successfully for source %s, new campaign ID: %s", campaignID, httpCampaign.ID)
+
+	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
+		"message":            "HTTP keyword validation started successfully",
+		"source_campaign_id": campaignID,
+		"new_campaign_id":    httpCampaign.ID,
+		"status":             "validation_in_progress",
+	})
+}
+
+// Helper function to dereference int pointers with defaults
+func derefIntPtr(ptr *int, defaultVal int) int {
+	if ptr == nil {
+		return defaultVal
+	}
+	return *ptr
 }
 
 // handleCampaignOperation is a helper method for common campaign operation handling

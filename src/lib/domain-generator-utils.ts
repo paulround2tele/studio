@@ -3,7 +3,17 @@
  * @fileOverview Utility functions for deterministic domain generation.
  * This includes generating the Nth character combination and constructing a domain from an index.
  */
-import type { DomainGenerationConfig } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type DomainGenerationConfig = {
+  generationPattern?: string;
+  constantPart?: string;
+  allowedCharSet?: string;
+  tlds?: string[];
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
+  maxDomainsToGenerate?: number;
+};
 
 // Constants for SLD validation
 const MAX_SLD_LENGTH = 63;

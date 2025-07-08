@@ -1,7 +1,11 @@
 package personas
 
 import (
+	"reflect"
+	
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // AddPersonaPaths adds persona-related paths to the OpenAPI specification
@@ -163,7 +167,7 @@ func addCreatePersonaPath(spec *openapi3.T) {
 		Content: map[string]*openapi3.MediaType{
 			"application/json": {
 				Schema: &openapi3.SchemaRef{
-					Ref: "#/components/schemas/PersonaResponse",
+					Ref: "#/components/schemas/Persona",
 				},
 			},
 		},
@@ -252,7 +256,7 @@ func addGetPersonaByIDPath(spec *openapi3.T) {
 		Content: map[string]*openapi3.MediaType{
 			"application/json": {
 				Schema: &openapi3.SchemaRef{
-					Ref: "#/components/schemas/PersonaResponse",
+					Ref: "#/components/schemas/Persona",
 				},
 			},
 		},
@@ -298,7 +302,7 @@ func addGetHttpPersonaByIDPath(spec *openapi3.T) {
 		Content: map[string]*openapi3.MediaType{
 			"application/json": {
 				Schema: &openapi3.SchemaRef{
-					Ref: "#/components/schemas/PersonaResponse",
+					Ref: "#/components/schemas/Persona",
 				},
 			},
 		},
@@ -344,7 +348,7 @@ func addGetDnsPersonaByIDPath(spec *openapi3.T) {
 		Content: map[string]*openapi3.MediaType{
 			"application/json": {
 				Schema: &openapi3.SchemaRef{
-					Ref: "#/components/schemas/PersonaResponse",
+					Ref: "#/components/schemas/Persona",
 				},
 			},
 		},
@@ -402,7 +406,7 @@ func addUpdatePersonaPath(spec *openapi3.T) {
 		Content: map[string]*openapi3.MediaType{
 			"application/json": {
 				Schema: &openapi3.SchemaRef{
-					Ref: "#/components/schemas/PersonaResponse",
+					Ref: "#/components/schemas/Persona",
 				},
 			},
 		},
@@ -645,70 +649,8 @@ func addPersonaSchemas(spec *openapi3.T) {
 		},
 	}
 
-	// PersonaResponse schema
-	spec.Components.Schemas["PersonaResponse"] = &openapi3.SchemaRef{
-		Value: &openapi3.Schema{
-			Type:        &openapi3.Types{"object"},
-			Description: "Persona response with structured configuration",
-			Properties: map[string]*openapi3.SchemaRef{
-				"id": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "Persona unique identifier",
-					},
-				},
-				"name": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Persona name",
-					},
-				},
-				"personaType": {
-					Value: &openapi3.Schema{
-						Type: &openapi3.Types{"string"},
-						Enum: []interface{}{"dns", "http"},
-						Description: "Type of persona",
-					},
-				},
-				"description": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Persona description",
-					},
-				},
-				"configDetails": {
-					Value: &openapi3.Schema{
-						OneOf: []*openapi3.SchemaRef{
-							{Ref: "#/components/schemas/HttpPersonaConfig"},
-							{Ref: "#/components/schemas/DnsPersonaConfig"},
-						},
-						Description: "Type-specific configuration details",
-					},
-				},
-				"isEnabled": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the persona is enabled",
-					},
-				},
-				"createdAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Persona creation timestamp",
-					},
-				},
-				"updatedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Persona last update timestamp",
-					},
-				},
-			},
-		},
-	}
+	// Auto-generate Persona schema from Go struct
+	utils.AddStructSchema(spec, reflect.TypeOf(models.Persona{}), "Persona")
 
 	// PersonaListResponse schema
 	spec.Components.Schemas["PersonaListResponse"] = &openapi3.SchemaRef{
@@ -726,7 +668,7 @@ func addPersonaSchemas(spec *openapi3.T) {
 					Value: &openapi3.Schema{
 						Type: &openapi3.Types{"array"},
 						Items: &openapi3.SchemaRef{
-							Ref: "#/components/schemas/PersonaResponse",
+							Ref: "#/components/schemas/Persona",
 						},
 					},
 				},
@@ -880,6 +822,31 @@ func addPersonaSchemas(spec *openapi3.T) {
 						Min:         &[]float64{0}[0],
 						Max:         &[]float64{20}[0],
 						Description: "Maximum number of redirects to follow",
+					},
+				},
+				"allowedStatusCodes": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type: &openapi3.Types{"integer"},
+								Min:  &[]float64{100}[0],
+								Max:  &[]float64{599}[0],
+							},
+						},
+						Description: "Allowed HTTP status codes",
+					},
+				},
+				"followRedirects": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Whether to follow HTTP redirects",
+					},
+				},
+				"insecureSkipVerify": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"boolean"},
+						Description: "Skip TLS certificate verification",
 					},
 				},
 				"rateLimitDps": {
@@ -1174,7 +1141,7 @@ func addPersonaSchemas(spec *openapi3.T) {
 				"mode": {
 					Value: &openapi3.Schema{
 						Type: &openapi3.Types{"string"},
-						Enum: []interface{}{"preserve", "ignore", "custom"},
+						Enum: []interface{}{"preserve", "ignore", "custom", "clear", "session_only"},
 						Description: "Cookie handling mode",
 					},
 				},

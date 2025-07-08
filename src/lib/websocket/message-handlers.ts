@@ -1,21 +1,140 @@
 /**
  * WebSocket message handlers with proper typing and validation
  * Ensures type safety for all real-time updates
+ * Updated to use OpenAPI types directly
  */
 
-import {
-  TypedWebSocketMessage,
-  WebSocketHandlers,
-  parseWebSocketMessage,
-  routeWebSocketMessage,
-  CampaignProgressMessage,
-  CampaignStatusMessage,
-  SystemNotificationMessage,
-  ErrorMessage,
-  WebSocketMessageTypes
-} from '../types/websocket-types-fixed';
+// WebSocket Message Types (replacing deleted websocket-types-fixed)
+export const WebSocketMessageTypes = {
+  CAMPAIGN_PROGRESS: 'campaign_progress',
+  CAMPAIGN_STATUS: 'campaign_status',
+  DOMAIN_GENERATED: 'domain_generated',
+  DNS_VALIDATION_RESULT: 'dns_validation_result',
+  HTTP_VALIDATION_RESULT: 'http_validation_result',
+  SYSTEM_NOTIFICATION: 'system_notification',
+  PROXY_STATUS: 'proxy_status',
+  ERROR: 'error'
+} as const;
 
-// Using OpenAPI compatible types instead of branded types
+export type WebSocketMessageType = typeof WebSocketMessageTypes[keyof typeof WebSocketMessageTypes];
+
+// Base WebSocket message structure
+export interface BaseWebSocketMessage {
+  type: WebSocketMessageType;
+  timestamp: string;
+  data: unknown;
+}
+
+// Specific message types
+export interface CampaignProgressMessage extends BaseWebSocketMessage {
+  type: typeof WebSocketMessageTypes.CAMPAIGN_PROGRESS;
+  data: {
+    campaignId: string;
+    progressPercent: number;
+    phase: string;
+    status: string;
+  };
+}
+
+export interface CampaignStatusMessage extends BaseWebSocketMessage {
+  type: typeof WebSocketMessageTypes.CAMPAIGN_STATUS;
+  data: {
+    campaignId: string;
+    status: string;
+    phase?: string;
+    errorCode?: string;
+  };
+}
+
+export interface SystemNotificationMessage extends BaseWebSocketMessage {
+  type: typeof WebSocketMessageTypes.SYSTEM_NOTIFICATION;
+  data: {
+    level: string;
+    message: string;
+    actionable?: boolean;
+  };
+}
+
+export interface ErrorMessage extends BaseWebSocketMessage {
+  type: typeof WebSocketMessageTypes.ERROR;
+  data: {
+    code: string;
+    message: string;
+    details?: string;
+    campaignId?: string;
+  };
+}
+
+export type TypedWebSocketMessage = 
+  | CampaignProgressMessage 
+  | CampaignStatusMessage 
+  | SystemNotificationMessage 
+  | ErrorMessage
+  | BaseWebSocketMessage;
+
+// WebSocket handlers interface
+export interface WebSocketHandlers {
+  onCampaignProgress?: (message: CampaignProgressMessage) => void;
+  onCampaignStatus?: (message: CampaignStatusMessage) => void;
+  onDomainGenerated?: (message: BaseWebSocketMessage) => void;
+  onDNSValidationResult?: (message: BaseWebSocketMessage) => void;
+  onHTTPValidationResult?: (message: BaseWebSocketMessage) => void;
+  onSystemNotification?: (message: SystemNotificationMessage) => void;
+  onProxyStatus?: (message: BaseWebSocketMessage) => void;
+  onError?: (message: ErrorMessage) => void;
+  onUnknownMessage?: (message: BaseWebSocketMessage) => void;
+}
+
+// Parse WebSocket message from raw string
+export function parseWebSocketMessage(rawMessage: string): TypedWebSocketMessage | null {
+  try {
+    const parsed = JSON.parse(rawMessage);
+    
+    if (!parsed || typeof parsed !== 'object' || !parsed.type || !parsed.timestamp) {
+      return null;
+    }
+    
+    return parsed as TypedWebSocketMessage;
+  } catch {
+    return null;
+  }
+}
+
+// Route message to appropriate handler
+export function routeWebSocketMessage(
+  message: TypedWebSocketMessage,
+  handlers: WebSocketHandlers
+): void {
+  switch (message.type) {
+    case WebSocketMessageTypes.CAMPAIGN_PROGRESS:
+      handlers.onCampaignProgress?.(message as CampaignProgressMessage);
+      break;
+    case WebSocketMessageTypes.CAMPAIGN_STATUS:
+      handlers.onCampaignStatus?.(message as CampaignStatusMessage);
+      break;
+    case WebSocketMessageTypes.DOMAIN_GENERATED:
+      handlers.onDomainGenerated?.(message);
+      break;
+    case WebSocketMessageTypes.DNS_VALIDATION_RESULT:
+      handlers.onDNSValidationResult?.(message);
+      break;
+    case WebSocketMessageTypes.HTTP_VALIDATION_RESULT:
+      handlers.onHTTPValidationResult?.(message);
+      break;
+    case WebSocketMessageTypes.SYSTEM_NOTIFICATION:
+      handlers.onSystemNotification?.(message as SystemNotificationMessage);
+      break;
+    case WebSocketMessageTypes.PROXY_STATUS:
+      handlers.onProxyStatus?.(message);
+      break;
+    case WebSocketMessageTypes.ERROR:
+      handlers.onError?.(message as ErrorMessage);
+      break;
+    default:
+      handlers.onUnknownMessage?.(message);
+      break;
+  }
+}
 
 /**
  * Message handler registry

@@ -508,6 +508,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/validate-dns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate DNS for campaign domains
+         * @description Triggers domain-centric DNS validation for all domains in a completed domain generation campaign
+         */
+        post: operations["validateDNSForCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/validate-http": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate HTTP for campaign domains
+         * @description Triggers domain-centric HTTP keyword validation for all domains in a completed DNS validation campaign
+         */
+        post: operations["validateHTTPForCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/change-password": {
         parameters: {
             query?: never;
@@ -1120,75 +1160,44 @@ export interface components {
             /** @description Total number of campaigns requested for deletion */
             totalRequested?: number;
         };
-        /** @description Campaign information */
         Campaign: {
-            /** @description Average processing rate */
             avgProcessingRate?: number;
-            /**
-             * @description Type of campaign
-             * @enum {string}
-             */
-            campaignType?: "domain_generation" | "dns_validation" | "http_keyword_validation";
-            /**
-             * Format: date-time
-             * @description Campaign completion timestamp
-             */
+            businessStatus?: string;
+            campaignType?: string;
+            /** Format: date-time */
             completedAt?: string;
-            /**
-             * Format: date-time
-             * @description Campaign creation timestamp
-             */
+            /** Format: date-time */
             createdAt?: string;
-            /** @description Error message if campaign failed */
+            currentPhase?: string;
+            dnsValidatedDomains?: number;
+            dnsValidationParams?: components["schemas"]["DNSValidationCampaignParams"];
+            domainGenerationParams?: components["schemas"]["DomainGenerationCampaignParams"];
+            domains?: number;
             errorMessage?: string;
-            /**
-             * Format: date-time
-             * @description Estimated completion timestamp
-             */
+            /** Format: date-time */
             estimatedCompletionAt?: string;
-            /** @description Number of failed items */
             failedItems?: number;
-            /**
-             * Format: uuid
-             * @description Campaign unique identifier
-             */
+            httpKeywordValidationParams?: components["schemas"]["HTTPKeywordCampaignParams"];
+            /** Format: uuid */
             id?: string;
-            /**
-             * Format: date-time
-             * @description Last heartbeat timestamp
-             */
+            /** Format: date-time */
             lastHeartbeatAt?: string;
-            /** @description Additional campaign metadata */
+            launchSequence?: boolean;
+            leads?: number;
             metadata?: Record<string, never>;
-            /** @description Campaign name */
             name?: string;
-            /** @description Number of items processed */
+            phaseStatus?: string;
             processedItems?: number;
-            /** @description Campaign progress percentage */
+            progress?: number;
             progressPercentage?: number;
-            /**
-             * Format: date-time
-             * @description Campaign start timestamp
-             */
+            /** Format: date-time */
             startedAt?: string;
-            /**
-             * @description Campaign status
-             * @enum {string}
-             */
-            status?: "pending" | "queued" | "running" | "pausing" | "paused" | "completed" | "failed" | "archived" | "cancelled";
-            /** @description Number of successfully processed items */
+            status?: string;
             successfulItems?: number;
-            /** @description Total number of items to process */
             totalItems?: number;
-            /**
-             * Format: date-time
-             * @description Campaign last update timestamp
-             */
+            /** Format: date-time */
             updatedAt?: string;
-            /**
-             * Format: uuid
-             * @description User ID who created the campaign
-             */
+            /** Format: uuid */
             userId?: string;
         };
         /** @description Campaign details with type-specific parameters */
@@ -1242,7 +1251,7 @@ export interface components {
              * @description Cookie handling mode
              * @enum {string}
              */
-            mode?: "preserve" | "ignore" | "custom";
+            mode?: "preserve" | "ignore" | "custom" | "clear" | "session_only";
         };
         /** @description Request to create a new campaign */
         CreateCampaignRequest: {
@@ -1353,6 +1362,44 @@ export interface components {
             /** @description Use system DNS resolvers */
             useSystemResolvers?: boolean;
         };
+        /** @description DNS persona configuration details */
+        DNSConfigDetails: {
+            /** @description Concurrent queries per domain */
+            concurrentQueriesPerDomain?: number;
+            /** @description Maximum concurrent goroutines */
+            maxConcurrentGoroutines?: number;
+            /** @description Maximum domains per request */
+            maxDomainsPerRequest?: number;
+            /** @description Maximum query delay in milliseconds */
+            queryDelayMaxMs?: number;
+            /** @description Minimum query delay in milliseconds */
+            queryDelayMinMs?: number;
+            /** @description Query timeout in seconds */
+            queryTimeoutSeconds?: number;
+            /** @description Rate limit burst size */
+            rateLimitBurst?: number;
+            /** @description Rate limit in domains per second */
+            rateLimitDps?: number;
+            /**
+             * @description Resolver selection strategy
+             * @enum {string}
+             */
+            resolverStrategy?: "round_robin" | "random" | "weighted" | "priority";
+            /** @description DNS resolver addresses */
+            resolvers?: string[];
+            /** @description Whether to use system resolvers */
+            useSystemResolvers?: boolean;
+        };
+        DNSValidationCampaignParams: {
+            batchSize?: number;
+            metadata?: Record<string, never>;
+            personaIds?: string[];
+            processingSpeedPerMinute?: number;
+            retryAttempts?: number;
+            rotationIntervalSeconds?: number;
+            /** Format: uuid */
+            sourceGenerationCampaignId?: string;
+        };
         /** @description DNS validation result information */
         DNSValidationResult: {
             /** @description Number of validation attempts */
@@ -1459,6 +1506,20 @@ export interface components {
              */
             sourceCampaignId: string;
         };
+        DomainGenerationCampaignParams: {
+            characterSet?: string;
+            constantString?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            currentOffset?: number;
+            numDomainsToGenerate?: number;
+            patternType?: string;
+            tld?: string;
+            totalPossibleCombinations?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+            variableLength?: number;
+        };
         /** @description Parameters for domain generation campaigns */
         DomainGenerationParams: {
             /** @description Character set for generation */
@@ -1471,7 +1532,7 @@ export interface components {
              * @description Pattern type for domain generation
              * @enum {string}
              */
-            patternType: "prefix" | "suffix" | "both";
+            patternType: "prefix_variable" | "suffix_variable" | "both_variable";
             /** @description Top-level domain */
             tld: string;
             /** @description Length of variable portion */
@@ -1504,6 +1565,13 @@ export interface components {
              * @description Record creation timestamp
              */
             createdAt?: string;
+            /** @description DNS resolved IP address */
+            dnsIp?: string;
+            /**
+             * @description DNS validation status
+             * @enum {string}
+             */
+            dnsStatus?: "pending" | "ok" | "error" | "timeout";
             /** @description Generated domain name */
             domainName?: string;
             /**
@@ -1516,11 +1584,29 @@ export interface components {
              * @description Generation campaign ID
              */
             generationCampaignId?: string;
+            /** @description HTTP keywords found */
+            httpKeywords?: string;
+            /**
+             * @description HTTP validation status
+             * @enum {string}
+             */
+            httpStatus?: "pending" | "ok" | "error" | "timeout";
+            /** @description HTTP response status code */
+            httpStatusCode?: number;
+            /** @description HTTP page title */
+            httpTitle?: string;
             /**
              * Format: uuid
              * @description Domain unique identifier
              */
             id?: string;
+            /**
+             * Format: date-time
+             * @description Last validation timestamp
+             */
+            lastValidatedAt?: string;
+            /** @description Lead quality score */
+            leadScore?: number;
             /** @description Offset index in generation space */
             offsetIndex?: number;
             /** @description Source keyword used for generation */
@@ -1574,6 +1660,57 @@ export interface components {
             requestTimeoutSeconds?: number;
             /** @description List of User-Agent strings to rotate through */
             userAgents?: string[];
+        };
+        /** @description HTTP persona configuration details */
+        HTTPConfigDetails: {
+            /** @description Allowed HTTP status codes */
+            allowedStatusCodes?: number[];
+            cookieHandling?: components["schemas"]["HTTPCookieHandling"];
+            /** @description Whether to follow redirects */
+            followRedirects?: boolean;
+            /** @description Order of HTTP headers */
+            headerOrder?: string[];
+            /** @description HTTP headers */
+            headers?: {
+                [key: string]: string;
+            };
+            /** @description Configuration notes */
+            notes?: string;
+            /** @description Rate limit burst size */
+            rateLimitBurst?: number;
+            /** @description Rate limit in requests per second */
+            rateLimitDps?: number;
+            /** @description Request timeout in seconds */
+            requestTimeoutSeconds?: number;
+            /** @description User agent string */
+            userAgent?: string;
+        };
+        /** @description HTTP cookie handling configuration */
+        HTTPCookieHandling: {
+            /**
+             * @description Cookie handling mode
+             * @enum {string}
+             */
+            mode?: "preserve" | "ignore" | "custom";
+        };
+        HTTPKeywordCampaignParams: {
+            adHocKeywords?: string[];
+            batchSize?: number;
+            keywordSetIds?: string[];
+            lastProcessedDomainName?: string;
+            metadata?: Record<string, never>;
+            personaIds?: string[];
+            processingSpeedPerMinute?: number;
+            proxyIds?: string[];
+            /** Format: uuid */
+            proxyPoolId?: string;
+            proxySelectionStrategy?: string;
+            retryAttempts?: number;
+            rotationIntervalSeconds?: number;
+            /** Format: uuid */
+            sourceCampaignId?: string;
+            sourceType?: string;
+            targetHttpPorts?: number[];
         };
         /** @description HTTP keyword validation result information */
         HTTPKeywordResult: {
@@ -1701,11 +1838,15 @@ export interface components {
         HttpPersonaConfig: {
             /** @description Allow insecure TLS connections */
             allowInsecureTls?: boolean;
+            /** @description Allowed HTTP status codes */
+            allowedStatusCodes?: number[];
             cookieHandling?: components["schemas"]["CookieHandling"];
             /** @description Capture DOM snapshots in headless browser */
             domSnapshot?: boolean;
             /** @description Fetch response body for keyword scanning */
             fetchBodyForKeywords?: boolean;
+            /** @description Whether to follow HTTP redirects */
+            followRedirects?: boolean;
             /** @description Order of HTTP headers */
             headerOrder?: string[];
             /** @description Custom HTTP headers */
@@ -1717,6 +1858,8 @@ export interface components {
             /** @description User agent for headless browser */
             headlessUserAgent?: string;
             http2Settings?: components["schemas"]["HTTP2SettingsConfig"];
+            /** @description Skip TLS certificate verification */
+            insecureSkipVerify?: boolean;
             /** @description Load images in headless browser */
             loadImages?: boolean;
             /** @description Maximum number of redirects to follow */
@@ -1814,40 +1957,19 @@ export interface components {
             /** @description Array of text matches for this keyword */
             matches: string[];
         };
-        /** @description Keyword rule information */
         KeywordRule: {
-            /** @description Category for organizing related rules */
             category?: string;
-            /** @description Number of context characters to include around matches */
             contextChars?: number;
-            /**
-             * Format: date-time
-             * @description Rule creation timestamp
-             */
+            /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: uuid
-             * @description Rule unique identifier
-             */
+            /** Format: uuid */
             id?: string;
-            /** @description Whether pattern matching is case sensitive */
             isCaseSensitive?: boolean;
-            /**
-             * Format: uuid
-             * @description Parent keyword set ID
-             */
+            /** Format: uuid */
             keywordSetId?: string;
-            /** @description Pattern to match against content */
             pattern?: string;
-            /**
-             * @description Type of rule pattern matching
-             * @enum {string}
-             */
-            ruleType?: "string" | "regex";
-            /**
-             * Format: date-time
-             * @description Rule last update timestamp
-             */
+            ruleType?: string;
+            /** Format: date-time */
             updatedAt?: string;
         };
         /** @description Request to create or update a keyword rule */
@@ -1872,32 +1994,16 @@ export interface components {
              */
             ruleType: "string" | "regex";
         };
-        /** @description Keyword set information with rules */
-        KeywordSetResponse: {
-            /**
-             * Format: date-time
-             * @description Keyword set creation timestamp
-             */
+        KeywordSet: {
+            /** Format: date-time */
             createdAt?: string;
-            /** @description Keyword set description */
             description?: string;
-            /**
-             * Format: uuid
-             * @description Keyword set unique identifier
-             */
+            /** Format: uuid */
             id?: string;
-            /** @description Whether the keyword set is enabled */
             isEnabled?: boolean;
-            /** @description Keyword set name */
             name?: string;
-            /** @description Number of rules in the set */
-            ruleCount?: number;
-            /** @description List of keyword rules in the set */
             rules?: components["schemas"]["KeywordRule"][];
-            /**
-             * Format: date-time
-             * @description Keyword set last update timestamp
-             */
+            /** Format: date-time */
             updatedAt?: string;
         };
         /** @description Logging configuration */
@@ -1964,44 +2070,31 @@ export interface components {
         PaginationMetadata: {
             page?: components["schemas"]["PageInfo"];
         };
+        Persona: {
+            configDetails?: Record<string, never>;
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            /** Format: uuid */
+            id?: string;
+            isEnabled?: boolean;
+            lastError?: string;
+            /** Format: date-time */
+            lastTested?: string;
+            name?: string;
+            personaType?: string;
+            status?: string;
+            tags?: string[];
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         /** @description Response for persona list */
         PersonaListResponse: {
-            data?: components["schemas"]["PersonaResponse"][];
+            data?: components["schemas"]["Persona"][];
             /** @description Response message */
             message?: string;
             /** @enum {string} */
             status?: "success";
-        };
-        /** @description Persona response with structured configuration */
-        PersonaResponse: {
-            /** @description Type-specific configuration details */
-            configDetails?: components["schemas"]["HttpPersonaConfig"] | components["schemas"]["DnsPersonaConfig"];
-            /**
-             * Format: date-time
-             * @description Persona creation timestamp
-             */
-            createdAt?: string;
-            /** @description Persona description */
-            description?: string;
-            /**
-             * Format: uuid
-             * @description Persona unique identifier
-             */
-            id?: string;
-            /** @description Whether the persona is enabled */
-            isEnabled?: boolean;
-            /** @description Persona name */
-            name?: string;
-            /**
-             * @description Type of persona
-             * @enum {string}
-             */
-            personaType?: "dns" | "http";
-            /**
-             * Format: date-time
-             * @description Persona last update timestamp
-             */
-            updatedAt?: string;
         };
         /** @description Result of persona test operation */
         PersonaTestResult: {
@@ -2031,58 +2124,37 @@ export interface components {
             /** @enum {string} */
             status?: "success";
         };
-        /** @description Proxy configuration and status information */
         Proxy: {
-            /** @description Proxy address */
             address?: string;
-            /** @description Proxy city location */
             city?: string;
-            /** @description Proxy country code */
             countryCode?: string;
-            /**
-             * Format: date-time
-             * @description Proxy creation timestamp
-             */
+            /** Format: date-time */
             createdAt?: string;
-            /** @description Proxy description */
             description?: string;
-            /** @description Proxy hostname or IP */
+            failureCount?: number;
             host?: string;
-            /**
-             * Format: uuid
-             * @description Proxy unique identifier
-             */
+            /** Format: uuid */
             id?: string;
-            /** @description Whether the proxy is enabled */
+            inputPassword?: string;
+            inputUsername?: string;
             isEnabled?: boolean;
-            /** @description Whether the proxy is healthy */
             isHealthy?: boolean;
-            /**
-             * Format: date-time
-             * @description Last health check timestamp
-             */
+            /** Format: date-time */
             lastCheckedAt?: string;
-            /** @description Last status message */
+            lastError?: string;
             lastStatus?: string;
-            /** @description Last measured latency in milliseconds */
+            /** Format: date-time */
+            lastTested?: string;
             latencyMs?: number;
-            /** @description Proxy name */
             name?: string;
-            /** @description Proxy port number */
+            notes?: string;
             port?: number;
-            /**
-             * @description Proxy protocol
-             * @enum {string}
-             */
-            protocol?: "http" | "https" | "socks5" | "socks4";
-            /** @description Proxy provider */
+            protocol?: string;
             provider?: string;
-            /**
-             * Format: date-time
-             * @description Proxy last update timestamp
-             */
+            status?: string;
+            successCount?: number;
+            /** Format: date-time */
             updatedAt?: string;
-            /** @description Proxy username */
             username?: string;
         };
         /** @description Proxy manager configuration */
@@ -2099,62 +2171,31 @@ export interface components {
              */
             testUrl?: string;
         };
-        /** @description Proxy pool configuration and status information */
         ProxyPool: {
-            /**
-             * Format: date-time
-             * @description Pool creation timestamp
-             */
+            /** Format: date-time */
             createdAt?: string;
-            /** @description Proxy pool description */
             description?: string;
-            /** @description Whether health checks are enabled */
             healthCheckEnabled?: boolean;
-            /** @description Health check interval in seconds */
             healthCheckIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Proxy pool unique identifier
-             */
+            /** Format: uuid */
             id?: string;
-            /** @description Whether the proxy pool is enabled */
             isEnabled?: boolean;
-            /** @description Maximum retry attempts */
             maxRetries?: number;
-            /** @description Proxy pool name */
             name?: string;
-            /** @description Pool selection strategy */
             poolStrategy?: string;
-            /** @description List of proxies in the pool */
             proxies?: components["schemas"]["Proxy"][];
-            /** @description Timeout in seconds */
             timeoutSeconds?: number;
-            /**
-             * Format: date-time
-             * @description Pool last update timestamp
-             */
+            /** Format: date-time */
             updatedAt?: string;
         };
-        /** @description Proxy pool membership information */
         ProxyPoolMembership: {
-            /**
-             * Format: date-time
-             * @description Timestamp when proxy was added to pool
-             */
+            /** Format: date-time */
             addedAt?: string;
-            /** @description Whether the membership is active */
             isActive?: boolean;
-            /**
-             * Format: uuid
-             * @description Pool ID
-             */
+            /** Format: uuid */
             poolId?: string;
-            /**
-             * Format: uuid
-             * @description Proxy ID
-             */
+            /** Format: uuid */
             proxyId?: string;
-            /** @description Weight for proxy selection */
             weight?: number;
         };
         /** @description Request to create or update a proxy pool */
@@ -2341,46 +2382,27 @@ export interface components {
             /** @description Proxy username for authentication */
             username?: string;
         };
-        /** @description User information */
         User: {
-            /**
-             * Format: date-time
-             * @description Account creation timestamp
-             */
+            avatarUrl?: string;
+            /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: email
-             * @description User email address
-             */
             email?: string;
-            /** @description Whether the user email is verified */
             emailVerified?: boolean;
-            /** @description User first name */
             firstName?: string;
-            /**
-             * Format: uuid
-             * @description User unique identifier
-             */
+            /** Format: uuid */
             id?: string;
-            /** @description Whether the user account is active */
             isActive?: boolean;
-            /** @description Whether the user account is locked */
             isLocked?: boolean;
-            /**
-             * Format: date-time
-             * @description Last login timestamp
-             */
+            /** Format: date-time */
             lastLoginAt?: string;
-            /** @description User last name */
+            lastLoginIp?: Record<string, never>[];
             lastName?: string;
-            /** @description Whether multi-factor authentication is enabled */
             mfaEnabled?: boolean;
-            /** @description Whether the user must change their password */
+            /** Format: date-time */
+            mfaLastUsedAt?: string;
             mustChangePassword?: boolean;
-            /**
-             * Format: date-time
-             * @description Account last update timestamp
-             */
+            name?: string;
+            /** Format: date-time */
             updatedAt?: string;
         };
         /** @description Worker configuration */
@@ -3909,6 +3931,154 @@ export interface operations {
             };
         };
     };
+    validateDNSForCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign UUID */
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description DNS validation started successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignOperationResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign is in an invalid state for this operation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    validateHTTPForCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign UUID */
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description HTTP keyword validation started successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignOperationResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign is in an invalid state for this operation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     changePassword: {
         parameters: {
             query?: never;
@@ -4187,7 +4357,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KeywordSetResponse"][];
+                    "application/json": components["schemas"]["KeywordSet"][];
                 };
             };
             /** @description Bad request */
@@ -4244,7 +4414,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KeywordSetResponse"];
+                    "application/json": components["schemas"]["KeywordSet"];
                 };
             };
             /** @description Bad request */
@@ -4309,7 +4479,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KeywordSetResponse"];
+                    "application/json": components["schemas"]["KeywordSet"];
                 };
             };
             /** @description Bad request */
@@ -4378,7 +4548,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KeywordSetResponse"];
+                    "application/json": components["schemas"]["KeywordSet"];
                 };
             };
             /** @description Bad request */
@@ -4622,7 +4792,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
+                    "application/json": components["schemas"]["Persona"];
                 };
             };
             /** @description Bad request */
@@ -4687,7 +4857,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
+                    "application/json": components["schemas"]["Persona"];
                 };
             };
             /** @description Bad request */
@@ -4756,7 +4926,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
+                    "application/json": components["schemas"]["Persona"];
                 };
             };
             /** @description Bad request */
@@ -4951,7 +5121,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
+                    "application/json": components["schemas"]["Persona"];
                 };
             };
             /** @description Bad request */
@@ -5016,7 +5186,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
+                    "application/json": components["schemas"]["Persona"];
                 };
             };
             /** @description Bad request */

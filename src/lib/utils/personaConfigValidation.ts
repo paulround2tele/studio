@@ -2,7 +2,10 @@
 // Addresses audit issue: "Persona Configuration Type Safety"
 
 import { z } from 'zod';
-import type { DnsPersonaConfig, HttpPersonaConfig } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type DnsPersonaConfig = components['schemas']['DnsPersonaConfig'];
+type HttpPersonaConfig = components['schemas']['HttpPersonaConfig'];
 
 // Validation schemas that match backend DNSConfigDetails and HTTPConfigDetails
 export const dnsPersonaConfigSchema = z.object({

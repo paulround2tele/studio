@@ -21,7 +21,7 @@ interface CampaignFormValues {
   uploadedDomainsFile?: File | null;
   uploadedDomainsContentCache?: string[];
   initialDomainsToProcessCount?: number;
-  generationPattern: "prefix_variable" | "suffix_variable" | "both_variable" | "constant_only";
+  generationPattern: "prefix_variable" | "suffix_variable" | "both_variable";
   constantPart: string;
   allowedCharSet: string;
   tldsInput: string;
@@ -101,10 +101,9 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
     }
     
     const patternTypeMap = {
-      "prefix_variable": "prefix",
-      "suffix_variable": "suffix",
-      "both_variable": "both",
-      "constant_only": "prefix"
+      "prefix_variable": "prefix_variable",
+      "suffix_variable": "suffix_variable",
+      "both_variable": "both_variable"
     } as const;
     
     const tlds = tldsInput.split(',').map(tld => tld.trim()).filter(tld => tld.length > 0);
@@ -130,6 +129,11 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
     let cancelled = false;
 
     async function fetchCurrentOffset() {
+      if (!patternSignature) {
+        setCurrentOffset({ value: 0, isLoading: false, error: null });
+        return;
+      }
+
       setCurrentOffset(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {

@@ -257,9 +257,15 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
           variant: "default"
         });
 
-        // Start the campaign for the new phase
+        // Start the campaign for the new phase using the appropriate method
         try {
-          await apiClient.startCampaign(campaignId);
+          if (phaseType === 'dns_validation') {
+            await apiClient.validateDNSForCampaign(campaignId);
+          } else if (phaseType === 'http_keyword_validation') {
+            await apiClient.validateHTTPForCampaign(campaignId);
+          } else {
+            await apiClient.startCampaign(campaignId);
+          }
         } catch (e) {
           console.warn('Campaign may have auto-started:', e);
         }

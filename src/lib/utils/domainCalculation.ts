@@ -2,7 +2,18 @@
 // Production domain calculation utilities
 // Replaces mock logic with real calculation
 
-import type { DomainGenerationConfig } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
+type DomainGenerationConfig = {
+  generationPattern?: string;
+  constantPart?: string;
+  allowedCharSet?: string;
+  tlds?: string[];
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
+  maxDomainsToGenerate?: number;
+};
 
 /**
  * Calculate maximum theoretical domains for a given configuration

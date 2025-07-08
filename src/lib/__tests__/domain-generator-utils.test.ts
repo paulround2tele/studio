@@ -1,5 +1,13 @@
 import { generateCharsForNth, calculateMaxSldCombinations, domainFromIndex } from '../domain-generator-utils';
-import type { DomainGenerationConfig } from '@/lib/types';
+type DomainGenerationConfig = {
+  generationPattern?: string;
+  constantPart?: string;
+  allowedCharSet?: string;
+  tlds?: string[];
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
+  maxDomainsToGenerate?: number;
+};
 
 describe('Domain Generator Utilities', () => {
   describe('generateCharsForNth', () => {

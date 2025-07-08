@@ -12,11 +12,12 @@ type HttpPersonaConfig struct {
 	CookieHandling *CookieHandling      `json:"cookieHandling"`
 
 	// Validation settings
-	AllowInsecureTLS  bool    `json:"allowInsecureTls"`
-	RequestTimeoutSec int     `json:"requestTimeoutSec" validate:"min=1,max=300"`
-	MaxRedirects      int     `json:"maxRedirects" validate:"min=0,max=20"`
-	RateLimitDps      float64 `json:"rateLimitDps" validate:"min=0"`
-	RateLimitBurst    int     `json:"rateLimitBurst" validate:"min=1"`
+	AllowInsecureTLS     bool    `json:"allowInsecureTls"`
+	RequestTimeoutSec    int     `json:"requestTimeoutSec" validate:"min=1,max=300"`
+	RequestTimeoutSeconds int    `json:"requestTimeoutSeconds" validate:"min=1,max=300"` // Alternative field name
+	MaxRedirects         int     `json:"maxRedirects" validate:"min=0,max=20"`
+	RateLimitDps         float64 `json:"rateLimitDps" validate:"min=0"`
+	RateLimitBurst       int     `json:"rateLimitBurst" validate:"min=1"`
 
 	// Headless browser settings
 	UseHeadless            bool   `json:"useHeadless"`
@@ -45,7 +46,7 @@ type HTTP2SettingsConfig struct {
 }
 
 type CookieHandling struct {
-	Mode string `json:"mode"` // "preserve", "ignore", "custom"
+	Mode string `json:"mode"` // "preserve", "ignore", "custom", "none", "file", "session"
 }
 
 // DnsPersonaConfig defines structured configuration for DNS personas
@@ -54,7 +55,7 @@ type DnsPersonaConfig struct {
 	UseSystemResolvers         bool               `json:"useSystemResolvers"`
 	QueryTimeoutSeconds        int                `json:"queryTimeoutSeconds" validate:"min=1,max=60"`
 	MaxDomainsPerRequest       int                `json:"maxDomainsPerRequest" validate:"min=1,max=1000"`
-	ResolverStrategy           string             `json:"resolverStrategy" validate:"required,oneof=round_robin random weighted priority"`
+	ResolverStrategy           string             `json:"resolverStrategy" validate:"required,oneof=round_robin random weighted priority random_rotation weighted_rotation sequential_failover"`
 	ResolversWeighted          map[string]float64 `json:"resolversWeighted"`
 	ResolversPreferredOrder    []string           `json:"resolversPreferredOrder"`
 	ConcurrentQueriesPerDomain int                `json:"concurrentQueriesPerDomain" validate:"min=1,max=10"`

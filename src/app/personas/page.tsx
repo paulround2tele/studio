@@ -9,12 +9,12 @@ import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
-type PersonaResponse = components['schemas']['PersonaResponse'];
+type Persona = components['schemas']['Persona'];
 type CreatePersonaRequest = components['schemas']['CreatePersonaRequest'];
 
 // Legacy compatibility types - add missing properties from old types
-interface Persona extends PersonaResponse {
-  status?: string; // Required by PersonaListItem
+interface Persona extends Persona {
+  status?: "Active" | "Disabled" | "Testing" | "Failed"; // Use correct OpenAPI enum
   tags?: string[]; // Legacy support
 }
 
@@ -29,7 +29,7 @@ interface DnsPersona extends Persona {
 type CreateHttpPersonaPayload = CreatePersonaRequest & { personaType: 'http' };
 type CreateDnsPersonaPayload = CreatePersonaRequest & { personaType: 'dns' };
 type PersonaDeleteResponse = { status: 'success' | 'error'; message?: string };
-type PersonaStatus = 'active' | 'inactive' | 'error' | 'Active' | 'Disabled' | 'Testing' | 'Failed';
+type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
 import { PlusCircle, Users, Globe, Wifi, Search as SearchIcon, UploadCloud } from 'lucide-react';
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -123,7 +123,7 @@ function PersonasPageContent() {
         // Add missing status property for compatibility
         const personasWithStatus = personasData.map(persona => ({
           ...persona,
-          status: persona.isEnabled ? 'active' : 'inactive',
+          status: persona.isEnabled ? 'Active' : 'Disabled',
           id: persona.id || '',
           name: persona.name || '',
           personaType: persona.personaType || type
@@ -187,11 +187,13 @@ function PersonasPageContent() {
     }
   };
 
-  const handleTogglePersonaStatus = async (personaId: string, personaType: 'http' | 'dns', newStatus: PersonaStatus) => {
+  const handleTogglePersonaStatus = async (personaId: string, personaType: 'http' | 'dns', newStatus: PersonaStatus | undefined) => {
+    if (!newStatus) return; // Guard against undefined status
+    
     setActionLoading(prev => ({ ...prev, [personaId]: 'toggle' }));
     try {
       // Map status to isEnabled field which is what the backend accepts
-      const isEnabled = newStatus === 'active' || newStatus === 'Active';
+      const isEnabled = newStatus === 'Active';
       const response = await updatePersona(personaId, { isEnabled }, personaType);
       if (response.status === 'success' && response.data) {
         toast({ title: `Persona Status Updated`, description: `${response.data.name} is now ${newStatus}.` });

@@ -36,7 +36,12 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import type { Proxy, ProxyActionResponse, ProxyDeleteResponse, UpdateProxyPayload } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type Proxy = components['schemas']['Proxy'];
+type ProxyActionResponse = { success: boolean; message?: string };
+type ProxyDeleteResponse = { deleted: boolean };
+type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { testProxy, cleanProxies, updateProxy, deleteProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 

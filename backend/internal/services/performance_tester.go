@@ -510,6 +510,6 @@ func containsIndexScan(planJSON string) bool {
 	// Simple check for index usage in execution plan
 	// In production, you'd properly parse the JSON plan
 	return len(planJSON) > 0 && (
-		fmt.Sprintf("%s", planJSON) != "" && // Basic non-empty check
+		planJSON != "" && // Basic non-empty check
 		true) // Simplified for this example
 }

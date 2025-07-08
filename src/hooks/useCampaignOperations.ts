@@ -11,13 +11,20 @@ import {
   getDnsCampaignDomains,
   getHttpCampaignItems,
   startCampaignPhase,
+  validateDNSForCampaign,
+  validateHTTPForCampaign,
   pauseCampaign as pauseCampaignAPI,
   resumeCampaign as resumeCampaignAPI,
   stopCampaign as stopCampaignAPI,
   deleteCampaign as deleteCampaignAPI
 } from '@/lib/api-client/client';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
-import type { CampaignType, Campaign, CampaignViewModel, GeneratedDomainBackend, CampaignValidationItem } from '@/lib/types';
+import type { CampaignViewModel, CampaignValidationItem } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type Campaign = components['schemas']['Campaign'];
+type CampaignType = NonNullable<Campaign['campaignType']>;
+type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
 import { useCampaignDetailsStore } from '@/lib/stores/campaignDetailsStore';
 
 export const useCampaignOperations = (campaignId: string) => {
@@ -210,11 +217,27 @@ export const useCampaignOperations = (campaignId: string) => {
     useCampaignDetailsStore.getState().setActionLoading(actionKey, true);
 
     try {
-      console.log(`🚀 [Campaign Operations] Starting phase ${phaseToStart} for campaign ${campaignId}`);
+      console.log(`🚀 [Campaign Operations] Starting phase ${phaseToStart} for campaign ${campaignId}`, {
+        campaignStatus: campaign.status,
+        campaignType: campaign.campaignType,
+        phaseToStart
+      });
       
-      const response = await startCampaignPhase(campaignId);
+      let response;
       
-      if (response?.campaign_id) {
+      // 🔧 CRITICAL FIX: Use domain-centric approach for DNS validation on completed campaigns
+      if (phaseToStart === 'dns_validation' && campaign.status === 'completed' && campaign.campaignType === 'domain_generation') {
+        console.log(`📡 [Campaign Operations] Using domain-centric DNS validation endpoint for completed domain generation campaign`);
+        response = await validateDNSForCampaign(campaignId);
+      } else if (phaseToStart === 'http_keyword_validation' && campaign.status === 'completed' && campaign.campaignType === 'dns_validation') {
+        console.log(`📡 [Campaign Operations] Using domain-centric HTTP validation endpoint for completed DNS validation campaign`);
+        response = await validateHTTPForCampaign(campaignId);
+      } else {
+        console.log(`📡 [Campaign Operations] Using standard campaign start endpoint for new campaign`);
+        response = await startCampaignPhase(campaignId);
+      }
+      
+      if (response?.campaign_id || response?.message) {
         toast({
           title: `${phaseToStart.replace('_', ' ').toUpperCase()} Started`,
           description: response.message || 'Campaign phase started successfully',
@@ -223,7 +246,7 @@ export const useCampaignOperations = (campaignId: string) => {
         // Refresh campaign data
         await loadCampaignData(false);
       } else {
-        throw new Error('Invalid response from start campaign API');
+        throw new Error('Invalid response from campaign API');
       }
 
     } catch (error) {

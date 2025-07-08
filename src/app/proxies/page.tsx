@@ -14,7 +14,13 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
-import type { Proxy, ProxiesListResponse, ProxyActionResponse, ProxyDeleteResponse, UpdateProxyPayload } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type Proxy = components['schemas']['Proxy'];
+type ProxiesListResponse = { status: 'success' | 'error'; data: Proxy[]; message?: string };
+type ProxyActionResponse = { status: 'success' | 'error'; message: string };
+type ProxyDeleteResponse = { status: 'success' | 'error'; message?: string };
+type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
 import type { ProxyCreationPayload } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
@@ -112,7 +118,7 @@ function ProxiesPageContent() {
       }
       const response: ProxyDeleteResponse = await deleteProxy(proxyToDelete.id);
       if (response.status === 'success') {
-        toast({ title: "Proxy Deleted", description: response.message });
+        toast({ title: "Proxy Deleted", description: response.message || "Proxy deleted successfully" });
         setProxies(prev => prev.filter(p => p.id !== proxyToDelete!.id));
       } else {
         toast({ title: "Error Deleting Proxy", description: response.message, variant: "destructive" });

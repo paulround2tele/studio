@@ -31,7 +31,9 @@ import {
   Activity,
   Loader2
 } from 'lucide-react';
-import type { Proxy } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type Proxy = components['schemas']['Proxy'];
 import { testProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';

@@ -1,7 +1,11 @@
 package proxies
 
 import (
+	"reflect"
+	
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/utils"
 )
 
 // AddProxyPaths adds proxy-related paths to the OpenAPI specification
@@ -632,128 +636,8 @@ func addProxySchemas(spec *openapi3.T) {
 		},
 	}
 
-	// Proxy schema
-	spec.Components.Schemas["Proxy"] = &openapi3.SchemaRef{
-		Value: &openapi3.Schema{
-			Type:        &openapi3.Types{"object"},
-			Description: "Proxy configuration and status information",
-			Properties: map[string]*openapi3.SchemaRef{
-				"id": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "uuid",
-						Description: "Proxy unique identifier",
-					},
-				},
-				"name": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy name",
-					},
-				},
-				"description": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy description",
-					},
-				},
-				"protocol": {
-					Value: &openapi3.Schema{
-						Type: &openapi3.Types{"string"},
-						Enum: []interface{}{"http", "https", "socks5", "socks4"},
-						Description: "Proxy protocol",
-					},
-				},
-				"address": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy address",
-					},
-				},
-				"username": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy username",
-					},
-				},
-				"host": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy hostname or IP",
-					},
-				},
-				"port": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Description: "Proxy port number",
-					},
-				},
-				"isEnabled": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the proxy is enabled",
-					},
-				},
-				"isHealthy": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"boolean"},
-						Description: "Whether the proxy is healthy",
-					},
-				},
-				"lastStatus": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Last status message",
-					},
-				},
-				"lastCheckedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Last health check timestamp",
-					},
-				},
-				"latencyMs": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"integer"},
-						Description: "Last measured latency in milliseconds",
-					},
-				},
-				"city": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy city location",
-					},
-				},
-				"countryCode": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy country code",
-					},
-				},
-				"provider": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Description: "Proxy provider",
-					},
-				},
-				"createdAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Proxy creation timestamp",
-					},
-				},
-				"updatedAt": {
-					Value: &openapi3.Schema{
-						Type:        &openapi3.Types{"string"},
-						Format:      "date-time",
-						Description: "Proxy last update timestamp",
-					},
-				},
-			},
-		},
-	}
+	// Auto-generate Proxy schema from Go struct
+	utils.AddStructSchema(spec, reflect.TypeOf(models.Proxy{}), "Proxy")
 
 	// ProxyStatus schema
 	spec.Components.Schemas["ProxyStatus"] = &openapi3.SchemaRef{

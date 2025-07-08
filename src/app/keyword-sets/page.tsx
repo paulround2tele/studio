@@ -10,7 +10,7 @@ import { Loader2, Plus, Edit } from 'lucide-react';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import { apiClient, type components } from '@/lib/api-client/client';
 
-type KeywordSet = components['schemas']['KeywordSetResponse'];
+type KeywordSet = components['schemas']['KeywordSet'];
 
 export default function KeywordSetsPage() {
   const [sets, setSets] = useState<KeywordSet[]>([]);

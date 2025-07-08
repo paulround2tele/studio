@@ -5,9 +5,8 @@ import PageHeader from '@/components/shared/PageHeader';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
-type PersonaResponse = components['schemas']['PersonaResponse'];
-type Persona = PersonaResponse;
-type PersonaDetailResponse = { status: 'success' | 'error'; data?: PersonaResponse; message?: string };
+type Persona = components['schemas']['Persona'];
+type PersonaDetailResponse = { status: 'success' | 'error'; data?: Persona; message?: string };
 import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';

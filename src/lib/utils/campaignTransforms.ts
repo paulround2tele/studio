@@ -2,7 +2,13 @@
 // Campaign data transformation utilities for UI compatibility (OpenAPI Migration)
 
 import type { components } from '@/lib/api-client/types';
-import type { CampaignViewModel, CampaignType, CampaignStatus, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
+
+type Campaign = components['schemas']['Campaign'];
+type CampaignType = NonNullable<Campaign['campaignType']>;
+type CampaignStatus = NonNullable<Campaign['status']>;
+
+// Keep these frontend-specific types from legacy for now
+import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
 
 type OpenAPICampaign = components['schemas']['Campaign'];
 

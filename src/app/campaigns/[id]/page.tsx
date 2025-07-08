@@ -35,7 +35,9 @@ import { getWebSocketStreamManager } from '@/lib/websocket/WebSocketStreamManage
 import useCampaignOperations from '@/hooks/useCampaignOperations';
 
 // Types
-import type { CampaignType } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type CampaignType = components['schemas']['Campaign']['campaignType'];
 
 export default function RefactoredCampaignDetailsPage() {
   const params = useParams();

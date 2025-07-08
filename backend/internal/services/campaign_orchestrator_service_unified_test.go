@@ -22,6 +22,7 @@ func (s *CampaignOrchestratorUnifiedTestSuite) SetupTest() {
 	dgService := services.NewDomainGenerationServiceStable(s.DB, s.CampaignStore, s.CampaignJobStore, s.AuditLogStore)
 	dnsService := services.NewDNSCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.AuditLogStore, s.CampaignJobStore, s.AppConfig)
 	httpKeywordService := services.NewHTTPKeywordCampaignService(s.DB, s.CampaignStore, s.PersonaStore, s.ProxyStore, s.KeywordStore, s.AuditLogStore, s.CampaignJobStore, nil, nil, nil, s.AppConfig)
+	domainValidationService := services.NewDomainValidationService(s.DB, s.CampaignStore, s.PersonaStore)
 
 	s.orchestrator = services.NewCampaignOrchestratorService(
 		s.DB,
@@ -33,6 +34,7 @@ func (s *CampaignOrchestratorUnifiedTestSuite) SetupTest() {
 		dgService,
 		dnsService,
 		httpKeywordService,
+		domainValidationService,
 		nil,
 	)
 }

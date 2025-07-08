@@ -1,7 +1,10 @@
 
 "use client";
 
-import type { Proxy, ProxyStatus } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type Proxy = components['schemas']['Proxy'];
+type ProxyStatus = components['schemas']['ProxyStatus'];
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

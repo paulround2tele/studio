@@ -21,7 +21,7 @@ export interface FormErrorState {
 
 /**
  * Extracts field-specific errors from an API response
- * @param apiResponse - API response from our SessionApiClient
+ * @param apiResponse - API response from our auto-generated API client
  * @returns Object mapping field names to error messages
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,7 +42,7 @@ export function extractFieldErrors(apiResponse: any): FormErrorState {
 
 /**
  * Gets the main error message from an API response
- * @param apiResponse - API response from our SessionApiClient
+ * @param apiResponse - API response from our auto-generated API client
  * @returns Main error message string
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,7 +60,7 @@ export function extractMainError(apiResponse: any): string {
 
 /**
  * Checks if an API response has field-specific validation errors
- * @param apiResponse - API response from our SessionApiClient
+ * @param apiResponse - API response from our auto-generated API client
  * @returns True if the response contains field errors
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,7 +102,7 @@ export function combineValidationErrors(zodError?: unknown, apiFieldErrors?: For
 
 /**
  * Creates user-friendly error messages for common API scenarios
- * @param apiResponse - API response from our SessionApiClient
+ * @param apiResponse - API response from our auto-generated API client
  * @returns User-friendly error message
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

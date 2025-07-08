@@ -4,7 +4,12 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
-import type { CampaignViewModel } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+// Frontend-specific view model based on auto-generated Campaign type
+type CampaignViewModel = components['schemas']['Campaign'] & {
+  // Add any frontend-specific fields if needed
+};
 import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff, Trash2, Loader2 } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef, lazy, Suspense, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';

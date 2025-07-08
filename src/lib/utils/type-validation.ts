@@ -1,20 +1,22 @@
 // src/lib/utils/type-validation.ts
 // Type validation utilities for backend-frontend alignment
 import type {
-  Campaign,
   CampaignType,
   CampaignStatus,
   PersonaType,
   ProxyProtocol,
-  User,
   Session,
   Role,
   Permission,
-  GeneratedDomain,
-  DNSValidationResult,
-  HTTPKeywordResult,
-  CampaignJob,
 } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type Campaign = components['schemas']['Campaign'];
+type User = components['schemas']['User'];
+type GeneratedDomain = components['schemas']['GeneratedDomain'];
+type DNSValidationResult = components['schemas']['DNSValidationResult'];
+type HTTPKeywordResult = components['schemas']['HTTPKeywordResult'];
+type CampaignJob = any; // Keep legacy for complex validation logic
 
 // Runtime type validation functions
 export function validateCampaignType(value: unknown): value is CampaignType {

@@ -3,13 +3,16 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import type { 
-  CampaignViewModel, 
-  CampaignStatus, 
-  GeneratedDomain, 
+import type {
+  CampaignViewModel,
+  CampaignStatus,
   CampaignValidationItem,
-  DomainActivityStatus 
+  DomainActivityStatus
 } from '@/lib/types';
+import type { components } from '@/lib/api-client/types';
+
+type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
+type Campaign = components['schemas']['Campaign'];
 
 // WebSocket message types aligned with backend contract
 export interface StreamingMessage {
@@ -59,7 +62,7 @@ export interface StreamingStats {
 
 // Domain cache for memory-efficient management
 export interface DomainCacheEntry {
-  domain: GeneratedDomain | CampaignValidationItem;
+  domain: GeneratedDomainBackend | CampaignValidationItem;
   lastAccessed: number;
   isVisible: boolean;
 }
@@ -74,7 +77,7 @@ export interface CampaignDetailsStore {
   
   // Domain data (source of truth: WebSocket + API)
   domains: Map<string, DomainCacheEntry>;
-  generatedDomains: GeneratedDomain[];
+  generatedDomains: GeneratedDomainBackend[];
   dnsCampaignItems: CampaignValidationItem[];
   httpCampaignItems: CampaignValidationItem[];
   totalDomainCount: number;
@@ -94,14 +97,14 @@ export interface CampaignDetailsStore {
   setError: (error: string | null) => void;
   updateFromWebSocket: (message: StreamingMessage) => void;
   updateFromAPI: (data: { 
-    generatedDomains?: GeneratedDomain[];
+    generatedDomains?: GeneratedDomainBackend[];
     dnsCampaignItems?: CampaignValidationItem[];
     httpCampaignItems?: CampaignValidationItem[];
   }) => void;
   updateFilters: (filters: Partial<TableFilters>) => void;
   updatePagination: (pagination: Partial<PaginationState>) => void;
   setActionLoading: (action: string, loading: boolean) => void;
-  addDomain: (domain: GeneratedDomain) => void;
+  addDomain: (domain: GeneratedDomainBackend) => void;
   updateStreamingStats: (stats: Partial<StreamingStats>) => void;
   selectDomain: (domainId: string, selected: boolean) => void;
   clearSelectedDomains: () => void;
@@ -190,7 +193,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       if (message.type === 'domain_generated' && message.data) {
         const payload = message.data as DomainGenerationPayload;
         if (payload.domain) {
-          const newDomain: GeneratedDomain = {
+          const newDomain: GeneratedDomainBackend = {
             id: payload.domainId || `${payload.domain}-${Date.now()}`,
             generationCampaignId: payload.campaignId,
             domainName: payload.domain,
@@ -200,6 +203,14 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
           };
           
           get().addDomain(newDomain);
+        }
+      }
+
+      if (message.type === 'campaign_status' && message.data) {
+        const payload = message.data as { campaignId: string; status: string };
+        const state = get();
+        if (state.campaign && payload.campaignId === state.campaign.id) {
+          set({ campaign: { ...state.campaign, status: payload.status as CampaignStatus } });
         }
       }
     },
@@ -212,11 +223,13 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
         // Update domain cache
         const domains = new Map(get().domains);
         data.generatedDomains.forEach(domain => {
-          domains.set(domain.id, {
-            domain,
-            lastAccessed: Date.now(),
-            isVisible: false,
-          });
+          if (domain.id) {
+            domains.set(domain.id, {
+              domain,
+              lastAccessed: Date.now(),
+              isVisible: false,
+            });
+          }
         });
         updates.domains = domains;
         updates.totalDomainCount = data.generatedDomains.length;
@@ -251,7 +264,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       const domains = new Map(state.domains);
       
       // Check for duplicates
-      if (domains.has(domain.id)) {
+      if (!domain.id || domains.has(domain.id)) {
         return;
       }
       
@@ -297,10 +310,10 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       
       // Apply filters
       const filteredDomains = allDomains.filter(entry => {
-        const domain = entry.domain as GeneratedDomain;
+        const domain = entry.domain as GeneratedDomainBackend;
         
         // Search filter
-        if (state.filters.searchTerm && 
+        if (state.filters.searchTerm && domain.domainName &&
             !domain.domainName.toLowerCase().includes(state.filters.searchTerm.toLowerCase())) {
           return false;
         }
@@ -316,13 +329,13 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       
       // Apply sorting
       filteredDomains.sort((a, b) => {
-        const domainA = a.domain as GeneratedDomain;
-        const domainB = b.domain as GeneratedDomain;
+        const domainA = a.domain as GeneratedDomainBackend;
+        const domainB = b.domain as GeneratedDomainBackend;
         
         let comparison = 0;
         switch (state.filters.sortBy) {
           case 'domainName':
-            comparison = domainA.domainName.localeCompare(domainB.domainName);
+            comparison = (domainA.domainName || '').localeCompare(domainB.domainName || '');
             break;
           case 'generatedDate':
             comparison = new Date(domainA.generatedAt || '').getTime() - 

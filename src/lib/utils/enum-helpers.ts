@@ -1,15 +1,60 @@
 /**
  * Enum Helper Utilities
  * Provides type-safe enum operations and validation
+ * Updated to use OpenAPI types directly
  */
 
-import {
-  ModelsCampaignTypeEnum,
-  ModelsCampaignStatusEnum,
-  ModelsPersonaTypeEnum,
-  ModelsProxyProtocolEnum,
-  ModelsKeywordRuleTypeEnum
-} from '@/lib/types/models-aligned';
+import type { components } from '@/lib/api-client/types';
+
+// Extract OpenAPI union types
+type CampaignType = components["schemas"]["Campaign"]["campaignType"];
+type CampaignStatus = components["schemas"]["Campaign"]["status"];
+type PersonaType = components["schemas"]["Persona"]["personaType"];
+type ProxyProtocol = components["schemas"]["Proxy"]["protocol"];
+type KeywordRuleType = components["schemas"]["KeywordRule"]["ruleType"];
+
+// Create enum-like objects for backwards compatibility
+export const ModelsCampaignTypeEnum = {
+  DomainGeneration: "domain_generation" as const,
+  DnsValidation: "dns_validation" as const,
+  HttpKeywordValidation: "http_keyword_validation" as const
+} as const;
+
+export const ModelsCampaignStatusEnum = {
+  Pending: "pending" as const,
+  Queued: "queued" as const,
+  Running: "running" as const,
+  Pausing: "pausing" as const,
+  Paused: "paused" as const,
+  Completed: "completed" as const,
+  Failed: "failed" as const,
+  Archived: "archived" as const,
+  Cancelled: "cancelled" as const
+} as const;
+
+export const ModelsPersonaTypeEnum = {
+  Dns: "dns" as const,
+  Http: "http" as const
+} as const;
+
+export const ModelsProxyProtocolEnum = {
+  Http: "http" as const,
+  Https: "https" as const,
+  Socks5: "socks5" as const,
+  Socks4: "socks4" as const
+} as const;
+
+export const ModelsKeywordRuleTypeEnum = {
+  String: "string" as const,
+  Regex: "regex" as const
+} as const;
+
+// Type aliases for consistency
+export type ModelsCampaignTypeEnumType = typeof ModelsCampaignTypeEnum[keyof typeof ModelsCampaignTypeEnum];
+export type ModelsCampaignStatusEnumType = typeof ModelsCampaignStatusEnum[keyof typeof ModelsCampaignStatusEnum];
+export type ModelsPersonaTypeEnumType = typeof ModelsPersonaTypeEnum[keyof typeof ModelsPersonaTypeEnum];
+export type ModelsProxyProtocolEnumType = typeof ModelsProxyProtocolEnum[keyof typeof ModelsProxyProtocolEnum];
+export type ModelsKeywordRuleTypeEnumType = typeof ModelsKeywordRuleTypeEnum[keyof typeof ModelsKeywordRuleTypeEnum];
 
 /**
  * Type-safe enum checker
@@ -43,10 +88,10 @@ export function getEnumValues<T extends Record<string, string>>(
  * Campaign type helpers
  */
 export const CampaignTypeHelpers = {
-  isValid: (value: unknown): value is ModelsCampaignTypeEnum => 
+  isValid: (value: unknown): value is ModelsCampaignTypeEnumType =>
     isEnumValue(value, ModelsCampaignTypeEnum),
   
-  getDisplayName: (type: ModelsCampaignTypeEnum): string => {
+  getDisplayName: (type: ModelsCampaignTypeEnumType): string => {
     switch (type) {
       case ModelsCampaignTypeEnum.DomainGeneration:
         return 'Domain Generation';
@@ -59,7 +104,7 @@ export const CampaignTypeHelpers = {
     }
   },
   
-  getShortName: (type: ModelsCampaignTypeEnum): string => {
+  getShortName: (type: ModelsCampaignTypeEnumType): string => {
     switch (type) {
       case ModelsCampaignTypeEnum.DomainGeneration:
         return 'Gen';
@@ -72,7 +117,7 @@ export const CampaignTypeHelpers = {
     }
   },
   
-  getIcon: (type: ModelsCampaignTypeEnum): string => {
+  getIcon: (type: ModelsCampaignTypeEnumType): string => {
     switch (type) {
       case ModelsCampaignTypeEnum.DomainGeneration:
         return '🔧';
@@ -90,10 +135,10 @@ export const CampaignTypeHelpers = {
  * Campaign status helpers
  */
 export const CampaignStatusHelpers = {
-  isValid: (value: unknown): value is ModelsCampaignStatusEnum => 
+  isValid: (value: unknown): value is ModelsCampaignStatusEnumType =>
     isEnumValue(value, ModelsCampaignStatusEnum),
   
-  isActive: (status: ModelsCampaignStatusEnum): boolean => {
+  isActive: (status: ModelsCampaignStatusEnumType): boolean => {
     switch (status) {
       case ModelsCampaignStatusEnum.Running:
       case ModelsCampaignStatusEnum.Pausing:
@@ -103,7 +148,7 @@ export const CampaignStatusHelpers = {
     }
   },
   
-  isTerminal: (status: ModelsCampaignStatusEnum): boolean => {
+  isTerminal: (status: ModelsCampaignStatusEnumType): boolean => {
     switch (status) {
       case ModelsCampaignStatusEnum.Completed:
       case ModelsCampaignStatusEnum.Failed:
@@ -114,7 +159,7 @@ export const CampaignStatusHelpers = {
     }
   },
   
-  canStart: (status: ModelsCampaignStatusEnum): boolean => {
+  canStart: (status: ModelsCampaignStatusEnumType): boolean => {
     switch (status) {
       case ModelsCampaignStatusEnum.Pending:
       case ModelsCampaignStatusEnum.Queued:
@@ -124,15 +169,15 @@ export const CampaignStatusHelpers = {
     }
   },
   
-  canPause: (status: ModelsCampaignStatusEnum): boolean => {
+  canPause: (status: ModelsCampaignStatusEnumType): boolean => {
     return status === ModelsCampaignStatusEnum.Running;
   },
   
-  canResume: (status: ModelsCampaignStatusEnum): boolean => {
+  canResume: (status: ModelsCampaignStatusEnumType): boolean => {
     return status === ModelsCampaignStatusEnum.Paused;
   },
   
-  canCancel: (status: ModelsCampaignStatusEnum): boolean => {
+  canCancel: (status: ModelsCampaignStatusEnumType): boolean => {
     switch (status) {
       case ModelsCampaignStatusEnum.Pending:
       case ModelsCampaignStatusEnum.Queued:
@@ -145,7 +190,7 @@ export const CampaignStatusHelpers = {
     }
   },
   
-  getDisplayName: (status: ModelsCampaignStatusEnum): string => {
+  getDisplayName: (status: ModelsCampaignStatusEnumType): string => {
     switch (status) {
       case ModelsCampaignStatusEnum.Pending:
         return 'Pending';
@@ -163,12 +208,14 @@ export const CampaignStatusHelpers = {
         return 'Failed';
       case ModelsCampaignStatusEnum.Cancelled:
         return 'Cancelled';
+      case ModelsCampaignStatusEnum.Archived:
+        return 'Archived';
       default:
         return exhaustiveCheck(status);
     }
   },
   
-  getColor: (status: ModelsCampaignStatusEnum): string => {
+  getColor: (status: ModelsCampaignStatusEnumType): string => {
     switch (status) {
       case ModelsCampaignStatusEnum.Pending:
       case ModelsCampaignStatusEnum.Queued:
@@ -185,6 +232,8 @@ export const CampaignStatusHelpers = {
         return 'red';
       case ModelsCampaignStatusEnum.Cancelled:
         return 'gray';
+      case ModelsCampaignStatusEnum.Archived:
+        return 'gray';
       default:
         return exhaustiveCheck(status);
     }
@@ -195,10 +244,10 @@ export const CampaignStatusHelpers = {
  * Persona type helpers
  */
 export const PersonaTypeHelpers = {
-  isValid: (value: unknown): value is ModelsPersonaTypeEnum => 
+  isValid: (value: unknown): value is ModelsPersonaTypeEnumType =>
     isEnumValue(value, ModelsPersonaTypeEnum),
   
-  getDisplayName: (type: ModelsPersonaTypeEnum): string => {
+  getDisplayName: (type: ModelsPersonaTypeEnumType): string => {
     switch (type) {
       case ModelsPersonaTypeEnum.Dns:
         return 'DNS Persona';
@@ -209,7 +258,7 @@ export const PersonaTypeHelpers = {
     }
   },
   
-  getIcon: (type: ModelsPersonaTypeEnum): string => {
+  getIcon: (type: ModelsPersonaTypeEnumType): string => {
     switch (type) {
       case ModelsPersonaTypeEnum.Dns:
         return '🔍';
@@ -225,10 +274,10 @@ export const PersonaTypeHelpers = {
  * Proxy protocol helpers
  */
 export const ProxyProtocolHelpers = {
-  isValid: (value: unknown): value is ModelsProxyProtocolEnum => 
+  isValid: (value: unknown): value is ModelsProxyProtocolEnumType =>
     isEnumValue(value, ModelsProxyProtocolEnum),
   
-  getDisplayName: (protocol: ModelsProxyProtocolEnum): string => {
+  getDisplayName: (protocol: ModelsProxyProtocolEnumType): string => {
     switch (protocol) {
       case ModelsProxyProtocolEnum.Http:
         return 'HTTP';
@@ -243,7 +292,7 @@ export const ProxyProtocolHelpers = {
     }
   },
   
-  getDefaultPort: (protocol: ModelsProxyProtocolEnum): number => {
+  getDefaultPort: (protocol: ModelsProxyProtocolEnumType): number => {
     switch (protocol) {
       case ModelsProxyProtocolEnum.Http:
         return 80;
@@ -258,7 +307,7 @@ export const ProxyProtocolHelpers = {
     }
   },
   
-  isSecure: (protocol: ModelsProxyProtocolEnum): boolean => {
+  isSecure: (protocol: ModelsProxyProtocolEnumType): boolean => {
     return protocol === ModelsProxyProtocolEnum.Https;
   }
 } as const;
@@ -267,10 +316,10 @@ export const ProxyProtocolHelpers = {
  * Keyword rule type helpers
  */
 export const KeywordRuleTypeHelpers = {
-  isValid: (value: unknown): value is ModelsKeywordRuleTypeEnum => 
+  isValid: (value: unknown): value is ModelsKeywordRuleTypeEnumType =>
     isEnumValue(value, ModelsKeywordRuleTypeEnum),
   
-  getDisplayName: (type: ModelsKeywordRuleTypeEnum): string => {
+  getDisplayName: (type: ModelsKeywordRuleTypeEnumType): string => {
     switch (type) {
       case ModelsKeywordRuleTypeEnum.String:
         return 'Exact Match';
@@ -281,7 +330,7 @@ export const KeywordRuleTypeHelpers = {
     }
   },
   
-  getHelpText: (type: ModelsKeywordRuleTypeEnum): string => {
+  getHelpText: (type: ModelsKeywordRuleTypeEnumType): string => {
     switch (type) {
       case ModelsKeywordRuleTypeEnum.String:
         return 'Matches the exact string (case-sensitive option available)';
@@ -326,14 +375,3 @@ export function stringsToEnums<T extends Record<string, string>>(
     .map(v => stringToEnum(v, enumObj))
     .filter((v): v is T[keyof T] => v !== undefined);
 }
-
-/**
- * Export all enum objects for direct import
- */
-export {
-  ModelsCampaignTypeEnum,
-  ModelsCampaignStatusEnum,
-  ModelsPersonaTypeEnum,
-  ModelsProxyProtocolEnum,
-  ModelsKeywordRuleTypeEnum
-} from '@/lib/types/models-aligned';
