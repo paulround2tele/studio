@@ -69,64 +69,92 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
       httpKeywordResults: []
     };
 
-    // Fetch detailed data in parallel
-    const [
-      generatedDomainsResponse,
-      dnsValidationResponse,
-      httpKeywordResponse
-    ] = await Promise.allSettled([
+    // Determine which APIs to call based on campaign type
+    const isHttpKeywordCampaign = campaign.campaignType === 'http_keyword_validation';
+    
+    // Build requests array - only include HTTP keyword request for HTTP campaigns
+    const requests = [
       apiClient.getCampaignGeneratedDomains(campaignId, { limit: 1000 }),
-      apiClient.getCampaignDNSValidationResults(campaignId, { limit: 1000 }),
-      apiClient.getCampaignHTTPKeywordResults(campaignId, { limit: 1000 })
-    ]);
-
-    // Process generated domains
-    if (generatedDomainsResponse.status === 'fulfilled') {
-      const domainsData = generatedDomainsResponse.value as GeneratedDomainsResponse;
-      if (domainsData.data) {
-        richData.domains = domainsData.data
-          .map(d => d.domainName)
-          .filter(Boolean) as string[];
-      }
+      apiClient.getCampaignDNSValidationResults(campaignId, { limit: 1000 })
+    ];
+    
+    if (isHttpKeywordCampaign) {
+      requests.push(apiClient.getCampaignHTTPKeywordResults(campaignId, { limit: 1000 }));
     }
 
-    // Process DNS validation results
-    if (dnsValidationResponse.status === 'fulfilled') {
-      const dnsData = dnsValidationResponse.value as DNSValidationResultsResponse;
-      if (dnsData.data) {
-        richData.dnsValidatedDomains = dnsData.data
-          .filter(d => d.validationStatus === 'valid')
-          .map(d => d.domainName)
-          .filter(Boolean) as string[];
+    // Fetch detailed data in parallel
+    const responses = await Promise.allSettled(requests);
+    
+    // Safely destructure with proper bounds checking
+    const generatedDomainsResponse = responses[0];
+    const dnsValidationResponse = responses[1];
+    const httpKeywordResponse = responses[2]; // May be undefined for non-HTTP campaigns
+
+    // Process generated domains with proper error handling
+    if (generatedDomainsResponse?.status === 'fulfilled') {
+      try {
+        const domainsData = generatedDomainsResponse.value as GeneratedDomainsResponse;
+        if (domainsData?.data && Array.isArray(domainsData.data)) {
+          richData.domains = domainsData.data
+            .map(d => d?.domainName)
+            .filter(Boolean) as string[];
+        }
+      } catch (error) {
+        console.warn(`Failed to process domains data for campaign ${campaignId}:`, error);
       }
+    } else if (generatedDomainsResponse?.status === 'rejected') {
+      console.warn(`Failed to fetch domains for campaign ${campaignId}:`, generatedDomainsResponse.reason);
     }
 
-    // Process HTTP keyword results
-    if (httpKeywordResponse.status === 'fulfilled') {
-      const httpData = httpKeywordResponse.value as HTTPKeywordResultsResponse;
-      if (httpData.data) {
-        richData.httpKeywordResults = httpData.data;
+    // Process DNS validation results with proper error handling
+    if (dnsValidationResponse?.status === 'fulfilled') {
+      try {
+        const dnsData = dnsValidationResponse.value as DNSValidationResultsResponse;
+        if (dnsData?.data && Array.isArray(dnsData.data)) {
+          richData.dnsValidatedDomains = dnsData.data
+            .filter(d => d?.validationStatus === 'valid')
+            .map(d => d?.domainName)
+            .filter(Boolean) as string[];
+        }
+      } catch (error) {
+        console.warn(`Failed to process DNS data for campaign ${campaignId}:`, error);
+      }
+    } else if (dnsValidationResponse?.status === 'rejected') {
+      console.warn(`Failed to fetch DNS validation for campaign ${campaignId}:`, dnsValidationResponse.reason);
+    }
+
+    // Process HTTP keyword results only for HTTP campaigns
+    if (isHttpKeywordCampaign && httpKeywordResponse?.status === 'fulfilled') {
+      try {
+        const httpData = httpKeywordResponse.value as HTTPKeywordResultsResponse;
+        if (httpData?.data && Array.isArray(httpData.data)) {
+          richData.httpKeywordResults = httpData.data;
         
-        // Extract leads from HTTP keyword results
-        const allLeads: RichCampaignData['leads'] = [];
-        httpData.data.forEach(result => {
-          // Create synthetic lead data from HTTP results
-          // In a real implementation, this would come from a dedicated leads endpoint
-          if (result.domainName && result.validationStatus === 'valid') {
-            const keywordCount = (result.foundAdHocKeywords?.length || 0) +
-                               Object.keys(result.foundKeywordsFromSets || {}).length;
-            
-            allLeads.push({
-              id: result.id || `${result.domainName}-lead`,
-              name: result.pageTitle || result.domainName,
-              sourceUrl: `https://${result.domainName}`,
-              similarityScore: keywordCount > 0 ? Math.min(keywordCount / 5, 1) : undefined,
-              company: result.domainName
-            });
-          }
-        });
-        richData.leads = allLeads;
+          // Extract leads from HTTP keyword results
+          const allLeads: RichCampaignData['leads'] = [];
+          httpData.data.forEach(result => {
+            // Create synthetic lead data from HTTP results
+            // In a real implementation, this would come from a dedicated leads endpoint
+            if (result.domainName && result.validationStatus === 'valid') {
+              const keywordCount = (result.foundAdHocKeywords?.length || 0) +
+                                 Object.keys(result.foundKeywordsFromSets || {}).length;
+              
+              allLeads.push({
+                id: result.id || `${result.domainName}-lead`,
+                name: result.pageTitle || result.domainName,
+                sourceUrl: `https://${result.domainName}`,
+                similarityScore: keywordCount > 0 ? Math.min(keywordCount / 5, 1) : undefined,
+                company: result.domainName
+              });
+            }
+          });
+          richData.leads = allLeads;
+        }
+      } catch (error) {
+        console.warn(`Failed to process HTTP keyword data for campaign ${campaignId}:`, error);
       }
+    } else if (isHttpKeywordCampaign && httpKeywordResponse?.status === 'rejected') {
+      console.warn(`Failed to fetch HTTP keyword results for campaign ${campaignId}:`, httpKeywordResponse.reason);
     }
 
     // Cache the result

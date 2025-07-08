@@ -339,7 +339,7 @@ export default function LatestActivityTable() {
     // CRITICAL FIX: Reduced polling from every 10 seconds to every 5 minutes (300 seconds) to prevent excessive backend requests
     const intervalId = setInterval(() => fetchAndProcessData(false), 300000); // Poll every 5 minutes without full loading spinner
     return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [fetchAndProcessData]);
+  }, []); // Remove fetchAndProcessData dependency to prevent infinite loop
 
   // Pagination logic
   const totalActivities = allActivityData.length; // This is now the length of the capped & sorted list
