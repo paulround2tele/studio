@@ -33,9 +33,15 @@ const getSyncBackendUrl = (): string => {
   return 'http://localhost:8080/api/v2';
 };
 
-// Create shared configuration
+// Create shared configuration with credentials for session-based auth
 const config = new Configuration({
   basePath: getSyncBackendUrl(),
+  baseOptions: {
+    withCredentials: true, // Include session cookies in requests
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  },
 });
 
 // Export configured API clients
