@@ -11,9 +11,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { apiClient, type OperationRequestBody, type ApiPaths } from '@/lib/api-client/client';
+import { keywordSetsApi } from '@/lib/api-client/client';
 
-type UpdateKeywordSetPayload = OperationRequestBody<ApiPaths['/keywords/sets/{setId}']['put']>;
+// Updated to use the actual request type from auto-generated client
+interface UpdateKeywordSetPayload {
+  name: string;
+  description?: string;
+  isEnabled: boolean;
+}
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 
 export default function EditKeywordSetPage() {
@@ -30,11 +35,11 @@ export default function EditKeywordSetPage() {
   useEffect(() => {
     async function load() {
       try {
-        const resp = await apiClient.getKeywordSetById(params.id as string);
+        const resp = await keywordSetsApi.getKeywordSet(params.id as string);
         form.reset({
-          name: resp.name,
-          description: resp.description || '',
-          isEnabled: resp.isEnabled,
+          name: resp.data.name,
+          description: resp.data.description || '',
+          isEnabled: resp.data.isEnabled,
         });
       } catch (e) {
         console.error(e);
@@ -51,7 +56,7 @@ export default function EditKeywordSetPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await apiClient.updateKeywordSet(params.id as string, data);
+      await keywordSetsApi.updateKeywordSet(params.id as string, data);
       setSuccessMessage('Keyword set updated');
       setTimeout(() => router.push('/keyword-sets'), 500);
     } catch (e) {

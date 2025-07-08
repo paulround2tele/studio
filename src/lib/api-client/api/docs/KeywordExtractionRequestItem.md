@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { KeywordExtractionRequestItem } from './api';
+import { KeywordExtractionRequestItem } from 'domainflow-api-client';
 
 const instance: KeywordExtractionRequestItem = {
     dnsPersonaId,

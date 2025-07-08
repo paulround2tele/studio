@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { BatchKeywordExtractionRequest } from './api';
+import { BatchKeywordExtractionRequest } from 'domainflow-api-client';
 
 const instance: BatchKeywordExtractionRequest = {
     items,

@@ -1,6 +1,6 @@
 # PersonasApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -25,7 +25,7 @@ import {
     PersonasApi,
     Configuration,
     CreatePersonaRequest
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
@@ -81,7 +81,7 @@ Deletes a persona by ID
 import {
     PersonasApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
@@ -137,7 +137,7 @@ Gets a DNS persona by ID with typed configuration
 import {
     PersonasApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
@@ -193,7 +193,7 @@ Gets an HTTP persona by ID with typed configuration
 import {
     PersonasApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
@@ -249,7 +249,7 @@ Gets a persona by ID regardless of type
 import {
     PersonasApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
@@ -305,7 +305,7 @@ Lists all personas with optional filtering by type and enabled status
 import {
     PersonasApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
@@ -369,7 +369,7 @@ Tests a persona by ID
 import {
     PersonasApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
@@ -426,7 +426,7 @@ import {
     PersonasApi,
     Configuration,
     UpdatePersonaRequest
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);

@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { LeadItem } from './api';
+import { LeadItem } from 'domainflow-api-client';
 
 const instance: LeadItem = {
     company,

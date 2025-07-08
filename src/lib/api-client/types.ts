@@ -548,6 +548,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/domain-generation/pattern-offset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get domain generation pattern offset
+         * @description Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+         */
+        post: operations["getDomainGenerationPatternOffset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/change-password": {
         parameters: {
             query?: never;
@@ -2094,6 +2114,22 @@ export interface components {
         /** @description Pagination metadata */
         PaginationMetadata: {
             page?: components["schemas"]["PageInfo"];
+        };
+        /** @description Request to get the current offset for a domain generation pattern */
+        PatternOffsetRequest: {
+            /** @description Character set for domain generation (e.g., 'abc', '123') */
+            characterSet: string;
+            /** @description Constant string part of the domain */
+            constantString: string;
+            /**
+             * @description Type of pattern (prefix, suffix, or both)
+             * @enum {string}
+             */
+            patternType: "prefix" | "suffix" | "both";
+            /** @description Top-level domain (e.g., '.com', '.net') */
+            tld: string;
+            /** @description Length of the variable part */
+            variableLength: number;
         };
         Persona: {
             configDetails?: Record<string, never>;
@@ -4080,6 +4116,70 @@ export interface operations {
             };
             /** @description Campaign is in an invalid state for this operation */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDomainGenerationPatternOffset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Pattern configuration */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatternOffsetRequest"];
+            };
+        };
+        responses: {
+            /** @description Current offset for the pattern */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: int64
+                         * @description Current global offset for this pattern signature
+                         */
+                        currentOffset: number;
+                    };
+                };
+            };
+            /** @description Invalid request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

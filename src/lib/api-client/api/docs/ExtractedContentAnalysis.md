@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ExtractedContentAnalysis } from './api';
+import { ExtractedContentAnalysis } from 'domainflow-api-client';
 
 const instance: ExtractedContentAnalysis = {
     advancedKeywords,

@@ -41,7 +41,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Campaign } from './api';
+import { Campaign } from 'domainflow-api-client';
 
 const instance: Campaign = {
     avgProcessingRate,

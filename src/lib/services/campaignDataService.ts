@@ -56,7 +56,7 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
 
   try {
     // Get campaign summary
-    const campaignResponse = await apiClient.getCampaignById(campaignId);
+    const campaignResponse = await apiClient.getCampaignDetails(campaignId);
     const campaignDetails = campaignResponse as CampaignDetailsResponse;
     const campaign = campaignDetails.campaign as CampaignViewModel;
 
@@ -74,12 +74,12 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     
     // Build requests array - only include HTTP keyword request for HTTP campaigns
     const requests = [
-      apiClient.getCampaignGeneratedDomains(campaignId, { limit: 1000 }),
-      apiClient.getCampaignDNSValidationResults(campaignId, { limit: 1000 })
+      apiClient.getGeneratedDomains(campaignId, 1000),
+      apiClient.getDNSValidationResults(campaignId, 1000)
     ];
     
     if (isHttpKeywordCampaign) {
-      requests.push(apiClient.getCampaignHTTPKeywordResults(campaignId, { limit: 1000 }));
+      requests.push(apiClient.getHTTPKeywordResults(campaignId, 1000));
     }
 
     // Fetch detailed data in parallel
@@ -93,7 +93,7 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     // Process generated domains with proper error handling
     if (generatedDomainsResponse?.status === 'fulfilled') {
       try {
-        const domainsData = generatedDomainsResponse.value as GeneratedDomainsResponse;
+        const domainsData = (generatedDomainsResponse.value as any).data as GeneratedDomainsResponse;
         if (domainsData?.data && Array.isArray(domainsData.data)) {
           richData.domains = domainsData.data
             .map(d => d?.domainName)
@@ -109,7 +109,7 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     // Process DNS validation results with proper error handling
     if (dnsValidationResponse?.status === 'fulfilled') {
       try {
-        const dnsData = dnsValidationResponse.value as DNSValidationResultsResponse;
+        const dnsData = (dnsValidationResponse.value as any).data as DNSValidationResultsResponse;
         if (dnsData?.data && Array.isArray(dnsData.data)) {
           richData.dnsValidatedDomains = dnsData.data
             .filter(d => d?.validationStatus === 'valid')
@@ -126,7 +126,7 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     // Process HTTP keyword results only for HTTP campaigns
     if (isHttpKeywordCampaign && httpKeywordResponse?.status === 'fulfilled') {
       try {
-        const httpData = httpKeywordResponse.value as HTTPKeywordResultsResponse;
+        const httpData = (httpKeywordResponse.value as any).data as HTTPKeywordResultsResponse;
         if (httpData?.data && Array.isArray(httpData.data)) {
           richData.httpKeywordResults = httpData.data;
         
@@ -170,7 +170,7 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     
     // Fallback to campaign summary with empty arrays
     try {
-      const campaignResponse = await apiClient.getCampaignById(campaignId);
+      const campaignResponse = await apiClient.getCampaignDetails(campaignId);
       const campaignDetails = campaignResponse as CampaignDetailsResponse;
       const campaign = campaignDetails.campaign as CampaignViewModel;
       

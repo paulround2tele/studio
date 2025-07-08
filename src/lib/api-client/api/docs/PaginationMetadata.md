@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PaginationMetadata } from './api';
+import { PaginationMetadata } from 'domainflow-api-client';
 
 const instance: PaginationMetadata = {
     page,

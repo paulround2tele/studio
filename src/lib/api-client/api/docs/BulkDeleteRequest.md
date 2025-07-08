@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { BulkDeleteRequest } from './api';
+import { BulkDeleteRequest } from 'domainflow-api-client';
 
 const instance: BulkDeleteRequest = {
     campaignIds,

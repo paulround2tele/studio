@@ -19,7 +19,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { LoggingConfig } from './api';
+import { LoggingConfig } from 'domainflow-api-client';
 
 const instance: LoggingConfig = {
     enableFileLogging,

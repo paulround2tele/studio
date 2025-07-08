@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { CreateKeywordSetRequest } from './api';
+import { CreateKeywordSetRequest } from 'domainflow-api-client';
 
 const instance: CreateKeywordSetRequest = {
     description,

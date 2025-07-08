@@ -1,6 +1,6 @@
 # ConfigApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -18,7 +18,7 @@ Returns current feature flag settings
 import {
     ConfigApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigApi(configuration);
@@ -66,7 +66,7 @@ import {
     ConfigApi,
     Configuration,
     FeatureFlags
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigApi(configuration);

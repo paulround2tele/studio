@@ -479,7 +479,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           let foundCampaign = null;
           
           for (const key of possibleKeys) {
-            const responseAsRecord = response as Record<string, unknown>;
+            const responseAsRecord = response.data as Record<string, unknown>;
             if (key in responseAsRecord && responseAsRecord[key] && typeof responseAsRecord[key] === 'object') {
               const nestedObj = responseAsRecord[key] as Record<string, unknown>;
               if ('id' in nestedObj && nestedObj.id) {

@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ChangePasswordRequest } from './api';
+import { ChangePasswordRequest } from 'domainflow-api-client';
 
 const instance: ChangePasswordRequest = {
     currentPassword,

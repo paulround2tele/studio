@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ProxyPool } from './api';
+import { ProxyPool } from 'domainflow-api-client';
 
 const instance: ProxyPool = {
     createdAt,

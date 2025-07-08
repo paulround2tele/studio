@@ -11,9 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { apiClient, type OperationRequestBody, type ApiPaths } from '@/lib/api-client/client';
+import { keywordSetsApi, type CreateKeywordSetRequest } from '@/lib/api-client/client';
 
-type CreateKeywordSetPayload = OperationRequestBody<ApiPaths['/keywords/sets']['post']>;
+type CreateKeywordSetPayload = CreateKeywordSetRequest;
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 
 export default function NewKeywordSetPage() {
@@ -30,7 +30,7 @@ export default function NewKeywordSetPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await apiClient.createKeywordSet(data);
+      await keywordSetsApi.createKeywordSet(data);
       setSuccessMessage('Keyword set created');
       setTimeout(() => router.push('/keyword-sets'), 500);
     } catch (e) {

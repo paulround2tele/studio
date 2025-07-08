@@ -213,7 +213,7 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
         let foundCampaign = null;
         
         for (const key of possibleKeys) {
-          const responseAsRecord = response as Record<string, unknown>;
+          const responseAsRecord = response.data as Record<string, unknown>;
           if (key in responseAsRecord && responseAsRecord[key] && typeof responseAsRecord[key] === 'object') {
             const nestedObj = responseAsRecord[key] as Record<string, unknown>;
             if ('id' in nestedObj && nestedObj.id) {
@@ -288,7 +288,7 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
           </DialogTitle>
           <DialogDescription>
             Configure the settings for the next phase of your campaign pipeline.
-            This will create a new {phaseDisplayNames[phaseType]?.toLowerCase()} campaign using domains from "{sourceCampaign?.name}".
+            This will create a new {phaseDisplayNames[phaseType]?.toLowerCase()} campaign using domains from &quot;{sourceCampaign?.name}&quot;.
           </DialogDescription>
         </DialogHeader>
 

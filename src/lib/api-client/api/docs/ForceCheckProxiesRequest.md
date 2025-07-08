@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ForceCheckProxiesRequest } from './api';
+import { ForceCheckProxiesRequest } from 'domainflow-api-client';
 
 const instance: ForceCheckProxiesRequest = {
     ids,

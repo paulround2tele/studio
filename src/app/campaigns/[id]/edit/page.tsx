@@ -40,9 +40,9 @@ function EditCampaignPageContent() {
       startLoading(loadingOperationId, "Loading campaign for editing");
       setError(null);
       try {
-        const response = await apiClient.getCampaignById(campaignId);
-        if (response.campaign) {
-          setCampaign(response.campaign as Campaign);
+        const response = await apiClient.getCampaignDetails(campaignId);
+        if (response.data.campaign) {
+          setCampaign(response.data.campaign as Campaign);
         } else {
           setError("Campaign not found.");
           setCampaign(null);

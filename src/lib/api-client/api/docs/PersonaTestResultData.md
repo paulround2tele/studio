@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PersonaTestResultData } from './api';
+import { PersonaTestResultData } from 'domainflow-api-client';
 
 const instance: PersonaTestResultData = {
     message,

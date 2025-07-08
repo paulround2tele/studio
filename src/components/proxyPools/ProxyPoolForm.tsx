@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { apiClient, type components } from "@/lib/api-client/client";
+import { proxyPoolsApi, type components } from "@/lib/api-client/client";
 
 type ProxyPool = components['schemas']['ProxyPool'];
 import { useToast } from "@/hooks/use-toast";
@@ -57,11 +57,11 @@ export default function ProxyPoolForm({
   async function onSubmit(values: PoolFormValues) {
     try {
       if (isEditing && pool && pool.id) {
-        await apiClient.updateProxyPool(pool.id, values);
+        await proxyPoolsApi.updateProxyPool(pool.id, values);
         toast({ title: "Pool updated" });
         onSuccess();
       } else {
-        await apiClient.createProxyPool(values);
+        await proxyPoolsApi.createProxyPool(values);
         toast({ title: "Pool created" });
         onSuccess();
       }

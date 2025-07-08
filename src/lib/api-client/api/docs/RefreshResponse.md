@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { RefreshResponse } from './api';
+import { RefreshResponse } from 'domainflow-api-client';
 
 const instance: RefreshResponse = {
     expiresAt,

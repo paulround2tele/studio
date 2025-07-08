@@ -20,7 +20,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { WorkerConfig } from './api';
+import { WorkerConfig } from 'domainflow-api-client';
 
 const instance: WorkerConfig = {
     batchSize,

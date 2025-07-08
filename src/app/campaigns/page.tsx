@@ -447,7 +447,7 @@ function CampaignsPageContent() {
       // Handle standard backend response format: { success: true, data: {...} } or { status: "success", data: [...] }
       else if (response && typeof response === 'object' && (('success' in response) || ('status' in response)) && 'data' in response) {
         const isSuccessField = 'success' in response;
-        const responseObj = response as Record<string, unknown>;
+        const responseObj = response.data as Record<string, unknown>;
         const successValue = isSuccessField ? responseObj.success : responseObj.status;
         const isSuccess = successValue === true || successValue === 'success' || successValue === 'ok' || successValue === 200;
         
@@ -483,7 +483,7 @@ function CampaignsPageContent() {
         } else {
           console.warn('⚠️ [BACKEND_INTEGRATION] Response indicates error:', {
             successValue,
-            dataType: typeof (response as Record<string, unknown>).data
+            dataType: typeof response.data
           });
         }
       }
@@ -603,10 +603,10 @@ function CampaignsPageContent() {
         console.error('❌ [BACKEND_INTEGRATION] PHASE 1 FAILED - Invalid response format:', {
           responseType: typeof response,
           hasStatus: !!(response && 'status' in response),
-          status: response && 'status' in response ? (response as Record<string, unknown>).status : 'missing',
+          status: response && 'status' in response ? response.status : 'missing',
           hasData: !!(response && 'data' in response),
-          dataType: response && 'data' in response ? typeof (response as Record<string, unknown>).data : 'missing',
-          isDataArray: response && 'data' in response ? Array.isArray((response as Record<string, unknown>).data) : false,
+          dataType: response && 'data' in response ? typeof response.data : 'missing',
+          isDataArray: response && 'data' in response ? Array.isArray(response.data) : false,
           fullResponse: response,
           possibleBackendIssues: [
             'Backend API returning unexpected format',
@@ -650,6 +650,7 @@ function CampaignsPageContent() {
         setGlobalLoading('campaigns_load', false);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // CRITICAL RATE LIMIT FIX: Remove all dependencies to prevent infinite loop
   // Note: toast, isGlobalLoading, setGlobalLoading are stable and don't need to be dependencies
 
@@ -681,6 +682,7 @@ function CampaignsPageContent() {
         abortControllerRef.current = null;
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // CRITICAL RATE LIMIT FIX: Remove loadCampaignsData dependency to prevent infinite loop
 
   // MEMORY LEAK FIX: Cleanup on unmount

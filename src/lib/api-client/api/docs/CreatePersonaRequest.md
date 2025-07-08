@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { CreatePersonaRequest } from './api';
+import { CreatePersonaRequest } from 'domainflow-api-client';
 
 const instance: CreatePersonaRequest = {
     configDetails,

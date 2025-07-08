@@ -25,6 +25,7 @@ func AddCampaignPaths(spec *openapi3.T) {
 	addGetGeneratedDomainsPath(spec)
 	addGetDNSValidationResultsPath(spec)
 	addGetHTTPKeywordResultsPath(spec)
+	addDomainGenerationPatternOffsetPath(spec)
 }
 
 // addCreateCampaignPath adds the create campaign endpoint
@@ -979,6 +980,92 @@ func addGetHTTPKeywordResultsPath(spec *openapi3.T) {
 	})
 }
 
+// addDomainGenerationPatternOffsetPath adds the domain generation pattern offset endpoint
+func addDomainGenerationPatternOffsetPath(spec *openapi3.T) {
+	patternOffsetOp := &openapi3.Operation{
+		OperationID: "getDomainGenerationPatternOffset",
+		Summary:     "Get domain generation pattern offset",
+		Description: "Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns",
+		Tags:        []string{"Campaigns"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
+		RequestBody: &openapi3.RequestBodyRef{
+			Value: &openapi3.RequestBody{
+				Required:    true,
+				Description: "Pattern configuration",
+				Content: map[string]*openapi3.MediaType{
+					"application/json": {
+						Schema: &openapi3.SchemaRef{
+							Ref: "#/components/schemas/PatternOffsetRequest",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	patternOffsetOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Current offset for the pattern"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"object"},
+						Properties: map[string]*openapi3.SchemaRef{
+							"currentOffset": {
+								Value: &openapi3.Schema{
+									Type:        &openapi3.Types{"integer"},
+									Format:      "int64",
+									Description: "Current global offset for this pattern signature",
+								},
+							},
+						},
+						Required: []string{"currentOffset"},
+					},
+				},
+			},
+		},
+	})
+
+	patternOffsetOp.AddResponse(400, &openapi3.Response{
+		Description: &[]string{"Invalid request parameters"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	patternOffsetOp.AddResponse(401, &openapi3.Response{
+		Description: &[]string{"Unauthorized"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	patternOffsetOp.AddResponse(500, &openapi3.Response{
+		Description: &[]string{"Internal server error"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	spec.Paths.Set("/campaigns/domain-generation/pattern-offset", &openapi3.PathItem{
+		Post: patternOffsetOp,
+	})
+}
+
 // addCampaignOperationErrorResponses adds common error responses for campaign operations
 func addCampaignOperationErrorResponses(op *openapi3.Operation) {
 	op.AddResponse(400, &openapi3.Response{
@@ -1381,6 +1468,49 @@ func addCampaignSchemas(spec *openapi3.T) {
 							},
 						},
 						Description: "Target HTTP ports for validation",
+					},
+				},
+			},
+		},
+	}
+
+	// PatternOffsetRequest schema for domain generation pattern offset endpoint
+	spec.Components.Schemas["PatternOffsetRequest"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Request to get the current offset for a domain generation pattern",
+			Required:    []string{"patternType", "variableLength", "characterSet", "constantString", "tld"},
+			Properties: map[string]*openapi3.SchemaRef{
+				"patternType": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+						Enum: []interface{}{"prefix", "suffix", "both"},
+						Description: "Type of pattern (prefix, suffix, or both)",
+					},
+				},
+				"variableLength": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Min:         &[]float64{1}[0],
+						Description: "Length of the variable part",
+					},
+				},
+				"characterSet": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Character set for domain generation (e.g., 'abc', '123')",
+					},
+				},
+				"constantString": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Constant string part of the domain",
+					},
+				},
+				"tld": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Top-level domain (e.g., '.com', '.net')",
 					},
 				},
 			},

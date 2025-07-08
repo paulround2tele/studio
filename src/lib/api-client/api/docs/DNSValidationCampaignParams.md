@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DNSValidationCampaignParams } from './api';
+import { DNSValidationCampaignParams } from 'domainflow-api-client';
 
 const instance: DNSValidationCampaignParams = {
     batchSize,

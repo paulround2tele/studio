@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { CookieHandling } from './api';
+import { CookieHandling } from 'domainflow-api-client';
 
 const instance: CookieHandling = {
     mode,

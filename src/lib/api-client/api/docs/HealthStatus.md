@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HealthStatus } from './api';
+import { HealthStatus } from 'domainflow-api-client';
 
 const instance: HealthStatus = {
     buildTime,

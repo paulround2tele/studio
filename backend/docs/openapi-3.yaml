@@ -1663,6 +1663,36 @@ components:
                     oneOf:
                         - $ref: '#/components/schemas/PageInfo'
             type: object
+        PatternOffsetRequest:
+            description: Request to get the current offset for a domain generation pattern
+            properties:
+                characterSet:
+                    description: Character set for domain generation (e.g., 'abc', '123')
+                    type: string
+                constantString:
+                    description: Constant string part of the domain
+                    type: string
+                patternType:
+                    description: Type of pattern (prefix, suffix, or both)
+                    enum:
+                        - prefix
+                        - suffix
+                        - both
+                    type: string
+                tld:
+                    description: Top-level domain (e.g., '.com', '.net')
+                    type: string
+                variableLength:
+                    description: Length of the variable part
+                    minimum: 1
+                    type: integer
+            required:
+                - patternType
+                - variableLength
+                - characterSet
+                - constantString
+                - tld
+            type: object
         Persona:
             properties:
                 configDetails:
@@ -3578,6 +3608,56 @@ paths:
             summary: Validate HTTP for campaign domains
             tags:
                 - Campaigns
+    /campaigns/domain-generation/pattern-offset:
+        post:
+            description: Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+            operationId: getDomainGenerationPatternOffset
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/PatternOffsetRequest'
+                description: Pattern configuration
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    currentOffset:
+                                        description: Current global offset for this pattern signature
+                                        format: int64
+                                        type: integer
+                                required:
+                                    - currentOffset
+                                type: object
+                    description: Current offset for the pattern
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Invalid request parameters
+                "401":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Unauthorized
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get domain generation pattern offset
+            tags:
+                - Campaigns
     /change-password:
         post:
             description: Changes the password for the currently authenticated user
@@ -5102,5 +5182,5 @@ paths:
             tags:
                 - ProxyPools
 servers:
-    - description: Development server
-      url: http://localhost:8080/api/v2
+    - description: API base path
+      url: /api/v2

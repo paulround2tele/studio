@@ -889,6 +889,17 @@ type PatternOffsetResponse struct {
 
 // getPatternOffset handles POST /campaigns/domain-generation/pattern-offset
 // Uses existing domain_generation_config_states system to get current offset for a pattern
+// @Summary Get domain generation pattern offset
+// @Description Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+// @Tags campaigns
+// @Accept json
+// @Produce json
+// @Param request body PatternOffsetRequest true "Pattern configuration"
+// @Success 200 {object} map[string]int64 "Current offset for the pattern"
+// @Failure 400 {object} map[string]string "Invalid request parameters"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /campaigns/domain-generation/pattern-offset [post]
+// @Security SessionAuth
 func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	var req PatternOffsetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

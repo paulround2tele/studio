@@ -1,7 +1,9 @@
-import { ApiClient } from '@/lib/api-client/client';
+import { configurationApi, configApi } from '@/lib/api-client/client';
 
-// Using manual client for config operations
-const configClient = new ApiClient();
+// Using appropriate API clients for different config operations
+// ConfigurationApi for system configs, ConfigApi for feature flags
+const configClient = configurationApi;
+const featureFlagsClient = configApi;
 
 export interface DNSConfig {
   resolvers: string[];
@@ -177,12 +179,12 @@ class SettingsService {
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsConfig> {
-    const response = await configClient.getFeatureFlags();
+    const response = await featureFlagsClient.getFeatureFlags();
     return response as unknown as FeatureFlagsConfig;
   }
 
   async updateFeatureFlags(flags: FeatureFlagsConfig): Promise<void> {
-    await configClient.updateFeatureFlags(flags as any);
+    await featureFlagsClient.updateFeatureFlags(flags as any);
   }
 }
 

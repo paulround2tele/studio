@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { CreateProxyRequest } from './api';
+import { CreateProxyRequest } from 'domainflow-api-client';
 
 const instance: CreateProxyRequest = {
     address,

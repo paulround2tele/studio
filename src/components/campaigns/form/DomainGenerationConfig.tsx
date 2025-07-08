@@ -101,8 +101,17 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
       setCurrentOffset(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {
-        // Call the dedicated pattern offset endpoint via apiClient
-        const data = await apiClient.getCampaignDomainGenerationPatternOffset(patternSignature);
+        // Call the pattern offset endpoint with proper request format
+        const patternRequest = {
+          patternType: patternSignature.patternType as 'prefix' | 'suffix' | 'both',
+          variableLength: patternSignature.variableLength,
+          characterSet: patternSignature.characterSet,
+          constantString: patternSignature.constantString,
+          tld: patternSignature.tld
+        };
+        
+        const response = await apiClient.getDomainGenerationPatternOffset(patternRequest);
+        const data = response.data;
 
         if (cancelled) return;
         

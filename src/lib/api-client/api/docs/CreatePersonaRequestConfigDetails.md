@@ -46,7 +46,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { CreatePersonaRequestConfigDetails } from './api';
+import { CreatePersonaRequestConfigDetails } from 'domainflow-api-client';
 
 const instance: CreatePersonaRequestConfigDetails = {
     allowInsecureTls,

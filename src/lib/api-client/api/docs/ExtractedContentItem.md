@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ExtractedContentItem } from './api';
+import { ExtractedContentItem } from 'domainflow-api-client';
 
 const instance: ExtractedContentItem = {
     advancedAnalysis,

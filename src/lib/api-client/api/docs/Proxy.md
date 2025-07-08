@@ -35,7 +35,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Proxy } from './api';
+import { Proxy } from 'domainflow-api-client';
 
 const instance: Proxy = {
     address,

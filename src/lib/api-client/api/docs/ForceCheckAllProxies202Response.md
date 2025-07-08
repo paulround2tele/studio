@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ForceCheckAllProxies202Response } from './api';
+import { ForceCheckAllProxies202Response } from 'domainflow-api-client';
 
 const instance: ForceCheckAllProxies202Response = {
     message,

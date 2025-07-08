@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
-import { apiClient, type components } from "@/lib/api-client/client";
+import { proxyPoolsApi, type components } from "@/lib/api-client/client";
 
 type ProxyPool = components['schemas']['ProxyPool'];
 import {
@@ -32,8 +32,8 @@ export default function ProxyPoolList() {
 
   const loadPools = async () => {
     try {
-      const pools = await apiClient.listProxyPools();
-      setPools(pools.filter(pool => pool.id) as ProxyPool[]);
+      const pools = await proxyPoolsApi.listProxyPools();
+      setPools(pools.data.filter((pool: any) => pool.id) as ProxyPool[]);
     } catch (error) {
       console.error('Failed to load proxy pools:', error);
     }
@@ -45,7 +45,7 @@ export default function ProxyPoolList() {
 
   const handleDelete = async (id: string) => {
     try {
-      await apiClient.deleteProxyPool(id);
+      await proxyPoolsApi.deleteProxyPool(id);
       toast({ title: "Deleted" });
       loadPools();
     } catch (error) {

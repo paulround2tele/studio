@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DNSValidationResultsResponse } from './api';
+import { DNSValidationResultsResponse } from 'domainflow-api-client';
 
 const instance: DNSValidationResultsResponse = {
     data,

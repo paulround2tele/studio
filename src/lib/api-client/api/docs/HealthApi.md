@@ -1,6 +1,6 @@
 # HealthApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -19,7 +19,7 @@ Returns overall health status of the application and its components
 import {
     HealthApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
@@ -65,7 +65,7 @@ Checks if the service is alive and running
 import {
     HealthApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
@@ -110,7 +110,7 @@ Checks if the service is ready to receive traffic
 import {
     HealthApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
