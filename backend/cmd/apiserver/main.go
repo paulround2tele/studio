@@ -324,14 +324,23 @@ func main() {
 	router.StaticFile("/api/openapi.yaml", "backend/docs/openapi-3.yaml")
 	log.Println("Registered OpenAPI 3.0 specification route under /api/openapi.yaml")
 
-	// Authentication routes (public) - aligned with OpenAPI spec
-	authRoutes := router.Group("/auth")
+	// Authentication routes under /api/v2 for consistency
+	authRoutesV2 := router.Group("/api/v2/auth")
 	{
-		authRoutes.POST("/login", rateLimitMiddleware.LoginRateLimit(), authHandler.Login)
-		authRoutes.POST("/logout", authHandler.Logout)
-		authRoutes.POST("/refresh", authHandler.RefreshSession)
+		authRoutesV2.POST("/login", rateLimitMiddleware.LoginRateLimit(), authHandler.Login)
+		authRoutesV2.POST("/logout", authHandler.Logout)
+		authRoutesV2.POST("/refresh", authHandler.RefreshSession)
 	}
-	log.Println("Registered authentication routes under /auth")
+	log.Println("Registered authentication routes under /api/v2/auth")
+	
+	// Legacy auth routes for backward compatibility
+	legacyAuthRoutes := router.Group("/auth")
+	{
+		legacyAuthRoutes.POST("/login", rateLimitMiddleware.LoginRateLimit(), authHandler.Login)
+		legacyAuthRoutes.POST("/logout", authHandler.Logout)
+		legacyAuthRoutes.POST("/refresh", authHandler.RefreshSession)
+	}
+	log.Println("Registered legacy authentication routes under /auth for backward compatibility")
 
 	// Register health check routes (legacy paths for backward compatibility)
 	api.RegisterHealthCheckRoutes(router, healthCheckHandler)

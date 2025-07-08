@@ -200,21 +200,12 @@ export class ApiClient {
     return this._detectedBackendUrl;
   }
 
-  // Handle different routing structures for auth vs API routes
+  // All routes standardized under /api/v2 for consistency
   private getEffectiveBaseUrl(path: string): string {
     const baseUrl = this.getEffectiveBackendUrl();
     
-    // Auth routes (/auth/*) are served directly from backend root
-    if (path.startsWith('/auth') || path.startsWith('/me') || path.startsWith('/change-password')) {
-      return baseUrl;
-    }
-    
-    // API routes need /api/v2 prefix if not already included
-    if (baseUrl.endsWith('/api/v2')) {
-      return baseUrl;
-    } else {
-      return `${baseUrl}/api/v2`;
-    }
+    // All routes use the same base URL (which includes /api/v2)
+    return baseUrl;
   }
 
   // Enhanced request method with retry logic and better error handling

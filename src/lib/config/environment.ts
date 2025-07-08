@@ -80,23 +80,23 @@ async function _getAutomaticApiUrl(): Promise<string> {
 }
 
 // Synchronous fallback for immediate usage
-// Returns base URL without /api/v2 prefix - let client routing logic handle path prefixes
+// All routes standardized under /api/v2 for consistency
 function getSyncApiUrl(): string {
   if (typeof window === 'undefined') {
-    return 'http://localhost:8080';
+    return 'http://localhost:8080/api/v2';
   }
   
   const { hostname, port, protocol } = window.location;
   
   if (port === '3000') {
-    return `${protocol}//${hostname}:8080`;
+    return `${protocol}//${hostname}:8080/api/v2`;
   }
   
   if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
-    return `${protocol}//${hostname}:8080`;
+    return `${protocol}//${hostname}:8080/api/v2`;
   }
 
-  return `${protocol}//${hostname}`;
+  return `${protocol}//${hostname}/api/v2`;
 }
 
 // Environment-specific configurations
