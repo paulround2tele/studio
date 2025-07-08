@@ -1,366 +1,361 @@
-# DomainFlow Backend - Go API Server
+# DomainFlow Backend
 
-## 🚀 Status: Production Ready
+Go-based REST API server with OpenAPI 3.0.3 specification, real-time WebSocket support, and standardized `/api/v2` routing.
 
-The DomainFlow backend is a high-performance Go API server built with the Gin framework, featuring comprehensive validation, secure authentication, and real-time WebSocket communication.
+## 🏗️ Architecture Overview
 
-## 🏗️ Architecture
+### API Structure
+All endpoints follow the standardized `/api/v2` prefix pattern:
 
-### Core Components
-- **API Handlers**: HTTP request processing with validation middleware
-- **Services**: Business logic layer with dependency injection
-- **Models**: Database entities with validation tags
-- **WebSocket**: Real-time communication with standardized message types
-- **Middleware**: Authentication, validation, and CORS handling
+```
+/api/v2/auth/*           # Authentication endpoints
+/api/v2/campaigns/*      # Campaign management
+/api/v2/personas/*       # Persona management  
+/api/v2/proxies/*        # Proxy management
+/api/v2/proxy-pools/*    # Proxy pool management
+/api/v2/keyword-sets/*   # Keyword set management
+/api/v2/me               # User profile
+/api/v2/health/*         # Health checks
+```
 
 ### Technology Stack
-- **Language**: Go 1.21+
-- **Framework**: Gin HTTP framework
-- **Database**: PostgreSQL with pgx driver
-- **Authentication**: Session-based with HTTP-only cookies
-- **WebSocket**: Gorilla WebSocket for real-time updates
-- **Validation**: Comprehensive runtime validation
+- **Framework**: Gin web framework for high-performance HTTP routing
+- **Database**: PostgreSQL with optimized queries and proper indexing
+- **Authentication**: Session-based auth with secure middleware
+- **Real-time**: WebSocket support for live updates
+- **Documentation**: Auto-generated OpenAPI 3.0.3 specification
+- **Validation**: Request/response validation with structured error handling
 
-## 📂 Project Structure
-
-```
-backend/
-├── cmd/
-│   └── apiserver/           # Application entry point
-│       └── main.go         # Server initialization and configuration
-├── internal/
-│   ├── api/                # HTTP handlers and API endpoints
-│   │   ├── auth_handlers.go            # Authentication endpoints
-│   │   ├── campaign_handlers.go        # Campaign CRUD operations
-│   │   ├── campaign_orchestrator_handlers.go  # Campaign control
-│   │   ├── admin_handlers.go           # Admin user management
-│   │   ├── keyword_*.go               # Keyword management
-│   │   ├── persona_handlers.go        # Persona management
-│   │   └── proxy_handlers.go          # Proxy management
-│   ├── models/             # Database models and validation
-│   │   ├── models.go                  # Core data models
-│   │   ├── auth_models.go             # Authentication models
-│   │   └── validation_tags.go         # Custom validation rules
-│   ├── services/           # Business logic services
-│   │   ├── interfaces.go              # Service interfaces
-│   │   ├── auth_service.go            # Authentication service
-│   │   ├── campaign_service.go        # Campaign business logic
-│   │   └── admin_service.go           # Admin operations
-│   ├── middleware/         # HTTP middleware
-│   │   ├── auth.go                    # Authentication middleware
-│   │   ├── validation.go              # Runtime validation middleware
-│   │   └── cors.go                    # CORS configuration
-│   ├── websocket/          # WebSocket handling
-│   │   ├── websocket.go               # WebSocket manager
-│   │   ├── message_types.go           # Standardized message types
-│   │   └── client.go                  # Client connection handling
-│   └── database/           # Database operations
-│       ├── connection.go              # Database connection setup
-│       └── migrations/                # Schema migrations
-├── database/               # Database schema and setup
-│   ├── schema.sql                     # Main database schema
-│   └── migrations/                    # Migration files
-├── scripts/               # Build and deployment scripts
-├── test_data/            # Test fixtures and sample data
-├── Makefile              # Build automation
-├── go.mod                # Go module dependencies
-└── config.json           # Server configuration
-```
-
-## 🛠️ Development Setup
+## 🚀 Quick Start
 
 ### Prerequisites
-- Go 1.21 or higher
-- PostgreSQL 13+ database
-- Make (for build automation)
+- Go 1.21+
+- PostgreSQL 15+
+- Environment variables configured
 
-### Installation
+### Development Setup
 
 ```bash
-# Clone and navigate to backend
+# Navigate to backend directory
 cd backend
 
 # Install dependencies
 go mod download
 
-# Build the application
-make build
+# Set up environment variables
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_USER=your_user
+export DB_PASSWORD=your_password
+export DB_NAME=domainflow_dev
+export SERVER_PORT=8080
 
-# Run tests
-make test
+# Run database migrations
+go run cmd/migrate/main.go
 
 # Start development server
-make run
+go run cmd/apiserver/main.go
 ```
 
-### Configuration
+The server will start on `http://localhost:8080` with all endpoints under `/api/v2/`.
 
-Create `config.json` based on `config.example.json`:
+## 📁 Project Structure
 
-```json
-{
-  "database": {
-    "host": "localhost",
-    "port": 5432,
-    "user": "domainflow",
-    "password": "your_password",
-    "dbname": "domainflow_dev",
-    "sslmode": "disable"
-  },
-  "server": {
-    "port": 8080,
-    "cors_origins": ["http://localhost:3000"],
-    "session_secret": "your-session-secret-key"
-  },
-  "auth": {
-    "session_duration": "24h",
-    "cookie_name": "domainflow_session",
-    "cookie_secure": false,
-    "cookie_httponly": true
-  }
-}
+```
+backend/
+├── cmd/                     # Application entry points
+│   ├── apiserver/          # Main API server
+│   ├── migrate/            # Database migrations
+│   └── generate-openapi/   # OpenAPI spec generator
+├── internal/               # Private application code
+│   ├── api/               # HTTP handlers and routing
+│   ├── services/          # Business logic layer
+│   ├── store/             # Data access layer
+│   ├── models/            # Data models and DTOs
+│   ├── middleware/        # HTTP middleware
+│   ├── config/            # Configuration management
+│   └── websocket/         # WebSocket handling
+├── database/              # Database schema and migrations
+│   ├── migrations/        # SQL migration files
+│   └── schema.sql         # Complete database schema
+└── docs/                  # Generated documentation
+    └── openapi-3.yaml     # OpenAPI specification
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Database Configuration
+DB_HOST=localhost           # Database host
+DB_PORT=5432               # Database port  
+DB_USER=username           # Database user
+DB_PASSWORD=password       # Database password
+DB_NAME=domainflow_dev     # Database name
+DB_SSLMODE=disable         # SSL mode (disable for local)
+
+# Server Configuration  
+SERVER_PORT=8080           # API server port
+GIN_MODE=debug             # Gin mode (debug/release)
+
+# Authentication
+SESSION_SECRET=your_secret_key    # Session encryption key
+AUTH_TIMEOUT=7200                 # Session timeout (seconds)
+
+# External Services
+DOMAIN_VALIDATION_TIMEOUT=30     # DNS validation timeout
+HTTP_REQUEST_TIMEOUT=15          # HTTP request timeout
 ```
 
 ### Database Setup
 
-**Quick Setup (Recommended):**
 ```bash
-# Run the automated setup script
-./database/setup.sh
+# Create database
+createdb domainflow_dev
 
-# Or with seed data for development
-./database/setup.sh --with-seed-data
+# Run migrations  
+go run cmd/migrate/main.go
+
+# Verify schema
+psql domainflow_dev -c "\dt"
 ```
 
-**Manual Setup:**
+## 🛠️ Development
+
+### Running the Server
+
 ```bash
-# 1. Create database and user
-sudo -u postgres psql << EOF
-CREATE DATABASE domainflow_production;
-CREATE USER domainflow WITH PASSWORD 'your_secure_password';
-GRANT ALL PRIVILEGES ON DATABASE domainflow_production TO domainflow;
-ALTER USER domainflow CREATEDB;
-\q
-EOF
+# Development mode with auto-reload
+go run cmd/apiserver/main.go
 
-# 2. Apply schema
-psql "postgres://domainflow:password@localhost:5432/domainflow_production" < database/schema.sql
-
-# 3. Create environment file
-cp .env.example .env
-# Edit .env with your database credentials
+# Build and run
+go build -o bin/apiserver cmd/apiserver/main.go
+./bin/apiserver
 ```
 
-For detailed setup instructions, see [database/README.md](./database/README.md).
-
-## 🔧 Build Commands
+### API Documentation
 
 ```bash
-# Development
-make run                    # Run development server with hot reload
-make build                  # Build binary to bin/studio
-make test                   # Run all tests
-make test-coverage          # Run tests with coverage report
+# Generate OpenAPI specification
+go run cmd/generate-openapi/main.go
 
-# Production
-make build-prod             # Build optimized production binary
-make docker                 # Build Docker image
+# View generated spec
+cat docs/openapi-3.yaml
+```
 
-# Maintenance
-make clean                  # Clean build artifacts
-make lint                   # Run Go linting
-make format                 # Format Go code
+### Testing
+
+```bash
+# Run all tests
+go test ./...
+
+# Run with coverage
+go test -cover ./...
+
+# Run specific package tests
+go test ./internal/services/...
+
+# Verbose testing
+go test -v ./internal/api/...
+```
+
+### Database Migrations
+
+```bash
+# Create new migration
+# (Manually create files in database/migrations/)
+
+# Run migrations
+go run cmd/migrate/main.go
+
+# Check migration status
+go run cmd/migrate/main.go -status
 ```
 
 ## 📊 API Endpoints
 
 ### Authentication
-- `POST /auth/login` - User login with credentials
-- `POST /auth/logout` - User logout and session cleanup
-- `GET /auth/refresh` - Refresh session token
-- `GET /auth/status` - Check authentication status
+```
+POST   /api/v2/auth/login     # User login
+POST   /api/v2/auth/logout    # User logout  
+POST   /api/v2/auth/refresh   # Refresh session
+GET    /api/v2/me             # Get current user
+POST   /api/v2/change-password # Change password
+```
 
-### Campaigns
-- `GET /api/v2/campaigns` - List all campaigns
-- `POST /api/v2/campaigns` - Create new campaign
-- `GET /api/v2/campaigns/{id}` - Get campaign details
-- `PUT /api/v2/campaigns/{id}` - Update campaign
-- `DELETE /api/v2/campaigns/{id}` - Delete campaign
-- `POST /api/v2/campaigns/{id}/start` - Start campaign execution
-- `POST /api/v2/campaigns/{id}/stop` - Stop campaign execution
+### Campaign Management
+```
+GET    /api/v2/campaigns                    # List campaigns
+POST   /api/v2/campaigns                    # Create campaign
+GET    /api/v2/campaigns/{id}               # Get campaign
+PUT    /api/v2/campaigns/{id}               # Update campaign
+DELETE /api/v2/campaigns/{id}               # Delete campaign
+POST   /api/v2/campaigns/{id}/start         # Start campaign
+POST   /api/v2/campaigns/{id}/stop          # Stop campaign
+```
 
-### Admin Operations
-- `GET /api/v2/admin/users` - List all users
-- `POST /api/v2/admin/users` - Create new user
-- `GET /api/v2/admin/users/{id}` - Get user details
-- `PUT /api/v2/admin/users/{id}` - Update user
-- `DELETE /api/v2/admin/users/{id}` - Delete user
+### Domain Generation
+```
+POST   /api/v2/campaigns/domain-generation/pattern-offset  # Get pattern offset
+```
 
-### WebSocket
-- `GET /ws` - WebSocket connection for real-time updates
+### Persona Management  
+```
+GET    /api/v2/personas       # List personas
+POST   /api/v2/personas       # Create persona
+GET    /api/v2/personas/{id}  # Get persona
+PUT    /api/v2/personas/{id}  # Update persona
+DELETE /api/v2/personas/{id}  # Delete persona
+```
 
-## ��️ Security Features
+### Proxy Management
+```
+GET    /api/v2/proxies        # List proxies
+POST   /api/v2/proxies        # Create proxy
+GET    /api/v2/proxies/{id}   # Get proxy
+PUT    /api/v2/proxies/{id}   # Update proxy  
+DELETE /api/v2/proxies/{id}   # Delete proxy
+```
 
-### Authentication
-- Session-based authentication with HTTP-only cookies
-- CSRF protection with SameSite cookie attributes
-- Secure session storage with encrypted cookies
-- Automatic session expiration and renewal
+### Health Checks
+```
+GET    /api/v2/health         # System health
+GET    /api/v2/health/ready   # Readiness check
+GET    /api/v2/health/live    # Liveness check
+```
 
-### Validation
-- Comprehensive runtime validation middleware
-- Input sanitization and type checking
-- SQL injection prevention with parameterized queries
-- XSS protection with proper output encoding
+## 🔌 WebSocket Support
 
-### Authorization
-- Role-based access control (RBAC)
-- Permission checking middleware
-- Admin-only endpoints protection
-- Resource-level access controls
+Real-time updates via WebSocket connections:
 
-## 🔗 WebSocket Communication
+```
+WS     /api/v2/ws             # WebSocket endpoint
+```
 
-### Message Types
+### WebSocket Events
 - `campaign_progress` - Campaign execution updates
-- `campaign_complete` - Campaign completion notification
-- `system_notification` - System-wide notifications
-- `error_notification` - Error and warning messages
+- `domain_generated` - New domain generation results  
+- `dns_validation` - DNS validation results
+- `http_validation` - HTTP validation results
+- `persona_created` - Persona management updates
+- `keyword_set_created` - Keyword set updates
 
-### Message Format
-```json
-{
-  "type": "campaign_progress",
-  "timestamp": "2025-06-19T10:30:00Z",
-  "data": {
-    "campaignId": "uuid",
-    "totalItems": 1000,
-    "processedItems": 450,
-    "successCount": 425,
-    "errorCount": 25,
-    "estimatedCompletion": "2025-06-19T10:45:00Z"
-  }
-}
-```
+## 🏭 Production Deployment
 
-## 🗄️ Database Schema
+### Building for Production
 
-### Core Tables
-- **users**: User accounts and authentication
-- **campaigns**: Campaign definitions and metadata
-- **generated_domains**: Domain generation results
-- **dns_validation_results**: DNS validation outcomes
-- **http_keyword_results**: HTTP keyword analysis results
-- **audit_logs**: Comprehensive operation logging
-
-### Relationships
-- Users → Campaigns (one-to-many)
-- Campaigns → Results (one-to-many per result type)
-- All operations → Audit Logs (comprehensive tracking)
-
-## 🧪 Testing
-
-### Test Structure
-```bash
-internal/
-├── api/
-│   └── *_test.go           # API handler tests
-├── services/
-│   └── *_test.go           # Service layer tests
-├── models/
-│   └── *_test.go           # Model validation tests
-└── middleware/
-    └── *_test.go           # Middleware tests
-```
-
-### Running Tests
-```bash
-# All tests
-make test
-
-# Specific package
-go test ./internal/api/...
-
-# With coverage
-make test-coverage
-
-# Integration tests
-make test-integration
-```
-
-## 📦 Dependencies
-
-### Core Dependencies
-- `github.com/gin-gonic/gin` - HTTP framework
-- `github.com/jackc/pgx/v5` - PostgreSQL driver
-- `github.com/gorilla/websocket` - WebSocket support
-- `github.com/google/uuid` - UUID generation
-- `golang.org/x/crypto` - Password hashing
-
-### Development Dependencies
-- `github.com/stretchr/testify` - Testing framework
-- `github.com/golang/mock` - Mock generation
-- `golang.org/x/tools` - Development tools
-
-## 🚀 Deployment
-
-### Production Build
 ```bash
 # Build optimized binary
-make build-prod
+CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/apiserver cmd/apiserver/main.go
 
-# Run with production config
-./bin/studio -config=config.production.json
+# Set production environment
+export GIN_MODE=release
+export DB_SSLMODE=require
+
+# Run with production settings
+./bin/apiserver
 ```
 
 ### Docker Deployment
-```bash
-# Build Docker image
-make docker
 
-# Run container
-docker run -p 8080:8080 domainflow-backend
+```dockerfile
+FROM golang:1.21-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -o apiserver cmd/apiserver/main.go
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/apiserver .
+CMD ["./apiserver"]
 ```
 
-### Environment Variables
-```bash
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=domainflow_prod
-export DB_USER=domainflow
-export DB_PASSWORD=your_password
-export SERVER_PORT=8080
-export SESSION_SECRET=your_production_secret
-```
+### Performance Optimization
 
-## 🔍 Monitoring
+- **Database Connections**: Connection pooling configured
+- **Indexes**: Optimized database indexes for common queries
+- **Caching**: In-memory caching for frequently accessed data
+- **Rate Limiting**: Request rate limiting to prevent abuse
+- **WebSocket**: Efficient real-time updates eliminate polling
+
+## 🛡️ Security
+
+### Authentication & Authorization
+- Session-based authentication with secure cookies
+- CSRF protection on state-changing operations
+- Rate limiting on authentication endpoints
+- Secure password hashing with bcrypt
+
+### API Security
+- Input validation on all endpoints
+- SQL injection prevention with parameterized queries
+- CORS configuration for cross-origin requests
+- Security headers (HSTS, CSP, X-Frame-Options)
+
+### Database Security
+- Connection encryption (TLS)
+- Prepared statements for all queries
+- Database user with minimal required privileges
+- Regular security updates and patches
+
+## 📋 Monitoring & Observability
 
 ### Health Checks
-- `GET /health` - Basic health status
-- `GET /health/db` - Database connectivity
-- `GET /health/detailed` - Comprehensive system status
+```bash
+# API health
+curl http://localhost:8080/api/v2/health
+
+# Database connectivity
+curl http://localhost:8080/api/v2/health/ready
+
+# Service liveness  
+curl http://localhost:8080/api/v2/health/live
+```
+
+### Logging
+- Structured logging with contextual information
+- Request/response logging in development
+- Error tracking with stack traces
+- Performance metrics logging
 
 ### Metrics
-- Request duration and count
-- Database connection pool status
-- Active WebSocket connections
-- Error rates by endpoint
-
-## 📚 Additional Documentation
-
-- See `../API_SPEC.md` for complete API specification
-- See `../DATABASE_SETUP_GUIDE.md` for database details
-- See `../docs/` for architecture documentation
-- See `../PHASE_5_FINAL_STATUS.md` for recent updates
+- HTTP request duration and status codes
+- Database query performance
+- WebSocket connection counts
+- Memory and CPU usage tracking
 
 ## 🤝 Contributing
 
-1. Follow Go standard code style (`gofmt`)
-2. Write comprehensive tests for new features
-3. Update API documentation for new endpoints
-4. Ensure database migrations are backwards compatible
-5. Add proper error handling and logging
+### Code Guidelines
+- Follow Go best practices and idioms
+- Maintain OpenAPI annotations for all endpoints
+- Include unit tests for business logic
+- Update documentation for API changes
+
+### Testing Requirements
+- Unit tests for all service layer functions
+- Integration tests for API endpoints
+- Database tests with transaction rollback
+- WebSocket connection testing
+
+### Pull Request Process
+1. Create feature branch from `main`
+2. Implement changes with tests
+3. Update OpenAPI annotations
+4. Verify all tests pass
+5. Submit pull request with description
+
+## 📚 Additional Resources
+
+- **[OpenAPI Spec](docs/openapi-3.yaml)** - Complete API specification
+- **[Database Schema](database/schema.sql)** - Database structure
+- **[Migration Guide](database/CHANGELOG.md)** - Database changes
+- **[Architecture Docs](../docs/ARCHITECTURE.md)** - System design
 
 ---
 
-**DomainFlow Backend** - High-performance Go API server with enterprise-grade security and real-time capabilities.
+**Backend Architecture**: High-performance Go API with PostgreSQL, real-time WebSocket support, and comprehensive OpenAPI documentation.

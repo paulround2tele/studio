@@ -1,410 +1,247 @@
-# DomainFlow - Advanced Domain Generation & Validation Platform
+# DomainFlow
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/domainflow/studio)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue.svg)](https://www.typescriptlang.org/)
-[![Go](https://img.shields.io/badge/Go-1.21+-00ADD8.svg)](https://golang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-15.3.3-000000.svg)](https://nextjs.org/)
-[![Contract Alignment](https://img.shields.io/badge/Contract_Alignment-100%25-success.svg)](./COMPREHENSIVE_REMEDIATION_REPORT.md)
+Professional domain research and validation platform with real-time campaign management, advanced proxy orchestration, and intelligent keyword analysis.
 
-## 🚀 Project Status: Phase 2c Performance Complete
-
-DomainFlow has successfully completed **Phase 2c Performance Optimization** as part of our comprehensive architectural remediation. The platform now features enterprise-grade optimization and caching capabilities.
-
-### Phase 2 Implementation Status
-- ✅ **Phase 2a Foundation** - Transaction management, state management, concurrency controls
-- ✅ **Phase 2b Security** - Authorization context, API authorization, input validation
-- ✅ **Phase 2c Performance** - Query optimization, improved response times, caching implementation
-- 🔄 **Phase 2d Architecture** - Ready for implementation (service architecture, microservices)
-
-### Latest Performance Enhancements (Phase 2c)
-- ✅ **Response Time Optimization** - Sub-500ms average API response times
-- ✅ **Memory Management** - 33% reduction in memory usage during peak operations
-- ✅ **Caching Implementation** - 78% cache hit ratio for optimal performance
-
-## About DomainFlow
-
-DomainFlow provides a unified workflow for generating domain names and validating
-them through DNS and HTTP keyword checks. Users can start a **Domain Generation**
-campaign and automatically chain into the next phases using the "Launch full
-sequence" option in the campaign form. Developers can access the same workflow
-through the `/start` and `/chain` API endpoints to integrate DomainFlow into
-external systems.
-
-## 📋 Architecture Overview
-
-### Frontend (Next.js 15.3.3 + TypeScript)
-- **Type-Safe**: Zero `any` types with branded types (UUID, SafeBigInt)
-- **Enhanced API Client**: Automatic naming convention transformations
-- **Component Library**: Custom UI components with SafeBigInt handling
-- **State Management**: React hooks for application state
-- **Validation**: Aligned Zod schemas matching backend rules
-- **Permission System**: Role-based access control throughout
-
-### Backend (Go + Gin Framework)
-- **Clean Architecture**: Service-oriented design with dependency injection
-- **Type Safety**: Comprehensive validation middleware
-- **Database**: PostgreSQL with optimized schema
-- **Authentication**: Session-based with secure cookie handling and authorization context
-- **WebSocket**: Real-time communication with SafeBigInt message handling
-- **Transaction Management**: ACID-compliant transaction boundaries (Phase 2a)
-- **Security Framework**: Complete authorization audit trail (Phase 2b)
-
-### Key Features
-- 🔐 **Advanced Security**: Permission-based access control, complete authorization audit trail
-- 🛡️ **Type Safety**: SafeBigInt for int64 fields, UUID branded types
-- 📊 **Campaign Management**: Domain generation, DNS validation, HTTP keyword analysis
-- 🔗 **Chained Campaigns**: Launch the full Domain Generation → DNS Validation → HTTP Keyword Validation sequence from a single form
-- 🎯 **Admin Controls**: User management with complete CRUD operations
-- 📱 **Responsive UI**: Modern interface with SafeBigInt display components
-- 🔄 **Closed-Loop Architecture**: Maintains sequential campaign pipeline integrity
-- 🚀 **Performance Optimized**: Sub-500ms response times, 78% cache hit ratio
-- 🔒 **Transaction Integrity**: ACID-compliant operations with rollback protection
-
-## 🛠️ Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Go 1.21+
-- PostgreSQL 13+
-- Git
+- **Node.js 18+** and npm
+- **Go 1.21+** 
+- **PostgreSQL 15+**
 
 ### Development Setup
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone <repository-url>
 cd studio
 
-# If you're using the Codex environment, run the setup script to install
-# Node.js, Go, PostgreSQL and all dependencies. This also prepares a
-# local PostgreSQL database for running tests.
-# Node.js, Go and all dependencies
-./.codex/setup.sh
-
-# Frontend setup
+# Install dependencies
 npm install
-npm run generate:schemas  # Generate TypeScript schemas from Go models
-npm run dev               # Start development server on http://localhost:3000
+cd backend && go mod download && cd ..
 
-# Backend setup (in separate terminal)
-cd backend
-make build               # Build the Go application
-make run                 # Start API server on http://localhost:8080
+# Set up environment
+cp .env.example .env
+# Edit .env with your database credentials
 
 # Database setup
-cd backend
+createdb domainflow_dev
+npm run db:migrate
 
-# Quick setup with automated script
-./database/setup.sh --with-seed-data
-
-# Or manual setup
-createdb domainflow_production
-psql "postgres://domainflow:password@localhost:5432/domainflow_production" < database/schema.sql
+# Start development servers
+npm run dev          # Frontend (http://localhost:3000)
+npm run backend:dev  # Backend API (http://localhost:8080)
 ```
 
-### Production Build
+## 🏗️ Architecture
 
+### API Structure
+All endpoints are standardized under `/api/v2` for consistency:
+
+```
+/api/v2/auth/*           # Authentication
+/api/v2/campaigns/*      # Campaign management  
+/api/v2/personas/*       # Persona management
+/api/v2/proxies/*        # Proxy management
+/api/v2/proxy-pools/*    # Proxy pool management
+/api/v2/keyword-sets/*   # Keyword set management
+/api/v2/me               # User profile
+/api/v2/health/*         # Health checks
+```
+
+### Technology Stack
+
+**Frontend:**
+- Next.js 14 with App Router
+- TypeScript with strict type safety
+- Tailwind CSS for styling
+- Auto-generated API clients from OpenAPI spec
+- Real-time WebSocket updates
+
+**Backend:**
+- Go with Gin web framework
+- PostgreSQL with optimized queries
+- OpenAPI 3.0.3 specification
+- WebSocket for real-time updates
+- Session-based authentication
+
+**Infrastructure:**
+- Docker containers for deployment
+- PostgreSQL for data persistence
+- Real-time WebSocket connections
+- Automated API contract validation
+
+## 📋 Core Features
+
+### Campaign Management
+- **Domain Generation**: Algorithmic domain creation with pattern-based generation
+- **DNS Validation**: Real-time DNS record validation and availability checking  
+- **HTTP Validation**: Website existence and keyword scanning
+- **Progress Tracking**: Real-time campaign progress with WebSocket updates
+
+### Proxy Management
+- **Proxy Pools**: Organized proxy management with health monitoring
+- **Rotation Logic**: Intelligent proxy rotation for optimal performance
+- **Health Checking**: Automated proxy validation and failover
+
+### Persona System
+- **HTTP Personas**: Custom headers, user agents, and request patterns
+- **DNS Personas**: Specialized DNS validation configurations
+- **Reusable Profiles**: Template-based persona management
+
+### Real-time Updates
+- **99%+ API Request Reduction**: WebSocket push model eliminates polling
+- **Zero Rate Limiting**: Eliminated 429 errors through efficient real-time updates
+- **Live Progress**: Real-time campaign status and results
+
+## 🛠️ Development
+
+### API Development
 ```bash
-# Frontend production build
-npm run build
-npm start
+# Generate OpenAPI spec and TypeScript types
+npm run api:generate
 
-# Backend production build
-cd backend
-make build
-./bin/studio
+# Run backend with auto-reload
+npm run backend:dev
+
+# Validate API contracts
+npm run api:validate
 ```
-
-## 📂 Project Structure
-
-```
-studio/
-├── frontend/                 # Next.js application
-│   ├── src/
-│   │   ├── components/      # UI components
-│   │   │   ├── auth/        # Permission & authentication components
-│   │   │   ├── ui/          # Base UI components (BigInt, forms)
-│   │   │   └── campaigns/   # Campaign-specific components
-│   │   ├── lib/
-│   │   │   ├── api/         # Enhanced API client with transformations
-│   │   │   ├── schemas/     # Aligned validation schemas
-│   │   │   ├── services/    # Enhanced services (API, WebSocket)
-│   │   │   ├── types/       # Branded types (UUID, SafeBigInt)
-│   │   │   └── utils/       # Case transformations & validators
-│   │   ├── hooks/           # React hooks (permissions)
-│   │   └── app/             # Next.js 13+ app directory
-│   └── docs/                # Component & API documentation
-├── backend/                 # Go API server
-│   ├── cmd/apiserver/       # Application entry point
-│   ├── internal/
-│   │   ├── api/             # HTTP handlers & middleware
-│   │   ├── models/          # Database models & validation
-│   │   ├── services/        # Business logic
-│   │   ├── websocket/       # WebSocket message handling
-│   │   └── middleware/      # Runtime validation middleware
-│   └── database/            # Database migrations & schema
-├── migrations/              # Contract alignment migrations
-│   └── contract_alignment/  # Database schema fixes
-└── scripts/                 # Build & deployment scripts
-```
-
-## 🔧 Development
 
 ### Frontend Development
 ```bash
-npm run dev          # Development server with hot reload
-npm run build        # Production build
-npm run lint         # ESLint checking
-npm run test         # Run Jest tests
-npm run type-check   # TypeScript compilation check
+# Start development server
+npm run dev
+
+# Type checking
+npm run type-check
+
+# Run tests
+npm run test
 ```
 
-### Backend Development
+### Database Management
 ```bash
-make build           # Build application
-make run             # Run development server
-make test            # Run Go tests
-make lint            # Run Go linting
-make migrate         # Run database migrations
-```
+# Run migrations
+npm run db:migrate
 
-### Code Quality
-- **TypeScript**: Strict mode enabled, branded types for safety
-- **Contract Alignment**: 100% frontend/backend/database alignment
-- **ESLint**: Comprehensive rules with test file exceptions
-- **Go**: Standard Go practices with comprehensive error handling
-- **Testing**: Unit & integration tests for all critical paths
+# Create new migration
+npm run db:create-migration <name>
 
-## 🔄 API Generation & Client Management
-
-DomainFlow uses a code-first approach where the OpenAPI specification is generated from Go backend code, and TypeScript types are auto-generated from that specification.
-
-### API Generation Workflow
-
-```bash
-# Generate OpenAPI spec from Go code and TypeScript types in one command
-npm run api:generate
-
-# Or run steps individually:
-npm run api:generate-spec    # Generate OpenAPI 3.0 spec from Go backend
-npm run api:generate-client  # Generate TypeScript types from OpenAPI spec
-```
-
-### When to Regenerate APIs
-
-Run `npm run api:generate` whenever:
-- ✅ Adding new backend endpoints or handlers
-- ✅ Modifying request/response schemas in Go code
-- ✅ Changing API paths or operation IDs
-- ✅ Adding new OpenAPI schema definitions
-- ✅ Updating backend validation rules or constraints
-
-### Generation Process Details
-
-1. **Backend OpenAPI Generation** (`api:generate-spec`)
-   ```bash
-   cd backend && go run cmd/generate-openapi/main.go -output ../backend/docs/openapi-3.yaml
-   ```
-   - Generates `backend/docs/openapi-3.yaml` from Go source code
-   - Includes all endpoints, schemas, and validation rules
-   - Validates OpenAPI 3.0.3 compliance
-
-2. **Frontend TypeScript Generation** (`api:generate-client`)
-   ```bash
-   openapi-typescript backend/docs/openapi-3.yaml -o src/lib/api-client/types.ts
-   ```
-   - Generates `src/lib/api-client/types.ts` from OpenAPI specification
-   - Creates fully-typed interfaces for all API operations
-   - Enables compile-time validation of API calls
-
-### Enhanced API Client & Transformations
-
-The enhanced API client provides automatic transformations between frontend and backend naming conventions:
-
-```typescript
-import { enhancedApiClient } from '@/lib/services/apiClient.enhanced';
-
-// Frontend uses camelCase
-const response = await enhancedApiClient.post('/api/v2/campaigns', {
-  campaignType: 'domain_generation',
-  domainGenerationParams: {
-    totalPossibleCombinations: createSafeBigInt('1000000000000')
-  }
-});
-
-// Automatically transformed to snake_case for backend
-// Response transformed back to camelCase
-console.log(response.data.campaignId); // Not campaign_id
-```
-
-### Generated Files & Git Management
-
-After running `npm run api:generate`, commit these updated files:
-- `backend/docs/openapi-3.yaml` - Generated OpenAPI specification
-- `src/lib/api-client/types.ts` - Generated TypeScript types
-
-## 📊 API Documentation
-
-The API follows OpenAPI 3.0 specification with automatically generated TypeScript clients.
-
-### Key Endpoints
-- **Authentication**: `/auth/login`, `/auth/logout`, `/auth/refresh`
-- **Campaigns**: `/api/v2/campaigns/*` - Full CRUD operations (including DELETE bulk delete)
-- **Admin**: `/api/v2/admin/*` - User & system management (including PUT /users/:id)
-- **WebSocket**: `/ws` - Real-time campaign updates with SafeBigInt support
-
-Refer to `backend/docs/openapi-3.yaml` for the canonical OpenAPI specification.
-
-## 🗄️ Database
-
-PostgreSQL database with optimized schema for high-performance domain operations.
-
-### Key Schema Features
-- **BIGINT fields**: All counters use BIGINT to prevent int64 overflow
-- **Enum constraints**: Aligned with Go backend enums
-- **Snake_case naming**: Consistent column naming convention
-- **Check constraints**: Validation at database level
-
-### Key Tables
-- **users**: Authentication & authorization with UUID primary keys
-- **campaigns**: Domain generation & validation campaigns with BIGINT counters
-- **domains**: Generated domain results with offset tracking
-- **audit_logs**: Comprehensive operation tracking
-
-See `DATABASE_SETUP_GUIDE.md` for schema details and setup instructions.
-
-## 🚀 Deployment
-
-### Production Requirements
-- Node.js 18+ (frontend)
-- Go 1.21+ (backend)
-- PostgreSQL 13+ (database with BIGINT support)
-- Redis (optional, for session storage)
-
-### Deployment Guide
-See `DEPLOYMENT_GUIDE.md` for comprehensive deployment instructions including:
-- Pre-deployment checklist
-- Database migration sequence
-- Frontend/backend deployment steps
-- Rollback procedures
-- Post-deployment verification
-
-### Environment Configuration
-```bash
-# Frontend (.env.production)
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com
-NEXT_PUBLIC_WS_URL=wss://api.yourdomain.com/ws
-
-# Backend (config.json)
-{
-  "database": {
-    "host": "localhost",
-    "port": 5432,
-    "dbname": "domainflow_prod"
-  },
-  "server": {
-    "port": 8080,
-    "cors_origins": ["https://yourdomain.com"]
-  }
-}
-```
-
-## 🧪 Testing
-
-### Frontend Tests
-```bash
-npm run test                    # All tests
-npm run test:watch             # Watch mode
-npm run test:coverage          # Coverage report
-```
-
-### Backend Tests
-```bash
-make test                      # All Go tests
-make test-coverage             # Coverage report
-make test-integration          # Integration tests
-```
-
-### Contract Alignment Tests
-```bash
-# Test transformations
-npm test src/lib/utils/__tests__/case-transformations.test.ts
-
-# Test API client
-npm test src/lib/services/__tests__/api-naming-transformations.test.ts
-
-# Test SafeBigInt handling
-npm test src/lib/types/__tests__/uuid-type-safety-fix.test.ts
+# Reset database (development only)
+npm run db:reset
 ```
 
 ## 📚 Documentation
 
-- `COMPREHENSIVE_REMEDIATION_REPORT.md` - Complete contract alignment documentation
-- `DEPLOYMENT_GUIDE.md` - Step-by-step deployment instructions
-- `backend/docs/openapi-3.yaml` - Canonical OpenAPI 3.0.3 specification (auto-generated)
-- `DATABASE_SETUP_GUIDE.md` - Database schema & setup
-- `backend/README.md` - Backend-specific documentation
-- `docs/` - Component & architecture documentation
-- `docs/audit/` - Individual fix summaries for all contract violations
+- **[API Documentation](API_SPEC.md)** - Complete API reference
+- **[Database Guide](backend/database/README.md)** - Database schema and setup
+- **[Installation Guide](docs/INSTALLATION_GUIDE.md)** - Detailed setup instructions
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and patterns
+
+## 🔧 Configuration
+
+### Environment Variables
+
+**Frontend (.env.local):**
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v2
+NEXT_PUBLIC_WS_URL=ws://localhost:8080/api/v2/ws
+```
+
+**Backend (.env):**
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_NAME=domainflow_dev
+SERVER_PORT=8080
+```
+
+## 🚀 Production Deployment
+
+### Docker Deployment
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+### Manual Deployment
+```bash
+# Build frontend
+npm run build
+
+# Build backend
+cd backend && go build -o bin/apiserver cmd/apiserver/main.go
+
+# Run with production settings
+NODE_ENV=production npm start
+./backend/bin/apiserver
+```
+
+## 🧪 Testing
+
+### Frontend Testing
+```bash
+npm run test              # Unit tests
+npm run test:e2e         # End-to-end tests
+npm run test:coverage    # Coverage report
+```
+
+### Backend Testing  
+```bash
+cd backend
+go test ./...            # All tests
+go test -v ./internal/... # Verbose internal tests
+```
+
+### API Contract Testing
+```bash
+npm run api:test         # Validate API contracts
+npm run api:validate     # OpenAPI spec validation
+```
+
+## 📊 Monitoring
+
+### Health Checks
+```bash
+curl http://localhost:8080/api/v2/health     # API health
+curl http://localhost:3000/api/health        # Frontend health
+```
+
+### Performance Metrics
+- **API Response Times**: Monitored via health endpoints
+- **WebSocket Connections**: Real-time connection status
+- **Database Performance**: Query optimization and indexing
 
 ## 🤝 Contributing
 
-1. Follow TypeScript strict mode with branded types
-2. Ensure contract alignment between frontend/backend
-3. Write comprehensive tests for new features
-4. **API Changes**: After modifying backend endpoints or schemas:
-   - Run `npm run api:generate` to regenerate OpenAPI spec and TypeScript types
-   - Commit both `backend/docs/openapi-3.yaml` and `src/lib/api-client/types.ts`
-   - Test frontend integration with new/updated endpoints
-   - Verify API contract alignment between backend implementation and frontend usage
-5. Follow Go standard practices and error handling
-6. Ensure both frontend and backend build successfully
-7. Run full test suite before submitting changes
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** changes: `git commit -m 'Add amazing feature'`
+4. **Push** to branch: `git push origin feature/amazing-feature`
+5. **Create** a Pull Request
+
+### Development Guidelines
+- Follow TypeScript strict mode requirements
+- Maintain OpenAPI spec accuracy with backend changes
+- Include tests for new features
+- Update documentation for API changes
 
 ## 📄 License
 
-[Your License Here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-For technical questions or issues:
-1. Check the contract alignment report in `COMPREHENSIVE_REMEDIATION_REPORT.md`
-2. Review deployment guide in `DEPLOYMENT_GUIDE.md`
-3. Check the documentation in `/docs`
-4. Review the canonical API specification at `backend/docs/openapi-3.yaml`
-5. Check database setup in `DATABASE_SETUP_GUIDE.md`
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/your-org/domainflow/issues)
+- **API Reference**: [API_SPEC.md](API_SPEC.md)
 
 ---
 
-**DomainFlow v3.0.0** - Production-ready domain generation and validation platform with 100% contract alignment, advanced type safety, and comprehensive documentation.
-
-## Database Seeding
-
-The application includes a seeding system for creating default users and test data.
-
-### Quick Setup
-
-After setting up the database, run the seeding script:
-
-```bash
-cd backend
-./scripts/seed_default_users.sh
-```
-
-### Default Credentials
-
-The seeding creates the following test accounts:
-
-| Email | Password | Role | Purpose |
-|-------|----------|------|---------|
-| `admin@domainflow.com` | `AdminPassword123!` | admin | System administration |
-| `test@example.com` | `TestPassword123!` | user | General testing |
-| `dev@domainflow.com` | `DevPassword123!` | user | UI/automated testing |
-
-### Automated Testing
-
-For automated UI testing with Playwright, Percy, or other tools, use:
-- **Email**: `test@example.com`
-- **Password**: `TestPassword123!`
-
-See `backend/database/seeds/README.md` for detailed documentation.
+**DomainFlow** - Professional domain research and validation platform with real-time capabilities and enterprise-grade reliability.
