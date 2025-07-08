@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, type Control, type SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -28,8 +28,7 @@ import type {
   CampaignFormValues,
   CampaignSelectedType,
   DomainGenerationPattern,
-  DomainSourceSelectionMode,
-  CampaignPhase
+  DomainSourceSelectionMode
 } from './types/CampaignFormTypes';
 
 // Import OpenAPI types
@@ -125,7 +124,7 @@ function needsHttpPersona(campaignType?: CampaignSelectedType | null): boolean {
 function needsDnsPersona(campaignType?: CampaignSelectedType | null): boolean {
   return campaignType === 'dns_validation';
 }
-import React, { useCallback, useMemo, useState, useRef, useEffect } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { FormErrorSummary } from '@/components/ui/form-field-error';
 import { type FormErrorState } from '@/lib/utils/errorHandling';
 

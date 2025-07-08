@@ -23,7 +23,7 @@ import { normalizeStatus, isActiveStatus } from '@/lib/utils/statusMapping';
 import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
 import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
 import { useToast } from '@/hooks/use-toast';
-import { useOptimisticUpdate, useLoadingState, useStateSubscription } from '@/lib/state/stateManager';
+import { useOptimisticUpdate, useLoadingState } from '@/lib/state/stateManager';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
 // Error serialization utility for meaningful logging

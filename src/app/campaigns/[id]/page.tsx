@@ -19,17 +19,12 @@ import DomainStreamingTable from '@/components/campaigns/DomainStreamingTable';
 
 // Centralized state management and operations
 import {
-  useCampaignDetailsStore,
   useCampaignData,
   useDomainData,
   useStreamingStats,
   useTableState,
   useActionLoading,
-  useCampaignDetailsActions,
-  type StreamingMessage,
-  type TableFilters,
-  type PaginationState,
-  type StreamingStats
+  useCampaignDetailsActions
 } from '@/lib/stores/campaignDetailsStore';
 import { getWebSocketStreamManager } from '@/lib/websocket/WebSocketStreamManager';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
@@ -46,29 +41,7 @@ export default function RefactoredCampaignDetailsPage() {
   const campaignId = params.id as string;
   const campaignTypeFromQuery = searchParams.get('type') as CampaignType | null;
 
-  // 🔧 CRITICAL FIX: Early return for missing campaign ID
-  if (!campaignId) {
-    console.error('❌ [Refactored Page] No campaign ID provided');
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Campaign Error" icon={Briefcase} />
-        <div className="text-center py-10">
-          <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-          <h2 className="text-lg font-semibold mb-2">No Campaign ID</h2>
-          <p className="text-muted-foreground mb-4">Campaign ID is missing from the URL.</p>
-          <Button onClick={() => router.push('/campaigns')}>
-            Back to Campaigns
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // 🔧 ENHANCED: If campaign type is missing, try to load campaign data first to get the type
-  if (!campaignTypeFromQuery) {
-    console.warn('⚠️ [Refactored Page] No campaign type provided in URL, will attempt to load from API');
-  }
-
+  // 🔧 CRITICAL FIX: All hooks must be called before any conditional logic
   // Initialization tracking
   const hasInitializedRef = useRef(false);
 
@@ -241,6 +214,29 @@ export default function RefactoredCampaignDetailsPage() {
       }
     };
   }, [webSocketConditions, campaignId, updateFromWebSocket, updateStreamingStats]); // Stable dependencies
+
+  // Now handle conditional logic after all hooks
+  if (!campaignId) {
+    console.error('❌ [Refactored Page] No campaign ID provided');
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Campaign Error" icon={Briefcase} />
+        <div className="text-center py-10">
+          <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+          <h2 className="text-lg font-semibold mb-2">No Campaign ID</h2>
+          <p className="text-muted-foreground mb-4">Campaign ID is missing from the URL.</p>
+          <Button onClick={() => router.push('/campaigns')}>
+            Back to Campaigns
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔧 ENHANCED: If campaign type is missing, try to load campaign data first to get the type
+  if (!campaignTypeFromQuery) {
+    console.warn('⚠️ [Refactored Page] No campaign type provided in URL, will attempt to load from API');
+  }
 
   // Error state
   if (error) {
