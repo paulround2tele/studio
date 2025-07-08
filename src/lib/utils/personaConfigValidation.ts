@@ -7,61 +7,53 @@ import type { components } from '@/lib/api-client/types';
 type DnsPersonaConfig = components['schemas']['DnsPersonaConfig'];
 type HttpPersonaConfig = components['schemas']['HttpPersonaConfig'];
 
-// Validation schemas that match backend DNSConfigDetails and HTTPConfigDetails
+// Validation schemas that match backend DnsPersonaConfig and HttpPersonaConfig
 export const dnsPersonaConfigSchema = z.object({
-  resolvers: z.array(z.string().min(1)).min(1),
-  useSystemResolvers: z.boolean().default(false),
+  // Required fields
+  maxDomainsPerRequest: z.number().min(1),
   queryTimeoutSeconds: z.number().min(0),
-  maxDomainsPerRequest: z.number().min(1).default(100),
-  resolverStrategy: z.enum(['random_rotation', 'weighted_rotation', 'sequential_failover']),
-  resolversWeighted: z.record(z.string(), z.number()).optional(),
+  resolverStrategy: z.enum(['round_robin', 'random', 'weighted', 'priority']),
+  resolvers: z.array(z.string().min(1)),
+  // Optional fields
+  concurrentQueriesPerDomain: z.number().min(1).optional(),
+  maxConcurrentGoroutines: z.number().min(1).optional(),
+  queryDelayMaxMs: z.number().min(0).optional(),
+  queryDelayMinMs: z.number().min(0).optional(),
+  rateLimitBurst: z.number().min(0).optional(),
+  rateLimitDps: z.number().min(0).optional(),
   resolversPreferredOrder: z.array(z.string()).optional(),
-  concurrentQueriesPerDomain: z.number().min(1),
-  queryDelayMinMs: z.number().min(0).default(0),
-  queryDelayMaxMs: z.number().min(0).default(1000),
-  maxConcurrentGoroutines: z.number().min(1),
-  rateLimitDps: z.number().min(0).default(10),
-  rateLimitBurst: z.number().min(0).default(50),
+  resolversWeighted: z.record(z.string(), z.number()).optional(),
+  useSystemResolvers: z.boolean().optional(),
 });
 
 export const httpPersonaConfigSchema = z.object({
+  // Required fields
   userAgent: z.string().min(1),
-  headers: z.record(z.string(), z.string()).optional(),
-  headerOrder: z.array(z.string()).optional(),
-  tlsClientHello: z.object({
-    minVersion: z.enum(['TLS10', 'TLS11', 'TLS12', 'TLS13']).optional(),
-    maxVersion: z.enum(['TLS10', 'TLS11', 'TLS12', 'TLS13']).optional(),
-    cipherSuites: z.array(z.string()).optional(),
-    curvePreferences: z.array(z.string()).optional(),
-    ja3: z.string().optional(),
-  }).optional(),
-  http2Settings: z.object({
-    enabled: z.boolean().default(false),
-  }).optional(),
-  cookieHandling: z.object({
-    mode: z.enum(['session', 'none', 'ignore', 'file']).optional(),
-  }).optional(),
+  // Optional fields
   allowInsecureTls: z.boolean().optional(),
-  requestTimeoutSec: z.number().min(0).optional(),
-  requestTimeoutSeconds: z.number().min(0).optional(),
-  maxRedirects: z.number().min(0).optional(),
-  followRedirects: z.boolean().optional(),
-  allowedStatusCodes: z.array(z.number().min(100).max(599)).optional(),
-  rateLimitDps: z.number().min(0).optional(),
-  rateLimitBurst: z.number().min(0).optional(),
-  useHeadless: z.boolean().optional(),
-  fallbackPolicy: z.enum(['never', 'on_fetch_error', 'always']).optional(),
-  viewportWidth: z.number().min(0).optional(),
-  viewportHeight: z.number().min(0).optional(),
-  headlessUserAgent: z.string().optional(),
-  scriptExecution: z.boolean().optional(),
-  loadImages: z.boolean().optional(),
-  screenshot: z.boolean().optional(),
+  allowedStatusCodes: z.array(z.number()).optional(),
+  cookieHandling: z.any().optional(), // Use any to avoid enum mismatch issues
   domSnapshot: z.boolean().optional(),
-  headlessTimeoutSeconds: z.number().min(0).optional(),
-  waitDelaySeconds: z.number().min(0).optional(),
   fetchBodyForKeywords: z.boolean().optional(),
-  notes: z.string().optional(),
+  followRedirects: z.boolean().optional(),
+  headerOrder: z.array(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  headlessTimeoutSeconds: z.number().min(0).optional(),
+  headlessUserAgent: z.string().optional(),
+  http2Settings: z.any().optional(),
+  insecureSkipVerify: z.boolean().optional(),
+  loadImages: z.boolean().optional(),
+  maxRedirects: z.number().min(0).optional(),
+  rateLimitBurst: z.number().min(0).optional(),
+  rateLimitDps: z.number().min(0).optional(),
+  requestTimeoutSec: z.number().min(0).optional(),
+  screenshot: z.boolean().optional(),
+  scriptExecution: z.boolean().optional(),
+  tlsClientHello: z.any().optional(),
+  useHeadless: z.boolean().optional(),
+  viewportHeight: z.number().min(0).optional(),
+  viewportWidth: z.number().min(0).optional(),
+  waitDelaySeconds: z.number().min(0).optional(),
 });
 
 /**

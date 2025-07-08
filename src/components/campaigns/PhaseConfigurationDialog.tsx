@@ -288,7 +288,7 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
           </DialogTitle>
           <DialogDescription>
             Configure the settings for the next phase of your campaign pipeline.
-            This will create a new {phaseDisplayNames[phaseType].toLowerCase()} campaign using domains from "{sourceCampaign.name}".
+            This will create a new {phaseDisplayNames[phaseType]?.toLowerCase()} campaign using domains from "{sourceCampaign?.name}".
           </DialogDescription>
         </DialogHeader>
 

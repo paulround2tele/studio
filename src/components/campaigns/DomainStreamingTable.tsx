@@ -218,19 +218,19 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
     } else if (campaign.campaignType === 'dns_validation') {
       domains = dnsCampaignItems.map(item => ({
         id: item.id,
-        domainName: item.domainName || item.domain,
+        domainName: item.domainName || item.domain || '',
         generatedDate: campaign.createdAt,
-        dnsStatus: getDomainStatusFromValidation(item.domainName || item.domain, dnsCampaignItems),
-        httpStatus: getDomainStatusFromValidation(item.domainName || item.domain, httpCampaignItems),
+        dnsStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', dnsCampaignItems),
+        httpStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', httpCampaignItems),
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
     } else if (campaign.campaignType === 'http_keyword_validation') {
       domains = httpCampaignItems.map(item => ({
         id: item.id,
-        domainName: item.domainName || item.domain,
+        domainName: item.domainName || item.domain || '',
         generatedDate: campaign.createdAt,
-        dnsStatus: getDomainStatusFromValidation(item.domainName || item.domain, dnsCampaignItems),
-        httpStatus: getDomainStatusFromValidation(item.domainName || item.domain, httpCampaignItems),
+        dnsStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', dnsCampaignItems),
+        httpStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', httpCampaignItems),
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
     }

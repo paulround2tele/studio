@@ -129,7 +129,7 @@ export function UserProfile({
                 Account Created
               </Label>
               <div className="p-3 bg-muted rounded-md">
-                {new Date(user.createdAt).toLocaleDateString()}
+                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
               </div>
             </div>
             

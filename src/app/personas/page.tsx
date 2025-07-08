@@ -9,11 +9,11 @@ import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
-type Persona = components['schemas']['Persona'];
+type PersonaBase = components['schemas']['Persona'];
 type CreatePersonaRequest = components['schemas']['CreatePersonaRequest'];
 
 // Legacy compatibility types - add missing properties from old types
-interface Persona extends Persona {
+interface Persona extends PersonaBase {
   status?: "Active" | "Disabled" | "Testing" | "Failed"; // Use correct OpenAPI enum
   tags?: string[]; // Legacy support
 }

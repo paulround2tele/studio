@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { getCampaigns } from '@/lib/api-client/client'; // Updated import path
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
+import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/campaignDataService';
 
 const MAX_ITEMS_DISPLAY_INITIAL_LOAD = 200; // Max items to process for the global table initially
 const DEFAULT_PAGE_SIZE_GLOBAL = 50;
@@ -33,11 +34,27 @@ const formatDate = (dateString: string): string => {
   }
 };
 
+// Helper functions to safely access campaign data
+const getCampaignDomains = (campaign: CampaignViewModel | RichCampaignData): string[] => {
+  return Array.isArray(campaign.domains) ? campaign.domains : [];
+};
+
+const getCampaignDnsValidatedDomains = (campaign: CampaignViewModel | RichCampaignData): string[] => {
+  return Array.isArray(campaign.dnsValidatedDomains) ? campaign.dnsValidatedDomains : [];
+};
+
+const getCampaignLeads = (campaign: CampaignViewModel | RichCampaignData): Array<any> => {
+  if ('leads' in campaign && Array.isArray(campaign.leads)) {
+    return campaign.leads;
+  }
+  return [];
+};
+
 // Helper function to determine domain status for the consolidated table
 const getGlobalDomainStatusForPhase = (
   domainName: string,
   phase: CampaignPhase,
-  campaign: CampaignViewModel
+  campaign: CampaignViewModel | RichCampaignData
 ): DomainActivityStatus => {
   const selectedType = campaign.selectedType || campaign.campaignType;
   const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
@@ -46,14 +63,21 @@ const getGlobalDomainStatusForPhase = (
   const phaseIndexInType = phasesForType.indexOf(phase);
   const currentCampaignPhaseIndexInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
 
-  // Determine if the domain was successfully processed in this phase
+  // Check if this domain was validated in this phase
   let validatedInThisPhase = false;
-  if (phase === 'DNSValidation') validatedInThisPhase = !!campaign.dnsValidatedDomains?.includes(domainName);
-  else if (phase === 'HTTPValidation') validatedInThisPhase = !!campaign.httpValidatedDomains?.includes(domainName);
-  // LeadGeneration status is handled separately by getGlobalLeadStatus
+  if (phase === 'DNSValidation') {
+    const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
+    validatedInThisPhase = dnsValidatedDomains.includes(domainName);
+  }
+  else if (phase === 'HTTPValidation') {
+    // For HTTP validation, we check if this domain has successful HTTP keyword results
+    const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
+    validatedInThisPhase = dnsValidatedDomains.includes(domainName);
+  }
 
+  // If validated in this phase, it's validated
   if (validatedInThisPhase) return 'validated';
-  
+
   // If campaign is fully completed, and this phase was part of its flow
   if (campaign.currentPhase === 'Completed' && phasesForType.includes(phase)) {
      // If it reached here, it means it wasn't in the validated list for this phase
@@ -64,8 +88,11 @@ const getGlobalDomainStatusForPhase = (
   // and it wasn't validated, then it's 'Not Validated' for that phase.
   if (currentCampaignPhaseIndexInType > phaseIndexInType || (campaign.currentPhase === phase && campaign.phaseStatus === 'Failed')) {
     // Check if this domain *should* have been processed by this phase
-    if (phase === 'DNSValidation' && (campaign.domains || []).includes(domainName)) return 'not_validated';
-    if (phase === 'HTTPValidation' && (campaign.dnsValidatedDomains || []).includes(domainName)) return 'not_validated';
+    const domains = getCampaignDomains(campaign);
+    const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
+    
+    if (phase === 'DNSValidation' && domains.includes(domainName)) return 'not_validated';
+    if (phase === 'HTTPValidation' && dnsValidatedDomains.includes(domainName)) return 'not_validated';
     return 'n_a'; // Not applicable or filtered out before even reaching this phase's potential input
   }
   
@@ -76,10 +103,13 @@ const getGlobalDomainStatusForPhase = (
   
   // If current campaign phase is before the phase we're checking, or campaign is Idle
   if (currentCampaignPhaseIndexInType < phaseIndexInType || campaign.currentPhase === 'Idle') {
+    const domains = getCampaignDomains(campaign);
+    const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
+    
     // If the domain was generated (in `campaign.domains`) but not yet DNS validated, it's pending for DNS
-    if (phase === 'DNSValidation' && (campaign.domains || []).includes(domainName)) return 'pending';
+    if (phase === 'DNSValidation' && domains.includes(domainName)) return 'pending';
      // If DNS validated but not yet HTTP validated, it's pending for HTTP
-    if (phase === 'HTTPValidation' && (campaign.dnsValidatedDomains || []).includes(domainName)) return 'pending';
+    if (phase === 'HTTPValidation' && dnsValidatedDomains.includes(domainName)) return 'pending';
 
     return 'pending'; // General pending for phases not yet reached
   }
@@ -90,7 +120,7 @@ const getGlobalDomainStatusForPhase = (
 
 const getGlobalLeadStatusAndScore = (
   domainName: string,
-  campaign: CampaignViewModel
+  campaign: CampaignViewModel | RichCampaignData
 ): { status: DomainActivityStatus; score?: number } => {
     const selectedType = campaign.selectedType || campaign.campaignType;
     const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
@@ -99,7 +129,7 @@ const getGlobalLeadStatusAndScore = (
     const leadGenPhaseIndex = phasesForType.indexOf('LeadGeneration');
     const currentPhaseOrderInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
 
-    const relevantLeads = (campaign.leads || []).filter(lead => lead.sourceUrl?.includes(domainName) || lead.name?.includes(domainName));
+    const relevantLeads = getCampaignLeads(campaign).filter(lead => lead.sourceUrl?.includes(domainName) || lead.name?.includes(domainName));
     const hasLeads = relevantLeads.length > 0;
     const score = hasLeads ? relevantLeads[0]?.similarityScore : undefined;
 
@@ -192,10 +222,25 @@ export default function LatestActivityTable() {
           typeof responseAny.data === 'object' && (responseAny.data as Record<string, unknown>).success &&
           Array.isArray((responseAny.data as Record<string, unknown>).data)) {
         const campaignsArray = transformCampaignsToViewModels((responseAny.data as Record<string, unknown>).data as Parameters<typeof transformCampaignsToViewModels>[0]);
+        
+        // Get campaign IDs for rich data fetching
+        const campaignIds = campaignsArray
+          .filter(campaign => campaign.id && campaign.name && campaign.createdAt)
+          .map(campaign => campaign.id!)
+          .slice(0, 10); // Limit to first 10 campaigns for performance
+
+        // Fetch rich data for all campaigns
+        const richCampaignDataMap = await getRichCampaignDataBatch(campaignIds);
+
+        // Process campaigns with rich data
         campaignsArray.forEach(campaign => {
           if (!campaign.id || !campaign.name || !campaign.createdAt) return;
-          (campaign.domains || []).forEach(domainName => {
-            const leadInfo = getGlobalLeadStatusAndScore(domainName, campaign);
+          
+          const richCampaign = richCampaignDataMap.get(campaign.id);
+          const domains = richCampaign?.domains || [];
+
+          domains.forEach(domainName => {
+            const leadInfo = getGlobalLeadStatusAndScore(domainName, richCampaign || campaign);
             processedActivities.push({
               id: `${campaign.id}-${domainName}`, // Unique ID for the activity row
               domain: domainName,
@@ -203,12 +248,12 @@ export default function LatestActivityTable() {
               campaignId: campaign.id!,
               campaignName: campaign.name!,
               phase: campaign.currentPhase || 'Idle',
-              status: getGlobalDomainStatusForPhase(domainName, 'DNSValidation', campaign),
+              status: getGlobalDomainStatusForPhase(domainName, 'DNSValidation', richCampaign || campaign),
               timestamp: campaign.createdAt!,
               activity: 'Domain processing',
               generatedDate: campaign.createdAt!, // Or a more specific date if available per domain
-              dnsStatus: getGlobalDomainStatusForPhase(domainName, 'DNSValidation', campaign),
-              httpStatus: getGlobalDomainStatusForPhase(domainName, 'HTTPValidation', campaign),
+              dnsStatus: getGlobalDomainStatusForPhase(domainName, 'DNSValidation', richCampaign || campaign),
+              httpStatus: getGlobalDomainStatusForPhase(domainName, 'HTTPValidation', richCampaign || campaign),
               leadScanStatus: leadInfo.status,
               leadScore: leadInfo.score, // Store the score here
               sourceUrl: `http://${domainName}`, // Assuming HTTP for direct link

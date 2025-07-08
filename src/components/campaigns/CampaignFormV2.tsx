@@ -23,11 +23,17 @@ import { CAMPAIGN_SELECTED_TYPES } from "@/lib/constants";
 import type { components } from '@/lib/api-client/types';
 import { apiClient } from '@/lib/api-client/client';
 
-// Import OpenAPI types to replace missing custom types
+// Import shared types to prevent conflicts
+import type {
+  CampaignFormValues,
+  CampaignSelectedType,
+  DomainGenerationPattern,
+  DomainSourceSelectionMode,
+  CampaignPhase
+} from './types/CampaignFormTypes';
+
+// Import OpenAPI types
 type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
-type CampaignSelectedType = components['schemas']['CreateCampaignRequest']['campaignType'];
-type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
-type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
 
 // Base campaign type from OpenAPI
 type BaseCampaign = components['schemas']['Campaign'];
@@ -97,39 +103,7 @@ const CampaignFormConstants = {
   DEFAULT_ROTATION_INTERVAL: 300,
 } as const;
 
-// Form values type using OpenAPI types directly
-interface CampaignFormValues {
-  name: string;
-  description?: string;
-  selectedType: CampaignSelectedType;
-  domainSourceSelectionMode: DomainSourceSelectionMode;
-  sourceCampaignId?: string;
-  sourcePhase?: components['schemas']['Campaign']['currentPhase'];
-  uploadedDomainsFile?: File | null;
-  uploadedDomainsContentCache?: string[];
-  initialDomainsToProcessCount?: number;
-  generationPattern: "prefix_variable" | "suffix_variable" | "both_variable";
-  constantPart: string;
-  allowedCharSet: string;
-  tldsInput: string;
-  prefixVariableLength?: number;
-  suffixVariableLength?: number;
-  maxDomainsToGenerate?: number;
-  targetKeywordsInput?: string;
-  scrapingRateLimitRequests?: number;
-  scrapingRateLimitPer?: 'second' | 'minute';
-  requiresJavaScriptRendering?: boolean;
-  rotationIntervalSeconds: number;
-  processingSpeedPerMinute: number;
-  batchSize: number;
-  retryAttempts: number;
-  targetHttpPorts?: number[];
-  assignedHttpPersonaId?: string;
-  assignedDnsPersonaId?: string;
-  proxyAssignmentMode: 'none' | 'single' | 'rotate_active';
-  assignedProxyId?: string;
-  launchSequence?: boolean;
-}
+// CampaignFormValues interface now imported from shared types file
 
 // Helper functions
 function getDefaultSourceMode(campaignType?: CampaignSelectedType | null): DomainSourceSelectionMode {
@@ -213,7 +187,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
       (campaignToEdit.domainSourceConfig?.type === 'current_campaign_output' ? 'campaign_output' as const : (campaignToEdit.domainSourceConfig?.type as DomainSourceSelectionMode || getDefaultSourceMode(campaignToEdit.selectedType))) :
       getDefaultSourceMode(preselectedType),
     sourceCampaignId: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourceCampaignId || CampaignFormConstants.NONE_VALUE_PLACEHOLDER) : CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
-    sourcePhase: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.sourcePhase as components['schemas']['Campaign']['currentPhase']) : undefined,
+    sourcePhase: isEditing && campaignToEdit ? campaignToEdit.domainSourceConfig?.sourcePhase : undefined,
     uploadedDomainsFile: null,
     uploadedDomainsContentCache: isEditing && campaignToEdit ? (campaignToEdit.domainSourceConfig?.type === 'upload' ? campaignToEdit.domainSourceConfig.uploadedDomains : []) : [],
     initialDomainsToProcessCount: isEditing && campaignToEdit ? campaignToEdit.initialDomainsToProcessCount : 100,
@@ -265,7 +239,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
   }), [isEditing, campaignToEdit, preselectedType]);
 
   const form = useForm<CampaignFormValues>({
-    defaultValues,
+    defaultValues: defaultValues as CampaignFormValues,
     mode: "onChange"
   });
 
@@ -671,7 +645,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit as SubmitHandler<CampaignFormValues>)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
               {/* Form Error Summary */}
               <FormErrorSummary 
                 errors={formFieldErrors}
@@ -680,7 +654,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               />
               
               {/* Basic Campaign Information */}
-              <FormField control={control as Control<CampaignFormValues>} name="name" render={({ field }) => (
+              <FormField control={control} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Campaign Name</FormLabel>
                   <FormControl>
@@ -690,7 +664,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                 </FormItem>
               )} />
               
-              <FormField control={control as Control<CampaignFormValues>} name="description" render={({ field }) => (
+              <FormField control={control} name="description" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
@@ -700,7 +674,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                 </FormItem>
               )} />
               
-              <FormField control={control as Control<CampaignFormValues>} name="selectedType" render={({ field }) => (
+              <FormField control={control} name="selectedType" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Campaign Type</FormLabel>
                   <Select onValueChange={(value) => {
@@ -725,7 +699,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               {/* Performance-optimized Domain Generation Configuration */}
               {selectedCampaignType === 'domain_generation' && (
                 <DomainGenerationConfig
-                  control={control as Control<CampaignFormValues>}
+                  control={control}
                   watch={watch}
                   setValue={setValue}
                   totalPossible={domainCalculation.total}
@@ -739,7 +713,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               {/* Optimized Domain Source Configuration */}
               {(selectedCampaignType === 'dns_validation' || selectedCampaignType === 'http_keyword_validation') && (
                 <DomainSourceConfig
-                  control={control as Control<CampaignFormValues>}
+                  control={control}
                   watch={watch}
                   sourceCampaigns={sourceCampaigns}
                   isLoading={loadingSelectData}
@@ -748,12 +722,12 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
 
               {/* Optimized Keyword Configuration */}
               {selectedCampaignType === 'http_keyword_validation' && (
-                <KeywordConfig control={control as Control<CampaignFormValues>} />
+                <KeywordConfig control={control} />
               )}
 
               {(selectedCampaignType === 'dns_validation' || selectedCampaignType === 'http_keyword_validation') && (
                 <CampaignTuningConfig
-                  control={control as Control<CampaignFormValues>}
+                  control={control}
                   showHttpPorts={selectedCampaignType === 'http_keyword_validation'}
                 />
               )}
@@ -761,7 +735,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               {/* Optimized Operational Assignments */}
               {(needsHttp || needsDns) && (
                 <OperationalAssignments
-                  control={control as Control<CampaignFormValues>}
+                  control={control}
                   needsHttp={needsHttp}
                   needsDns={needsDns}
                   httpPersonas={httpPersonas}
@@ -771,7 +745,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               )}
 
               {selectedCampaignType === 'domain_generation' && (
-                <FormField control={control as Control<CampaignFormValues>} name="launchSequence" render={({ field }) => (
+                <FormField control={control} name="launchSequence" render={({ field }) => (
                   <FormItem className="flex items-center space-x-2">
                     <FormLabel>Launch full sequence</FormLabel>
                     <FormControl>

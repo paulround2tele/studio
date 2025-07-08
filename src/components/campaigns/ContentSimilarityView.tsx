@@ -25,7 +25,8 @@ const getSimilarityBadgeVariant = (score: number) => {
 };
 
 export default function ContentSimilarityView({ campaign, onAnalysisComplete }: ContentSimilarityViewProps) {
-  const { extractedContent = [], leads = [] } = campaign;
+  const extractedContent = (campaign as any).extractedContent || [];
+  const leads = Array.isArray((campaign as any).leads) ? (campaign as any).leads : [];
   const { toast } = useToast();
   const [analyzingContentId, setAnalyzingContentId] = useState<string | null>(null);
 
@@ -34,6 +35,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
     setAnalyzingContentId(item.id);
     try {
       const _analysisInput: AnalyzeContentInput = {
+        urls: [item.url],
         content: item.text,
         keywords: item.text.toLowerCase().split(/\s+/).filter(kw => kw.length > 3).slice(0, 5), // Simple existing keywords
       };
@@ -139,7 +141,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {extractedContent.map((item) => (
+                  {extractedContent.map((item: any) => (
                     <TableRow key={item.id}>
                       <TableCell className="max-w-xs">
                         <p className="font-medium truncate" title={item.text}>{item.text.substring(0,100)}{item.text.length > 100 ? "..." : ""}</p>
@@ -216,7 +218,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leads.map((lead) => (
+                  {leads.map((lead: any) => (
                     <TableRow key={lead.id}>
                       <TableCell>
                         <p className="font-medium">{lead.name || 'N/A'}</p>

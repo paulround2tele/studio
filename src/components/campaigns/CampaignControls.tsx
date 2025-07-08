@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 export interface CampaignControlsProps {
   campaign: CampaignViewModel;
   actionLoading: Record<string, boolean>;
-  onStartPhase: (phaseToStart: CampaignType) => void;
+  onStartPhase: (phaseToStart: CampaignType) => Promise<void>;
   onPauseCampaign: () => void;
   onResumeCampaign: () => void;
   onStopCampaign: () => void;
@@ -164,7 +164,11 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
           {campaign.campaignType !== 'domain_generation' && (
             <PhaseGateButton
               label={`Retry ${failedPhaseName}`}
-              onClick={() => campaign.campaignType && onStartPhase(campaign.campaignType)}
+              onClick={() => {
+                if (campaign.campaignType) {
+                  onStartPhase(campaign.campaignType);
+                }
+              }}
               Icon={RefreshCw}
               variant="destructive"
               isLoading={actionLoading[`phase-${campaign.campaignType}`]}

@@ -18,7 +18,7 @@ import { createPersona, updatePersona } from "@/lib/services/personaService";
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
-type PersonaResponse = components['schemas']['PersonaResponse'];
+type PersonaResponse = components['schemas']['Persona'];
 type CreatePersonaRequest = components['schemas']['CreatePersonaRequest'];
 type UpdatePersonaRequest = components['schemas']['UpdatePersonaRequest'];
 type HttpPersonaConfig = components['schemas']['HttpPersonaConfig'];
@@ -130,27 +130,27 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           name: persona.name || "",
           description: persona.description || "",
           tagsInput: "", // Tags not in OpenAPI persona response
-          userAgent: ((persona as HttpPersona).configDetails as HTTPConfigDetails).userAgent || "",
-          headersJson: stringifyJsonForForm(((persona as HttpPersona).configDetails as HTTPConfigDetails).headers),
-          headerOrderInput: ((persona as HttpPersona).configDetails as HTTPConfigDetails).headerOrder?.join(', ') || "",
-          tlsClientHelloJson: stringifyJsonForForm(((persona as HttpPersona).configDetails as HTTPConfigDetails).tlsClientHello as unknown as Record<string, unknown>),
-          http2SettingsJson: stringifyJsonForForm(((persona as HttpPersona).configDetails as HTTPConfigDetails).http2Settings as unknown as Record<string, unknown>),
-          cookieHandlingJson: stringifyJsonForForm(((persona as HttpPersona).configDetails as HTTPConfigDetails).cookieHandling as unknown as Record<string, unknown>),
-          allowInsecureTls: ((persona as HttpPersona).configDetails as HTTPConfigDetails).allowInsecureTls || false,
-          requestTimeoutSec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).requestTimeoutSec || 30,
-          maxRedirects: ((persona as HttpPersona).configDetails as HTTPConfigDetails).maxRedirects || 5,
-          useHeadless: ((persona as HttpPersona).configDetails as HTTPConfigDetails).useHeadless ?? false,
+          userAgent: (persona as HttpPersona).configDetails?.userAgent || "",
+          headersJson: stringifyJsonForForm((persona as HttpPersona).configDetails?.headers || {}),
+          headerOrderInput: ((persona as HttpPersona).configDetails as unknown as HTTPConfigDetails)?.headerOrder?.join(', ') || "",
+          tlsClientHelloJson: stringifyJsonForForm((persona as HttpPersona).configDetails?.tlsClientHello as unknown as Record<string, unknown> || {}),
+          http2SettingsJson: stringifyJsonForForm((persona as HttpPersona).configDetails?.http2Settings as unknown as Record<string, unknown> || {}),
+          cookieHandlingJson: stringifyJsonForForm((persona as HttpPersona).configDetails?.cookieHandling as unknown as Record<string, unknown> || {}),
+          allowInsecureTls: (persona as HttpPersona).configDetails?.allowInsecureTls || false,
+          requestTimeoutSec: (persona as HttpPersona).configDetails?.requestTimeoutSeconds || 30,
+          maxRedirects: (persona as HttpPersona).configDetails?.maxRedirects || 5,
+          useHeadless: (persona as HttpPersona).configDetails?.useHeadless ?? false,
           fallbackPolicy: 'never', // Not in OpenAPI HTTP config
-          viewportWidth: ((persona as HttpPersona).configDetails as HTTPConfigDetails).viewportWidth,
-          viewportHeight: ((persona as HttpPersona).configDetails as HTTPConfigDetails).viewportHeight,
-          headlessUserAgent: ((persona as HttpPersona).configDetails as HTTPConfigDetails).headlessUserAgent || '',
-          scriptExecution: ((persona as HttpPersona).configDetails as HTTPConfigDetails).scriptExecution ?? false,
-          loadImages: ((persona as HttpPersona).configDetails as HTTPConfigDetails).loadImages ?? false,
-          screenshot: ((persona as HttpPersona).configDetails as HTTPConfigDetails).screenshot ?? false,
-          domSnapshot: ((persona as HttpPersona).configDetails as HTTPConfigDetails).domSnapshot ?? false,
-          headlessTimeoutSec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).headlessTimeoutSeconds,
-          waitDelaySec: ((persona as HttpPersona).configDetails as HTTPConfigDetails).waitDelaySeconds,
-          fetchBodyForKeywords: ((persona as HttpPersona).configDetails as HTTPConfigDetails).fetchBodyForKeywords ?? false,
+          viewportWidth: (persona as HttpPersona).configDetails?.viewportWidth,
+          viewportHeight: (persona as HttpPersona).configDetails?.viewportHeight,
+          headlessUserAgent: (persona as HttpPersona).configDetails?.headlessUserAgent || '',
+          scriptExecution: (persona as HttpPersona).configDetails?.scriptExecution ?? false,
+          loadImages: (persona as HttpPersona).configDetails?.loadImages ?? false,
+          screenshot: (persona as HttpPersona).configDetails?.screenshot ?? false,
+          domSnapshot: (persona as HttpPersona).configDetails?.domSnapshot ?? false,
+          headlessTimeoutSec: (persona as HttpPersona).configDetails?.headlessTimeoutSeconds,
+          waitDelaySec: (persona as HttpPersona).configDetails?.waitDelaySeconds,
+          fetchBodyForKeywords: (persona as HttpPersona).configDetails?.fetchBodyForKeywords ?? false,
           notes: "", // Notes not in OpenAPI HTTP config
         }
       : {
@@ -415,19 +415,19 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
           name: persona.name || "",
           description: persona.description || "",
           tagsInput: "", // Tags not in OpenAPI persona response
-          config_resolversInput: ((persona as DnsPersona).configDetails as DNSConfigDetails).resolvers?.join(', ') || "",
-          config_useSystemResolvers: ((persona as DnsPersona).configDetails as DNSConfigDetails).useSystemResolvers || false,
-          config_queryTimeoutSeconds: ((persona as DnsPersona).configDetails as DNSConfigDetails).queryTimeoutSeconds || 5,
-          config_maxDomainsPerRequest: ((persona as DnsPersona).configDetails as DNSConfigDetails).maxDomainsPerRequest,
-          config_resolverStrategy: (((persona as DnsPersona).configDetails as DNSConfigDetails).resolverStrategy as DnsResolverStrategy) || "round_robin",
-          config_resolversWeightedJson: stringifyJsonObjectForForm(((persona as DnsPersona).configDetails as DNSConfigDetails).resolversWeighted || {}),
-          config_resolversPreferredOrderInput: ((persona as DnsPersona).configDetails as DNSConfigDetails).resolversPreferredOrder?.join(', ') || "",
-          config_concurrentQueriesPerDomain: ((persona as DnsPersona).configDetails as DNSConfigDetails).concurrentQueriesPerDomain || 2,
-          config_queryDelayMinMs: ((persona as DnsPersona).configDetails as DNSConfigDetails).queryDelayMinMs,
-          config_queryDelayMaxMs: ((persona as DnsPersona).configDetails as DNSConfigDetails).queryDelayMaxMs,
-          config_maxConcurrentGoroutines: ((persona as DnsPersona).configDetails as DNSConfigDetails).maxConcurrentGoroutines || 10,
-          config_rateLimitDps: ((persona as DnsPersona).configDetails as DNSConfigDetails).rateLimitDps,
-          config_rateLimitBurst: ((persona as DnsPersona).configDetails as DNSConfigDetails).rateLimitBurst,
+          config_resolversInput: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.resolvers?.join(', ') || "",
+          config_useSystemResolvers: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.useSystemResolvers || false,
+          config_queryTimeoutSeconds: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.queryTimeoutSeconds || 5,
+          config_maxDomainsPerRequest: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.maxDomainsPerRequest || 100,
+          config_resolverStrategy: (((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.resolverStrategy as DnsResolverStrategy) || "round_robin",
+          config_resolversWeightedJson: stringifyJsonObjectForForm(((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.resolversWeighted || {}),
+          config_resolversPreferredOrderInput: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.resolversPreferredOrder?.join(', ') || "",
+          config_concurrentQueriesPerDomain: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.concurrentQueriesPerDomain || 2,
+          config_queryDelayMinMs: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.queryDelayMinMs,
+          config_queryDelayMaxMs: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.queryDelayMaxMs,
+          config_maxConcurrentGoroutines: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.maxConcurrentGoroutines || 10,
+          config_rateLimitDps: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.rateLimitDps,
+          config_rateLimitBurst: ((persona as DnsPersona).configDetails as unknown as DNSConfigDetails)?.rateLimitBurst,
         }
       : {
           name: "",

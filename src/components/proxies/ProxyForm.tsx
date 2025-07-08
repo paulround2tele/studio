@@ -27,8 +27,11 @@ import { createProxy, updateProxy } from '@/lib/services/proxyService.production
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from "lucide-react";
-const PROXY_PROTOCOLS: ProxyProtocol[] = ['http', 'https', 'socks4', 'socks5'];
-const INITIAL_PROXY_STATUSES: ProxyStatus[] = ['Active', 'Disabled']; // For creating new proxy
+const PROXY_PROTOCOLS = ['http', 'https', 'socks4', 'socks5'] as const;
+const INITIAL_PROXY_STATUSES = ['Active', 'Disabled'] as const; // For creating new proxy
+
+type ProxyFormProtocol = typeof PROXY_PROTOCOLS[number];
+type ProxyFormStatus = typeof INITIAL_PROXY_STATUSES[number];
 
 // Proxy form schema
 const proxyFormSchema = z.object({
@@ -36,13 +39,13 @@ const proxyFormSchema = z.object({
   description: z.string().optional(),
   address: z.string().min(7, { message: "Proxy address must be at least 7 characters (e.g., 1.2.3.4:80)." })
     .regex(/^[a-zA-Z0-9.-]+:[0-9]+$/, "Invalid hostname:port format"),
-  protocol: z.enum(PROXY_PROTOCOLS as [ProxyProtocol, ...ProxyProtocol[]], { required_error: "Protocol is required." }),
+  protocol: z.enum(PROXY_PROTOCOLS, { required_error: "Protocol is required." }),
   username: z.string().optional(),
   password: z.string().optional(),
   countryCode: z.string().optional(),
   notes: z.string().optional(),
   userEnabled: z.boolean().optional().default(true),
-  initialStatus: z.enum(INITIAL_PROXY_STATUSES as [ProxyStatus, ...ProxyStatus[]]).optional(),
+  initialStatus: z.enum(INITIAL_PROXY_STATUSES).optional(),
 });
 
 type ProxyFormValues = z.infer<typeof proxyFormSchema>;
@@ -64,7 +67,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
       name: proxyToEdit.name,
       description: proxyToEdit.description || "",
       address: proxyToEdit.address,
-      protocol: proxyToEdit.protocol,
+      protocol: (proxyToEdit.protocol as typeof PROXY_PROTOCOLS[number]) || "http",
       username: proxyToEdit.username || "",
       password: "",
       countryCode: proxyToEdit.countryCode || "",
@@ -99,11 +102,10 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           name: data.name,
           description: data.description,
           address: data.address,
-          protocol: data.protocol,
+          protocol: data.protocol as "http" | "https" | "socks4" | "socks5",
           username: data.username,
           password: data.password,
           countryCode: data.countryCode,
-          notes: data.notes,
           isEnabled: data.userEnabled,
           // Status is generally not updated via this form directly in edit mode
         };

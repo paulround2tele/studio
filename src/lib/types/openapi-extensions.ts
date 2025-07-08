@@ -28,7 +28,7 @@ export interface CampaignUIExtensions {
   domainSourceConfig?: {
     type?: string;
     sourceCampaignId?: string;
-    sourcePhase?: string;
+    sourcePhase?: CampaignPhase;
     uploadedDomains?: string[];
   };
   domainGenerationConfig?: {
@@ -75,9 +75,9 @@ export interface CampaignUIExtensions {
 export type CampaignViewModel = Campaign & CampaignUIExtensions;
 
 // Form-specific types
-export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
+export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable" | "constant_only";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-export type CampaignPhase = CampaignSelectedType;
+export type CampaignPhase = NonNullable<CampaignSelectedType>;
 
 // API Response wrapper for UI compatibility
 export interface ApiResponse<T = unknown> {

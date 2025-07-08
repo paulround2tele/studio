@@ -55,7 +55,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
   const statusInfo = getStatusBadgeInfo(persona.status as PersonaStatus);
 
   const handleDelete = () => {
-    if (persona.id && persona.personaType) onDelete(persona.id, persona.personaType);
+    if (persona.id && persona.personaType) onDelete(persona.id, persona.personaType as "http" | "dns");
   };
 
   const handleExport = () => {
@@ -108,11 +108,8 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
         <div className="text-sm space-y-1 mb-3">
           <div><strong>User-Agent:</strong> <p className="font-mono text-xs truncate block ml-1" title={config.userAgent}>{config.userAgent || "Not set"}</p></div>
           
-          <div className="flex items-center mt-1"><strong>Allow Insecure TLS:</strong>
-            <Badge variant={config.allowInsecureTls ? "destructive" : "secondary"} className="ml-2 text-xs">{config.allowInsecureTls ? "Yes" : "No"}</Badge>
-          </div>
-          <p><strong>Timeout:</strong> {config.requestTimeoutSec || config.requestTimeoutSeconds}s</p>
-          <p><strong>Redirects:</strong> {config.maxRedirects}</p>
+          <p><strong>Timeout:</strong> {config.requestTimeoutSeconds}s</p>
+          {config.followRedirects !== undefined && <p><strong>Follow Redirects:</strong> {config.followRedirects ? "Yes" : "No"}</p>}
           {config.cookieHandling?.mode && <p><strong>Cookie Handling:</strong> {config.cookieHandling.mode}</p>}
           {config.notes && <p><strong>Notes:</strong> <span className="text-muted-foreground italic truncate" title={config.notes}>{config.notes}</span></p>}
         </div>
@@ -121,16 +118,6 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
           {config.headers && Object.keys(config.headers).length > 0 &&
               <Button variant="outline" size="sm" onClick={() => copyToClipboard(config.headers, "HTTP Headers")} className="w-full justify-start text-left text-xs">
                 <Copy className="mr-2 h-3 w-3"/> Copy HTTP Headers ({Object.keys(config.headers).length} headers)
-              </Button>
-          }
-          {config.tlsClientHello && Object.keys(config.tlsClientHello).length > 0 &&
-              <Button variant="outline" size="sm" onClick={() => copyToClipboard(config.tlsClientHello, "TLS ClientHello Config")} className="w-full justify-start text-left text-xs">
-                <Copy className="mr-2 h-3 w-3"/> Copy TLS Config
-              </Button>
-          }
-          {config.http2Settings && Object.keys(config.http2Settings).length > 0 &&
-              <Button variant="outline" size="sm" onClick={() => copyToClipboard(config.http2Settings, "HTTP/2 Settings")} className="w-full justify-start text-left text-xs">
-                <Copy className="mr-2 h-3 w-3"/> Copy HTTP/2 Config
               </Button>
           }
         </div>
@@ -143,7 +130,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
     return (
       <>
         <div className="text-sm space-y-1 mb-3">
-          <div><strong>Strategy:</strong> <Badge variant="secondary" className="ml-2 text-xs">{config.resolverStrategy.replace(/_/g, ' ')}</Badge></div>
+          <div><strong>Strategy:</strong> <Badge variant="secondary" className="ml-2 text-xs">{config.resolverStrategy?.replace(/_/g, ' ') || 'Not set'}</Badge></div>
           <p><strong>Timeout:</strong> {config.queryTimeoutSeconds}s</p>
           <p><strong>Concurrent Queries/Domain:</strong> {config.concurrentQueriesPerDomain}</p>
           <p><strong>Max Goroutines:</strong> {config.maxConcurrentGoroutines}</p>
@@ -194,16 +181,16 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
                 <FilePenLine className="mr-2 h-4 w-4" /> Edit
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => persona.id && persona.personaType && onTest(persona.id, persona.personaType)} disabled={isActionDisabled || persona.status === 'Testing' || !persona.id || !persona.personaType}>
+            <DropdownMenuItem onClick={() => persona.id && persona.personaType && onTest(persona.id, persona.personaType as "http" | "dns")} disabled={isActionDisabled || persona.status === 'Testing' || !persona.id || !persona.personaType}>
               {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TestTubeDiagonal className="mr-2 h-4 w-4" />} Test Persona
             </DropdownMenuItem>
             {persona.status !== 'Disabled' && (
-                <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType, 'Disabled')} disabled={isActionDisabled || persona.status === 'Testing' || !persona.id || !persona.personaType}>
+                <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType as "http" | "dns", 'Disabled')} disabled={isActionDisabled || persona.status === 'Testing' || !persona.id || !persona.personaType}>
                    {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PowerOff className="mr-2 h-4 w-4" />} Disable Persona
                 </DropdownMenuItem>
             )}
             {persona.status === 'Disabled' && (
-                 <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType, 'Active')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
+                 <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType as "http" | "dns", 'Active')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
                     {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Power className="mr-2 h-4 w-4" />} Enable Persona
                 </DropdownMenuItem>
             )}

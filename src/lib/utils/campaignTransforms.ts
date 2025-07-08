@@ -91,12 +91,12 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
     phaseStatus,
     progress: campaign.progressPercentage || 0,
     
-    // Initialize empty arrays for UI state (will be populated as needed)
-    domains: [],
-    dnsValidatedDomains: [],
-    httpValidatedDomains: [],
-    extractedContent: [],
-    leads: [],
+    // Use actual count values from backend (these are numbers, not arrays)
+    domains: campaign.domains || 0,
+    dnsValidatedDomains: campaign.dnsValidatedDomains || 0,
+    // httpValidatedDomains: 0, // Not available in backend yet - this property doesn't exist in the OpenAPI schema
+    // extractedContent: [], // UI-only field for now - this property doesn't exist in the OpenAPI schema
+    leads: campaign.leads || 0,
     
     // Default UI configuration
     domainSourceConfig: {
@@ -278,8 +278,8 @@ export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: 
     
     updatedViewModel.status = newStatus;
     updatedViewModel.campaignType = newType;
-    updatedViewModel.currentPhase = mapStatusToPhase(newStatus, newType);
-    updatedViewModel.phaseStatus = mapStatusToPhaseStatus(newStatus);
+    updatedViewModel.currentPhase = mapStatusToPhase(newStatus || '', newType || '');
+    updatedViewModel.phaseStatus = mapStatusToPhaseStatus(newStatus || '');
     updatedViewModel.selectedType = newType;
   }
   

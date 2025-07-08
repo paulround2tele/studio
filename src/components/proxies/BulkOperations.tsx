@@ -39,8 +39,9 @@ import {
 import type { components } from '@/lib/api-client/types';
 
 type Proxy = components['schemas']['Proxy'];
-type ProxyActionResponse = { success: boolean; message?: string };
-type ProxyDeleteResponse = { deleted: boolean };
+import type { ProxyUpdateResponse, ProxyDeleteResponse, ApiResponse } from '@/lib/services/proxyService.production';
+
+type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { testProxy, cleanProxies, updateProxy, deleteProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
@@ -148,7 +149,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
       if (!proxy) continue;
       
       try {
-        let response: ProxyActionResponse | ProxyDeleteResponse;
+        let response: ProxyUpdateResponse | ProxyDeleteResponse | ApiResponse<unknown> | ProxyActionResponse;
         
         switch (action) {
           case 'enable':
@@ -165,7 +166,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
             
           case 'test':
             if (!proxy.id) continue;
-            response = await testProxy(proxy.id) as ProxyActionResponse;
+            response = await testProxy(proxy.id);
             break;
             
           case 'delete':
@@ -186,7 +187,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
           successCount++;
         } else {
           errorCount++;
-          errors.push(`${proxy.address}: ${response.message}`);
+          errors.push(`${proxy.address}: ${response.message || 'Unknown error'}`);
         }
       } catch (error) {
         errorCount++;
