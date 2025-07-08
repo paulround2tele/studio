@@ -320,8 +320,8 @@ func main() {
 	// Public routes (no authentication required)
 	router.GET("/ping", api.PingHandlerGin)
 
-	// OpenAPI 3.0 specification (public)
-	router.StaticFile("/api/openapi.yaml", "backend/docs/openapi.yaml")
+	// OpenAPI 3.0 specification (public) - auto-generated from Go code
+	router.StaticFile("/api/openapi.yaml", "backend/docs/openapi-3.yaml")
 	log.Println("Registered OpenAPI 3.0 specification route under /api/openapi.yaml")
 
 	// Authentication routes (public) - aligned with OpenAPI spec

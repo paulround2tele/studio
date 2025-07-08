@@ -371,7 +371,7 @@ For technical questions or issues:
 1. Check the contract alignment report in `COMPREHENSIVE_REMEDIATION_REPORT.md`
 2. Review deployment guide in `DEPLOYMENT_GUIDE.md`
 3. Check the documentation in `/docs`
-4. Review the canonical API specification at `backend/docs/openapi.yaml`
+4. Review the canonical API specification at `backend/docs/openapi-3.yaml`
 5. Check database setup in `DATABASE_SETUP_GUIDE.md`
 
 ---

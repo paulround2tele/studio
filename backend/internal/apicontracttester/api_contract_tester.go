@@ -60,7 +60,7 @@ func NewAPIContractTester(baseURL string) *APIContractTester {
 // loadSpec loads the OpenAPI specification and initializes the router
 func (t *APIContractTester) loadSpec() error {
 	loader := openapi3.NewLoader()
-	doc, err := loader.LoadFromFile("backend/docs/openapi.yaml")
+	doc, err := loader.LoadFromFile("backend/docs/openapi-3.yaml")
 	if err != nil {
 		return err
 	}
