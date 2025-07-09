@@ -95,7 +95,7 @@ const AppSidebar = memo(() => {
           <div className="flex flex-col">
             <span className="text-sm font-medium">{user?.email}</span>
             <span className="text-xs text-muted-foreground">
-              {user?.isActive ? 'Active User' : 'Inactive User'}
+              {isLoading ? 'Loading...' : (user?.isActive !== false ? 'Active User' : 'Inactive User')}
             </span>
           </div>
           <button
