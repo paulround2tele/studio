@@ -1,19 +1,20 @@
 // src/lib/services/authService.ts
-// Pure authentication service with configuration-driven API integration
-// NO HARDCODING - Uses environment-based configuration
+// Clean authentication service using auto-generated API clients
 
-import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
-import type { components } from '@/lib/api-client/types';
-
-type User = components['schemas']['User'];
+import { AuthApi, Configuration, User, LoginRequest } from '@/lib/api-client';
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
 
+// Create configured AuthApi instance
+const config = new Configuration({
+  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2'
+});
+const authApi = new AuthApi(config);
 
 // Use OpenAPI types for authentication
-export type LoginCredentials = components['schemas']['LoginRequest'] & {
-  rememberMe?: boolean; // UI-specific extension
+export type LoginCredentials = LoginRequest & {
+  rememberMe?: boolean;
 };
 
 export interface AuthResult {
@@ -22,35 +23,15 @@ export interface AuthResult {
   error?: string;
 }
 
-// Import additional OpenAPI auth types
-export type LoginResponse = components['schemas']['LoginResponse'];
-export type RefreshResponse = components['schemas']['RefreshResponse'];
-export type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
-export type StandardAPIResponse = components['schemas']['StandardAPIResponse'];
-
 /**
- * Pure authentication service with environment-based configuration.
- * NO UI logic, NO loading states, NO notifications - just auth operations.
- * Uses configurable timeouts and retry logic.
+ * Clean authentication service using auto-generated API clients
+ * No legacy wrappers - just clean, direct API calls
  */
 class AuthService {
   private static instance: AuthService;
-  private sessionCheckTimeout: number;
-  private maxRetries: number;
 
   constructor() {
-    // Configuration from environment - NO HARDCODING
-    this.sessionCheckTimeout = parseInt(
-      process.env.NEXT_PUBLIC_AUTH_SESSION_TIMEOUT || '15000'
-    );
-    this.maxRetries = parseInt(
-      process.env.NEXT_PUBLIC_AUTH_MAX_RETRIES || '2'
-    );
-
-    logger.debug('AUTH_SERVICE', 'Initialized with configuration', {
-      sessionCheckTimeout: this.sessionCheckTimeout,
-      maxRetries: this.maxRetries
-    });
+    logger.debug('AUTH_SERVICE', 'Initialized with pure auto-generated API client');
   }
 
   static getInstance(): AuthService {
@@ -61,38 +42,28 @@ class AuthService {
   }
 
   /**
-   * SIMPLE session check - no overthinking, just works
+   * Get current user using pure auto-generated API
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      // Use enhanced API client with circuit breaker and retry logic
-      const response = await enhancedApiClient.getCurrentUser();
+      const response = await authApi.getCurrentUser();
+      const userData = response.data;
       
-      if (response && typeof response === 'object') {
-        // Extract data from AxiosResponse
-        const userData = 'data' in response ? response.data : response;
-        
-        // Validate the user data
-        if (!userData?.id || !userData?.email) {
-          logger.warn('AUTH_SERVICE', 'Invalid user data received', { userData });
-          return null;
-        }
-        
-        logger.debug('AUTH_SERVICE', 'User retrieved successfully', {
-          userId: userData.id,
-          email: userData.email
-        });
-        
-        return userData as User;
+      if (!userData?.id || !userData?.email) {
+        logger.warn('AUTH_SERVICE', 'Invalid user data received', { userData });
+        return null;
       }
-
-      return null;
+      
+      logger.debug('AUTH_SERVICE', 'User retrieved successfully', {
+        userId: userData.id,
+        email: userData.email
+      });
+      
+      return userData as User;
     } catch (error) {
-      // Don't log 401 errors as they're expected when not authenticated
       const isAuthError = error instanceof Error && (
         error.message.includes('401') ||
-        error.message.includes('Unauthorized') ||
-        error.message.includes('Authentication required')
+        error.message.includes('Unauthorized')
       );
       
       if (!isAuthError) {
@@ -106,101 +77,53 @@ class AuthService {
   }
 
   /**
-   * Login with credentials and configurable retry logic
+   * Login using pure auto-generated API
    */
   async login(credentials: LoginCredentials): Promise<AuthResult> {
-    logger.info('AUTH_SERVICE', 'Login attempt started', { 
+    logger.info('AUTH_SERVICE', 'Login attempt started', {
       email: credentials.email,
-      rememberMe: credentials.rememberMe 
+      rememberMe: credentials.rememberMe
     });
 
-    let lastError: Error | null = null;
-
-    // Retry logic with configurable attempts
-    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
-      try {
-        const response = await enhancedApiClient.login({
-          email: credentials.email,
-          password: credentials.password,
-          rememberMe: credentials.rememberMe
-        });
-        
-        if (response?.data?.user) {
-          // Validate the user data
-          if (!response.data.user?.id || !response.data.user?.email) {
-            logger.warn('AUTH_SERVICE', 'Invalid user data in login response', {
-              attempt: attempt + 1,
-              hasUser: !!response.data.user
-            });
-            return {
-              success: false,
-              error: 'Invalid login response'
-            };
-          }
-          logger.info('AUTH_SERVICE', 'Login successful', {
-            userId: response.data.user.id,
-            attempt: attempt + 1
-          });
-          
-          return {
-            success: true,
-            user: response.data.user
-          };
-        }
-        
-        logger.warn('AUTH_SERVICE', 'Login failed - invalid response', { 
-          attempt: attempt + 1,
-          hasResponse: !!response,
-          hasUser: !!(response as { user?: unknown })?.user
-        });
-        
+    try {
+      const response = await authApi.login({
+        email: credentials.email,
+        password: credentials.password,
+        rememberMe: credentials.rememberMe
+      });
+      
+      const userData = response.data?.user;
+      if (!userData?.id || !userData?.email) {
+        logger.warn('AUTH_SERVICE', 'Invalid user data in login response');
         return {
           success: false,
           error: 'Invalid login response'
         };
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error');
-        
-        // Don't retry on certain errors
-        if (lastError.message.includes('401') || lastError.message.includes('400')) {
-          logger.warn('AUTH_SERVICE', 'Login failed - authentication error', { 
-            error: lastError.message,
-            attempt: attempt + 1 
-          });
-          break;
-        }
-
-        if (attempt < this.maxRetries) {
-          const retryDelay = Math.pow(2, attempt) * 1000;
-          logger.debug('AUTH_SERVICE', 'Retrying login after delay', { 
-            attempt: attempt + 1,
-            retryDelay 
-          });
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-        }
       }
+      
+      logger.info('AUTH_SERVICE', 'Login successful', { userId: userData.id });
+      return {
+        success: true,
+        user: userData as User
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      logger.error('AUTH_SERVICE', 'Login failed', { error: errorMessage });
+      return {
+        success: false,
+        error: errorMessage
+      };
     }
-
-    const errorMessage = lastError?.message || 'Login failed';
-    logger.error('AUTH_SERVICE', 'Login failed after all retries', { 
-      error: errorMessage,
-      maxRetries: this.maxRetries 
-    });
-
-    return {
-      success: false,
-      error: errorMessage
-    };
   }
 
   /**
-   * Logout current session
+   * Logout using pure auto-generated API
    */
   async logout(): Promise<AuthResult> {
     logger.info('AUTH_SERVICE', 'Logout started');
 
     try {
-      await enhancedApiClient.logout();
+      await authApi.logout();
       logger.info('AUTH_SERVICE', 'Logout successful');
       return { success: true };
     } catch (error) {
@@ -214,13 +137,13 @@ class AuthService {
   }
 
   /**
-   * Refresh current session
+   * Refresh session using pure auto-generated API
    */
   async refreshSession(): Promise<AuthResult> {
     logger.debug('AUTH_SERVICE', 'Session refresh started');
 
     try {
-      await enhancedApiClient.auth.authRefreshPost();
+      await authApi.refreshSession();
       logger.info('AUTH_SERVICE', 'Session refresh successful');
       return { success: true };
     } catch (error) {
@@ -234,13 +157,13 @@ class AuthService {
   }
 
   /**
-   * Change password with validation
+   * Change password using pure auto-generated API
    */
   async changePassword(currentPassword: string, newPassword: string): Promise<AuthResult> {
     logger.info('AUTH_SERVICE', 'Change password started');
 
     try {
-      await enhancedApiClient.auth.changePasswordPost({
+      await authApi.changePassword({
         currentPassword,
         newPassword
       });

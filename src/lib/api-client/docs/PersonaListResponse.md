@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PersonaListResponse } from 'api-client';
+import { PersonaListResponse } from './api';
 
 const instance: PersonaListResponse = {
     data,

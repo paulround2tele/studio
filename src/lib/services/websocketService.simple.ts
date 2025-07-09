@@ -1,736 +1,410 @@
-// src/lib/services/websocketService.simple.ts
-// Professional WebSocket service using centralized backend detection
-// Eliminates 429 rate limiting through request consolidation
+// WebSocket Service - Single, unified WebSocket solution
+// Supports multiple simultaneous connections with proper error handling and reconnection
 
-import { getLogger } from '@/lib/utils/logger';
-import { getBackendUrl } from '@/lib/services/backendDetection';
-
-const logger = getLogger();
-
-// Professional WebSocket URL construction using centralized backend detection
-const getWebSocketUrl = async (): Promise<string> => {
-  console.log('🔍 [WebSocketService] Constructing WebSocket URL...');
-
-  // If explicitly configured, use it (highest priority)
-  if (process.env.NEXT_PUBLIC_WS_URL) {
-    console.log(`🔧 [WebSocketService] Using configured WebSocket URL: ${process.env.NEXT_PUBLIC_WS_URL}`);
-    return process.env.NEXT_PUBLIC_WS_URL;
-  }
-
-  // Use centralized backend detection (no more duplicate port scanning)
-  const backendUrl = await getBackendUrl();
-  console.log(`🔗 [WebSocketService] Backend URL from centralized detection: ${backendUrl}`);
-
-  // Construct WebSocket URL from backend URL
-  if (backendUrl) {
-    // Convert HTTP backend URL to WebSocket URL
-    const protocol = backendUrl.startsWith('https:') ? 'wss:' : 'ws:';
-    const wsUrl = backendUrl.replace(/^https?:/, protocol) + '/api/v2/ws';
-    console.log(`  ✅ Constructed WebSocket URL from backend: ${wsUrl}`);
-    return wsUrl;
-  }
-
-  // Fallback to relative URL (same origin)
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const url = `${protocol}//${window.location.host}/api/v2/ws`;
-    console.log(`  ✅ Fallback WebSocket URL: ${url}`);
-    return url;
-  }
-
-  // SSR fallback
-  const fallbackUrl = '/api/v2/ws';
-  console.log(`  ✅ SSR fallback WebSocket URL: ${fallbackUrl}`);
-  return fallbackUrl;
-};
-
-/**
- * Environment-aware WebSocket configuration
- * Adapts connection behavior based on environment settings
- */
-interface WebSocketConfig {
-  url: string;
-  reconnectInterval: number;
-  maxReconnectAttempts: number;
-  connectionTimeout: number;
-  heartbeatInterval: number;
-  enableHeartbeat: boolean;
-  enableDebugMode: boolean;
-  protocols?: string[];
-  headers?: Record<string, string>;
-}
-
-/**
- * Default configuration from environment variables
- */
-const DEFAULT_CONFIG: WebSocketConfig = {
-  url: '', // Will be resolved dynamically when connecting
-  // RATE LIMIT FIX: Increased base reconnect interval from 5s to 10s
-  reconnectInterval: parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || '10000'),
-  maxReconnectAttempts: parseInt(process.env.NEXT_PUBLIC_WS_MAX_RECONNECTS || '5'),
-  connectionTimeout: parseInt(process.env.NEXT_PUBLIC_WS_CONNECTION_TIMEOUT || '30000'),
-  // RATE LIMIT FIX: Increased heartbeat interval from 30s to 60s
-  heartbeatInterval: parseInt(process.env.NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL || '60000'),
-  enableHeartbeat: process.env.NEXT_PUBLIC_WS_ENABLE_HEARTBEAT !== 'false',
-  enableDebugMode: process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEBUG === 'true',
-  protocols: process.env.NEXT_PUBLIC_WS_PROTOCOLS?.split(',') || [],
-};
-
-/**
- * WebSocket message types
- */
-interface WebSocketMessage {
+// Legacy message format
+export interface WebSocketMessage {
   type: string;
   data?: unknown;
-  timestamp: number;
-  id?: string;
+  campaignId?: string;
+  timestamp?: string;
+  sequenceNumber?: number;
 }
 
-/**
- * Connection status interface
- */
-interface ConnectionStatus {
-  isConnected: boolean;
-  lastConnected?: Date;
-  lastError?: string;
+// Handler types
+export type MessageHandler = (message: WebSocketMessage) => void;
+export type ErrorHandler = (error: Event | Error) => void;
+
+// Dashboard activity payload type for compatibility
+export interface DashboardActivityPayload {
+  campaignId: string;
+  domainName: string;
+  activity: string;
+  status: string;
+  phase: string;
+  timestamp: string;
+}
+
+// Connection options
+export interface ConnectionOptions {
+  onMessage: MessageHandler;
+  onError?: ErrorHandler;
+  onOpen?: () => void;
+  onClose?: () => void;
+  onConnect?: () => void; // Legacy alias for onOpen
+  onDisconnect?: () => void; // Legacy alias for onClose
+}
+
+// WebSocket connection management
+interface WebSocketConnection {
+  ws: WebSocket | null;
+  options: ConnectionOptions;
   reconnectAttempts: number;
+  reconnectTimer: NodeJS.Timeout | null;
+  isConnected: boolean;
+  maxReconnectAttempts: number;
+  reconnectInterval: number;
 }
 
-/**
- * Event handlers interface
- */
-interface WebSocketEventHandlers {
-  onMessage?: (message: WebSocketMessage) => void;
-  onError?: (error: Event | Error) => void;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
-  onReconnect?: (attempt: number) => void;
-}
+class WebSocketServiceImpl {
+  private connections: Map<string, WebSocketConnection> = new Map();
+  private baseUrl: string;
 
-/**
- * Configuration-driven WebSocket service
- * Handles connections, reconnection, and message routing
- */
-class WebSocketService {
-  private config: WebSocketConfig;
-  private connections: Map<string, WebSocket> = new Map();
-  private connectionStatuses: Map<string, ConnectionStatus> = new Map();
-  private reconnectTimers: Map<string, NodeJS.Timeout> = new Map();
-  private heartbeatTimers: Map<string, NodeJS.Timeout> = new Map();
-  private eventHandlers: Map<string, WebSocketEventHandlers> = new Map();
-
-  constructor(config: Partial<WebSocketConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+  constructor() {
+    // Get WebSocket URL from environment
+    this.baseUrl = process.env.NEXT_PUBLIC_WS_URL || '';
     
-    logger.debug('WEBSOCKET', 'Service initialized', {
-      url: this.config.url,
-      reconnectInterval: this.config.reconnectInterval,
-      maxReconnectAttempts: this.config.maxReconnectAttempts,
-    });
+    if (!this.baseUrl || !this.baseUrl.trim()) {
+      console.warn('⚠️ [WebSocketService] NEXT_PUBLIC_WS_URL not configured. WebSocket connections will fail.');
+    }
   }
 
   /**
-   * Connect to WebSocket with specified key and handlers
+   * Connect to a specific channel
    */
-  connect(
-    connectionKey: string,
-    handlers: WebSocketEventHandlers = {},
-    customUrl?: string
-  ): () => void {
-    logger.info('WEBSOCKET', `Starting connection setup for ${connectionKey}`);
-
-    // Store handlers for this connection
-    this.eventHandlers.set(connectionKey, handlers);
-
-    // Initialize connection status
-    this.connectionStatuses.set(connectionKey, {
-      isConnected: false,
+  connect(channel: string, options: ConnectionOptions): () => void {
+    console.log(`🔗 [WebSocketService] Connecting to channel: ${channel}`);
+    
+    // Clean up existing connection if any
+    this.disconnect(channel);
+    
+    // Create new connection
+    const connection: WebSocketConnection = {
+      ws: null,
+      options,
       reconnectAttempts: 0,
-    });
-
-    // Resolve URL dynamically and start connection
-    if (customUrl) {
-      logger.info('WEBSOCKET', `Using custom URL for ${connectionKey}`, { url: customUrl });
-      this.establishConnection(connectionKey, customUrl);
-    } else {
-      // Resolve URL dynamically
-      getWebSocketUrl().then(url => {
-        logger.info('WEBSOCKET', `Resolved dynamic URL for ${connectionKey}`, { url });
-        this.establishConnection(connectionKey, url);
-      }).catch(error => {
-        logger.error('WEBSOCKET', `Failed to resolve URL for ${connectionKey}`, error);
-        this.handleConnectionFailure(connectionKey, error);
-      });
-    }
-
-    // Return cleanup function
-    return () => this.disconnect(connectionKey);
-  }
-
-  /**
-   * Connect to all campaigns (specific method used by existing code)
-   */
-  connectToAllCampaigns(
-    onMessage?: (message: WebSocketMessage) => void,
-    onError?: (error: Event | Error) => void
-  ): () => void {
-    const connectionKey = 'all-campaigns';
-    
-    console.log('[WebSocketService] connectToAllCampaigns called');
-    
-    return this.connect(connectionKey, {
-      onMessage: (message) => {
-        console.log('[WebSocketService] Message received on all-campaigns connection:', message);
-        onMessage?.(message);
-      },
-      onError: (error) => {
-        console.log('[WebSocketService] Error on all-campaigns connection:', error);
-        onError?.(error);
-      },
-      onConnect: () => {
-        console.log('[WebSocketService] Successfully connected to all campaigns');
-        logger.websocket.success('Connected to all campaigns');
-        // Initialize connection first, then subscribe to campaign updates
-        this.sendMessage(connectionKey, {
-          type: 'connection_init',
-          data: { lastSequenceNumber: 0 },
-          timestamp: Date.now(),
-        });
-        
-        // Send subscription after a brief delay to allow connection_ack
-        setTimeout(() => {
-          console.log('[WebSocketService] Sending subscription message');
-          this.sendMessage(connectionKey, {
-            type: 'subscribe',
-            data: { channels: ['campaigns', 'campaign-updates'] },
-            timestamp: Date.now(),
-          });
-        }, 100);
-      },
-      onDisconnect: () => {
-        console.log('[WebSocketService] Disconnected from all campaigns');
-        logger.info('WEBSOCKET', 'Disconnected from all campaigns');
-      },
-    });
-  }
-
-  /**
-   * Establish WebSocket connection
-   */
-  private establishConnection(connectionKey: string, url: string): void {
-    try {
-      console.log(`[WebSocketService] Establishing connection for ${connectionKey} to ${url}`);
-      
-      // Close existing connection if any
-      this.closeConnection(connectionKey);
-
-      // Create new WebSocket connection
-      const ws = new WebSocket(url, this.config.protocols);
-      this.connections.set(connectionKey, ws);
-      
-      console.log(`[WebSocketService] WebSocket created for ${connectionKey}, readyState: ${ws.readyState}`);
-
-      // Set connection timeout
-      const connectionTimeout = setTimeout(() => {
-        if (ws.readyState === WebSocket.CONNECTING) {
-          console.log(`[WebSocketService] Connection timeout for ${connectionKey} after ${this.config.connectionTimeout}ms`);
-          logger.warn('WEBSOCKET', `Connection timeout for ${connectionKey}`);
-          ws.close();
-          this.handleConnectionFailure(connectionKey, new Error('Connection timeout'));
-        }
-      }, this.config.connectionTimeout);
-
-      // Setup event handlers
-      ws.onopen = () => {
-        console.log(`[WebSocketService] WebSocket onopen triggered for ${connectionKey}`);
-        clearTimeout(connectionTimeout);
-        this.handleConnectionOpen(connectionKey);
-      };
-
-      ws.onmessage = (event) => {
-        console.log(`[WebSocketService] WebSocket onmessage triggered for ${connectionKey}:`, event.data);
-        
-        // DIAGNOSTIC: Enhanced message logging for websocket debugging
-        try {
-          const parsedData = JSON.parse(event.data);
-          console.log(`🔍 [DIAGNOSTIC] WebSocket Message Details:`, {
-            connectionKey,
-            messageType: parsedData.type,
-            campaignId: parsedData.campaignId || parsedData.campaign_id || parsedData.data?.campaignId || parsedData.data?.campaign_id,
-            hasData: !!parsedData.data,
-            timestamp: parsedData.timestamp,
-            sequenceNumber: parsedData.sequenceNumber,
-            messageSize: event.data.length,
-            rawType: typeof parsedData.type,
-            allKeys: Object.keys(parsedData)
-          });
-          
-          // Check for message format issues
-          if (parsedData.type) {
-            const messageType = parsedData.type;
-            if (messageType.includes('_')) {
-              console.log(`⚠️ [DIAGNOSTIC] Legacy message format detected: "${messageType}" (should use dot notation)`);
-            }
-            if (messageType.includes('.')) {
-              console.log(`✅ [DIAGNOSTIC] Modern message format detected: "${messageType}"`);
-            }
-          }
-          
-          // Check for campaign ID field variations
-          const campaignIdVariations = {
-            campaignId: parsedData.campaignId,
-            campaign_id: parsedData.campaign_id,
-            campaignID: parsedData.campaignID,
-            'data.campaignId': parsedData.data?.campaignId,
-            'data.campaign_id': parsedData.data?.campaign_id
-          };
-          
-          const foundCampaignIds = Object.entries(campaignIdVariations)
-            .filter(([_key, value]) => value)
-            .map(([key, value]) => ({ field: key, value }));
-            
-          if (foundCampaignIds.length > 0) {
-            console.log(`🎯 [DIAGNOSTIC] Campaign ID fields found:`, foundCampaignIds);
-          } else {
-            console.log(`❌ [DIAGNOSTIC] No campaign ID found in message`);
-          }
-          
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.log(`❌ [DIAGNOSTIC] Failed to parse WebSocket message:`, errorMessage);
-          console.log(`❌ [DIAGNOSTIC] Raw message:`, event.data.substring(0, 200));
-        }
-        
-        this.handleMessage(connectionKey, event);
-      };
-
-      ws.onerror = (error) => {
-        console.log(`[WebSocketService] WebSocket onerror triggered for ${connectionKey}:`, error);
-        clearTimeout(connectionTimeout);
-        this.handleError(connectionKey, error);
-      };
-
-      ws.onclose = (event) => {
-        console.log(`[WebSocketService] WebSocket onclose triggered for ${connectionKey}:`, {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean
-        });
-        clearTimeout(connectionTimeout);
-        this.handleConnectionClose(connectionKey, event);
-      };
-
-    } catch (error) {
-      console.log(`[WebSocketService] Exception while establishing connection for ${connectionKey}:`, error);
-      logger.error('WEBSOCKET', `Failed to create connection ${connectionKey}`, error);
-      this.handleConnectionFailure(connectionKey, error as Error);
-    }
-  }
-
-  /**
-   * Handle successful connection
-   */
-  private handleConnectionOpen(connectionKey: string): void {
-    logger.websocket.success(`Connected: ${connectionKey}`);
-
-    // Update status
-    const status = this.connectionStatuses.get(connectionKey);
-    if (status) {
-      status.isConnected = true;
-      status.lastConnected = new Date();
-      status.reconnectAttempts = 0;
-      status.lastError = undefined;
-    }
-
-    // Clear reconnect timer
-    const reconnectTimer = this.reconnectTimers.get(connectionKey);
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer);
-      this.reconnectTimers.delete(connectionKey);
-    }
-
-    // Start heartbeat if enabled
-    if (this.config.enableHeartbeat) {
-      this.startHeartbeat(connectionKey);
-    }
-
-    // Call connect handler
-    const handlers = this.eventHandlers.get(connectionKey);
-    handlers?.onConnect?.();
-  }
-
-  /**
-   * Handle connection close
-   */
-  private handleConnectionClose(connectionKey: string, event: CloseEvent): void {
-    logger.info('WEBSOCKET', `Connection closed: ${connectionKey}`, {
-      code: event.code,
-      reason: event.reason,
-      wasClean: event.wasClean,
-    });
-
-    // Update status
-    const status = this.connectionStatuses.get(connectionKey);
-    if (status) {
-      status.isConnected = false;
-    }
-
-    // Stop heartbeat
-    this.stopHeartbeat(connectionKey);
-
-    // Remove connection
-    this.connections.delete(connectionKey);
-
-    // Call disconnect handler
-    const handlers = this.eventHandlers.get(connectionKey);
-    handlers?.onDisconnect?.();
-
-    // Attempt reconnection if not a clean close
-    if (!event.wasClean && status && status.reconnectAttempts < this.config.maxReconnectAttempts) {
-      this.scheduleReconnect(connectionKey);
-    }
-  }
-
-  /**
-   * Handle connection error - distinguish between retryable connection issues and true errors
-   */
-  private handleError(connectionKey: string, error: Event): void {
-    // More graceful error logging - don't log full error objects for common WebSocket issues
-    const errorDetails = {
-      type: error.type,
-      target: error.target?.constructor?.name || 'WebSocket',
-      timeStamp: error.timeStamp
+      reconnectTimer: null,
+      isConnected: false,
+      maxReconnectAttempts: 10,
+      reconnectInterval: 1000
     };
     
-    // Classify error types - only escalate true application errors
-    const isConnectionError = error.type === 'error' && error.target?.constructor?.name === 'WebSocket';
+    this.connections.set(channel, connection);
     
-    if (isConnectionError) {
-      // This is a normal connection failure (network issues, server down, etc.)
-      // Log at debug level and don't escalate to application layer
-      logger.debug('WEBSOCKET', `Connection attempt failed: ${connectionKey} (will retry)`, errorDetails);
-      
-      // Update status but don't call error handler for connection attempts
-      const status = this.connectionStatuses.get(connectionKey);
-      if (status) {
-        status.lastError = `Connection attempt failed: ${error.type}`;
-      }
-      
-      // Don't call onError handler for normal connection failures - they will be retried
-      // The application should only be notified of true errors, not connection attempts
-      
-    } else {
-      // This is an actual application error that should be escalated
-      logger.warn('WEBSOCKET', `Application error: ${connectionKey}`, errorDetails);
-      
-      // Update status
-      const status = this.connectionStatuses.get(connectionKey);
-      if (status) {
-        status.lastError = `Application error: ${error.type}`;
-      }
-      
-      // Call error handler for true application errors
-      const handlers = this.eventHandlers.get(connectionKey);
-      handlers?.onError?.(error);
-    }
+    // Start connection
+    this.connectChannel(channel);
+    
+    // Return cleanup function
+    return () => this.disconnect(channel);
   }
 
   /**
-   * Handle connection failure
+   * Connect to all campaigns for real-time updates
    */
-  private handleConnectionFailure(connectionKey: string, error: Error): void {
-    // Use warn level for connection failures as they're often temporary network issues
-    logger.warn('WEBSOCKET', `Connection failed: ${connectionKey}`, {
-      message: error.message,
-      name: error.name
+  connectToAllCampaigns(
+    messageHandler: MessageHandler,
+    errorHandler?: ErrorHandler
+  ): () => void {
+    console.log(`🔗 [WebSocketService] Connecting to all campaigns`);
+    
+    return this.connect('all-campaigns', {
+      onMessage: messageHandler,
+      onError: errorHandler,
+      onOpen: () => console.log(`✅ [WebSocketService] Connected to all campaigns`),
+      onClose: () => console.log(`🔌 [WebSocketService] Disconnected from all campaigns`)
     });
-
-    // Update status
-    const status = this.connectionStatuses.get(connectionKey);
-    if (status) {
-      status.isConnected = false;
-      status.lastError = error.message;
-    }
-
-    // Call error handler
-    const handlers = this.eventHandlers.get(connectionKey);
-    handlers?.onError?.(error);
-
-    // Schedule reconnect
-    if (status && status.reconnectAttempts < this.config.maxReconnectAttempts) {
-      this.scheduleReconnect(connectionKey);
-    }
   }
 
   /**
-   * Schedule reconnection attempt
+   * Disconnect from a specific channel
    */
-  private scheduleReconnect(connectionKey: string): void {
-    const status = this.connectionStatuses.get(connectionKey);
-    if (!status) return;
+  private disconnect(channel: string): void {
+    const connection = this.connections.get(channel);
+    if (!connection) return;
 
-    status.reconnectAttempts++;
+    console.log(`🔌 [WebSocketService] Disconnecting from channel: ${channel}`);
     
-    logger.info('WEBSOCKET', `Scheduling reconnect attempt ${status.reconnectAttempts}/${this.config.maxReconnectAttempts} for ${connectionKey}`);
-
-    // RATE LIMIT FIX: Implement exponential backoff with jitter
-    const baseDelay = this.config.reconnectInterval;
-    const exponentialDelay = Math.min(baseDelay * Math.pow(2, status.reconnectAttempts - 1), 300000); // Max 5 minutes
-    const jitter = Math.random() * 0.1 * exponentialDelay; // Add 10% jitter
-    const finalDelay = exponentialDelay + jitter;
+    // Clear reconnect timer
+    if (connection.reconnectTimer) {
+      clearTimeout(connection.reconnectTimer);
+      connection.reconnectTimer = null;
+    }
     
-    logger.info('WEBSOCKET', `Scheduling reconnect attempt ${status.reconnectAttempts}/${this.config.maxReconnectAttempts} for ${connectionKey} in ${Math.round(finalDelay/1000)}s`);
-
-    const timer = setTimeout(() => {
-      logger.info('WEBSOCKET', `Reconnect attempt ${status.reconnectAttempts} for ${connectionKey}`);
-      
-      const handlers = this.eventHandlers.get(connectionKey);
-      handlers?.onReconnect?.(status.reconnectAttempts);
-      
-      // Resolve URL dynamically for reconnection (same as initial connection)
-      getWebSocketUrl().then(url => {
-        logger.info('WEBSOCKET', `Resolved dynamic URL for reconnection ${connectionKey}`, { url });
-        this.establishConnection(connectionKey, url);
-      }).catch(error => {
-        logger.error('WEBSOCKET', `Failed to resolve URL for reconnection ${connectionKey}`, error);
-        this.handleConnectionFailure(connectionKey, error);
-      });
-    }, finalDelay);
-
-    this.reconnectTimers.set(connectionKey, timer);
-  }
-
-  /**
-   * Handle incoming message
-   */
-  private handleMessage(connectionKey: string, event: MessageEvent): void {
-    try {
-      const message: WebSocketMessage = JSON.parse(event.data);
-      
-      if (this.config.enableDebugMode) {
-        logger.websocket.message(`Message received on ${connectionKey}`, message);
-      }
-
-      // Handle heartbeat response
-      if (message.type === 'pong') {
-        return; // Heartbeat handled, no need to forward
-      }
-
-      // Call message handler
-      const handlers = this.eventHandlers.get(connectionKey);
-      handlers?.onMessage?.(message);
-
-    } catch (error) {
-      logger.error('WEBSOCKET', `Failed to parse message for ${connectionKey}`, error);
+    // Close WebSocket
+    if (connection.ws) {
+      connection.ws.close(1000, 'Normal closure');
+      connection.ws = null;
     }
-  }
-
-  /**
-   * Send message to connection
-   */
-  sendMessage(connectionKey: string, message: WebSocketMessage): boolean {
-    const connection = this.connections.get(connectionKey);
-    const status = this.connectionStatuses.get(connectionKey);
-
-    if (!connection || !status?.isConnected || connection.readyState !== WebSocket.OPEN) {
-      logger.warn('WEBSOCKET', `Cannot send message - connection ${connectionKey} not ready`);
-      return false;
-    }
-
-    try {
-      connection.send(JSON.stringify(message));
-      
-      if (this.config.enableDebugMode) {
-        logger.websocket.message(`Message sent on ${connectionKey}`, message);
-      }
-      
-      return true;
-    } catch (error) {
-      logger.error('WEBSOCKET', `Failed to send message on ${connectionKey}`, error);
-      return false;
-    }
-  }
-
-  /**
-   * Start heartbeat for connection
-   */
-  private startHeartbeat(connectionKey: string): void {
-    const timer = setInterval(() => {
-      this.sendMessage(connectionKey, {
-        type: 'ping',
-        timestamp: Date.now(),
-      });
-    }, this.config.heartbeatInterval);
-
-    this.heartbeatTimers.set(connectionKey, timer);
-  }
-
-  /**
-   * Stop heartbeat for connection
-   */
-  private stopHeartbeat(connectionKey: string): void {
-    const timer = this.heartbeatTimers.get(connectionKey);
-    if (timer) {
-      clearInterval(timer);
-      this.heartbeatTimers.delete(connectionKey);
-    }
-  }
-
-  /**
-   * Close specific connection
-   */
-  private closeConnection(connectionKey: string): void {
-    const connection = this.connections.get(connectionKey);
-    if (connection) {
-      connection.close();
-      this.connections.delete(connectionKey);
-    }
-
-    // Clear timers
-    const reconnectTimer = this.reconnectTimers.get(connectionKey);
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer);
-      this.reconnectTimers.delete(connectionKey);
-    }
-
-    this.stopHeartbeat(connectionKey);
-  }
-
-  /**
-   * Disconnect specific connection
-   */
-  disconnect(connectionKey: string): void {
-    logger.info('WEBSOCKET', `Disconnecting: ${connectionKey}`);
-
-    this.closeConnection(connectionKey);
     
-    // Update status
-    const status = this.connectionStatuses.get(connectionKey);
-    if (status) {
-      status.isConnected = false;
-    }
-
-    // Remove handlers
-    this.eventHandlers.delete(connectionKey);
+    connection.isConnected = false;
+    this.connections.delete(channel);
   }
 
   /**
-   * Disconnect all connections
+   * Disconnect all channels
    */
   disconnectAll(): void {
-    logger.info('WEBSOCKET', 'Disconnecting all connections');
-
-    for (const connectionKey of this.connections.keys()) {
-      this.disconnect(connectionKey);
+    console.log(`🔌 [WebSocketService] Disconnecting all channels`);
+    
+    for (const channel of this.connections.keys()) {
+      this.disconnect(channel);
     }
-
-    this.connections.clear();
-    this.connectionStatuses.clear();
-    this.eventHandlers.clear();
-    this.reconnectTimers.clear();
-    this.heartbeatTimers.clear();
   }
 
   /**
-   * Get connection status
+   * Check if a specific channel is connected
+   */
+  isConnected(channel: string): boolean {
+    const connection = this.connections.get(channel);
+    return connection?.isConnected || false;
+  }
+
+  /**
+   * Get connection status for all channels
    */
   getConnectionStatus(): Record<string, boolean> {
     const status: Record<string, boolean> = {};
-    
-    for (const [key, connectionStatus] of this.connectionStatuses.entries()) {
-      status[key] = connectionStatus.isConnected;
+    for (const [channel, connection] of this.connections.entries()) {
+      status[channel] = connection.isConnected;
     }
-    
-    console.log('[WebSocketService] getConnectionStatus returning:', status);
     return status;
   }
 
   /**
-   * Get detailed connection info
+   * Send a message to a specific channel
    */
-  getConnectionInfo(connectionKey: string): ConnectionStatus | null {
-    return this.connectionStatuses.get(connectionKey) || null;
-  }
-
-  /**
-   * Check if specific connection is connected
-   */
-  isConnected(connectionKey: string): boolean {
-    const status = this.connectionStatuses.get(connectionKey);
-    return status?.isConnected || false;
-  }
-
-  /**
-   * Update configuration
-   */
-  updateConfig(newConfig: Partial<WebSocketConfig>): void {
-    this.config = { ...this.config, ...newConfig };
-    logger.debug('WEBSOCKET', 'Configuration updated', this.config);
-  }
-
-  /**
-   * Get current configuration
-   */
-  getConfig(): WebSocketConfig {
-    return { ...this.config };
-  }
-
-  /**
-   * Force reconnect for specific connection
-   */
-  forceReconnect(connectionKey: string): void {
-    logger.info('WEBSOCKET', `Force reconnecting: ${connectionKey}`);
-
-    const handlers = this.eventHandlers.get(connectionKey);
-    this.disconnect(connectionKey);
-    
-    if (handlers) {
-      setTimeout(() => {
-        this.connect(connectionKey, handlers);
-      }, 1000);
+  sendMessage(channel: string, message: WebSocketMessage): void {
+    const connection = this.connections.get(channel);
+    if (connection?.ws && connection.isConnected) {
+      try {
+        console.log(`📤 [WebSocketService] Sending message to channel ${channel}:`, message);
+        connection.ws.send(JSON.stringify(message));
+      } catch (error) {
+        console.error(`❌ [WebSocketService] Failed to send message to ${channel}:`, error);
+        this.handleError(channel, error);
+      }
+    } else {
+      console.warn(`⚠️ [WebSocketService] Cannot send message to disconnected channel: ${channel}`);
     }
   }
 
   /**
-   * Force reconnect for all connections
+   * Get active connection count
    */
-  forceReconnectAll(): void {
-    logger.info('WEBSOCKET', 'Force reconnecting all connections');
+  getActiveConnectionCount(): number {
+    return Array.from(this.connections.values()).filter(conn => conn.isConnected).length;
+  }
 
-    const handlersSnapshot = new Map(this.eventHandlers);
-    this.disconnectAll();
+  /**
+   * Internal method to establish WebSocket connection for a channel
+   */
+  private connectChannel(channel: string): void {
+    const connection = this.connections.get(channel);
+    if (!connection || !this.baseUrl) return;
 
-    setTimeout(() => {
-      for (const [connectionKey, handlers] of handlersSnapshot.entries()) {
-        this.connect(connectionKey, handlers);
+    try {
+      console.log(`🔗 [WebSocketService] Establishing WebSocket connection for ${channel}:`, this.baseUrl);
+      
+      connection.ws = new WebSocket(this.baseUrl);
+      
+      connection.ws.onopen = () => {
+        console.log(`✅ [WebSocketService] Connected to channel: ${channel}`);
+        connection.isConnected = true;
+        connection.reconnectAttempts = 0;
+        
+        // Send connection initialization
+        this.sendMessage(channel, {
+          type: 'connection_init',
+          timestamp: new Date().toISOString()
+        });
+        
+        // Subscribe to channel-specific events
+        if (channel.startsWith('campaign-')) {
+          // Individual campaign subscription
+          const campaignId = channel.replace('campaign-', '');
+          this.sendMessage(channel, {
+            type: 'subscribe_campaign',
+            campaignId,
+            timestamp: new Date().toISOString()
+          });
+        } else if (channel === 'all-campaigns') {
+          // All campaigns subscription
+          this.sendMessage(channel, {
+            type: 'subscribe_all_campaigns',
+            timestamp: new Date().toISOString()
+          });
+        } else if (channel === 'dashboard-activity') {
+          // Dashboard activity subscription
+          this.sendMessage(channel, {
+            type: 'subscribe_dashboard_activity',
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          // Other channel subscriptions (proxies, keyword-sets, etc.)
+          this.sendMessage(channel, {
+            type: 'subscribe_channel',
+            data: { channel },
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        // Notify handlers
+        if (connection.options.onOpen) {
+          connection.options.onOpen();
+        }
+        if (connection.options.onConnect) {
+          connection.options.onConnect();
+        }
+      };
+      
+      connection.ws.onmessage = (event) => {
+        this.handleMessage(channel, event);
+      };
+      
+      connection.ws.onerror = (error) => {
+        console.error(`❌ [WebSocketService] Connection error for ${channel}:`, error);
+        this.handleError(channel, error);
+      };
+      
+      connection.ws.onclose = (event) => {
+        console.log(`🔌 [WebSocketService] Connection closed for ${channel}:`, {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
+        
+        connection.isConnected = false;
+        
+        if (connection.options.onClose) {
+          connection.options.onClose();
+        }
+        if (connection.options.onDisconnect) {
+          connection.options.onDisconnect();
+        }
+        
+        // Determine if we should reconnect
+        const shouldReconnect = 
+          event.code !== 1000 && // Not normal closure
+          event.code !== 1001 && // Not going away
+          connection.reconnectAttempts < connection.maxReconnectAttempts;
+          
+        if (shouldReconnect) {
+          this.scheduleReconnect(channel);
+        } else if (connection.reconnectAttempts >= connection.maxReconnectAttempts) {
+          console.error(`❌ [WebSocketService] Max reconnection attempts reached for ${channel}`);
+        }
+      };
+      
+    } catch (error) {
+      console.error(`❌ [WebSocketService] Failed to create WebSocket for ${channel}:`, error);
+      this.handleError(channel, error);
+    }
+  }
+
+  /**
+   * Handle incoming WebSocket messages
+   */
+  private handleMessage(channel: string, event: MessageEvent): void {
+    const connection = this.connections.get(channel);
+    if (!connection) return;
+
+    try {
+      // Handle concatenated JSON messages
+      const rawData = event.data.trim();
+      let messages: string[] = [];
+      
+      // Split by newlines and filter empty lines
+      const jsonLines = rawData.split('\n').filter((line: string) => line.trim());
+      
+      if (jsonLines.length === 1 && jsonLines[0].includes('}{')) {
+        // Handle concatenated JSON objects
+        const parts = jsonLines[0].split('}{');
+        messages = parts.map((part: string, index: number) => {
+          if (index === 0) return part + '}';
+          if (index === parts.length - 1) return '{' + part;
+          return '{' + part + '}';
+        });
+      } else {
+        messages = jsonLines;
       }
-    }, 1000);
+      
+      // Process each message
+      for (const messageData of messages) {
+        if (!messageData.trim()) continue;
+        
+        try {
+          const message: WebSocketMessage = JSON.parse(messageData);
+          
+          console.log(`📥 [WebSocketService] Received message on ${channel}:`, {
+            type: message.type,
+            campaignId: message.campaignId,
+            timestamp: message.timestamp
+          });
+          
+          // Handle special message types
+          if (message.type === 'heartbeat') {
+            this.sendMessage(channel, {
+              type: 'heartbeat_response',
+              timestamp: new Date().toISOString()
+            });
+            continue;
+          }
+          
+          if (message.type === 'ping') {
+            this.sendMessage(channel, {
+              type: 'pong',
+              timestamp: new Date().toISOString()
+            });
+            continue;
+          }
+          
+          // Forward to message handler
+          connection.options.onMessage(message);
+          
+        } catch (parseError) {
+          console.error(`❌ [WebSocketService] Failed to parse message on ${channel}:`, parseError, messageData);
+        }
+      }
+      
+    } catch (error) {
+      console.error(`❌ [WebSocketService] Error handling message on ${channel}:`, error);
+      this.handleError(channel, error);
+    }
+  }
+
+  /**
+   * Handle WebSocket errors
+   */
+  private handleError(channel: string, error: unknown): void {
+    const connection = this.connections.get(channel);
+    if (!connection) return;
+
+    console.error(`❌ [WebSocketService] Error on channel ${channel}:`, error);
+    
+    if (connection.options.onError) {
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      connection.options.onError(errorObj);
+    }
+  }
+
+  /**
+   * Schedule reconnection for a channel
+   */
+  private scheduleReconnect(channel: string): void {
+    const connection = this.connections.get(channel);
+    if (!connection || connection.reconnectTimer) return;
+
+    connection.reconnectAttempts++;
+    
+    // Exponential backoff with jitter
+    const baseDelay = connection.reconnectInterval;
+    const exponentialDelay = baseDelay * Math.pow(2, connection.reconnectAttempts - 1);
+    const jitter = Math.random() * 1000;
+    const delay = Math.min(exponentialDelay + jitter, 30000); // Max 30 seconds
+    
+    console.log(`🔄 [WebSocketService] Scheduling reconnect for ${channel} in ${Math.round(delay)}ms (attempt ${connection.reconnectAttempts}/${connection.maxReconnectAttempts})`);
+    
+    connection.reconnectTimer = setTimeout(() => {
+      connection.reconnectTimer = null;
+      this.connectChannel(channel);
+    }, delay);
   }
 }
 
-// Create singleton service instance
-let serviceInstance: WebSocketService | null = null;
+// Global instance
+const websocketServiceInstance = new WebSocketServiceImpl();
 
-/**
- * Get or create the singleton WebSocket service instance
- */
-export function getWebSocketService(config?: Partial<WebSocketConfig>): WebSocketService {
-  if (!serviceInstance) {
-    serviceInstance = new WebSocketService(config);
-  } else if (config) {
-    serviceInstance.updateConfig(config);
-  }
-  return serviceInstance;
-}
+// Export the service instance
+export { websocketServiceInstance as websocketService };
 
-// Export default service instance
-export const websocketService = getWebSocketService();
-
-// Export service class for testing
-export { WebSocketService };
-
-// Export types
-export type { WebSocketConfig, WebSocketMessage, ConnectionStatus, WebSocketEventHandlers };
-
-// Export default
-export default websocketService;
+// Default export for backward compatibility
+export default websocketServiceInstance;

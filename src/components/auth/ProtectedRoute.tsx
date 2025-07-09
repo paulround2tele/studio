@@ -105,28 +105,8 @@ export function ProtectedRoute({
   // Determine overall loading state
   const isOverallLoading = isLoading || isSessionLoading || !isInitialized;
 
-  // Handle redirect after authentication check
-  useEffect(() => {
-    if (!isOverallLoading && !isAuthenticated && redirectTo && showLoginPrompt && !hasTriedRedirect) {
-      logger.debug('PROTECTED_ROUTE', 'Redirecting to login', {
-        pathname,
-        redirectTo,
-        isAuthenticated,
-        isOverallLoading
-      });
-      
-      setHasTriedRedirect(true);
-      const currentPath = encodeURIComponent(pathname);
-      router.push(`${redirectTo}?redirect=${currentPath}`);
-    }
-  }, [isOverallLoading, isAuthenticated, redirectTo, showLoginPrompt, hasTriedRedirect, router, pathname]);
-
-  // Reset redirect flag when auth state changes
-  useEffect(() => {
-    if (isAuthenticated) {
-      setHasTriedRedirect(false);
-    }
-  }, [isAuthenticated]);
+  // REMOVED: Client-side authentication redirects - middleware handles all auth
+  // This prevents race conditions between middleware and client-side auth logic
 
   // Show loading while auth is loading or session is being checked
   if (isOverallLoading) {
@@ -145,31 +125,10 @@ export function ProtectedRoute({
     return <>{children}</>;
   }
 
-  // Check authentication
-  if (!isAuthenticated) {
-    logger.debug('PROTECTED_ROUTE', 'User not authenticated', {
-      pathname,
-      redirectTo,
-      showLoginPrompt,
-      hasTriedRedirect
-    });
-
-    // If we're redirecting and haven't tried yet, show loading
-    if (redirectTo && showLoginPrompt && !hasTriedRedirect) {
-      return <LoadingScreen />;
-    }
-    
-    // Show custom fallback if provided
-    if (fallbackComponent) {
-      return <>{fallbackComponent}</>;
-    }
-    
-    // Show access denied screen
-    return (
-      <AccessDenied
-        redirectTo={redirectTo}
-      />
-    );
+  // If we reach here, middleware has already validated the session
+  // Show custom fallback if provided (for special cases)
+  if (fallbackComponent && !isAuthenticated) {
+    return <>{fallbackComponent}</>;
   }
 
   // All checks passed, render children

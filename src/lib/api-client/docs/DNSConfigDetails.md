@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DNSConfigDetails } from 'api-client';
+import { DNSConfigDetails } from './api';
 
 const instance: DNSConfigDetails = {
     concurrentQueriesPerDomain,

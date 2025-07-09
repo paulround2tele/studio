@@ -35,7 +35,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HttpPersonaConfig } from 'api-client';
+import { HttpPersonaConfig } from './api';
 
 const instance: HttpPersonaConfig = {
     allowInsecureTls,

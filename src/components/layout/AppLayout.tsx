@@ -51,17 +51,11 @@ const navigationItems = [
 const AppSidebar = memo(() => {
   const { user, logout, isLoading, isAuthenticated } = useAuth();
 
-  // Show all navigation items for authenticated users
+  // Always show all navigation items - middleware ensures user is authenticated
   const filteredItems = useMemo(() => {
-    // Show only Dashboard while auth is loading
-    if (isLoading || !isAuthenticated || !user) {
-      const dashboardItem = navigationItems.find(item => item.title === "Dashboard");
-      return dashboardItem ? [dashboardItem] : [];
-    }
-    
-    // Show all items for authenticated users
+    // Middleware guarantees authentication, so always show full navigation
     return navigationItems;
-  }, [isLoading, isAuthenticated, user]);
+  }, []);
 
   // Memoize logout handler to prevent re-creation on every render
   const handleLogout = useCallback(() => {

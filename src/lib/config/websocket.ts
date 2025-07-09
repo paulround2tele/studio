@@ -156,12 +156,18 @@ export const webSocketSessionConfig = {
       origins.push(process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN);
     }
     
-    // If no origins configured, throw error to enforce proper configuration
-    if (origins.length === 0) {
+    // In development, allow common development origins if none configured
+    if (process.env.NODE_ENV === 'development' && origins.length === 0) {
+      origins.push('http://localhost:3000', 'http://127.0.0.1:3000');
+      console.warn('⚠️ [WebSocket] Using default development origins. Consider setting NEXT_PUBLIC_APP_URL for better security.');
+    }
+    
+    // Only throw error in production if no origins configured
+    if (process.env.NODE_ENV === 'production' && origins.length === 0) {
       throw new Error(
-        'CONFIGURATION ERROR: No WebSocket origins configured. ' +
+        'CONFIGURATION ERROR: No WebSocket origins configured for production. ' +
         'Please set NEXT_PUBLIC_APP_URL and/or NEXT_PUBLIC_PRODUCTION_DOMAIN environment variables. ' +
-        'Example: NEXT_PUBLIC_APP_URL=http://your-frontend-host:3000'
+        'Example: NEXT_PUBLIC_APP_URL=https://your-frontend-host'
       );
     }
     

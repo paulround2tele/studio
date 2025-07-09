@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Persona } from 'api-client';
+import { Persona } from './api';
 
 const instance: Persona = {
     configDetails,

@@ -35,7 +35,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Proxy } from 'api-client';
+import { Proxy } from './api';
 
 const instance: Proxy = {
     address,

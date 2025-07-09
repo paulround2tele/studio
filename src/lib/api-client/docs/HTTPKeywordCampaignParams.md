@@ -24,7 +24,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HTTPKeywordCampaignParams } from 'api-client';
+import { HTTPKeywordCampaignParams } from './api';
 
 const instance: HTTPKeywordCampaignParams = {
     adHocKeywords,

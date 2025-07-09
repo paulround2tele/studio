@@ -39,28 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const sessionCheckStartedRef = useRef(false);
   const minLoadingTimeRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Ensure auth loading state gets cleared when loading operations complete
-  const isSessionLoading = loadingStore.isOperationLoading(LOADING_OPERATIONS.SESSION_CHECK);
-  
-  // Force update auth loading state when session loading changes - but with minimum loading time
-  useEffect(() => {
-    if (!isSessionLoading && authState.isLoading) {
-      // Minimum loading time to prevent flash - give time for cookies to be available
-      if (minLoadingTimeRef.current) {
-        clearTimeout(minLoadingTimeRef.current);
-      }
-      
-      minLoadingTimeRef.current = setTimeout(() => {
-        if (mountedRef.current) {
-          setAuthState(prev => ({
-            ...prev,
-            isLoading: false
-          }));
-        }
-      }, 200); // 200ms minimum loading time to prevent flash
-    }
-  }, [isSessionLoading, authState.isLoading]);
-
   const checkSession = useCallback(async () => {
     // Prevent multiple simultaneous session checks
     if (sessionCheckStartedRef.current) {
@@ -70,24 +48,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionCheckStartedRef.current = true;
     
     try {
-      // SIMPLE SESSION CHECK - just call the API, don't overthink it
+      console.log('[AuthContext] Checking session via backend cookie validation...');
       const user = await authService.getCurrentUser();
 
-      if (user) {
+      if (user && user.id && user.email) {
+        // Ensure user has required fields and set isActive to true by default
+        const completeUser = {
+          ...user,
+          isActive: user.isActive !== undefined ? user.isActive : true
+        };
+        
+        console.log('[AuthContext] Session valid, user authenticated:', {
+          id: completeUser.id,
+          email: completeUser.email,
+          isActive: completeUser.isActive
+        });
+        
         setAuthState({
-          user,
+          user: completeUser as User,
           isAuthenticated: true,
           isLoading: false
         });
       } else {
+        console.log('[AuthContext] Invalid or incomplete user data, treating as unauthenticated');
         setAuthState({
           user: null,
           isAuthenticated: false,
           isLoading: false
         });
       }
-    } catch (_error) {
-      // On any error, just set as unauthenticated - don't make it complicated
+    } catch (error) {
+      console.warn('[AuthContext] Session check failed:', error);
       setAuthState({
         user: null,
         isAuthenticated: false,
@@ -98,12 +89,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Check for existing session on mount ONLY - no dependencies to prevent infinite loops
+  // Check for existing session on mount AND handle page reload persistence
   useEffect(() => {
     // Only run session check once on mount
     if (!sessionCheckStartedRef.current) {
+      console.log('[AuthContext] Component mounted, checking for existing session...');
       checkSession();
     }
+    
+    // Add visibility change listener to re-check session when tab becomes active
+    // This helps with session persistence across browser refreshes and tab switches
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !sessionCheckStartedRef.current) {
+        console.log('[AuthContext] Tab became visible, re-checking session...');
+        checkSession();
+      }
+    };
+
+    // Add storage event listener to sync auth state across tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_logout') {
+        console.log('[AuthContext] Logout detected from another tab');
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorageChange);
     
     // Capture refs for cleanup to avoid stale reference warnings
     const currentSessionCheck = sessionCheckRef.current;
@@ -112,6 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Cleanup on unmount
     return () => {
       mountedRef.current = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
       if (currentSessionCheck) {
         currentSessionCheck.abort();
       }
@@ -130,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (result.success && result.user) {
         logger.info('AUTH_CONTEXT', 'Login successful', { userId: result.user.id });
         setAuthState({
-          user: result.user,
+          user: result.user as User,
           isAuthenticated: true,
           isLoading: false
         });
@@ -162,11 +180,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const errorMsg = error instanceof Error ? error.message : 'Logout error';
       logger.error('AUTH_CONTEXT', 'Logout error', { error: errorMsg });
     } finally {
+      // Signal logout to other tabs via localStorage
+      localStorage.setItem('auth_logout', Date.now().toString());
+      
       setAuthState({
         user: null,
         isAuthenticated: false,
         isLoading: false
       });
+
+      // Clean up the signal after a short delay
+      setTimeout(() => {
+        localStorage.removeItem('auth_logout');
+      }, 1000);
     }
   }, []);
 

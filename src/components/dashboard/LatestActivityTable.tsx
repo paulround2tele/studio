@@ -12,12 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, ChevronLeft, ChevronRight, Percent } from 'lucide-react';
 import Link from 'next/link';
-import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/campaignDataService';
 import { type BaseWebSocketMessage } from '@/lib/websocket/message-handlers';
-import { type DashboardActivityPayload } from '@/lib/websocket/WebSocketStreamManager';
+import { type DashboardActivityPayload } from '@/lib/services/websocketService.simple';
 
 // Type definition for campaign leads
 interface CampaignLead {
@@ -182,27 +182,68 @@ const getSimilarityBadgeVariant = (score: number | undefined) => {
 const StatusBadge: React.FC<{ status: DomainActivityStatus; score?: number }> = ({ status }) => {
   let Icon;
   let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'outline';
-  let text = status;
+  let text: string = status;
+  let className = '';
 
   switch (status) {
-    case 'validated': Icon = CheckCircle; variant = 'default'; break;
-    case 'generating': Icon = Dna; variant = 'secondary'; text="generating"; break; 
-    case 'scanned': Icon = Search; variant = 'default'; break;
-    case 'not_validated': Icon = XCircle; variant = 'destructive'; break;
-    case 'failed': Icon = AlertCircle; variant = 'destructive'; break;
-    case 'no_leads': Icon = ShieldQuestion; variant = 'secondary'; text = "no_leads"; break;
-    case 'pending': Icon = Clock; variant = 'secondary'; break;
-    case 'n_a': Icon = HelpCircle; variant = 'outline'; break;
-    default: Icon = HelpCircle;
+    case 'validated':
+      Icon = CheckCircle;
+      variant = 'default';
+      text = 'Validated';
+      className = 'bg-green-500 text-white hover:bg-green-600';
+      break;
+    case 'generating':
+      Icon = Dna;
+      variant = 'secondary';
+      text = 'Generating';
+      className = 'bg-blue-500 text-white hover:bg-blue-600';
+      break;
+    case 'scanned':
+      Icon = Search;
+      variant = 'default';
+      text = 'Scanned';
+      className = 'bg-emerald-500 text-white hover:bg-emerald-600';
+      break;
+    case 'not_validated':
+      Icon = XCircle;
+      variant = 'destructive';
+      text = 'Not Validated';
+      className = 'bg-red-500 text-white hover:bg-red-600';
+      break;
+    case 'failed':
+      Icon = AlertCircle;
+      variant = 'destructive';
+      text = 'Failed';
+      className = 'bg-red-600 text-white hover:bg-red-700';
+      break;
+    case 'no_leads':
+      Icon = ShieldQuestion;
+      variant = 'secondary';
+      text = 'No Leads';
+      className = 'bg-gray-500 text-white hover:bg-gray-600';
+      break;
+    case 'pending':
+      Icon = Clock;
+      variant = 'secondary';
+      text = 'Pending';
+      className = 'bg-yellow-500 text-black hover:bg-yellow-600';
+      break;
+    case 'n_a':
+      Icon = HelpCircle;
+      variant = 'outline';
+      text = 'N/A';
+      className = 'bg-gray-200 text-gray-600 border-gray-300';
+      break;
+    default:
+      Icon = HelpCircle;
+      text = 'Unknown';
+      className = 'bg-gray-200 text-gray-600 border-gray-300';
   }
 
   return (
-    <Badge variant={variant} className="text-xs whitespace-nowrap">
+    <Badge variant={variant} className={`text-xs whitespace-nowrap ${className}`}>
       <Icon className="mr-1 h-3.5 w-3.5" />
       {text}
-      {/* Score display integrated here for 'Scanned' status, or if score is always present */}
-      {/* For this table, score is tied to 'leadScanStatus' if it implies scoring */}
-      {/* Let's adjust: Score display is better handled by a separate column in the table */}
     </Badge>
   );
 };
@@ -221,12 +262,20 @@ export default function LatestActivityTable() {
   const fetchAndProcessData = useCallback(async (showLoadingSpinner = true) => {
     if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading dashboard activity");
     try {
-      const response = await enhancedApiClient.listCampaigns();
+      const response = await campaignsApi.listCampaigns();
       const processedActivities: LatestDomainActivity[] = [];
 
-      // Handle the AxiosResponse structure: response.data contains the campaigns array directly
-      if (response && response.data && Array.isArray(response.data)) {
-        const campaignsArray = transformCampaignsToViewModels(response.data as Parameters<typeof transformCampaignsToViewModels>[0]);
+      // Handle the Axios response structure: response.data.data.data contains the campaigns array
+      // Cast to any to handle the type mismatch between expected array and actual AxiosResponse
+      const axiosResponse = response as any;
+      
+      if (axiosResponse &&
+          axiosResponse.data &&
+          axiosResponse.data.data &&
+          axiosResponse.data.data.data &&
+          Array.isArray(axiosResponse.data.data.data)) {
+        
+        const campaignsArray = transformCampaignsToViewModels(axiosResponse.data.data.data as Parameters<typeof transformCampaignsToViewModels>[0]);
         
         // Get campaign IDs for rich data fetching
         const campaignIds = campaignsArray
@@ -237,12 +286,56 @@ export default function LatestActivityTable() {
         // Fetch rich data for all campaigns
         const richCampaignDataMap = await getRichCampaignDataBatch(campaignIds);
 
-        // Process campaigns with rich data
+        // Process campaigns with rich data - enhanced for completed campaigns
         campaignsArray.forEach(campaign => {
           if (!campaign.id || !campaign.name || !campaign.createdAt) return;
           
           const richCampaign = richCampaignDataMap.get(campaign.id);
-          const domains = richCampaign?.domains || [];
+          
+          // Enhanced domain extraction - check multiple sources
+          let domains: string[] = [];
+          
+          // Try rich campaign data first
+          if (richCampaign?.domains && Array.isArray(richCampaign.domains)) {
+            domains = richCampaign.domains;
+            console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} domains from rich data`);
+          }
+          // Fallback to base campaign data
+          else if (campaign.domains && Array.isArray(campaign.domains)) {
+            domains = campaign.domains;
+            console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} domains from base data`);
+          }
+          // For completed campaigns, try DNS validated domains as another source
+          else if (campaign.dnsValidatedDomains && Array.isArray(campaign.dnsValidatedDomains)) {
+            domains = campaign.dnsValidatedDomains;
+            console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} DNS validated domains`);
+          }
+          
+          console.log(`[LatestActivity] Processing campaign ${campaign.name} (${campaign.currentPhase}): ${domains.length} domains found`);
+          
+          if (domains.length === 0) {
+            // Still show campaign entry even without domains for completed campaigns
+            if (campaign.currentPhase === 'Completed') {
+              processedActivities.push({
+                id: `${campaign.id}-placeholder`,
+                domain: 'No domains found',
+                domainName: 'No domains found',
+                campaignId: campaign.id!,
+                campaignName: campaign.name!,
+                phase: campaign.currentPhase || 'Idle',
+                status: 'n_a' as const,
+                timestamp: campaign.createdAt!,
+                activity: 'Campaign completed',
+                generatedDate: campaign.createdAt!,
+                dnsStatus: 'n_a' as const,
+                httpStatus: 'n_a' as const,
+                leadScanStatus: 'n_a' as const,
+                leadScore: undefined,
+                sourceUrl: '#',
+              });
+            }
+            return;
+          }
 
           domains.forEach(domainName => {
             const leadInfo = getGlobalLeadStatusAndScore(domainName, richCampaign || campaign);
@@ -265,64 +358,30 @@ export default function LatestActivityTable() {
             });
           });
         });
+        
+        // Note: Empty array is a valid response, not an error
+        if (campaignsArray.length === 0) {
+          console.log("No campaigns found - this is normal when no campaigns exist yet");
+        }
       } else {
-        // Serialize the response for meaningful logging
-        const serializeResponse = (obj: unknown): string => {
-          if (obj === null || obj === undefined) {
-            return String(obj);
-          }
-
-          // Handle Error instances
-          if (obj instanceof Error) {
-            return JSON.stringify({
-              name: obj.name,
-              message: obj.message,
-              stack: obj.stack,
-              ...(('cause' in obj && obj.cause !== undefined) ? { cause: obj.cause } : {}),
-              ...Object.fromEntries(Object.entries(obj))
-            }, null, 2);
-          }
-
-          // Handle generic objects with circular reference protection
-          try {
-            const seen = new WeakSet();
-            const result = JSON.stringify(obj, (key, value) => {
-              if (typeof value === 'object' && value !== null) {
-                if (seen.has(value)) {
-                  return '[Circular Reference]';
-                }
-                seen.add(value);
-              }
-              return value;
-            }, 2);
-            
-            // If JSON.stringify returns '{}' for an object, try to extract some properties manually
-            if (result === '{}' && typeof obj === 'object' && obj !== null) {
-              const keys = Object.getOwnPropertyNames(obj);
-              if (keys.length > 0) {
-                const extractedProps: Record<string, unknown> = {};
-                keys.slice(0, 10).forEach(key => { // Limit to first 10 properties
-                  try {
-                    const descriptor = Object.getOwnPropertyDescriptor(obj, key);
-                    if (descriptor) {
-                      extractedProps[key] = descriptor.value;
-                    }
-                  } catch {
-                    extractedProps[key] = '[Unable to access]';
-                  }
-                });
-                return JSON.stringify(extractedProps, null, 2);
-              }
-            }
-            
-            return result;
-          } catch (_error) {
-            return `[Object: ${obj.constructor?.name || 'Unknown'}]`;
-          }
-        };
-
-        console.error("Failed to load campaigns for activity table:", serializeResponse(response));
-        // setAllActivityData([]); // Keep existing data on error if not showLoadingSpinner?
+        // Handle valid empty response (axiosResponse.data.data.data exists but is empty array)
+        if (axiosResponse &&
+            axiosResponse.data &&
+            axiosResponse.data.data &&
+            axiosResponse.data.data.data &&
+            Array.isArray(axiosResponse.data.data.data) &&
+            axiosResponse.data.data.data.length === 0) {
+          console.log("No campaigns found - this is normal when no campaigns exist yet");
+        } else {
+          // Only log actual errors, not valid empty responses
+          console.error("Invalid response format from campaigns API:", {
+            responseType: typeof axiosResponse,
+            hasData: !!(axiosResponse && 'data' in axiosResponse),
+            hasNestedData: !!(axiosResponse && axiosResponse.data && 'data' in axiosResponse.data),
+            hasTripleNestedData: !!(axiosResponse && axiosResponse.data && axiosResponse.data.data && 'data' in axiosResponse.data.data),
+            actualStructure: axiosResponse
+          });
+        }
       }
 
       // Sort by date, then slice for initial load cap
@@ -378,6 +437,7 @@ export default function LatestActivityTable() {
     fetchAndProcessData(); // Initial fetch
     
     let wsCleanup: (() => void) | null = null;
+    let fallbackInterval: NodeJS.Timeout | null = null;
 
     const connectWebSocket = async () => {
       try {
@@ -398,27 +458,55 @@ export default function LatestActivityTable() {
           },
           onConnect: () => {
             console.log('[DashboardActivity] WebSocket connected for dashboard activity push updates');
+            // Clear fallback polling when WebSocket connects
+            if (fallbackInterval) {
+              clearInterval(fallbackInterval);
+              fallbackInterval = null;
+            }
           },
           onError: (error: any) => {
-            console.error('[DashboardActivity] WebSocket error:', error);
+            console.warn('[DashboardActivity] WebSocket error, implementing fallback polling:', error);
+            // Start fallback polling when WebSocket fails
+            if (!fallbackInterval) {
+              fallbackInterval = setInterval(() => {
+                console.log('[DashboardActivity] Fallback: Refreshing data via REST API');
+                fetchAndProcessData(false); // Don't show loading spinner for background refresh
+              }, 30000); // Poll every 30 seconds
+            }
           },
           onDisconnect: () => {
-            console.log('[DashboardActivity] WebSocket disconnected');
+            console.log('[DashboardActivity] WebSocket disconnected, starting fallback polling');
+            // Start fallback polling when WebSocket disconnects
+            if (!fallbackInterval) {
+              fallbackInterval = setInterval(() => {
+                console.log('[DashboardActivity] Fallback: Refreshing data via REST API');
+                fetchAndProcessData(false); // Don't show loading spinner for background refresh
+              }, 30000); // Poll every 30 seconds
+            }
           }
         });
         
       } catch (error) {
-        console.error('[DashboardActivity] Failed to connect WebSocket:', error);
+        console.warn('[DashboardActivity] Failed to connect WebSocket, using fallback polling:', error);
+        // Start fallback polling immediately if WebSocket setup fails
+        fallbackInterval = setInterval(() => {
+          console.log('[DashboardActivity] Fallback: Refreshing data via REST API');
+          fetchAndProcessData(false); // Don't show loading spinner for background refresh
+        }, 30000); // Poll every 30 seconds
       }
     };
 
-    // Connect WebSocket for real-time updates
+    // Connect WebSocket for real-time updates with fallback
     connectWebSocket();
     
     return () => {
       // Cleanup WebSocket connection
       if (wsCleanup) {
         wsCleanup();
+      }
+      // Cleanup fallback polling
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
       }
     };
   }, [fetchAndProcessData, handleDashboardActivity]);

@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UpdateProxyRequest } from 'api-client';
+import { UpdateProxyRequest } from './api';
 
 const instance: UpdateProxyRequest = {
     address,

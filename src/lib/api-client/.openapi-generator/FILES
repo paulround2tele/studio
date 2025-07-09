@@ -1,6 +1,5 @@
 .gitignore
 .npmignore
-README.md
 api.ts
 base.ts
 common.ts
@@ -45,6 +44,7 @@ docs/ForceCheckAllProxies202Response.md
 docs/ForceCheckProxiesRequest.md
 docs/GeneratedDomain.md
 docs/GeneratedDomainsResponse.md
+docs/GetDomainGenerationPatternOffset200Response.md
 docs/HTTP2SettingsConfig.md
 docs/HTTPConfig.md
 docs/HTTPConfigDetails.md
@@ -70,6 +70,7 @@ docs/LoginRequest.md
 docs/LoginResponse.md
 docs/PageInfo.md
 docs/PaginationMetadata.md
+docs/PatternOffsetRequest.md
 docs/Persona.md
 docs/PersonaListResponse.md
 docs/PersonaTestResult.md
@@ -102,6 +103,3 @@ docs/WebSocketApi.md
 docs/WorkerConfig.md
 git_push.sh
 index.ts
-package.json
-tsconfig.esm.json
-tsconfig.json

@@ -1,8 +1,14 @@
 // src/lib/services/proxyService.ts
 // Production Proxy Service - Direct OpenAPI integration without adapters
 
-import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import { ProxiesApi, Configuration } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
+
+// Create configured ProxiesApi instance
+const config = new Configuration({
+  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2'
+});
+const proxiesApi = new ProxiesApi(config);
 
 // Use OpenAPI types directly
 export type Proxy = components['schemas']['Proxy'];
@@ -54,9 +60,7 @@ class ProxyService {
 
   async getProxies(): Promise<ProxiesListResponse> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.proxies.proxiesGet()
-      );
+      const response = await proxiesApi.listProxies();
       
       // Backend wraps response in APIResponse format: { success: true, data: Proxy[], requestId: string }
       let proxiesData: any[] = [];
@@ -145,9 +149,7 @@ class ProxyService {
 
   async createProxy(payload: ProxyCreationPayload): Promise<ProxyCreationResponse> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.proxies.proxiesPost(payload)
-      );
+      const response = await proxiesApi.createProxy(payload);
       return {
         status: 'success',
         data: response.data as Proxy,
@@ -163,9 +165,7 @@ class ProxyService {
 
   async updateProxy(proxyId: string, payload: ProxyUpdatePayload): Promise<ProxyUpdateResponse> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.proxies.proxiesProxyIdPut(proxyId, payload)
-      );
+      const response = await proxiesApi.updateProxy(proxyId, payload);
       return {
         status: 'success',
         data: response.data as Proxy,
@@ -181,9 +181,7 @@ class ProxyService {
 
   async deleteProxy(proxyId: string): Promise<ProxyDeleteResponse> {
     try {
-      await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.proxies.proxiesProxyIdDelete(proxyId)
-      );
+      await proxiesApi.deleteProxy(proxyId);
       return {
         status: 'success',
         data: null,
@@ -199,9 +197,7 @@ class ProxyService {
 
   async testProxy(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.proxies.proxiesProxyIdTestPost(proxyId)
-      );
+      const response = await proxiesApi.testProxy(proxyId);
       return {
         status: 'success',
         data: response.data,
@@ -217,9 +213,7 @@ class ProxyService {
 
   async forceProxyHealthCheck(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.proxies.proxiesProxyIdHealthCheckPost(proxyId)
-      );
+      const response = await proxiesApi.forceCheckSingleProxy(proxyId);
       return {
         status: 'success',
         data: response.data,
@@ -235,9 +229,7 @@ class ProxyService {
 
   async forceAllProxiesHealthCheck(): Promise<ApiResponse<unknown>> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.proxies.proxiesHealthCheckPost()
-      );
+      const response = await proxiesApi.forceCheckAllProxies();
       return {
         status: 'success',
         data: response.data,
@@ -253,9 +245,7 @@ class ProxyService {
 
   async getProxyStatuses(): Promise<ApiResponse<unknown>> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.proxies.proxiesStatusGet()
-      );
+      const response = await proxiesApi.getProxyStatuses();
       return {
         status: 'success',
         data: response.data,

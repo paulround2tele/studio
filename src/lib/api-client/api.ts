@@ -1699,6 +1699,19 @@ export interface GeneratedDomainsResponse {
     'totalCount'?: number;
 }
 /**
+ * 
+ * @export
+ * @interface GetDomainGenerationPatternOffset200Response
+ */
+export interface GetDomainGenerationPatternOffset200Response {
+    /**
+     * Current global offset for this pattern signature
+     * @type {number}
+     * @memberof GetDomainGenerationPatternOffset200Response
+     */
+    'currentOffset': number;
+}
+/**
  * HTTP/2 settings configuration
  * @export
  * @interface HTTP2SettingsConfig
@@ -2895,6 +2908,52 @@ export interface PaginationMetadata {
      */
     'page'?: PageInfo;
 }
+/**
+ * Request to get the current offset for a domain generation pattern
+ * @export
+ * @interface PatternOffsetRequest
+ */
+export interface PatternOffsetRequest {
+    /**
+     * Character set for domain generation (e.g., \'abc\', \'123\')
+     * @type {string}
+     * @memberof PatternOffsetRequest
+     */
+    'characterSet': string;
+    /**
+     * Constant string part of the domain
+     * @type {string}
+     * @memberof PatternOffsetRequest
+     */
+    'constantString': string;
+    /**
+     * Type of pattern (prefix, suffix, or both)
+     * @type {string}
+     * @memberof PatternOffsetRequest
+     */
+    'patternType': PatternOffsetRequestPatternTypeEnum;
+    /**
+     * Top-level domain (e.g., \'.com\', \'.net\')
+     * @type {string}
+     * @memberof PatternOffsetRequest
+     */
+    'tld': string;
+    /**
+     * Length of the variable part
+     * @type {number}
+     * @memberof PatternOffsetRequest
+     */
+    'variableLength': number;
+}
+
+export const PatternOffsetRequestPatternTypeEnum = {
+    Prefix: 'prefix',
+    Suffix: 'suffix',
+    Both: 'both'
+} as const;
+
+export type PatternOffsetRequestPatternTypeEnum = typeof PatternOffsetRequestPatternTypeEnum[keyof typeof PatternOffsetRequestPatternTypeEnum];
+
 /**
  * 
  * @export
@@ -4710,6 +4769,44 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
+         * Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+         * @summary Get domain generation pattern offset
+         * @param {PatternOffsetRequest} patternOffsetRequest Pattern configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getDomainGenerationPatternOffset: async (patternOffsetRequest: PatternOffsetRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'patternOffsetRequest' is not null or undefined
+            assertParamExists('getDomainGenerationPatternOffset', 'patternOffsetRequest', patternOffsetRequest)
+            const localVarPath = `/campaigns/domain-generation/pattern-offset`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication sessionAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patternOffsetRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Gets generated domains for a domain generation campaign
          * @summary Get generated domains
          * @param {string} campaignId Campaign UUID
@@ -5124,6 +5221,19 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+         * @summary Get domain generation pattern offset
+         * @param {PatternOffsetRequest} patternOffsetRequest Pattern configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getDomainGenerationPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetDomainGenerationPatternOffset200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getDomainGenerationPatternOffset(patternOffsetRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getDomainGenerationPatternOffset']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Gets generated domains for a domain generation campaign
          * @summary Get generated domains
          * @param {string} campaignId Campaign UUID
@@ -5307,6 +5417,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.getDNSValidationResults(campaignId, limit, cursor, options).then((request) => request(axios, basePath));
         },
         /**
+         * Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+         * @summary Get domain generation pattern offset
+         * @param {PatternOffsetRequest} patternOffsetRequest Pattern configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getDomainGenerationPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): AxiosPromise<GetDomainGenerationPatternOffset200Response> {
+            return localVarFp.getDomainGenerationPatternOffset(patternOffsetRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Gets generated domains for a domain generation campaign
          * @summary Get generated domains
          * @param {string} campaignId Campaign UUID
@@ -5475,6 +5595,18 @@ export class CampaignsApi extends BaseAPI {
      */
     public getDNSValidationResults(campaignId: string, limit?: number, cursor?: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).getDNSValidationResults(campaignId, limit, cursor, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+     * @summary Get domain generation pattern offset
+     * @param {PatternOffsetRequest} patternOffsetRequest Pattern configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public getDomainGenerationPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getDomainGenerationPatternOffset(patternOffsetRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

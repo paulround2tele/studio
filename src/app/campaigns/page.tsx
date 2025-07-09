@@ -209,13 +209,16 @@ function CampaignsPageContent() {
               case 'progress':
                 // Update campaign progress
                 if (message.campaignId) {
+                  const progressData = message.data as { progress?: number; phase?: string; status?: string };
                   setCampaigns(prev => prev.map(campaign =>
                     campaign.id === message.campaignId
                       ? {
                           ...campaign,
-                          progressPercentage: typeof message.data.progress === 'number'
-                            ? message.data.progress
-                            : campaign.progressPercentage
+                          progressPercentage: typeof progressData.progress === 'number'
+                            ? progressData.progress
+                            : campaign.progressPercentage,
+                          currentPhase: progressData.phase || campaign.currentPhase,
+                          phaseStatus: progressData.status || campaign.phaseStatus
                         }
                       : campaign
                   ));
@@ -225,13 +228,28 @@ function CampaignsPageContent() {
               case 'phase_complete':
                 // Update campaign status and phase
                 if (message.campaignId && message.data.status) {
+                  const phaseData = message.data as { phase?: string; status?: string; progress?: number };
                   setCampaigns(prev => prev.map(campaign =>
                     campaign.id === message.campaignId
-                      ? { 
-                          ...campaign, 
-                          status: normalizeStatus(message.data.status),
-                          currentPhase: message.data.phase as CampaignViewModel['currentPhase']
+                      ? {
+                          ...campaign,
+                          status: phaseData.status === 'Succeeded' ? 'completed' : normalizeStatus(phaseData.status),
+                          currentPhase: phaseData.phase as CampaignViewModel['currentPhase'] || campaign.currentPhase,
+                          phaseStatus: phaseData.status || campaign.phaseStatus,
+                          progressPercentage: phaseData.progress || 100
                         }
+                      : campaign
+                  ));
+                }
+                break;
+
+              case 'campaign_status':
+                // Handle campaign status updates
+                if (message.campaignId) {
+                  const statusData = message.data as { status?: string };
+                  setCampaigns(prev => prev.map(campaign =>
+                    campaign.id === message.campaignId
+                      ? { ...campaign, status: statusData.status || campaign.status }
                       : campaign
                   ));
                 }
@@ -444,18 +462,80 @@ function CampaignsPageContent() {
         responseValid = true;
         console.log('✅ [BACKEND_INTEGRATION] Direct array response format detected');
       }
+      // Handle Axios response wrapper: { data: {...}, status: 200, statusText: "OK" }
+      else if (response && typeof response === 'object' && 'status' in response && 'data' in response && typeof response.status === 'number') {
+        console.log('✅ [BACKEND_INTEGRATION] Axios response wrapper detected, extracting data');
+        const axiosResponse = response as unknown as Record<string, unknown>;
+        const actualApiResponse = axiosResponse.data;
+        
+        // Check if it's a successful HTTP status
+        const httpStatus = axiosResponse.status as number;
+        if (httpStatus >= 200 && httpStatus < 300) {
+          // Now handle the actual API response inside response.data
+          if (actualApiResponse && typeof actualApiResponse === 'object') {
+            const apiData = actualApiResponse as Record<string, unknown>;
+            
+            // Handle nested success response: { success: true, data: { success: true, data: [...] } }
+            if (apiData.success === true && apiData.data && typeof apiData.data === 'object') {
+              const nestedData = apiData.data as Record<string, unknown>;
+              
+              // Triple-nested: data.data.data contains array
+              if (nestedData.success === true && nestedData.data && Array.isArray(nestedData.data)) {
+                campaignsData = nestedData.data;
+                responseValid = true;
+                console.log('✅ [BACKEND_INTEGRATION] Axios-wrapped triple-nested response format detected');
+              }
+              // Double-nested: data.data contains array
+              else if (Array.isArray(nestedData.data)) {
+                campaignsData = nestedData.data;
+                responseValid = true;
+                console.log('✅ [BACKEND_INTEGRATION] Axios-wrapped double-nested response format detected');
+              }
+              // Handle null or empty nested data
+              else if (nestedData.data === null || (Array.isArray(nestedData.data) && nestedData.data.length === 0)) {
+                campaignsData = [];
+                responseValid = true;
+                isEmptyButValid = true;
+                console.log('✅ [BACKEND_INTEGRATION] Axios-wrapped response with no campaigns');
+              }
+            }
+            // Handle single-nested: { success: true, data: [...] }
+            else if (apiData.success === true && Array.isArray(apiData.data)) {
+              campaignsData = apiData.data;
+              responseValid = true;
+              console.log('✅ [BACKEND_INTEGRATION] Axios-wrapped single-nested response format detected');
+            }
+            // Handle null data
+            else if (apiData.success === true && apiData.data === null) {
+              campaignsData = [];
+              responseValid = true;
+              isEmptyButValid = true;
+              console.log('✅ [BACKEND_INTEGRATION] Axios-wrapped response with null data');
+            }
+          }
+        }
+      }
       // Handle standard backend response format: { success: true, data: {...} } or { status: "success", data: [...] }
-      else if (response && typeof response === 'object' && (('success' in response) || ('status' in response)) && 'data' in response) {
+      else if (response && typeof response === 'object' && (('success' in response) || ('status' in response)) && 'data' in response && !('statusText' in response)) {
         const isSuccessField = 'success' in response;
-        const responseObj = response.data as Record<string, unknown>;
+        const responseObj = response as unknown as Record<string, unknown>;
+        const dataField = responseObj.data as Record<string, unknown>;
+        
+        // Get success value from the correct location
         const successValue = isSuccessField ? responseObj.success : responseObj.status;
         const isSuccess = successValue === true || successValue === 'success' || successValue === 'ok' || successValue === 200;
         
         if (isSuccess) {
-          const dataField = responseObj.data;
-          
+          // Handle triple-nested response: {success: true, data: {success: true, data: {success: true, data: [...]}}}
+          if (dataField && typeof dataField === 'object' && 'data' in dataField &&
+              dataField.data && typeof dataField.data === 'object' && 'data' in dataField.data &&
+              Array.isArray((dataField.data as Record<string, unknown>).data)) {
+            campaignsData = (dataField.data as Record<string, unknown>).data as unknown[];
+            responseValid = true;
+            console.log('✅ [BACKEND_INTEGRATION] Triple-nested backend response format detected');
+          }
           // Handle double-nested response: {success: true, data: {success: true, data: [...]}}
-          if (dataField && typeof dataField === 'object' && 'data' in dataField && Array.isArray(dataField.data)) {
+          else if (dataField && typeof dataField === 'object' && 'data' in dataField && Array.isArray(dataField.data)) {
             campaignsData = dataField.data;
             responseValid = true;
             console.log('✅ [BACKEND_INTEGRATION] Double-nested backend response format detected');
@@ -466,12 +546,26 @@ function CampaignsPageContent() {
             responseValid = true;
             console.log('✅ [BACKEND_INTEGRATION] Single-nested backend response format detected');
           }
-          // Handle nested null data
-          else if (dataField === null || (dataField && typeof dataField === 'object' && 'data' in dataField && dataField.data === null)) {
+          // Handle nested null data (including triple-nested null)
+          else if (dataField === null ||
+                   (dataField && typeof dataField === 'object' && 'data' in dataField && dataField.data === null) ||
+                   (dataField && typeof dataField === 'object' && 'data' in dataField &&
+                    dataField.data && typeof dataField.data === 'object' && 'data' in dataField.data &&
+                    (dataField.data as Record<string, unknown>).data === null)) {
             campaignsData = [];
             responseValid = true;
             isEmptyButValid = true;
             console.log('✅ [BACKEND_INTEGRATION] Successful response with no campaigns (nested null)');
+          }
+          // Handle triple-nested empty array
+          else if (dataField && typeof dataField === 'object' && 'data' in dataField &&
+                   dataField.data && typeof dataField.data === 'object' && 'data' in dataField.data &&
+                   Array.isArray((dataField.data as Record<string, unknown>).data) &&
+                   ((dataField.data as Record<string, unknown>).data as unknown[]).length === 0) {
+            campaignsData = [];
+            responseValid = true;
+            isEmptyButValid = true;
+            console.log('✅ [BACKEND_INTEGRATION] Successful response with empty campaigns array (triple-nested)');
           }
           else {
             console.warn('⚠️ [BACKEND_INTEGRATION] Success response but unexpected data structure:', {
@@ -483,7 +577,7 @@ function CampaignsPageContent() {
         } else {
           console.warn('⚠️ [BACKEND_INTEGRATION] Response indicates error:', {
             successValue,
-            dataType: typeof response.data
+            dataType: typeof (response as any).data
           });
         }
       }
@@ -508,7 +602,7 @@ function CampaignsPageContent() {
         
         for (const key of possibleDataKeys) {
           if (key in response) {
-            const value = (response as Record<string, unknown>)[key];
+            const value = (response as unknown as Record<string, unknown>)[key];
             if (Array.isArray(value)) {
               campaignsData = value;
               responseValid = true;
@@ -532,7 +626,7 @@ function CampaignsPageContent() {
           if (objectKeys.length > 0 && objectKeys[0]) {
             // Check if this might be a single campaign object that should be wrapped in array
             const firstKey = objectKeys[0];
-            const firstValue = (response as Record<string, unknown>)[firstKey];
+            const firstValue = (response as unknown as Record<string, unknown>)[firstKey];
             if (typeof firstValue === 'string' || typeof firstValue === 'number') {
               // Looks like a single object with primitive values, treat as single campaign
               campaignsData = [response];
@@ -603,10 +697,10 @@ function CampaignsPageContent() {
         console.error('❌ [BACKEND_INTEGRATION] PHASE 1 FAILED - Invalid response format:', {
           responseType: typeof response,
           hasStatus: !!(response && 'status' in response),
-          status: response && 'status' in response ? response.status : 'missing',
+          status: response && 'status' in response ? (response as any).status : 'missing',
           hasData: !!(response && 'data' in response),
-          dataType: response && 'data' in response ? typeof response.data : 'missing',
-          isDataArray: response && 'data' in response ? Array.isArray(response.data) : false,
+          dataType: response && 'data' in response ? typeof (response as any).data : 'missing',
+          isDataArray: response && 'data' in response ? Array.isArray((response as any).data) : false,
           fullResponse: response,
           possibleBackendIssues: [
             'Backend API returning unexpected format',

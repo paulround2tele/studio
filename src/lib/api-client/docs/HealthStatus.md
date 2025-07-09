@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HealthStatus } from 'api-client';
+import { HealthStatus } from './api';
 
 const instance: HealthStatus = {
     buildTime,

@@ -1,6 +1,6 @@
 # KeywordSetsApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -22,7 +22,7 @@ import {
     KeywordSetsApi,
     Configuration,
     CreateKeywordSetRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
@@ -78,7 +78,7 @@ Deletes a keyword set by ID including all its rules
 import {
     KeywordSetsApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
@@ -134,7 +134,7 @@ Gets a keyword set by ID including its rules
 import {
     KeywordSetsApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
@@ -190,7 +190,7 @@ Lists all keyword sets with optional filtering and pagination
 import {
     KeywordSetsApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
@@ -255,7 +255,7 @@ import {
     KeywordSetsApi,
     Configuration,
     UpdateKeywordSetRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);

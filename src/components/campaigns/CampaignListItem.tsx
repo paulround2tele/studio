@@ -252,7 +252,11 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
             <div className="flex justify-between items-center mb-1 text-sm">
               <span className="font-medium text-muted-foreground">Overall Progress</span>
             </div>
-            <Progress value={overallProgress} className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-primary [&>div]:to-accent" />
+            <Progress
+              value={overallProgress}
+              className="h-2"
+              indicatorVariant={overallProgress >= 100 ? "success" : "default"}
+            />
             <p className="text-xs text-muted-foreground mt-1 text-right">{overallProgress}% complete</p>
           </div>
           <div className="text-sm text-muted-foreground">

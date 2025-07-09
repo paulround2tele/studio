@@ -1,6 +1,6 @@
 # UtilitiesApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -17,7 +17,7 @@ Simple ping endpoint to test server connectivity
 import {
     UtilitiesApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new UtilitiesApi(configuration);

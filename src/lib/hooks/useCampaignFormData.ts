@@ -6,7 +6,7 @@ type HttpPersona = components['schemas']['Persona'] & { personaType: 'http' };
 type DnsPersona = components['schemas']['Persona'] & { personaType: 'dns' };
 import { getPersonas } from "@/lib/services/personaService";
 import { getProxies } from "@/lib/services/proxyService.production";
-import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
 type Campaign = components['schemas']['Campaign'];
@@ -45,7 +45,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
         getPersonas('http'),
         getPersonas('dns'),
         getProxies(),
-        enhancedApiClient.listCampaigns()
+        campaignsApi.listCampaigns()
       ]);
 
       // Process HTTP personas result

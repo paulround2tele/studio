@@ -1,8 +1,14 @@
 // src/lib/services/configService.ts
 // Production Config Service - Feature flags and configuration management
 
-import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import { ConfigApi, Configuration } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
+
+// Create configured ConfigApi instance
+const config = new Configuration({
+  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2'
+});
+const configApi = new ConfigApi(config);
 
 // Use generated types
 export type FeatureFlags = components['schemas']['FeatureFlags'];
@@ -28,9 +34,7 @@ class ConfigService {
 
   async getFeatureFlags(): Promise<ConfigResponse<FeatureFlags>> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.configApi.configFeaturesGet()
-      );
+      const response = await configApi.getFeatureFlags();
       return {
         status: 'success',
         data: response.data as FeatureFlags,
@@ -46,9 +50,7 @@ class ConfigService {
 
   async updateFeatureFlags(flags: FeatureFlags): Promise<ConfigResponse<FeatureFlags>> {
     try {
-      const response = await enhancedApiClient.executeWithCircuitBreaker(() =>
-        enhancedApiClient.configApi.configFeaturesPost(flags)
-      );
+      const response = await configApi.updateFeatureFlags(flags);
       return {
         status: 'success',
         data: response.data as FeatureFlags,

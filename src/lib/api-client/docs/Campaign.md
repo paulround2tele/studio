@@ -41,7 +41,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Campaign } from 'api-client';
+import { Campaign } from './api';
 
 const instance: Campaign = {
     avgProcessingRate,

@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { KeywordExtractionResult } from 'api-client';
+import { KeywordExtractionResult } from './api';
 
 const instance: KeywordExtractionResult = {
     count,

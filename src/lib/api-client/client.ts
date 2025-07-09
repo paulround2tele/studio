@@ -1,94 +1,47 @@
-// Simple configuration for auto-generated OpenAPI clients
-// Exports properly configured clients with auto-detected base URL
+// Clean API Client Configuration
+// Auto-generated API instances with proper configuration
+// DO NOT manually add custom methods - use the auto-generated APIs directly
 
-import { Configuration } from './api/configuration';
 import {
+  AuthApi,
   CampaignsApi,
+  ConfigApi,
+  ConfigurationApi,
   KeywordSetsApi,
   PersonasApi,
   ProxiesApi,
   ProxyPoolsApi,
-  AuthApi,
-  ConfigurationApi,
-  ConfigApi
-} from './api/api';
+  UtilitiesApi,
+  Configuration
+} from './index';
 
-// Strict backend URL configuration - NO hardcoded fallbacks allowed
-const getSyncBackendUrl = (): string => {
-  const configured = process.env.NEXT_PUBLIC_API_URL;
-  if (configured && configured.trim()) {
-    return configured;
-  }
-  
-  // Only auto-detect in browser context and only for the exact same origin
-  if (typeof window !== 'undefined') {
-    const { hostname, port, protocol } = window.location;
-    
-    // Auto-detect only when frontend and backend are on the same host
-    // This prevents accidental connections to wrong backends
-    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return `${protocol}//${hostname}${port ? `:${port}` : ''}/api/v2`;
-    }
-  }
-  
-  // STRICT: No fallbacks allowed - force proper configuration
-  throw new Error(
-    'CONFIGURATION ERROR: API base URL not configured. ' +
-    'Please set NEXT_PUBLIC_API_URL environment variable to the backend API URL. ' +
-    'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2 ' +
-    'This prevents accidental connections to localhost or misconfigured backends.'
-  );
-};
-
-// Create shared configuration with credentials for session-based auth
-const config = new Configuration({
-  basePath: getSyncBackendUrl(),
-  baseOptions: {
-    withCredentials: true, // Include session cookies in requests
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  },
+// Create configuration instance
+const apiConfiguration = new Configuration({
+  // Configuration will be handled by the base API classes
+  // which already have proper URL resolution and auth handling
 });
 
-// Export configured API clients
-export const campaignsApi = new CampaignsApi(config);
-export const keywordSetsApi = new KeywordSetsApi(config);
-export const personasApi = new PersonasApi(config);
-export const proxiesApi = new ProxiesApi(config);
-export const proxyPoolsApi = new ProxyPoolsApi(config);
-export const authApi = new AuthApi(config);
-export const configurationApi = new ConfigurationApi(config);
-export const configApi = new ConfigApi(config);
+// Export pre-configured API instances
+export const authApi = new AuthApi(apiConfiguration);
+export const authenticationApi = authApi; // Alias for backwards compatibility
+export const campaignsApi = new CampaignsApi(apiConfiguration);
+export const configApi = new ConfigApi(apiConfiguration);
+export const configurationApi = new ConfigurationApi(apiConfiguration);
+export const keywordSetsApi = new KeywordSetsApi(apiConfiguration);
+export const personasApi = new PersonasApi(apiConfiguration);
+export const proxiesApi = new ProxiesApi(apiConfiguration);
+export const proxyPoolsApi = new ProxyPoolsApi(apiConfiguration);
+export const utilitiesApi = new UtilitiesApi(apiConfiguration);
 
-// Legacy compatibility - use campaigns API as default apiClient
+// Legacy alias - use campaignsApi directly instead
 export const apiClient = campaignsApi;
 
-// Legacy compatibility alias
-export const ApiClient = campaignsApi;
-
-// Re-export types for compatibility
+// Export types for convenience
 export type { components } from './types';
-export type {
-  Campaign,
-  CreateCampaignRequest,
-  CampaignDetailsResponse,
-  CampaignListResponse,
-  KeywordSet,
-  CreateKeywordSetRequest,
-  UpdateKeywordSetRequest,
-  Persona,
-  Proxy,
-  ProxyPool,
-  ProxyPoolRequest
-} from './api/models';
 
-// Re-export pattern offset types from api
-export type {
-  PatternOffsetRequest,
-  GetDomainGenerationPatternOffset200Response
-} from './api/api';
+// Import components type to use for re-exports
+import type { components } from './types';
 
-// Additional type exports for legacy compatibility
-export type OperationRequestBody = Record<string, any>;
-export type ApiPaths = Record<string, any>;
+// Re-export specific types that are commonly used
+export type CreateKeywordSetRequest = components['schemas']['CreateKeywordSetRequest'];
+export type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];

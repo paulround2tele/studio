@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HttpKeywordParams } from 'api-client';
+import { HttpKeywordParams } from './api';
 
 const instance: HttpKeywordParams = {
     adHocKeywords,

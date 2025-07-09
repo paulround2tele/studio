@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ServerConfig } from 'api-client';
+import { ServerConfig } from './api';
 
 const instance: ServerConfig = {
     ginMode,

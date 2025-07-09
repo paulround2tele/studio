@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UpdatePersonaRequest } from 'api-client';
+import { UpdatePersonaRequest } from './api';
 
 const instance: UpdatePersonaRequest = {
     configDetails,

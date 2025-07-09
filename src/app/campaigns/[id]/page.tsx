@@ -26,7 +26,7 @@ import {
   useActionLoading,
   useCampaignDetailsActions
 } from '@/lib/stores/campaignDetailsStore';
-import { getWebSocketStreamManager } from '@/lib/websocket/WebSocketStreamManager';
+import { websocketService } from '@/lib/services/websocketService.simple';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
 
 // Types
@@ -71,8 +71,7 @@ export default function RefactoredCampaignDetailsPage() {
     downloadDomains
   } = campaignOperations;
 
-  // WebSocket stream manager reference
-  const streamManagerRef = useRef(getWebSocketStreamManager());
+  // WebSocket cleanup reference
   const cleanupRef = useRef<(() => void) | null>(null);
 
   // 🔧 CRITICAL FIX: Create stable loadCampaignData reference
@@ -98,16 +97,21 @@ export default function RefactoredCampaignDetailsPage() {
     loadCampaignData(true);
   }, [campaignId, reset, loadCampaignData]);
 
-  // 🔧 CRITICAL FIX: Memoize WebSocket conditions to prevent unnecessary effect runs
-  // 🚨 ROOT CAUSE FIX: Remove 'completed' status to stop WebSocket polling after campaign completion
+  // 🔧 CRITICAL FIX: Stable WebSocket connection management with progress-based disconnection
   const webSocketConditions = useMemo(() => {
+    const isActiveStatus = campaign && ['pending', 'queued', 'running'].includes(campaign.status || '');
+    const isNearCompletion = campaign && (campaign.progress || 0) >= 95; // Disconnect when 95%+ to prevent instability
+    const shouldConnect = !!(campaign &&
+      campaign.campaignType === 'domain_generation' &&
+      isActiveStatus &&
+      !isNearCompletion); // Prevent connection issues when campaign is almost done
+      
     return {
-      shouldConnect: !!(campaign &&
-        campaign.campaignType === 'domain_generation' &&
-        ['pending', 'queued', 'running'].includes(campaign.status || '')),
+      shouldConnect,
       campaignId: campaign?.id,
       campaignType: campaign?.campaignType,
-      status: campaign?.status
+      status: campaign?.status,
+      progress: campaign?.progress || 0
     };
   }, [campaign]);
 
@@ -126,79 +130,88 @@ export default function RefactoredCampaignDetailsPage() {
       return;
     }
 
-    // Connect to WebSocket stream
-    const streamManager = streamManagerRef.current;
-    
-    const connectAndSubscribe = async () => {
+    // Connect to WebSocket stream using new service
+    const connectAndSubscribe = () => {
       try {
-        await streamManager.connect(campaignId);
-        
-        const unsubscribe = streamManager.subscribeToEvents({
-          onDomainGenerated: (payload) => {
-            updateFromWebSocket({
-              type: 'domain_generated',
-              data: payload,
-              timestamp: new Date().toISOString(),
-              campaignId: payload.campaignId,
-              sequenceNumber: Date.now(),
-            });
-          },
-          
-          onCampaignProgress: (payload) => {
-            updateFromWebSocket({
-              type: 'campaign_progress',
-              data: payload,
-              timestamp: new Date().toISOString(),
-              campaignId: payload.campaignId,
-            });
-          },
-          
-          onCampaignStatus: (payload) => {
-            updateFromWebSocket({
-              type: 'campaign_status',
-              data: payload,
-              timestamp: new Date().toISOString(),
-              campaignId: payload.campaignId,
-            });
-          },
-          
-          onConnectionStatus: (status) => {
-            updateStreamingStats({ connectionStatus: status });
-          },
-          
-          onDNSValidation: (payload) => {
-            updateFromWebSocket({
-              type: 'dns_validation_result',
-              data: payload,
-              timestamp: new Date().toISOString(),
-              campaignId: payload.campaignId,
-            });
-          },
-          
-          onHTTPValidation: (payload) => {
-            updateFromWebSocket({
-              type: 'http_validation_result',
-              data: payload,
-              timestamp: new Date().toISOString(),
-              campaignId: payload.campaignId,
-            });
-          },
-          
-          onError: (error) => {
-            if (!error.recoverable) {
-              cleanupRef.current?.();
-              cleanupRef.current = null;
+        const cleanup = websocketService.connect(`campaign-${campaignId}`, {
+          onMessage: (message: any) => {
+            // Route messages based on type
+            switch (message.type) {
+              case 'domain_generated':
+              case 'domain.generated':
+                updateFromWebSocket({
+                  type: 'domain_generated',
+                  data: message.data,
+                  timestamp: message.timestamp || new Date().toISOString(),
+                  campaignId: message.campaignId || campaignId,
+                  sequenceNumber: message.sequenceNumber || Date.now(),
+                });
+                break;
+                
+              case 'campaign_progress':
+              case 'campaign.progress':
+              case 'domain_generation_progress':
+                updateFromWebSocket({
+                  type: 'campaign_progress',
+                  data: message.data,
+                  timestamp: message.timestamp || new Date().toISOString(),
+                  campaignId: message.campaignId || campaignId,
+                });
+                break;
+                
+              case 'campaign_status':
+              case 'campaign.status':
+              case 'campaign_completed':
+              case 'campaign_failed':
+              case 'campaign_phase_complete':
+                updateFromWebSocket({
+                  type: 'campaign_status',
+                  data: message.data,
+                  timestamp: message.timestamp || new Date().toISOString(),
+                  campaignId: message.campaignId || campaignId,
+                });
+                break;
+                
+              case 'dns_validation_result':
+              case 'dns.validation.result':
+                updateFromWebSocket({
+                  type: 'dns_validation_result',
+                  data: message.data,
+                  timestamp: message.timestamp || new Date().toISOString(),
+                  campaignId: message.campaignId || campaignId,
+                });
+                break;
+                
+              case 'http_validation_result':
+              case 'http.validation.result':
+                updateFromWebSocket({
+                  type: 'http_validation_result',
+                  data: message.data,
+                  timestamp: message.timestamp || new Date().toISOString(),
+                  campaignId: message.campaignId || campaignId,
+                });
+                break;
+                
+              default:
+                console.log(`📝 [WebSocket] Unhandled message type: ${message.type}`);
             }
+          },
+          
+          onOpen: () => {
+            updateStreamingStats({ connectionStatus: 'connected' as any });
+          },
+          
+          onClose: () => {
+            updateStreamingStats({ connectionStatus: 'disconnected' as any });
+          },
+          
+          onError: (error: any) => {
+            console.error('❌ [WebSocket] Connection error:', error);
+            updateStreamingStats({ connectionStatus: 'disconnected' as any });
           }
         });
-
-        // Enable high-frequency mode for real-time updates
-        streamManager.enableHighFrequencyMode();
         
-        cleanupRef.current = () => {
-          unsubscribe();
-          streamManager.disconnect();
-        };
+        cleanupRef.current = cleanup;
 
       } catch (error) {
         console.error('❌ [WebSocket] Failed to connect:', error);

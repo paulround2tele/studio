@@ -60,12 +60,14 @@ export const CampaignMetrics: React.FC<CampaignMetricsProps> = ({
   streamingStats,
   className
 }) => {
-  const progressPercentage = campaign.progressPercentage || 0;
-  const processedItems = campaign.processedItems || 0;
+  // CRITICAL FIX: Use consistent data sources - prefer WebSocket data over stale campaign data
+  const progressPercentage = campaign.progressPercentage || campaign.progress || 0;
+  const processedItems = totalDomains > 0 ? totalDomains : (campaign.processedItems || 0);
   const successfulItems = campaign.successfulItems || 0;
   const failedItems = campaign.failedItems || 0;
   const targetItems = campaign.totalItems || campaign.domainGenerationParams?.numDomainsToGenerate || 0;
   
+  // Calculate rates based on actual processed items (from WebSocket data)
   const successRate = processedItems > 0 ? (successfulItems / processedItems) * 100 : 0;
   const failureRate = processedItems > 0 ? (failedItems / processedItems) * 100 : 0;
   

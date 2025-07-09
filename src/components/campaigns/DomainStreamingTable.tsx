@@ -78,15 +78,15 @@ interface DomainDetail {
 const StatusBadge = React.memo<{ status: DomainActivityStatus; score?: number }>(function StatusBadge({ status, score }) {
   const getBadgeConfig = (status: DomainActivityStatus) => {
     switch (status) {
-      case 'validated': return { icon: CheckCircle, variant: 'default' as const, text: 'Validated' };
-      case 'generating': return { icon: Dna, variant: 'secondary' as const, text: 'Generating' };
-      case 'scanned': return { icon: Search, variant: 'default' as const, text: 'Scanned' };
-      case 'not_validated': return { icon: XCircle, variant: 'destructive' as const, text: 'Not Validated' };
-      case 'failed': return { icon: AlertCircle, variant: 'destructive' as const, text: 'Failed' };
-      case 'no_leads': return { icon: ShieldQuestion, variant: 'secondary' as const, text: 'No Leads' };
-      case 'pending': return { icon: Clock, variant: 'secondary' as const, text: 'Pending' };
-      case 'n_a': return { icon: HelpCircle, variant: 'outline' as const, text: 'N/A' };
-      default: return { icon: HelpCircle, variant: 'outline' as const, text: 'Unknown' };
+      case 'validated': return { icon: CheckCircle, variant: 'default' as const, text: 'Validated', className: 'bg-green-500 text-white hover:bg-green-600' };
+      case 'generating': return { icon: Dna, variant: 'secondary' as const, text: 'Generating', className: 'bg-blue-500 text-white hover:bg-blue-600' };
+      case 'scanned': return { icon: Search, variant: 'default' as const, text: 'Scanned', className: 'bg-emerald-500 text-white hover:bg-emerald-600' };
+      case 'not_validated': return { icon: XCircle, variant: 'destructive' as const, text: 'Not Validated', className: 'bg-red-500 text-white hover:bg-red-600' };
+      case 'failed': return { icon: AlertCircle, variant: 'destructive' as const, text: 'Failed', className: 'bg-red-600 text-white hover:bg-red-700' };
+      case 'no_leads': return { icon: ShieldQuestion, variant: 'secondary' as const, text: 'No Leads', className: 'bg-gray-500 text-white hover:bg-gray-600' };
+      case 'pending': return { icon: Clock, variant: 'secondary' as const, text: 'Pending', className: 'bg-yellow-500 text-black hover:bg-yellow-600' };
+      case 'n_a': return { icon: HelpCircle, variant: 'outline' as const, text: 'N/A', className: 'bg-gray-200 text-gray-600 border-gray-300' };
+      default: return { icon: HelpCircle, variant: 'outline' as const, text: 'Unknown', className: 'bg-gray-200 text-gray-600 border-gray-300' };
     }
   };
 
@@ -94,7 +94,7 @@ const StatusBadge = React.memo<{ status: DomainActivityStatus; score?: number }>
   const IconComponent = config.icon;
 
   return (
-    <Badge variant={config.variant} className="text-xs whitespace-nowrap">
+    <Badge variant={config.variant} className={`text-xs whitespace-nowrap ${config.className}`}>
       <IconComponent className="mr-1 h-3.5 w-3.5" />
       {config.text}
       {score !== undefined && status === 'scanned' && (

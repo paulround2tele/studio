@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { KeywordExtractionRequestItem } from 'api-client';
+import { KeywordExtractionRequestItem } from './api';
 
 const instance: KeywordExtractionRequestItem = {
     dnsPersonaId,

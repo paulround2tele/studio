@@ -17,7 +17,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { CreateCampaignRequest } from 'api-client';
+import { CreateCampaignRequest } from './api';
 
 const instance: CreateCampaignRequest = {
     campaignType,

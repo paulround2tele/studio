@@ -22,7 +22,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HTTPConfig } from 'api-client';
+import { HTTPConfig } from './api';
 
 const instance: HTTPConfig = {
     allowInsecureTLS,

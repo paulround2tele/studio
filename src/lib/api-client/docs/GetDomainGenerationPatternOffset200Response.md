@@ -1,19 +1,19 @@
-# ErrorResponse
+# GetDomainGenerationPatternOffset200Response
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**error** | **string** | Error message | [optional] [default to undefined]
+**currentOffset** | **number** | Current global offset for this pattern signature | [default to undefined]
 
 ## Example
 
 ```typescript
-import { ErrorResponse } from './api';
+import { GetDomainGenerationPatternOffset200Response } from './api';
 
-const instance: ErrorResponse = {
-    error,
+const instance: GetDomainGenerationPatternOffset200Response = {
+    currentOffset,
 };
 ```
 

@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { RefreshResponse } from 'api-client';
+import { RefreshResponse } from './api';
 
 const instance: RefreshResponse = {
     expiresAt,

@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { GeneratedDomainsResponse } from 'api-client';
+import { GeneratedDomainsResponse } from './api';
 
 const instance: GeneratedDomainsResponse = {
     data,

@@ -65,13 +65,15 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
     }
     
     const patternTypeMap = {
-      "prefix_variable": "prefix_variable",
-      "suffix_variable": "suffix_variable",
-      "both_variable": "both_variable"
+      "prefix_variable": "prefix",
+      "suffix_variable": "suffix",
+      "both_variable": "both"
     } as const;
     
     const tlds = tldsInput.split(',').map(tld => tld.trim()).filter(tld => tld.length > 0);
-    const primaryTld = tlds[0] || '.com';
+    // Ensure TLD format is consistent (remove leading dot if present, then add it)
+    const primaryTld = tlds[0] || 'com';
+    const normalizedTld = primaryTld.startsWith('.') ? primaryTld.substring(1) : primaryTld;
     const variableLength = prefixVariableLength || 3;
     
     return {
@@ -79,7 +81,7 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
       variableLength,
       characterSet: allowedCharSet,
       constantString: constantPart,
-      tld: primaryTld,
+      tld: normalizedTld,
     };
   }, [generationPattern, constantPart, allowedCharSet, tldsInput, prefixVariableLength]);
 
@@ -110,24 +112,50 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
           tld: patternSignature.tld
         };
         
+        console.log('🔍 [Offset] Fetching offset for pattern:', patternRequest);
+        
         const response = await apiClient.getDomainGenerationPatternOffset(patternRequest);
         const data = response.data;
+
+        console.log('📊 [Offset] API response:', data);
 
         if (cancelled) return;
         
         if (!cancelled) {
-          setCurrentOffset({
-            value: data.currentOffset || 0,
-            isLoading: false,
-            error: null
-          });
+          const offsetValue = data.currentOffset;
+          if (typeof offsetValue === 'number') {
+            setCurrentOffset({
+              value: offsetValue,
+              isLoading: false,
+              error: null
+            });
+            console.log(`✅ [Offset] Successfully fetched offset: ${offsetValue}`);
+          } else {
+            throw new Error(`Invalid offset response: expected number, got ${typeof offsetValue}`);
+          }
         }
       } catch (err) {
+        console.error('❌ [Offset] Error fetching pattern offset:', err);
+        
         if (!cancelled) {
+          let errorMessage = 'Failed to fetch offset';
+          if (err instanceof Error) {
+            errorMessage = err.message;
+          } else if (typeof err === 'object' && err !== null && 'response' in err) {
+            const axiosError = err as any;
+            if (axiosError.response?.status === 404) {
+              errorMessage = 'Pattern not found - this is a new pattern combination';
+            } else if (axiosError.response?.status >= 500) {
+              errorMessage = 'Server error while fetching offset';
+            } else if (axiosError.response?.data?.message) {
+              errorMessage = axiosError.response.data.message;
+            }
+          }
+          
           setCurrentOffset({
-            value: 0,
+            value: 0, // Default to 0 for new patterns, but with clear error indication
             isLoading: false,
-            error: err instanceof Error ? err.message : 'Failed to fetch offset'
+            error: errorMessage
           });
         }
       }

@@ -206,11 +206,59 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
         }
       }
 
+      // Handle campaign status updates
       if (message.type === 'campaign_status' && message.data) {
         const payload = message.data as { campaignId: string; status: string };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
           set({ campaign: { ...state.campaign, status: payload.status as CampaignStatus } });
+        }
+      }
+
+      // Handle phase completion updates
+      if (message.type === 'phase_complete' && message.data) {
+        const payload = message.data as {
+          campaignId: string;
+          phase: string;
+          status: string;
+          progress?: number;
+        };
+        const state = get();
+        if (state.campaign && payload.campaignId === state.campaign.id) {
+          set({
+            campaign: {
+              ...state.campaign,
+              currentPhase: payload.phase as any,
+              phaseStatus: payload.status as any,
+              progress: payload.progress || 100,
+              progressPercentage: payload.progress || 100, // CRITICAL: Update both progress fields
+              processedItems: state.totalDomainCount, // Use WebSocket domain count as processed items
+              status: payload.status === 'Succeeded' ? 'completed' : state.campaign.status
+            }
+          });
+        }
+      }
+
+      // Handle phase progress updates
+      if (message.type === 'campaign_progress' && message.data) {
+        const payload = message.data as {
+          campaignId: string;
+          progress: number;
+          phase?: string;
+          status?: string;
+        };
+        const state = get();
+        if (state.campaign && payload.campaignId === state.campaign.id) {
+          set({
+            campaign: {
+              ...state.campaign,
+              progress: payload.progress,
+              progressPercentage: payload.progress, // CRITICAL: Keep both progress fields in sync
+              processedItems: Math.floor((payload.progress / 100) * (state.campaign.totalItems || 0)), // Calculate from progress
+              currentPhase: payload.phase ? payload.phase as any : state.campaign.currentPhase,
+              phaseStatus: payload.status ? payload.status as any : state.campaign.phaseStatus
+            }
+          });
         }
       }
     },

@@ -1,7 +1,7 @@
 // src/lib/services/campaignService.ts
 // Production Campaign Service - Direct OpenAPI integration without adapters
 
-import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import { campaignsApi } from '@/lib/api-client/client';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
@@ -70,7 +70,7 @@ class CampaignService {
   async getCampaigns(_options?: { limit?: number; sortBy?: string; sortOrder?: string }): Promise<CampaignsListResponse> {
     try {
       console.log('[CampaignService] Getting campaigns');
-      const response = await enhancedApiClient.listCampaigns();
+      const response = await campaignsApi.listCampaigns();
       
       // Extract data from AxiosResponse
       const result = 'data' in response ? response.data : response;
@@ -93,7 +93,7 @@ class CampaignService {
   async getCampaignById(campaignId: string): Promise<CampaignDetailResponse> {
     try {
       console.log('[CampaignService] Getting campaign by ID:', campaignId);
-      const response = await enhancedApiClient.getCampaignById(campaignId);
+      const response = await campaignsApi.getCampaignDetails(campaignId);
       const result = 'data' in response ? response.data : response;
       
       // Extract campaign from wrapped response
@@ -117,7 +117,7 @@ class CampaignService {
     try {
       console.log('[CampaignService] Creating campaign with payload:', payload);
       
-      const response = await enhancedApiClient.createCampaign(payload);
+      const response = await campaignsApi.createCampaign(payload);
       const result = 'data' in response ? response.data : response;
       
       console.log('[CampaignService] Campaign created successfully:', result);
@@ -139,7 +139,7 @@ class CampaignService {
   async startCampaign(campaignId: string): Promise<CampaignOperationResponse> {
     try {
       console.log('[CampaignService] Starting campaign:', campaignId);
-      const response = await enhancedApiClient.startCampaign(campaignId);
+      const response = await campaignsApi.startCampaign(campaignId);
       const result = 'data' in response ? response.data : response;
       
       return {
@@ -159,7 +159,7 @@ class CampaignService {
   async pauseCampaign(campaignId: string): Promise<CampaignOperationResponse> {
     try {
       console.log('[CampaignService] Pausing campaign:', campaignId);
-      const response = await enhancedApiClient.pauseCampaign(campaignId);
+      const response = await campaignsApi.pauseCampaign(campaignId);
       const result = 'data' in response ? response.data : response;
       
       return {
@@ -179,7 +179,7 @@ class CampaignService {
   async resumeCampaign(campaignId: string): Promise<CampaignOperationResponse> {
     try {
       console.log('[CampaignService] Resuming campaign:', campaignId);
-      const response = await enhancedApiClient.resumeCampaign(campaignId);
+      const response = await campaignsApi.resumeCampaign(campaignId);
       const result = 'data' in response ? response.data : response;
       
       return {
@@ -199,7 +199,7 @@ class CampaignService {
   async cancelCampaign(campaignId: string): Promise<CampaignOperationResponse> {
     try {
       console.log('[CampaignService] Cancelling campaign:', campaignId);
-      const response = await enhancedApiClient.cancelCampaign(campaignId);
+      const response = await campaignsApi.cancelCampaign(campaignId);
       const result = 'data' in response ? response.data : response;
       
       return {
@@ -228,7 +228,7 @@ class CampaignService {
       }
       
       // Then delete it
-      await enhancedApiClient.deleteCampaign(campaignId);
+      await campaignsApi.deleteCampaign(campaignId);
       
       return {
         status: 'success',
@@ -251,22 +251,9 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting generated domains for campaign:', campaignId, options);
-      const response = await enhancedApiClient.campaigns.campaignsCampaignIdResultsGeneratedDomainsGet(campaignId, options?.limit, options?.cursor);
-      const result = 'data' in response ? response.data : response;
-      
-      // Handle case where API returns {} instead of array
-      let data: unknown[] = [];
-      if (Array.isArray(result)) {
-        data = result;
-      } else if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data)) {
-        data = result.data;
-      }
-      
-      return {
-        status: 'success',
-        data,
-        message: 'Generated domains retrieved successfully'
-      };
+      // TODO: These results methods need to be implemented with correct API client
+      // const response = await campaignsApi.campaignsCampaignIdResultsGeneratedDomainsGet(campaignId, options?.limit, options?.cursor);
+      throw new Error('getGeneratedDomains method needs to be implemented with correct API client');
     } catch (error) {
       console.error('[CampaignService] Failed to get generated domains:', error);
       return {
@@ -283,22 +270,9 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting DNS validation results for campaign:', campaignId, options);
-      const response = await enhancedApiClient.campaigns.campaignsCampaignIdResultsDnsValidationGet(campaignId, options?.limit, options?.cursor);
-      const result = 'data' in response ? response.data : response;
-      
-      // Handle case where API returns {} instead of array
-      let data: unknown[] = [];
-      if (Array.isArray(result)) {
-        data = result;
-      } else if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data)) {
-        data = result.data;
-      }
-      
-      return {
-        status: 'success',
-        data,
-        message: 'DNS validation results retrieved successfully'
-      };
+      // TODO: These results methods need to be implemented with correct API client
+      // const response = await campaignsApi.campaignsCampaignIdResultsDnsValidationGet(campaignId, options?.limit, options?.cursor);
+      throw new Error('getDnsValidationResults method needs to be implemented with correct API client');
     } catch (error) {
       console.error('[CampaignService] Failed to get DNS validation results:', error);
       return {
@@ -315,22 +289,9 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting HTTP keyword results for campaign:', campaignId, options);
-      const response = await enhancedApiClient.campaigns.campaignsCampaignIdResultsHttpKeywordGet(campaignId, options?.limit, options?.cursor);
-      const result = 'data' in response ? response.data : response;
-      
-      // Handle case where API returns {} instead of array
-      let data: unknown[] = [];
-      if (Array.isArray(result)) {
-        data = result;
-      } else if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data)) {
-        data = result.data;
-      }
-      
-      return {
-        status: 'success',
-        data,
-        message: 'HTTP keyword results retrieved successfully'
-      };
+      // TODO: These results methods need to be implemented with correct API client
+      // const response = await campaignsApi.campaignsCampaignIdResultsHttpKeywordGet(campaignId, options?.limit, options?.cursor);
+      throw new Error('getHttpKeywordResults method needs to be implemented with correct API client');
     } catch (error) {
       console.error('[CampaignService] Failed to get HTTP keyword results:', error);
       return {

@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ProxyStatus } from 'api-client';
+import { ProxyStatus } from './api';
 
 const instance: ProxyStatus = {
     address,

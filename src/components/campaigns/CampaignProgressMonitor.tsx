@@ -137,22 +137,56 @@ const CampaignProgressMonitor = memo(({
         break;
 
       case 'phase_complete':
-        const phaseData = message.data as { phase?: string; status?: string };
+        const phaseData = message.data as { phase?: string; status?: string; progress?: number };
         if (phaseData && phaseData.phase && phaseData.status) {
           setRealtimeData(prev => ({
             ...prev,
             currentPhase: phaseData.phase as CampaignPhase,
             currentStatus: normalizeStatus(phaseData.status),
+            currentProgress: phaseData.progress || 100,
             lastActivity: new Date()
           }));
           onCampaignUpdate?.({
             currentPhase: phaseData.phase as CampaignPhase,
-            status: normalizeStatus(phaseData.status),
-            progress: 100
+            phaseStatus: phaseData.status as any,
+            status: phaseData.status === 'Succeeded' ? 'completed' : normalizeStatus(phaseData.status),
+            progress: phaseData.progress || 100
           });
           toast({
             title: "Phase Completed",
             description: `${phaseData.phase} phase has completed successfully.`
+          });
+        }
+        break;
+
+      case 'campaign_progress':
+        const campaignProgressData = message.data as { progress?: number; phase?: string; status?: string };
+        if (campaignProgressData && typeof campaignProgressData.progress === 'number') {
+          setRealtimeData(prev => ({
+            ...prev,
+            currentProgress: campaignProgressData.progress || prev.currentProgress,
+            currentPhase: (campaignProgressData.phase as CampaignPhase) || prev.currentPhase,
+            currentStatus: campaignProgressData.status ? normalizeStatus(campaignProgressData.status) : prev.currentStatus,
+            lastActivity: new Date()
+          }));
+          onCampaignUpdate?.({
+            progress: campaignProgressData.progress,
+            currentPhase: campaignProgressData.phase as CampaignPhase,
+            phaseStatus: campaignProgressData.status as any
+          });
+        }
+        break;
+
+      case 'campaign_status':
+        const statusData = message.data as { campaignId?: string; status?: string };
+        if (statusData && statusData.status) {
+          setRealtimeData(prev => ({
+            ...prev,
+            currentStatus: normalizeStatus(statusData.status),
+            lastActivity: new Date()
+          }));
+          onCampaignUpdate?.({
+            status: normalizeStatus(statusData.status)
           });
         }
         break;
@@ -188,9 +222,13 @@ const CampaignProgressMonitor = memo(({
         `campaign-${campaignKey.id}`,
         {
           onMessage: (standardMessage: WebSocketMessage) => {
-            // Convert to legacy format
-            const message = adaptWebSocketMessage(standardMessage);
-            handleWebSocketMessage(message);
+            // Convert to legacy format and then back to compatible format
+            const legacyMessage = adaptWebSocketMessage(standardMessage);
+            const compatibleMessage: WebSocketMessage & { campaignId?: string; message?: string } = {
+              ...legacyMessage,
+              timestamp: new Date(legacyMessage.timestamp).toISOString()
+            };
+            handleWebSocketMessage(compatibleMessage);
           },
           onError: (error: Event | Error) => {
             console.error('WebSocket error:', error);

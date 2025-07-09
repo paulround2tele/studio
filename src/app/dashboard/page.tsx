@@ -16,15 +16,11 @@ export default function DashboardPage() {
   const { isAuthenticated, isLoading, isInitialized, user } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (isInitialized && !isLoading && !isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, isLoading, isInitialized, router]);
+  // REMOVED: Client-side authentication redirects - middleware handles all auth
+  // This prevents race conditions between middleware and client-side auth logic
 
-  // Show loading while authentication is being determined
-  if (!isInitialized || isLoading) {
+  // Show loading only while auth context is initializing
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
@@ -35,35 +31,14 @@ export default function DashboardPage() {
     );
   }
 
-  // If not authenticated, show redirecting message
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Redirecting to login...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If no user data, show loading
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading user data...</p>
-        </div>
-      </div>
-    );
-  }
+  // SIMPLIFIED: If middleware let us through, render dashboard
+  // Don't get stuck waiting for user data that might not load
 
   // Render dashboard for authenticated users ONLY
   return (
     <div className="container mx-auto">
       <PageHeader
-        title={`Welcome back, ${user?.name || user?.email}`}
+        title={`Welcome back${user?.name ? `, ${user.name}` : user?.email ? `, ${user.email}` : ''}`}
         description="Orchestrate your domain intelligence and lead generation campaigns."
         icon={PlayCircle}
       />

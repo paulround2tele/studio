@@ -19,21 +19,7 @@ import type { Configuration } from './configuration';
 import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 
-// STRICT: No hardcoded BASE_PATH - force environment configuration
-const getBasePath = (): string => {
-  const configured = process.env.NEXT_PUBLIC_API_URL;
-  if (configured && configured.trim()) {
-    return configured.replace(/\/+$/, "");
-  }
-  
-  throw new Error(
-    'CONFIGURATION ERROR: API base URL not configured. ' +
-    'Please set NEXT_PUBLIC_API_URL environment variable to the backend API URL. ' +
-    'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2'
-  );
-};
-
-export const BASE_PATH = getBasePath();
+export const BASE_PATH = "/api/v2".replace(/\/+$/, "");
 
 /**
  *

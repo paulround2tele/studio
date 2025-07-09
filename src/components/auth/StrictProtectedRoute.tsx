@@ -59,7 +59,10 @@ export default function StrictProtectedRoute({
 }: StrictProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show loading while auth is checking
+  // REMOVED: Client-side authentication checks and redirects
+  // Middleware handles all authentication - this prevents race conditions
+  
+  // Show loading only while auth context is initializing
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -69,11 +72,7 @@ export default function StrictProtectedRoute({
     return <>{children}</>;
   }
 
-  // Check authentication - strict enforcement with no fallbacks
-  if (!isAuthenticated) {
-    return <AccessDenied />;
-  }
-
-  // All checks passed, render children
+  // If we reach here, middleware has already validated the session
+  // Just render children - no client-side auth checks needed
   return <>{children}</>;
 }

@@ -19,7 +19,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { KeywordExtractionAPIResult } from 'api-client';
+import { KeywordExtractionAPIResult } from './api';
 
 const instance: KeywordExtractionAPIResult = {
     dnsPersonaIdUsed,

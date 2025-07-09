@@ -60,6 +60,12 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     const campaignDetails = campaignResponse as CampaignDetailsResponse;
     const campaign = campaignDetails.campaign as CampaignViewModel;
 
+    // Add null check to prevent undefined access errors
+    if (!campaign || !campaign.campaignType) {
+      console.warn(`[campaignDataService] Invalid campaign data for ${campaignId}:`, campaign);
+      throw new Error(`Campaign not found or missing campaignType: ${campaignId}`);
+    }
+
     // Initialize rich data with campaign summary
     const richData: RichCampaignData = {
       ...campaign,

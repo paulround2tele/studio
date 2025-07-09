@@ -5,7 +5,10 @@
 
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { enhancedApiClient } from '@/lib/utils/enhancedApiClientFactory';
+import { CampaignsApi } from '@/lib/api-client';
+
+// Initialize the API client
+const campaignsApi = new CampaignsApi();
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import type { CampaignViewModel, CampaignValidationItem } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
@@ -93,7 +96,7 @@ export const useCampaignOperations = (campaignId: string) => {
 
       if (campaignData.campaignType === 'domain_generation') {
         console.log('📡 [Domain Loading] Fetching generated domains...');
-        const domainsResponse = await enhancedApiClient.campaigns.campaignsCampaignIdResultsGeneratedDomainsGet(campaignId, 1000, 0);
+        const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId, 1000, 0);
         console.log('📡 [Domain Loading] Raw API response:', domainsResponse);
         
         const domains = extractDomainsFromResponse(domainsResponse.data);
@@ -107,7 +110,7 @@ export const useCampaignOperations = (campaignId: string) => {
 
       if (campaignData.campaignType === 'dns_validation') {
         console.log('📡 [Domain Loading] Fetching DNS validation items...');
-        const dnsResponse = await enhancedApiClient.campaigns.campaignsCampaignIdResultsDnsValidationGet(campaignId, 1000, '0');
+        const dnsResponse = await campaignsApi.getDNSValidationResults(campaignId, 1000, '0');
         const dnsItems = Array.isArray(dnsResponse?.data) ? dnsResponse.data : [];
         updates.dnsCampaignItems = dnsItems as CampaignValidationItem[];
         console.log('✅ [Domain Loading] DNS items loaded:', dnsItems.length);
@@ -115,7 +118,7 @@ export const useCampaignOperations = (campaignId: string) => {
 
       if (campaignData.campaignType === 'http_keyword_validation') {
         console.log('📡 [Domain Loading] Fetching HTTP validation items...');
-        const httpResponse = await enhancedApiClient.campaigns.campaignsCampaignIdResultsHttpKeywordGet(campaignId, 1000, '0');
+        const httpResponse = await campaignsApi.getHTTPKeywordResults(campaignId, 1000, '0');
         const httpItems = Array.isArray(httpResponse?.data) ? httpResponse.data : [];
         updates.httpCampaignItems = httpItems as CampaignValidationItem[];
         console.log('✅ [Domain Loading] HTTP items loaded:', httpItems.length);
@@ -147,7 +150,7 @@ export const useCampaignOperations = (campaignId: string) => {
     useCampaignDetailsStore.getState().setError(null);
 
     try {
-      const rawResponse = await enhancedApiClient.getCampaignById(campaignId);
+      const rawResponse = await campaignsApi.getCampaignDetails(campaignId);
       let campaignData: Campaign | null = null;
 
       // Extract data from AxiosResponse
@@ -218,7 +221,7 @@ export const useCampaignOperations = (campaignId: string) => {
       
       // Use enhanced API client for campaign operations
       console.log(`📡 [Campaign Operations] Starting campaign phase ${phaseToStart} for campaign ${campaignId}`);
-      response = await enhancedApiClient.startCampaign(campaignId);
+      response = await campaignsApi.startCampaign(campaignId);
       
       // Handle response from enhanced client (AxiosResponse)
       const responseData = response && typeof response === 'object' && 'data' in response ? response.data : response;
@@ -257,7 +260,7 @@ export const useCampaignOperations = (campaignId: string) => {
     useCampaignDetailsStore.getState().setActionLoading('control-pause', true);
 
     try {
-      const response = await enhancedApiClient.pauseCampaign(campaignId);
+      const response = await campaignsApi.pauseCampaign(campaignId);
       
       if (response && typeof response === 'object' && 'campaign_id' in response) {
         toast({
@@ -288,7 +291,7 @@ export const useCampaignOperations = (campaignId: string) => {
     useCampaignDetailsStore.getState().setActionLoading('control-resume', true);
 
     try {
-      const response = await enhancedApiClient.resumeCampaign(campaignId);
+      const response = await campaignsApi.resumeCampaign(campaignId);
       
       if (response && typeof response === 'object' && 'campaign_id' in response) {
         toast({
@@ -319,7 +322,7 @@ export const useCampaignOperations = (campaignId: string) => {
     useCampaignDetailsStore.getState().setActionLoading('control-stop', true);
 
     try {
-      const response = await enhancedApiClient.cancelCampaign(campaignId);
+      const response = await campaignsApi.cancelCampaign(campaignId);
       
       if (response && typeof response === 'object' && 'campaign_id' in response) {
         toast({
@@ -378,7 +381,7 @@ export const useCampaignOperations = (campaignId: string) => {
     useCampaignDetailsStore.getState().setActionLoading('control-delete', true);
 
     try {
-      const response = await enhancedApiClient.deleteCampaign(campaignId);
+      const response = await campaignsApi.deleteCampaign(campaignId);
       
       if (response && typeof response === 'object' && 'success' in response && response.success) {
         toast({

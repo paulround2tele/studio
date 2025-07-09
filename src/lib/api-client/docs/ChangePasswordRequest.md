@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ChangePasswordRequest } from 'api-client';
+import { ChangePasswordRequest } from './api';
 
 const instance: ChangePasswordRequest = {
     currentPassword,

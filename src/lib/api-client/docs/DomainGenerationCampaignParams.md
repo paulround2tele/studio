@@ -19,7 +19,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DomainGenerationCampaignParams } from 'api-client';
+import { DomainGenerationCampaignParams } from './api';
 
 const instance: DomainGenerationCampaignParams = {
     characterSet,

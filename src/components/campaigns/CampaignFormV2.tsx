@@ -314,16 +314,16 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           }
 
           // Map frontend pattern types to backend pattern types
-          const mapPatternType = (frontendPattern: DomainGenerationPattern): "prefix_variable" | "suffix_variable" | "both_variable" => {
+          const mapPatternType = (frontendPattern: DomainGenerationPattern): "prefix" | "suffix" | "both" => {
             switch (frontendPattern) {
               case "prefix_variable":
-                return "prefix_variable";
+                return "prefix";
               case "suffix_variable":
-                return "suffix_variable";
+                return "suffix";
               case "both_variable":
-                return "both_variable";
+                return "both";
               default:
-                return "prefix_variable";
+                return "prefix";
             }
           };
 
@@ -331,7 +331,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             campaignType: 'domain_generation',
             name: data.name,
             description: data.description,
-            launchSequence: data.launchSequence || false,
+            launchSequence: data.launchSequence !== false, // Default to true unless explicitly disabled
             domainGenerationParams: {
               patternType: mapPatternType(data.generationPattern),
               variableLength: variableLength,
@@ -340,7 +340,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               tld: tlds[0] || '.com',
               numDomainsToGenerate: maxDomains,
             },
-          } as CreateCampaignRequest & { launchSequence?: boolean };
+          } as unknown as CreateCampaignRequest & { launchSequence?: boolean };
           break;
         }
 
@@ -460,7 +460,25 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         });
         return;
       } else {
-        const response = await apiClient.createCampaign(unifiedPayload);
+        console.log('🚀 [CAMPAIGN_CREATION] Sending payload:', JSON.stringify(unifiedPayload, null, 2));
+        
+        let response;
+        try {
+          response = await apiClient.createCampaign(unifiedPayload);
+        } catch (error: any) {
+          console.error('❌ [CAMPAIGN_CREATION] API Error:', {
+            message: error.message,
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            config: {
+              url: error.config?.url,
+              method: error.config?.method,
+              data: error.config?.data
+            }
+          });
+          throw error; // Re-throw to trigger existing error handling
+        }
 
         // 🔧 SIMPLIFIED: Handle response structures without excessive logging
         let campaign;

@@ -148,11 +148,24 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
     const isActivePhaseNode = phase === campaign.currentPhase;
     const isCampaignIdle = campaign.currentPhase === "Idle";
     const operationalPhaseIndexInType = operationalPhasesForType.indexOf(phase);
+    const currentPhaseIndex = campaign.currentPhase ? operationalPhasesForType.indexOf(campaign.currentPhase) : -1;
 
     if (isCampaignIdle) {
-      return phase === "Idle" ? "Pending" : "Pending"; // Or 'Idle' for Idle phase itself
-    } else if (campaign.currentPhase === "Completed") {
-       return 'Succeeded'; // All operational phases are succeeded
+      return phase === "Idle" ? "Pending" : "Pending";
+    } else if (campaign.status === "completed" || campaign.currentPhase === "Completed") {
+       // CRITICAL FIX: Case-sensitive phase matching with backend constants
+       // Backend uses "DomainGeneration" not "domain_generation"
+       const isDomainGenerationCampaign = campaign.campaignType === 'domain_generation';
+       const isDomainGenerationPhase = phase === 'domain_generation' || phase === 'DomainGeneration';
+       
+       if (isDomainGenerationCampaign && isDomainGenerationPhase) {
+         return 'Succeeded'; // Domain generation phase completed
+       } else if (isActivePhaseNode && campaign.phaseStatus === 'Succeeded') {
+         return 'Succeeded';
+       } else if (operationalPhaseIndexInType !== -1 && currentPhaseIndex !== -1 && operationalPhaseIndexInType <= currentPhaseIndex) {
+         return 'Succeeded'; // Phase has been completed (is current or before current)
+       }
+       return 'Pending'; // Future phases remain pending
     } else if (campaign.phaseStatus === "Failed" && isActivePhaseNode) {
        return 'Failed';
     } else if (operationalPhaseIndexInType !== -1 && campaign.currentPhase && operationalPhaseIndexInType < operationalPhasesForType.indexOf(campaign.currentPhase)) {
@@ -163,7 +176,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
        return 'Succeeded'; // Current phase has succeeded
     }
     return 'Pending';
-  }, [campaign.currentPhase, campaign.phaseStatus, operationalPhasesForType]);
+  }, [campaign.currentPhase, campaign.phaseStatus, campaign.status, campaign.campaignType, operationalPhasesForType]);
 
   // Memoize progress calculation
   const progressWidth = useMemo(() => {
@@ -222,13 +235,13 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
             <span>{campaign.currentPhase === "Completed" ? '100' : campaign.progress}%</span>
           </div>
           <Progress
-            value={campaign.currentPhase === "Completed" ? 100 : campaign.progress}
-            className={cn(
-              "w-full h-3 [&>div]:bg-gradient-to-r transition-all duration-500",
-              (campaign.phaseStatus === 'Succeeded' && campaign.progress === 100) || campaign.currentPhase === "Completed"
-                ? "[&>div]:from-blue-500 [&>div]:to-blue-600" // Keep blue when completed
-                : "[&>div]:from-blue-400 [&>div]:to-blue-600"  // Standard blue during progress
-            )}
+            value={campaign.currentPhase === "Completed" ? 100 : campaign.progress || 0}
+            className="w-full h-3"
+            indicatorVariant={
+              (campaign.phaseStatus === 'Succeeded' && (campaign.progress === 100 || campaign.currentPhase === "Completed"))
+                ? "success" // Green when phase succeeded
+                : "info"    // Blue during progress
+            }
           />
         </div>
       ) : null}
