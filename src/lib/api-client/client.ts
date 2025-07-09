@@ -14,11 +14,14 @@ import {
   UtilitiesApi,
   Configuration
 } from './index';
+import { getApiBaseUrlSync } from '../config/environment';
 
-// Create configuration instance
+// Create configuration instance with proper base URL
 const apiConfiguration = new Configuration({
-  // Configuration will be handled by the base API classes
-  // which already have proper URL resolution and auth handling
+  basePath: getApiBaseUrlSync(),
+  baseOptions: {
+    withCredentials: true, // Enable cookies for session auth
+  }
 });
 
 // Export pre-configured API instances
