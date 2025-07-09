@@ -193,6 +193,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setTimeout(() => {
         localStorage.removeItem('auth_logout');
       }, 1000);
+
+      // Redirect to login page
+      window.location.href = '/login';
     }
   }, []);
 
