@@ -13,24 +13,31 @@ import {
   ConfigApi
 } from './api/api';
 
-// Auto-detect backend URL
+// Strict backend URL configuration - NO hardcoded fallbacks allowed
 const getSyncBackendUrl = (): string => {
   const configured = process.env.NEXT_PUBLIC_API_URL;
   if (configured && configured.trim()) {
     return configured;
   }
   
+  // Only auto-detect in browser context and only for the exact same origin
   if (typeof window !== 'undefined') {
     const { hostname, port, protocol } = window.location;
     
-    if (port === '3000') {
-      return `${protocol}//${hostname}:8080/api/v2`;
+    // Auto-detect only when frontend and backend are on the same host
+    // This prevents accidental connections to wrong backends
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return `${protocol}//${hostname}${port ? `:${port}` : ''}/api/v2`;
     }
-    
-    return `${protocol}//${hostname}${port ? `:${port}` : ''}/api/v2`;
   }
   
-  return 'http://localhost:8080/api/v2';
+  // STRICT: No fallbacks allowed - force proper configuration
+  throw new Error(
+    'CONFIGURATION ERROR: API base URL not configured. ' +
+    'Please set NEXT_PUBLIC_API_URL environment variable to the backend API URL. ' +
+    'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2 ' +
+    'This prevents accidental connections to localhost or misconfigured backends.'
+  );
 };
 
 // Create shared configuration with credentials for session-based auth

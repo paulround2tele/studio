@@ -96,7 +96,7 @@ class ContentSecurityPolicy {
         "'self'",
         apiUrl,
         wsUrl,
-        isDevelopment ? 'ws://localhost:*' : '', // WebSocket for HMR in dev
+        isDevelopment ? 'ws://*:*' : '', // WebSocket for HMR in dev (any host)
         'https://vitals.vercel-insights.com', // Vercel analytics
       ].filter(Boolean),
       'media-src': ["'self'"],

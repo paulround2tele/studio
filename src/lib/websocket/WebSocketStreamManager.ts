@@ -555,8 +555,17 @@ export class WebSocketStreamManagerImpl implements WebSocketStreamManager {
 
 // Factory function for creating WebSocket stream manager
 export function createWebSocketStreamManager(config: Partial<WebSocketConfig> = {}): WebSocketStreamManager {
-  // Get WebSocket URL from environment or default to correct backend endpoint
-  const defaultUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/api/v2/ws';
+  // Get WebSocket URL from environment - NO hardcoded fallbacks allowed
+  const defaultUrl = process.env.NEXT_PUBLIC_WS_URL;
+  
+  if (!defaultUrl || !defaultUrl.trim()) {
+    throw new Error(
+      'CONFIGURATION ERROR: WebSocket URL not configured. ' +
+      'Please set NEXT_PUBLIC_WS_URL environment variable to the backend WebSocket URL. ' +
+      'Example: NEXT_PUBLIC_WS_URL=ws://your-backend-host:8080/api/v2/ws ' +
+      'This prevents accidental connections to localhost or misconfigured backends.'
+    );
+  }
   
   return new WebSocketStreamManagerImpl({
     url: defaultUrl,

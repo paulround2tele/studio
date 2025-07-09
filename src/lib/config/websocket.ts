@@ -143,11 +143,30 @@ export const webSocketSessionConfig = {
   
   // Origin validation for security
   validateOrigin: true,
-  allowedOrigins: [
-    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    'http://localhost:3001', // Development backend
-    'https://domainflow.local', // Production domain
-  ],
+  allowedOrigins: (() => {
+    const origins: string[] = [];
+    
+    // Only add configured origins - no hardcoded fallbacks
+    if (process.env.NEXT_PUBLIC_APP_URL?.trim()) {
+      origins.push(process.env.NEXT_PUBLIC_APP_URL);
+    }
+    
+    // Add production domain if configured
+    if (process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN?.trim()) {
+      origins.push(process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN);
+    }
+    
+    // If no origins configured, throw error to enforce proper configuration
+    if (origins.length === 0) {
+      throw new Error(
+        'CONFIGURATION ERROR: No WebSocket origins configured. ' +
+        'Please set NEXT_PUBLIC_APP_URL and/or NEXT_PUBLIC_PRODUCTION_DOMAIN environment variables. ' +
+        'Example: NEXT_PUBLIC_APP_URL=http://your-frontend-host:3000'
+      );
+    }
+    
+    return origins;
+  })(),
   
   // Connection upgrade requirements
   requireSecureConnection: process.env.NODE_ENV === 'production',

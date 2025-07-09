@@ -15,7 +15,7 @@ import { ProxyPoolsApi } from '@/lib/api-client/api/proxy-pools-api';
 import { ConfigApi } from '@/lib/api-client/api/config-api';
 import { HealthApi } from '@/lib/api-client/api/health-api';
 
-// Professional backend URL detection (preserved from manual client)
+// Strict backend URL configuration - NO hardcoded fallbacks allowed
 // All routes standardized under /api/v2 for consistency
 const getSyncBackendUrl = (): string => {
   const configured = process.env.NEXT_PUBLIC_API_URL;
@@ -23,21 +23,24 @@ const getSyncBackendUrl = (): string => {
     return configured;
   }
   
+  // Only auto-detect in browser context and only for the exact same origin
   if (typeof window !== 'undefined') {
     const { hostname, port, protocol } = window.location;
     
-    if (port === '3000') {
-      return `${protocol}//${hostname}:8080/api/v2`;
+    // Auto-detect only when frontend and backend are on the same host
+    // This prevents accidental connections to wrong backends
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return `${protocol}//${hostname}${port ? `:${port}` : ''}/api/v2`;
     }
-    
-    if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
-      return `${protocol}//${hostname}:8080/api/v2`;
-    }
-    
-    return `${protocol}//${hostname}/api/v2`;
   }
   
-  return 'http://localhost:8080/api/v2';
+  // STRICT: No fallbacks allowed - force proper configuration
+  throw new Error(
+    'CONFIGURATION ERROR: API base URL not configured. ' +
+    'Please set NEXT_PUBLIC_API_URL environment variable to the backend API URL. ' +
+    'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2 ' +
+    'This prevents accidental connections to localhost or misconfigured backends.'
+  );
 };
 
 // Enhanced request configuration (preserved from manual client)

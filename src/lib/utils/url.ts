@@ -49,10 +49,13 @@ export function getFallbackUrl(path: string): string {
     return `${window.location.origin}${path}`;
   }
   
-  // In SSR, assume standard development setup
-  return process.env.NODE_ENV === 'development' 
-    ? `http://localhost:8080${path}`
-    : path; // Relative URL for production
+  // STRICT: No hardcoded localhost fallbacks in SSR
+  // Force proper environment configuration
+  throw new Error(
+    'CONFIGURATION ERROR: Cannot determine base URL in SSR context. ' +
+    'Please set NEXT_PUBLIC_API_URL environment variable. ' +
+    'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2'
+  );
 }
 
 /**
@@ -72,7 +75,12 @@ export function constructApiUrl(baseUrl: string, path: string): URL {
   // Relative URL - use current origin (production where frontend/backend same origin)
   const origin = typeof window !== 'undefined'
     ? window.location.origin
-    : 'http://localhost:3000'; // Fallback for SSR
+    : (() => {
+        throw new Error(
+          'CONFIGURATION ERROR: Cannot determine origin in SSR context. ' +
+          'Please provide absolute URLs or set proper environment variables.'
+        );
+      })();
     
   return new URL(fullPath, origin);
 }
@@ -100,13 +108,16 @@ export function getCurrentOrigin(request?: Request): string {
     try {
       return new URL(request.url).origin;
     } catch {
-      // Fallback if request.url is malformed
-      return 'http://localhost:3000';
+      // STRICT: No hardcoded fallbacks
+      throw new Error('CONFIGURATION ERROR: Cannot determine origin from malformed request URL.');
     }
   }
   
-  // Ultimate fallback for SSR without request
-  return 'http://localhost:3000';
+  // STRICT: No hardcoded fallbacks for SSR
+  throw new Error(
+    'CONFIGURATION ERROR: Cannot determine origin in SSR context without request. ' +
+    'Please provide a request object or ensure proper environment configuration.'
+  );
 }
 
 /**
@@ -127,8 +138,11 @@ export function constructRedirectUrl(path: string, request: { url: string; nextU
     const requestUrl = new URL(request.url);
     return new URL(path, requestUrl.origin);
   } catch {
-    // Ultimate fallback
-    return new URL(path, 'http://localhost:3000');
+    // STRICT: No hardcoded fallbacks
+    throw new Error(
+      'CONFIGURATION ERROR: Cannot construct redirect URL from malformed request. ' +
+      'Please ensure proper request URL format.'
+    );
   }
 }
 

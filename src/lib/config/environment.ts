@@ -59,44 +59,41 @@ async function _getAutomaticApiUrl(): Promise<string> {
     const { getBackendUrl } = await import('../services/backendDetection');
     return await getBackendUrl();
   } catch (error) {
-    console.warn('[Environment] Centralized backend detection failed, using fallback:', error);
-    // Simplified fallback for immediate usage
-    if (typeof window === 'undefined') {
-      return 'http://localhost:8080';
-    }
-    
-    const { hostname, port, protocol } = window.location;
-    
-    if (port === '3000') {
-      return `${protocol}//${hostname}:8080`;
-    }
-    
-    if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
-      return `${protocol}//${hostname}:8080`;
-    }
-    
-    return `${protocol}//${hostname}`;
+    console.error('[Environment] Backend URL detection failed:', error);
+    // STRICT: No fallbacks allowed - force proper configuration
+    throw new Error(
+      'CONFIGURATION ERROR: Backend URL not configured and auto-detection failed. ' +
+      'Please set NEXT_PUBLIC_API_URL environment variable to the backend URL. ' +
+      'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2'
+    );
   }
 }
 
-// Synchronous fallback for immediate usage
+// Strict synchronous API URL configuration - NO hardcoded fallbacks
 // All routes standardized under /api/v2 for consistency
 function getSyncApiUrl(): string {
-  if (typeof window === 'undefined') {
-    return 'http://localhost:8080/api/v2';
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (configured && configured.trim()) {
+    return configured;
   }
   
-  const { hostname, port, protocol } = window.location;
-  
-  if (port === '3000') {
-    return `${protocol}//${hostname}:8080/api/v2`;
+  // Only auto-detect in browser context and only for the exact same origin
+  if (typeof window !== 'undefined') {
+    const { hostname, port, protocol } = window.location;
+    
+    // Auto-detect only when frontend and backend are on the same host
+    // This prevents accidental connections to wrong backends
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return `${protocol}//${hostname}${port ? `:${port}` : ''}/api/v2`;
+    }
   }
   
-  if ((hostname === 'localhost' || hostname === '127.0.0.1') && (!port || port === '80')) {
-    return `${protocol}//${hostname}:8080/api/v2`;
-  }
-
-  return `${protocol}//${hostname}/api/v2`;
+  // STRICT: No fallbacks allowed - force proper configuration
+  throw new Error(
+    'CONFIGURATION ERROR: API base URL not configured. ' +
+    'Please set NEXT_PUBLIC_API_URL environment variable to the backend API URL. ' +
+    'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2'
+  );
 }
 
 // Environment-specific configurations
