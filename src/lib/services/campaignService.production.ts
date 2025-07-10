@@ -71,7 +71,9 @@ class CampaignService {
   async getCampaigns(_options?: { limit?: number; sortBy?: string; sortOrder?: string }): Promise<CampaignsListResponse> {
     try {
       console.log('[CampaignService] Getting campaigns');
-      const response = await campaignsApi.listCampaigns();
+      // Request all campaigns with high limit to avoid pagination truncation
+      // Database has 22 campaigns, so 100 is safe buffer
+      const response = await campaignsApi.listCampaigns(100);
       
       // Extract data from AxiosResponse
       const result = 'data' in response ? response.data : response;
