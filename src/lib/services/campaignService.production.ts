@@ -97,13 +97,49 @@ class CampaignService {
     try {
       console.log('[CampaignService] Getting campaign by ID:', campaignId);
       const response = await campaignsApi.getCampaignDetails(campaignId);
-      const result = 'data' in response ? response.data : response;
       
-      // Extract campaign from wrapped response
-      const campaign = (result as { campaign?: Campaign }).campaign || result;
+      // Add diagnostic logging to debug response structure
+      console.log('[CampaignService] Raw API response for', campaignId, ':', response);
+      
+      // Handle different response wrapper formats while preserving data integrity
+      let campaign: Campaign;
+      
+      if ('data' in response && response.data) {
+        // Handle Axios response wrapper: { data: { success: true, data: Campaign } }
+        const axiosData = response.data;
+        console.log('[CampaignService] Axios response data:', axiosData);
+        
+        if (axiosData && typeof axiosData === 'object' && 'data' in axiosData) {
+          // Triple-nested format: response.data.data contains the actual campaign
+          campaign = axiosData.data as Campaign;
+        } else if (axiosData && typeof axiosData === 'object' && 'campaign' in axiosData) {
+          // Campaign wrapped in { campaign: Campaign } format
+          campaign = (axiosData as { campaign: Campaign }).campaign;
+        } else {
+          // Direct campaign data in response.data
+          campaign = axiosData as Campaign;
+        }
+      } else {
+        // Direct response format - cast to unknown first to avoid type conflicts
+        campaign = response as unknown as Campaign;
+      }
+      
+      // Validate that we have a valid campaign with required fields
+      console.log('[CampaignService] Extracted campaign data:', campaign);
+      
+      if (!campaign || typeof campaign !== 'object') {
+        throw new Error('Invalid campaign data structure received from API');
+      }
+      
+      // Ensure campaignType field exists (this was causing the validation failures)
+      if (!campaign.campaignType && (campaign as any).campaign_type) {
+        // Handle backend using snake_case instead of camelCase
+        (campaign as any).campaignType = (campaign as any).campaign_type;
+      }
+      
       return {
         status: 'success',
-        data: campaign as Campaign,
+        data: campaign,
         message: 'Campaign retrieved successfully'
       };
     } catch (error) {
