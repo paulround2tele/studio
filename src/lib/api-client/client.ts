@@ -21,6 +21,9 @@ const apiConfiguration = new Configuration({
   basePath: getApiBaseUrlSync(),
   baseOptions: {
     withCredentials: true, // Enable cookies for session auth
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest', // Required for SessionProtection middleware CSRF protection
+    }
   }
 });
 

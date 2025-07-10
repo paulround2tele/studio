@@ -356,7 +356,11 @@ export interface paths {
          * @description Gets detailed information about a campaign including type-specific parameters
          */
         get: operations["getCampaignDetails"];
-        put?: never;
+        /**
+         * Update campaign
+         * @description Updates an existing campaign with new configuration
+         */
+        put: operations["updateCampaign"];
         post?: never;
         /**
          * Delete campaign
@@ -2399,6 +2403,35 @@ export interface components {
         };
         /** Format: uuid */
         UUID: string;
+        /** @description Request to update an existing campaign */
+        UpdateCampaignRequest: {
+            /** @description Ad-hoc keywords */
+            adHocKeywords?: string[];
+            /** @description Batch size for processing */
+            batchSize?: number;
+            /** @description Keyword set IDs */
+            keywordSetIds?: string[];
+            /** @description Campaign name */
+            name?: string;
+            /** @description Persona IDs */
+            personaIds?: string[];
+            /** @description Processing speed per minute */
+            processingSpeedPerMinute?: number;
+            /**
+             * Format: uuid
+             * @description Proxy pool ID
+             */
+            proxyPoolId?: string;
+            /** @description Number of retry attempts */
+            retryAttempts?: number;
+            /**
+             * @description Campaign status
+             * @enum {string}
+             */
+            status?: "pending" | "queued" | "running" | "paused" | "completed" | "failed" | "cancelled" | "archived";
+            /** @description Target HTTP ports */
+            targetHttpPorts?: number[];
+        };
         /** @description Request to update an existing keyword set */
         UpdateKeywordSetRequest: {
             /** @description Keyword set description */
@@ -3429,6 +3462,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignDetailsResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign UUID */
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCampaignRequest"];
+            };
+        };
+        responses: {
+            /** @description Campaign updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
                 };
             };
             /** @description Bad request */

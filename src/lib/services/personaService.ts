@@ -1,11 +1,15 @@
 // src/lib/services/personaService.ts
 // Production-ready Persona Service using OpenAPI types directly
 import { PersonasApi, Configuration } from '@/lib/api-client';
+import { getApiBaseUrlSync } from '@/lib/config/environment';
 import type { components } from '@/lib/api-client/types';
 
-// Create configured PersonasApi instance
+// Create configured PersonasApi instance with authentication
 const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2'
+  basePath: getApiBaseUrlSync(),
+  baseOptions: {
+    withCredentials: true
+  }
 });
 const personasApi = new PersonasApi(config);
 

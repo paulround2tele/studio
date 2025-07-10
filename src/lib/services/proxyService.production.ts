@@ -2,11 +2,15 @@
 // Production Proxy Service - Direct OpenAPI integration without adapters
 
 import { ProxiesApi, Configuration } from '@/lib/api-client';
+import { getApiBaseUrlSync } from '@/lib/config/environment';
 import type { components } from '@/lib/api-client/types';
 
-// Create configured ProxiesApi instance
+// Create configured ProxiesApi instance with authentication
 const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2'
+  basePath: getApiBaseUrlSync(),
+  baseOptions: {
+    withCredentials: true
+  }
 });
 const proxiesApi = new ProxiesApi(config);
 

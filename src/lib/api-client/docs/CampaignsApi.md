@@ -17,6 +17,7 @@ All URIs are relative to */api/v2*
 |[**pauseCampaign**](#pausecampaign) | **POST** /campaigns/{campaignId}/pause | Pause campaign|
 |[**resumeCampaign**](#resumecampaign) | **POST** /campaigns/{campaignId}/resume | Resume campaign|
 |[**startCampaign**](#startcampaign) | **POST** /campaigns/{campaignId}/start | Start campaign|
+|[**updateCampaign**](#updatecampaign) | **PUT** /campaigns/{campaignId} | Update campaign|
 |[**validateDNSForCampaign**](#validatednsforcampaign) | **POST** /campaigns/{campaignId}/validate-dns | Validate DNS for campaign domains|
 |[**validateHTTPForCampaign**](#validatehttpforcampaign) | **POST** /campaigns/{campaignId}/validate-http | Validate HTTP for campaign domains|
 
@@ -767,6 +768,65 @@ const { status, data } = await apiInstance.startCampaign(
 |**401** | Unauthorized |  -  |
 |**404** | Campaign not found |  -  |
 |**409** | Campaign is in an invalid state for this operation |  -  |
+|**500** | Internal server error |  -  |
+|**0** |  |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateCampaign**
+> Campaign updateCampaign(updateCampaignRequest)
+
+Updates an existing campaign with new configuration
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    UpdateCampaignRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; //Campaign UUID (default to undefined)
+let updateCampaignRequest: UpdateCampaignRequest; //
+
+const { status, data } = await apiInstance.updateCampaign(
+    campaignId,
+    updateCampaignRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **updateCampaignRequest** | **UpdateCampaignRequest**|  | |
+| **campaignId** | [**string**] | Campaign UUID | defaults to undefined|
+
+
+### Return type
+
+**Campaign**
+
+### Authorization
+
+[sessionAuth](../README.md#sessionAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Campaign updated successfully |  -  |
+|**400** | Bad request |  -  |
+|**404** | Campaign not found |  -  |
 |**500** | Internal server error |  -  |
 |**0** |  |  -  |
 

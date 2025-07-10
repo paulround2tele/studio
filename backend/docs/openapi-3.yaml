@@ -2134,6 +2134,65 @@ components:
             format: uuid
             pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
             type: string
+        UpdateCampaignRequest:
+            description: Request to update an existing campaign
+            properties:
+                adHocKeywords:
+                    description: Ad-hoc keywords
+                    items:
+                        type: string
+                    type: array
+                batchSize:
+                    description: Batch size for processing
+                    minimum: 1
+                    type: integer
+                keywordSetIds:
+                    description: Keyword set IDs
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                name:
+                    description: Campaign name
+                    type: string
+                personaIds:
+                    description: Persona IDs
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                processingSpeedPerMinute:
+                    description: Processing speed per minute
+                    minimum: 1
+                    type: integer
+                proxyPoolId:
+                    description: Proxy pool ID
+                    format: uuid
+                    type: string
+                retryAttempts:
+                    description: Number of retry attempts
+                    minimum: 0
+                    type: integer
+                status:
+                    description: Campaign status
+                    enum:
+                        - pending
+                        - queued
+                        - running
+                        - paused
+                        - completed
+                        - failed
+                        - cancelled
+                        - archived
+                    type: string
+                targetHttpPorts:
+                    description: Target HTTP ports
+                    items:
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                    type: array
+            type: object
         UpdateKeywordSetRequest:
             description: Request to update an existing keyword set
             properties:
@@ -3118,6 +3177,55 @@ paths:
             security:
                 - sessionAuth: []
             summary: Get campaign details
+            tags:
+                - Campaigns
+        put:
+            description: Updates an existing campaign with new configuration
+            operationId: updateCampaign
+            parameters:
+                - description: Campaign UUID
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    format: uuid
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateCampaignRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Campaign'
+                    description: Campaign updated successfully
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad request
+                "404":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Campaign not found
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal server error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Update campaign
             tags:
                 - Campaigns
     /campaigns/{campaignId}/cancel:
@@ -4622,6 +4730,8 @@ paths:
                     description: Internal server error
                 default:
                     description: ""
+            security:
+                - sessionAuth: []
             summary: List proxies
             tags:
                 - Proxies
@@ -4655,6 +4765,8 @@ paths:
                     description: Internal server error
                 default:
                     description: ""
+            security:
+                - sessionAuth: []
             summary: Add proxy
             tags:
                 - Proxies
@@ -4693,6 +4805,8 @@ paths:
                     description: Internal server error
                 default:
                     description: ""
+            security:
+                - sessionAuth: []
             summary: Delete proxy
             tags:
                 - Proxies
@@ -4740,6 +4854,8 @@ paths:
                     description: Internal server error
                 default:
                     description: ""
+            security:
+                - sessionAuth: []
             summary: Update proxy
             tags:
                 - Proxies
@@ -4782,6 +4898,8 @@ paths:
                     description: Internal server error
                 default:
                     description: ""
+            security:
+                - sessionAuth: []
             summary: Force single proxy health check
             tags:
                 - Proxies
@@ -4824,6 +4942,8 @@ paths:
                     description: Internal server error
                 default:
                     description: ""
+            security:
+                - sessionAuth: []
             summary: Test proxy
             tags:
                 - Proxies
@@ -4861,6 +4981,8 @@ paths:
                     description: Internal server error
                 default:
                     description: ""
+            security:
+                - sessionAuth: []
             summary: Force all proxies health check
             tags:
                 - Proxies
@@ -4885,6 +5007,8 @@ paths:
                     description: Internal server error
                 default:
                     description: ""
+            security:
+                - sessionAuth: []
             summary: Get proxy statuses
             tags:
                 - Proxies

@@ -3,6 +3,7 @@
 
 import { campaignsApi } from '@/lib/api-client/client';
 import type { components } from '@/lib/api-client/types';
+import type { UpdateCampaignRequest } from '@/lib/api-client';
 
 // Use OpenAPI types directly
 export type Campaign = components['schemas']['Campaign'];
@@ -131,6 +132,28 @@ class CampaignService {
       return {
         status: 'error' as const,
         message: error instanceof Error ? error.message : 'Failed to create campaign'
+      };
+    }
+  }
+
+  // Campaign Update Operation using auto-generated OpenAPI client
+  async updateCampaign(campaignId: string, updatePayload: UpdateCampaignRequest): Promise<CampaignOperationResponse> {
+    try {
+      console.log('[CampaignService] Updating campaign:', campaignId, updatePayload);
+      
+      const response = await campaignsApi.updateCampaign(campaignId, updatePayload);
+      const result = 'data' in response ? response.data : response;
+      
+      return {
+        status: 'success',
+        data: result as Campaign,
+        message: 'Campaign updated successfully'
+      };
+    } catch (error) {
+      console.error('[CampaignService] Campaign update failed:', error);
+      return {
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Failed to update campaign'
       };
     }
   }

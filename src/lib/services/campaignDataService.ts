@@ -6,7 +6,7 @@
  * and the frontend's need for rich array data.
  */
 
-import { apiClient } from '../api-client/client';
+import { campaignService } from './campaignService.production';
 import { CampaignViewModel, components } from '../types';
 
 // Extract types from the OpenAPI schema
@@ -55,10 +55,12 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
   }
 
   try {
-    // Get campaign summary
-    const campaignResponse = await apiClient.getCampaignDetails(campaignId);
-    const campaignDetails = campaignResponse as CampaignDetailsResponse;
-    const campaign = campaignDetails.campaign as CampaignViewModel;
+    // Get campaign summary via service layer
+    const campaignResponse = await campaignService.getCampaignById(campaignId);
+    if (campaignResponse.status !== 'success' || !campaignResponse.data) {
+      throw new Error(`Failed to fetch campaign: ${campaignResponse.message}`);
+    }
+    const campaign = campaignResponse.data as CampaignViewModel;
 
     // Add null check to prevent undefined access errors
     if (!campaign || !campaign.campaignType) {
@@ -80,12 +82,12 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     
     // Build requests array - only include HTTP keyword request for HTTP campaigns
     const requests = [
-      apiClient.getGeneratedDomains(campaignId, 1000),
-      apiClient.getDNSValidationResults(campaignId, 1000)
+      campaignService.getGeneratedDomains(campaignId, { limit: 1000 }),
+      campaignService.getDNSValidationResults(campaignId, { limit: 1000 })
     ];
     
     if (isHttpKeywordCampaign) {
-      requests.push(apiClient.getHTTPKeywordResults(campaignId, 1000));
+      requests.push(campaignService.getHTTPKeywordResults(campaignId, { limit: 1000 }));
     }
 
     // Fetch detailed data in parallel
@@ -99,10 +101,10 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     // Process generated domains with proper error handling
     if (generatedDomainsResponse?.status === 'fulfilled') {
       try {
-        const domainsData = (generatedDomainsResponse.value as any).data as GeneratedDomainsResponse;
-        if (domainsData?.data && Array.isArray(domainsData.data)) {
-          richData.domains = domainsData.data
-            .map(d => d?.domainName)
+        const serviceResponse = generatedDomainsResponse.value as any;
+        if (serviceResponse.status === 'success' && serviceResponse.data && Array.isArray(serviceResponse.data)) {
+          richData.domains = serviceResponse.data
+            .map((d: any) => d?.domainName)
             .filter(Boolean) as string[];
         }
       } catch (error) {
@@ -115,11 +117,11 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     // Process DNS validation results with proper error handling
     if (dnsValidationResponse?.status === 'fulfilled') {
       try {
-        const dnsData = (dnsValidationResponse.value as any).data as DNSValidationResultsResponse;
-        if (dnsData?.data && Array.isArray(dnsData.data)) {
-          richData.dnsValidatedDomains = dnsData.data
-            .filter(d => d?.validationStatus === 'valid')
-            .map(d => d?.domainName)
+        const serviceResponse = dnsValidationResponse.value as any;
+        if (serviceResponse.status === 'success' && serviceResponse.data && Array.isArray(serviceResponse.data)) {
+          richData.dnsValidatedDomains = serviceResponse.data
+            .filter((d: any) => d?.validationStatus === 'valid')
+            .map((d: any) => d?.domainName)
             .filter(Boolean) as string[];
         }
       } catch (error) {
@@ -132,13 +134,13 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     // Process HTTP keyword results only for HTTP campaigns
     if (isHttpKeywordCampaign && httpKeywordResponse?.status === 'fulfilled') {
       try {
-        const httpData = (httpKeywordResponse.value as any).data as HTTPKeywordResultsResponse;
-        if (httpData?.data && Array.isArray(httpData.data)) {
-          richData.httpKeywordResults = httpData.data;
+        const serviceResponse = httpKeywordResponse.value as any;
+        if (serviceResponse.status === 'success' && serviceResponse.data && Array.isArray(serviceResponse.data)) {
+          richData.httpKeywordResults = serviceResponse.data;
         
           // Extract leads from HTTP keyword results
           const allLeads: RichCampaignData['leads'] = [];
-          httpData.data.forEach(result => {
+          serviceResponse.data.forEach((result: any) => {
             // Create synthetic lead data from HTTP results
             // In a real implementation, this would come from a dedicated leads endpoint
             if (result.domainName && result.validationStatus === 'valid') {
@@ -176,17 +178,17 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     
     // Fallback to campaign summary with empty arrays
     try {
-      const campaignResponse = await apiClient.getCampaignDetails(campaignId);
-      const campaignDetails = campaignResponse as CampaignDetailsResponse;
-      const campaign = campaignDetails.campaign as CampaignViewModel;
-      
-      return {
-        ...campaign,
-        domains: [],
-        dnsValidatedDomains: [],
-        leads: [],
-        httpKeywordResults: []
-      };
+      const campaignResponse = await campaignService.getCampaignById(campaignId);
+      if (campaignResponse.status === 'success' && campaignResponse.data) {
+        return {
+          ...campaignResponse.data,
+          domains: [],
+          dnsValidatedDomains: [],
+          leads: [],
+          httpKeywordResults: []
+        } as RichCampaignData;
+      }
+      throw new Error(`Failed to fetch campaign: ${campaignResponse.message}`);
     } catch (fallbackError) {
       console.error(`Failed to fetch even basic campaign data for ${campaignId}:`, fallbackError);
       throw error;

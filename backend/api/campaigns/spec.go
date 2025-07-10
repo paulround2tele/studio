@@ -14,6 +14,7 @@ func AddCampaignPaths(spec *openapi3.T) {
 	addCreateCampaignPath(spec)
 	addListCampaignsPath(spec)
 	addGetCampaignDetailsPath(spec)
+	addUpdateCampaignPath(spec)
 	addStartCampaignPath(spec)
 	addPauseCampaignPath(spec)
 	addResumeCampaignPath(spec)
@@ -301,6 +302,101 @@ func addGetCampaignDetailsPath(spec *openapi3.T) {
 	spec.Paths.Set("/campaigns/{campaignId}", &openapi3.PathItem{
 		Get: getOp,
 	})
+}
+
+// addUpdateCampaignPath adds the update campaign endpoint
+func addUpdateCampaignPath(spec *openapi3.T) {
+	putOp := &openapi3.Operation{
+		OperationID: "updateCampaign",
+		Summary:     "Update campaign",
+		Description: "Updates an existing campaign with new configuration",
+		Tags:        []string{"Campaigns"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
+		Parameters: openapi3.Parameters{
+			{
+				Value: &openapi3.Parameter{
+					Name:        "campaignId",
+					In:          "path",
+					Required:    true,
+					Description: "Campaign UUID",
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type:   &openapi3.Types{"string"},
+							Format: "uuid",
+						},
+					},
+				},
+			},
+		},
+		RequestBody: &openapi3.RequestBodyRef{
+			Value: &openapi3.RequestBody{
+				Required: true,
+				Content: map[string]*openapi3.MediaType{
+					"application/json": {
+						Schema: &openapi3.SchemaRef{
+							Ref: "#/components/schemas/UpdateCampaignRequest",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	putOp.AddResponse(200, &openapi3.Response{
+		Description: &[]string{"Campaign updated successfully"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/Campaign",
+				},
+			},
+		},
+	})
+
+	putOp.AddResponse(400, &openapi3.Response{
+		Description: &[]string{"Bad request"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	putOp.AddResponse(404, &openapi3.Response{
+		Description: &[]string{"Campaign not found"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	putOp.AddResponse(500, &openapi3.Response{
+		Description: &[]string{"Internal server error"}[0],
+		Content: map[string]*openapi3.MediaType{
+			"application/json": {
+				Schema: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorResponse",
+				},
+			},
+		},
+	})
+
+	// Update the existing path to include both GET and PUT operations
+	existingPath := spec.Paths.Find("/campaigns/{campaignId}")
+	if existingPath != nil {
+		existingPath.Put = putOp
+	} else {
+		spec.Paths.Set("/campaigns/{campaignId}", &openapi3.PathItem{
+			Put: putOp,
+		})
+	}
 }
 
 // addStartCampaignPath adds the start campaign endpoint
@@ -1526,6 +1622,107 @@ func addCampaignSchemas(spec *openapi3.T) {
 	// Add configuration detail schemas
 	addConfigurationSchemas(spec)
 	
+	// UpdateCampaignRequest schema
+	spec.Components.Schemas["UpdateCampaignRequest"] = &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"object"},
+			Description: "Request to update an existing campaign",
+			Properties: map[string]*openapi3.SchemaRef{
+				"name": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Campaign name",
+					},
+				},
+				"status": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Description: "Campaign status",
+						Enum: []interface{}{
+							"pending", "queued", "running", "paused", "completed", "failed", "cancelled", "archived",
+						},
+					},
+				},
+				"keywordSetIds": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type:   &openapi3.Types{"string"},
+								Format: "uuid",
+							},
+						},
+						Description: "Keyword set IDs",
+					},
+				},
+				"adHocKeywords": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type: &openapi3.Types{"string"},
+							},
+						},
+						Description: "Ad-hoc keywords",
+					},
+				},
+				"personaIds": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type:   &openapi3.Types{"string"},
+								Format: "uuid",
+							},
+						},
+						Description: "Persona IDs",
+					},
+				},
+				"proxyPoolId": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"string"},
+						Format:      "uuid",
+						Description: "Proxy pool ID",
+					},
+				},
+				"processingSpeedPerMinute": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Processing speed per minute",
+						Min:         &[]float64{1}[0],
+					},
+				},
+				"batchSize": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Batch size for processing",
+						Min:         &[]float64{1}[0],
+					},
+				},
+				"retryAttempts": {
+					Value: &openapi3.Schema{
+						Type:        &openapi3.Types{"integer"},
+						Description: "Number of retry attempts",
+						Min:         &[]float64{0}[0],
+					},
+				},
+				"targetHttpPorts": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"array"},
+						Items: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type: &openapi3.Types{"integer"},
+								Min:  &[]float64{1}[0],
+								Max:  &[]float64{65535}[0],
+							},
+						},
+						Description: "Target HTTP ports",
+					},
+				},
+			},
+		},
+	}
+
 	// Add enum schemas
 	addEnumSchemas(spec)
 	

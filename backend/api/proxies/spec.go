@@ -28,6 +28,9 @@ func addListProxiesPath(spec *openapi3.T) {
 		Summary:     "List proxies",
 		Description: "Lists all proxies with optional filtering",
 		Tags:        []string{"Proxies"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
 		Parameters: openapi3.Parameters{
 			{
 				Value: &openapi3.Parameter{
@@ -134,6 +137,9 @@ func addCreateProxyPath(spec *openapi3.T) {
 		Summary:     "Add proxy",
 		Description: "Adds a new proxy",
 		Tags:        []string{"Proxies"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
 		RequestBody: &openapi3.RequestBodyRef{
 			Value: &openapi3.RequestBody{
 				Required: true,
@@ -194,6 +200,9 @@ func addUpdateProxyPath(spec *openapi3.T) {
 		Summary:     "Update proxy",
 		Description: "Updates a proxy by ID",
 		Tags:        []string{"Proxies"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
 		Parameters: openapi3.Parameters{
 			{
 				Value: &openapi3.Parameter{
@@ -249,6 +258,9 @@ func addDeleteProxyPath(spec *openapi3.T) {
 		Summary:     "Delete proxy",
 		Description: "Deletes a proxy by ID",
 		Tags:        []string{"Proxies"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
 		Parameters: openapi3.Parameters{
 			{
 				Value: &openapi3.Parameter{
@@ -286,6 +298,9 @@ func addGetProxyStatusesPath(spec *openapi3.T) {
 		Summary:     "Get proxy statuses",
 		Description: "Gets the status of all proxies",
 		Tags:        []string{"Proxies"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
 	}
 
 	statusOp.AddResponse(200, &openapi3.Response{
@@ -327,6 +342,9 @@ func addForceCheckSingleProxyPath(spec *openapi3.T) {
 		Summary:     "Force single proxy health check",
 		Description: "Forces a health check on a single proxy",
 		Tags:        []string{"Proxies"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
 		Parameters: openapi3.Parameters{
 			{
 				Value: &openapi3.Parameter{
@@ -370,6 +388,9 @@ func addForceCheckAllProxiesPath(spec *openapi3.T) {
 		Summary:     "Force all proxies health check",
 		Description: "Forces a health check on all proxies",
 		Tags:        []string{"Proxies"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
 		RequestBody: &openapi3.RequestBodyRef{
 			Value: &openapi3.RequestBody{
 				Required: false,
@@ -439,6 +460,9 @@ func addTestProxyPath(spec *openapi3.T) {
 		Summary:     "Test proxy",
 		Description: "Tests a proxy by ID",
 		Tags:        []string{"Proxies"},
+		Security: &openapi3.SecurityRequirements{
+			{"sessionAuth": {}},
+		},
 		Parameters: openapi3.Parameters{
 			{
 				Value: &openapi3.Parameter{

@@ -21,7 +21,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { CAMPAIGN_SELECTED_TYPES } from "@/lib/constants";
 import type { components } from '@/lib/api-client/types';
-import { apiClient } from '@/lib/api-client/client';
+import { campaignService } from '@/lib/services/campaignService.production';
 
 // Import shared types to prevent conflicts
 import type {
@@ -462,58 +462,19 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
       } else {
         console.log('🚀 [CAMPAIGN_CREATION] Sending payload:', JSON.stringify(unifiedPayload, null, 2));
         
-        let response;
-        try {
-          response = await apiClient.createCampaign(unifiedPayload);
-        } catch (error: any) {
-          console.error('❌ [CAMPAIGN_CREATION] API Error:', {
-            message: error.message,
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            config: {
-              url: error.config?.url,
-              method: error.config?.method,
-              data: error.config?.data
-            }
-          });
-          throw error; // Re-throw to trigger existing error handling
-        }
-
-        // 🔧 SIMPLIFIED: Handle response structures without excessive logging
-        let campaign;
+        const response = await campaignService.createCampaign(unifiedPayload);
         
-        if (Array.isArray(response)) {
-          campaign = response.find(item =>
-            item &&
-            typeof item === 'object' &&
-            'id' in item &&
-            item.id
-          ) || response[0];
-        } else if (response && typeof response === 'object' && 'id' in response) {
-          campaign = response;
-        } else if (response && typeof response === 'object') {
-          const possibleKeys = ['campaign', 'data', 'result', 'payload', 'campaign_data'];
-          let foundCampaign = null;
+        if (response.status === 'success' && response.data?.id) {
+          const campaign = response.data;
+          const campaignId = campaign.id;
           
-          for (const key of possibleKeys) {
-            const responseAsRecord = response.data as Record<string, unknown>;
-            if (key in responseAsRecord && responseAsRecord[key] && typeof responseAsRecord[key] === 'object') {
-              const nestedObj = responseAsRecord[key] as Record<string, unknown>;
-              if ('id' in nestedObj && nestedObj.id) {
-                foundCampaign = nestedObj;
-                break;
-              }
-            }
+          // Type guard to ensure campaignId is defined
+          if (!campaignId) {
+            throw new Error('Campaign created successfully but missing ID');
           }
-          campaign = foundCampaign;
-        } else {
-          campaign = null;
-        }
-        
-        if (campaign && campaign.id) {
+          
           console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign creation successful - starting post-creation flow:', {
-            campaignId: campaign.id,
+            campaignId: campaignId,
             campaignName: campaign.name,
             campaignType: campaign.campaignType,
             campaignStatus: campaign.status,
@@ -533,9 +494,10 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
             console.log('🚀 [CAMPAIGN_FORM_DEBUG] Starting campaign sequence...');
             try {
               const startSequenceTime = Date.now();
-              await apiClient.startCampaign(campaign.id);
+              const startResponse = await campaignService.startCampaign(campaignId);
               console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign sequence started successfully:', {
-                startSequenceDuration: Date.now() - startSequenceTime
+                startSequenceDuration: Date.now() - startSequenceTime,
+                startResponse: startResponse.status
               });
             } catch (e) {
               console.error('❌ [CAMPAIGN_FORM_DEBUG] Failed to start campaign sequence (might be auto-completed):', e);
@@ -549,10 +511,10 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           // The metrics page has WebSocket integration for live progress tracking
           console.log('🚀 [CAMPAIGN_FORM_DEBUG] Campaign created successfully, navigating to metrics page for real-time monitoring');
           
-          const redirectUrl = `/campaigns/${campaign.id}?type=${data.selectedType}`;
+          const redirectUrl = `/campaigns/${campaignId}?type=${data.selectedType}`;
           router.push(redirectUrl);
         } else {
-          const errorMessage = "Failed to create campaign. Please check your inputs and try again.";
+          const errorMessage = response.message || "Failed to create campaign. Please check your inputs and try again.";
           setFormMainError(errorMessage);
           setFormFieldErrors({});
           

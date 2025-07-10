@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, CheckCircle, Globe, Wifi, ShieldCheck, Settings, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { apiClient } from '@/lib/api-client/client';
+import { campaignService } from '@/lib/services/campaignService.production';
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
 import { useAuth } from '@/contexts/AuthContext';
 import type { components as _components } from '@/lib/api-client/types';
@@ -238,13 +238,14 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         hasHttpPersona: phaseType === 'http_keyword_validation' && (updatePayload.personaIds?.length || 0) > 0,
       });
 
-      // ✅ ORCHESTRATION FIX: Update existing campaign instead of creating new one
-      // Using direct request method to bypass OpenAPI type issues until types are regenerated
-      const updatedCampaign = await (apiClient as any).request(
-        `/campaigns/${sourceCampaign.id}`,
-        'PUT',
-        { body: updatePayload }
-      );
+      // ✅ ORCHESTRATION FIX: Update existing campaign using service layer
+      const updateResult = await campaignService.updateCampaign(sourceCampaign.id, updatePayload as any);
+      
+      if (updateResult.status === 'error') {
+        throw new Error(updateResult.message || 'Failed to update campaign');
+      }
+      
+      const updatedCampaign = updateResult.data;
 
       if (updatedCampaign && (updatedCampaign.id || sourceCampaign.id)) {
         const campaignId = updatedCampaign.id || sourceCampaign.id;
@@ -255,15 +256,10 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
           variant: "default"
         });
 
-        // Start the campaign for the new phase using the appropriate method
+        // Start the campaign for the new phase using the service layer
         try {
-          if (phaseType === 'dns_validation') {
-            await apiClient.validateDNSForCampaign(campaignId);
-          } else if (phaseType === 'http_keyword_validation') {
-            await apiClient.validateHTTPForCampaign(campaignId);
-          } else {
-            await apiClient.startCampaign(campaignId);
-          }
+          // Use service layer for campaign operations
+          await campaignService.startCampaign(campaignId);
         } catch (e) {
           console.warn('Campaign may have auto-started:', e);
         }

@@ -1,16 +1,11 @@
 // src/lib/services/authService.ts
 // Clean authentication service using auto-generated API clients
 
-import { AuthApi, Configuration, User, LoginRequest } from '@/lib/api-client';
+import { authApi } from '@/lib/api-client/client';
+import { User, LoginRequest } from '@/lib/api-client';
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
-
-// Create configured AuthApi instance
-const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2'
-});
-const authApi = new AuthApi(config);
 
 // Use OpenAPI types for authentication
 export type LoginCredentials = LoginRequest & {
@@ -31,7 +26,7 @@ class AuthService {
   private static instance: AuthService;
 
   constructor() {
-    logger.debug('AUTH_SERVICE', 'Initialized with pure auto-generated API client');
+    logger.debug('AUTH_SERVICE', 'Initialized with shared API client configuration');
   }
 
   static getInstance(): AuthService {
