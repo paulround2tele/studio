@@ -265,6 +265,12 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
   // Memoized form submission handler to prevent unnecessary re-creates
   const onSubmit = useCallback(async (data: CampaignFormValues) => {
     try {
+      console.log('🔍 [FORM_DEBUG] Form submission started:', {
+        formData: data.selectedType,
+        currentUrl: window.location.href,
+        routerAvailable: !!router
+      });
+
       // Clear previous errors
       setFormFieldErrors({});
       setFormMainError(null);
@@ -464,89 +470,45 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         
         const response = await campaignService.createCampaign(unifiedPayload);
         
-        if (response.status === 'success' && response.data?.id) {
-          const campaign = response.data;
-          const campaignId = campaign.id;
+        if (response.status === 'success' && response.data) {
+          // Handle nested response structure from the API
+          const apiResponse = response.data as any;
+          const campaign = apiResponse.data || response.data;
+          const campaignId = campaign?.id;
           
-          // Type guard to ensure campaignId is defined
+          // Validate campaign ID exists
           if (!campaignId) {
             throw new Error('Campaign created successfully but missing ID');
           }
-          
-          console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign creation successful - starting post-creation flow:', {
-            campaignId: campaignId,
-            campaignName: campaign.name,
-            campaignType: campaign.campaignType,
-            campaignStatus: campaign.status,
-            launchSequence: data.launchSequence,
-            selectedType: data.selectedType,
-            willStartSequence: data.launchSequence && data.selectedType === 'domain_generation'
-          });
 
           toast({
             title: "Campaign Created Successfully",
-            description: `Campaign "${campaign.name}" has been created.`,
+            description: `Campaign "${campaign.name || 'New Campaign'}" has been created.`,
             variant: "default"
           });
           
-          // 🔧 CRITICAL FIX: Handle auto-completed domain generation campaigns
+          // Auto-start domain generation campaigns if launch sequence is enabled
           if (data.launchSequence && data.selectedType === 'domain_generation') {
-            console.log('🚀 [CAMPAIGN_FORM_DEBUG] Starting campaign sequence...');
             try {
-              const startSequenceTime = Date.now();
-              const startResponse = await campaignService.startCampaign(campaignId);
-              console.log('✅ [CAMPAIGN_FORM_DEBUG] Campaign sequence started successfully:', {
-                startSequenceDuration: Date.now() - startSequenceTime,
-                startResponse: startResponse.status
-              });
-            } catch (e) {
-              console.error('❌ [CAMPAIGN_FORM_DEBUG] Failed to start campaign sequence (might be auto-completed):', e);
-              // Don't fail the creation flow if start fails due to auto-completion
+              await campaignService.startCampaign(campaignId);
+            } catch (startError) {
+              // Don't fail the creation flow if start fails (campaign may auto-complete)
+              console.warn('[CampaignForm] Campaign start failed (may be auto-completed):', startError);
             }
-          } else if (data.selectedType === 'domain_generation') {
-            console.log('🔍 [CAMPAIGN_FORM_DEBUG] Domain generation campaign created without launch sequence - domains may auto-generate');
           }
           
-          // 🔧 UX FIX: Navigate immediately to metrics page for real-time monitoring
-          // The metrics page has WebSocket integration for live progress tracking
-          console.log('🚀 [CAMPAIGN_FORM_DEBUG] Campaign created successfully, navigating to metrics page for real-time monitoring');
-          
+          // Navigate to campaign metrics page for real-time monitoring
           const redirectUrl = `/campaigns/${campaignId}?type=${data.selectedType}`;
-          console.log('🔗 [CAMPAIGN_FORM_DEBUG] Redirecting to:', redirectUrl);
           
-          try {
-            // Add small delay to ensure API response is fully processed
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            await router.push(redirectUrl);
-            console.log('✅ [CAMPAIGN_FORM_DEBUG] Redirect successful');
-          } catch (redirectError) {
-            console.error('❌ [CAMPAIGN_FORM_DEBUG] Redirect failed:', redirectError);
-            
-            // Fallback: Try alternative redirect approaches
+          // Use setTimeout to ensure proper navigation after form submission
+          setTimeout(async () => {
             try {
-              console.log('🔄 [CAMPAIGN_FORM_DEBUG] Attempting fallback redirect...');
+              await router.push(redirectUrl);
+            } catch (routerError) {
+              // Fallback to direct navigation if router fails
               window.location.href = redirectUrl;
-            } catch (fallbackError) {
-              console.error('❌ [CAMPAIGN_FORM_DEBUG] Fallback redirect also failed:', fallbackError);
-              
-              // Last resort: Show success message and manual navigation
-              toast({
-                title: "Campaign Created Successfully",
-                description: `Campaign "${campaign.name}" created. Click to view metrics.`,
-                variant: "default",
-                action: (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.location.href = redirectUrl}
-                  >
-                    View Campaign
-                  </Button>
-                )
-              });
             }
-          }
+          }, 100);
         } else {
           const errorMessage = response.message || "Failed to create campaign. Please check your inputs and try again.";
           setFormMainError(errorMessage);

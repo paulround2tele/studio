@@ -1,17 +1,7 @@
 // src/lib/services/personaService.ts
 // Production-ready Persona Service using OpenAPI types directly
-import { PersonasApi, Configuration } from '@/lib/api-client';
-import { getApiBaseUrlSync } from '@/lib/config/environment';
+import { personasApi } from '@/lib/api-client/client';
 import type { components } from '@/lib/api-client/types';
-
-// Create configured PersonasApi instance with authentication
-const config = new Configuration({
-  basePath: getApiBaseUrlSync(),
-  baseOptions: {
-    withCredentials: true
-  }
-});
-const personasApi = new PersonasApi(config);
 
 // Use OpenAPI types directly
 type Persona = components["schemas"]["Persona"];
@@ -28,28 +18,45 @@ export type PersonaListResponse = components["schemas"]["PersonaListResponse"];
 export async function createPersona(payload: CreatePersonaRequest): Promise<ApiResponse<Persona>> {
   try {
     const response = await personasApi.createPersona(payload);
-    const result = 'data' in response ? response.data : response;
+    // Axios response structure: response.data = API wrapper object
+    const apiResponse = 'data' in response ? response.data : response;
+    
+    // Extract persona from API response structure: { status, data: Persona, message }
+    const persona = (apiResponse as any)?.data || apiResponse;
+    const message = (apiResponse as any)?.message || 'Persona created successfully';
+    
     return {
       status: 'success',
-      data: result as Persona,
-      message: 'Persona created successfully'
+      data: persona as Persona,
+      message: message
     };
-  } catch (error) {
+  } catch (error: any) {
+    // Extract error message from API response
+    const apiError = error?.response?.data;
+    const errorMessage = apiError?.message || error?.message || 'Unknown error occurred';
+    
     return {
       status: 'error',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: errorMessage
     };
   }
 }
 
 export async function listPersonas(): Promise<ApiResponse<Persona[]>> {
   try {
-    const response = await personasApi.listPersonas();
-    const result = 'data' in response ? response.data : response;
+    // Request all personas with high limit to avoid pagination truncation
+    // Database has 39 total personas (7 DNS + 32 HTTP), so 100 is safe
+    const response = await personasApi.listPersonas(100);
+    // Axios response structure: response.data = PersonaListResponse
+    const personaListResponse = 'data' in response ? response.data : response;
+    
+    // Extract personas array from PersonaListResponse.data
+    const personasArray = (personaListResponse?.data || []) as Persona[];
+    
     return {
       status: 'success',
-      data: Array.isArray(result) ? result : [],
-      message: 'Personas retrieved successfully'
+      data: personasArray,
+      message: personaListResponse?.message || 'Personas retrieved successfully'
     };
   } catch (error) {
     return {
@@ -80,16 +87,26 @@ export async function getPersonaById(personaId: string, _personaType?: 'http' | 
 export async function updatePersona(personaId: string, payload: UpdatePersonaRequest, _personaType?: 'http' | 'dns'): Promise<ApiResponse<Persona>> {
   try {
     const response = await personasApi.updatePersona(personaId, payload);
-    const result = 'data' in response ? response.data : response;
+    // Axios response structure: response.data = API wrapper object
+    const apiResponse = 'data' in response ? response.data : response;
+    
+    // Extract persona from API response structure: { status, data: Persona, message }
+    const persona = (apiResponse as any)?.data || apiResponse;
+    const message = (apiResponse as any)?.message || 'Persona updated successfully';
+    
     return {
       status: 'success',
-      data: result as Persona,
-      message: 'Persona updated successfully'
+      data: persona as Persona,
+      message: message
     };
-  } catch (error) {
+  } catch (error: any) {
+    // Extract error message from API response
+    const apiError = error?.response?.data;
+    const errorMessage = apiError?.message || error?.message || 'Unknown error occurred';
+    
     return {
       status: 'error',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: errorMessage
     };
   }
 }
