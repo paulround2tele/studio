@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+/home/vboxuser/studio/src/lib/hooks/useCampaignFormData.tsimport { useState, useEffect, useCallback, useMemo } from 'react';
 import type { CampaignViewModel } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 
@@ -45,7 +45,8 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
         getPersonas('http'),
         getPersonas('dns'),
         getProxies(),
-        campaignsApi.listCampaigns()
+        // Fix: Add limit=100 to prevent pagination truncation (same fix as other campaign calls)
+        campaignsApi.listCampaigns(100)
       ]);
 
       // Process HTTP personas result

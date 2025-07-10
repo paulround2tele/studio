@@ -262,7 +262,8 @@ export default function LatestActivityTable() {
   const fetchAndProcessData = useCallback(async (showLoadingSpinner = true) => {
     if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading dashboard activity");
     try {
-      const response = await campaignsApi.listCampaigns();
+      // Fix: Add limit=100 to prevent pagination truncation (same fix as main campaigns page)
+      const response = await campaignsApi.listCampaigns(100);
       const processedActivities: LatestDomainActivity[] = [];
 
       // Handle the Axios response structure: response.data.data.data contains the campaigns array

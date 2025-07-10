@@ -369,13 +369,14 @@ function CampaignsPageContent() {
     try {
       // 🔍 DIAGNOSTIC: Track API call timing and response
       const apiCallStartTime = Date.now();
-      console.log('🚀 [CAMPAIGNS_LIST_DEBUG] Calling apiClient.listCampaigns()...', {
+      console.log('🚀 [CAMPAIGNS_LIST_DEBUG] Calling apiClient.listCampaigns(100)...', {
         apiCallStartTime,
         timeSinceLoadStart: apiCallStartTime - loadStartTime
       });
       
       // MEMORY LEAK FIX: Pass AbortSignal to API call (if getCampaigns supports it)
-      const response = await apiClient.listCampaigns();
+      // FIX: Add limit=100 to prevent pagination truncation (same fix as personas)
+      const response = await apiClient.listCampaigns(100);
       const apiCallDuration = Date.now() - apiCallStartTime;
       
       // 🔍 DIAGNOSTIC: Log raw API response structure
