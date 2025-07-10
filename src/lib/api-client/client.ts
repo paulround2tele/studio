@@ -15,16 +15,13 @@ import {
   Configuration
 } from './index';
 
-// Get API base URL from environment or use default
+// Import proper environment configuration - NO HARDCODED URLS
+import { getApiConfig } from '@/lib/config/environment';
+
+// Get API base URL from environment configuration system
 const getApiBaseUrl = (): string => {
-  // Check for environment variable first (runtime)
-  if (typeof window !== 'undefined') {
-    // Browser environment
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2';
-  } else {
-    // Server environment
-    return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2';
-  }
+  const apiConfig = getApiConfig();
+  return apiConfig.baseUrl;
 };
 
 // Create configuration instance with proper base URL

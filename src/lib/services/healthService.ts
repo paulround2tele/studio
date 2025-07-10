@@ -4,7 +4,7 @@
  * Eliminates 429 rate limiting through request consolidation and proper rate limiting
  */
 
-import { getBackendUrl } from '@/lib/services/backendDetection';
+import { getApiBaseUrl } from '@/lib/config/environment';
 
 /**
  * Normalize various health status formats to standardized values
@@ -156,8 +156,8 @@ export async function getHealth(forceRefresh: boolean = false): Promise<HealthRe
 
   try {
     const result = await circuitBreaker.execute(async () => {
-      // Use centralized backend detection (no more duplicate port scanning)
-      const backendUrl = await getBackendUrl();
+      // Use centralized environment configuration
+      const backendUrl = await getApiBaseUrl();
       const healthUrl = `${backendUrl}/health`;
 
       console.log(`🔗 [HealthService] Checking health at: ${healthUrl}`);

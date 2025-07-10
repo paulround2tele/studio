@@ -4,6 +4,12 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const isProduction = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
+  // Ensure environment variables are available to the client
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
+  },
+
   // TypeScript and ESLint Configuration
   typescript: {
     ignoreBuildErrors: false,

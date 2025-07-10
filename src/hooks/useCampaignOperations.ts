@@ -5,10 +5,7 @@
 
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { CampaignsApi } from '@/lib/api-client';
-
-// Initialize the API client
-const campaignsApi = new CampaignsApi();
+import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import type { CampaignViewModel, CampaignValidationItem } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';

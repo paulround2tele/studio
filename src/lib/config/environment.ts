@@ -53,21 +53,7 @@ export interface EnvironmentConfig {
 }
 
 // Professional API URL detection using centralized service (async version for future use)
-async function _getAutomaticApiUrl(): Promise<string> {
-  try {
-    // Use centralized backend detection to prevent 429 rate limiting
-    const { getBackendUrl } = await import('../services/backendDetection');
-    return await getBackendUrl();
-  } catch (error) {
-    console.error('[Environment] Backend URL detection failed:', error);
-    // STRICT: No fallbacks allowed - force proper configuration
-    throw new Error(
-      'CONFIGURATION ERROR: Backend URL not configured and auto-detection failed. ' +
-      'Please set NEXT_PUBLIC_API_URL environment variable to the backend URL. ' +
-      'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2'
-    );
-  }
-}
+// Removed: async function _getAutomaticApiUrl() - using getSyncApiUrl() instead
 
 // Strict synchronous API URL configuration - NO hardcoded fallbacks
 // All routes standardized under /api/v2 for consistency
@@ -77,20 +63,29 @@ function getSyncApiUrl(): string {
     return configured;
   }
   
-  // Only auto-detect in browser context and only for the exact same origin
+  // Universal auto-detection for ANY hostname (localhost, VPS IP, domain, etc.)
   if (typeof window !== 'undefined') {
-    const { hostname, port, protocol } = window.location;
+    const { hostname, protocol, port } = window.location;
     
-    // Auto-detect only when frontend and backend are on the same host
-    // This prevents accidental connections to wrong backends
-    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return `${protocol}//${hostname}${port ? `:${port}` : ''}/api/v2`;
+    if (hostname) {
+      // Universal logic: if frontend is on a development port, assume backend on 8080
+      // Otherwise assume backend on same origin with /api/v2 path
+      const currentPort = port || (protocol === 'https:' ? '443' : '80');
+      const isDevelopmentPort = ['3000', '3001', '3002', '5173', '4200'].includes(currentPort);
+      
+      if (isDevelopmentPort) {
+        // Development: backend typically on 8080 (works for localhost, VPS IP, any hostname)
+        return `${protocol}//${hostname}:8080/api/v2`;
+      } else {
+        // Production or same-origin: backend on same host (works for any hostname)
+        return `${protocol}//${hostname}/api/v2`;
+      }
     }
   }
   
-  // STRICT: No fallbacks allowed - force proper configuration
+  // Only throw if we truly can't determine anything
   throw new Error(
-    'CONFIGURATION ERROR: API base URL not configured. ' +
+    'CONFIGURATION ERROR: API base URL not configured and auto-detection failed. ' +
     'Please set NEXT_PUBLIC_API_URL environment variable to the backend API URL. ' +
     'Example: NEXT_PUBLIC_API_URL=http://your-backend-host:8080/api/v2'
   );
@@ -100,7 +95,7 @@ function getSyncApiUrl(): string {
 const environments: Record<string, EnvironmentConfig> = {
   development: {
     api: {
-      baseUrl: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || getSyncApiUrl(),
+      baseUrl: getSyncApiUrl(), // Use our universal auto-detection logic
       timeout: 30000,
       retryAttempts: 3,
       retryDelay: 1000,
@@ -110,9 +105,7 @@ const environments: Record<string, EnvironmentConfig> = {
       sessionTimeoutMinutes: 120, // 2 hours
     },
     websocket: {
-      url: process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || (typeof window !== 'undefined' ?
-        `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:8080/api/v2/ws` :
-        '/api/v2/ws'),
+      url: process.env.NEXT_PUBLIC_WS_URL || process.env.WS_URL || 'ws://localhost:8080/api/v2/ws',
       reconnectAttempts: 5,
       reconnectDelay: 2000,
       heartbeatInterval: 30000,
@@ -448,14 +441,7 @@ export function validateConfiguration(): boolean {
 
 // Professional API base URL function for Next.js API routes and compatibility
 export async function getApiBaseUrl(): Promise<string> {
-  try {
-    // Use centralized backend detection for optimal performance
-    const { getBackendUrl } = await import('../services/backendDetection');
-    return await getBackendUrl();
-  } catch (error) {
-    console.warn('[Environment] Centralized detection failed, using sync fallback:', error);
-    return getSyncApiUrl();
-  }
+  return getSyncApiUrl();
 }
 
 // Synchronous API base URL for immediate usage

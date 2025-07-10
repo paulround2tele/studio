@@ -5,8 +5,10 @@ import { ConfigApi, Configuration } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
 
 // Create configured ConfigApi instance
+import { getApiConfig } from '../config/environment';
+
 const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2'
+  basePath: getApiConfig().baseUrl
 });
 const configApi = new ConfigApi(config);
 

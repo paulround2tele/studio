@@ -46,7 +46,7 @@ class EnhancedApiService {
 
   constructor() {
     const config = getApiConfig();
-    this.baseUrl = `${config.baseUrl}/api/v2`;
+    this.baseUrl = config.baseUrl; // baseUrl already includes /api/v2
     this.defaultTimeout = config.timeout;
     
     this.defaultRetryConfig = {

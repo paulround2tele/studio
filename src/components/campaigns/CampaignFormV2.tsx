@@ -512,7 +512,41 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           console.log('🚀 [CAMPAIGN_FORM_DEBUG] Campaign created successfully, navigating to metrics page for real-time monitoring');
           
           const redirectUrl = `/campaigns/${campaignId}?type=${data.selectedType}`;
-          router.push(redirectUrl);
+          console.log('🔗 [CAMPAIGN_FORM_DEBUG] Redirecting to:', redirectUrl);
+          
+          try {
+            // Add small delay to ensure API response is fully processed
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            await router.push(redirectUrl);
+            console.log('✅ [CAMPAIGN_FORM_DEBUG] Redirect successful');
+          } catch (redirectError) {
+            console.error('❌ [CAMPAIGN_FORM_DEBUG] Redirect failed:', redirectError);
+            
+            // Fallback: Try alternative redirect approaches
+            try {
+              console.log('🔄 [CAMPAIGN_FORM_DEBUG] Attempting fallback redirect...');
+              window.location.href = redirectUrl;
+            } catch (fallbackError) {
+              console.error('❌ [CAMPAIGN_FORM_DEBUG] Fallback redirect also failed:', fallbackError);
+              
+              // Last resort: Show success message and manual navigation
+              toast({
+                title: "Campaign Created Successfully",
+                description: `Campaign "${campaign.name}" created. Click to view metrics.`,
+                variant: "default",
+                action: (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.location.href = redirectUrl}
+                  >
+                    View Campaign
+                  </Button>
+                )
+              });
+            }
+          }
         } else {
           const errorMessage = response.message || "Failed to create campaign. Please check your inputs and try again.";
           setFormMainError(errorMessage);
@@ -562,13 +596,19 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
 
   // 🔧 CRITICAL FIX: Stable form submission handler without clearFormErrors dependency cycle
   const handleFormSubmit = useCallback(async (data: CampaignFormValues) => {
+    // Prevent duplicate submissions during redirect
+    if (isSubmitting) {
+      console.log('🔒 [CAMPAIGN_FORM_DEBUG] Submission already in progress, ignoring duplicate');
+      return;
+    }
+
     // Clear errors at the start of submission - directly inline to avoid dependency cycles
     setFormFieldErrors({});
     setFormMainError(null);
     
     // Proceed with original onSubmit logic
     await onSubmit(data);
-  }, [onSubmit]);
+  }, [onSubmit, isSubmitting]);
 
   // Memoized persona requirements to prevent unnecessary recalculations
   const needsHttp = useMemo(() => needsHttpPersona(selectedCampaignType), [selectedCampaignType]);
