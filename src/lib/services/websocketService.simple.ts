@@ -34,10 +34,10 @@ export interface ConnectionOptions {
   onDisconnect?: () => void; // Legacy alias for onClose
 }
 
-// WebSocket connection management
+// WebSocket connection management with subscription tracking
 interface WebSocketConnection {
   ws: WebSocket | null;
-  options: ConnectionOptions;
+  subscribers: Map<string, ConnectionOptions>; // Track multiple subscribers per channel
   reconnectAttempts: number;
   reconnectTimer: NodeJS.Timeout | null;
   isConnected: boolean;
@@ -64,27 +64,53 @@ class WebSocketServiceImpl {
   connect(channel: string, options: ConnectionOptions): () => void {
     console.log(`🔗 [WebSocketService] Connecting to channel: ${channel}`);
     
-    // Clean up existing connection if any
-    this.disconnect(channel);
+    // Generate unique subscriber ID
+    const subscriberId = Math.random().toString(36).substring(2, 15);
     
-    // Create new connection
-    const connection: WebSocketConnection = {
-      ws: null,
-      options,
-      reconnectAttempts: 0,
-      reconnectTimer: null,
-      isConnected: false,
-      maxReconnectAttempts: 10,
-      reconnectInterval: 1000
-    };
+    // Get or create connection
+    let connection = this.connections.get(channel);
+    if (!connection) {
+      // Create new connection
+      connection = {
+        ws: null,
+        subscribers: new Map(),
+        reconnectAttempts: 0,
+        reconnectTimer: null,
+        isConnected: false,
+        maxReconnectAttempts: 10,
+        reconnectInterval: 1000
+      };
+      this.connections.set(channel, connection);
+      
+      // Start connection only if this is the first subscriber
+      this.connectChannel(channel);
+    }
     
-    this.connections.set(channel, connection);
+    // Add subscriber to existing connection
+    connection.subscribers.set(subscriberId, options);
+    console.log(`📝 [WebSocketService] Added subscriber ${subscriberId} to channel ${channel}. Total subscribers: ${connection.subscribers.size}`);
     
-    // Start connection
-    this.connectChannel(channel);
+    // Return cleanup function that removes only this subscriber
+    return () => this.removeSubscriber(channel, subscriberId);
+  }
+
+  /**
+   * Remove a subscriber from a channel
+   */
+  private removeSubscriber(channel: string, subscriberId: string): void {
+    const connection = this.connections.get(channel);
+    if (!connection) return;
+
+    console.log(`🗑️ [WebSocketService] Removing subscriber ${subscriberId} from channel ${channel}`);
+    connection.subscribers.delete(subscriberId);
     
-    // Return cleanup function
-    return () => this.disconnect(channel);
+    // If no more subscribers, disconnect the channel
+    if (connection.subscribers.size === 0) {
+      console.log(`📭 [WebSocketService] No more subscribers for ${channel}, disconnecting...`);
+      this.disconnect(channel);
+    } else {
+      console.log(`📝 [WebSocketService] Channel ${channel} still has ${connection.subscribers.size} subscribers`);
+    }
   }
 
   /**
@@ -246,13 +272,15 @@ class WebSocketServiceImpl {
           }
         }, 10); // Small delay to ensure WebSocket is fully ready
         
-        // Notify handlers
-        if (connection.options.onOpen) {
-          connection.options.onOpen();
-        }
-        if (connection.options.onConnect) {
-          connection.options.onConnect();
-        }
+        // Notify all subscribers
+        connection.subscribers.forEach((options) => {
+          if (options.onOpen) {
+            options.onOpen();
+          }
+          if (options.onConnect) {
+            options.onConnect();
+          }
+        });
       };
       
       connection.ws.onmessage = (event) => {
@@ -273,12 +301,15 @@ class WebSocketServiceImpl {
         
         connection.isConnected = false;
         
-        if (connection.options.onClose) {
-          connection.options.onClose();
-        }
-        if (connection.options.onDisconnect) {
-          connection.options.onDisconnect();
-        }
+        // Notify all subscribers about disconnection
+        connection.subscribers.forEach((options) => {
+          if (options.onClose) {
+            options.onClose();
+          }
+          if (options.onDisconnect) {
+            options.onDisconnect();
+          }
+        });
         
         // Determine if we should reconnect
         const shouldReconnect = 
@@ -357,7 +388,12 @@ class WebSocketServiceImpl {
           }
           
           // Forward to message handler
-          connection.options.onMessage(message);
+          // Broadcast message to all subscribers
+          connection.subscribers.forEach((options) => {
+            if (options.onMessage) {
+              options.onMessage(message);
+            }
+          });
           
         } catch (parseError) {
           console.error(`❌ [WebSocketService] Failed to parse message on ${channel}:`, parseError, messageData);
@@ -379,10 +415,13 @@ class WebSocketServiceImpl {
 
     console.error(`❌ [WebSocketService] Error on channel ${channel}:`, error);
     
-    if (connection.options.onError) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
-      connection.options.onError(errorObj);
-    }
+    // Notify all subscribers about the error
+    const errorObj = error instanceof Error ? error : new Error(String(error));
+    connection.subscribers.forEach((options) => {
+      if (options.onError) {
+        options.onError(errorObj);
+      }
+    });
   }
 
   /**
