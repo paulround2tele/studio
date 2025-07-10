@@ -14,11 +14,22 @@ import {
   UtilitiesApi,
   Configuration
 } from './index';
-import { getApiBaseUrlSync } from '../config/environment';
+
+// Get API base URL from environment or use default
+const getApiBaseUrl = (): string => {
+  // Check for environment variable first (runtime)
+  if (typeof window !== 'undefined') {
+    // Browser environment
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2';
+  } else {
+    // Server environment
+    return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v2';
+  }
+};
 
 // Create configuration instance with proper base URL
 const apiConfiguration = new Configuration({
-  basePath: getApiBaseUrlSync(),
+  basePath: getApiBaseUrl(),
   baseOptions: {
     withCredentials: true, // Enable cookies for session auth
     headers: {

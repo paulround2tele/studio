@@ -201,41 +201,50 @@ class WebSocketServiceImpl {
         connection.isConnected = true;
         connection.reconnectAttempts = 0;
         
-        // Send connection initialization
-        this.sendMessage(channel, {
-          type: 'connection_init',
-          timestamp: new Date().toISOString()
-        });
-        
-        // Subscribe to channel-specific events
-        if (channel.startsWith('campaign-')) {
-          // Individual campaign subscription
-          const campaignId = channel.replace('campaign-', '');
-          this.sendMessage(channel, {
-            type: 'subscribe_campaign',
-            campaignId,
-            timestamp: new Date().toISOString()
-          });
-        } else if (channel === 'all-campaigns') {
-          // All campaigns subscription
-          this.sendMessage(channel, {
-            type: 'subscribe_all_campaigns',
-            timestamp: new Date().toISOString()
-          });
-        } else if (channel === 'dashboard-activity') {
-          // Dashboard activity subscription
-          this.sendMessage(channel, {
-            type: 'subscribe_dashboard_activity',
-            timestamp: new Date().toISOString()
-          });
-        } else {
-          // Other channel subscriptions (proxies, keyword-sets, etc.)
-          this.sendMessage(channel, {
-            type: 'subscribe_channel',
-            data: { channel },
-            timestamp: new Date().toISOString()
-          });
-        }
+        // Wait for WebSocket to be fully ready before sending messages
+        // This prevents "Still in CONNECTING state" errors
+        setTimeout(() => {
+          // Double-check connection is still valid and ready
+          if (connection.ws && connection.ws.readyState === WebSocket.OPEN && connection.isConnected) {
+            // Send connection initialization
+            this.sendMessage(channel, {
+              type: 'connection_init',
+              timestamp: new Date().toISOString()
+            });
+            
+            // Subscribe to channel-specific events
+            if (channel.startsWith('campaign-')) {
+              // Individual campaign subscription
+              const campaignId = channel.replace('campaign-', '');
+              this.sendMessage(channel, {
+                type: 'subscribe_campaign',
+                campaignId,
+                timestamp: new Date().toISOString()
+              });
+            } else if (channel === 'all-campaigns') {
+              // All campaigns subscription
+              this.sendMessage(channel, {
+                type: 'subscribe_all_campaigns',
+                timestamp: new Date().toISOString()
+              });
+            } else if (channel === 'dashboard-activity') {
+              // Dashboard activity subscription
+              this.sendMessage(channel, {
+                type: 'subscribe_dashboard_activity',
+                timestamp: new Date().toISOString()
+              });
+            } else {
+              // Other channel subscriptions (proxies, keyword-sets, etc.)
+              this.sendMessage(channel, {
+                type: 'subscribe_channel',
+                data: { channel },
+                timestamp: new Date().toISOString()
+              });
+            }
+          } else {
+            console.warn(`⚠️ [WebSocketService] Connection no longer valid for subscription on ${channel}`);
+          }
+        }, 10); // Small delay to ensure WebSocket is fully ready
         
         // Notify handlers
         if (connection.options.onOpen) {

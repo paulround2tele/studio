@@ -47,7 +47,7 @@ const CACHE_DURATION = 30000; // 30 seconds
 /**
  * Fetches rich campaign data by combining campaign summary with detailed endpoints
  */
-export const getRichCampaignData = async (campaignId: string): Promise<RichCampaignData> => {
+export const getRichCampaignData = async (campaignId: string): Promise<RichCampaignData | null> => {
   // Check cache first
   const cached = richDataCache.get(campaignId);
   if (cached && Date.now() < cached.expiry) {
@@ -65,7 +65,10 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     // Add null check to prevent undefined access errors
     if (!campaign || !campaign.campaignType) {
       console.warn(`[campaignDataService] Invalid campaign data for ${campaignId}:`, campaign);
-      throw new Error(`Campaign not found or missing campaignType: ${campaignId}`);
+      console.warn(`[campaignDataService] This may be a deleted campaign or corrupted data. Skipping gracefully.`);
+      
+      // Return null instead of throwing to allow graceful handling
+      return null;
     }
 
     // Initialize rich data with campaign summary
@@ -212,7 +215,7 @@ export const getRichCampaignDataBatch = async (campaignIds: string[]): Promise<M
     
     const batchResults = await Promise.allSettled(batchPromises);
     batchResults.forEach(result => {
-      if (result.status === 'fulfilled') {
+      if (result.status === 'fulfilled' && result.value.data !== null) {
         results.set(result.value.id, result.value.data);
       }
     });
