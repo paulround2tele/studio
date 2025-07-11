@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
@@ -22,17 +23,17 @@ import (
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
 type CampaignOrchestratorAPIHandler struct {
 	orchestratorService   services.CampaignOrchestratorService
-	domainValidationSvc   services.DomainValidationService    // Domain-centric DNS validation
+	dnsService            services.DNSCampaignService         // DNS validation service
 	httpKeywordSvc        services.HTTPKeywordCampaignService // Domain-centric HTTP validation
 	campaignStore         store.CampaignStore // Direct access needed for pattern offset queries
 	broadcaster           websocket.Broadcaster  // WebSocket broadcaster for real-time updates
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
-func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService, domainValidationSvc services.DomainValidationService, httpKeywordSvc services.HTTPKeywordCampaignService, campaignStore store.CampaignStore, broadcaster websocket.Broadcaster) *CampaignOrchestratorAPIHandler {
+func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestratorService, dnsService services.DNSCampaignService, httpKeywordSvc services.HTTPKeywordCampaignService, campaignStore store.CampaignStore, broadcaster websocket.Broadcaster) *CampaignOrchestratorAPIHandler {
 	return &CampaignOrchestratorAPIHandler{
 		orchestratorService: orchService,
-		domainValidationSvc: domainValidationSvc,
+		dnsService:          dnsService,
 		httpKeywordSvc:      httpKeywordSvc,
 		campaignStore:       campaignStore,
 		broadcaster:         broadcaster,
@@ -170,6 +171,15 @@ func (h *CampaignOrchestratorAPIHandler) validateCampaignRequest(req services.Cr
 		if req.DomainGenerationParams != nil || req.HttpKeywordParams != nil {
 			return fmt.Errorf("only dnsValidationParams should be provided for dns_validation campaigns")
 		}
+		// Validate dual-path strategy: exactly one source must be specified
+		hasSourceGen := req.DnsValidationParams.SourceGenerationCampaignID != nil
+		hasSourceCampaign := req.DnsValidationParams.SourceCampaignID != nil
+		if !hasSourceGen && !hasSourceCampaign {
+			return fmt.Errorf("dnsValidationParams must specify either sourceGenerationCampaignId (for phased validation) or sourceCampaignId (for standalone validation)")
+		}
+		if hasSourceGen && hasSourceCampaign {
+			return fmt.Errorf("dnsValidationParams cannot specify both sourceGenerationCampaignId and sourceCampaignId - choose one validation type")
+		}
 	case "http_keyword_validation":
 		if req.HttpKeywordParams == nil {
 			return fmt.Errorf("httpKeywordParams required for http_keyword_validation campaigns")
@@ -241,6 +251,35 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 						Message: err.Error(),
 						Context: map[string]interface{}{
 							"campaign_id": campaignID,
+						},
+					},
+				})
+		} else if strings.Contains(err.Error(), "cannot transition to DNS validation") ||
+			strings.Contains(err.Error(), "must be completed") ||
+			strings.Contains(err.Error(), "personaIds required for DNS validation") {
+			// Handle phase transition validation errors
+			respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+				"Phase transition validation failed", []ErrorDetail{
+					{
+						Code:    ErrorCodeValidation,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+							"error_type": "phase_transition",
+						},
+					},
+				})
+		} else if strings.Contains(err.Error(), "campaign type transition") ||
+			strings.Contains(err.Error(), "is not supported") {
+			// Handle unsupported phase transition errors
+			respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+				"Unsupported campaign type transition", []ErrorDetail{
+					{
+						Code:    ErrorCodeValidation,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+							"error_type": "unsupported_transition",
 						},
 					},
 				})
@@ -610,35 +649,115 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 		return
 	}
 
-	log.Printf("INFO [DNS Validation]: Starting domain-centric DNS validation for campaign %s", campaignID)
+	log.Printf("[DNS_VALIDATION_TRIGGER] Starting validateDNSForCampaign handler for campaign %s", campaignID)
 
-	// For now, we'll need to provide persona IDs. In a production system, these could be:
-	// 1. Retrieved from campaign configuration if it was a DNS validation campaign
-	// 2. Retrieved from system defaults
-	// 3. Made configurable via request body
-	// For this fix, we'll use an empty slice to let the service handle defaults
+	// Handle optional request body for persona configuration
 	var req services.DNSValidationRequest
+	
+	// Try to bind JSON for optional request parameters (for backward compatibility)
 	if err := c.ShouldBindJSON(&req); err != nil {
-		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
-			"Invalid request body for DNS validation", []ErrorDetail{
+		log.Printf("INFO [DNS Validation]: No request body provided for campaign %s, will use stored campaign configuration", campaignID)
+	}
+
+	log.Printf("INFO [DNS Validation]: Processing in-place DNS validation request for campaign %s", campaignID)
+
+	// Get the source campaign for DNS validation
+	sourceCampaign, _, err := h.orchestratorService.GetCampaignDetails(c.Request.Context(), campaignID)
+	if err != nil {
+		log.Printf("ERROR [DNS Validation]: Failed to get source campaign %s: %v", campaignID, err)
+		respondWithDetailedErrorGin(c, http.StatusNotFound, ErrorCodeNotFound,
+			"Source campaign not found", []ErrorDetail{
 				{
-					Field:   "body",
-					Code:    ErrorCodeValidation,
-					Message: err.Error(),
+					Code:    ErrorCodeNotFound,
+					Message: "The specified campaign could not be found or you do not have permission to access it",
+					Context: map[string]interface{}{
+						"campaign_id": campaignID,
+					},
 				},
 			})
 		return
 	}
 
-	// Use the domain-centric validation service to validate all domains for this campaign
-	if err := h.domainValidationSvc.StartDNSValidation(c.Request.Context(), campaignID, req.PersonaIDs); err != nil {
-		log.Printf("ERROR [DNS Validation]: Failed to start DNS validation for campaign %s: %v", campaignIDStr, err)
+	// Validate the source campaign can be used for DNS validation
+	if sourceCampaign.CampaignType != models.CampaignTypeDomainGeneration && sourceCampaign.CampaignType != models.CampaignTypeDNSValidation {
+		log.Printf("ERROR [DNS Validation]: Invalid campaign type for DNS validation. Expected domain_generation or dns_validation, got %s", sourceCampaign.CampaignType)
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid campaign type for DNS validation", []ErrorDetail{
+				{
+					Code:    ErrorCodeValidation,
+					Message: "DNS validation can only be performed on domain generation or DNS validation campaigns",
+					Context: map[string]interface{}{
+						"campaign_id":     campaignID,
+						"campaign_type": sourceCampaign.CampaignType,
+					},
+				},
+			})
+		return
+	}
+
+	if sourceCampaign.Status != models.CampaignStatusCompleted && sourceCampaign.Status != models.CampaignStatusRunning {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Campaign must be completed or running", []ErrorDetail{
+				{
+					Code:    ErrorCodeValidation,
+					Message: "Source campaign must be completed or running before in-place DNS validation can be performed",
+					Context: map[string]interface{}{
+						"campaign_id":     campaignID,
+						"campaign_status": sourceCampaign.Status,
+					},
+				},
+			})
+		return
+	}
+
+	// Create in-place DNS validation request
+	inPlaceRequest := services.InPlaceDNSValidationRequest{
+		CampaignID:              campaignID,
+		PersonaIDs:              req.PersonaIDs, // These may be empty - the service will read from campaign config
+		RotationIntervalSeconds: 30,
+		ProcessingSpeedPerMinute: 60,
+		BatchSize:               10,
+		RetryAttempts:           3,
+		OnlyInvalidDomains:      true, // For re-validation, only process invalid domains
+	}
+
+	// Use override parameters if provided in the request
+	if req.RotationIntervalSeconds != nil {
+		inPlaceRequest.RotationIntervalSeconds = *req.RotationIntervalSeconds
+	}
+	if req.ProcessingSpeedPerMinute != nil {
+		inPlaceRequest.ProcessingSpeedPerMinute = *req.ProcessingSpeedPerMinute
+	}
+	if req.BatchSize != nil {
+		inPlaceRequest.BatchSize = *req.BatchSize
+	}
+	if req.RetryAttempts != nil {
+		inPlaceRequest.RetryAttempts = *req.RetryAttempts
+	}
+
+	// Start in-place DNS validation using the DNS campaign service
+	err = h.dnsService.StartInPlaceDNSValidation(c.Request.Context(), inPlaceRequest)
+	if err != nil {
+		log.Printf("ERROR [DNS Validation]: Failed to start in-place DNS validation for campaign %s: %v", campaignID, err)
 
 		// Handle different error types
 		if err.Error() == "record not found" || err.Error() == "campaign not found" {
 			respondWithDetailedErrorGin(c, http.StatusNotFound, ErrorCodeNotFound,
-				"Campaign not found", nil)
-		} else if err.Error() == "no domains found for campaign" {
+				"Source campaign not found", nil)
+		} else if strings.Contains(err.Error(), "no DNS personas found") {
+			respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+				"DNS personas required", []ErrorDetail{
+					{
+						Code:    ErrorCodeValidation,
+						Message: err.Error(),
+						Context: map[string]interface{}{
+							"campaign_id": campaignID,
+							"required_field": "personaIds",
+							"help": "DNS personas define the validation profiles used for domain checking. Please configure DNS personas in the validation panel and try again.",
+						},
+					},
+				})
+		} else if strings.Contains(err.Error(), "no domains found") {
 			respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
 				"No domains found for DNS validation", []ErrorDetail{
 					{
@@ -651,7 +770,7 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 				})
 		} else {
 			respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
-				"Failed to start DNS validation", []ErrorDetail{
+				"Failed to start in-place DNS validation", []ErrorDetail{
 					{
 						Code:    ErrorCodeInternalServer,
 						Message: err.Error(),
@@ -664,12 +783,13 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 		return
 	}
 
-	log.Printf("SUCCESS [DNS Validation]: DNS validation started successfully for campaign %s", campaignID)
+	log.Printf("SUCCESS [DNS Validation]: In-place DNS validation started successfully for campaign %s", campaignID)
 
 	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
-		"message":     "DNS validation started successfully",
-		"campaign_id": campaignID,
-		"status":      "validation_in_progress",
+		"message":               "In-place DNS validation started successfully",
+		"campaign_id":           campaignID,
+		"validation_mode":       "in_place",
+		"status":                "validation_in_progress",
 	})
 }
 

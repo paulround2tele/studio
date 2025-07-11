@@ -62,6 +62,7 @@ type CampaignStore interface {
 	CreateDNSValidationResults(ctx context.Context, exec Querier, results []*models.DNSValidationResult) error
 	GetDNSValidationResultsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, filter ListValidationResultsFilter) ([]*models.DNSValidationResult, error)
 	CountDNSValidationResults(ctx context.Context, exec Querier, campaignID uuid.UUID, onlyValid bool) (int64, error)
+	DeleteDNSValidationResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (int64, error)
 	GetDomainsForDNSValidation(ctx context.Context, exec Querier, dnsCampaignID uuid.UUID, sourceGenerationCampaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error)
 
 	CreateHTTPKeywordParams(ctx context.Context, exec Querier, params *models.HTTPKeywordCampaignParams) error

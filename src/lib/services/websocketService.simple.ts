@@ -245,7 +245,9 @@ class WebSocketServiceImpl {
               this.sendMessage(channel, {
                 type: 'subscribe_campaign',
                 campaignId,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                // Backend expects uppercase CampaignID field
+                ...({ CampaignID: campaignId } as any)
               });
             } else if (channel === 'all-campaigns') {
               // All campaigns subscription

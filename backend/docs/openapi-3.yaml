@@ -2146,6 +2146,13 @@ components:
                     description: Batch size for processing
                     minimum: 1
                     type: integer
+                campaignType:
+                    description: Campaign type for phase transitions
+                    enum:
+                        - domain_generation
+                        - dns_validation
+                        - http_keyword_validation
+                    type: string
                 keywordSetIds:
                     description: Keyword set IDs
                     items:

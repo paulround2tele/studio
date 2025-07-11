@@ -8,6 +8,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **adHocKeywords** | **Array&lt;string&gt;** | Ad-hoc keywords | [optional] [default to undefined]
 **batchSize** | **number** | Batch size for processing | [optional] [default to undefined]
+**campaignType** | **string** | Campaign type for phase transitions | [optional] [default to undefined]
 **keywordSetIds** | **Array&lt;string&gt;** | Keyword set IDs | [optional] [default to undefined]
 **name** | **string** | Campaign name | [optional] [default to undefined]
 **personaIds** | **Array&lt;string&gt;** | Persona IDs | [optional] [default to undefined]
@@ -25,6 +26,7 @@ import { UpdateCampaignRequest } from './api';
 const instance: UpdateCampaignRequest = {
     adHocKeywords,
     batchSize,
+    campaignType,
     keywordSetIds,
     name,
     personaIds,

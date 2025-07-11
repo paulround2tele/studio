@@ -2409,6 +2409,11 @@ export interface components {
             adHocKeywords?: string[];
             /** @description Batch size for processing */
             batchSize?: number;
+            /**
+             * @description Campaign type for phase transitions
+             * @enum {string}
+             */
+            campaignType?: "domain_generation" | "dns_validation" | "http_keyword_validation";
             /** @description Keyword set IDs */
             keywordSetIds?: string[];
             /** @description Campaign name */

@@ -201,16 +201,16 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         }
         console.log('[DEBUG] UUID validation passed');
 
-        // ✅ ORCHESTRATION FIX: Prepare DNS validation parameters (no campaign type change)
+        // ✅ PHASE TRANSITION: Use UpdateCampaign with campaignType for proper phase transition
         updatePayload = {
-          // DO NOT include campaignType - we're not changing the campaign type
+          campaignType: 'dns_validation',
           personaIds: [data.assignedDnsPersonaId],
           rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
           processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
           batchSize: Number(data.batchSize),
           retryAttempts: Number(data.retryAttempts),
         };
-        console.log('[DEBUG] Built DNS validation params (no type change):', updatePayload);
+        console.log('[DEBUG] Built DNS validation params with phase transition:', updatePayload);
       } else if (phaseType === 'http_keyword_validation') {
         console.log('[DEBUG] Processing HTTP keyword validation phase');
         // Validate required HTTP fields
@@ -252,9 +252,9 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
           return;
         }
 
-        // ✅ ORCHESTRATION FIX: Prepare HTTP validation parameters (no campaign type change)
+        // ✅ PHASE TRANSITION: Use UpdateCampaign with campaignType for proper phase transition
         updatePayload = {
-          // DO NOT include campaignType - we're not changing the campaign type
+          campaignType: 'http_keyword_validation',
           adHocKeywords: adHocKeywords,
           personaIds: [data.assignedHttpPersonaId],
           proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER)
@@ -266,101 +266,59 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
           retryAttempts: Number(data.retryAttempts),
           targetHttpPorts: data.targetHttpPorts,
         };
-        console.log('[DEBUG] Built HTTP validation params (no type change):', updatePayload);
+        console.log('[DEBUG] Built HTTP validation params with phase transition:', updatePayload);
       } else {
         console.log('[DEBUG] Unsupported phase type:', phaseType);
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 
-      // ✅ FIX: Use proper API endpoint for phase transitions
-      if (phaseType === 'dns_validation') {
-        // For DNS validation phase transition, use the validateDNS endpoint
-        console.log('[DEBUG] Using validateDNSForCampaign endpoint for phase transition');
-        console.log('[DEBUG] Campaign ID:', sourceCampaign.id);
-        console.log('[DEBUG] DNS Persona ID:', updatePayload.personaIds?.[0]);
+      // ✅ PHASE TRANSITION: Use UpdateCampaign for all phase transitions
+      console.log('[DEBUG] Using UpdateCampaign for phase transition:', phaseType);
+      console.log('[DEBUG] Campaign ID:', sourceCampaign.id);
+      console.log('[DEBUG] Update payload:', updatePayload);
+      
+      const updateResult = await campaignService.updateCampaign(sourceCampaign.id, updatePayload as any);
+      console.log('[DEBUG] campaignService.updateCampaign returned:', updateResult);
+      
+      if (updateResult.status === 'error') {
+        console.log('[DEBUG] Update result indicates error:', updateResult.message);
+        throw new Error(updateResult.message || 'Failed to update campaign for phase transition');
+      }
+      
+      const updatedCampaign = updateResult.data;
+      console.log('[DEBUG] Updated campaign data:', updatedCampaign);
+
+      if (updatedCampaign && (updatedCampaign.id || sourceCampaign.id)) {
+        const campaignId = updatedCampaign.id || sourceCampaign.id;
+        console.log('[DEBUG] Success! Campaign ID:', campaignId);
         
-        // First, update the campaign with DNS validation parameters
-        const dnsUpdatePayload = {
-          personaIds: updatePayload.personaIds,
-          rotationIntervalSeconds: updatePayload.rotationIntervalSeconds,
-          processingSpeedPerMinute: updatePayload.processingSpeedPerMinute,
-          batchSize: updatePayload.batchSize,
-          retryAttempts: updatePayload.retryAttempts,
+        const phaseDisplayNames = {
+          'dns_validation': 'DNS Validation',
+          'http_keyword_validation': 'HTTP Keyword Validation'
         };
         
-        console.log('[DEBUG] Updating campaign with DNS params:', dnsUpdatePayload);
-        const paramUpdateResult = await campaignService.updateCampaign(sourceCampaign.id, dnsUpdatePayload as any);
-        
-        if (paramUpdateResult.status === 'error') {
-          console.log('[DEBUG] Failed to update DNS params:', paramUpdateResult.message);
-          throw new Error(paramUpdateResult.message || 'Failed to update DNS validation parameters');
-        }
-        
-        // Then trigger DNS validation on the existing campaign
-        console.log('[DEBUG] Triggering DNS validation on campaign:', sourceCampaign.id);
-        const validationResult = await campaignService.validateDNSForCampaign(sourceCampaign.id);
-        console.log('[DEBUG] DNS validation result:', validationResult);
-        
-        if (validationResult.status === 'error') {
-          console.log('[DEBUG] DNS validation failed:', validationResult.message);
-          throw new Error(validationResult.message || 'Failed to start DNS validation');
-        }
-        
         toast({
-          title: "DNS Validation Started Successfully",
-          description: `DNS validation has been triggered on the existing campaign.`,
+          title: `${phaseDisplayNames[phaseType]} Started Successfully`,
+          description: `${phaseDisplayNames[phaseType]} phase has been configured and started on the existing campaign.`,
           variant: "default"
         });
-        
+
+        // Start the campaign for the new phase using the service layer
+        try {
+          console.log('[DEBUG] Starting campaign...');
+          await campaignService.startCampaign(campaignId);
+          console.log('[DEBUG] Campaign started successfully');
+        } catch (e) {
+          console.log('[DEBUG] Campaign start warning:', e);
+          console.warn('Campaign may have auto-started:', e);
+        }
+
         // Close panel and notify parent with the same campaign ID
-        console.log('[DEBUG] DNS validation started, closing panel');
+        console.log('[DEBUG] Closing panel and notifying parent');
         onClose();
-        onPhaseStarted(sourceCampaign.id);
-        
-      } else if (phaseType === 'http_keyword_validation') {
-        // For HTTP validation, we still need to update the campaign
-        // This will be handled similarly in the future
-        console.log('[DEBUG] HTTP validation phase - using update approach for now');
-        
-        const updateResult = await campaignService.updateCampaign(sourceCampaign.id, updatePayload as any);
-        console.log('[DEBUG] campaignService.updateCampaign returned:', updateResult);
-        
-        if (updateResult.status === 'error') {
-          console.log('[DEBUG] Update result indicates error:', updateResult.message);
-          throw new Error(updateResult.message || 'Failed to update campaign');
-        }
-        
-        const updatedCampaign = updateResult.data;
-        console.log('[DEBUG] Updated campaign data:', updatedCampaign);
-
-        if (updatedCampaign && (updatedCampaign.id || sourceCampaign.id)) {
-          const campaignId = updatedCampaign.id || sourceCampaign.id;
-          console.log('[DEBUG] Success! Campaign ID:', campaignId);
-          
-          toast({
-            title: "HTTP Validation Configured Successfully",
-            description: `${phaseDisplayNames[phaseType]} has been configured on the existing campaign.`,
-            variant: "default"
-          });
-
-          // Start the campaign for the new phase using the service layer
-          try {
-            console.log('[DEBUG] Starting campaign...');
-            await campaignService.startCampaign(campaignId);
-            console.log('[DEBUG] Campaign started successfully');
-          } catch (e) {
-            console.log('[DEBUG] Campaign start warning:', e);
-            console.warn('Campaign may have auto-started:', e);
-          }
-
-          // Close panel and notify parent with the same campaign ID
-          console.log('[DEBUG] Closing panel and notifying parent');
-          onClose();
-          onPhaseStarted(campaignId);
-        } else {
-          console.log('[DEBUG] No valid campaign ID found in result');
-          throw new Error("Failed to update campaign for HTTP validation");
-        }
+        onPhaseStarted(campaignId);
+        console.log('[DEBUG] No valid campaign ID found in result');
+        throw new Error("Failed to update campaign for phase transition");
       }
     } catch (error: unknown) {
       console.log('[DEBUG] Exception caught in onSubmit:', error);

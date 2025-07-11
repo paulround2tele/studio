@@ -22,6 +22,9 @@ export interface StreamingMessage {
   campaignId?: string;
   messageId?: string;
   sequenceNumber?: number;
+  // DNS validation phase transition fields
+  phase?: string;
+  status?: string;
 }
 
 export interface DomainGenerationPayload {
@@ -243,9 +246,59 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       if (message.type === 'campaign_progress' && message.data) {
         const payload = message.data as {
           campaignId: string;
+          progress?: number;
+          progressPercentage?: number;
+        };
+        const state = get();
+        if (state.campaign && payload.campaignId === state.campaign.id) {
+          const progress = payload.progress || payload.progressPercentage || 0;
+          
+          // CRITICAL FIX: Phase and status are at message level, not data level
+          const messagePhase = (message as any).phase;
+          const messageStatus = (message as any).status;
+          
+          console.log(`🔧 [STORE_UPDATE] Processing campaign_progress message:`, {
+            messagePhase,
+            messageStatus,
+            currentCampaignPhase: state.campaign.currentPhase,
+            currentCampaignStatus: state.campaign.status,
+            willUpdatePhase: !!messagePhase,
+            willUpdateStatus: !!messageStatus
+          });
+          
+          const updatedCampaign = {
+            ...state.campaign,
+            progress: progress,
+            progressPercentage: progress, // CRITICAL: Keep both progress fields in sync
+            processedItems: Math.floor((progress / 100) * (state.campaign.totalItems || 0)), // Calculate from progress
+            currentPhase: messagePhase ? messagePhase as any : state.campaign.currentPhase,
+            phaseStatus: messageStatus ? messageStatus as any : state.campaign.phaseStatus,
+            // CRITICAL: Update status during phase transitions
+            status: messageStatus === 'running' ? 'running' :
+                   messageStatus === 'completed' ? 'completed' :
+                   state.campaign.status
+          };
+          
+          console.log(`🔧 [STORE_UPDATE] Updated campaign state:`, {
+            oldPhase: state.campaign.currentPhase,
+            newPhase: updatedCampaign.currentPhase,
+            oldStatus: state.campaign.status,
+            newStatus: updatedCampaign.status
+          });
+          
+          set({ campaign: updatedCampaign });
+        }
+      }
+
+      // Handle validation progress updates (DNS, HTTP, etc.)
+      if (message.type === 'validation_progress' && message.data) {
+        const payload = message.data as {
+          campaignId: string;
           progress: number;
-          phase?: string;
-          status?: string;
+          validationsProcessed: number;
+          totalValidations: number;
+          validationType: string;
+          phase: string;
         };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
@@ -253,10 +306,12 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
             campaign: {
               ...state.campaign,
               progress: payload.progress,
-              progressPercentage: payload.progress, // CRITICAL: Keep both progress fields in sync
-              processedItems: Math.floor((payload.progress / 100) * (state.campaign.totalItems || 0)), // Calculate from progress
-              currentPhase: payload.phase ? payload.phase as any : state.campaign.currentPhase,
-              phaseStatus: payload.status ? payload.status as any : state.campaign.phaseStatus
+              progressPercentage: payload.progress,
+              processedItems: payload.validationsProcessed,
+              totalItems: payload.totalValidations,
+              currentPhase: payload.phase as any,
+              phaseStatus: 'InProgress' as any,
+              status: 'running' as CampaignStatus
             }
           });
         }

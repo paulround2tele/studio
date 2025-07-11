@@ -279,6 +279,11 @@ func (s *campaignStorePostgres) CountCampaigns(ctx context.Context, exec store.Q
 }
 
 func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec store.Querier, id uuid.UUID, status models.CampaignStatusEnum, errorMessage sql.NullString) error {
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+	
 	query := `UPDATE campaigns SET status = $1, error_message = $2, updated_at = NOW() WHERE id = $3`
 	result, err := exec.ExecContext(ctx, query, status, errorMessage, id)
 	if err != nil {
@@ -450,6 +455,11 @@ func (s *campaignStorePostgres) CountGeneratedDomainsByCampaign(ctx context.Cont
 // --- DNS Validation Campaign Params --- //
 
 func (s *campaignStorePostgres) CreateDNSValidationParams(ctx context.Context, exec store.Querier, params *models.DNSValidationCampaignParams) error {
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+	
 	query := `INSERT INTO dns_validation_params
 	               (campaign_id, source_generation_campaign_id, persona_ids, rotation_interval_seconds, processing_speed_per_minute, batch_size, retry_attempts, metadata)
 	             VALUES (:campaign_id, :source_generation_campaign_id, :persona_ids, :rotation_interval_seconds, :processing_speed_per_minute, :batch_size, :retry_attempts, :metadata)`
@@ -553,6 +563,19 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 		}
 	}
 	return nil
+}
+
+func (s *campaignStorePostgres) DeleteDNSValidationResults(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
+	query := `DELETE FROM dns_validation_results WHERE dns_campaign_id = $1`
+	result, err := exec.ExecContext(ctx, query, campaignID)
+	if err != nil {
+		return 0, err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return rowsAffected, nil
 }
 
 func (s *campaignStorePostgres) GetDNSValidationResultsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, filter store.ListValidationResultsFilter) ([]*models.DNSValidationResult, error) {

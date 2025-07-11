@@ -50,7 +50,7 @@ const { status, data } = await apiInstance.createProxy(
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -104,7 +104,7 @@ void (empty response body)
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -160,7 +160,7 @@ const { status, data } = await apiInstance.forceCheckAllProxies(
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -214,7 +214,7 @@ const { status, data } = await apiInstance.forceCheckSingleProxy(
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -262,7 +262,7 @@ This endpoint does not have any parameters.
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -327,7 +327,7 @@ const { status, data } = await apiInstance.listProxies(
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -380,7 +380,7 @@ const { status, data } = await apiInstance.testProxy(
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 
@@ -439,7 +439,7 @@ const { status, data } = await apiInstance.updateProxy(
 
 ### Authorization
 
-No authorization required
+[sessionAuth](../README.md#sessionAuth)
 
 ### HTTP request headers
 

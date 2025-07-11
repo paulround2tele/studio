@@ -326,6 +326,7 @@ class CampaignService {
     }
   }
 
+
   // Campaign Results
   async getGeneratedDomains(
     campaignId: string,
@@ -333,9 +334,16 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting generated domains for campaign:', campaignId, options);
-      // TODO: These results methods need to be implemented with correct API client
-      // const response = await campaignsApi.campaignsCampaignIdResultsGeneratedDomainsGet(campaignId, options?.limit, options?.cursor);
-      throw new Error('getGeneratedDomains method needs to be implemented with correct API client');
+      const response = await campaignsApi.getGeneratedDomains(campaignId, options?.limit, options?.cursor);
+      
+      // Extract data from AxiosResponse
+      const result = 'data' in response ? response.data : response;
+      
+      return {
+        status: 'success',
+        data: Array.isArray(result) ? result : (result as any)?.domains || [],
+        message: 'Generated domains retrieved successfully'
+      };
     } catch (error) {
       console.error('[CampaignService] Failed to get generated domains:', error);
       return {
@@ -352,9 +360,16 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting DNS validation results for campaign:', campaignId, options);
-      // TODO: These results methods need to be implemented with correct API client
-      // const response = await campaignsApi.campaignsCampaignIdResultsDnsValidationGet(campaignId, options?.limit, options?.cursor);
-      throw new Error('getDnsValidationResults method needs to be implemented with correct API client');
+      const response = await campaignsApi.getDNSValidationResults(campaignId, options?.limit, options?.cursor);
+      
+      // Extract data from AxiosResponse
+      const result = 'data' in response ? response.data : response;
+      
+      return {
+        status: 'success',
+        data: Array.isArray(result) ? result : (result as any)?.results || [],
+        message: 'DNS validation results retrieved successfully'
+      };
     } catch (error) {
       console.error('[CampaignService] Failed to get DNS validation results:', error);
       return {

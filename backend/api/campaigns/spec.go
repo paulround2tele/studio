@@ -1634,6 +1634,15 @@ func addCampaignSchemas(spec *openapi3.T) {
 						Description: "Campaign name",
 					},
 				},
+				"campaignType": {
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+						Enum: []interface{}{
+							"domain_generation", "dns_validation", "http_keyword_validation",
+						},
+						Description: "Campaign type for phase transitions",
+					},
+				},
 				"status": {
 					Value: &openapi3.Schema{
 						Type:        &openapi3.Types{"string"},

@@ -91,7 +91,10 @@ export const useCampaignOperations = (campaignId: string) => {
         httpCampaignItems?: CampaignValidationItem[];
       } = {};
 
-      if (campaignData.campaignType === 'domain_generation') {
+      // 🔧 CRITICAL FIX: Check currentPhase for DNS validation transition
+      const isDNSValidationPhase = (campaignData as any).currentPhase === 'dns_validation';
+      
+      if (campaignData.campaignType === 'domain_generation' && !isDNSValidationPhase) {
         console.log('📡 [Domain Loading] Fetching generated domains...');
         const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId, 1000, 0);
         console.log('📡 [Domain Loading] Raw API response:', domainsResponse);
@@ -105,7 +108,7 @@ export const useCampaignOperations = (campaignId: string) => {
         });
       }
 
-      if (campaignData.campaignType === 'dns_validation') {
+      if (campaignData.campaignType === 'dns_validation' || isDNSValidationPhase) {
         console.log('📡 [Domain Loading] Fetching DNS validation items...');
         const dnsResponse = await campaignsApi.getDNSValidationResults(campaignId, 1000, '0');
         const dnsItems = Array.isArray(dnsResponse?.data) ? dnsResponse.data : [];

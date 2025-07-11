@@ -24,7 +24,8 @@ import {
   useStreamingStats,
   useTableState,
   useActionLoading,
-  useCampaignDetailsActions
+  useCampaignDetailsActions,
+  useCampaignDetailsStore
 } from '@/lib/stores/campaignDetailsStore';
 import { websocketService } from '@/lib/services/websocketService.simple';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
@@ -52,12 +53,14 @@ export default function RefactoredCampaignDetailsPage() {
   const { filters, pagination } = useTableState();
   const actionLoading = useActionLoading();
 
-  // 🔧 CRITICAL FIX: Use stable store actions to prevent infinite loops
+  // 🔧 CRITICAL FIX: Access store functions directly without subscriptions
+  const updateFromWebSocket = useCampaignDetailsStore(state => state.updateFromWebSocket);
+  const updateStreamingStats = useCampaignDetailsStore(state => state.updateStreamingStats);
+  
+  // Keep other actions from the hook for compatibility
   const {
     updateFilters,
     updatePagination,
-    updateFromWebSocket,
-    updateStreamingStats,
     reset
   } = useCampaignDetailsActions();
 
@@ -97,21 +100,66 @@ export default function RefactoredCampaignDetailsPage() {
     loadCampaignData(true);
   }, [campaignId, reset, loadCampaignData]);
 
-  // 🔧 CRITICAL FIX: Stable WebSocket connection management with progress-based disconnection
+  // 🔧 CRITICAL FIX: WebSocket connection for post-completion activities (DNS validation)
   const webSocketConditions = useMemo(() => {
-    const isActiveStatus = campaign && ['pending', 'queued', 'running'].includes(campaign.status || '');
-    const isNearCompletion = campaign && (campaign.progress || 0) >= 95; // Disconnect when 95%+ to prevent instability
-    const shouldConnect = !!(campaign &&
-      campaign.campaignType === 'domain_generation' &&
-      isActiveStatus &&
-      !isNearCompletion); // Prevent connection issues when campaign is almost done
+    console.log(`🔍 [DEBUG] WebSocket conditions check:`, {
+      campaign: campaign?.id,
+      campaignType: campaign?.campaignType,
+      status: campaign?.status,
+      progress: campaign?.progress
+    });
+    
+    if (!campaign) {
+      console.log(`⏳ [DEBUG] WebSocket WAITING - Campaign data not loaded yet`);
+      return {
+        shouldConnect: false,
+        campaignId: undefined,
+        campaignType: undefined,
+        status: undefined,
+        progress: 0
+      };
+    }
+    
+    if (campaign.campaignType !== 'domain_generation') {
+      console.log(`❌ [DEBUG] WebSocket DISCONNECTED - Campaign type is not domain_generation:`, campaign.campaignType);
+      return {
+        shouldConnect: false,
+        campaignId: campaign.id,
+        campaignType: campaign.campaignType,
+        status: campaign.status,
+        progress: campaign.progress || 0
+      };
+    }
+
+    // Active statuses that definitely need WebSocket connection
+    const isActiveStatus = ['pending', 'queued', 'running'].includes(campaign.status || '');
+    
+    // For domain generation campaigns, also connect for "completed" status to receive DNS validation updates
+    const isCompletedDomainGeneration = campaign.status === 'completed';
+    
+    // CRITICAL: Also connect when DNS validation is active (currentPhase = dns_validation)
+    const isDNSValidationActive = campaign.currentPhase === 'dns_validation' ||
+                                  campaign.currentPhase === 'DNSValidation';
+    
+    // Connect if active OR if it's a completed domain generation campaign (for DNS validation)
+    // OR if DNS validation phase is active
+    const shouldConnect = !!(campaign && (isActiveStatus || isCompletedDomainGeneration || isDNSValidationActive));
+      
+    console.log(`🔌 [DEBUG] WebSocket connection decision:`, {
+      isActiveStatus,
+      isCompletedDomainGeneration,
+      isDNSValidationActive,
+      currentPhase: campaign.currentPhase,
+      shouldConnect
+    });
       
     return {
       shouldConnect,
       campaignId: campaign?.id,
       campaignType: campaign?.campaignType,
       status: campaign?.status,
-      progress: campaign?.progress || 0
+      progress: campaign?.progress || 0,
+      currentPhase: campaign?.currentPhase
     };
   }, [campaign]);
 
@@ -136,6 +184,26 @@ export default function RefactoredCampaignDetailsPage() {
         const cleanup = websocketService.connect(`campaign-${campaignId}`, {
           onMessage: (message: any) => {
             // Route messages based on type
+            console.log(`🔍 [WEBSOCKET_DEBUG] Message received:`, {
+              type: message.type,
+              campaignId: message.campaignId,
+              data: message.data,
+              phase: message.data?.phase,
+              status: message.data?.status,
+              progress: message.data?.progressPercentage || message.data?.progress,
+              timestamp: message.timestamp,
+              fullMessage: message
+            });
+            
+            // CRITICAL: Log specifically for DNS validation
+            if (message.type === 'campaign_progress' && message.data?.phase === 'dns_validation') {
+              console.log(`🎯 [DNS_VALIDATION_WEBSOCKET] DNS validation progress message detected!`, message);
+            }
+            
+            if (message.data?.status === 'completed' && message.data?.phase === 'dns_validation') {
+              console.log(`✅ [DNS_VALIDATION_COMPLETE] DNS validation completed message detected!`, message);
+            }
+            
             switch (message.type) {
               case 'domain_generated':
               case 'domain.generated':
@@ -151,8 +219,23 @@ export default function RefactoredCampaignDetailsPage() {
               case 'campaign_progress':
               case 'campaign.progress':
               case 'domain_generation_progress':
+                // CRITICAL FIX: Forward phase and status from message level to store
                 updateFromWebSocket({
                   type: 'campaign_progress',
+                  data: message.data,
+                  timestamp: message.timestamp || new Date().toISOString(),
+                  campaignId: message.campaignId || campaignId,
+                  // Forward phase and status from message level
+                  phase: (message as any).phase,
+                  status: (message as any).status,
+                });
+                break;
+                
+              case 'validation_progress':
+                // CRITICAL: Handle DNS/HTTP validation progress messages
+                console.log(`🧬 [VALIDATION_PROGRESS] Validation progress message:`, message);
+                updateFromWebSocket({
+                  type: 'validation_progress',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
                   campaignId: message.campaignId || campaignId,

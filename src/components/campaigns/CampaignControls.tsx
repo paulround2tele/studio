@@ -212,9 +212,12 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
     
     // Campaign running - show progress text
     if (campaign.status === "running") {
-      const currentPhaseName = campaign.campaignType
-        ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType)
-        : 'Unknown Phase';
+      // CRITICAL: Use currentPhase instead of campaignType to show the actual running phase
+      const currentPhaseName = campaign.currentPhase
+        ? (phaseDisplayNames[campaign.currentPhase] || campaign.currentPhase)
+        : campaign.campaignType
+          ? (phaseDisplayNames[campaign.campaignType] || campaign.campaignType)
+          : 'Unknown Phase';
       
       const progressText = campaign.progressPercentage ? `(${campaign.progressPercentage}%)` : '';
       

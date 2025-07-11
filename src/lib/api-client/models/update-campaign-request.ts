@@ -33,6 +33,12 @@ export interface UpdateCampaignRequest {
      */
     'batchSize'?: number;
     /**
+     * Campaign type for phase transitions
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'campaignType'?: UpdateCampaignRequestCampaignTypeEnum;
+    /**
      * Keyword set IDs
      * @type {Array<string>}
      * @memberof UpdateCampaignRequest
@@ -81,6 +87,14 @@ export interface UpdateCampaignRequest {
      */
     'targetHttpPorts'?: Array<number>;
 }
+
+export const UpdateCampaignRequestCampaignTypeEnum = {
+    DomainGeneration: 'domain_generation',
+    DnsValidation: 'dns_validation',
+    HttpKeywordValidation: 'http_keyword_validation'
+} as const;
+
+export type UpdateCampaignRequestCampaignTypeEnum = typeof UpdateCampaignRequestCampaignTypeEnum[keyof typeof UpdateCampaignRequestCampaignTypeEnum];
 
 export const UpdateCampaignRequestStatusEnum = {
     Pending: 'pending',
