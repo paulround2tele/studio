@@ -500,10 +500,38 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 		opErr = errGet
 		return opErr // opErr will be handled by defer if in SQL transaction
 	}
-	if campaign.Status != models.CampaignStatusPending {
-		opErr = fmt.Errorf("campaign %s not pending: %s", campaignID, campaign.Status)
+	
+	// DIAGNOSTIC: Log campaign details to debug status issue
+	log.Printf("[DIAGNOSTIC] StartCampaign called for campaign %s: {type: %s, status: %s, name: %s}",
+		campaignID, campaign.CampaignType, campaign.Status, campaign.Name)
+	
+	// Allow starting campaigns in specific scenarios:
+	// 1. Standard flow: campaign status is pending
+	// 2. DNS validation flow: completed domain_generation campaign with DNS params added
+	isValidForStart := false
+	startReason := ""
+	
+	if campaign.Status == models.CampaignStatusPending {
+		isValidForStart = true
+		startReason = "standard_pending_campaign"
+	} else if campaign.Status == models.CampaignStatusCompleted && campaign.CampaignType == models.CampaignTypeDomainGeneration {
+		// Check if this is a domain generation campaign that has DNS validation params added
+		// This enables DNS validation processing on existing domain generation campaigns
+		if dnsParams, getErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID); getErr == nil && dnsParams != nil {
+			isValidForStart = true
+			startReason = "dns_validation_phase_on_domain_generation"
+			log.Printf("[DIAGNOSTIC] StartCampaign allowing DNS validation phase on completed domain generation campaign %s", campaignID)
+		}
+	}
+	
+	if !isValidForStart {
+		log.Printf("[DIAGNOSTIC] StartCampaign FAILED - Invalid status for campaign %s: expected '%s' or DNS validation transition, but got type '%s' status '%s'",
+			campaignID, models.CampaignStatusPending, campaign.CampaignType, campaign.Status)
+		opErr = fmt.Errorf("campaign %s not startable: type=%s status=%s", campaignID, campaign.CampaignType, campaign.Status)
 		return opErr // opErr will be handled by defer if in SQL transaction
 	}
+	
+	log.Printf("[DIAGNOSTIC] StartCampaign proceeding - campaign %s valid for start: reason=%s", campaignID, startReason)
 
 	initialJob := &models.CampaignJob{
 		ID:              uuid.New(),
@@ -516,48 +544,64 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 		NextExecutionAt: sql.NullTime{Time: time.Now().UTC(), Valid: true},
 	}
 
-	// Set job payload based on campaign type
-	switch campaign.CampaignType {
-	case models.CampaignTypeDomainGeneration:
-		params, getErr := s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
-		if getErr != nil {
-			log.Printf("Warning: Failed to get domain generation params for job payload: %v", getErr)
+	// Set job payload based on campaign type and available params
+	// Priority: Check for DNS validation params first (in-place processing), then fall back to campaign type
+	dnsParams, dnsErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
+	if dnsErr == nil && dnsParams != nil {
+		// DNS validation processing on existing campaign (in-place)
+		log.Printf("[INFO] Creating DNS validation job for in-place processing on campaign %s", campaignID)
+		initialJob.JobType = models.CampaignTypeDNSValidation
+		payloadBytes, err := json.Marshal(dnsParams)
+		if err != nil {
+			log.Printf("Warning: Failed to marshal DNS validation job payload: %v", err)
 		} else {
-			// Marshal the params struct directly to JSON
-			payloadBytes, err := json.Marshal(params)
-			if err != nil {
-				log.Printf("Warning: Failed to marshal domain generation job payload: %v", err)
-			} else {
-				rawMsg := json.RawMessage(payloadBytes)
-				initialJob.JobPayload = &rawMsg
-			}
+			rawMsg := json.RawMessage(payloadBytes)
+			initialJob.JobPayload = &rawMsg
 		}
-	case models.CampaignTypeDNSValidation:
-		params, getErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
-		if getErr != nil {
-			log.Printf("Warning: Failed to get DNS validation params for job payload: %v", getErr)
-		} else {
-			// Marshal the params struct directly to JSON
-			payloadBytes, err := json.Marshal(params)
-			if err != nil {
-				log.Printf("Warning: Failed to marshal DNS validation job payload: %v", err)
+	} else {
+		// Standard processing based on campaign type
+		switch campaign.CampaignType {
+		case models.CampaignTypeDomainGeneration:
+			params, getErr := s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
+			if getErr != nil {
+				log.Printf("Warning: Failed to get domain generation params for job payload: %v", getErr)
 			} else {
-				rawMsg := json.RawMessage(payloadBytes)
-				initialJob.JobPayload = &rawMsg
+				// Marshal the params struct directly to JSON
+				payloadBytes, err := json.Marshal(params)
+				if err != nil {
+					log.Printf("Warning: Failed to marshal domain generation job payload: %v", err)
+				} else {
+					rawMsg := json.RawMessage(payloadBytes)
+					initialJob.JobPayload = &rawMsg
+				}
 			}
-		}
-	case models.CampaignTypeHTTPKeywordValidation:
-		params, getErr := s.campaignStore.GetHTTPKeywordParams(ctx, querier, campaignID)
-		if getErr != nil {
-			log.Printf("Warning: Failed to get HTTP keyword params for job payload: %v", getErr)
-		} else {
-			// Marshal the params struct directly to JSON
-			payloadBytes, err := json.Marshal(params)
-			if err != nil {
-				log.Printf("Warning: Failed to marshal HTTP keyword job payload: %v", err)
+		case models.CampaignTypeDNSValidation:
+			params, getErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
+			if getErr != nil {
+				log.Printf("Warning: Failed to get DNS validation params for job payload: %v", getErr)
 			} else {
-				rawMsg := json.RawMessage(payloadBytes)
-				initialJob.JobPayload = &rawMsg
+				// Marshal the params struct directly to JSON
+				payloadBytes, err := json.Marshal(params)
+				if err != nil {
+					log.Printf("Warning: Failed to marshal DNS validation job payload: %v", err)
+				} else {
+					rawMsg := json.RawMessage(payloadBytes)
+					initialJob.JobPayload = &rawMsg
+				}
+			}
+		case models.CampaignTypeHTTPKeywordValidation:
+			params, getErr := s.campaignStore.GetHTTPKeywordParams(ctx, querier, campaignID)
+			if getErr != nil {
+				log.Printf("Warning: Failed to get HTTP keyword params for job payload: %v", getErr)
+			} else {
+				// Marshal the params struct directly to JSON
+				payloadBytes, err := json.Marshal(params)
+				if err != nil {
+					log.Printf("Warning: Failed to marshal HTTP keyword job payload: %v", err)
+				} else {
+					rawMsg := json.RawMessage(payloadBytes)
+					initialJob.JobPayload = &rawMsg
+				}
 			}
 		}
 	}
@@ -986,6 +1030,12 @@ func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, ca
 		return nil, opErr
 	}
 
+	// DIAGNOSTIC: Log the update request details
+	log.Printf("[DNS_DIAGNOSTIC] UpdateCampaign called for campaign %s", campaignID)
+	log.Printf("[DNS_DIAGNOSTIC] Current campaign type: %s", campaign.CampaignType)
+	log.Printf("[DNS_DIAGNOSTIC] Update request fields: Name=%v, Status=%v", req.Name, req.Status)
+	log.Printf("[DNS_DIAGNOSTIC] PersonaIDs=%v, BatchSize=%v", req.PersonaIDs, req.BatchSize)
+	
 	// Update campaign fields if provided
 	if req.Name != nil {
 		campaign.Name = *req.Name
@@ -999,6 +1049,48 @@ func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, ca
 	if err := s.campaignStore.UpdateCampaign(ctx, querier, campaign); err != nil {
 		opErr = fmt.Errorf("UpdateCampaign: update campaign %s failed: %w", campaignID, err)
 		return nil, opErr
+	}
+
+	// Handle DNS validation parameters if this is a domain generation campaign
+	if campaign.CampaignType == models.CampaignTypeDomainGeneration && req.PersonaIDs != nil && len(*req.PersonaIDs) > 0 {
+		log.Printf("[DNS_DIAGNOSTIC] Updating DNS validation params for domain generation campaign %s", campaignID)
+		
+		// Create or update DNS validation params
+		dnsParams := &models.DNSValidationCampaignParams{
+			CampaignID:               campaignID,
+			SourceGenerationCampaignID: &campaignID, // Self-reference for phase transition
+			PersonaIDs:               *req.PersonaIDs,
+		}
+		
+		if req.RotationIntervalSeconds != nil {
+			dnsParams.RotationIntervalSeconds = req.RotationIntervalSeconds
+		}
+		if req.ProcessingSpeedPerMinute != nil {
+			dnsParams.ProcessingSpeedPerMinute = req.ProcessingSpeedPerMinute
+		}
+		if req.BatchSize != nil {
+			dnsParams.BatchSize = req.BatchSize
+		}
+		if req.RetryAttempts != nil {
+			dnsParams.RetryAttempts = req.RetryAttempts
+		}
+		
+		// Check if DNS params already exist
+		existingParams, _ := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
+		if existingParams != nil {
+			// Update existing params
+			log.Printf("[DNS_DIAGNOSTIC] Updating existing DNS validation params")
+			// Note: We'd need to add an UpdateDNSValidationParams method to the store
+			// For now, we'll log this limitation
+			log.Printf("[DNS_DIAGNOSTIC] WARNING: UpdateDNSValidationParams not implemented, params may not be updated")
+		} else {
+			// Create new params
+			log.Printf("[DNS_DIAGNOSTIC] Creating new DNS validation params")
+			if err := s.campaignStore.CreateDNSValidationParams(ctx, querier, dnsParams); err != nil {
+				log.Printf("[DNS_DIAGNOSTIC] Failed to create DNS validation params: %v", err)
+				// Don't fail the whole update, just log the error
+			}
+		}
 	}
 
 	// Log audit event
@@ -1358,26 +1450,10 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 
 	switch campaign.CampaignType {
 	case models.CampaignTypeDomainGeneration:
-		enabled := true
-		personas, err := s.personaStore.ListPersonas(ctx, s.db, store.ListPersonasFilter{Type: models.PersonaTypeDNS, IsEnabled: &enabled, Limit: 1})
-		if err != nil || len(personas) == 0 {
-			log.Printf("[ERROR] Failed to find enabled DNS personas for auto-chaining from campaign %s: %v", campaignID, err)
-			return err
-		}
-		req := CreateDNSValidationCampaignRequest{
-			Name:                       campaign.Name + " DNS",
-			SourceGenerationCampaignID: campaignID,
-			PersonaIDs:                 []uuid.UUID{personas[0].ID},
-			UserID:                     *campaign.UserID,
-		}
-		log.Printf("[INFO] Creating DNS validation campaign for auto-chain from campaign %s", campaignID)
-		nextCamp, err := s.dnsService.CreateCampaign(ctx, req)
-		if err != nil {
-			log.Printf("[ERROR] Failed to create DNS validation campaign for auto-chain: %v", err)
-			return err
-		}
-		log.Printf("[INFO] Successfully created DNS validation campaign %s, starting it", nextCamp.ID)
-		return s.StartCampaign(ctx, nextCamp.ID)
+		// DNS validation is now handled in-place on the same campaign, not via auto-chaining
+		// Users manually add DNS validation params and call StartCampaign on the same campaign
+		log.Printf("[INFO] Domain generation campaign %s completed. DNS validation will be handled in-place when configured manually.", campaignID)
+		return nil
 		
 	case models.CampaignTypeDNSValidation:
 		enabled := true

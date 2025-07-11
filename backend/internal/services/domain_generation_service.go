@@ -1035,9 +1035,23 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		progressPercentage = 100.0
 	}
 
+	// 🔧 COMPLETION DEBUG: Add comprehensive completion condition logging
+	condition1 := genParams.NumDomainsToGenerate > 0 && newProcessedItems >= int64(genParams.NumDomainsToGenerate)
+	condition2 := genParams.CurrentOffset >= genParams.TotalPossibleCombinations
+	
+	log.Printf("[COMPLETION_DEBUG] Campaign %s - Checking completion conditions:", campaignID)
+	log.Printf("[COMPLETION_DEBUG] - NumDomainsToGenerate: %d", genParams.NumDomainsToGenerate)
+	log.Printf("[COMPLETION_DEBUG] - newProcessedItems: %d", newProcessedItems)
+	log.Printf("[COMPLETION_DEBUG] - CurrentOffset: %d", genParams.CurrentOffset)
+	log.Printf("[COMPLETION_DEBUG] - TotalPossibleCombinations: %d", genParams.TotalPossibleCombinations)
+	log.Printf("[COMPLETION_DEBUG] - Condition1 (target reached): %t", condition1)
+	log.Printf("[COMPLETION_DEBUG] - Condition2 (offset exhausted): %t", condition2)
+	log.Printf("[COMPLETION_DEBUG] - processedInThisBatch: %d", processedInThisBatch)
+
 	// Check if campaign is completed
-	if (genParams.NumDomainsToGenerate > 0 && newProcessedItems >= int64(genParams.NumDomainsToGenerate)) ||
-		(genParams.CurrentOffset >= genParams.TotalPossibleCombinations) {
+	if condition1 || condition2 {
+		
+		log.Printf("[COMPLETION_DEBUG] ✅ COMPLETION TRIGGERED for campaign %s", campaignID)
 		
 		// Campaign is completed - update to 100% and set completed status
 		if errUpdateProgress := s.campaignStore.UpdateCampaignProgress(ctx, querier, campaignID, newProcessedItems, targetItems, 100.0); errUpdateProgress != nil {

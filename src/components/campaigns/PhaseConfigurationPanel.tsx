@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,7 +73,26 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
   onPhaseStarted
 }) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  
+  // Get current user for validation - DIAGNOSTIC LOGGING
+  const authContext = useAuth();
+  const { user } = authContext;
+  
+  // DIAGNOSTIC: Log auth context state when component uses it
+  useEffect(() => {
+    console.log('[PhaseConfigurationPanel] DIAGNOSTIC: Auth context state on mount/update:', {
+      timestamp: new Date().toISOString(),
+      hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      isAuthenticated: authContext.isAuthenticated,
+      isLoading: authContext.isLoading,
+      isInitialized: authContext.isInitialized,
+      currentPath: window.location.pathname,
+      phaseType: phaseType
+    });
+  }, [user, authContext.isAuthenticated, authContext.isLoading, authContext.isInitialized, phaseType]);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load personas and proxies data
@@ -111,10 +130,13 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
   // Form submission handler
   const onSubmit = useCallback(async (data: PhaseConfigurationFormValues) => {
     try {
+      console.log('[DEBUG] onSubmit starting with data:', data);
       setIsSubmitting(true);
 
       // ✅ FIX: Validate authentication
+      console.log('[DEBUG] Checking authentication, user:', user);
       if (!user?.id) {
+        console.log('[DEBUG] Authentication failed - no user.id');
         toast({
           title: "Authentication Required",
           description: "You must be logged in to start DNS validation. Please log in and try again.",
@@ -122,9 +144,12 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         });
         return;
       }
+      console.log('[DEBUG] Authentication passed, user.id:', user.id);
 
       // ✅ FIX: Validate source campaign
+      console.log('[DEBUG] Checking source campaign:', sourceCampaign);
       if (!sourceCampaign?.id) {
+        console.log('[DEBUG] Source campaign validation failed - no sourceCampaign.id');
         toast({
           title: "Invalid Source Campaign",
           description: "Source campaign is invalid. Please refresh the page and try again.",
@@ -132,9 +157,11 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         });
         return;
       }
+      console.log('[DEBUG] Source campaign validation passed, id:', sourceCampaign.id);
 
       // Build update payload based on phase type - using UpdateCampaignRequest structure
       let updatePayload: {
+        campaignType?: CampaignType;
         personaIds?: string[];
         adHocKeywords?: string[];
         proxyPoolId?: string;
@@ -145,9 +172,13 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         targetHttpPorts?: number[];
       };
 
+      console.log('[DEBUG] Building payload for phaseType:', phaseType);
       if (phaseType === 'dns_validation') {
+        console.log('[DEBUG] Processing DNS validation phase');
         // Validate required DNS fields
+        console.log('[DEBUG] Checking DNS persona selection:', data.assignedDnsPersonaId);
         if (!data.assignedDnsPersonaId || data.assignedDnsPersonaId === CampaignFormConstants.NONE_VALUE_PLACEHOLDER) {
+          console.log('[DEBUG] DNS persona validation failed');
           toast({
             title: "Validation Error",
             description: "DNS persona is required for DNS validation.",
@@ -158,7 +189,9 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
 
         // ✅ FIX: Validate persona UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        console.log('[DEBUG] Validating UUID format for:', data.assignedDnsPersonaId);
         if (!uuidRegex.test(data.assignedDnsPersonaId)) {
+          console.log('[DEBUG] UUID validation failed');
           toast({
             title: "Invalid Persona Selection",
             description: "Selected persona is invalid. Please refresh the page and try again.",
@@ -166,18 +199,23 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
           });
           return;
         }
+        console.log('[DEBUG] UUID validation passed');
 
-        // ✅ ORCHESTRATION FIX: Update existing campaign instead of creating new one
+        // ✅ ORCHESTRATION FIX: Prepare DNS validation parameters (no campaign type change)
         updatePayload = {
+          // DO NOT include campaignType - we're not changing the campaign type
           personaIds: [data.assignedDnsPersonaId],
           rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
           processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
           batchSize: Number(data.batchSize),
           retryAttempts: Number(data.retryAttempts),
         };
+        console.log('[DEBUG] Built DNS validation params (no type change):', updatePayload);
       } else if (phaseType === 'http_keyword_validation') {
+        console.log('[DEBUG] Processing HTTP keyword validation phase');
         // Validate required HTTP fields
         if (!data.assignedHttpPersonaId || data.assignedHttpPersonaId === CampaignFormConstants.NONE_VALUE_PLACEHOLDER) {
+          console.log('[DEBUG] HTTP persona validation failed');
           toast({
             title: "Validation Error",
             description: "HTTP persona is required for HTTP keyword validation.",
@@ -187,6 +225,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         }
 
         if (!data.targetKeywordsInput?.trim()) {
+          console.log('[DEBUG] Keywords validation failed');
           toast({
             title: "Validation Error",
             description: "At least one keyword is required for HTTP keyword validation.",
@@ -204,6 +243,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         // ✅ FIX: Validate HTTP persona UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(data.assignedHttpPersonaId)) {
+          console.log('[DEBUG] HTTP UUID validation failed');
           toast({
             title: "Invalid Persona Selection",
             description: "Selected HTTP persona is invalid. Please refresh the page and try again.",
@@ -212,8 +252,9 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
           return;
         }
 
-        // ✅ ORCHESTRATION FIX: Update existing campaign instead of creating new one
+        // ✅ ORCHESTRATION FIX: Prepare HTTP validation parameters (no campaign type change)
         updatePayload = {
+          // DO NOT include campaignType - we're not changing the campaign type
           adHocKeywords: adHocKeywords,
           personaIds: [data.assignedHttpPersonaId],
           proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER)
@@ -225,52 +266,104 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
           retryAttempts: Number(data.retryAttempts),
           targetHttpPorts: data.targetHttpPorts,
         };
+        console.log('[DEBUG] Built HTTP validation params (no type change):', updatePayload);
       } else {
+        console.log('[DEBUG] Unsupported phase type:', phaseType);
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 
-      // ✅ FIX: Enhanced logging for debugging
-      console.log('[PhaseConfiguration] Updating campaign for DNS validation:', {
-        campaignId: sourceCampaign.id,
-        phaseType: phaseType,
-        updatePayload: updatePayload,
-        hasDnsPersona: phaseType === 'dns_validation' && (updatePayload.personaIds?.length || 0) > 0,
-        hasHttpPersona: phaseType === 'http_keyword_validation' && (updatePayload.personaIds?.length || 0) > 0,
-      });
-
-      // ✅ ORCHESTRATION FIX: Update existing campaign using service layer
-      const updateResult = await campaignService.updateCampaign(sourceCampaign.id, updatePayload as any);
-      
-      if (updateResult.status === 'error') {
-        throw new Error(updateResult.message || 'Failed to update campaign');
-      }
-      
-      const updatedCampaign = updateResult.data;
-
-      if (updatedCampaign && (updatedCampaign.id || sourceCampaign.id)) {
-        const campaignId = updatedCampaign.id || sourceCampaign.id;
+      // ✅ FIX: Use proper API endpoint for phase transitions
+      if (phaseType === 'dns_validation') {
+        // For DNS validation phase transition, use the validateDNS endpoint
+        console.log('[DEBUG] Using validateDNSForCampaign endpoint for phase transition');
+        console.log('[DEBUG] Campaign ID:', sourceCampaign.id);
+        console.log('[DEBUG] DNS Persona ID:', updatePayload.personaIds?.[0]);
+        
+        // First, update the campaign with DNS validation parameters
+        const dnsUpdatePayload = {
+          personaIds: updatePayload.personaIds,
+          rotationIntervalSeconds: updatePayload.rotationIntervalSeconds,
+          processingSpeedPerMinute: updatePayload.processingSpeedPerMinute,
+          batchSize: updatePayload.batchSize,
+          retryAttempts: updatePayload.retryAttempts,
+        };
+        
+        console.log('[DEBUG] Updating campaign with DNS params:', dnsUpdatePayload);
+        const paramUpdateResult = await campaignService.updateCampaign(sourceCampaign.id, dnsUpdatePayload as any);
+        
+        if (paramUpdateResult.status === 'error') {
+          console.log('[DEBUG] Failed to update DNS params:', paramUpdateResult.message);
+          throw new Error(paramUpdateResult.message || 'Failed to update DNS validation parameters');
+        }
+        
+        // Then trigger DNS validation on the existing campaign
+        console.log('[DEBUG] Triggering DNS validation on campaign:', sourceCampaign.id);
+        const validationResult = await campaignService.validateDNSForCampaign(sourceCampaign.id);
+        console.log('[DEBUG] DNS validation result:', validationResult);
+        
+        if (validationResult.status === 'error') {
+          console.log('[DEBUG] DNS validation failed:', validationResult.message);
+          throw new Error(validationResult.message || 'Failed to start DNS validation');
+        }
         
         toast({
           title: "DNS Validation Started Successfully",
-          description: `${phaseDisplayNames[phaseType]} has been configured and started on the existing campaign.`,
+          description: `DNS validation has been triggered on the existing campaign.`,
           variant: "default"
         });
-
-        // Start the campaign for the new phase using the service layer
-        try {
-          // Use service layer for campaign operations
-          await campaignService.startCampaign(campaignId);
-        } catch (e) {
-          console.warn('Campaign may have auto-started:', e);
-        }
-
-        // Close panel and notify parent with the same campaign ID (not creating new campaign)
+        
+        // Close panel and notify parent with the same campaign ID
+        console.log('[DEBUG] DNS validation started, closing panel');
         onClose();
-        onPhaseStarted(campaignId);
-      } else {
-        throw new Error("Failed to update campaign for DNS validation");
+        onPhaseStarted(sourceCampaign.id);
+        
+      } else if (phaseType === 'http_keyword_validation') {
+        // For HTTP validation, we still need to update the campaign
+        // This will be handled similarly in the future
+        console.log('[DEBUG] HTTP validation phase - using update approach for now');
+        
+        const updateResult = await campaignService.updateCampaign(sourceCampaign.id, updatePayload as any);
+        console.log('[DEBUG] campaignService.updateCampaign returned:', updateResult);
+        
+        if (updateResult.status === 'error') {
+          console.log('[DEBUG] Update result indicates error:', updateResult.message);
+          throw new Error(updateResult.message || 'Failed to update campaign');
+        }
+        
+        const updatedCampaign = updateResult.data;
+        console.log('[DEBUG] Updated campaign data:', updatedCampaign);
+
+        if (updatedCampaign && (updatedCampaign.id || sourceCampaign.id)) {
+          const campaignId = updatedCampaign.id || sourceCampaign.id;
+          console.log('[DEBUG] Success! Campaign ID:', campaignId);
+          
+          toast({
+            title: "HTTP Validation Configured Successfully",
+            description: `${phaseDisplayNames[phaseType]} has been configured on the existing campaign.`,
+            variant: "default"
+          });
+
+          // Start the campaign for the new phase using the service layer
+          try {
+            console.log('[DEBUG] Starting campaign...');
+            await campaignService.startCampaign(campaignId);
+            console.log('[DEBUG] Campaign started successfully');
+          } catch (e) {
+            console.log('[DEBUG] Campaign start warning:', e);
+            console.warn('Campaign may have auto-started:', e);
+          }
+
+          // Close panel and notify parent with the same campaign ID
+          console.log('[DEBUG] Closing panel and notifying parent');
+          onClose();
+          onPhaseStarted(campaignId);
+        } else {
+          console.log('[DEBUG] No valid campaign ID found in result');
+          throw new Error("Failed to update campaign for HTTP validation");
+        }
       }
     } catch (error: unknown) {
+      console.log('[DEBUG] Exception caught in onSubmit:', error);
       console.error('[PhaseConfiguration] Campaign creation error:', error);
       
       // ✅ FIX: Enhanced error handling with specific error messages
@@ -322,6 +415,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         });
       }
     } finally {
+      console.log('[DEBUG] onSubmit finally block, setting isSubmitting false');
       setIsSubmitting(false);
     }
   }, [sourceCampaign.id, phaseType, toast, onClose, onPhaseStarted, user?.id]);
@@ -652,9 +746,57 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              onClick={form.handleSubmit(onSubmit)}
+            <Button
+              type="submit"
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('[DEBUG] Button clicked - Starting diagnosis...');
+                
+                // Get current form state
+                const formValues = form.getValues();
+                const formErrors = form.formState.errors;
+                const isFormValid = form.formState.isValid;
+                
+                console.log('[DEBUG] Form state diagnosis:', {
+                  phaseType,
+                  formValues,
+                  formErrors,
+                  isFormValid,
+                  isSubmitting,
+                  loadingData,
+                  buttonDisabled: isSubmitting || loadingData || !isValid,
+                  buttonClickable: !isSubmitting && !loadingData && isValid
+                });
+                
+                // Check DNS persona specifically
+                if (phaseType === 'dns_validation') {
+                  console.log('[DEBUG] DNS validation specific checks:', {
+                    assignedDnsPersonaId: formValues.assignedDnsPersonaId,
+                    isDnsPersonaRequired: true,
+                    isDnsPersonaValid: formValues.assignedDnsPersonaId && formValues.assignedDnsPersonaId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER,
+                    availableDnsPersonas: dnsPersonas.length,
+                    dnsPersonasList: dnsPersonas.map(p => ({ id: p.id, name: p.name }))
+                  });
+                }
+                
+                // Try manual validation
+                const triggerResult = form.trigger();
+                console.log('[DEBUG] Manual form validation result:', triggerResult);
+                
+                // Call the form submission with error handling
+                const handleSubmitWithLogging = form.handleSubmit(
+                  (data) => {
+                    console.log('[DEBUG] Form validation PASSED - calling onSubmit with data:', data);
+                    return onSubmit(data);
+                  },
+                  (errors) => {
+                    console.log('[DEBUG] Form validation FAILED - errors:', errors);
+                  }
+                );
+                
+                console.log('[DEBUG] Calling form.handleSubmit...');
+                return handleSubmitWithLogging(e);
+              }}
               disabled={isSubmitting || loadingData || !isValid}
               className="bg-green-600 hover:bg-green-700"
             >

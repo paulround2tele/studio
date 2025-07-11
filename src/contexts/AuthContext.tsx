@@ -27,29 +27,136 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true
+  // Initialize auth state from localStorage if available
+  const [authState, setAuthState] = useState<AuthState>(() => {
+    // Try to restore auth state from localStorage on initial load
+    if (typeof window !== 'undefined') {
+      try {
+        const storedAuth = localStorage.getItem('auth_state');
+        if (storedAuth) {
+          const parsed = JSON.parse(storedAuth);
+          console.log('[AuthContext] RESTORE: Found stored auth state:', {
+            hasUser: !!parsed.user,
+            userId: parsed.user?.id,
+            timestamp: new Date().toISOString()
+          });
+          return {
+            user: parsed.user,
+            isAuthenticated: !!parsed.user && !!parsed.user.id,
+            isLoading: true // Still need to validate with backend
+          };
+        }
+      } catch (error) {
+        console.warn('[AuthContext] RESTORE: Failed to parse stored auth state:', error);
+        localStorage.removeItem('auth_state');
+      }
+    }
+    
+    return {
+      user: null,
+      isAuthenticated: false,
+      isLoading: true
+    };
   });
+
+  // DIAGNOSTIC: Track auth state changes and persist to localStorage
+  useEffect(() => {
+    console.log('[AuthContext] AUTH STATE CHANGE:', {
+      timestamp: new Date().toISOString(),
+      hasUser: !!authState.user,
+      userId: authState.user?.id,
+      isAuthenticated: authState.isAuthenticated,
+      isLoading: authState.isLoading,
+      userEmail: authState.user?.email,
+      location: window.location.pathname,
+      referrer: document.referrer
+    });
+    
+    // Persist auth state to localStorage for navigation persistence
+    if (typeof window !== 'undefined') {
+      if (authState.user && authState.isAuthenticated) {
+        localStorage.setItem('auth_state', JSON.stringify({
+          user: authState.user,
+          timestamp: Date.now()
+        }));
+        console.log('[AuthContext] PERSIST: Stored auth state to localStorage');
+      } else if (!authState.isLoading) {
+        // Only clear when not loading to avoid clearing during initialization
+        localStorage.removeItem('auth_state');
+        console.log('[AuthContext] PERSIST: Cleared auth state from localStorage');
+      }
+    }
+  }, [authState]);
 
   const loadingStore = useLoadingStore();
   const sessionCheckRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
   const sessionCheckStartedRef = useRef(false);
   const minLoadingTimeRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSessionCheckRef = useRef<number>(0);
+  const sessionCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const checkSession = useCallback(async () => {
-    // Prevent multiple simultaneous session checks
-    if (sessionCheckStartedRef.current) {
+  const checkSession = useCallback(async (force = false, skipIfNoStoredAuth = true) => {
+    const now = Date.now();
+    const timeSinceLastCheck = now - lastSessionCheckRef.current;
+    const MIN_CHECK_INTERVAL = 2000; // Minimum 2 seconds between checks
+
+    console.log('[AuthContext] DIAGNOSTIC: checkSession called', {
+      timestamp: new Date().toISOString(),
+      sessionCheckStarted: sessionCheckStartedRef.current,
+      currentPath: window.location.pathname,
+      timeSinceLastCheck,
+      force,
+      skipIfNoStoredAuth
+    });
+
+    // Check if we have any indication that user might be authenticated
+    const hasStoredAuth = typeof window !== 'undefined' && localStorage.getItem('auth_state');
+    const hasCurrentUser = !!authState.user;
+    const shouldSkipCheck = skipIfNoStoredAuth && !hasStoredAuth && !hasCurrentUser && !force;
+
+    if (shouldSkipCheck) {
+      console.log('[AuthContext] DIAGNOSTIC: Skipping session check - no stored auth data and not forced');
+      // Set loading to false for fresh sessions without any auth indicators
+      if (authState.isLoading && !authState.user) {
+        setAuthState(prev => ({
+          ...prev,
+          isLoading: false
+        }));
+      }
       return;
     }
 
+    // Rate limiting: Prevent excessive session checks
+    if (!force && timeSinceLastCheck < MIN_CHECK_INTERVAL) {
+      console.log('[AuthContext] DIAGNOSTIC: Rate limited - too soon since last check, skipping');
+      return;
+    }
+
+    // Prevent multiple simultaneous session checks
+    if (sessionCheckStartedRef.current) {
+      console.log('[AuthContext] DIAGNOSTIC: Session check already in progress, skipping');
+      return;
+    }
+
+    lastSessionCheckRef.current = now;
     sessionCheckStartedRef.current = true;
+    console.log('[AuthContext] DIAGNOSTIC: Starting session check...', {
+      hasStoredAuth: !!hasStoredAuth,
+      hasCurrentUser,
+      reason: force ? 'forced' : 'has auth indicators'
+    });
     
     try {
       console.log('[AuthContext] Checking session via backend cookie validation...');
       const user = await authService.getCurrentUser();
+      console.log('[AuthContext] DIAGNOSTIC: getCurrentUser result:', {
+        hasUser: !!user,
+        userId: user?.id,
+        userEmail: user?.email,
+        hasId: !!(user?.id),
+        hasEmail: !!(user?.email)
+      });
 
       if (user && user.id && user.email) {
         // Ensure user has required fields and set isActive to true by default
@@ -64,45 +171,99 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isActive: completeUser.isActive
         });
         
-        setAuthState({
-          user: completeUser as User,
-          isAuthenticated: true,
-          isLoading: false
-        });
+        if (mountedRef.current) {
+          setAuthState({
+            user: completeUser as User,
+            isAuthenticated: true,
+            isLoading: false
+          });
+          console.log('[AuthContext] DIAGNOSTIC: Auth state updated to authenticated');
+        } else {
+          console.log('[AuthContext] DIAGNOSTIC: Component unmounted but user authenticated');
+        }
       } else {
         console.log('[AuthContext] Invalid or incomplete user data, treating as unauthenticated');
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false
-        });
+        // Implement grace period: don't immediately clear auth state for stored sessions
+        if (hasStoredAuth || hasCurrentUser) {
+          console.log('[AuthContext] DIAGNOSTIC: Backend validation failed but preserving stored auth state with grace period');
+          // Keep the current auth state but set loading to false
+          setAuthState(prev => ({
+            ...prev,
+            isLoading: false
+          }));
+        } else {
+          console.log('[AuthContext] DIAGNOSTIC: No stored auth, just setting loading to false');
+          setAuthState(prev => ({
+            ...prev,
+            isLoading: false
+          }));
+        }
       }
     } catch (error) {
       console.warn('[AuthContext] Session check failed:', error);
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false
-      });
+      
+      // Implement grace period: preserve stored auth state during temporary backend failures
+      if (hasStoredAuth || hasCurrentUser) {
+        console.log('[AuthContext] DIAGNOSTIC: Backend error but preserving stored auth state with grace period');
+        // Keep the current auth state but set loading to false
+        setAuthState(prev => ({
+          ...prev,
+          isLoading: false
+        }));
+      } else {
+        console.log('[AuthContext] DIAGNOSTIC: Backend error but no auth indicators - just stop loading');
+        setAuthState(prev => ({
+          ...prev,
+          isLoading: false
+        }));
+      }
+      
+      if (!mountedRef.current) {
+        console.log('[AuthContext] DIAGNOSTIC: Component unmounted but error state handled');
+      }
     } finally {
       sessionCheckStartedRef.current = false;
+      console.log('[AuthContext] DIAGNOSTIC: Session check completed, flag reset');
     }
-  }, []);
+  }, [authState.user, authState.isLoading]); // Include dependencies we actually use
 
   // Check for existing session on mount AND handle page reload persistence
   useEffect(() => {
-    // Only run session check once on mount
+    // Only run session check once on mount unless we're navigating with existing auth
     if (!sessionCheckStartedRef.current) {
       console.log('[AuthContext] Component mounted, checking for existing session...');
-      checkSession();
+      console.log('[AuthContext] Current auth state on mount:', {
+        hasUser: !!authState.user,
+        isAuthenticated: authState.isAuthenticated,
+        isLoading: authState.isLoading
+      });
+      
+      // If we already have a user (from previous context), preserve it but still validate
+      if (authState.user && authState.isAuthenticated) {
+        console.log('[AuthContext] Preserving existing auth state during navigation');
+        // Still validate the session but don't clear auth state immediately
+        setTimeout(() => checkSession(true, false), 100); // Force validation for existing users
+      } else {
+        // For fresh sessions, only check if we have stored auth indicators
+        checkSession(false, true); // Use smart checking - don't force unnecessary /me calls
+      }
     }
     
-    // Add visibility change listener to re-check session when tab becomes active
+    // Add debounced visibility change listener to re-check session when tab becomes active
     // This helps with session persistence across browser refreshes and tab switches
     const handleVisibilityChange = () => {
       if (!document.hidden && !sessionCheckStartedRef.current) {
-        console.log('[AuthContext] Tab became visible, re-checking session...');
-        checkSession();
+        console.log('[AuthContext] Tab became visible, scheduling session check...');
+        
+        // Clear any existing timeout
+        if (sessionCheckTimeoutRef.current) {
+          clearTimeout(sessionCheckTimeoutRef.current);
+        }
+        
+        // Debounce session check by 1 second
+        sessionCheckTimeoutRef.current = setTimeout(() => {
+          checkSession(false, false); // Check on visibility change, but only if we have auth indicators
+        }, 1000);
       }
     };
 
@@ -124,6 +285,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Capture refs for cleanup to avoid stale reference warnings
     const currentSessionCheck = sessionCheckRef.current;
     const currentMinLoadingTime = minLoadingTimeRef.current;
+    const currentSessionCheckTimeout = sessionCheckTimeoutRef.current;
     
     // Cleanup on unmount
     return () => {
@@ -136,8 +298,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentMinLoadingTime) {
         clearTimeout(currentMinLoadingTime);
       }
+      if (currentSessionCheckTimeout) {
+        clearTimeout(currentSessionCheckTimeout);
+      }
     };
-  }, [checkSession]); // Include checkSession dependency
+  }, []); // FIXED: Remove checkSession dependency to prevent re-initialization
 
   const login = useCallback(async (credentials: { email: string; password: string }) => {
     logger.info('AUTH_CONTEXT', 'Login attempt started', { email: credentials.email });

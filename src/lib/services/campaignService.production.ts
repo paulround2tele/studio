@@ -305,6 +305,27 @@ class CampaignService {
     }
   }
 
+  // DNS Validation method for phase transitions
+  async validateDNSForCampaign(campaignId: string): Promise<CampaignOperationResponse> {
+    try {
+      console.log('[CampaignService] Triggering DNS validation for campaign:', campaignId);
+      const response = await campaignsApi.validateDNSForCampaign(campaignId);
+      const result = 'data' in response ? response.data : response;
+      
+      return {
+        status: 'success',
+        data: result as unknown as Campaign,
+        message: 'DNS validation started successfully'
+      };
+    } catch (error) {
+      console.error('[CampaignService] DNS validation error:', error);
+      return {
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Failed to start DNS validation'
+      };
+    }
+  }
+
   // Campaign Results
   async getGeneratedDomains(
     campaignId: string,
@@ -393,10 +414,11 @@ export const cancelCampaign = (campaignId: string) => campaignService.cancelCamp
 export const deleteCampaign = (campaignId: string) => campaignService.deleteCampaign(campaignId);
 export const getGeneratedDomains = (campaignId: string, options?: Parameters<typeof campaignService.getGeneratedDomains>[1]) => 
   campaignService.getGeneratedDomains(campaignId, options);
-export const getDNSValidationResults = (campaignId: string, options?: Parameters<typeof campaignService.getDNSValidationResults>[1]) => 
+export const getDNSValidationResults = (campaignId: string, options?: Parameters<typeof campaignService.getDNSValidationResults>[1]) =>
   campaignService.getDNSValidationResults(campaignId, options);
-export const getHTTPKeywordResults = (campaignId: string, options?: Parameters<typeof campaignService.getHTTPKeywordResults>[1]) => 
+export const getHTTPKeywordResults = (campaignId: string, options?: Parameters<typeof campaignService.getHTTPKeywordResults>[1]) =>
   campaignService.getHTTPKeywordResults(campaignId, options);
+export const validateDNSForCampaign = (campaignId: string) => campaignService.validateDNSForCampaign(campaignId);
 
 // Legacy aliases for compatibility
 export const createCampaignUnified = createCampaign;

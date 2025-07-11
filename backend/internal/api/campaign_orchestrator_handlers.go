@@ -617,10 +617,21 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 	// 2. Retrieved from system defaults
 	// 3. Made configurable via request body
 	// For this fix, we'll use an empty slice to let the service handle defaults
-	var personaIDs []uuid.UUID
+	var req services.DNSValidationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid request body for DNS validation", []ErrorDetail{
+				{
+					Field:   "body",
+					Code:    ErrorCodeValidation,
+					Message: err.Error(),
+				},
+			})
+		return
+	}
 
 	// Use the domain-centric validation service to validate all domains for this campaign
-	if err := h.domainValidationSvc.StartDNSValidation(c.Request.Context(), campaignID, personaIDs); err != nil {
+	if err := h.domainValidationSvc.StartDNSValidation(c.Request.Context(), campaignID, req.PersonaIDs); err != nil {
 		log.Printf("ERROR [DNS Validation]: Failed to start DNS validation for campaign %s: %v", campaignIDStr, err)
 
 		// Handle different error types
