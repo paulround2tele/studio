@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UpdateCampaignRequest } from './api';
+import { UpdateCampaignRequest } from 'api-client';
 
 const instance: UpdateCampaignRequest = {
     adHocKeywords,

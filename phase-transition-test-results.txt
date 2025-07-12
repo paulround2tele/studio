@@ -1,0 +1,883 @@
+=== DNS PHASE TRANSITION TEST RESULTS ===
+
+🎯 PURPOSE: Test UpdateCampaign phase transitions from user perspective
+🎯 FOCUS: Verify no duplicate campaigns created during transitions
+🎯 FOCUS: Confirm UpdateCampaign API uses campaignType field correctly
+
+--- Test Execution Logs ---
+[2025-07-12T01:24:02.482Z] === DNS Phase Transition Test Started ===
+[2025-07-12T01:24:02.483Z] 🎯 Testing UpdateCampaign phase transitions from user perspective
+[2025-07-12T01:24:06.923Z] 🔐 Logging in...
+[2025-07-12T01:24:08.424Z] ✅ Navigated to login page
+[2025-07-12T01:24:10.473Z] ✅ Login form found
+[2025-07-12T01:24:10.808Z] 🔍 [FRONTEND ERROR] [2025-07-12T01:24:10.804Z] [gd894mee] [ERROR] [AUTH_SERVICE] Login failed {
+  "error": "Network Error"
+}
+[2025-07-12T01:24:10.831Z] 🔍 [FRONTEND ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED
+[2025-07-12T01:24:11.111Z] 🔑 Login button clicked
+[2025-07-12T01:24:39.860Z] ✅ Login successful
+[2025-07-12T01:24:39.862Z] 🎯 Creating domain generation campaign through UI...
+[2025-07-12T01:24:40.018Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns?limit=100
+[2025-07-12T01:24:40.026Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns?limit=100
+[2025-07-12T01:24:40.033Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns?limit=100
+[2025-07-12T01:24:40.067Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns?limit=100
+[2025-07-12T01:24:40.069Z] 📤 [NETWORK] GET http://localhost:3000/campaigns/new
+[2025-07-12T01:24:40.406Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns?limit=100 → 200
+[2025-07-12T01:24:40.407Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.423Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.429Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.442Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.450Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.459Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.459Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.460Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.460Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.460Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.597Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns?limit=100 → 200
+[2025-07-12T01:24:40.618Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.680Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.681Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.681Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.681Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.681Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.681Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.681Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.681Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.686Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.689Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns?limit=100 → 200
+[2025-07-12T01:24:40.689Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.689Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.689Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.689Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.689Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.721Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.726Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.743Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.743Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.743Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.854Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca → 200
+[2025-07-12T01:24:40.910Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 424829b1-d7cd-46b4-9d6c-e780dfe9faca, name: Phase-Test-1752278259397, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:40.912Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[2025-07-12T01:24:40.912Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[2025-07-12T01:24:40.912Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000
+[2025-07-12T01:24:40.912Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000
+[2025-07-12T01:24:40.982Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns?limit=100 → 200
+[2025-07-12T01:24:40.983Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:41.030Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:41.049Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:41.058Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:41.058Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:41.059Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:41.075Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:41.089Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:41.094Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:41.094Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:41.095Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215 → 200
+[2025-07-12T01:24:41.095Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: dc07d543-8441-46cb-a218-66a50e606215, name: Phase-Test-1752278376807, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:41.095Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[2025-07-12T01:24:41.095Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[2025-07-12T01:24:41.095Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.095Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.171Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992 → 200
+[2025-07-12T01:24:41.173Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 17166a30-6bd6-4d82-97d0-297fdf44d992, name: Phase-Test-1752280647118, campaignType: dns_validation, status: running, launchSequence: false}
+[2025-07-12T01:24:41.180Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[2025-07-12T01:24:41.182Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[2025-07-12T01:24:41.187Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.189Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.346Z] 🔍 [FRONTEND LOG] 📥 [WebSocketService] Received message on dashboard-activity: {type: connection_ack, campaignId: undefined, timestamp: 2025-07-12T01:24:40Z}
+[2025-07-12T01:24:41.434Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5 → 200
+[2025-07-12T01:24:41.464Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 5ab8635a-10c4-4516-a715-beec01f458f5, name: DNS-Test-1752277038066, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:41.489Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[2025-07-12T01:24:41.491Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[2025-07-12T01:24:41.491Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.491Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.536Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca → 200
+[2025-07-12T01:24:41.548Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 424829b1-d7cd-46b4-9d6c-e780dfe9faca, name: Phase-Test-1752278259397, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:41.548Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[2025-07-12T01:24:41.548Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[2025-07-12T01:24:41.548Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.548Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.548Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c → 200
+[2025-07-12T01:24:41.548Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: f7755854-88e4-4bd3-bdf6-b9e47ee3394c, name: DNS-Test-1752276879455, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T01:24:41.551Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[2025-07-12T01:24:41.551Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[2025-07-12T01:24:41.551Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.551Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.559Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215 → 200
+[2025-07-12T01:24:41.573Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: dc07d543-8441-46cb-a218-66a50e606215, name: Phase-Test-1752278376807, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:41.573Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[2025-07-12T01:24:41.577Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[2025-07-12T01:24:41.579Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.579Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.579Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992 → 200
+[2025-07-12T01:24:41.580Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 17166a30-6bd6-4d82-97d0-297fdf44d992, name: Phase-Test-1752280647118, campaignType: dns_validation, status: running, launchSequence: false}
+[2025-07-12T01:24:41.580Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[2025-07-12T01:24:41.580Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[2025-07-12T01:24:41.581Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.581Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.581Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca → 200
+[2025-07-12T01:24:41.588Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:24:41.591Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5 → 200
+[2025-07-12T01:24:41.635Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c → 200
+[2025-07-12T01:24:41.637Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215 → 200
+[2025-07-12T01:24:41.637Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:41.773Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 424829b1-d7cd-46b4-9d6c-e780dfe9faca, name: Phase-Test-1752278259397, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:41.774Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[2025-07-12T01:24:41.778Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[2025-07-12T01:24:41.810Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.850Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.917Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 5ab8635a-10c4-4516-a715-beec01f458f5, name: DNS-Test-1752277038066, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:41.948Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[2025-07-12T01:24:41.965Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[2025-07-12T01:24:41.989Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000
+[2025-07-12T01:24:42.006Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000
+[2025-07-12T01:24:42.018Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: f7755854-88e4-4bd3-bdf6-b9e47ee3394c, name: DNS-Test-1752276879455, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T01:24:42.031Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[2025-07-12T01:24:42.040Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[2025-07-12T01:24:42.043Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000
+[2025-07-12T01:24:42.048Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000
+[2025-07-12T01:24:42.084Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: dc07d543-8441-46cb-a218-66a50e606215, name: Phase-Test-1752278376807, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:42.097Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[2025-07-12T01:24:42.109Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[2025-07-12T01:24:42.109Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000
+[2025-07-12T01:24:42.110Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000
+[2025-07-12T01:24:42.127Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:49.345Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:24:49.461Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:49.474Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:24:49.489Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:24:49.494Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:24:49.499Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:24:49.505Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:49.642Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992 → 200
+[2025-07-12T01:24:49.749Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:49.806Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:24:50.073Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:24:50.106Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 17166a30-6bd6-4d82-97d0-297fdf44d992, name: Phase-Test-1752280647118, campaignType: dns_validation, status: running, launchSequence: false}
+[2025-07-12T01:24:50.108Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[2025-07-12T01:24:50.108Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[2025-07-12T01:24:50.108Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000
+[2025-07-12T01:24:50.108Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000
+[2025-07-12T01:24:50.593Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:24:50.733Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:24:50.749Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:24:50.750Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:24:50.750Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:24:50.750Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:24:50.765Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:24:50.765Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:24:50.765Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:24:50.766Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:24:50.766Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:24:50.766Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c → 200
+[2025-07-12T01:24:50.766Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: f7755854-88e4-4bd3-bdf6-b9e47ee3394c, name: DNS-Test-1752276879455, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T01:24:50.766Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[2025-07-12T01:24:50.809Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[2025-07-12T01:24:50.863Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000
+[2025-07-12T01:24:50.865Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000
+[2025-07-12T01:24:50.884Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5 → 200
+[2025-07-12T01:24:50.978Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 5ab8635a-10c4-4516-a715-beec01f458f5, name: DNS-Test-1752277038066, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:51.010Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[2025-07-12T01:24:51.042Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[2025-07-12T01:24:51.171Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000
+[2025-07-12T01:24:51.198Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000
+[2025-07-12T01:24:51.198Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca → 200
+[2025-07-12T01:24:51.207Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 424829b1-d7cd-46b4-9d6c-e780dfe9faca, name: Phase-Test-1752278259397, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:51.274Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[2025-07-12T01:24:51.278Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[2025-07-12T01:24:51.285Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000
+[2025-07-12T01:24:51.288Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000
+[2025-07-12T01:24:51.288Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215 → 200
+[2025-07-12T01:24:51.288Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: dc07d543-8441-46cb-a218-66a50e606215, name: Phase-Test-1752278376807, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:51.288Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[2025-07-12T01:24:51.288Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[2025-07-12T01:24:51.300Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000
+[2025-07-12T01:24:51.303Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000
+[2025-07-12T01:24:51.326Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:24:51.328Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:51.352Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:24:51.370Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:24:51.376Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:24:51.376Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:51.382Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:51.401Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:24:51.401Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:24:51.401Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:24:51.401Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:24:55.743Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992 → 200
+[2025-07-12T01:24:55.863Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 17166a30-6bd6-4d82-97d0-297fdf44d992, name: Phase-Test-1752280647118, campaignType: dns_validation, status: running, launchSequence: false}
+[2025-07-12T01:24:55.891Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[2025-07-12T01:24:55.892Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[2025-07-12T01:24:55.896Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000
+[2025-07-12T01:24:55.896Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000
+[2025-07-12T01:24:55.896Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c → 200
+[2025-07-12T01:24:55.897Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:24:55.899Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:55.944Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: f7755854-88e4-4bd3-bdf6-b9e47ee3394c, name: DNS-Test-1752276879455, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T01:24:55.945Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[2025-07-12T01:24:55.970Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[2025-07-12T01:24:55.970Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000
+[2025-07-12T01:24:55.970Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000
+[2025-07-12T01:24:55.987Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:55.996Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5 → 200
+[2025-07-12T01:24:56.029Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 5ab8635a-10c4-4516-a715-beec01f458f5, name: DNS-Test-1752277038066, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:56.030Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[2025-07-12T01:24:56.034Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[2025-07-12T01:24:56.035Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.036Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.050Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:24:56.052Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:24:56.053Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:24:56.053Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:24:56.053Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:24:56.054Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:24:56.054Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:24:56.055Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:24:56.067Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:24:56.080Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:24:56.086Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:24:56.094Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:24:56.095Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:24:56.137Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:24:56.156Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:56.229Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:24:56.232Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:24:56.232Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:56.274Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:24:56.371Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:24:56.629Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:24:56.707Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 → 200
+[2025-07-12T01:24:56.770Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 → 200
+[2025-07-12T01:24:56.807Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480, name: DNS-Test-1752266456097, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:56.810Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[2025-07-12T01:24:56.811Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[2025-07-12T01:24:56.811Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.811Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.811Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 → 200
+[2025-07-12T01:24:56.811Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3, name: DNS-Test-1752276089580, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:56.811Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[2025-07-12T01:24:56.811Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[2025-07-12T01:24:56.820Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.824Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.882Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543 → 200
+[2025-07-12T01:24:56.899Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 798e64f0-cecd-4069-b9d8-253929446543, name: DNS-Test-1752267079398, campaignType: domain_generation, status: running, launchSequence: false}
+[2025-07-12T01:24:56.908Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[2025-07-12T01:24:56.909Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[2025-07-12T01:24:56.912Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.919Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.919Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50, name: DNS-Test-1752265587319, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:24:56.919Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[2025-07-12T01:24:56.919Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[2025-07-12T01:24:56.920Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.920Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.920Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616 → 200
+[2025-07-12T01:24:56.922Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 8449c16a-529f-4210-aeac-45908af1d616, name: DNS-Test-1752276653090, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T01:24:56.923Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[2025-07-12T01:24:56.969Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[2025-07-12T01:24:56.970Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.970Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.982Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:01.040Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:01.068Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:25:01.068Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:25:01.143Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:25:01.158Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:25:01.159Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:01.180Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:01.227Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:01.282Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:25:01.309Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:25:01.315Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:25:01.315Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:25:01.316Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:25:01.323Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:25:01.328Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:25:01.329Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:25:01.330Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:25:01.331Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:25:01.331Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:25:01.340Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:25:01.460Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 → 200
+[2025-07-12T01:25:01.461Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 → 200
+[2025-07-12T01:25:01.498Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:01.498Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:01.498Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:01.498Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 → 200
+[2025-07-12T01:25:01.498Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50, name: DNS-Test-1752265587319, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:25:01.498Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[2025-07-12T01:25:01.629Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[2025-07-12T01:25:01.629Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/generated-domains?limit=1000
+[2025-07-12T01:25:01.629Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/dns-validation?limit=1000
+[2025-07-12T01:25:01.630Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3, name: DNS-Test-1752276089580, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:25:01.630Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[2025-07-12T01:25:01.631Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[2025-07-12T01:25:01.631Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/generated-domains?limit=1000
+[2025-07-12T01:25:01.631Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/dns-validation?limit=1000
+[2025-07-12T01:25:01.631Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480, name: DNS-Test-1752266456097, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:25:01.631Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[2025-07-12T01:25:01.631Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[2025-07-12T01:25:01.677Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/generated-domains?limit=1000
+[2025-07-12T01:25:01.680Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/dns-validation?limit=1000
+[2025-07-12T01:25:01.742Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:01.797Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:01.851Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543 → 200
+[2025-07-12T01:25:01.865Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 798e64f0-cecd-4069-b9d8-253929446543, name: DNS-Test-1752267079398, campaignType: domain_generation, status: running, launchSequence: false}
+[2025-07-12T01:25:01.865Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[2025-07-12T01:25:01.865Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[2025-07-12T01:25:01.872Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/generated-domains?limit=1000
+[2025-07-12T01:25:01.874Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/dns-validation?limit=1000
+[2025-07-12T01:25:01.981Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:02.003Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:02.018Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616 → 200
+[2025-07-12T01:25:02.021Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:02.219Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 8449c16a-529f-4210-aeac-45908af1d616, name: DNS-Test-1752276653090, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T01:25:02.219Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[2025-07-12T01:25:02.219Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[2025-07-12T01:25:02.220Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/generated-domains?limit=1000
+[2025-07-12T01:25:02.220Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/dns-validation?limit=1000
+[2025-07-12T01:25:06.122Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:06.202Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:06.223Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:06.486Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:06.506Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: 8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:25:06.513Z] 🔍 [FRONTEND LOG] [CampaignService] Getting campaign by ID: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:25:06.531Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:25:06.572Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:25:06.603Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:06.634Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:06.694Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/generated-domains?limit=1000 → 500
+[2025-07-12T01:25:06.718Z] 🔍 [FRONTEND ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[2025-07-12T01:25:06.739Z] 🔍 [FRONTEND ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[2025-07-12T01:25:06.757Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Phase-Test-1752280647118 (dns_validation): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Phase-Test-1752278376807 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Phase-Test-1752278259397 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752277038066 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752276879455 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752276653090 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752276089580 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752267079398 (domain_generation): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752266456097 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752265587319 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752265040264 (completed): 0 domains found
+[2025-07-12T01:25:06.758Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752264871771 (completed): 0 domains found
+[2025-07-12T01:25:06.759Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752264517381 (completed): 0 domains found
+[2025-07-12T01:25:06.759Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752263613918 (completed): 0 domains found
+[2025-07-12T01:25:06.759Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752263399805 (completed): 0 domains found
+[2025-07-12T01:25:06.759Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752263229663 (completed): 0 domains found
+[2025-07-12T01:25:06.759Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752262883634 (completed): 0 domains found
+[2025-07-12T01:25:06.767Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752262185085 (domain_generation): 0 domains found
+[2025-07-12T01:25:06.767Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752260298216 (completed): 0 domains found
+[2025-07-12T01:25:06.767Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign DNS-Test-1752260118765 (completed): 0 domains found
+[2025-07-12T01:25:06.767Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752259334576 (completed): 0 domains found
+[2025-07-12T01:25:06.767Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752259093874 (completed): 0 domains found
+[2025-07-12T01:25:06.767Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752258540350 (completed): 0 domains found
+[2025-07-12T01:25:06.767Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752258383414 (completed): 0 domains found
+[2025-07-12T01:25:06.768Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752257992323 (completed): 0 domains found
+[2025-07-12T01:25:06.768Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752257563243 (completed): 0 domains found
+[2025-07-12T01:25:06.768Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752257367471 (completed): 0 domains found
+[2025-07-12T01:25:06.768Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752257151663 (completed): 0 domains found
+[2025-07-12T01:25:06.768Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752257070414 (completed): 0 domains found
+[2025-07-12T01:25:06.768Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752256606737 (completed): 0 domains found
+[2025-07-12T01:25:06.790Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752255845177 (domain_generation): 0 domains found
+[2025-07-12T01:25:06.817Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752252856157 (completed): 0 domains found
+[2025-07-12T01:25:06.819Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752252642994 (completed): 0 domains found
+[2025-07-12T01:25:06.819Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752252206114 (completed): 0 domains found
+[2025-07-12T01:25:06.819Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752252097354 (completed): 0 domains found
+[2025-07-12T01:25:06.819Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752251792810 (completed): 0 domains found
+[2025-07-12T01:25:06.881Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752251372489 (completed): 0 domains found
+[2025-07-12T01:25:06.883Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752250472504 (completed): 0 domains found
+[2025-07-12T01:25:06.908Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752249566790 (completed): 0 domains found
+[2025-07-12T01:25:06.915Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752249463483 (completed): 0 domains found
+[2025-07-12T01:25:06.949Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752248485676 (completed): 0 domains found
+[2025-07-12T01:25:06.954Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752248369826 (completed): 0 domains found
+[2025-07-12T01:25:06.954Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752248176434 (completed): 0 domains found
+[2025-07-12T01:25:06.966Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752247989685 (completed): 0 domains found
+[2025-07-12T01:25:06.978Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752247209914 (completed): 0 domains found
+[2025-07-12T01:25:06.986Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752245371544 (completed): 0 domains found
+[2025-07-12T01:25:06.986Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752245014522 (completed): 0 domains found
+[2025-07-12T01:25:06.987Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752244533017 (completed): 0 domains found
+[2025-07-12T01:25:06.987Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign test-till-dnss (completed): 0 domains found
+[2025-07-12T01:25:06.987Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752241547375 (completed): 0 domains found
+[2025-07-12T01:25:06.987Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752241000529 (completed): 0 domains found
+[2025-07-12T01:25:06.987Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752240560849 (completed): 0 domains found
+[2025-07-12T01:25:06.987Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752240464956 (completed): 0 domains found
+[2025-07-12T01:25:06.987Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752240105502 (completed): 0 domains found
+[2025-07-12T01:25:06.988Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752239125290 (completed): 0 domains found
+[2025-07-12T01:25:06.988Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752238765372 (completed): 0 domains found
+[2025-07-12T01:25:06.988Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752237455722 (completed): 0 domains found
+[2025-07-12T01:25:07.018Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752236934334 (completed): 0 domains found
+[2025-07-12T01:25:07.027Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752236660088 (completed): 0 domains found
+[2025-07-12T01:25:07.027Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752235321832 (completed): 0 domains found
+[2025-07-12T01:25:07.027Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752234726836 (completed): 0 domains found
+[2025-07-12T01:25:07.027Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752234624734 (completed): 0 domains found
+[2025-07-12T01:25:07.027Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752234444726 (completed): 0 domains found
+[2025-07-12T01:25:07.027Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752234235124 (completed): 0 domains found
+[2025-07-12T01:25:07.027Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752233923998 (completed): 0 domains found
+[2025-07-12T01:25:07.027Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752233490407 (completed): 0 domains found
+[2025-07-12T01:25:07.028Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752233443237 (completed): 0 domains found
+[2025-07-12T01:25:07.028Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752233222857 (completed): 0 domains found
+[2025-07-12T01:25:07.028Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752232853468 (completed): 0 domains found
+[2025-07-12T01:25:07.028Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752232798226 (completed): 0 domains found
+[2025-07-12T01:25:07.028Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752232409732 (completed): 0 domains found
+[2025-07-12T01:25:07.028Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752231819454 (completed): 0 domains found
+[2025-07-12T01:25:07.028Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752231557416 (completed): 0 domains found
+[2025-07-12T01:25:07.032Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752230502457 (completed): 0 domains found
+[2025-07-12T01:25:07.035Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752229187620 (completed): 0 domains found
+[2025-07-12T01:25:07.045Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752228675550 (completed): 0 domains found
+[2025-07-12T01:25:07.054Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752228357265 (completed): 0 domains found
+[2025-07-12T01:25:07.054Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752227851029 (completed): 0 domains found
+[2025-07-12T01:25:07.057Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752227515504 (completed): 0 domains found
+[2025-07-12T01:25:07.060Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752227316193 (completed): 0 domains found
+[2025-07-12T01:25:07.060Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752226685282 (completed): 0 domains found
+[2025-07-12T01:25:07.060Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752224816631 (completed): 0 domains found
+[2025-07-12T01:25:07.060Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752223963731 (completed): 0 domains found
+[2025-07-12T01:25:07.067Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752191290139 (completed): 0 domains found
+[2025-07-12T01:25:07.072Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752189928332 (completed): 0 domains found
+[2025-07-12T01:25:07.075Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752189740826 (completed): 0 domains found
+[2025-07-12T01:25:07.075Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752189456651 (completed): 0 domains found
+[2025-07-12T01:25:07.075Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752189317196 (completed): 0 domains found
+[2025-07-12T01:25:07.075Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752180420249 (completed): 0 domains found
+[2025-07-12T01:25:07.075Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752180223159 (completed): 0 domains found
+[2025-07-12T01:25:07.075Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752180073223 (completed): 0 domains found
+[2025-07-12T01:25:07.075Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752179666930 (completed): 0 domains found
+[2025-07-12T01:25:07.076Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752179288463 (completed): 0 domains found
+[2025-07-12T01:25:07.080Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752179081908 (completed): 0 domains found
+[2025-07-12T01:25:07.084Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752178548056 (completed): 0 domains found
+[2025-07-12T01:25:07.087Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752178390112 (completed): 0 domains found
+[2025-07-12T01:25:07.087Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752178157842 (completed): 0 domains found
+[2025-07-12T01:25:07.087Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752178050330 (completed): 0 domains found
+[2025-07-12T01:25:07.087Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752177962725 (completed): 0 domains found
+[2025-07-12T01:25:07.088Z] 🔍 [FRONTEND LOG] [LatestActivity] Processing campaign Redirect-Test-1752177614724 (completed): 0 domains found
+[2025-07-12T01:25:07.233Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:07.271Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 → 200
+[2025-07-12T01:25:07.288Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480, name: DNS-Test-1752266456097, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:25:07.351Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[2025-07-12T01:25:07.364Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[2025-07-12T01:25:07.395Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.408Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.438Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 → 200
+[2025-07-12T01:25:07.453Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50, name: DNS-Test-1752265587319, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:25:07.455Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[2025-07-12T01:25:07.455Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[2025-07-12T01:25:07.455Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.455Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.509Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 → 200
+[2025-07-12T01:25:07.553Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3, name: DNS-Test-1752276089580, campaignType: domain_generation, status: completed, launchSequence: false}
+[2025-07-12T01:25:07.563Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[2025-07-12T01:25:07.597Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[2025-07-12T01:25:07.603Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.657Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.721Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:07.774Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543 → 200
+[2025-07-12T01:25:07.779Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 798e64f0-cecd-4069-b9d8-253929446543, name: DNS-Test-1752267079398, campaignType: domain_generation, status: running, launchSequence: false}
+[2025-07-12T01:25:07.779Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[2025-07-12T01:25:07.779Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[2025-07-12T01:25:07.779Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.780Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.841Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616 → 200
+[2025-07-12T01:25:07.843Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 8449c16a-529f-4210-aeac-45908af1d616, name: DNS-Test-1752276653090, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T01:25:07.868Z] 🔍 [FRONTEND LOG] [CampaignService] Getting generated domains for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[2025-07-12T01:25:07.868Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[2025-07-12T01:25:07.870Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.871Z] 📤 [NETWORK] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.871Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:07.871Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:07.871Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/dns-validation?limit=1000 → 200
+[2025-07-12T01:25:07.871Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:07.872Z] 📥 [NETWORK] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/generated-domains?limit=1000 → 200
+[2025-07-12T01:25:09.968Z] ❌ Test error: page.goto: Timeout 30000ms exceeded.
+Call log:
+[2m  - navigating to "http://localhost:3000/campaigns/new", waiting until "load"[22m
+
+
+--- Frontend Console Logs ---
+[FRONTEND] [ERROR] [2025-07-12T01:24:10.804Z] [gd894mee] [ERROR] [AUTH_SERVICE] Login failed {
+  "error": "Network Error"
+}
+[FRONTEND] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: dc07d543-8441-46cb-a218-66a50e606215
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 5ab8635a-10c4-4516-a715-beec01f458f5
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: dc07d543-8441-46cb-a218-66a50e606215
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 5ab8635a-10c4-4516-a715-beec01f458f5
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: dc07d543-8441-46cb-a218-66a50e606215
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 5ab8635a-10c4-4516-a715-beec01f458f5
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 424829b1-d7cd-46b4-9d6c-e780dfe9faca, name: Phase-Test-1752278259397, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: dc07d543-8441-46cb-a218-66a50e606215
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 5ab8635a-10c4-4516-a715-beec01f458f5
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: dc07d543-8441-46cb-a218-66a50e606215, name: Phase-Test-1752278376807, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 17166a30-6bd6-4d82-97d0-297fdf44d992, name: Phase-Test-1752280647118, campaignType: dns_validation, status: running, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[FRONTEND] [LOG] 📥 [WebSocketService] Received message on dashboard-activity: {type: connection_ack, campaignId: undefined, timestamp: 2025-07-12T01:24:40Z}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 5ab8635a-10c4-4516-a715-beec01f458f5, name: DNS-Test-1752277038066, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 424829b1-d7cd-46b4-9d6c-e780dfe9faca, name: Phase-Test-1752278259397, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: f7755854-88e4-4bd3-bdf6-b9e47ee3394c, name: DNS-Test-1752276879455, campaignType: dns_validation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: dc07d543-8441-46cb-a218-66a50e606215, name: Phase-Test-1752278376807, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 17166a30-6bd6-4d82-97d0-297fdf44d992, name: Phase-Test-1752280647118, campaignType: dns_validation, status: running, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 424829b1-d7cd-46b4-9d6c-e780dfe9faca, name: Phase-Test-1752278259397, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 5ab8635a-10c4-4516-a715-beec01f458f5, name: DNS-Test-1752277038066, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: f7755854-88e4-4bd3-bdf6-b9e47ee3394c, name: DNS-Test-1752276879455, campaignType: dns_validation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: dc07d543-8441-46cb-a218-66a50e606215, name: Phase-Test-1752278376807, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 17166a30-6bd6-4d82-97d0-297fdf44d992, name: Phase-Test-1752280647118, campaignType: dns_validation, status: running, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 8449c16a-529f-4210-aeac-45908af1d616
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 798e64f0-cecd-4069-b9d8-253929446543
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: f7755854-88e4-4bd3-bdf6-b9e47ee3394c, name: DNS-Test-1752276879455, campaignType: dns_validation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 5ab8635a-10c4-4516-a715-beec01f458f5, name: DNS-Test-1752277038066, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 424829b1-d7cd-46b4-9d6c-e780dfe9faca, name: Phase-Test-1752278259397, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 424829b1-d7cd-46b4-9d6c-e780dfe9faca {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: dc07d543-8441-46cb-a218-66a50e606215, name: Phase-Test-1752278376807, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: dc07d543-8441-46cb-a218-66a50e606215 {limit: 1000}
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 17166a30-6bd6-4d82-97d0-297fdf44d992, name: Phase-Test-1752280647118, campaignType: dns_validation, status: running, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 17166a30-6bd6-4d82-97d0-297fdf44d992 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: f7755854-88e4-4bd3-bdf6-b9e47ee3394c, name: DNS-Test-1752276879455, campaignType: dns_validation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: f7755854-88e4-4bd3-bdf6-b9e47ee3394c {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 5ab8635a-10c4-4516-a715-beec01f458f5, name: DNS-Test-1752277038066, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 5ab8635a-10c4-4516-a715-beec01f458f5 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 8449c16a-529f-4210-aeac-45908af1d616
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 798e64f0-cecd-4069-b9d8-253929446543
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480, name: DNS-Test-1752266456097, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3, name: DNS-Test-1752276089580, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 798e64f0-cecd-4069-b9d8-253929446543, name: DNS-Test-1752267079398, campaignType: domain_generation, status: running, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50, name: DNS-Test-1752265587319, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 8449c16a-529f-4210-aeac-45908af1d616, name: DNS-Test-1752276653090, campaignType: dns_validation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 8449c16a-529f-4210-aeac-45908af1d616
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 798e64f0-cecd-4069-b9d8-253929446543
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50, name: DNS-Test-1752265587319, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3, name: DNS-Test-1752276089580, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480, name: DNS-Test-1752266456097, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 798e64f0-cecd-4069-b9d8-253929446543, name: DNS-Test-1752267079398, campaignType: domain_generation, status: running, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 8449c16a-529f-4210-aeac-45908af1d616, name: DNS-Test-1752276653090, campaignType: dns_validation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: 8449c16a-529f-4210-aeac-45908af1d616
+[FRONTEND] [LOG] [CampaignService] Getting campaign by ID: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[FRONTEND] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[FRONTEND] [ERROR] [CampaignService] Failed to get generated domains: AxiosError
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Phase-Test-1752280647118 (dns_validation): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Phase-Test-1752278376807 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Phase-Test-1752278259397 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752277038066 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752276879455 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752276653090 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752276089580 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752267079398 (domain_generation): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752266456097 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752265587319 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752265040264 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752264871771 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752264517381 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752263613918 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752263399805 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752263229663 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752262883634 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752262185085 (domain_generation): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752260298216 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign DNS-Test-1752260118765 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752259334576 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752259093874 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752258540350 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752258383414 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752257992323 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752257563243 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752257367471 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752257151663 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752257070414 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752256606737 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752255845177 (domain_generation): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752252856157 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752252642994 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752252206114 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752252097354 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752251792810 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752251372489 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752250472504 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752249566790 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752249463483 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752248485676 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752248369826 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752248176434 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752247989685 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752247209914 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752245371544 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752245014522 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752244533017 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign test-till-dnss (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752241547375 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752241000529 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752240560849 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752240464956 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752240105502 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752239125290 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752238765372 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752237455722 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752236934334 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752236660088 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752235321832 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752234726836 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752234624734 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752234444726 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752234235124 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752233923998 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752233490407 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752233443237 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752233222857 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752232853468 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752232798226 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752232409732 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752231819454 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752231557416 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752230502457 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752229187620 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752228675550 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752228357265 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752227851029 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752227515504 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752227316193 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752226685282 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752224816631 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752223963731 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752191290139 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752189928332 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752189740826 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752189456651 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752189317196 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752180420249 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752180223159 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752180073223 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752179666930 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752179288463 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752179081908 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752178548056 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752178390112 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752178157842 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752178050330 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752177962725 (completed): 0 domains found
+[FRONTEND] [LOG] [LatestActivity] Processing campaign Redirect-Test-1752177614724 (completed): 0 domains found
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480, name: DNS-Test-1752266456097, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50, name: DNS-Test-1752265587319, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3, name: DNS-Test-1752276089580, campaignType: domain_generation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 798e64f0-cecd-4069-b9d8-253929446543, name: DNS-Test-1752267079398, campaignType: domain_generation, status: running, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 798e64f0-cecd-4069-b9d8-253929446543 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Extracted campaign data: {id: 8449c16a-529f-4210-aeac-45908af1d616, name: DNS-Test-1752276653090, campaignType: dns_validation, status: completed, launchSequence: false}
+[FRONTEND] [LOG] [CampaignService] Getting generated domains for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+[FRONTEND] [LOG] [CampaignService] Getting DNS validation results for campaign: 8449c16a-529f-4210-aeac-45908af1d616 {limit: 1000}
+
+--- Network Request Summary ---
+[2025-07-12T01:24:40.018Z] GET http://localhost:8080/api/v2/campaigns?limit=100
+[2025-07-12T01:24:40.022Z] GET http://localhost:8080/api/v2/campaigns?limit=100
+[2025-07-12T01:24:40.033Z] GET http://localhost:8080/api/v2/campaigns?limit=100
+[2025-07-12T01:24:40.067Z] GET http://localhost:8080/api/v2/campaigns?limit=100
+[2025-07-12T01:24:40.069Z] GET http://localhost:3000/campaigns/new
+[2025-07-12T01:24:40.459Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.459Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.460Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.460Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.460Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.681Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.681Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.681Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.681Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.686Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.721Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:40.726Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:40.743Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:40.743Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:40.743Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:40.912Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000
+[2025-07-12T01:24:40.912Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.059Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T01:24:41.075Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215
+[2025-07-12T01:24:41.089Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca
+[2025-07-12T01:24:41.094Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5
+[2025-07-12T01:24:41.094Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c
+[2025-07-12T01:24:41.095Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.095Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.186Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.189Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.491Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.491Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.548Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.548Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.551Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.551Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.579Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.579Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.581Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.581Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.810Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.850Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000
+[2025-07-12T01:24:41.989Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000
+[2025-07-12T01:24:41.998Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000
+[2025-07-12T01:24:42.043Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000
+[2025-07-12T01:24:42.043Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000
+[2025-07-12T01:24:42.109Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000
+[2025-07-12T01:24:42.110Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000
+[2025-07-12T01:24:50.108Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000
+[2025-07-12T01:24:50.108Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000
+[2025-07-12T01:24:50.765Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:24:50.765Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:24:50.765Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:24:50.766Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:24:50.766Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:24:50.863Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000
+[2025-07-12T01:24:50.865Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000
+[2025-07-12T01:24:51.169Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000
+[2025-07-12T01:24:51.198Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000
+[2025-07-12T01:24:51.285Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/generated-domains?limit=1000
+[2025-07-12T01:24:51.288Z] GET http://localhost:8080/api/v2/campaigns/424829b1-d7cd-46b4-9d6c-e780dfe9faca/results/dns-validation?limit=1000
+[2025-07-12T01:24:51.288Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/generated-domains?limit=1000
+[2025-07-12T01:24:51.303Z] GET http://localhost:8080/api/v2/campaigns/dc07d543-8441-46cb-a218-66a50e606215/results/dns-validation?limit=1000
+[2025-07-12T01:24:55.895Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/generated-domains?limit=1000
+[2025-07-12T01:24:55.896Z] GET http://localhost:8080/api/v2/campaigns/17166a30-6bd6-4d82-97d0-297fdf44d992/results/dns-validation?limit=1000
+[2025-07-12T01:24:55.970Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/generated-domains?limit=1000
+[2025-07-12T01:24:55.970Z] GET http://localhost:8080/api/v2/campaigns/f7755854-88e4-4bd3-bdf6-b9e47ee3394c/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.035Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.036Z] GET http://localhost:8080/api/v2/campaigns/5ab8635a-10c4-4516-a715-beec01f458f5/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.054Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:24:56.054Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:24:56.054Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:24:56.067Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:24:56.080Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:24:56.811Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.811Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.820Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.824Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.911Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.919Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.920Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.920Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/dns-validation?limit=1000
+[2025-07-12T01:24:56.970Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/generated-domains?limit=1000
+[2025-07-12T01:24:56.970Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/dns-validation?limit=1000
+[2025-07-12T01:25:01.329Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:25:01.329Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3
+[2025-07-12T01:25:01.330Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T01:25:01.331Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480
+[2025-07-12T01:25:01.340Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:25:01.629Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/generated-domains?limit=1000
+[2025-07-12T01:25:01.629Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/dns-validation?limit=1000
+[2025-07-12T01:25:01.631Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/generated-domains?limit=1000
+[2025-07-12T01:25:01.631Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/dns-validation?limit=1000
+[2025-07-12T01:25:01.676Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/generated-domains?limit=1000
+[2025-07-12T01:25:01.679Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/dns-validation?limit=1000
+[2025-07-12T01:25:01.872Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/generated-domains?limit=1000
+[2025-07-12T01:25:01.874Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/dns-validation?limit=1000
+[2025-07-12T01:25:02.220Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/generated-domains?limit=1000
+[2025-07-12T01:25:02.220Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/dns-validation?limit=1000
+[2025-07-12T01:25:06.531Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616
+[2025-07-12T01:25:06.572Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50
+[2025-07-12T01:25:07.395Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.408Z] GET http://localhost:8080/api/v2/campaigns/73c3ed0f-f179-4e6b-a3a2-5b6e0e35c480/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.455Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.455Z] GET http://localhost:8080/api/v2/campaigns/dc9bfbdf-7c60-415a-8b6f-0f12fcd20c50/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.603Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.657Z] GET http://localhost:8080/api/v2/campaigns/92f71e7a-a06d-4fa2-bccc-d7d26c5bd6c3/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.779Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.780Z] GET http://localhost:8080/api/v2/campaigns/798e64f0-cecd-4069-b9d8-253929446543/results/dns-validation?limit=1000
+[2025-07-12T01:25:07.868Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/generated-domains?limit=1000
+[2025-07-12T01:25:07.871Z] GET http://localhost:8080/api/v2/campaigns/8449c16a-529f-4210-aeac-45908af1d616/results/dns-validation?limit=1000
+
+--- Final Test Results ---
+Campaign Creation: false
+Domain Generation Completion: false
+Phase Transition Trigger: false
+UpdateCampaign API Call Detected: false
+No Duplicate Campaigns Created: false
+Phase Transition Success: false
+
+=== End of Test ===

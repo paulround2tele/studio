@@ -23,7 +23,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DnsPersonaConfig } from './api';
+import { DnsPersonaConfig } from 'api-client';
 
 const instance: DnsPersonaConfig = {
     concurrentQueriesPerDomain,

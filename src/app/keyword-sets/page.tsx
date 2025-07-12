@@ -44,7 +44,7 @@ export default function KeywordSetsPage() {
         
         // Connect to WebSocket for keyword set updates
         wsCleanup = websocketService.connect('keyword-sets', {
-          onMessage: (message: any) => {
+          onMessage: (message) => {
             console.log('[KeywordSetsPage] WebSocket message received:', message);
             
             // Route keyword set-specific messages
@@ -57,7 +57,7 @@ export default function KeywordSetsPage() {
           onConnect: () => {
             console.log('[KeywordSetsPage] WebSocket connected for keyword set push updates');
           },
-          onError: (error: any) => {
+          onError: (error) => {
             console.error('[KeywordSetsPage] WebSocket error:', error);
           },
           onDisconnect: () => {

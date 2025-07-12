@@ -10,10 +10,6 @@ import { campaignService } from './campaignService.production';
 import { CampaignViewModel, components } from '../types';
 
 // Extract types from the OpenAPI schema
-type GeneratedDomainsResponse = components["schemas"]["GeneratedDomainsResponse"];
-type DNSValidationResultsResponse = components["schemas"]["DNSValidationResultsResponse"];
-type HTTPKeywordResultsResponse = components["schemas"]["HTTPKeywordResultsResponse"];
-type CampaignDetailsResponse = components["schemas"]["CampaignDetailsResponse"];
 type _GeneratedDomain = components["schemas"]["GeneratedDomain"]; // Unused
 type _DNSValidationResult = components["schemas"]["DNSValidationResult"]; // Unused
 type HTTPKeywordResult = components["schemas"]["HTTPKeywordResult"];

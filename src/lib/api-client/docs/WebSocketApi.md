@@ -17,7 +17,7 @@ Upgrades HTTP connection to WebSocket for real-time communication
 import {
     WebSocketApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new WebSocketApi(configuration);

@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DomainGenerationParams } from './api';
+import { DomainGenerationParams } from 'api-client';
 
 const instance: DomainGenerationParams = {
     characterSet,

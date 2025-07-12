@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { StandardAPIResponse } from './api';
+import { StandardAPIResponse } from 'api-client';
 
 const instance: StandardAPIResponse = {
     data,

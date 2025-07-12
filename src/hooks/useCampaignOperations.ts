@@ -92,7 +92,7 @@ export const useCampaignOperations = (campaignId: string) => {
       } = {};
 
       // 🔧 CRITICAL FIX: Check currentPhase for DNS validation transition
-      const isDNSValidationPhase = (campaignData as any).currentPhase === 'dns_validation';
+      const isDNSValidationPhase = (campaignData as { currentPhase?: string }).currentPhase === 'dns_validation';
       
       if (campaignData.campaignType === 'domain_generation' && !isDNSValidationPhase) {
         console.log('📡 [Domain Loading] Fetching generated domains...');

@@ -16,7 +16,17 @@ type User = components['schemas']['User'];
 type GeneratedDomain = components['schemas']['GeneratedDomain'];
 type DNSValidationResult = components['schemas']['DNSValidationResult'];
 type HTTPKeywordResult = components['schemas']['HTTPKeywordResult'];
-type CampaignJob = any; // Keep legacy for complex validation logic
+interface CampaignJob {
+  id: string;
+  campaignId: string;
+  jobType: string;
+  status: string;
+  scheduledAt: string;
+  attempts: number;
+  maxAttempts: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Runtime type validation functions
 export function validateCampaignType(value: unknown): value is CampaignType {

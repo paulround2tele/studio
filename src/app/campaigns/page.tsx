@@ -558,16 +558,7 @@ function CampaignsPageContent() {
             isEmptyButValid = true;
             console.log('✅ [BACKEND_INTEGRATION] Successful response with no campaigns (nested null)');
           }
-          // Handle triple-nested empty array
-          else if (dataField && typeof dataField === 'object' && 'data' in dataField &&
-                   dataField.data && typeof dataField.data === 'object' && 'data' in dataField.data &&
-                   Array.isArray((dataField.data as Record<string, unknown>).data) &&
-                   ((dataField.data as Record<string, unknown>).data as unknown[]).length === 0) {
-            campaignsData = [];
-            responseValid = true;
-            isEmptyButValid = true;
-            console.log('✅ [BACKEND_INTEGRATION] Successful response with empty campaigns array (triple-nested)');
-          }
+          // Note: Triple-nested empty array condition removed as it was duplicate
           else {
             console.warn('⚠️ [BACKEND_INTEGRATION] Success response but unexpected data structure:', {
               successValue,

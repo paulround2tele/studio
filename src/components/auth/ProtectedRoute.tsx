@@ -2,8 +2,8 @@
 // Configuration-driven protected route component with proper loading state management
 'use client';
 
-import React, { ReactNode, useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 import { getLogger } from '@/lib/utils/logger';
@@ -26,21 +26,19 @@ interface AccessDeniedProps {
   redirectTo?: string;
 }
 
-function AccessDenied({ onLogin, redirectTo }: AccessDeniedProps) {
-  const router = useRouter();
-
+function _AccessDenied({ onLogin, redirectTo }: AccessDeniedProps) {
   const handleLogin = () => {
     if (onLogin) {
       onLogin();
     } else if (redirectTo) {
-      router.push(redirectTo);
+      window.location.href = redirectTo;
     } else {
-      router.push('/login');
+      window.location.href = '/login';
     }
   };
 
   const handleGoHome = () => {
-    router.push('/');
+    window.location.href = '/';
   };
 
   return (
@@ -83,8 +81,6 @@ function LoadingScreen() {
 export function ProtectedRoute({
   children,
   fallbackComponent,
-  redirectTo,
-  showLoginPrompt = true,
   allowUnauthenticated = false
 }: ProtectedRouteProps) {
   const {
@@ -95,9 +91,7 @@ export function ProtectedRoute({
   } = useAuth();
   
   const loadingStore = useLoadingStore();
-  const router = useRouter();
   const pathname = usePathname();
-  const [hasTriedRedirect, setHasTriedRedirect] = useState(false);
 
   // Get session loading state
   const isSessionLoading = loadingStore.isOperationLoading(LOADING_OPERATIONS.SESSION_CHECK);

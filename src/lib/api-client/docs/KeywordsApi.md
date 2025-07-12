@@ -19,7 +19,7 @@ import {
     KeywordsApi,
     Configuration,
     BatchKeywordExtractionRequest
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordsApi(configuration);
@@ -73,7 +73,7 @@ Extracts keywords from a single URL with real-time streaming results
 import {
     KeywordsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordsApi(configuration);

@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ComponentStatus } from './api';
+import { ComponentStatus } from 'api-client';
 
 const instance: ComponentStatus = {
     message,

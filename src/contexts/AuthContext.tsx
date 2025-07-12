@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { User } from '@/lib/types';
 import { authService } from '@/lib/services/authService';
-import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
+import { useLoadingStore } from '@/lib/stores/loadingStore';
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [authState]);
 
-  const loadingStore = useLoadingStore();
+  const _loadingStore = useLoadingStore();
   const sessionCheckRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
   const sessionCheckStartedRef = useRef(false);
@@ -268,8 +268,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Add storage event listener to sync auth state across tabs
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth_logout') {
+    const handleStorageChange = (e: Event) => {
+      // Type guard to check if it's a storage event
+      if (!('key' in e) || !('newValue' in e)) return;
+      const storageEvent = e as { key: string | null; newValue: string | null };
+      if (storageEvent.key === 'auth_logout') {
         console.log('[AuthContext] Logout detected from another tab');
         setAuthState({
           user: null,
@@ -302,7 +305,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearTimeout(currentSessionCheckTimeout);
       }
     };
-  }, []); // FIXED: Remove checkSession dependency to prevent re-initialization
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- Intentionally empty to prevent re-initialization
 
   const login = useCallback(async (credentials: { email: string; password: string }) => {
     logger.info('AUTH_CONTEXT', 'Login attempt started', { email: credentials.email });

@@ -247,7 +247,7 @@ class WebSocketServiceImpl {
                 campaignId,
                 timestamp: new Date().toISOString(),
                 // Backend expects uppercase CampaignID field
-                ...({ CampaignID: campaignId } as any)
+                ...({ CampaignID: campaignId } as { CampaignID: string })
               });
             } else if (channel === 'all-campaigns') {
               // All campaigns subscription

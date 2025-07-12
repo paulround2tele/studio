@@ -1,5 +1,6 @@
 .gitignore
 .npmignore
+README.md
 api.ts
 base.ts
 common.ts
@@ -104,3 +105,5 @@ docs/WebSocketApi.md
 docs/WorkerConfig.md
 git_push.sh
 index.ts
+package.json
+tsconfig.json

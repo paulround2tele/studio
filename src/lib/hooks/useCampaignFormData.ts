@@ -81,7 +81,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
         
         // Check if data is wrapped with campaigns property
         if (responseData && typeof responseData === 'object' && 'campaigns' in responseData) {
-          const campaigns = (responseData as any).campaigns;
+          const campaigns = (responseData as { campaigns: unknown }).campaigns;
           if (Array.isArray(campaigns)) {
             campaignsArray = campaigns;
           }

@@ -376,7 +376,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
       console.log('[DEBUG] onSubmit finally block, setting isSubmitting false');
       setIsSubmitting(false);
     }
-  }, [sourceCampaign.id, phaseType, toast, onClose, onPhaseStarted, user?.id]);
+  }, [sourceCampaign, user, phaseType, toast, onClose, onPhaseStarted]);
 
   // Reset form when panel opens/closes
   React.useEffect(() => {

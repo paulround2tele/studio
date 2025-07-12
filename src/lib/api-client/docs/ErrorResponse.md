@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ErrorResponse } from './api';
+import { ErrorResponse } from 'api-client';
 
 const instance: ErrorResponse = {
     error,

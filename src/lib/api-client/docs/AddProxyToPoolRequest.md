@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { AddProxyToPoolRequest } from './api';
+import { AddProxyToPoolRequest } from 'api-client';
 
 const instance: AddProxyToPoolRequest = {
     proxyId,

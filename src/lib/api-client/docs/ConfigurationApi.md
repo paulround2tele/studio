@@ -32,7 +32,7 @@ Retrieves sanitized authentication configuration
 import {
     ConfigurationApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -77,7 +77,7 @@ Retrieves the default DNS validator configuration
 import {
     ConfigurationApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -122,7 +122,7 @@ Retrieves the default HTTP validator configuration
 import {
     ConfigurationApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -167,7 +167,7 @@ Retrieves the current logging configuration
 import {
     ConfigurationApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -212,7 +212,7 @@ Retrieves proxy manager settings
 import {
     ConfigurationApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -257,7 +257,7 @@ Retrieves global rate limiter settings
 import {
     ConfigurationApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -302,7 +302,7 @@ Retrieves current server-wide configurations
 import {
     ConfigurationApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -347,7 +347,7 @@ Retrieves the worker configuration
 import {
     ConfigurationApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -393,7 +393,7 @@ import {
     ConfigurationApi,
     Configuration,
     AuthConfig
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -446,7 +446,7 @@ import {
     ConfigurationApi,
     Configuration,
     DNSConfig
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -499,7 +499,7 @@ import {
     ConfigurationApi,
     Configuration,
     HTTPConfig
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -552,7 +552,7 @@ import {
     ConfigurationApi,
     Configuration,
     LoggingConfig
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -605,7 +605,7 @@ import {
     ConfigurationApi,
     Configuration,
     ProxyManagerConfig
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -658,7 +658,7 @@ import {
     ConfigurationApi,
     Configuration,
     RateLimiterConfig
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -711,7 +711,7 @@ import {
     ConfigurationApi,
     Configuration,
     ServerConfig
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);
@@ -764,7 +764,7 @@ import {
     ConfigurationApi,
     Configuration,
     WorkerConfig
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigurationApi(configuration);

@@ -49,7 +49,7 @@ const navigationItems = [
 
 // Memoized sidebar component to prevent unnecessary re-renders
 const AppSidebar = memo(() => {
-  const { user, logout, isLoading, isAuthenticated } = useAuth();
+  const { user, logout, isLoading } = useAuth();
 
   // Always show all navigation items - middleware ensures user is authenticated
   const filteredItems = useMemo(() => {

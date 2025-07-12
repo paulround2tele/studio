@@ -19,7 +19,7 @@ Returns overall health status of the application and its components
 import {
     HealthApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
@@ -65,7 +65,7 @@ Checks if the service is alive and running
 import {
     HealthApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
@@ -110,7 +110,7 @@ Checks if the service is ready to receive traffic
 import {
     HealthApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);

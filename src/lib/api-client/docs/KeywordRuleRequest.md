@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { KeywordRuleRequest } from './api';
+import { KeywordRuleRequest } from 'api-client';
 
 const instance: KeywordRuleRequest = {
     category,

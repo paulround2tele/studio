@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HTTP2SettingsConfig } from './api';
+import { HTTP2SettingsConfig } from 'api-client';
 
 const instance: HTTP2SettingsConfig = {
     enabled,

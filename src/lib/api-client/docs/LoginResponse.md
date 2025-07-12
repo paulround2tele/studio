@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { LoginResponse } from './api';
+import { LoginResponse } from 'api-client';
 
 const instance: LoginResponse = {
     expiresAt,

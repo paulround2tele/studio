@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DNSValidationResult } from './api';
+import { DNSValidationResult } from 'api-client';
 
 const instance: DNSValidationResult = {
     attempts,

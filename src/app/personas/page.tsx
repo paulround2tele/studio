@@ -156,7 +156,7 @@ function PersonasPageContent() {
         
         // Connect to WebSocket for persona updates
         wsCleanup = websocketService.connect('personas', {
-          onMessage: (message: any) => {
+          onMessage: (message) => {
             console.log('[PersonasPage] WebSocket message received:', message);
             
             // Route persona-specific messages
@@ -169,7 +169,7 @@ function PersonasPageContent() {
           onConnect: () => {
             console.log('[PersonasPage] WebSocket connected for persona push updates');
           },
-          onError: (error: any) => {
+          onError: (error) => {
             console.error('[PersonasPage] WebSocket error:', error);
           },
           onDisconnect: () => {

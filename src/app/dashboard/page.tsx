@@ -1,8 +1,6 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -13,23 +11,12 @@ import LatestActivityTable from '@/components/dashboard/LatestActivityTable';
 import ProductionReadinessCheck from '@/components/system/ProductionReadinessCheck';
 
 export default function DashboardPage() {
-  const { isAuthenticated, isLoading, isInitialized, user } = useAuth();
-  const router = useRouter();
+  const { user } = useAuth();
 
   // REMOVED: Client-side authentication redirects - middleware handles all auth
   // This prevents race conditions between middleware and client-side auth logic
 
-  // Show loading only while auth context is initializing
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Loading removed - middleware handles authentication
 
   // SIMPLIFIED: If middleware let us through, render dashboard
   // Don't get stuck waiting for user data that might not load

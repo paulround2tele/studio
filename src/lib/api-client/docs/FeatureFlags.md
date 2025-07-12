@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { FeatureFlags } from './api';
+import { FeatureFlags } from 'api-client';
 
 const instance: FeatureFlags = {
     enableAnalytics,

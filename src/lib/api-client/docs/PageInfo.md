@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PageInfo } from './api';
+import { PageInfo } from 'api-client';
 
 const instance: PageInfo = {
     count,

@@ -18,7 +18,7 @@ Returns current feature flag settings
 import {
     ConfigApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigApi(configuration);
@@ -66,7 +66,7 @@ import {
     ConfigApi,
     Configuration,
     FeatureFlags
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new ConfigApi(configuration);

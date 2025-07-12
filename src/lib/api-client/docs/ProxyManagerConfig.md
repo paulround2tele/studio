@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ProxyManagerConfig } from './api';
+import { ProxyManagerConfig } from 'api-client';
 
 const instance: ProxyManagerConfig = {
     initialHealthCheckTimeoutSeconds,

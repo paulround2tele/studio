@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PatternOffsetRequest } from './api';
+import { PatternOffsetRequest } from 'api-client';
 
 const instance: PatternOffsetRequest = {
     characterSet,

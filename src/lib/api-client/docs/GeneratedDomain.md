@@ -27,7 +27,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { GeneratedDomain } from './api';
+import { GeneratedDomain } from 'api-client';
 
 const instance: GeneratedDomain = {
     createdAt,

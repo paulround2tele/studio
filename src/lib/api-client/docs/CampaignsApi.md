@@ -33,7 +33,7 @@ import {
     CampaignsApi,
     Configuration,
     BulkDeleteRequest
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -88,7 +88,7 @@ Cancels a campaign, setting it to cancelled status
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -146,7 +146,7 @@ import {
     CampaignsApi,
     Configuration,
     CreateCampaignRequest
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -201,7 +201,7 @@ Permanently deletes a campaign and all its associated data
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -258,7 +258,7 @@ Gets detailed information about a campaign including type-specific parameters
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -313,7 +313,7 @@ Gets DNS validation results for a DNS validation campaign
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -374,7 +374,7 @@ import {
     CampaignsApi,
     Configuration,
     PatternOffsetRequest
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -429,7 +429,7 @@ Gets generated domains for a domain generation campaign
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -489,7 +489,7 @@ Gets HTTP keyword validation results for an HTTP keyword validation campaign
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -549,7 +549,7 @@ Lists all campaigns with pagination and filtering support
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -613,7 +613,7 @@ Pauses a running or queued campaign
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -670,7 +670,7 @@ Resumes a paused campaign by queuing it for execution
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -727,7 +727,7 @@ Starts a campaign by transitioning it from pending to queued status
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -785,7 +785,7 @@ import {
     CampaignsApi,
     Configuration,
     UpdateCampaignRequest
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -843,7 +843,7 @@ Triggers domain-centric DNS validation for all domains in a completed domain gen
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
@@ -900,7 +900,7 @@ Triggers domain-centric HTTP keyword validation for all domains in a completed D
 import {
     CampaignsApi,
     Configuration
-} from './api';
+} from 'api-client';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);

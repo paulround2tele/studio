@@ -33,7 +33,7 @@ export default function ProxyPoolList() {
   const loadPools = async () => {
     try {
       const pools = await proxyPoolsApi.listProxyPools();
-      setPools(pools.data.filter((pool: any) => pool.id) as ProxyPool[]);
+      setPools(pools.data.filter((pool: { id?: unknown }) => pool.id) as ProxyPool[]);
     } catch (error) {
       console.error('Failed to load proxy pools:', error);
     }

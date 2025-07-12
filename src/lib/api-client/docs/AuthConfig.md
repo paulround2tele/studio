@@ -30,7 +30,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { AuthConfig } from './api';
+import { AuthConfig } from 'api-client';
 
 const instance: AuthConfig = {
     accountLockDuration,

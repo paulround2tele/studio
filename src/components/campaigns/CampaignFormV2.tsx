@@ -472,9 +472,11 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         
         if (response.status === 'success' && response.data) {
           // Handle nested response structure from the API
-          const apiResponse = response.data as any;
-          const campaign = apiResponse.data || response.data;
-          const campaignId = campaign?.id;
+          const apiResponse = response.data as { data?: unknown } | unknown;
+          const campaign = (typeof apiResponse === 'object' && apiResponse !== null && 'data' in apiResponse)
+            ? (apiResponse as { data: unknown }).data
+            : response.data;
+          const campaignId = (campaign as { id?: string })?.id;
           
           // Validate campaign ID exists
           if (!campaignId) {
@@ -483,7 +485,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
 
           toast({
             title: "Campaign Created Successfully",
-            description: `Campaign "${campaign.name || 'New Campaign'}" has been created.`,
+            description: `Campaign "${(campaign as { name?: string })?.name || 'New Campaign'}" has been created.`,
             variant: "default"
           });
           
@@ -504,7 +506,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           setTimeout(async () => {
             try {
               await router.push(redirectUrl);
-            } catch (routerError) {
+            } catch (_routerError) {
               // Fallback to direct navigation if router fails
               window.location.href = redirectUrl;
             }

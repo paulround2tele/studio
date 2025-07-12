@@ -20,7 +20,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HTTPConfigDetails } from './api';
+import { HTTPConfigDetails } from 'api-client';
 
 const instance: HTTPConfigDetails = {
     allowedStatusCodes,

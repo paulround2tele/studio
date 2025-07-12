@@ -14,7 +14,7 @@ interface StrictProtectedRouteProps {
   redirectTo?: string;
 }
 
-function AccessDenied() {
+function _AccessDenied() {
   const handleLogin = () => {
     // Force redirect to login
     window.location.href = '/login';
@@ -57,7 +57,7 @@ export default function StrictProtectedRoute({
   children,
   allowUnauthenticated = false
 }: StrictProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   // REMOVED: Client-side authentication checks and redirects
   // Middleware handles all authentication - this prevents race conditions

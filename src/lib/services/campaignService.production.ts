@@ -28,7 +28,7 @@ export interface CampaignCreationResponse {
   message?: string;
 }
 
-export interface CampaignOperationResponse {
+export interface CampaignServiceResponse {
   status: 'success' | 'error';
   data?: Campaign;
   message?: string;
@@ -175,7 +175,7 @@ class CampaignService {
   }
 
   // Campaign Update Operation using auto-generated OpenAPI client
-  async updateCampaign(campaignId: string, updatePayload: UpdateCampaignRequest): Promise<CampaignOperationResponse> {
+  async updateCampaign(campaignId: string, updatePayload: UpdateCampaignRequest): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Updating campaign:', campaignId, updatePayload);
       
@@ -197,7 +197,7 @@ class CampaignService {
   }
 
   // Campaign Control Operations
-  async startCampaign(campaignId: string): Promise<CampaignOperationResponse> {
+  async startCampaign(campaignId: string): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Starting campaign:', campaignId);
       const response = await campaignsApi.startCampaign(campaignId);
@@ -217,7 +217,7 @@ class CampaignService {
     }
   }
 
-  async pauseCampaign(campaignId: string): Promise<CampaignOperationResponse> {
+  async pauseCampaign(campaignId: string): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Pausing campaign:', campaignId);
       const response = await campaignsApi.pauseCampaign(campaignId);
@@ -237,7 +237,7 @@ class CampaignService {
     }
   }
 
-  async resumeCampaign(campaignId: string): Promise<CampaignOperationResponse> {
+  async resumeCampaign(campaignId: string): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Resuming campaign:', campaignId);
       const response = await campaignsApi.resumeCampaign(campaignId);
@@ -257,7 +257,7 @@ class CampaignService {
     }
   }
 
-  async cancelCampaign(campaignId: string): Promise<CampaignOperationResponse> {
+  async cancelCampaign(campaignId: string): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Cancelling campaign:', campaignId);
       const response = await campaignsApi.cancelCampaign(campaignId);
@@ -306,7 +306,7 @@ class CampaignService {
   }
 
   // DNS Validation method for phase transitions
-  async validateDNSForCampaign(campaignId: string): Promise<CampaignOperationResponse> {
+  async validateDNSForCampaign(campaignId: string): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Triggering DNS validation for campaign:', campaignId);
       const response = await campaignsApi.validateDNSForCampaign(campaignId);

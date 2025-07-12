@@ -27,7 +27,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HTTPKeywordResult } from './api';
+import { HTTPKeywordResult } from 'api-client';
 
 const instance: HTTPKeywordResult = {
     attempts,
