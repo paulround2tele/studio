@@ -1,24 +1,26 @@
 # GeneratedDomainsResponse
 
-Response for generated domains
+Paginated list of generated domains
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**data** | [**Array&lt;GeneratedDomain&gt;**](GeneratedDomain.md) |  | [optional] [default to undefined]
-**nextCursor** | **number** | Next cursor for pagination | [optional] [default to undefined]
-**totalCount** | **number** | Total number of generated domains | [optional] [default to undefined]
+**domains** | [**Array&lt;GeneratedDomain&gt;**](GeneratedDomain.md) | List of generated domains | [default to undefined]
+**limit** | **number** | Number of items per page | [default to undefined]
+**page** | **number** | Current page number | [default to undefined]
+**total** | **number** | Total number of domains | [default to undefined]
 
 ## Example
 
 ```typescript
-import { GeneratedDomainsResponse } from 'api-client';
+import { GeneratedDomainsResponse } from './api';
 
 const instance: GeneratedDomainsResponse = {
-    data,
-    nextCursor,
-    totalCount,
+    domains,
+    limit,
+    page,
+    total,
 };
 ```
 

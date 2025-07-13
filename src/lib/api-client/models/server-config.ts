@@ -40,12 +40,14 @@ export interface ServerConfig {
     'streamChunkSize'?: number;
 }
 
-export const ServerConfigGinModeEnum = {
-    Debug: 'debug',
-    Release: 'release',
-    Test: 'test'
-} as const;
-
-export type ServerConfigGinModeEnum = typeof ServerConfigGinModeEnum[keyof typeof ServerConfigGinModeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum ServerConfigGinModeEnum {
+    Debug = 'debug',
+    Release = 'release',
+    Test = 'test'
+}
 
 

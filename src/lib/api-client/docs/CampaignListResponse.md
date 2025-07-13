@@ -1,24 +1,26 @@
 # CampaignListResponse
 
-Response for campaign list with pagination metadata
+Paginated list of campaigns
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**data** | [**Array&lt;Campaign&gt;**](Campaign.md) |  | [optional] [default to undefined]
-**metadata** | [**PaginationMetadata**](PaginationMetadata.md) |  | [optional] [default to undefined]
-**status** | **string** |  | [optional] [default to undefined]
+**campaigns** | [**Array&lt;Campaign&gt;**](Campaign.md) | List of campaigns | [default to undefined]
+**limit** | **number** | Number of items per page | [default to undefined]
+**page** | **number** | Current page number | [default to undefined]
+**total** | **number** | Total number of campaigns | [default to undefined]
 
 ## Example
 
 ```typescript
-import { CampaignListResponse } from 'api-client';
+import { CampaignListResponse } from './api';
 
 const instance: CampaignListResponse = {
-    data,
-    metadata,
-    status,
+    campaigns,
+    limit,
+    page,
+    total,
 };
 ```
 

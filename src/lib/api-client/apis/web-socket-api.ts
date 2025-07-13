@@ -106,12 +106,29 @@ export const WebSocketApiFactory = function (configuration?: Configuration, base
 };
 
 /**
+ * WebSocketApi - interface
+ * @export
+ * @interface WebSocketApi
+ */
+export interface WebSocketApiInterface {
+    /**
+     * Upgrades HTTP connection to WebSocket for real-time communication
+     * @summary WebSocket connection endpoint
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof WebSocketApiInterface
+     */
+    connectWebSocket(options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+}
+
+/**
  * WebSocketApi - object-oriented interface
  * @export
  * @class WebSocketApi
  * @extends {BaseAPI}
  */
-export class WebSocketApi extends BaseAPI {
+export class WebSocketApi extends BaseAPI implements WebSocketApiInterface {
     /**
      * Upgrades HTTP connection to WebSocket for real-time communication
      * @summary WebSocket connection endpoint

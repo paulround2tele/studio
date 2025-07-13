@@ -93,9 +93,32 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   };
 
   // Handle phase started from dialog
-  const handlePhaseStarted = (_campaignId: string) => {
-    // Refresh the parent page or navigate to the new campaign
-    window.location.reload();
+  const handlePhaseStarted = async (campaignId: string) => {
+    // 🔧 CRITICAL FIX: Add transition delay to prevent race conditions
+    // This prevents the "campaign not found" issue and domain disappearing bug
+    
+    // Force cache invalidation for the campaign
+    if (typeof window !== 'undefined') {
+      // Clear any cached campaign data to ensure fresh load
+      window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
+        detail: { campaignId }
+      }));
+    }
+    
+    // 🔧 CRITICAL FIX: Wait for backend transition to complete before navigation
+    // This prevents fetching campaign data during transition state
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Force additional cache clear after delay
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
+        detail: { campaignId }
+      }));
+    }
+    
+    // Navigate to the campaign page without type parameter to let the backend determine the correct type
+    // This ensures URL consistency with the actual campaign type after phase transition
+    window.location.href = `/campaigns/${campaignId}`;
   };
   const renderPhaseButtons = () => {
     // 🔧 CRITICAL FIX: Match backend behavior - domain generation auto-completes

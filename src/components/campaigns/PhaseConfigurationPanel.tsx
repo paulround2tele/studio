@@ -285,11 +285,18 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         throw new Error(updateResult.message || 'Failed to update campaign for phase transition');
       }
       
-      const updatedCampaign = updateResult.data;
+      // Fix: Extract the actual campaign data from the nested response
+      const backendResponse = updateResult.data;
+      const updatedCampaign = backendResponse && typeof backendResponse === 'object' && 'data' in backendResponse
+        ? backendResponse.data
+        : backendResponse;
       console.log('[DEBUG] Updated campaign data:', updatedCampaign);
+      console.log('[DEBUG] Backend response structure:', backendResponse);
 
-      if (updatedCampaign && (updatedCampaign.id || sourceCampaign.id)) {
-        const campaignId = updatedCampaign.id || sourceCampaign.id;
+      // Type cast to handle the response structure properly
+      const campaignData = updatedCampaign as any;
+      if (campaignData && (campaignData.id || sourceCampaign.id)) {
+        const campaignId = campaignData.id || sourceCampaign.id;
         console.log('[DEBUG] Success! Campaign ID:', campaignId);
         
         const phaseDisplayNames = {
@@ -316,7 +323,21 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         // Close panel and notify parent with the same campaign ID
         console.log('[DEBUG] Closing panel and notifying parent');
         onClose();
-        onPhaseStarted(campaignId);
+        
+        // 🔧 PHASE TRANSITION FIX: Sync cache invalidation with notification timing
+        // This prevents race conditions during phase transitions
+        setTimeout(() => {
+          // Force cache invalidation synchronized with navigation
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
+              detail: { campaignId }
+            }));
+          }
+          
+          // Notify parent after cache invalidation
+          onPhaseStarted(campaignId);
+        }, 500);
+      } else {
         console.log('[DEBUG] No valid campaign ID found in result');
         throw new Error("Failed to update campaign for phase transition");
       }

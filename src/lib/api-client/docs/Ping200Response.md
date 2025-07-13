@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { Ping200Response } from 'api-client';
+import { Ping200Response } from './api';
 
 const instance: Ping200Response = {
     message,

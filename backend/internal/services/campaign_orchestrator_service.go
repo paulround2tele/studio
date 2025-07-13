@@ -313,8 +313,8 @@ func (s *campaignOrchestratorServiceImpl) GetGeneratedDomainsForCampaign(ctx con
 	if err != nil {
 		return nil, fmt.Errorf("orchestrator: failed to get campaign %s: %w", campaignID, err)
 	}
-	if campaign.CampaignType != models.CampaignTypeDomainGeneration {
-		return nil, fmt.Errorf("orchestrator: campaign %s is not a domain generation campaign", campaignID)
+	if campaign.CampaignType != models.CampaignTypeDomainGeneration && campaign.CampaignType != models.CampaignTypeDNSValidation {
+		return nil, fmt.Errorf("orchestrator: campaign %s is not a domain generation or DNS validation campaign", campaignID)
 	}
 
 	resultsPtr, err := s.campaignStore.GetGeneratedDomainsByCampaign(ctx, querier, campaignID, limit, cursor)
@@ -632,20 +632,28 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 		}
 	}
 
-	// DIAGNOSTIC: Check if this is DNS validation on completed campaign
+	// DIAGNOSTIC: Check if this is DNS validation after phase transition
+	// After phase transition: campaign type is now dns_validation and status is pending
+	isDNSValidationAfterTransition := (campaign.Status == models.CampaignStatusPending &&
+		campaign.CampaignType == models.CampaignTypeDNSValidation &&
+		startReason == "standard_pending_campaign")
+	
+	// DIAGNOSTIC: Legacy check for DNS validation on completed campaign (before transition)
 	isDNSValidationOnCompleted := (campaign.Status == models.CampaignStatusCompleted &&
 		campaign.CampaignType == models.CampaignTypeDomainGeneration &&
 		startReason == "dns_validation_phase_on_domain_generation")
 	
-	log.Printf("[DIAGNOSTIC] StartCampaign transition check - campaignID=%s, currentStatus=%s, targetStatus=%s, isDNSValidationOnCompleted=%t, startReason=%s",
-		campaignID, campaign.Status, models.CampaignStatusQueued, isDNSValidationOnCompleted, startReason)
+	log.Printf("[DIAGNOSTIC] StartCampaign transition check - campaignID=%s, currentStatus=%s, targetStatus=%s, isDNSValidationAfterTransition=%t, isDNSValidationOnCompleted=%t, startReason=%s",
+		campaignID, campaign.Status, models.CampaignStatusQueued, isDNSValidationAfterTransition, isDNSValidationOnCompleted, startReason)
 
-	// FIX: For DNS validation on completed campaigns, bypass status transition
-	// The campaign stays "completed" while DNS validation job processes in-place
+	// FIX: For DNS validation campaigns (both legacy and post-transition), use appropriate handling
 	if isDNSValidationOnCompleted {
 		log.Printf("[FIX] Bypassing status transition for DNS validation on completed campaign %s - preserving completed status", campaignID)
 		s.logAuditEvent(ctx, querier, campaign, "DNS Validation Started on Completed Campaign", "DNS validation job created without changing campaign status")
 		return nil // Success without status change
+	} else if isDNSValidationAfterTransition {
+		log.Printf("[FIX] DNS validation after phase transition for campaign %s - proceeding with normal status transition", campaignID)
+		// Continue to normal status transition flow
 	}
 
 	desc := fmt.Sprintf("Campaign status changed to %s", models.CampaignStatusQueued)
@@ -1111,14 +1119,14 @@ func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, ca
 
 // transitionToDNSValidation handles the transition from domain_generation to dns_validation
 func (s *campaignOrchestratorServiceImpl) transitionToDNSValidation(ctx context.Context, querier store.Querier, campaign *models.Campaign, req *UpdateCampaignRequest) error {
-	log.Printf("Transitioning campaign %s from domain_generation to dns_validation", campaign.ID)
+	log.Printf("Transitioning campaign %s from domain_generation phase to dns_validation phase", campaign.ID)
 	
-	// Update campaign type and reset for new phase
-	campaign.CampaignType = models.CampaignTypeDNSValidation
+	// CRITICAL FIX: Do NOT change campaign type - it remains a domain_generation campaign
+	// Only change the current phase to DNS validation
 	campaign.Status = models.CampaignStatusPending
 	campaign.UpdatedAt = time.Now().UTC()
 	
-	// CRITICAL: Set the currentPhase to match the new campaign type for consistency
+	// CORRECT: Set currentPhase to dns_validation while keeping campaignType as domain_generation
 	dnsPhase := models.CampaignPhaseDNSValidation
 	campaign.CurrentPhase = &dnsPhase
 	

@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 /**
  * DomainFlow API
  * DomainFlow API for domain generation, validation, and campaign management.
@@ -14,13 +15,13 @@
 
 
 /**
- * Request to bulk delete campaigns
+ * Request to delete multiple campaigns
  * @export
  * @interface BulkDeleteRequest
  */
 export interface BulkDeleteRequest {
     /**
-     * Array of campaign UUIDs to delete
+     * List of campaign IDs to delete
      * @type {Array<string>}
      * @memberof BulkDeleteRequest
      */

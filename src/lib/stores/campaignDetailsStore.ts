@@ -209,16 +209,23 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
         }
       }
 
-      // Handle campaign status updates
+      // Handle campaign status updates - PRESERVE domain data during transitions
       if (message.type === 'campaign_status' && message.data) {
         const payload = message.data as { campaignId: string; status: string };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
-          set({ campaign: { ...state.campaign, status: payload.status as CampaignStatus } });
+          // 🔥 CRITICAL: Preserve existing domain data during status transitions
+          set({
+            campaign: {
+              ...state.campaign,
+              status: payload.status as CampaignStatus
+            }
+            // IMPORTANT: Do NOT clear generatedDomains, dnsCampaignItems, or httpCampaignItems
+          });
         }
       }
 
-      // Handle phase completion updates
+      // Handle phase completion updates - PRESERVE domain data during phase transitions
       if (message.type === 'phase_complete' && message.data) {
         const payload = message.data as {
           campaignId: string;
@@ -228,6 +235,17 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
         };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
+          console.log('🔄 [Phase Transition] Phase completion update:', {
+            oldPhase: state.campaign.currentPhase,
+            newPhase: payload.phase,
+            status: payload.status,
+            preservingDomains: {
+              generatedDomains: state.generatedDomains.length,
+              dnsCampaignItems: state.dnsCampaignItems.length,
+              httpCampaignItems: state.httpCampaignItems.length
+            }
+          });
+          
           set({
             campaign: {
               ...state.campaign,
@@ -238,6 +256,8 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
               processedItems: state.totalDomainCount, // Use WebSocket domain count as processed items
               status: payload.status === 'Succeeded' ? 'completed' : state.campaign.status
             }
+            // 🔥 CRITICAL: Domain data (generatedDomains, dnsCampaignItems, httpCampaignItems)
+            // is intentionally NOT modified here to preserve domains during phase transitions
           });
         }
       }
@@ -283,10 +303,19 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
             oldPhase: state.campaign.currentPhase,
             newPhase: updatedCampaign.currentPhase,
             oldStatus: state.campaign.status,
-            newStatus: updatedCampaign.status
+            newStatus: updatedCampaign.status,
+            preservingDomains: {
+              generatedDomains: state.generatedDomains.length,
+              dnsCampaignItems: state.dnsCampaignItems.length,
+              httpCampaignItems: state.httpCampaignItems.length
+            }
           });
           
-          set({ campaign: updatedCampaign });
+          // 🔥 CRITICAL: Preserve domain data during campaign progress updates
+          set({
+            campaign: updatedCampaign
+            // IMPORTANT: Domain data is NOT cleared during progress updates
+          });
         }
       }
 
@@ -314,6 +343,89 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
               status: 'running' as CampaignStatus
             }
           });
+        }
+      }
+
+      // Handle DNS validation results with error handling
+      if (message.type === 'dns_validation_result' && message.data) {
+        const payload = message.data as {
+          campaignId: string;
+          results?: any[];
+          errors?: any[];
+          offsetUpdates?: any[];
+          status?: string;
+          error?: string;
+        };
+        const state = get();
+        if (state.campaign && payload.campaignId === state.campaign.id) {
+          // Check for validation errors
+          if (payload.error || (payload.errors && payload.errors.length > 0)) {
+            const errorMessage = payload.error ||
+              `DNS validation failed: ${payload.errors?.map(e => e.message || e).join(', ')}`;
+            console.error('🔴 [Store] DNS validation error:', errorMessage);
+            set({ error: errorMessage });
+          }
+          
+          // Check for offset limit errors
+          if (payload.errors && Array.isArray(payload.errors)) {
+            const offsetError = payload.errors.find(e =>
+              e.code === 'OFFSET_LIMIT_EXCEEDED' ||
+              e.message?.includes('offset limit') ||
+              e.message?.includes('maximum offset')
+            );
+            
+            if (offsetError) {
+              console.error('🚫 [Store] Offset limit exceeded:', offsetError);
+              set({
+                error: `Domain generation stopped: ${offsetError.message || 'Maximum offset limit reached for this pattern'}`
+              });
+            }
+          }
+          
+          // Update campaign status if provided
+          if (payload.status) {
+            set({
+              campaign: {
+                ...state.campaign,
+                status: payload.status === 'failed' ? 'failed' :
+                       payload.status === 'completed' ? 'completed' :
+                       state.campaign.status
+              }
+            });
+          }
+        }
+      }
+
+      // Handle HTTP validation results with error handling
+      if (message.type === 'http_validation_result' && message.data) {
+        const payload = message.data as {
+          campaignId: string;
+          results?: any[];
+          errors?: any[];
+          status?: string;
+          error?: string;
+        };
+        const state = get();
+        if (state.campaign && payload.campaignId === state.campaign.id) {
+          // Check for validation errors
+          if (payload.error || (payload.errors && payload.errors.length > 0)) {
+            const errorMessage = payload.error ||
+              `HTTP validation failed: ${payload.errors?.map(e => e.message || e).join(', ')}`;
+            console.error('🔴 [Store] HTTP validation error:', errorMessage);
+            set({ error: errorMessage });
+          }
+          
+          // Update campaign status if provided
+          if (payload.status) {
+            set({
+              campaign: {
+                ...state.campaign,
+                status: payload.status === 'failed' ? 'failed' :
+                       payload.status === 'completed' ? 'completed' :
+                       state.campaign.status
+              }
+            });
+          }
         }
       }
     },

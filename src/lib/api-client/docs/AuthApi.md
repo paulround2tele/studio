@@ -22,7 +22,7 @@ import {
     AuthApi,
     Configuration,
     ChangePasswordRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -77,7 +77,7 @@ Returns information about the currently authenticated user
 import {
     AuthApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -125,7 +125,7 @@ import {
     AuthApi,
     Configuration,
     LoginRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -180,7 +180,7 @@ Invalidates the current session and clears session cookie
 import {
     AuthApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -226,7 +226,7 @@ Refreshes the current session
 import {
     AuthApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);

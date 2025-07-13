@@ -104,12 +104,29 @@ export const UtilitiesApiFactory = function (configuration?: Configuration, base
 };
 
 /**
+ * UtilitiesApi - interface
+ * @export
+ * @interface UtilitiesApi
+ */
+export interface UtilitiesApiInterface {
+    /**
+     * Simple ping endpoint to test server connectivity
+     * @summary Basic connectivity test
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UtilitiesApiInterface
+     */
+    ping(options?: RawAxiosRequestConfig): AxiosPromise<Ping200Response>;
+
+}
+
+/**
  * UtilitiesApi - object-oriented interface
  * @export
  * @class UtilitiesApi
  * @extends {BaseAPI}
  */
-export class UtilitiesApi extends BaseAPI {
+export class UtilitiesApi extends BaseAPI implements UtilitiesApiInterface {
     /**
      * Simple ping endpoint to test server connectivity
      * @summary Basic connectivity test

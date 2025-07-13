@@ -4,6 +4,218 @@
  */
 
 export interface paths {
+    "/api/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List campaigns
+         * @description Retrieves a paginated list of campaigns with optional filtering
+         */
+        get: operations["listCampaigns"];
+        put?: never;
+        /**
+         * Create campaign
+         * @description Creates a new campaign using unified endpoint supporting all campaign types
+         */
+        post: operations["createCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get campaign details
+         * @description Retrieves detailed information about a specific campaign
+         */
+        get: operations["getCampaignDetails"];
+        /**
+         * Update campaign
+         * @description Updates campaign details and configuration
+         */
+        put: operations["updateCampaign"];
+        post?: never;
+        /**
+         * Delete campaign
+         * @description Deletes a campaign and all associated data
+         */
+        delete: operations["deleteCampaign"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel campaign
+         * @description Cancels a campaign execution
+         */
+        post: operations["cancelCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{id}/dns-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get DNS validation results
+         * @description Retrieves DNS validation results for a campaign
+         */
+        get: operations["getDNSValidationResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{id}/domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get generated domains
+         * @description Retrieves the list of generated domains for a campaign
+         */
+        get: operations["getGeneratedDomains"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{id}/http-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get HTTP keyword results
+         * @description Retrieves HTTP keyword validation results for a campaign
+         */
+        get: operations["getHTTPKeywordResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pause campaign
+         * @description Pauses a running campaign
+         */
+        post: operations["pauseCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume campaign
+         * @description Resumes a paused campaign
+         */
+        post: operations["resumeCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start campaign
+         * @description Starts a campaign execution
+         */
+        post: operations["startCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/bulk-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk delete campaigns
+         * @description Deletes multiple campaigns and all associated data
+         */
+        post: operations["bulkDeleteCampaigns"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/config/auth": {
         parameters: {
             query?: never;
@@ -316,202 +528,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/campaigns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List campaigns
-         * @description Lists all campaigns with pagination and filtering support
-         */
-        get: operations["listCampaigns"];
-        put?: never;
-        /**
-         * Create campaign
-         * @description Creates a new campaign using unified endpoint supporting all campaign types
-         */
-        post: operations["createCampaign"];
-        /**
-         * Bulk delete campaigns
-         * @description Permanently deletes multiple campaigns and all their associated data
-         */
-        delete: operations["bulkDeleteCampaigns"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get campaign details
-         * @description Gets detailed information about a campaign including type-specific parameters
-         */
-        get: operations["getCampaignDetails"];
-        /**
-         * Update campaign
-         * @description Updates an existing campaign with new configuration
-         */
-        put: operations["updateCampaign"];
-        post?: never;
-        /**
-         * Delete campaign
-         * @description Permanently deletes a campaign and all its associated data
-         */
-        delete: operations["deleteCampaign"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancel campaign
-         * @description Cancels a campaign, setting it to cancelled status
-         */
-        post: operations["cancelCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/pause": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Pause campaign
-         * @description Pauses a running or queued campaign
-         */
-        post: operations["pauseCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/results/dns-validation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get DNS validation results
-         * @description Gets DNS validation results for a DNS validation campaign
-         */
-        get: operations["getDNSValidationResults"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/results/generated-domains": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get generated domains
-         * @description Gets generated domains for a domain generation campaign
-         */
-        get: operations["getGeneratedDomains"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/results/http-keyword": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get HTTP keyword results
-         * @description Gets HTTP keyword validation results for an HTTP keyword validation campaign
-         */
-        get: operations["getHTTPKeywordResults"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Resume campaign
-         * @description Resumes a paused campaign by queuing it for execution
-         */
-        post: operations["resumeCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/start": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start campaign
-         * @description Starts a campaign by transitioning it from pending to queued status
-         */
-        post: operations["startCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/campaigns/{campaignId}/validate-dns": {
         parameters: {
             query?: never;
@@ -523,7 +539,7 @@ export interface paths {
         put?: never;
         /**
          * Validate DNS for campaign domains
-         * @description Triggers domain-centric DNS validation for all domains in a completed domain generation campaign
+         * @description Starts DNS validation for a domain generation campaign
          */
         post: operations["validateDNSForCampaign"];
         delete?: never;
@@ -543,7 +559,7 @@ export interface paths {
         put?: never;
         /**
          * Validate HTTP for campaign domains
-         * @description Triggers domain-centric HTTP keyword validation for all domains in a completed DNS validation campaign
+         * @description Starts HTTP validation for a campaign
          */
         post: operations["validateHTTPForCampaign"];
         delete?: never;
@@ -1166,23 +1182,17 @@ export interface components {
             /** @description Array of keyword extraction results */
             results: components["schemas"]["KeywordExtractionAPIResult"][];
         };
-        /** @description Request to bulk delete campaigns */
+        /** @description Request to delete multiple campaigns */
         BulkDeleteRequest: {
-            /** @description Array of campaign UUIDs to delete */
+            /** @description List of campaign IDs to delete */
             campaignIds: string[];
         };
-        /** @description Response for bulk delete operation */
-        BulkDeleteResponse: {
-            /** @description List of error messages for failed deletions */
+        BulkDeleteResult: {
+            deleted_campaign_ids?: string[];
             errors?: string[];
-            /** @description Number of campaigns that failed to delete */
-            failedDeletions?: number;
-            /** @description Operation result message */
-            message?: string;
-            /** @description Number of campaigns successfully deleted */
-            successfulDeletions?: number;
-            /** @description Total number of campaigns requested for deletion */
-            totalRequested?: number;
+            failed_campaign_ids?: string[];
+            failed_deletions?: number;
+            successfully_deleted?: number;
         };
         Campaign: {
             avgProcessingRate?: number;
@@ -1226,29 +1236,27 @@ export interface components {
             /** Format: uuid */
             userId?: string;
         };
-        /** @description Campaign details with type-specific parameters */
-        CampaignDetailsResponse: {
+        CampaignDependencyInfo: {
             campaign?: components["schemas"]["Campaign"];
-            /** @description Type-specific campaign parameters */
-            params?: Record<string, never>;
+            canDelete?: boolean;
+            dependentCampaigns?: components["schemas"]["Campaign"][];
+            hasDependencies?: boolean;
         };
-        /** @description Response for campaign list with pagination metadata */
+        /** @description Paginated list of campaigns */
         CampaignListResponse: {
-            data?: components["schemas"]["Campaign"][];
-            metadata?: components["schemas"]["PaginationMetadata"];
-            /** @enum {string} */
-            status?: "success";
+            /** @description List of campaigns */
+            campaigns: components["schemas"]["Campaign"][];
+            /** @description Number of items per page */
+            limit: number;
+            /** @description Current page number */
+            page: number;
+            /** @description Total number of campaigns */
+            total: number;
         };
-        /** @description Response for campaign operations */
-        CampaignOperationResponse: {
-            /**
-             * Format: uuid
-             * @description Campaign ID
-             */
-            campaign_id?: string;
-            /** @description Operation result message */
-            message?: string;
-        };
+        CampaignPhaseEnum: Record<string, never>;
+        CampaignPhaseStatusEnum: Record<string, never>;
+        CampaignStatusEnum: Record<string, never>;
+        CampaignTypeEnum: Record<string, never>;
         /** @description Password change request */
         ChangePasswordRequest: {
             /** @description Current password */
@@ -1279,24 +1287,56 @@ export interface components {
              */
             mode?: "preserve" | "ignore" | "custom" | "clear" | "session_only";
         };
-        /** @description Request to create a new campaign */
         CreateCampaignRequest: {
-            /**
-             * @description Type of campaign to create
-             * @enum {string}
-             */
-            campaignType: "domain_generation" | "dns_validation" | "http_keyword_validation";
-            /** @description Campaign description */
+            campaignType?: string;
             description?: string;
             dnsValidationParams?: components["schemas"]["DnsValidationParams"];
             domainGenerationParams?: components["schemas"]["DomainGenerationParams"];
             httpKeywordParams?: components["schemas"]["HttpKeywordParams"];
-            /** @description Campaign name */
-            name: string;
-            /**
-             * Format: uuid
-             * @description User ID creating the campaign
-             */
+            launchSequence?: boolean;
+            name?: string;
+            /** Format: uuid */
+            userId?: string;
+        };
+        CreateDNSValidationCampaignRequest: {
+            batchSize?: number;
+            name?: string;
+            personaIds?: string[];
+            processingSpeedPerMinute?: number;
+            retryAttempts?: number;
+            rotationIntervalSeconds?: number;
+            /** Format: uuid */
+            sourceCampaignId?: string;
+            /** Format: uuid */
+            userId?: string;
+        };
+        CreateDomainGenerationCampaignRequest: {
+            characterSet?: string;
+            constantString?: string;
+            name?: string;
+            numDomainsToGenerate?: number;
+            patternType?: string;
+            tld?: string;
+            /** Format: uuid */
+            userId?: string;
+            variableLength?: number;
+        };
+        CreateHTTPKeywordCampaignRequest: {
+            adHocKeywords?: string[];
+            batchSize?: number;
+            keywordSetIds?: string[];
+            name?: string;
+            personaIds?: string[];
+            processingSpeedPerMinute?: number;
+            /** Format: uuid */
+            proxyPoolId?: string;
+            proxySelectionStrategy?: string;
+            retryAttempts?: number;
+            rotationIntervalSeconds?: number;
+            /** Format: uuid */
+            sourceCampaignId?: string;
+            targetHttpPorts?: number[];
+            /** Format: uuid */
             userId?: string;
         };
         /** @description Request to create a new keyword set */
@@ -1388,34 +1428,6 @@ export interface components {
             /** @description Use system DNS resolvers */
             useSystemResolvers?: boolean;
         };
-        /** @description DNS persona configuration details */
-        DNSConfigDetails: {
-            /** @description Concurrent queries per domain */
-            concurrentQueriesPerDomain?: number;
-            /** @description Maximum concurrent goroutines */
-            maxConcurrentGoroutines?: number;
-            /** @description Maximum domains per request */
-            maxDomainsPerRequest?: number;
-            /** @description Maximum query delay in milliseconds */
-            queryDelayMaxMs?: number;
-            /** @description Minimum query delay in milliseconds */
-            queryDelayMinMs?: number;
-            /** @description Query timeout in seconds */
-            queryTimeoutSeconds?: number;
-            /** @description Rate limit burst size */
-            rateLimitBurst?: number;
-            /** @description Rate limit in domains per second */
-            rateLimitDps?: number;
-            /**
-             * @description Resolver selection strategy
-             * @enum {string}
-             */
-            resolverStrategy?: "round_robin" | "random" | "weighted" | "priority";
-            /** @description DNS resolver addresses */
-            resolvers?: string[];
-            /** @description Whether to use system resolvers */
-            useSystemResolvers?: boolean;
-        };
         DNSValidationCampaignParams: {
             batchSize?: number;
             metadata?: Record<string, never>;
@@ -1426,59 +1438,35 @@ export interface components {
             /** Format: uuid */
             sourceGenerationCampaignId?: string;
         };
-        /** @description DNS validation result information */
         DNSValidationResult: {
-            /** @description Number of validation attempts */
             attempts?: number;
-            /** @description Business status */
             businessStatus?: string;
-            /**
-             * Format: date-time
-             * @description Record creation timestamp
-             */
+            /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: uuid
-             * @description DNS campaign ID
-             */
+            /** Format: uuid */
             dnsCampaignId?: string;
-            /** @description DNS records found */
             dnsRecords?: Record<string, never>;
-            /** @description Domain name validated */
             domainName?: string;
-            /**
-             * Format: uuid
-             * @description Generated domain ID
-             */
+            /** Format: uuid */
             generatedDomainId?: string;
-            /**
-             * Format: uuid
-             * @description Result unique identifier
-             */
+            /** Format: uuid */
             id?: string;
-            /**
-             * Format: date-time
-             * @description Last validation timestamp
-             */
+            /** Format: date-time */
             lastCheckedAt?: string;
-            /**
-             * Format: uuid
-             * @description Persona used for validation
-             */
+            /** Format: uuid */
             validatedByPersonaId?: string;
-            /**
-             * @description Validation status
-             * @enum {string}
-             */
-            validationStatus?: "pending" | "valid" | "invalid" | "error" | "skipped";
+            validationStatus?: string;
         };
-        /** @description Response for DNS validation results */
+        /** @description Paginated list of DNS validation results */
         DNSValidationResultsResponse: {
-            data?: components["schemas"]["DNSValidationResult"][];
-            /** @description Next cursor for pagination */
-            nextCursor?: string;
-            /** @description Total number of DNS validation results */
-            totalCount?: number;
+            /** @description Number of items per page */
+            limit: number;
+            /** @description Current page number */
+            page: number;
+            /** @description List of DNS validation results */
+            results: components["schemas"]["DNSValidationResult"][];
+            /** @description Total number of results */
+            total: number;
         };
         /** @description DNS persona configuration details */
         DnsPersonaConfig: {
@@ -1514,23 +1502,16 @@ export interface components {
             /** @description Use system DNS resolvers */
             useSystemResolvers?: boolean;
         };
-        /** @description Parameters for DNS validation campaigns */
         DnsValidationParams: {
-            /** @description Batch size for processing */
             batchSize?: number;
-            /** @description DNS personas to use for validation */
-            personaIds: string[];
-            /** @description Processing speed per minute */
+            personaIds?: string[];
             processingSpeedPerMinute?: number;
-            /** @description Number of retry attempts */
             retryAttempts?: number;
-            /** @description Persona rotation interval in seconds */
             rotationIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Source domain generation campaign ID
-             */
-            sourceCampaignId: string;
+            /** Format: uuid */
+            sourceCampaignId?: string;
+            /** Format: uuid */
+            sourceGenerationCampaignId?: string;
         };
         DomainGenerationCampaignParams: {
             characterSet?: string;
@@ -1546,27 +1527,20 @@ export interface components {
             updatedAt?: string;
             variableLength?: number;
         };
-        /** @description Parameters for domain generation campaigns */
         DomainGenerationParams: {
-            /** @description Character set for generation */
-            characterSet: string;
-            /** @description Constant string portion */
-            constantString: string;
-            /** @description Number of domains to generate */
+            characterSet?: string;
+            constantString?: string;
             numDomainsToGenerate?: number;
-            /**
-             * @description Pattern type for domain generation
-             * @enum {string}
-             */
-            patternType: "prefix_variable" | "suffix_variable" | "both_variable";
-            /** @description Top-level domain */
-            tld: string;
-            /** @description Length of variable portion */
-            variableLength: number;
+            patternType?: string;
+            tld?: string;
+            variableLength?: number;
         };
+        /** @description Standard error response */
         ErrorResponse: {
+            /** @description Additional error details */
+            details?: string;
             /** @description Error message */
-            error?: string;
+            error: string;
         };
         ExtractedContentAnalysis: {
             advancedKeywords?: string[];
@@ -1598,71 +1572,40 @@ export interface components {
             /** @description List of proxy IDs to check (empty for all) */
             ids?: string[];
         };
-        /** @description Generated domain information */
         GeneratedDomain: {
-            /**
-             * Format: date-time
-             * @description Record creation timestamp
-             */
+            /** Format: date-time */
             createdAt?: string;
-            /** @description DNS resolved IP address */
             dnsIp?: string;
-            /**
-             * @description DNS validation status
-             * @enum {string}
-             */
-            dnsStatus?: "pending" | "ok" | "error" | "timeout";
-            /** @description Generated domain name */
+            dnsStatus?: string;
             domainName?: string;
-            /**
-             * Format: date-time
-             * @description Domain generation timestamp
-             */
+            /** Format: date-time */
             generatedAt?: string;
-            /**
-             * Format: uuid
-             * @description Generation campaign ID
-             */
+            /** Format: uuid */
             generationCampaignId?: string;
-            /** @description HTTP keywords found */
             httpKeywords?: string;
-            /**
-             * @description HTTP validation status
-             * @enum {string}
-             */
-            httpStatus?: "pending" | "ok" | "error" | "timeout";
-            /** @description HTTP response status code */
+            httpStatus?: string;
             httpStatusCode?: number;
-            /** @description HTTP page title */
             httpTitle?: string;
-            /**
-             * Format: uuid
-             * @description Domain unique identifier
-             */
+            /** Format: uuid */
             id?: string;
-            /**
-             * Format: date-time
-             * @description Last validation timestamp
-             */
+            /** Format: date-time */
             lastValidatedAt?: string;
-            /** @description Lead quality score */
             leadScore?: number;
-            /** @description Offset index in generation space */
             offsetIndex?: number;
-            /** @description Source keyword used for generation */
             sourceKeyword?: string;
-            /** @description Source pattern used for generation */
             sourcePattern?: string;
-            /** @description Top-level domain */
             tld?: string;
         };
-        /** @description Response for generated domains */
+        /** @description Paginated list of generated domains */
         GeneratedDomainsResponse: {
-            data?: components["schemas"]["GeneratedDomain"][];
-            /** @description Next cursor for pagination */
-            nextCursor?: number;
-            /** @description Total number of generated domains */
-            totalCount?: number;
+            /** @description List of generated domains */
+            domains: components["schemas"]["GeneratedDomain"][];
+            /** @description Number of items per page */
+            limit: number;
+            /** @description Current page number */
+            page: number;
+            /** @description Total number of domains */
+            total: number;
         };
         /** @description HTTP/2 settings configuration */
         HTTP2SettingsConfig: {
@@ -1701,38 +1644,6 @@ export interface components {
             /** @description List of User-Agent strings to rotate through */
             userAgents?: string[];
         };
-        /** @description HTTP persona configuration details */
-        HTTPConfigDetails: {
-            /** @description Allowed HTTP status codes */
-            allowedStatusCodes?: number[];
-            cookieHandling?: components["schemas"]["HTTPCookieHandling"];
-            /** @description Whether to follow redirects */
-            followRedirects?: boolean;
-            /** @description Order of HTTP headers */
-            headerOrder?: string[];
-            /** @description HTTP headers */
-            headers?: {
-                [key: string]: string;
-            };
-            /** @description Configuration notes */
-            notes?: string;
-            /** @description Rate limit burst size */
-            rateLimitBurst?: number;
-            /** @description Rate limit in requests per second */
-            rateLimitDps?: number;
-            /** @description Request timeout in seconds */
-            requestTimeoutSeconds?: number;
-            /** @description User agent string */
-            userAgent?: string;
-        };
-        /** @description HTTP cookie handling configuration */
-        HTTPCookieHandling: {
-            /**
-             * @description Cookie handling mode
-             * @enum {string}
-             */
-            mode?: "preserve" | "ignore" | "custom";
-        };
         HTTPKeywordCampaignParams: {
             adHocKeywords?: string[];
             batchSize?: number;
@@ -1752,74 +1663,42 @@ export interface components {
             sourceType?: string;
             targetHttpPorts?: number[];
         };
-        /** @description HTTP keyword validation result information */
         HTTPKeywordResult: {
-            /** @description Number of validation attempts */
             attempts?: number;
-            /** @description Content hash for deduplication */
             contentHash?: string;
-            /**
-             * Format: date-time
-             * @description Record creation timestamp
-             */
+            /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: uuid
-             * @description Associated DNS result ID
-             */
+            /** Format: uuid */
             dnsResultId?: string;
-            /** @description Domain name validated */
             domainName?: string;
-            /** @description Content snippet extracted */
             extractedContentSnippet?: string;
-            /** @description Ad-hoc keywords found */
             foundAdHocKeywords?: string[];
-            /** @description Keywords found from keyword sets */
             foundKeywordsFromSets?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description HTTP keyword campaign ID
-             */
+            /** Format: uuid */
             httpKeywordCampaignId?: string;
-            /** @description HTTP status code received */
             httpStatusCode?: number;
-            /**
-             * Format: uuid
-             * @description Result unique identifier
-             */
+            /** Format: uuid */
             id?: string;
-            /**
-             * Format: date-time
-             * @description Last validation timestamp
-             */
+            /** Format: date-time */
             lastCheckedAt?: string;
-            /** @description Page title extracted */
             pageTitle?: string;
-            /** @description HTTP response headers */
             responseHeaders?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description Proxy used for validation
-             */
+            /** Format: uuid */
             usedProxyId?: string;
-            /**
-             * Format: uuid
-             * @description Persona used for validation
-             */
+            /** Format: uuid */
             validatedByPersonaId?: string;
-            /**
-             * @description Validation status
-             * @enum {string}
-             */
-            validationStatus?: "pending" | "valid" | "invalid" | "error" | "skipped";
+            validationStatus?: string;
         };
-        /** @description Response for HTTP keyword validation results */
+        /** @description Paginated list of HTTP keyword results */
         HTTPKeywordResultsResponse: {
-            data?: components["schemas"]["HTTPKeywordResult"][];
-            /** @description Next cursor for pagination */
-            nextCursor?: string;
-            /** @description Total number of HTTP keyword results */
-            totalCount?: number;
+            /** @description Number of items per page */
+            limit: number;
+            /** @description Current page number */
+            page: number;
+            /** @description List of HTTP keyword results */
+            results: components["schemas"]["HTTPKeywordResult"][];
+            /** @description Total number of results */
+            total: number;
         };
         /** @description Health status of the application and its components */
         HealthStatus: {
@@ -1843,35 +1722,19 @@ export interface components {
             /** @description Application version */
             version: string;
         };
-        /** @description Parameters for HTTP keyword validation campaigns */
         HttpKeywordParams: {
-            /** @description Ad-hoc keywords for validation */
             adHocKeywords?: string[];
-            /** @description Batch size for processing */
             batchSize?: number;
-            /** @description Keyword set IDs to use for validation */
             keywordSetIds?: string[];
-            /** @description HTTP personas to use for validation */
-            personaIds: string[];
-            /** @description Processing speed per minute */
+            personaIds?: string[];
             processingSpeedPerMinute?: number;
-            /**
-             * Format: uuid
-             * @description Proxy pool ID for requests
-             */
+            /** Format: uuid */
             proxyPoolId?: string;
-            /** @description Strategy for proxy selection */
             proxySelectionStrategy?: string;
-            /** @description Number of retry attempts */
             retryAttempts?: number;
-            /** @description Persona rotation interval in seconds */
             rotationIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Source DNS validation campaign ID
-             */
-            sourceCampaignId: string;
-            /** @description Target HTTP ports for validation */
+            /** Format: uuid */
+            sourceCampaignId?: string;
             targetHttpPorts?: number[];
         };
         /** @description HTTP persona configuration details */
@@ -1925,6 +1788,16 @@ export interface components {
             viewportWidth?: number;
             /** @description Wait delay before capturing content */
             waitDelaySeconds?: number;
+        };
+        InPlaceDNSValidationRequest: {
+            batchSize?: number;
+            /** Format: uuid */
+            campaignId?: string;
+            onlyInvalidDomains?: boolean;
+            personaIds?: string[];
+            processingSpeedPerMinute?: number;
+            retryAttempts?: number;
+            rotationIntervalSeconds?: number;
         };
         /** @description Result of keyword extraction for a single URL */
         KeywordExtractionAPIResult: {
@@ -2034,6 +1907,7 @@ export interface components {
              */
             ruleType: "string" | "regex";
         };
+        KeywordRuleTypeEnum: Record<string, never>;
         KeywordSet: {
             /** Format: date-time */
             createdAt?: string;
@@ -2104,21 +1978,6 @@ export interface components {
             sessionId?: string;
             user?: components["schemas"]["User"];
         };
-        /** @description Page information for pagination */
-        PageInfo: {
-            /** @description Total number of items */
-            count?: number;
-            /** @description Current page number */
-            current?: number;
-            /** @description Number of items per page */
-            pageSize?: number;
-            /** @description Total number of pages */
-            total?: number;
-        };
-        /** @description Pagination metadata */
-        PaginationMetadata: {
-            page?: components["schemas"]["PageInfo"];
-        };
         /** @description Request to get the current offset for a domain generation pattern */
         PatternOffsetRequest: {
             /** @description Character set for domain generation (e.g., 'abc', '123') */
@@ -2161,6 +2020,7 @@ export interface components {
             /** @enum {string} */
             status?: "success";
         };
+        PersonaStatusEnum: Record<string, never>;
         /** @description Result of persona test operation */
         PersonaTestResult: {
             data?: {
@@ -2189,6 +2049,7 @@ export interface components {
             /** @enum {string} */
             status?: "success";
         };
+        PersonaTypeEnum: Record<string, never>;
         Proxy: {
             address?: string;
             city?: string;
@@ -2403,39 +2264,30 @@ export interface components {
         };
         /** Format: uuid */
         UUID: string;
-        /** @description Request to update an existing campaign */
         UpdateCampaignRequest: {
-            /** @description Ad-hoc keywords */
             adHocKeywords?: string[];
-            /** @description Batch size for processing */
             batchSize?: number;
-            /**
-             * @description Campaign type for phase transitions
-             * @enum {string}
-             */
-            campaignType?: "domain_generation" | "dns_validation" | "http_keyword_validation";
-            /** @description Keyword set IDs */
+            campaignType?: string;
+            characterSet?: string;
+            constantString?: string;
             keywordSetIds?: string[];
-            /** @description Campaign name */
             name?: string;
-            /** @description Persona IDs */
+            numDomainsToGenerate?: number;
             personaIds?: string[];
-            /** @description Processing speed per minute */
             processingSpeedPerMinute?: number;
-            /**
-             * Format: uuid
-             * @description Proxy pool ID
-             */
+            /** Format: uuid */
             proxyPoolId?: string;
-            /** @description Number of retry attempts */
+            proxySelectionStrategy?: string;
             retryAttempts?: number;
-            /**
-             * @description Campaign status
-             * @enum {string}
-             */
-            status?: "pending" | "queued" | "running" | "paused" | "completed" | "failed" | "cancelled" | "archived";
-            /** @description Target HTTP ports */
+            rotationIntervalSeconds?: number;
+            /** Format: uuid */
+            sourceDnsCampaignId?: string;
+            /** Format: uuid */
+            sourceGenerationCampaignId?: string;
+            status?: string;
             targetHttpPorts?: number[];
+            tld?: string;
+            variableLength?: number;
         };
         /** @description Request to update an existing keyword set */
         UpdateKeywordSetRequest: {
@@ -2447,6 +2299,14 @@ export interface components {
             name?: string;
             /** @description List of keyword rules (replaces all existing rules) */
             rules?: components["schemas"]["KeywordRuleRequest"][];
+        };
+        /** @description Request to update domain generation pattern offset */
+        UpdatePatternOffsetRequest: {
+            /**
+             * Format: int64
+             * @description New pattern offset value
+             */
+            offset: number;
         };
         /** @description Request to update an existing persona */
         UpdatePersonaRequest: {
@@ -2536,6 +2396,804 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listCampaigns: {
+        parameters: {
+            query?: {
+                /** @description Page number (1-based) */
+                page?: number;
+                /** @description Number of items per page */
+                limit?: number;
+                /** @description Filter by campaign type */
+                campaignType?: components["schemas"]["CampaignTypeEnum"];
+                /** @description Filter by campaign status */
+                status?: components["schemas"]["CampaignStatusEnum"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of campaigns */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignListResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCampaignRequest"];
+            };
+        };
+        responses: {
+            /** @description Campaign created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCampaignDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCampaignRequest"];
+            };
+        };
+        responses: {
+            /** @description Campaign updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign deleted successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict - campaign has dependencies */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDependencyInfo"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancelCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign cancelled successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Bad request - campaign cannot be cancelled */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDNSValidationResults: {
+        parameters: {
+            query?: {
+                /** @description Page number (1-based) */
+                page?: number;
+                /** @description Number of items per page */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description DNS validation results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DNSValidationResultsResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getGeneratedDomains: {
+        parameters: {
+            query?: {
+                /** @description Page number (1-based) */
+                page?: number;
+                /** @description Number of items per page */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of generated domains */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeneratedDomainsResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getHTTPKeywordResults: {
+        parameters: {
+            query?: {
+                /** @description Page number (1-based) */
+                page?: number;
+                /** @description Number of items per page */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description HTTP keyword results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPKeywordResultsResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    pauseCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign paused successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Bad request - campaign cannot be paused */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resumeCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign resumed successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Bad request - campaign cannot be resumed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    startCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaign started successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Campaign"];
+                };
+            };
+            /** @description Bad request - campaign cannot be started */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bulkDeleteCampaigns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Bulk delete completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkDeleteResult"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getAuthConfig: {
         parameters: {
             query?: never;
@@ -3272,835 +3930,21 @@ export interface operations {
             };
         };
     };
-    listCampaigns: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of campaigns to return (1-100) */
-                limit?: number;
-                /** @description Number of campaigns to skip for pagination */
-                offset?: number;
-                /** @description Filter campaigns by status */
-                status?: "pending" | "queued" | "running" | "pausing" | "paused" | "completed" | "failed" | "archived" | "cancelled";
-                /** @description Filter campaigns by type */
-                type?: "domain_generation" | "dns_validation" | "http_keyword_validation";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Campaigns retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignListResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCampaignRequest"];
-            };
-        };
-        responses: {
-            /** @description Campaign created successfully */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Campaign"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    bulkDeleteCampaigns: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkDeleteRequest"];
-            };
-        };
-        responses: {
-            /** @description Campaigns bulk delete completed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkDeleteResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getCampaignDetails: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Campaign details retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignDetailsResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCampaignRequest"];
-            };
-        };
-        responses: {
-            /** @description Campaign updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Campaign"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    deleteCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Campaign deleted successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign is in an invalid state for this operation */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    cancelCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Campaign cancelled successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign is in an invalid state for this operation */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    pauseCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Campaign paused successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign is in an invalid state for this operation */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getDNSValidationResults: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of results to return */
-                limit?: number;
-                /** @description Cursor for pagination */
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description DNS validation results retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DNSValidationResultsResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getGeneratedDomains: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of domains to return */
-                limit?: number;
-                /** @description Cursor for pagination (offset index) */
-                cursor?: number;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Generated domains retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeneratedDomainsResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getHTTPKeywordResults: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of results to return */
-                limit?: number;
-                /** @description Cursor for pagination */
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTTP keyword results retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPKeywordResultsResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    resumeCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Campaign resumed successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign is in an invalid state for this operation */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    startCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign UUID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Campaign queued for start */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign is in an invalid state for this operation */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     validateDNSForCampaign: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Campaign UUID */
+                /** @description Campaign ID */
                 campaignId: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InPlaceDNSValidationRequest"];
+            };
+        };
         responses: {
             /** @description DNS validation started successfully */
             200: {
@@ -4108,7 +3952,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
+                    "application/json": components["schemas"]["Campaign"];
                 };
             };
             /** @description Bad request */
@@ -4131,15 +3975,6 @@ export interface operations {
             };
             /** @description Campaign not found */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign is in an invalid state for this operation */
-            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4169,20 +4004,24 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Campaign UUID */
+                /** @description Campaign ID */
                 campaignId: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateHTTPKeywordCampaignRequest"];
+            };
+        };
         responses: {
-            /** @description HTTP keyword validation started successfully */
+            /** @description HTTP validation started successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
+                    "application/json": components["schemas"]["Campaign"];
                 };
             };
             /** @description Bad request */
@@ -4205,15 +4044,6 @@ export interface operations {
             };
             /** @description Campaign not found */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign is in an invalid state for this operation */
-            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4267,7 +4097,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Invalid request parameters */
+            /** @description Bad request */
             400: {
                 headers: {
                     [name: string]: unknown;

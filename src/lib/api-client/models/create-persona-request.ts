@@ -55,11 +55,13 @@ export interface CreatePersonaRequest {
     'personaType': CreatePersonaRequestPersonaTypeEnum;
 }
 
-export const CreatePersonaRequestPersonaTypeEnum = {
-    Dns: 'dns',
-    Http: 'http'
-} as const;
-
-export type CreatePersonaRequestPersonaTypeEnum = typeof CreatePersonaRequestPersonaTypeEnum[keyof typeof CreatePersonaRequestPersonaTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CreatePersonaRequestPersonaTypeEnum {
+    Dns = 'dns',
+    Http = 'http'
+}
 
 

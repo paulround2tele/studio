@@ -24,19 +24,19 @@ import type { DomainGenerationParams } from './domain-generation-params';
 import type { HttpKeywordParams } from './http-keyword-params';
 
 /**
- * Request to create a new campaign
+ * 
  * @export
  * @interface CreateCampaignRequest
  */
 export interface CreateCampaignRequest {
     /**
-     * Type of campaign to create
+     * 
      * @type {string}
      * @memberof CreateCampaignRequest
      */
-    'campaignType': CreateCampaignRequestCampaignTypeEnum;
+    'campaignType'?: string;
     /**
-     * Campaign description
+     * 
      * @type {string}
      * @memberof CreateCampaignRequest
      */
@@ -60,25 +60,22 @@ export interface CreateCampaignRequest {
      */
     'httpKeywordParams'?: HttpKeywordParams;
     /**
-     * Campaign name
+     * 
+     * @type {boolean}
+     * @memberof CreateCampaignRequest
+     */
+    'launchSequence'?: boolean;
+    /**
+     * 
      * @type {string}
      * @memberof CreateCampaignRequest
      */
-    'name': string;
+    'name'?: string;
     /**
-     * User ID creating the campaign
+     * 
      * @type {string}
      * @memberof CreateCampaignRequest
      */
     'userId'?: string;
 }
-
-export const CreateCampaignRequestCampaignTypeEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation'
-} as const;
-
-export type CreateCampaignRequestCampaignTypeEnum = typeof CreateCampaignRequestCampaignTypeEnum[keyof typeof CreateCampaignRequestCampaignTypeEnum];
-
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"log"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -230,20 +231,35 @@ func (c *Client) handleMessage(message []byte) {
 		if dataBytes, err := json.Marshal(clientMsg.Data); err == nil {
 			if err := json.Unmarshal(dataBytes, &subscribeData); err == nil {
 				c.subscriptionMutex.Lock()
+				log.Printf("🔍 [SUBSCRIPTION_DEBUG] Client %s processing subscription request for channels: %v",
+					c.conn.RemoteAddr().String(), subscribeData.Channels)
+				
 				for _, channel := range subscribeData.Channels {
 					switch channel {
 					case "campaigns", "campaign-updates":
 						// Subscribe to all campaigns for these general channels
 						c.campaignSubscriptions["*"] = true
-						log.Printf("Client %s subscribed to general channel: %s",
+						log.Printf("✅ [SUBSCRIPTION_DEBUG] Client %s subscribed to general channel: %s",
 							c.conn.RemoteAddr().String(), channel)
 					default:
-						// Assume it's a specific campaign ID
-						c.campaignSubscriptions[channel] = true
-						log.Printf("Client %s subscribed to campaign: %s",
-							c.conn.RemoteAddr().String(), channel)
+						// CRITICAL: Handle campaign-specific subscriptions
+						if strings.HasPrefix(channel, "campaign-") {
+							// Extract actual campaign ID from "campaign-{campaignId}" format
+							campaignId := strings.TrimPrefix(channel, "campaign-")
+							c.campaignSubscriptions[campaignId] = true
+							log.Printf("✅ [SUBSCRIPTION_DEBUG] Client %s subscribed to campaign ID: %s (from channel: %s)",
+								c.conn.RemoteAddr().String(), campaignId, channel)
+						} else {
+							// Assume it's a direct campaign ID
+							c.campaignSubscriptions[channel] = true
+							log.Printf("✅ [SUBSCRIPTION_DEBUG] Client %s subscribed to direct campaign: %s",
+								c.conn.RemoteAddr().String(), channel)
+						}
 					}
 				}
+				
+				log.Printf("🔍 [SUBSCRIPTION_DEBUG] Client %s final subscriptions: %v",
+					c.conn.RemoteAddr().String(), c.campaignSubscriptions)
 				c.subscriptionMutex.Unlock()
 
 				// Send subscription acknowledgment
@@ -662,16 +678,17 @@ func CreateConnectionAckMessage(connectionID, userID string, lastSequenceNumber 
 
 // BroadcastCampaignProgress broadcasts campaign progress to subscribed clients
 func BroadcastCampaignProgress(campaignID string, progress float64, status string, phase string) {
-	log.Printf("[DIAGNOSTIC] BroadcastCampaignProgress called: campaignID=%s, progress=%.2f, status=%s, phase=%s",
+	log.Printf("🟢 [WEBSOCKET_BROADCAST_DEBUG] BroadcastCampaignProgress called: campaignID=%s, progress=%.2f, status=%s, phase=%s",
 		campaignID, progress, status, phase)
 	
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
-		log.Printf("[DIAGNOSTIC] Broadcaster available, creating message")
+		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Broadcaster available, creating message")
 		message := CreateCampaignProgressMessage(campaignID, progress, status, phase)
-		log.Printf("[DIAGNOSTIC] Broadcasting campaign progress message: %+v", message)
+		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting campaign progress message: %+v", message)
 		broadcaster.BroadcastToCampaign(campaignID, message)
+		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Campaign progress message sent successfully")
 	} else {
-		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for campaign progress")
+		log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] ERROR: No broadcaster available for campaign progress")
 	}
 }
 
@@ -691,17 +708,19 @@ func BroadcastProxyStatus(proxyID, status string, campaignID string) {
 
 // BroadcastDomainGeneration broadcasts domain generation progress
 func BroadcastDomainGeneration(campaignID string, domainsGenerated int64, totalDomains int64) {
-	log.Printf("[DIAGNOSTIC] BroadcastDomainGeneration called: campaignID=%s, generated=%d, total=%d",
+	log.Printf("🔵 [WEBSOCKET_BROADCAST_DEBUG] BroadcastDomainGeneration called: campaignID=%s, generated=%d, total=%d",
 		campaignID, domainsGenerated, totalDomains)
 	
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateDomainGenerationMessage(campaignID, domainsGenerated, totalDomains)
-		log.Printf("[DIAGNOSTIC] Broadcasting domain generation message")
+		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting domain generation progress message")
 		broadcaster.BroadcastToCampaign(campaignID, message)
+		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Domain generation progress message sent successfully")
 	} else {
-		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for domain generation")
+		log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] ERROR: No broadcaster available for domain generation")
 	}
 }
+
 
 // BroadcastCampaignListUpdate broadcasts campaign list changes to eliminate polling
 func BroadcastCampaignListUpdate(action string, campaignID string, campaignData interface{}) {
@@ -968,15 +987,16 @@ func CreateCampaignListUpdateMessage(action string, campaignID string, campaignD
 
 // BroadcastValidationProgress broadcasts validation progress
 func BroadcastValidationProgress(campaignID string, validationsProcessed int64, totalValidations int64, validationType string) {
-	log.Printf("[DIAGNOSTIC] BroadcastValidationProgress called: campaignID=%s, processed=%d, total=%d, type=%s",
+	log.Printf("🟡 [WEBSOCKET_BROADCAST_DEBUG] BroadcastValidationProgress called: campaignID=%s, processed=%d, total=%d, type=%s",
 		campaignID, validationsProcessed, totalValidations, validationType)
 	
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateValidationProgressMessage(campaignID, validationsProcessed, totalValidations, validationType)
-		log.Printf("[DIAGNOSTIC] Broadcasting validation progress message")
+		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting validation progress message: %+v", message)
 		broadcaster.BroadcastToCampaign(campaignID, message)
+		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Validation progress message sent successfully")
 	} else {
-		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for validation progress")
+		log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] ERROR: No broadcaster available for validation progress")
 	}
 }
 

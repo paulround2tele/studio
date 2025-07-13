@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { KeywordSet } from 'api-client';
+import { KeywordSet } from './api';
 
 const instance: KeywordSet = {
     createdAt,

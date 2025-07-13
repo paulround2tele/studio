@@ -18,28 +18,34 @@
 import type { GeneratedDomain } from './generated-domain';
 
 /**
- * Response for generated domains
+ * Paginated list of generated domains
  * @export
  * @interface GeneratedDomainsResponse
  */
 export interface GeneratedDomainsResponse {
     /**
-     * 
+     * List of generated domains
      * @type {Array<GeneratedDomain>}
      * @memberof GeneratedDomainsResponse
      */
-    'data'?: Array<GeneratedDomain>;
+    'domains': Array<GeneratedDomain>;
     /**
-     * Next cursor for pagination
+     * Number of items per page
      * @type {number}
      * @memberof GeneratedDomainsResponse
      */
-    'nextCursor'?: number;
+    'limit': number;
     /**
-     * Total number of generated domains
+     * Current page number
      * @type {number}
      * @memberof GeneratedDomainsResponse
      */
-    'totalCount'?: number;
+    'page': number;
+    /**
+     * Total number of domains
+     * @type {number}
+     * @memberof GeneratedDomainsResponse
+     */
+    'total': number;
 }
 

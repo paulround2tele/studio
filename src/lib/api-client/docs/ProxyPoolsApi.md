@@ -23,7 +23,7 @@ import {
     ProxyPoolsApi,
     Configuration,
     AddProxyToPoolRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
@@ -83,7 +83,7 @@ import {
     ProxyPoolsApi,
     Configuration,
     ProxyPoolRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
@@ -138,7 +138,7 @@ Deletes a proxy pool by ID
 import {
     ProxyPoolsApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
@@ -194,7 +194,7 @@ Returns all proxy pools
 import {
     ProxyPoolsApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
@@ -240,7 +240,7 @@ Removes a proxy from a pool
 import {
     ProxyPoolsApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
@@ -300,7 +300,7 @@ import {
     ProxyPoolsApi,
     Configuration,
     ProxyPoolRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);

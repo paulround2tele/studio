@@ -25,7 +25,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { User } from 'api-client';
+import { User } from './api';
 
 const instance: User = {
     avatarUrl,

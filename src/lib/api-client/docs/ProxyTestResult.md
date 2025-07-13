@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ProxyTestResult } from 'api-client';
+import { ProxyTestResult } from './api';
 
 const instance: ProxyTestResult = {
     durationMs,

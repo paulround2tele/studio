@@ -15,55 +15,46 @@
 
 
 /**
- * Parameters for domain generation campaigns
+ * 
  * @export
  * @interface DomainGenerationParams
  */
 export interface DomainGenerationParams {
     /**
-     * Character set for generation
+     * 
      * @type {string}
      * @memberof DomainGenerationParams
      */
-    'characterSet': string;
+    'characterSet'?: string;
     /**
-     * Constant string portion
+     * 
      * @type {string}
      * @memberof DomainGenerationParams
      */
-    'constantString': string;
+    'constantString'?: string;
     /**
-     * Number of domains to generate
+     * 
      * @type {number}
      * @memberof DomainGenerationParams
      */
     'numDomainsToGenerate'?: number;
     /**
-     * Pattern type for domain generation
+     * 
      * @type {string}
      * @memberof DomainGenerationParams
      */
-    'patternType': DomainGenerationParamsPatternTypeEnum;
+    'patternType'?: string;
     /**
-     * Top-level domain
+     * 
      * @type {string}
      * @memberof DomainGenerationParams
      */
-    'tld': string;
+    'tld'?: string;
     /**
-     * Length of variable portion
+     * 
      * @type {number}
      * @memberof DomainGenerationParams
      */
-    'variableLength': number;
+    'variableLength'?: number;
 }
-
-export const DomainGenerationParamsPatternTypeEnum = {
-    PrefixVariable: 'prefix_variable',
-    SuffixVariable: 'suffix_variable',
-    BothVariable: 'both_variable'
-} as const;
-
-export type DomainGenerationParamsPatternTypeEnum = typeof DomainGenerationParamsPatternTypeEnum[keyof typeof DomainGenerationParamsPatternTypeEnum];
-
 

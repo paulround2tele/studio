@@ -17,7 +17,7 @@ Simple ping endpoint to test server connectivity
 import {
     UtilitiesApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new UtilitiesApi(configuration);

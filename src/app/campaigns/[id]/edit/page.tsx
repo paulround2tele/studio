@@ -41,8 +41,8 @@ function EditCampaignPageContent() {
       setError(null);
       try {
         const response = await apiClient.getCampaignDetails(campaignId);
-        if (response.data.campaign) {
-          setCampaign(response.data.campaign as Campaign);
+        if (response.data) {
+          setCampaign(response.data as Campaign);
         } else {
           setError("Campaign not found.");
           setCampaign(null);

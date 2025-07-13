@@ -28,14 +28,16 @@ export interface CookieHandling {
     'mode'?: CookieHandlingModeEnum;
 }
 
-export const CookieHandlingModeEnum = {
-    Preserve: 'preserve',
-    Ignore: 'ignore',
-    Custom: 'custom',
-    Clear: 'clear',
-    SessionOnly: 'session_only'
-} as const;
-
-export type CookieHandlingModeEnum = typeof CookieHandlingModeEnum[keyof typeof CookieHandlingModeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CookieHandlingModeEnum {
+    Preserve = 'preserve',
+    Ignore = 'ignore',
+    Custom = 'custom',
+    Clear = 'clear',
+    SessionOnly = 'session_only'
+}
 
 

@@ -437,12 +437,82 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
 };
 
 /**
+ * ProxyPoolsApi - interface
+ * @export
+ * @interface ProxyPoolsApi
+ */
+export interface ProxyPoolsApiInterface {
+    /**
+     * Assigns a proxy to a pool
+     * @summary Add proxy to pool
+     * @param {string} poolId Pool ID
+     * @param {AddProxyToPoolRequest} addProxyToPoolRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxyPoolsApiInterface
+     */
+    addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxyPoolMembership>;
+
+    /**
+     * Creates a new proxy pool
+     * @summary Create proxy pool
+     * @param {ProxyPoolRequest} proxyPoolRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxyPoolsApiInterface
+     */
+    createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxyPool>;
+
+    /**
+     * Deletes a proxy pool by ID
+     * @summary Delete proxy pool
+     * @param {string} poolId Pool ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxyPoolsApiInterface
+     */
+    deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<DeleteProxyPool200Response>;
+
+    /**
+     * Returns all proxy pools
+     * @summary List proxy pools
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxyPoolsApiInterface
+     */
+    listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<Array<ProxyPool>>;
+
+    /**
+     * Removes a proxy from a pool
+     * @summary Remove proxy from pool
+     * @param {string} poolId Pool ID
+     * @param {string} proxyId Proxy ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxyPoolsApiInterface
+     */
+    removeProxyFromPool(poolId: string, proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<RemoveProxyFromPool200Response>;
+
+    /**
+     * Updates a proxy pool by ID
+     * @summary Update proxy pool
+     * @param {string} poolId Pool ID
+     * @param {ProxyPoolRequest} proxyPoolRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxyPoolsApiInterface
+     */
+    updateProxyPool(poolId: string, proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxyPool>;
+
+}
+
+/**
  * ProxyPoolsApi - object-oriented interface
  * @export
  * @class ProxyPoolsApi
  * @extends {BaseAPI}
  */
-export class ProxyPoolsApi extends BaseAPI {
+export class ProxyPoolsApi extends BaseAPI implements ProxyPoolsApiInterface {
     /**
      * Assigns a proxy to a pool
      * @summary Add proxy to pool

@@ -64,12 +64,14 @@ export interface HealthStatus {
     'version': string;
 }
 
-export const HealthStatusStatusEnum = {
-    Ok: 'ok',
-    Degraded: 'degraded',
-    Error: 'error'
-} as const;
-
-export type HealthStatusStatusEnum = typeof HealthStatusStatusEnum[keyof typeof HealthStatusStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum HealthStatusStatusEnum {
+    Ok = 'ok',
+    Degraded = 'degraded',
+    Error = 'error'
+}
 
 

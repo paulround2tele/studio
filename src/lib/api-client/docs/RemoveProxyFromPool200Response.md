@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { RemoveProxyFromPool200Response } from 'api-client';
+import { RemoveProxyFromPool200Response } from './api';
 
 const instance: RemoveProxyFromPool200Response = {
     removed,

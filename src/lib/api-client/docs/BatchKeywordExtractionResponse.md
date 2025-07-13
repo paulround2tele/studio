@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { BatchKeywordExtractionResponse } from 'api-client';
+import { BatchKeywordExtractionResponse } from './api';
 
 const instance: BatchKeywordExtractionResponse = {
     results,

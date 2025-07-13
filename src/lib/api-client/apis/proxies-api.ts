@@ -65,6 +65,8 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication sessionAuth required
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -102,6 +104,8 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication sessionAuth required
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -132,6 +136,8 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication sessionAuth required
 
 
     
@@ -170,6 +176,8 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication sessionAuth required
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -199,6 +207,8 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication sessionAuth required
 
 
     
@@ -234,6 +244,8 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication sessionAuth required
 
             if (limit !== undefined) {
                 localVarQueryParameter['limit'] = limit;
@@ -289,6 +301,8 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication sessionAuth required
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -325,6 +339,8 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication sessionAuth required
 
 
     
@@ -556,12 +572,104 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
 };
 
 /**
+ * ProxiesApi - interface
+ * @export
+ * @interface ProxiesApi
+ */
+export interface ProxiesApiInterface {
+    /**
+     * Adds a new proxy
+     * @summary Add proxy
+     * @param {CreateProxyRequest} createProxyRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    createProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<Proxy>;
+
+    /**
+     * Deletes a proxy by ID
+     * @summary Delete proxy
+     * @param {string} proxyId Proxy ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    deleteProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Forces a health check on all proxies
+     * @summary Force all proxies health check
+     * @param {ForceCheckProxiesRequest} [forceCheckProxiesRequest] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    forceCheckAllProxies(forceCheckProxiesRequest?: ForceCheckProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ForceCheckAllProxies202Response>;
+
+    /**
+     * Forces a health check on a single proxy
+     * @summary Force single proxy health check
+     * @param {string} proxyId Proxy ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    forceCheckSingleProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxyStatus>;
+
+    /**
+     * Gets the status of all proxies
+     * @summary Get proxy statuses
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    getProxyStatuses(options?: RawAxiosRequestConfig): AxiosPromise<Array<ProxyStatus>>;
+
+    /**
+     * Lists all proxies with optional filtering
+     * @summary List proxies
+     * @param {number} [limit] Number of items to return
+     * @param {number} [offset] Number of items to skip
+     * @param {ListProxiesProtocolEnum} [protocol] Filter by proxy protocol
+     * @param {boolean} [isEnabled] Filter by enabled status
+     * @param {boolean} [isHealthy] Filter by health status
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    listProxies(limit?: number, offset?: number, protocol?: ListProxiesProtocolEnum, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<Proxy>>;
+
+    /**
+     * Tests a proxy by ID
+     * @summary Test proxy
+     * @param {string} proxyId Proxy ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    testProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxyTestResult>;
+
+    /**
+     * Updates a proxy by ID
+     * @summary Update proxy
+     * @param {string} proxyId Proxy ID
+     * @param {UpdateProxyRequest} updateProxyRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProxiesApiInterface
+     */
+    updateProxy(proxyId: string, updateProxyRequest: UpdateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<Proxy>;
+
+}
+
+/**
  * ProxiesApi - object-oriented interface
  * @export
  * @class ProxiesApi
  * @extends {BaseAPI}
  */
-export class ProxiesApi extends BaseAPI {
+export class ProxiesApi extends BaseAPI implements ProxiesApiInterface {
     /**
      * Adds a new proxy
      * @summary Add proxy
@@ -664,12 +772,12 @@ export class ProxiesApi extends BaseAPI {
 }
 
 /**
- * @export
- */
-export const ListProxiesProtocolEnum = {
-    Http: 'http',
-    Https: 'https',
-    Socks5: 'socks5',
-    Socks4: 'socks4'
-} as const;
-export type ListProxiesProtocolEnum = typeof ListProxiesProtocolEnum[keyof typeof ListProxiesProtocolEnum];
+  * @export
+  * @enum {string}
+  */
+export enum ListProxiesProtocolEnum {
+    Http = 'http',
+    Https = 'https',
+    Socks5 = 'socks5',
+    Socks4 = 'socks4'
+}

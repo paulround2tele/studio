@@ -100,13 +100,15 @@ export interface DNSConfig {
     'useSystemResolvers'?: boolean;
 }
 
-export const DNSConfigResolverStrategyEnum = {
-    RoundRobin: 'round_robin',
-    Random: 'random',
-    Weighted: 'weighted',
-    Priority: 'priority'
-} as const;
-
-export type DNSConfigResolverStrategyEnum = typeof DNSConfigResolverStrategyEnum[keyof typeof DNSConfigResolverStrategyEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum DNSConfigResolverStrategyEnum {
+    RoundRobin = 'round_robin',
+    Random = 'random',
+    Weighted = 'weighted',
+    Priority = 'priority'
+}
 
 

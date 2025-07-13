@@ -52,12 +52,14 @@ export interface PatternOffsetRequest {
     'variableLength': number;
 }
 
-export const PatternOffsetRequestPatternTypeEnum = {
-    Prefix: 'prefix',
-    Suffix: 'suffix',
-    Both: 'both'
-} as const;
-
-export type PatternOffsetRequestPatternTypeEnum = typeof PatternOffsetRequestPatternTypeEnum[keyof typeof PatternOffsetRequestPatternTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PatternOffsetRequestPatternTypeEnum {
+    Prefix = 'prefix',
+    Suffix = 'suffix',
+    Both = 'both'
+}
 
 

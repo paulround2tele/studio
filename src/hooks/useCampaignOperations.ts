@@ -91,37 +91,71 @@ export const useCampaignOperations = (campaignId: string) => {
         httpCampaignItems?: CampaignValidationItem[];
       } = {};
 
-      // 🔧 CRITICAL FIX: Check currentPhase for DNS validation transition
+      // 🔧 CRITICAL FIX: Check currentPhase for validation transitions
       const isDNSValidationPhase = (campaignData as { currentPhase?: string }).currentPhase === 'dns_validation';
+      const isHTTPValidationPhase = (campaignData as { currentPhase?: string }).currentPhase === 'http_validation' ||
+                                    (campaignData as { currentPhase?: string }).currentPhase === 'HTTPValidation' ||
+                                    (campaignData as { currentPhase?: string }).currentPhase === 'http_keyword_validation';
       
-      if (campaignData.campaignType === 'domain_generation' && !isDNSValidationPhase) {
-        console.log('📡 [Domain Loading] Fetching generated domains...');
+      // 🔥 CRITICAL FIX: PHASE-AWARE DOMAIN LOADING
+      // DNS validation and HTTP validation campaigns are essentially domain generation campaigns
+      // that have been transitioned to validation phases. They ALWAYS need to show generated domains.
+      const hasDomainGenerationHistory =
+        campaignData.campaignType === 'domain_generation' ||
+        campaignData.campaignType === 'dns_validation' ||
+        campaignData.campaignType === 'http_keyword_validation' ||
+        campaignData.domainGenerationParams !== undefined;
+      
+      if (hasDomainGenerationHistory) {
+        console.log('📡 [Domain Loading] Loading generated domains (phase-aware)...', {
+          campaignType: campaignData.campaignType,
+          currentPhase: (campaignData as { currentPhase?: string }).currentPhase,
+          hasDomainGenParams: !!campaignData.domainGenerationParams,
+          reason: campaignData.campaignType === 'domain_generation' ? 'direct_domain_generation' :
+                  campaignData.campaignType === 'dns_validation' ? 'dns_validation_campaign' :
+                  campaignData.campaignType === 'http_keyword_validation' ? 'http_validation_campaign' :
+                  campaignData.domainGenerationParams ? 'has_domain_gen_params' : 'unknown'
+        });
+        
         const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId, 1000, 0);
         console.log('📡 [Domain Loading] Raw API response:', domainsResponse);
         
         const domains = extractDomainsFromResponse(domainsResponse.data);
         updates.generatedDomains = domains as GeneratedDomainBackend[];
         
-        console.log('✅ [Domain Loading] Extracted domains:', {
+        console.log('✅ [Domain Loading] Generated domains loaded (phase-aware):', {
           count: domains.length,
-          sampleDomains: domains.slice(0, 3).map(d => d.domainName)
+          sampleDomains: domains.slice(0, 3).map(d => d.domainName),
+          currentPhase: isDNSValidationPhase ? 'DNS_VALIDATION' : isHTTPValidationPhase ? 'HTTP_VALIDATION' : 'DOMAIN_GENERATION',
+          campaignType: campaignData.campaignType
         });
       }
 
       if (campaignData.campaignType === 'dns_validation' || isDNSValidationPhase) {
         console.log('📡 [Domain Loading] Fetching DNS validation items...');
-        const dnsResponse = await campaignsApi.getDNSValidationResults(campaignId, 1000, '0');
+        const dnsResponse = await campaignsApi.getDNSValidationResults(campaignId, 1, 1000);
         const dnsItems = Array.isArray(dnsResponse?.data) ? dnsResponse.data : [];
         updates.dnsCampaignItems = dnsItems as CampaignValidationItem[];
         console.log('✅ [Domain Loading] DNS items loaded:', dnsItems.length);
       }
 
-      if (campaignData.campaignType === 'http_keyword_validation') {
+      // CRITICAL FIX: For HTTP validation phase, ensure we load both generated domains AND HTTP results
+      if (campaignData.campaignType === 'http_keyword_validation' || isHTTPValidationPhase) {
         console.log('📡 [Domain Loading] Fetching HTTP validation items...');
-        const httpResponse = await campaignsApi.getHTTPKeywordResults(campaignId, 1000, '0');
+        const httpResponse = await campaignsApi.getHTTPKeywordResults(campaignId, 1, 1000);
         const httpItems = Array.isArray(httpResponse?.data) ? httpResponse.data : [];
         updates.httpCampaignItems = httpItems as CampaignValidationItem[];
         console.log('✅ [Domain Loading] HTTP items loaded:', httpItems.length);
+
+        // CRITICAL FIX: If this is an HTTP validation phase for a domain_generation campaign,
+        // we need to also load the generated domains if we haven't already
+        if (isHTTPValidationPhase && campaignData.campaignType === 'domain_generation' && !updates.generatedDomains) {
+          console.log('📡 [Domain Loading] Loading generated domains for HTTP validation phase...');
+          const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId, 1000, 0);
+          const domains = extractDomainsFromResponse(domainsResponse.data);
+          updates.generatedDomains = domains as GeneratedDomainBackend[];
+          console.log('✅ [Domain Loading] Generated domains loaded for HTTP validation:', domains.length);
+        }
       }
 
       // 🔧 Direct store access to avoid dependency cycles

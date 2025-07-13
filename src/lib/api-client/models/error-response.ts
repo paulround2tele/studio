@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 /**
  * DomainFlow API
  * DomainFlow API for domain generation, validation, and campaign management.
@@ -14,16 +15,22 @@
 
 
 /**
- * 
+ * Standard error response
  * @export
  * @interface ErrorResponse
  */
 export interface ErrorResponse {
     /**
+     * Additional error details
+     * @type {string}
+     * @memberof ErrorResponse
+     */
+    'details'?: string;
+    /**
      * Error message
      * @type {string}
      * @memberof ErrorResponse
      */
-    'error'?: string;
+    'error': string;
 }
 

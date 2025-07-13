@@ -52,21 +52,25 @@ export interface TLSClientHello {
     'minVersion'?: TLSClientHelloMinVersionEnum;
 }
 
-export const TLSClientHelloMaxVersionEnum = {
-    Tls10: 'TLS10',
-    Tls11: 'TLS11',
-    Tls12: 'TLS12',
-    Tls13: 'TLS13'
-} as const;
-
-export type TLSClientHelloMaxVersionEnum = typeof TLSClientHelloMaxVersionEnum[keyof typeof TLSClientHelloMaxVersionEnum];
-export const TLSClientHelloMinVersionEnum = {
-    Tls10: 'TLS10',
-    Tls11: 'TLS11',
-    Tls12: 'TLS12',
-    Tls13: 'TLS13'
-} as const;
-
-export type TLSClientHelloMinVersionEnum = typeof TLSClientHelloMinVersionEnum[keyof typeof TLSClientHelloMinVersionEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum TLSClientHelloMaxVersionEnum {
+    Tls10 = 'TLS10',
+    Tls11 = 'TLS11',
+    Tls12 = 'TLS12',
+    Tls13 = 'TLS13'
+}
+/**
+    * @export
+    * @enum {string}
+    */
+export enum TLSClientHelloMinVersionEnum {
+    Tls10 = 'TLS10',
+    Tls11 = 'TLS11',
+    Tls12 = 'TLS12',
+    Tls13 = 'TLS13'
+}
 
 

@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { SystemInfo } from 'api-client';
+import { SystemInfo } from './api';
 
 const instance: SystemInfo = {
     goVersion,

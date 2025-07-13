@@ -25,7 +25,7 @@ import {
     ProxiesApi,
     Configuration,
     CreateProxyRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
@@ -79,7 +79,7 @@ Deletes a proxy by ID
 import {
     ProxiesApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
@@ -135,7 +135,7 @@ import {
     ProxiesApi,
     Configuration,
     ForceCheckProxiesRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
@@ -189,7 +189,7 @@ Forces a health check on a single proxy
 import {
     ProxiesApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
@@ -244,7 +244,7 @@ Gets the status of all proxies
 import {
     ProxiesApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
@@ -290,7 +290,7 @@ Lists all proxies with optional filtering
 import {
     ProxiesApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
@@ -355,7 +355,7 @@ Tests a proxy by ID
 import {
     ProxiesApi,
     Configuration
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
@@ -411,7 +411,7 @@ import {
     ProxiesApi,
     Configuration,
     UpdateProxyRequest
-} from 'api-client';
+} from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);

@@ -15,130 +15,112 @@
 
 
 /**
- * Generated domain information
+ * 
  * @export
  * @interface GeneratedDomain
  */
 export interface GeneratedDomain {
     /**
-     * Record creation timestamp
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'createdAt'?: string;
     /**
-     * DNS resolved IP address
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'dnsIp'?: string;
     /**
-     * DNS validation status
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'dnsStatus'?: GeneratedDomainDnsStatusEnum;
+    'dnsStatus'?: string;
     /**
-     * Generated domain name
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'domainName'?: string;
     /**
-     * Domain generation timestamp
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'generatedAt'?: string;
     /**
-     * Generation campaign ID
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'generationCampaignId'?: string;
     /**
-     * HTTP keywords found
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'httpKeywords'?: string;
     /**
-     * HTTP validation status
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'httpStatus'?: GeneratedDomainHttpStatusEnum;
+    'httpStatus'?: string;
     /**
-     * HTTP response status code
+     * 
      * @type {number}
      * @memberof GeneratedDomain
      */
     'httpStatusCode'?: number;
     /**
-     * HTTP page title
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'httpTitle'?: string;
     /**
-     * Domain unique identifier
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'id'?: string;
     /**
-     * Last validation timestamp
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'lastValidatedAt'?: string;
     /**
-     * Lead quality score
+     * 
      * @type {number}
      * @memberof GeneratedDomain
      */
     'leadScore'?: number;
     /**
-     * Offset index in generation space
+     * 
      * @type {number}
      * @memberof GeneratedDomain
      */
     'offsetIndex'?: number;
     /**
-     * Source keyword used for generation
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'sourceKeyword'?: string;
     /**
-     * Source pattern used for generation
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'sourcePattern'?: string;
     /**
-     * Top-level domain
+     * 
      * @type {string}
      * @memberof GeneratedDomain
      */
     'tld'?: string;
 }
-
-export const GeneratedDomainDnsStatusEnum = {
-    Pending: 'pending',
-    Ok: 'ok',
-    Error: 'error',
-    Timeout: 'timeout'
-} as const;
-
-export type GeneratedDomainDnsStatusEnum = typeof GeneratedDomainDnsStatusEnum[keyof typeof GeneratedDomainDnsStatusEnum];
-export const GeneratedDomainHttpStatusEnum = {
-    Pending: 'pending',
-    Ok: 'ok',
-    Error: 'error',
-    Timeout: 'timeout'
-} as const;
-
-export type GeneratedDomainHttpStatusEnum = typeof GeneratedDomainHttpStatusEnum[keyof typeof GeneratedDomainHttpStatusEnum];
-
 

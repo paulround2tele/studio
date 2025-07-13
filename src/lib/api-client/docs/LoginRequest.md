@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { LoginRequest } from 'api-client';
+import { LoginRequest } from './api';
 
 const instance: LoginRequest = {
     captchaToken,

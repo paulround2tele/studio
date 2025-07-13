@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { BulkDeleteResponse } from 'api-client';
+import { BulkDeleteResponse } from './api';
 
 const instance: BulkDeleteResponse = {
     errors,

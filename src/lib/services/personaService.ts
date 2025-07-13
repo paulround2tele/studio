@@ -1,6 +1,7 @@
 // src/lib/services/personaService.ts
 // Production-ready Persona Service using OpenAPI types directly
 import { personasApi } from '@/lib/api-client/client';
+import { CookieHandlingModeEnum } from '@/lib/api-client/models/cookie-handling';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
@@ -12,12 +13,43 @@ type PersonaTestResult = components["schemas"]["PersonaTestResult"];
 // Import unified API response wrapper
 import type { ApiResponse } from '@/lib/types';
 
+// Cookie mode conversion utility
+const convertCookieMode = (mode: string): CookieHandlingModeEnum => {
+  switch (mode) {
+    case 'preserve': return CookieHandlingModeEnum.Preserve;
+    case 'ignore': return CookieHandlingModeEnum.Ignore;
+    case 'custom': return CookieHandlingModeEnum.Custom;
+    case 'clear': return CookieHandlingModeEnum.Clear;
+    case 'session_only': return CookieHandlingModeEnum.SessionOnly;
+    default: return CookieHandlingModeEnum.Preserve;
+  }
+};
+
+// Convert payload to ensure enums are properly typed
+const convertPersonaPayload = (payload: any): any => {
+  if (!payload.configDetails) return payload;
+  
+  const converted = { ...payload };
+  if (converted.configDetails.cookieHandling?.mode) {
+    converted.configDetails = {
+      ...converted.configDetails,
+      cookieHandling: {
+        ...converted.configDetails.cookieHandling,
+        mode: convertCookieMode(converted.configDetails.cookieHandling.mode)
+      }
+    };
+  }
+  
+  return converted;
+};
+
 // Import additional OpenAPI persona types
 export type PersonaListResponse = components["schemas"]["PersonaListResponse"];
 
 export async function createPersona(payload: CreatePersonaRequest): Promise<ApiResponse<Persona>> {
   try {
-    const response = await personasApi.createPersona(payload);
+    const convertedPayload = convertPersonaPayload(payload);
+    const response = await personasApi.createPersona(convertedPayload);
     // Axios response structure: response.data = API wrapper object
     const apiResponse = 'data' in response ? response.data : response;
     
@@ -86,7 +118,8 @@ export async function getPersonaById(personaId: string, _personaType?: 'http' | 
 
 export async function updatePersona(personaId: string, payload: UpdatePersonaRequest, _personaType?: 'http' | 'dns'): Promise<ApiResponse<Persona>> {
   try {
-    const response = await personasApi.updatePersona(personaId, payload);
+    const convertedPayload = convertPersonaPayload(payload);
+    const response = await personasApi.updatePersona(personaId, convertedPayload);
     // Axios response structure: response.data = API wrapper object
     const apiResponse = 'data' in response ? response.data : response;
     

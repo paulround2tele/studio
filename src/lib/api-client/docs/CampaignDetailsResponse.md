@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { CampaignDetailsResponse } from 'api-client';
+import { CampaignDetailsResponse } from './api';
 
 const instance: CampaignDetailsResponse = {
     campaign,

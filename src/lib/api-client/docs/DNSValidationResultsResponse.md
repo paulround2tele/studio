@@ -1,24 +1,26 @@
 # DNSValidationResultsResponse
 
-Response for DNS validation results
+Paginated list of DNS validation results
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**data** | [**Array&lt;DNSValidationResult&gt;**](DNSValidationResult.md) |  | [optional] [default to undefined]
-**nextCursor** | **string** | Next cursor for pagination | [optional] [default to undefined]
-**totalCount** | **number** | Total number of DNS validation results | [optional] [default to undefined]
+**limit** | **number** | Number of items per page | [default to undefined]
+**page** | **number** | Current page number | [default to undefined]
+**results** | [**Array&lt;DNSValidationResult&gt;**](DNSValidationResult.md) | List of DNS validation results | [default to undefined]
+**total** | **number** | Total number of results | [default to undefined]
 
 ## Example
 
 ```typescript
-import { DNSValidationResultsResponse } from 'api-client';
+import { DNSValidationResultsResponse } from './api';
 
 const instance: DNSValidationResultsResponse = {
-    data,
-    nextCursor,
-    totalCount,
+    limit,
+    page,
+    results,
+    total,
 };
 ```
 

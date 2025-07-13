@@ -1,17 +1,17 @@
 # BulkDeleteRequest
 
-Request to bulk delete campaigns
+Request to delete multiple campaigns
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaignIds** | **Array&lt;string&gt;** | Array of campaign UUIDs to delete | [default to undefined]
+**campaignIds** | **Array&lt;string&gt;** | List of campaign IDs to delete | [default to undefined]
 
 ## Example
 
 ```typescript
-import { BulkDeleteRequest } from 'api-client';
+import { BulkDeleteRequest } from './api';
 
 const instance: BulkDeleteRequest = {
     campaignIds,

@@ -52,8 +52,8 @@ export type HttpPersona = Persona;
 export type DnsPersona = Persona;
 
 // Configuration details from OpenAPI
-export type HTTPConfigDetails = components["schemas"]["HTTPConfigDetails"];
-export type DNSConfigDetails = components["schemas"]["DNSConfigDetails"];
+export type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
+export type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';
 
 // Domain validation items - use OpenAPI GeneratedDomain as base with UI extensions
 export interface CampaignValidationItem extends Omit<GeneratedDomain, 'domainName'> {

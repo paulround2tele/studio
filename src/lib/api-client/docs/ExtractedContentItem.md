@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ExtractedContentItem } from 'api-client';
+import { ExtractedContentItem } from './api';
 
 const instance: ExtractedContentItem = {
     advancedAnalysis,

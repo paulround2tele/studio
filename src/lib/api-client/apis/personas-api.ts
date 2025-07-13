@@ -569,12 +569,104 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
 };
 
 /**
+ * PersonasApi - interface
+ * @export
+ * @interface PersonasApi
+ */
+export interface PersonasApiInterface {
+    /**
+     * Creates a new persona with structured configuration
+     * @summary Create persona
+     * @param {CreatePersonaRequest} createPersonaRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<Persona>;
+
+    /**
+     * Deletes a persona by ID
+     * @summary Delete persona
+     * @param {string} id Persona ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    deletePersona(id: string, options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse>;
+
+    /**
+     * Gets a DNS persona by ID with typed configuration
+     * @summary Get DNS persona by ID
+     * @param {string} id Persona ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    getDnsPersonaById(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Persona>;
+
+    /**
+     * Gets an HTTP persona by ID with typed configuration
+     * @summary Get HTTP persona by ID
+     * @param {string} id Persona ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    getHttpPersonaById(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Persona>;
+
+    /**
+     * Gets a persona by ID regardless of type
+     * @summary Get persona by ID
+     * @param {string} id Persona ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    getPersonaById(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Persona>;
+
+    /**
+     * Lists all personas with optional filtering by type and enabled status
+     * @summary List personas
+     * @param {number} [limit] Maximum number of personas to return
+     * @param {number} [offset] Number of personas to skip for pagination
+     * @param {ListPersonasPersonaTypeEnum} [personaType] Filter personas by type
+     * @param {boolean} [isEnabled] Filter personas by enabled status
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    listPersonas(limit?: number, offset?: number, personaType?: ListPersonasPersonaTypeEnum, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<PersonaListResponse>;
+
+    /**
+     * Tests a persona by ID
+     * @summary Test persona
+     * @param {string} id Persona ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    testPersona(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaTestResult>;
+
+    /**
+     * Updates a persona by ID with structured configuration
+     * @summary Update persona
+     * @param {string} id Persona ID
+     * @param {UpdatePersonaRequest} updatePersonaRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PersonasApiInterface
+     */
+    updatePersona(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<Persona>;
+
+}
+
+/**
  * PersonasApi - object-oriented interface
  * @export
  * @class PersonasApi
  * @extends {BaseAPI}
  */
-export class PersonasApi extends BaseAPI {
+export class PersonasApi extends BaseAPI implements PersonasApiInterface {
     /**
      * Creates a new persona with structured configuration
      * @summary Create persona
@@ -677,10 +769,10 @@ export class PersonasApi extends BaseAPI {
 }
 
 /**
- * @export
- */
-export const ListPersonasPersonaTypeEnum = {
-    Dns: 'dns',
-    Http: 'http'
-} as const;
-export type ListPersonasPersonaTypeEnum = typeof ListPersonasPersonaTypeEnum[keyof typeof ListPersonasPersonaTypeEnum];
+  * @export
+  * @enum {string}
+  */
+export enum ListPersonasPersonaTypeEnum {
+    Dns = 'dns',
+    Http = 'http'
+}

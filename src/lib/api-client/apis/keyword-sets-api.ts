@@ -386,12 +386,74 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
 };
 
 /**
+ * KeywordSetsApi - interface
+ * @export
+ * @interface KeywordSetsApi
+ */
+export interface KeywordSetsApiInterface {
+    /**
+     * Creates a new keyword set with optional rules
+     * @summary Create keyword set
+     * @param {CreateKeywordSetRequest} createKeywordSetRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApiInterface
+     */
+    createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSet>;
+
+    /**
+     * Deletes a keyword set by ID including all its rules
+     * @summary Delete keyword set
+     * @param {string} setId Keyword set ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApiInterface
+     */
+    deleteKeywordSet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Gets a keyword set by ID including its rules
+     * @summary Get keyword set
+     * @param {string} setId Keyword set ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApiInterface
+     */
+    getKeywordSet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSet>;
+
+    /**
+     * Lists all keyword sets with optional filtering and pagination
+     * @summary List keyword sets
+     * @param {number} [limit] Maximum number of keyword sets to return
+     * @param {number} [offset] Number of keyword sets to skip for pagination
+     * @param {boolean} [isEnabled] Filter keyword sets by enabled status
+     * @param {boolean} [includeRules] Include keyword rules in the response
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApiInterface
+     */
+    listKeywordSets(limit?: number, offset?: number, isEnabled?: boolean, includeRules?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<KeywordSet>>;
+
+    /**
+     * Updates a keyword set by ID including its rules
+     * @summary Update keyword set
+     * @param {string} setId Keyword set ID
+     * @param {UpdateKeywordSetRequest} updateKeywordSetRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApiInterface
+     */
+    updateKeywordSet(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSet>;
+
+}
+
+/**
  * KeywordSetsApi - object-oriented interface
  * @export
  * @class KeywordSetsApi
  * @extends {BaseAPI}
  */
-export class KeywordSetsApi extends BaseAPI {
+export class KeywordSetsApi extends BaseAPI implements KeywordSetsApiInterface {
     /**
      * Creates a new keyword set with optional rules
      * @summary Create keyword set

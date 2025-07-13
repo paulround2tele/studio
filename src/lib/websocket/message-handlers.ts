@@ -11,9 +11,10 @@ export const WebSocketMessageTypes = {
   CAMPAIGN_LIST_UPDATE: 'campaign_list_update', // NEW: Complete campaign list updates
   CAMPAIGN_CREATED: 'campaign_created',         // NEW: Single campaign added
   CAMPAIGN_DELETED: 'campaign_deleted',         // NEW: Single campaign removed
+  PHASE_TRANSITION: 'phase_transition',         // NEW: Campaign phase transitions
   DOMAIN_GENERATED: 'domain_generated',
-  DNS_VALIDATION_RESULT: 'dns_validation_result',
-  HTTP_VALIDATION_RESULT: 'http_validation_result',
+  DNS_VALIDATION_RESULT: 'dns.validation.result', // Updated to standardized format
+  HTTP_VALIDATION_RESULT: 'http.validation.result', // Updated to standardized format
   SYSTEM_NOTIFICATION: 'system_notification',
   PROXY_STATUS: 'proxy_status',
   PROXY_LIST_UPDATE: 'proxy_list_update',       // NEW: Proxy CRUD operations
@@ -52,6 +53,18 @@ export interface CampaignStatusMessage extends BaseWebSocketMessage {
   };
 }
 
+export interface PhaseTransitionMessage extends BaseWebSocketMessage {
+  type: typeof WebSocketMessageTypes.PHASE_TRANSITION;
+  data: {
+    campaignId: string;
+    previousPhase: string;
+    newPhase: string;
+    newStatus: string;
+    timestamp: string;
+    transitionType: string;
+  };
+}
+
 export interface SystemNotificationMessage extends BaseWebSocketMessage {
   type: typeof WebSocketMessageTypes.SYSTEM_NOTIFICATION;
   data: {
@@ -71,10 +84,11 @@ export interface ErrorMessage extends BaseWebSocketMessage {
   };
 }
 
-export type TypedWebSocketMessage = 
-  | CampaignProgressMessage 
-  | CampaignStatusMessage 
-  | SystemNotificationMessage 
+export type TypedWebSocketMessage =
+  | CampaignProgressMessage
+  | CampaignStatusMessage
+  | PhaseTransitionMessage
+  | SystemNotificationMessage
   | ErrorMessage
   | BaseWebSocketMessage;
 
@@ -82,6 +96,7 @@ export type TypedWebSocketMessage =
 export interface WebSocketHandlers {
   onCampaignProgress?: (message: CampaignProgressMessage) => void;
   onCampaignStatus?: (message: CampaignStatusMessage) => void;
+  onPhaseTransition?: (message: PhaseTransitionMessage) => void;
   onDomainGenerated?: (message: BaseWebSocketMessage) => void;
   onDNSValidationResult?: (message: BaseWebSocketMessage) => void;
   onHTTPValidationResult?: (message: BaseWebSocketMessage) => void;
@@ -120,6 +135,9 @@ export function routeWebSocketMessage(
       break;
     case WebSocketMessageTypes.CAMPAIGN_STATUS:
       handlers.onCampaignStatus?.(message as CampaignStatusMessage);
+      break;
+    case WebSocketMessageTypes.PHASE_TRANSITION:
+      handlers.onPhaseTransition?.(message as PhaseTransitionMessage);
       break;
     case WebSocketMessageTypes.DOMAIN_GENERATED:
       handlers.onDomainGenerated?.(message);

@@ -6,7 +6,7 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Briefcase } from 'lucide-react';
+import { AlertCircle, Briefcase, Loader2 } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import CampaignProgress from '@/components/campaigns/CampaignProgress';
 import ContentSimilarityView from '@/components/campaigns/ContentSimilarityView';
@@ -29,6 +29,7 @@ import {
 } from '@/lib/stores/campaignDetailsStore';
 import { websocketService } from '@/lib/services/websocketService.simple';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
+import { handlePhaseTransition } from '@/lib/services/campaignDataService';
 
 // Types
 import type { components } from '@/lib/api-client/types';
@@ -120,8 +121,10 @@ export default function RefactoredCampaignDetailsPage() {
       };
     }
     
-    if (campaign.campaignType !== 'domain_generation') {
-      console.log(`❌ [DEBUG] WebSocket DISCONNECTED - Campaign type is not domain_generation:`, campaign.campaignType);
+    // Allow WebSocket connections for domain generation and validation campaigns
+    const allowedCampaignTypes = ['domain_generation', 'dns_validation', 'http_keyword_validation'];
+    if (!campaign.campaignType || !allowedCampaignTypes.includes(campaign.campaignType)) {
+      console.log(`❌ [DEBUG] WebSocket DISCONNECTED - Campaign type not supported for streaming:`, campaign.campaignType);
       return {
         shouldConnect: false,
         campaignId: campaign.id,
@@ -141,14 +144,20 @@ export default function RefactoredCampaignDetailsPage() {
     const isDNSValidationActive = campaign.currentPhase === 'dns_validation' ||
                                   campaign.currentPhase === 'DNSValidation';
     
+    // FIXED: Check if HTTP validation phase is active
+    const isHTTPValidationActive = campaign.currentPhase === 'http_validation' ||
+                                   campaign.currentPhase === 'HTTPValidation' ||
+                                   campaign.currentPhase === 'http_keyword_validation';
+    
     // Connect if active OR if it's a completed domain generation campaign (for DNS validation)
-    // OR if DNS validation phase is active
-    const shouldConnect = !!(campaign && (isActiveStatus || isCompletedDomainGeneration || isDNSValidationActive));
+    // OR if DNS validation phase is active OR if HTTP validation phase is active
+    const shouldConnect = !!(campaign && (isActiveStatus || isCompletedDomainGeneration || isDNSValidationActive || isHTTPValidationActive));
       
     console.log(`🔌 [DEBUG] WebSocket connection decision:`, {
       isActiveStatus,
       isCompletedDomainGeneration,
       isDNSValidationActive,
+      isHTTPValidationActive,
       currentPhase: campaign.currentPhase,
       shouldConnect
     });
@@ -204,9 +213,12 @@ export default function RefactoredCampaignDetailsPage() {
               console.log(`✅ [DNS_VALIDATION_COMPLETE] DNS validation completed message detected!`, message);
             }
             
+            console.log(`🟡 [WEBSOCKET_DEBUG] Processing message type: ${message.type} for campaign ${campaignId}`, message);
+            
             switch (message.type) {
               case 'domain_generated':
               case 'domain.generated':
+                console.log(`🔵 [DOMAIN_GENERATED_DEBUG] Received domain generated message:`, message.data);
                 updateFromWebSocket({
                   type: 'domain_generated',
                   data: message.data,
@@ -219,6 +231,7 @@ export default function RefactoredCampaignDetailsPage() {
               case 'campaign_progress':
               case 'campaign.progress':
               case 'domain_generation_progress':
+                console.log(`🟢 [CAMPAIGN_PROGRESS_DEBUG] Received campaign progress message:`, message.data);
                 // CRITICAL FIX: Forward phase and status from message level to store
                 updateFromWebSocket({
                   type: 'campaign_progress',
@@ -233,7 +246,7 @@ export default function RefactoredCampaignDetailsPage() {
                 
               case 'validation_progress':
                 // CRITICAL: Handle DNS/HTTP validation progress messages
-                console.log(`🧬 [VALIDATION_PROGRESS] Validation progress message:`, message);
+                console.log(`🧬 [VALIDATION_PROGRESS_DEBUG] Validation progress message:`, message);
                 updateFromWebSocket({
                   type: 'validation_progress',
                   data: message.data,
@@ -247,6 +260,7 @@ export default function RefactoredCampaignDetailsPage() {
               case 'campaign_completed':
               case 'campaign_failed':
               case 'campaign_phase_complete':
+                console.log(`🟣 [CAMPAIGN_STATUS_DEBUG] Received campaign status message:`, message.data);
                 updateFromWebSocket({
                   type: 'campaign_status',
                   data: message.data,
@@ -255,8 +269,8 @@ export default function RefactoredCampaignDetailsPage() {
                 });
                 break;
                 
-              case 'dns_validation_result':
               case 'dns.validation.result':
+                console.log(`🔴 [DNS_VALIDATION_RESULT_DEBUG] Received DNS validation result:`, message.data);
                 updateFromWebSocket({
                   type: 'dns_validation_result',
                   data: message.data,
@@ -265,10 +279,27 @@ export default function RefactoredCampaignDetailsPage() {
                 });
                 break;
                 
-              case 'http_validation_result':
               case 'http.validation.result':
+                console.log(`🟠 [HTTP_VALIDATION_RESULT_DEBUG] Received HTTP validation result:`, message.data);
                 updateFromWebSocket({
                   type: 'http_validation_result',
+                  data: message.data,
+                  timestamp: message.timestamp || new Date().toISOString(),
+                  campaignId: message.campaignId || campaignId,
+                });
+                break;
+                
+              case 'phase_transition':
+                console.log(`🔄 [PHASE_TRANSITION] Phase transition detected:`, message.data);
+                // Handle phase transition with real-time cache invalidation
+                handlePhaseTransition({
+                  type: 'phase_transition',
+                  timestamp: message.timestamp || new Date().toISOString(),
+                  data: message.data
+                });
+                // Update local campaign state immediately
+                updateFromWebSocket({
+                  type: 'phase_transition',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
                   campaignId: message.campaignId || campaignId,
@@ -334,8 +365,8 @@ export default function RefactoredCampaignDetailsPage() {
     console.warn('⚠️ [Refactored Page] No campaign type provided in URL, will attempt to load from API');
   }
 
-  // Error state
-  if (error) {
+  // Error state (only for actual errors, not loading/transition states)
+  if (error && !loading) {
     return (
       <div className="space-y-6">
         <PageHeader title="Campaign Error" icon={Briefcase} />
@@ -356,41 +387,31 @@ export default function RefactoredCampaignDetailsPage() {
     );
   }
 
-  // Loading state with improved messaging for new campaigns
-  if (loading && !campaign) {
+  // Loading state OR campaign not available (could be transitioning)
+  if (loading || !campaign) {
+    const isTransitioning = !loading && !campaign; // Not loading but no campaign = likely transitioning
+    
     return (
       <div className="space-y-6">
-        <PageHeader title="Loading Campaign..." icon={Briefcase} />
+        <PageHeader
+          title={isTransitioning ? "Campaign Transitioning..." : "Loading Campaign..."}
+          icon={Briefcase}
+        />
         <div className="space-y-6">
           <div className="text-center py-8">
             <div className="space-y-4">
+              <Loader2 className="mx-auto h-12 w-12 animate-spin text-muted-foreground mb-4" />
               <div className="h-32 bg-muted rounded-lg animate-pulse" />
               <div className="h-48 bg-muted rounded-lg animate-pulse" />
               <div className="h-64 bg-muted rounded-lg animate-pulse" />
               <p className="text-muted-foreground mt-4">
-                Setting up your campaign monitoring dashboard...
+                {isTransitioning
+                  ? "Please wait while the campaign transitions to the next phase..."
+                  : "Setting up your campaign monitoring dashboard..."
+                }
               </p>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Campaign not found
-  if (!campaign) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Campaign Not Found" icon={Briefcase} />
-        <div className="text-center py-10">
-          <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-          <h2 className="text-lg font-semibold mb-2">Campaign Not Found</h2>
-          <p className="text-muted-foreground mb-4">
-            The requested campaign could not be loaded or does not exist.
-          </p>
-          <Button onClick={() => router.push('/campaigns')}>
-            Back to Campaigns
-          </Button>
         </div>
       </div>
     );

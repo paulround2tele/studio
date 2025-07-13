@@ -20,7 +20,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { WorkerConfig } from 'api-client';
+import { WorkerConfig } from './api';
 
 const instance: WorkerConfig = {
     batchSize,

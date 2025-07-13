@@ -24,17 +24,17 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { BulkDeleteRequest } from '../models';
 // @ts-ignore
-import type { BulkDeleteResponse } from '../models';
+import type { BulkDeleteResult } from '../models';
 // @ts-ignore
 import type { Campaign } from '../models';
 // @ts-ignore
-import type { CampaignDetailsResponse } from '../models';
+import type { CampaignDependencyInfo } from '../models';
 // @ts-ignore
 import type { CampaignListResponse } from '../models';
 // @ts-ignore
-import type { CampaignOperationResponse } from '../models';
-// @ts-ignore
 import type { CreateCampaignRequest } from '../models';
+// @ts-ignore
+import type { CreateHTTPKeywordCampaignRequest } from '../models';
 // @ts-ignore
 import type { DNSValidationResultsResponse } from '../models';
 // @ts-ignore
@@ -46,6 +46,8 @@ import type { GetDomainGenerationPatternOffset200Response } from '../models';
 // @ts-ignore
 import type { HTTPKeywordResultsResponse } from '../models';
 // @ts-ignore
+import type { InPlaceDNSValidationRequest } from '../models';
+// @ts-ignore
 import type { PatternOffsetRequest } from '../models';
 // @ts-ignore
 import type { UpdateCampaignRequest } from '../models';
@@ -56,7 +58,7 @@ import type { UpdateCampaignRequest } from '../models';
 export const CampaignsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * Permanently deletes multiple campaigns and all their associated data
+         * Deletes multiple campaigns and all associated data
          * @summary Bulk delete campaigns
          * @param {BulkDeleteRequest} bulkDeleteRequest 
          * @param {*} [options] Override http request option.
@@ -65,7 +67,7 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
         bulkDeleteCampaigns: async (bulkDeleteRequest: BulkDeleteRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'bulkDeleteRequest' is not null or undefined
             assertParamExists('bulkDeleteCampaigns', 'bulkDeleteRequest', bulkDeleteRequest)
-            const localVarPath = `/campaigns`;
+            const localVarPath = `/api/campaigns/bulk-delete`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -73,7 +75,7 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -94,17 +96,17 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Cancels a campaign, setting it to cancelled status
+         * Cancels a campaign execution
          * @summary Cancel campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cancelCampaign: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('cancelCampaign', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}/cancel`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        cancelCampaign: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('cancelCampaign', 'id', id)
+            const localVarPath = `/api/campaigns/{id}/cancel`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -139,7 +141,7 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
         createCampaign: async (createCampaignRequest: CreateCampaignRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'createCampaignRequest' is not null or undefined
             assertParamExists('createCampaign', 'createCampaignRequest', createCampaignRequest)
-            const localVarPath = `/campaigns`;
+            const localVarPath = `/api/campaigns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -168,17 +170,17 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Permanently deletes a campaign and all its associated data
+         * Deletes a campaign and all associated data
          * @summary Delete campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteCampaign: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('deleteCampaign', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        deleteCampaign: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('deleteCampaign', 'id', id)
+            const localVarPath = `/api/campaigns/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -204,17 +206,17 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Gets detailed information about a campaign including type-specific parameters
+         * Retrieves detailed information about a specific campaign
          * @summary Get campaign details
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getCampaignDetails: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('getCampaignDetails', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        getCampaignDetails: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getCampaignDetails', 'id', id)
+            const localVarPath = `/api/campaigns/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -240,19 +242,19 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Gets DNS validation results for a DNS validation campaign
+         * Retrieves DNS validation results for a campaign
          * @summary Get DNS validation results
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of results to return
-         * @param {string} [cursor] Cursor for pagination
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getDNSValidationResults: async (campaignId: string, limit?: number, cursor?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('getDNSValidationResults', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}/results/dns-validation`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        getDNSValidationResults: async (id: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getDNSValidationResults', 'id', id)
+            const localVarPath = `/api/campaigns/{id}/dns-results`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -266,12 +268,12 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             // authentication sessionAuth required
 
-            if (limit !== undefined) {
-                localVarQueryParameter['limit'] = limit;
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
             }
 
-            if (cursor !== undefined) {
-                localVarQueryParameter['cursor'] = cursor;
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
             }
 
 
@@ -324,19 +326,19 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Gets generated domains for a domain generation campaign
+         * Retrieves the list of generated domains for a campaign
          * @summary Get generated domains
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of domains to return
-         * @param {number} [cursor] Cursor for pagination (offset index)
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getGeneratedDomains: async (campaignId: string, limit?: number, cursor?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('getGeneratedDomains', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}/results/generated-domains`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        getGeneratedDomains: async (id: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getGeneratedDomains', 'id', id)
+            const localVarPath = `/api/campaigns/{id}/domains`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -350,12 +352,12 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             // authentication sessionAuth required
 
-            if (limit !== undefined) {
-                localVarQueryParameter['limit'] = limit;
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
             }
 
-            if (cursor !== undefined) {
-                localVarQueryParameter['cursor'] = cursor;
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
             }
 
 
@@ -370,19 +372,19 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Gets HTTP keyword validation results for an HTTP keyword validation campaign
+         * Retrieves HTTP keyword validation results for a campaign
          * @summary Get HTTP keyword results
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of results to return
-         * @param {string} [cursor] Cursor for pagination
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getHTTPKeywordResults: async (campaignId: string, limit?: number, cursor?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('getHTTPKeywordResults', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}/results/http-keyword`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        getHTTPKeywordResults: async (id: string, page?: number, limit?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getHTTPKeywordResults', 'id', id)
+            const localVarPath = `/api/campaigns/{id}/http-results`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -396,12 +398,12 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             // authentication sessionAuth required
 
-            if (limit !== undefined) {
-                localVarQueryParameter['limit'] = limit;
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
             }
 
-            if (cursor !== undefined) {
-                localVarQueryParameter['cursor'] = cursor;
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
             }
 
 
@@ -416,17 +418,17 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Lists all campaigns with pagination and filtering support
+         * Retrieves a paginated list of campaigns with optional filtering
          * @summary List campaigns
-         * @param {number} [limit] Maximum number of campaigns to return (1-100)
-         * @param {number} [offset] Number of campaigns to skip for pagination
-         * @param {ListCampaignsStatusEnum} [status] Filter campaigns by status
-         * @param {ListCampaignsTypeEnum} [type] Filter campaigns by type
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
+         * @param {object} [campaignType] Filter by campaign type
+         * @param {object} [status] Filter by campaign status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listCampaigns: async (limit?: number, offset?: number, status?: ListCampaignsStatusEnum, type?: ListCampaignsTypeEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/campaigns`;
+        listCampaigns: async (page?: number, limit?: number, campaignType?: object, status?: object, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/campaigns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -440,20 +442,24 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             // authentication sessionAuth required
 
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
             if (limit !== undefined) {
                 localVarQueryParameter['limit'] = limit;
             }
 
-            if (offset !== undefined) {
-                localVarQueryParameter['offset'] = offset;
+            if (campaignType !== undefined) {
+                for (const [key, value] of Object.entries(campaignType)) {
+                    localVarQueryParameter[key] = value;
+                }
             }
 
             if (status !== undefined) {
-                localVarQueryParameter['status'] = status;
-            }
-
-            if (type !== undefined) {
-                localVarQueryParameter['type'] = type;
+                for (const [key, value] of Object.entries(status)) {
+                    localVarQueryParameter[key] = value;
+                }
             }
 
 
@@ -468,17 +474,17 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Pauses a running or queued campaign
+         * Pauses a running campaign
          * @summary Pause campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pauseCampaign: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('pauseCampaign', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}/pause`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        pauseCampaign: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('pauseCampaign', 'id', id)
+            const localVarPath = `/api/campaigns/{id}/pause`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -504,17 +510,17 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Resumes a paused campaign by queuing it for execution
+         * Resumes a paused campaign
          * @summary Resume campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        resumeCampaign: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('resumeCampaign', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}/resume`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        resumeCampaign: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('resumeCampaign', 'id', id)
+            const localVarPath = `/api/campaigns/{id}/resume`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -540,17 +546,17 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Starts a campaign by transitioning it from pending to queued status
+         * Starts a campaign execution
          * @summary Start campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        startCampaign: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('startCampaign', 'campaignId', campaignId)
-            const localVarPath = `/campaigns/{campaignId}/start`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+        startCampaign: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('startCampaign', 'id', id)
+            const localVarPath = `/api/campaigns/{id}/start`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -576,20 +582,20 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Updates an existing campaign with new configuration
+         * Updates campaign details and configuration
          * @summary Update campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {UpdateCampaignRequest} updateCampaignRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateCampaign: async (campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'campaignId' is not null or undefined
-            assertParamExists('updateCampaign', 'campaignId', campaignId)
+        updateCampaign: async (id: string, updateCampaignRequest: UpdateCampaignRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('updateCampaign', 'id', id)
             // verify required parameter 'updateCampaignRequest' is not null or undefined
             assertParamExists('updateCampaign', 'updateCampaignRequest', updateCampaignRequest)
-            const localVarPath = `/campaigns/{campaignId}`
-                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            const localVarPath = `/api/campaigns/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -618,15 +624,18 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Triggers domain-centric DNS validation for all domains in a completed domain generation campaign
+         * Starts DNS validation for a domain generation campaign
          * @summary Validate DNS for campaign domains
-         * @param {string} campaignId Campaign UUID
+         * @param {string} campaignId Campaign ID
+         * @param {InPlaceDNSValidationRequest} inPlaceDNSValidationRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        validateDNSForCampaign: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        validateDNSForCampaign: async (campaignId: string, inPlaceDNSValidationRequest: InPlaceDNSValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('validateDNSForCampaign', 'campaignId', campaignId)
+            // verify required parameter 'inPlaceDNSValidationRequest' is not null or undefined
+            assertParamExists('validateDNSForCampaign', 'inPlaceDNSValidationRequest', inPlaceDNSValidationRequest)
             const localVarPath = `/campaigns/{campaignId}/validate-dns`
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -644,9 +653,12 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(inPlaceDNSValidationRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -654,15 +666,18 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
-         * Triggers domain-centric HTTP keyword validation for all domains in a completed DNS validation campaign
+         * Starts HTTP validation for a campaign
          * @summary Validate HTTP for campaign domains
-         * @param {string} campaignId Campaign UUID
+         * @param {string} campaignId Campaign ID
+         * @param {CreateHTTPKeywordCampaignRequest} createHTTPKeywordCampaignRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        validateHTTPForCampaign: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        validateHTTPForCampaign: async (campaignId: string, createHTTPKeywordCampaignRequest: CreateHTTPKeywordCampaignRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('validateHTTPForCampaign', 'campaignId', campaignId)
+            // verify required parameter 'createHTTPKeywordCampaignRequest' is not null or undefined
+            assertParamExists('validateHTTPForCampaign', 'createHTTPKeywordCampaignRequest', createHTTPKeywordCampaignRequest)
             const localVarPath = `/campaigns/{campaignId}/validate-http`
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -680,9 +695,12 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createHTTPKeywordCampaignRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -700,27 +718,27 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = CampaignsApiAxiosParamCreator(configuration)
     return {
         /**
-         * Permanently deletes multiple campaigns and all their associated data
+         * Deletes multiple campaigns and all associated data
          * @summary Bulk delete campaigns
          * @param {BulkDeleteRequest} bulkDeleteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkDeleteCampaigns(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkDeleteResponse>> {
+        async bulkDeleteCampaigns(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkDeleteResult>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.bulkDeleteCampaigns(bulkDeleteRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.bulkDeleteCampaigns']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Cancels a campaign, setting it to cancelled status
+         * Cancels a campaign execution
          * @summary Cancel campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async cancelCampaign(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignOperationResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.cancelCampaign(campaignId, options);
+        async cancelCampaign(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.cancelCampaign(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.cancelCampaign']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -739,42 +757,42 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Permanently deletes a campaign and all its associated data
+         * Deletes a campaign and all associated data
          * @summary Delete campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteCampaign(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignOperationResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteCampaign(campaignId, options);
+        async deleteCampaign(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteCampaign(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.deleteCampaign']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Gets detailed information about a campaign including type-specific parameters
+         * Retrieves detailed information about a specific campaign
          * @summary Get campaign details
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getCampaignDetails(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignDetailsResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getCampaignDetails(campaignId, options);
+        async getCampaignDetails(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getCampaignDetails(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getCampaignDetails']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Gets DNS validation results for a DNS validation campaign
+         * Retrieves DNS validation results for a campaign
          * @summary Get DNS validation results
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of results to return
-         * @param {string} [cursor] Cursor for pagination
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getDNSValidationResults(campaignId: string, limit?: number, cursor?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DNSValidationResultsResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getDNSValidationResults(campaignId, limit, cursor, options);
+        async getDNSValidationResults(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DNSValidationResultsResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getDNSValidationResults(id, page, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getDNSValidationResults']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -793,126 +811,128 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Gets generated domains for a domain generation campaign
+         * Retrieves the list of generated domains for a campaign
          * @summary Get generated domains
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of domains to return
-         * @param {number} [cursor] Cursor for pagination (offset index)
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getGeneratedDomains(campaignId: string, limit?: number, cursor?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GeneratedDomainsResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getGeneratedDomains(campaignId, limit, cursor, options);
+        async getGeneratedDomains(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GeneratedDomainsResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getGeneratedDomains(id, page, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getGeneratedDomains']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Gets HTTP keyword validation results for an HTTP keyword validation campaign
+         * Retrieves HTTP keyword validation results for a campaign
          * @summary Get HTTP keyword results
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of results to return
-         * @param {string} [cursor] Cursor for pagination
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getHTTPKeywordResults(campaignId: string, limit?: number, cursor?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HTTPKeywordResultsResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getHTTPKeywordResults(campaignId, limit, cursor, options);
+        async getHTTPKeywordResults(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HTTPKeywordResultsResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getHTTPKeywordResults(id, page, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getHTTPKeywordResults']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Lists all campaigns with pagination and filtering support
+         * Retrieves a paginated list of campaigns with optional filtering
          * @summary List campaigns
-         * @param {number} [limit] Maximum number of campaigns to return (1-100)
-         * @param {number} [offset] Number of campaigns to skip for pagination
-         * @param {ListCampaignsStatusEnum} [status] Filter campaigns by status
-         * @param {ListCampaignsTypeEnum} [type] Filter campaigns by type
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
+         * @param {object} [campaignType] Filter by campaign type
+         * @param {object} [status] Filter by campaign status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listCampaigns(limit?: number, offset?: number, status?: ListCampaignsStatusEnum, type?: ListCampaignsTypeEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignListResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listCampaigns(limit, offset, status, type, options);
+        async listCampaigns(page?: number, limit?: number, campaignType?: object, status?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignListResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.listCampaigns(page, limit, campaignType, status, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.listCampaigns']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Pauses a running or queued campaign
+         * Pauses a running campaign
          * @summary Pause campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async pauseCampaign(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignOperationResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.pauseCampaign(campaignId, options);
+        async pauseCampaign(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.pauseCampaign(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.pauseCampaign']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Resumes a paused campaign by queuing it for execution
+         * Resumes a paused campaign
          * @summary Resume campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async resumeCampaign(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignOperationResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.resumeCampaign(campaignId, options);
+        async resumeCampaign(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.resumeCampaign(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.resumeCampaign']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Starts a campaign by transitioning it from pending to queued status
+         * Starts a campaign execution
          * @summary Start campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async startCampaign(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignOperationResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.startCampaign(campaignId, options);
+        async startCampaign(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.startCampaign(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.startCampaign']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Updates an existing campaign with new configuration
+         * Updates campaign details and configuration
          * @summary Update campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {UpdateCampaignRequest} updateCampaignRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateCampaign(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateCampaign(campaignId, updateCampaignRequest, options);
+        async updateCampaign(id: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateCampaign(id, updateCampaignRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.updateCampaign']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Triggers domain-centric DNS validation for all domains in a completed domain generation campaign
+         * Starts DNS validation for a domain generation campaign
          * @summary Validate DNS for campaign domains
-         * @param {string} campaignId Campaign UUID
+         * @param {string} campaignId Campaign ID
+         * @param {InPlaceDNSValidationRequest} inPlaceDNSValidationRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async validateDNSForCampaign(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignOperationResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.validateDNSForCampaign(campaignId, options);
+        async validateDNSForCampaign(campaignId: string, inPlaceDNSValidationRequest: InPlaceDNSValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.validateDNSForCampaign(campaignId, inPlaceDNSValidationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.validateDNSForCampaign']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Triggers domain-centric HTTP keyword validation for all domains in a completed DNS validation campaign
+         * Starts HTTP validation for a campaign
          * @summary Validate HTTP for campaign domains
-         * @param {string} campaignId Campaign UUID
+         * @param {string} campaignId Campaign ID
+         * @param {CreateHTTPKeywordCampaignRequest} createHTTPKeywordCampaignRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async validateHTTPForCampaign(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignOperationResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.validateHTTPForCampaign(campaignId, options);
+        async validateHTTPForCampaign(campaignId: string, createHTTPKeywordCampaignRequest: CreateHTTPKeywordCampaignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Campaign>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.validateHTTPForCampaign(campaignId, createHTTPKeywordCampaignRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.validateHTTPForCampaign']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -928,24 +948,24 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
     const localVarFp = CampaignsApiFp(configuration)
     return {
         /**
-         * Permanently deletes multiple campaigns and all their associated data
+         * Deletes multiple campaigns and all associated data
          * @summary Bulk delete campaigns
          * @param {BulkDeleteRequest} bulkDeleteRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkDeleteCampaigns(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkDeleteResponse> {
+        bulkDeleteCampaigns(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkDeleteResult> {
             return localVarFp.bulkDeleteCampaigns(bulkDeleteRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * Cancels a campaign, setting it to cancelled status
+         * Cancels a campaign execution
          * @summary Cancel campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        cancelCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignOperationResponse> {
-            return localVarFp.cancelCampaign(campaignId, options).then((request) => request(axios, basePath));
+        cancelCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
+            return localVarFp.cancelCampaign(id, options).then((request) => request(axios, basePath));
         },
         /**
          * Creates a new campaign using unified endpoint supporting all campaign types
@@ -958,36 +978,36 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.createCampaign(createCampaignRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * Permanently deletes a campaign and all its associated data
+         * Deletes a campaign and all associated data
          * @summary Delete campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignOperationResponse> {
-            return localVarFp.deleteCampaign(campaignId, options).then((request) => request(axios, basePath));
+        deleteCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.deleteCampaign(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * Gets detailed information about a campaign including type-specific parameters
+         * Retrieves detailed information about a specific campaign
          * @summary Get campaign details
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getCampaignDetails(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignDetailsResponse> {
-            return localVarFp.getCampaignDetails(campaignId, options).then((request) => request(axios, basePath));
+        getCampaignDetails(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
+            return localVarFp.getCampaignDetails(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * Gets DNS validation results for a DNS validation campaign
+         * Retrieves DNS validation results for a campaign
          * @summary Get DNS validation results
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of results to return
-         * @param {string} [cursor] Cursor for pagination
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getDNSValidationResults(campaignId: string, limit?: number, cursor?: string, options?: RawAxiosRequestConfig): AxiosPromise<DNSValidationResultsResponse> {
-            return localVarFp.getDNSValidationResults(campaignId, limit, cursor, options).then((request) => request(axios, basePath));
+        getDNSValidationResults(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<DNSValidationResultsResponse> {
+            return localVarFp.getDNSValidationResults(id, page, limit, options).then((request) => request(axios, basePath));
         },
         /**
          * Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
@@ -1000,105 +1020,287 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.getDomainGenerationPatternOffset(patternOffsetRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * Gets generated domains for a domain generation campaign
+         * Retrieves the list of generated domains for a campaign
          * @summary Get generated domains
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of domains to return
-         * @param {number} [cursor] Cursor for pagination (offset index)
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getGeneratedDomains(campaignId: string, limit?: number, cursor?: number, options?: RawAxiosRequestConfig): AxiosPromise<GeneratedDomainsResponse> {
-            return localVarFp.getGeneratedDomains(campaignId, limit, cursor, options).then((request) => request(axios, basePath));
+        getGeneratedDomains(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<GeneratedDomainsResponse> {
+            return localVarFp.getGeneratedDomains(id, page, limit, options).then((request) => request(axios, basePath));
         },
         /**
-         * Gets HTTP keyword validation results for an HTTP keyword validation campaign
+         * Retrieves HTTP keyword validation results for a campaign
          * @summary Get HTTP keyword results
-         * @param {string} campaignId Campaign UUID
-         * @param {number} [limit] Maximum number of results to return
-         * @param {string} [cursor] Cursor for pagination
+         * @param {string} id Campaign ID
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getHTTPKeywordResults(campaignId: string, limit?: number, cursor?: string, options?: RawAxiosRequestConfig): AxiosPromise<HTTPKeywordResultsResponse> {
-            return localVarFp.getHTTPKeywordResults(campaignId, limit, cursor, options).then((request) => request(axios, basePath));
+        getHTTPKeywordResults(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<HTTPKeywordResultsResponse> {
+            return localVarFp.getHTTPKeywordResults(id, page, limit, options).then((request) => request(axios, basePath));
         },
         /**
-         * Lists all campaigns with pagination and filtering support
+         * Retrieves a paginated list of campaigns with optional filtering
          * @summary List campaigns
-         * @param {number} [limit] Maximum number of campaigns to return (1-100)
-         * @param {number} [offset] Number of campaigns to skip for pagination
-         * @param {ListCampaignsStatusEnum} [status] Filter campaigns by status
-         * @param {ListCampaignsTypeEnum} [type] Filter campaigns by type
+         * @param {number} [page] Page number (1-based)
+         * @param {number} [limit] Number of items per page
+         * @param {object} [campaignType] Filter by campaign type
+         * @param {object} [status] Filter by campaign status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listCampaigns(limit?: number, offset?: number, status?: ListCampaignsStatusEnum, type?: ListCampaignsTypeEnum, options?: RawAxiosRequestConfig): AxiosPromise<CampaignListResponse> {
-            return localVarFp.listCampaigns(limit, offset, status, type, options).then((request) => request(axios, basePath));
+        listCampaigns(page?: number, limit?: number, campaignType?: object, status?: object, options?: RawAxiosRequestConfig): AxiosPromise<CampaignListResponse> {
+            return localVarFp.listCampaigns(page, limit, campaignType, status, options).then((request) => request(axios, basePath));
         },
         /**
-         * Pauses a running or queued campaign
+         * Pauses a running campaign
          * @summary Pause campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pauseCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignOperationResponse> {
-            return localVarFp.pauseCampaign(campaignId, options).then((request) => request(axios, basePath));
+        pauseCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
+            return localVarFp.pauseCampaign(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * Resumes a paused campaign by queuing it for execution
+         * Resumes a paused campaign
          * @summary Resume campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        resumeCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignOperationResponse> {
-            return localVarFp.resumeCampaign(campaignId, options).then((request) => request(axios, basePath));
+        resumeCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
+            return localVarFp.resumeCampaign(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * Starts a campaign by transitioning it from pending to queued status
+         * Starts a campaign execution
          * @summary Start campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        startCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignOperationResponse> {
-            return localVarFp.startCampaign(campaignId, options).then((request) => request(axios, basePath));
+        startCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
+            return localVarFp.startCampaign(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * Updates an existing campaign with new configuration
+         * Updates campaign details and configuration
          * @summary Update campaign
-         * @param {string} campaignId Campaign UUID
+         * @param {string} id Campaign ID
          * @param {UpdateCampaignRequest} updateCampaignRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateCampaign(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
-            return localVarFp.updateCampaign(campaignId, updateCampaignRequest, options).then((request) => request(axios, basePath));
+        updateCampaign(id: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
+            return localVarFp.updateCampaign(id, updateCampaignRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * Triggers domain-centric DNS validation for all domains in a completed domain generation campaign
+         * Starts DNS validation for a domain generation campaign
          * @summary Validate DNS for campaign domains
-         * @param {string} campaignId Campaign UUID
+         * @param {string} campaignId Campaign ID
+         * @param {InPlaceDNSValidationRequest} inPlaceDNSValidationRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        validateDNSForCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignOperationResponse> {
-            return localVarFp.validateDNSForCampaign(campaignId, options).then((request) => request(axios, basePath));
+        validateDNSForCampaign(campaignId: string, inPlaceDNSValidationRequest: InPlaceDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
+            return localVarFp.validateDNSForCampaign(campaignId, inPlaceDNSValidationRequest, options).then((request) => request(axios, basePath));
         },
         /**
-         * Triggers domain-centric HTTP keyword validation for all domains in a completed DNS validation campaign
+         * Starts HTTP validation for a campaign
          * @summary Validate HTTP for campaign domains
-         * @param {string} campaignId Campaign UUID
+         * @param {string} campaignId Campaign ID
+         * @param {CreateHTTPKeywordCampaignRequest} createHTTPKeywordCampaignRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        validateHTTPForCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignOperationResponse> {
-            return localVarFp.validateHTTPForCampaign(campaignId, options).then((request) => request(axios, basePath));
+        validateHTTPForCampaign(campaignId: string, createHTTPKeywordCampaignRequest: CreateHTTPKeywordCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<Campaign> {
+            return localVarFp.validateHTTPForCampaign(campaignId, createHTTPKeywordCampaignRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
+
+/**
+ * CampaignsApi - interface
+ * @export
+ * @interface CampaignsApi
+ */
+export interface CampaignsApiInterface {
+    /**
+     * Deletes multiple campaigns and all associated data
+     * @summary Bulk delete campaigns
+     * @param {BulkDeleteRequest} bulkDeleteRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    bulkDeleteCampaigns(bulkDeleteRequest: BulkDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkDeleteResult>;
+
+    /**
+     * Cancels a campaign execution
+     * @summary Cancel campaign
+     * @param {string} id Campaign ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    cancelCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+    /**
+     * Creates a new campaign using unified endpoint supporting all campaign types
+     * @summary Create campaign
+     * @param {CreateCampaignRequest} createCampaignRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    createCampaign(createCampaignRequest: CreateCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+    /**
+     * Deletes a campaign and all associated data
+     * @summary Delete campaign
+     * @param {string} id Campaign ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    deleteCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Retrieves detailed information about a specific campaign
+     * @summary Get campaign details
+     * @param {string} id Campaign ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getCampaignDetails(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+    /**
+     * Retrieves DNS validation results for a campaign
+     * @summary Get DNS validation results
+     * @param {string} id Campaign ID
+     * @param {number} [page] Page number (1-based)
+     * @param {number} [limit] Number of items per page
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getDNSValidationResults(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<DNSValidationResultsResponse>;
+
+    /**
+     * Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+     * @summary Get domain generation pattern offset
+     * @param {PatternOffsetRequest} patternOffsetRequest Pattern configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getDomainGenerationPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): AxiosPromise<GetDomainGenerationPatternOffset200Response>;
+
+    /**
+     * Retrieves the list of generated domains for a campaign
+     * @summary Get generated domains
+     * @param {string} id Campaign ID
+     * @param {number} [page] Page number (1-based)
+     * @param {number} [limit] Number of items per page
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getGeneratedDomains(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<GeneratedDomainsResponse>;
+
+    /**
+     * Retrieves HTTP keyword validation results for a campaign
+     * @summary Get HTTP keyword results
+     * @param {string} id Campaign ID
+     * @param {number} [page] Page number (1-based)
+     * @param {number} [limit] Number of items per page
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getHTTPKeywordResults(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<HTTPKeywordResultsResponse>;
+
+    /**
+     * Retrieves a paginated list of campaigns with optional filtering
+     * @summary List campaigns
+     * @param {number} [page] Page number (1-based)
+     * @param {number} [limit] Number of items per page
+     * @param {object} [campaignType] Filter by campaign type
+     * @param {object} [status] Filter by campaign status
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    listCampaigns(page?: number, limit?: number, campaignType?: object, status?: object, options?: RawAxiosRequestConfig): AxiosPromise<CampaignListResponse>;
+
+    /**
+     * Pauses a running campaign
+     * @summary Pause campaign
+     * @param {string} id Campaign ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    pauseCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+    /**
+     * Resumes a paused campaign
+     * @summary Resume campaign
+     * @param {string} id Campaign ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    resumeCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+    /**
+     * Starts a campaign execution
+     * @summary Start campaign
+     * @param {string} id Campaign ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    startCampaign(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+    /**
+     * Updates campaign details and configuration
+     * @summary Update campaign
+     * @param {string} id Campaign ID
+     * @param {UpdateCampaignRequest} updateCampaignRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    updateCampaign(id: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+    /**
+     * Starts DNS validation for a domain generation campaign
+     * @summary Validate DNS for campaign domains
+     * @param {string} campaignId Campaign ID
+     * @param {InPlaceDNSValidationRequest} inPlaceDNSValidationRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    validateDNSForCampaign(campaignId: string, inPlaceDNSValidationRequest: InPlaceDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+    /**
+     * Starts HTTP validation for a campaign
+     * @summary Validate HTTP for campaign domains
+     * @param {string} campaignId Campaign ID
+     * @param {CreateHTTPKeywordCampaignRequest} createHTTPKeywordCampaignRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    validateHTTPForCampaign(campaignId: string, createHTTPKeywordCampaignRequest: CreateHTTPKeywordCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<Campaign>;
+
+}
 
 /**
  * CampaignsApi - object-oriented interface
@@ -1106,9 +1308,9 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
  * @class CampaignsApi
  * @extends {BaseAPI}
  */
-export class CampaignsApi extends BaseAPI {
+export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
     /**
-     * Permanently deletes multiple campaigns and all their associated data
+     * Deletes multiple campaigns and all associated data
      * @summary Bulk delete campaigns
      * @param {BulkDeleteRequest} bulkDeleteRequest 
      * @param {*} [options] Override http request option.
@@ -1120,15 +1322,15 @@ export class CampaignsApi extends BaseAPI {
     }
 
     /**
-     * Cancels a campaign, setting it to cancelled status
+     * Cancels a campaign execution
      * @summary Cancel campaign
-     * @param {string} campaignId Campaign UUID
+     * @param {string} id Campaign ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public cancelCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).cancelCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public cancelCampaign(id: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).cancelCampaign(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1144,41 +1346,41 @@ export class CampaignsApi extends BaseAPI {
     }
 
     /**
-     * Permanently deletes a campaign and all its associated data
+     * Deletes a campaign and all associated data
      * @summary Delete campaign
-     * @param {string} campaignId Campaign UUID
+     * @param {string} id Campaign ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public deleteCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).deleteCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public deleteCampaign(id: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).deleteCampaign(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Gets detailed information about a campaign including type-specific parameters
+     * Retrieves detailed information about a specific campaign
      * @summary Get campaign details
-     * @param {string} campaignId Campaign UUID
+     * @param {string} id Campaign ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public getCampaignDetails(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).getCampaignDetails(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public getCampaignDetails(id: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getCampaignDetails(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Gets DNS validation results for a DNS validation campaign
+     * Retrieves DNS validation results for a campaign
      * @summary Get DNS validation results
-     * @param {string} campaignId Campaign UUID
-     * @param {number} [limit] Maximum number of results to return
-     * @param {string} [cursor] Cursor for pagination
+     * @param {string} id Campaign ID
+     * @param {number} [page] Page number (1-based)
+     * @param {number} [limit] Number of items per page
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public getDNSValidationResults(campaignId: string, limit?: number, cursor?: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).getDNSValidationResults(campaignId, limit, cursor, options).then((request) => request(this.axios, this.basePath));
+    public getDNSValidationResults(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getDNSValidationResults(id, page, limit, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1194,143 +1396,121 @@ export class CampaignsApi extends BaseAPI {
     }
 
     /**
-     * Gets generated domains for a domain generation campaign
+     * Retrieves the list of generated domains for a campaign
      * @summary Get generated domains
-     * @param {string} campaignId Campaign UUID
-     * @param {number} [limit] Maximum number of domains to return
-     * @param {number} [cursor] Cursor for pagination (offset index)
+     * @param {string} id Campaign ID
+     * @param {number} [page] Page number (1-based)
+     * @param {number} [limit] Number of items per page
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public getGeneratedDomains(campaignId: string, limit?: number, cursor?: number, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).getGeneratedDomains(campaignId, limit, cursor, options).then((request) => request(this.axios, this.basePath));
+    public getGeneratedDomains(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getGeneratedDomains(id, page, limit, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Gets HTTP keyword validation results for an HTTP keyword validation campaign
+     * Retrieves HTTP keyword validation results for a campaign
      * @summary Get HTTP keyword results
-     * @param {string} campaignId Campaign UUID
-     * @param {number} [limit] Maximum number of results to return
-     * @param {string} [cursor] Cursor for pagination
+     * @param {string} id Campaign ID
+     * @param {number} [page] Page number (1-based)
+     * @param {number} [limit] Number of items per page
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public getHTTPKeywordResults(campaignId: string, limit?: number, cursor?: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).getHTTPKeywordResults(campaignId, limit, cursor, options).then((request) => request(this.axios, this.basePath));
+    public getHTTPKeywordResults(id: string, page?: number, limit?: number, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getHTTPKeywordResults(id, page, limit, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Lists all campaigns with pagination and filtering support
+     * Retrieves a paginated list of campaigns with optional filtering
      * @summary List campaigns
-     * @param {number} [limit] Maximum number of campaigns to return (1-100)
-     * @param {number} [offset] Number of campaigns to skip for pagination
-     * @param {ListCampaignsStatusEnum} [status] Filter campaigns by status
-     * @param {ListCampaignsTypeEnum} [type] Filter campaigns by type
+     * @param {number} [page] Page number (1-based)
+     * @param {number} [limit] Number of items per page
+     * @param {object} [campaignType] Filter by campaign type
+     * @param {object} [status] Filter by campaign status
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public listCampaigns(limit?: number, offset?: number, status?: ListCampaignsStatusEnum, type?: ListCampaignsTypeEnum, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).listCampaigns(limit, offset, status, type, options).then((request) => request(this.axios, this.basePath));
+    public listCampaigns(page?: number, limit?: number, campaignType?: object, status?: object, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).listCampaigns(page, limit, campaignType, status, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Pauses a running or queued campaign
+     * Pauses a running campaign
      * @summary Pause campaign
-     * @param {string} campaignId Campaign UUID
+     * @param {string} id Campaign ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public pauseCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).pauseCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public pauseCampaign(id: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).pauseCampaign(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Resumes a paused campaign by queuing it for execution
+     * Resumes a paused campaign
      * @summary Resume campaign
-     * @param {string} campaignId Campaign UUID
+     * @param {string} id Campaign ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public resumeCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).resumeCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public resumeCampaign(id: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).resumeCampaign(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Starts a campaign by transitioning it from pending to queued status
+     * Starts a campaign execution
      * @summary Start campaign
-     * @param {string} campaignId Campaign UUID
+     * @param {string} id Campaign ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public startCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).startCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public startCampaign(id: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).startCampaign(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Updates an existing campaign with new configuration
+     * Updates campaign details and configuration
      * @summary Update campaign
-     * @param {string} campaignId Campaign UUID
+     * @param {string} id Campaign ID
      * @param {UpdateCampaignRequest} updateCampaignRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public updateCampaign(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).updateCampaign(campaignId, updateCampaignRequest, options).then((request) => request(this.axios, this.basePath));
+    public updateCampaign(id: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).updateCampaign(id, updateCampaignRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Triggers domain-centric DNS validation for all domains in a completed domain generation campaign
+     * Starts DNS validation for a domain generation campaign
      * @summary Validate DNS for campaign domains
-     * @param {string} campaignId Campaign UUID
+     * @param {string} campaignId Campaign ID
+     * @param {InPlaceDNSValidationRequest} inPlaceDNSValidationRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public validateDNSForCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).validateDNSForCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public validateDNSForCampaign(campaignId: string, inPlaceDNSValidationRequest: InPlaceDNSValidationRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).validateDNSForCampaign(campaignId, inPlaceDNSValidationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Triggers domain-centric HTTP keyword validation for all domains in a completed DNS validation campaign
+     * Starts HTTP validation for a campaign
      * @summary Validate HTTP for campaign domains
-     * @param {string} campaignId Campaign UUID
+     * @param {string} campaignId Campaign ID
+     * @param {CreateHTTPKeywordCampaignRequest} createHTTPKeywordCampaignRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public validateHTTPForCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).validateHTTPForCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    public validateHTTPForCampaign(campaignId: string, createHTTPKeywordCampaignRequest: CreateHTTPKeywordCampaignRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).validateHTTPForCampaign(campaignId, createHTTPKeywordCampaignRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
-/**
- * @export
- */
-export const ListCampaignsStatusEnum = {
-    Pending: 'pending',
-    Queued: 'queued',
-    Running: 'running',
-    Pausing: 'pausing',
-    Paused: 'paused',
-    Completed: 'completed',
-    Failed: 'failed',
-    Archived: 'archived',
-    Cancelled: 'cancelled'
-} as const;
-export type ListCampaignsStatusEnum = typeof ListCampaignsStatusEnum[keyof typeof ListCampaignsStatusEnum];
-/**
- * @export
- */
-export const ListCampaignsTypeEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation'
-} as const;
-export type ListCampaignsTypeEnum = typeof ListCampaignsTypeEnum[keyof typeof ListCampaignsTypeEnum];

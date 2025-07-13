@@ -15,73 +15,73 @@
 
 
 /**
- * Parameters for HTTP keyword validation campaigns
+ * 
  * @export
  * @interface HttpKeywordParams
  */
 export interface HttpKeywordParams {
     /**
-     * Ad-hoc keywords for validation
+     * 
      * @type {Array<string>}
      * @memberof HttpKeywordParams
      */
     'adHocKeywords'?: Array<string>;
     /**
-     * Batch size for processing
+     * 
      * @type {number}
      * @memberof HttpKeywordParams
      */
     'batchSize'?: number;
     /**
-     * Keyword set IDs to use for validation
+     * 
      * @type {Array<string>}
      * @memberof HttpKeywordParams
      */
     'keywordSetIds'?: Array<string>;
     /**
-     * HTTP personas to use for validation
+     * 
      * @type {Array<string>}
      * @memberof HttpKeywordParams
      */
-    'personaIds': Array<string>;
+    'personaIds'?: Array<string>;
     /**
-     * Processing speed per minute
+     * 
      * @type {number}
      * @memberof HttpKeywordParams
      */
     'processingSpeedPerMinute'?: number;
     /**
-     * Proxy pool ID for requests
+     * 
      * @type {string}
      * @memberof HttpKeywordParams
      */
     'proxyPoolId'?: string;
     /**
-     * Strategy for proxy selection
+     * 
      * @type {string}
      * @memberof HttpKeywordParams
      */
     'proxySelectionStrategy'?: string;
     /**
-     * Number of retry attempts
+     * 
      * @type {number}
      * @memberof HttpKeywordParams
      */
     'retryAttempts'?: number;
     /**
-     * Persona rotation interval in seconds
+     * 
      * @type {number}
      * @memberof HttpKeywordParams
      */
     'rotationIntervalSeconds'?: number;
     /**
-     * Source DNS validation campaign ID
+     * 
      * @type {string}
      * @memberof HttpKeywordParams
      */
-    'sourceCampaignId': string;
+    'sourceCampaignId'?: string;
     /**
-     * Target HTTP ports for validation
+     * 
      * @type {Array<number>}
      * @memberof HttpKeywordParams
      */

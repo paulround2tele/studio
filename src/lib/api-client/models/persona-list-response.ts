@@ -43,10 +43,12 @@ export interface PersonaListResponse {
     'status'?: PersonaListResponseStatusEnum;
 }
 
-export const PersonaListResponseStatusEnum = {
-    Success: 'success'
-} as const;
-
-export type PersonaListResponseStatusEnum = typeof PersonaListResponseStatusEnum[keyof typeof PersonaListResponseStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PersonaListResponseStatusEnum {
+    Success = 'success'
+}
 
 

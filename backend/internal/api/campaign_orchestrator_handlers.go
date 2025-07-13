@@ -22,11 +22,11 @@ import (
 
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
 type CampaignOrchestratorAPIHandler struct {
-	orchestratorService   services.CampaignOrchestratorService
-	dnsService            services.DNSCampaignService         // DNS validation service
-	httpKeywordSvc        services.HTTPKeywordCampaignService // Domain-centric HTTP validation
-	campaignStore         store.CampaignStore // Direct access needed for pattern offset queries
-	broadcaster           websocket.Broadcaster  // WebSocket broadcaster for real-time updates
+	orchestratorService services.CampaignOrchestratorService
+	dnsService          services.DNSCampaignService         // DNS validation service
+	httpKeywordSvc      services.HTTPKeywordCampaignService // Domain-centric HTTP validation
+	campaignStore       store.CampaignStore                 // Direct access needed for pattern offset queries
+	broadcaster         websocket.Broadcaster               // WebSocket broadcaster for real-time updates
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
@@ -66,7 +66,7 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	group.POST("/:campaignId/pause", h.pauseCampaign)
 	group.POST("/:campaignId/resume", h.resumeCampaign)
 	group.POST("/:campaignId/cancel", h.cancelCampaign)
-	
+
 	// Domain-centric validation routes - session-based auth
 	group.POST("/:campaignId/validate-dns", h.validateDNSForCampaign)
 	group.POST("/:campaignId/validate-http", h.validateHTTPForCampaign)
@@ -238,7 +238,7 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 	campaign, err := h.orchestratorService.UpdateCampaign(c.Request.Context(), campaignID, req)
 	if err != nil {
 		log.Printf("Error updating campaign %s: %v", campaignIDStr, err)
-		
+
 		// Differentiate error types based on error message
 		if err.Error() == "record not found" {
 			respondWithDetailedErrorGin(c, http.StatusNotFound, ErrorCodeNotFound,
@@ -265,7 +265,7 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 						Message: err.Error(),
 						Context: map[string]interface{}{
 							"campaign_id": campaignID,
-							"error_type": "phase_transition",
+							"error_type":  "phase_transition",
 						},
 					},
 				})
@@ -279,7 +279,7 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 						Message: err.Error(),
 						Context: map[string]interface{}{
 							"campaign_id": campaignID,
-							"error_type": "unsupported_transition",
+							"error_type":  "unsupported_transition",
 						},
 					},
 				})
@@ -547,10 +547,10 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 	}
 
 	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
-		"message":           "Bulk deletion completed",
-		"total_requested":   len(campaignUUIDs),
+		"message":              "Bulk deletion completed",
+		"total_requested":      len(campaignUUIDs),
 		"successfully_deleted": result.SuccessfullyDeleted,
-		"failed_deletions":  result.FailedDeletions,
+		"failed_deletions":     result.FailedDeletions,
 		"deleted_campaign_ids": result.DeletedCampaignIDs,
 	})
 }
@@ -653,7 +653,7 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 
 	// Handle optional request body for persona configuration
 	var req services.DNSValidationRequest
-	
+
 	// Try to bind JSON for optional request parameters (for backward compatibility)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("INFO [DNS Validation]: No request body provided for campaign %s, will use stored campaign configuration", campaignID)
@@ -687,7 +687,7 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 					Code:    ErrorCodeValidation,
 					Message: "DNS validation can only be performed on domain generation or DNS validation campaigns",
 					Context: map[string]interface{}{
-						"campaign_id":     campaignID,
+						"campaign_id":   campaignID,
 						"campaign_type": sourceCampaign.CampaignType,
 					},
 				},
@@ -712,13 +712,13 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 
 	// Create in-place DNS validation request
 	inPlaceRequest := services.InPlaceDNSValidationRequest{
-		CampaignID:              campaignID,
-		PersonaIDs:              req.PersonaIDs, // These may be empty - the service will read from campaign config
-		RotationIntervalSeconds: 30,
+		CampaignID:               campaignID,
+		PersonaIDs:               req.PersonaIDs, // These may be empty - the service will read from campaign config
+		RotationIntervalSeconds:  30,
 		ProcessingSpeedPerMinute: 60,
-		BatchSize:               10,
-		RetryAttempts:           3,
-		OnlyInvalidDomains:      true, // For re-validation, only process invalid domains
+		BatchSize:                10,
+		RetryAttempts:            3,
+		OnlyInvalidDomains:       true, // For re-validation, only process invalid domains
 	}
 
 	// Use override parameters if provided in the request
@@ -751,9 +751,9 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 						Code:    ErrorCodeValidation,
 						Message: err.Error(),
 						Context: map[string]interface{}{
-							"campaign_id": campaignID,
+							"campaign_id":    campaignID,
 							"required_field": "personaIds",
-							"help": "DNS personas define the validation profiles used for domain checking. Please configure DNS personas in the validation panel and try again.",
+							"help":           "DNS personas define the validation profiles used for domain checking. Please configure DNS personas in the validation panel and try again.",
 						},
 					},
 				})
@@ -786,10 +786,10 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 	log.Printf("SUCCESS [DNS Validation]: In-place DNS validation started successfully for campaign %s", campaignID)
 
 	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
-		"message":               "In-place DNS validation started successfully",
-		"campaign_id":           campaignID,
-		"validation_mode":       "in_place",
-		"status":                "validation_in_progress",
+		"message":         "In-place DNS validation started successfully",
+		"campaign_id":     campaignID,
+		"validation_mode": "in_place",
+		"status":          "validation_in_progress",
 	})
 }
 
@@ -1000,22 +1000,22 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 
 // PatternOffsetRequest represents the request to get pattern offset
 type PatternOffsetRequest struct {
-	PatternType     string `json:"patternType" binding:"required" validate:"oneof=prefix suffix both"`
-	VariableLength  int    `json:"variableLength" binding:"required,min=1"`
-	CharacterSet    string `json:"characterSet" binding:"required"`
-	ConstantString  string `json:"constantString" binding:"required"`
-	TLD             string `json:"tld" binding:"required"`
+	PatternType    string `json:"patternType" binding:"required" validate:"oneof=prefix suffix both"`
+	VariableLength int    `json:"variableLength" binding:"required,min=1"`
+	CharacterSet   string `json:"characterSet" binding:"required"`
+	ConstantString string `json:"constantString" binding:"required"`
+	TLD            string `json:"tld" binding:"required"`
 }
 
 // PatternOffsetResponse represents the pattern offset response
 type PatternOffsetResponse struct {
-	PatternType                string `json:"patternType"`
-	VariableLength             int    `json:"variableLength"`
-	CharacterSet               string `json:"characterSet"`
-	ConstantString             string `json:"constantString"`
-	TLD                        string `json:"tld"`
-	CurrentOffset              int64  `json:"currentOffset"`
-	TotalPossibleCombinations  int64  `json:"totalPossibleCombinations"`
+	PatternType               string `json:"patternType"`
+	VariableLength            int    `json:"variableLength"`
+	CharacterSet              string `json:"characterSet"`
+	ConstantString            string `json:"constantString"`
+	TLD                       string `json:"tld"`
+	CurrentOffset             int64  `json:"currentOffset"`
+	TotalPossibleCombinations int64  `json:"totalPossibleCombinations"`
 }
 
 // getPatternOffset handles POST /campaigns/domain-generation/pattern-offset

@@ -181,7 +181,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
   const defaultValues = useMemo(() => ({
     name: isEditing && campaignToEdit ? campaignToEdit.name : "",
     description: isEditing && campaignToEdit ? (campaignToEdit.description || "") : "",
-    selectedType: isEditing && campaignToEdit ? campaignToEdit.selectedType : (preselectedType && Object.values(CAMPAIGN_SELECTED_TYPES).includes(preselectedType) ? preselectedType : undefined),
+    selectedType: isEditing && campaignToEdit ? campaignToEdit.selectedType : (preselectedType && Object.values(CAMPAIGN_SELECTED_TYPES).includes(preselectedType as any) ? preselectedType as "dns_validation" | "http_keyword_validation" | "domain_generation" : undefined),
     domainSourceSelectionMode: isEditing && campaignToEdit ?
       (campaignToEdit.domainSourceConfig?.type === 'current_campaign_output' ? 'campaign_output' as const : (campaignToEdit.domainSourceConfig?.type as DomainSourceSelectionMode || getDefaultSourceMode(campaignToEdit.selectedType))) :
       getDefaultSourceMode(preselectedType),

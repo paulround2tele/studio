@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { LeadItem } from 'api-client';
+import { LeadItem } from './api';
 
 const instance: LeadItem = {
     company,

@@ -13,7 +13,7 @@ export type PersonaResponse = components["schemas"]["Persona"];
 export type CreatePersonaRequest = components["schemas"]["CreatePersonaRequest"];
 export type UpdatePersonaRequest = components["schemas"]["UpdatePersonaRequest"];
 export type CreateCampaignRequest = components["schemas"]["CreateCampaignRequest"];
-export type CampaignDetailsResponse = components["schemas"]["CampaignDetailsResponse"];
+export type { CampaignDetailsResponse } from '@/lib/api-client/models/campaign-details-response';
 
 // Type aliases for UI compatibility (matching OpenAPI enum values exactly)
 export type CampaignSelectedType = Campaign["campaignType"];

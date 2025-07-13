@@ -18,28 +18,34 @@
 import type { HTTPKeywordResult } from './httpkeyword-result';
 
 /**
- * Response for HTTP keyword validation results
+ * Paginated list of HTTP keyword results
  * @export
  * @interface HTTPKeywordResultsResponse
  */
 export interface HTTPKeywordResultsResponse {
     /**
-     * 
-     * @type {Array<HTTPKeywordResult>}
-     * @memberof HTTPKeywordResultsResponse
-     */
-    'data'?: Array<HTTPKeywordResult>;
-    /**
-     * Next cursor for pagination
-     * @type {string}
-     * @memberof HTTPKeywordResultsResponse
-     */
-    'nextCursor'?: string;
-    /**
-     * Total number of HTTP keyword results
+     * Number of items per page
      * @type {number}
      * @memberof HTTPKeywordResultsResponse
      */
-    'totalCount'?: number;
+    'limit': number;
+    /**
+     * Current page number
+     * @type {number}
+     * @memberof HTTPKeywordResultsResponse
+     */
+    'page': number;
+    /**
+     * List of HTTP keyword results
+     * @type {Array<HTTPKeywordResult>}
+     * @memberof HTTPKeywordResultsResponse
+     */
+    'results': Array<HTTPKeywordResult>;
+    /**
+     * Total number of results
+     * @type {number}
+     * @memberof HTTPKeywordResultsResponse
+     */
+    'total': number;
 }
 

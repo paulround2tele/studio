@@ -979,12 +979,172 @@ export const ConfigurationApiFactory = function (configuration?: Configuration, 
 };
 
 /**
+ * ConfigurationApi - interface
+ * @export
+ * @interface ConfigurationApi
+ */
+export interface ConfigurationApiInterface {
+    /**
+     * Retrieves sanitized authentication configuration
+     * @summary Get authentication configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    getAuthConfig(options?: RawAxiosRequestConfig): AxiosPromise<AuthConfig>;
+
+    /**
+     * Retrieves the default DNS validator configuration
+     * @summary Get DNS configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    getDNSConfig(options?: RawAxiosRequestConfig): AxiosPromise<DNSConfig>;
+
+    /**
+     * Retrieves the default HTTP validator configuration
+     * @summary Get HTTP configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    getHTTPConfig(options?: RawAxiosRequestConfig): AxiosPromise<HTTPConfig>;
+
+    /**
+     * Retrieves the current logging configuration
+     * @summary Get logging configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    getLoggingConfig(options?: RawAxiosRequestConfig): AxiosPromise<LoggingConfig>;
+
+    /**
+     * Retrieves proxy manager settings
+     * @summary Get proxy manager configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    getProxyManagerConfig(options?: RawAxiosRequestConfig): AxiosPromise<ProxyManagerConfig>;
+
+    /**
+     * Retrieves global rate limiter settings
+     * @summary Get rate limiter configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    getRateLimiterConfig(options?: RawAxiosRequestConfig): AxiosPromise<RateLimiterConfig>;
+
+    /**
+     * Retrieves current server-wide configurations
+     * @summary Get server configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    getServerConfig(options?: RawAxiosRequestConfig): AxiosPromise<ServerConfig>;
+
+    /**
+     * Retrieves the worker configuration
+     * @summary Get worker configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    getWorkerConfig(options?: RawAxiosRequestConfig): AxiosPromise<WorkerConfig>;
+
+    /**
+     * Updates authentication configuration
+     * @summary Update authentication configuration
+     * @param {AuthConfig} authConfig 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    updateAuthConfig(authConfig: AuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<AuthConfig>;
+
+    /**
+     * Updates the default DNS validator configuration
+     * @summary Update DNS configuration
+     * @param {DNSConfig} dNSConfig 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    updateDNSConfig(dNSConfig: DNSConfig, options?: RawAxiosRequestConfig): AxiosPromise<DNSConfig>;
+
+    /**
+     * Updates the default HTTP validator configuration
+     * @summary Update HTTP configuration
+     * @param {HTTPConfig} hTTPConfig 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    updateHTTPConfig(hTTPConfig: HTTPConfig, options?: RawAxiosRequestConfig): AxiosPromise<HTTPConfig>;
+
+    /**
+     * Updates the logging configuration
+     * @summary Update logging configuration
+     * @param {LoggingConfig} loggingConfig 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    updateLoggingConfig(loggingConfig: LoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<LoggingConfig>;
+
+    /**
+     * Updates proxy manager settings
+     * @summary Update proxy manager configuration
+     * @param {ProxyManagerConfig} proxyManagerConfig 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    updateProxyManagerConfig(proxyManagerConfig: ProxyManagerConfig, options?: RawAxiosRequestConfig): AxiosPromise<ProxyManagerConfig>;
+
+    /**
+     * Updates global rate limiter settings
+     * @summary Update rate limiter configuration
+     * @param {RateLimiterConfig} rateLimiterConfig 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    updateRateLimiterConfig(rateLimiterConfig: RateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<RateLimiterConfig>;
+
+    /**
+     * Updates server-wide configurations
+     * @summary Update server configuration
+     * @param {ServerConfig} serverConfig 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    updateServerConfig(serverConfig: ServerConfig, options?: RawAxiosRequestConfig): AxiosPromise<ServerConfig>;
+
+    /**
+     * Updates the worker configuration
+     * @summary Update worker configuration
+     * @param {WorkerConfig} workerConfig 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigurationApiInterface
+     */
+    updateWorkerConfig(workerConfig: WorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<WorkerConfig>;
+
+}
+
+/**
  * ConfigurationApi - object-oriented interface
  * @export
  * @class ConfigurationApi
  * @extends {BaseAPI}
  */
-export class ConfigurationApi extends BaseAPI {
+export class ConfigurationApi extends BaseAPI implements ConfigurationApiInterface {
     /**
      * Retrieves sanitized authentication configuration
      * @summary Get authentication configuration

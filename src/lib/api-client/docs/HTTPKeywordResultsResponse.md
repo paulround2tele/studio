@@ -1,24 +1,26 @@
 # HTTPKeywordResultsResponse
 
-Response for HTTP keyword validation results
+Paginated list of HTTP keyword results
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**data** | [**Array&lt;HTTPKeywordResult&gt;**](HTTPKeywordResult.md) |  | [optional] [default to undefined]
-**nextCursor** | **string** | Next cursor for pagination | [optional] [default to undefined]
-**totalCount** | **number** | Total number of HTTP keyword results | [optional] [default to undefined]
+**limit** | **number** | Number of items per page | [default to undefined]
+**page** | **number** | Current page number | [default to undefined]
+**results** | [**Array&lt;HTTPKeywordResult&gt;**](HTTPKeywordResult.md) | List of HTTP keyword results | [default to undefined]
+**total** | **number** | Total number of results | [default to undefined]
 
 ## Example
 
 ```typescript
-import { HTTPKeywordResultsResponse } from 'api-client';
+import { HTTPKeywordResultsResponse } from './api';
 
 const instance: HTTPKeywordResultsResponse = {
-    data,
-    nextCursor,
-    totalCount,
+    limit,
+    page,
+    results,
+    total,
 };
 ```
 

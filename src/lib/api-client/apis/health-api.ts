@@ -210,12 +210,47 @@ export const HealthApiFactory = function (configuration?: Configuration, basePat
 };
 
 /**
+ * HealthApi - interface
+ * @export
+ * @interface HealthApi
+ */
+export interface HealthApiInterface {
+    /**
+     * Returns overall health status of the application and its components
+     * @summary Basic health check
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HealthApiInterface
+     */
+    getHealthCheck(options?: RawAxiosRequestConfig): AxiosPromise<HealthStatus>;
+
+    /**
+     * Checks if the service is alive and running
+     * @summary Liveness probe
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HealthApiInterface
+     */
+    getLivenessCheck(options?: RawAxiosRequestConfig): AxiosPromise<SimpleStatus>;
+
+    /**
+     * Checks if the service is ready to receive traffic
+     * @summary Readiness probe
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HealthApiInterface
+     */
+    getReadinessCheck(options?: RawAxiosRequestConfig): AxiosPromise<SimpleStatus>;
+
+}
+
+/**
  * HealthApi - object-oriented interface
  * @export
  * @class HealthApi
  * @extends {BaseAPI}
  */
-export class HealthApi extends BaseAPI {
+export class HealthApi extends BaseAPI implements HealthApiInterface {
     /**
      * Returns overall health status of the application and its components
      * @summary Basic health check

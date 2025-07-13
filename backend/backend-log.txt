@@ -1,0 +1,158 @@
+Building application...
+go build -buildvcs=false -o bin/apiserver ./cmd/apiserver
+Running application from binary...
+./bin/apiserver
+2025/07/13 02:24:28 API Validator initialized and custom validations registered.
+2025/07/13 02:24:28 Starting DomainFlow API Server...
+2025/07/13 02:24:28 Successfully loaded environment variables from ../.env
+2025/07/13 02:24:28 Config: Attempting to load main config from: config.json
+2025/07/13 02:24:28 Configuration loaded with environment overrides.
+2025/07/13 02:24:28 Global WebSocket broadcaster initialized and started.
+2025/07/13 02:24:28 Initializing PostgreSQL database connection...
+2025/07/13 02:24:28 Connecting to database: host=localhost port=5432 user=domainflow dbname=domainflow_production sslmode=disable
+2025/07/13 02:24:28 Successfully connected to PostgreSQL database.
+2025/07/13 02:24:28 PostgreSQL-backed stores initialized.
+2025/07/13 02:24:28 ProxyManager: Initializing with 0 proxy entries.
+2025/07/13 02:24:28 ProxyManager: Performing initial health checks for 0 supported proxies (timeout per proxy: 7s)...
+2025/07/13 02:24:28 ProxyManager: Initialization and initial health checks complete. Total managed: 0, Initially active: 0
+2025/07/13 02:24:28 ProxyManager initialized.
+2025/07/13 02:24:28 HTTPValidator service initialized.
+2025/07/13 02:24:28 KeywordScanner service initialized.
+2025/07/13 02:24:28 Using session configuration for environment: development (CookieSecure: false, CookieDomain: '', CookieName: 'domainflow_session')
+2025/07/13 02:24:28 Session service initialized.
+2025/07/13 02:24:28 DomainGenerationService initialized.
+2025/07/13 02:24:28 DNSCampaignService initialized.
+2025/07/13 02:24:28 HTTPKeywordCampaignService initialized.
+2025/07/13 02:24:28 Warning: failed to register service contracts: failed to store contract: pq: relation "service_contracts" does not exist
+2025/07/13 02:24:28 CampaignOrchestratorService initialized.
+2025/07/13 02:24:28 CampaignWorkerService initialized.
+2025/07/13 02:24:28 Main APIHandler initialized.
+2025/07/13 02:24:28 CampaignOrchestratorAPIHandler initialized.
+2025/07/13 02:24:28 WebSocketAPIHandler initialized.
+2025/07/13 02:24:28 AuthHandler initialized.
+2025/07/13 02:24:28 Security middleware initialized.
+2025/07/13 02:24:28 HealthCheckHandler initialized.
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /api/v2/ws                --> github.com/fntelecomllc/studio/backend/internal/api.(*WebSocketHandler).HandleConnections-fm (9 handlers)
+2025/07/13 02:24:28 Registered WebSocket route under /api/v2/ws.
+[GIN-debug] GET    /ping                     --> github.com/fntelecomllc/studio/backend/internal/api.PingHandlerGin (9 handlers)
+[GIN-debug] GET    /api/openapi.yaml         --> main.main.(*RouterGroup).StaticFile.func42 (9 handlers)
+[GIN-debug] HEAD   /api/openapi.yaml         --> main.main.(*RouterGroup).StaticFile.func42 (9 handlers)
+2025/07/13 02:24:28 Registered OpenAPI 3.0 specification route under /api/openapi.yaml
+[GIN-debug] POST   /api/v2/auth/login        --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).Login-fm (10 handlers)
+[GIN-debug] POST   /api/v2/auth/logout       --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).Logout-fm (9 handlers)
+[GIN-debug] POST   /api/v2/auth/refresh      --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).RefreshSession-fm (9 handlers)
+2025/07/13 02:24:28 Registered authentication routes under /api/v2/auth
+[GIN-debug] POST   /auth/login               --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).Login-fm (10 handlers)
+[GIN-debug] POST   /auth/logout              --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).Logout-fm (9 handlers)
+[GIN-debug] POST   /auth/refresh             --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).RefreshSession-fm (9 handlers)
+2025/07/13 02:24:28 Registered legacy authentication routes under /auth for backward compatibility
+[GIN-debug] GET    /health                   --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleHealthCheck-fm (9 handlers)
+[GIN-debug] GET    /health/ready             --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleReadinessCheck-fm (9 handlers)
+[GIN-debug] GET    /health/live              --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleLivenessCheck-fm (9 handlers)
+2025/07/13 02:24:28 Registered health check routes: /health, /health/ready, /health/live
+[GIN-debug] GET    /api/v2/health            --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleHealthCheck-fm (9 handlers)
+[GIN-debug] GET    /api/v2/health/ready      --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleReadinessCheck-fm (9 handlers)
+[GIN-debug] GET    /api/v2/health/live       --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleLivenessCheck-fm (9 handlers)
+2025/07/13 02:24:28 Registered API v2 health check routes: /api/v2/health, /api/v2/health/ready, /api/v2/health/live
+2025/07/13 02:24:28 Authentication configured for session-only (offline mode)
+[GIN-debug] GET    /api/v2/me                --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).Me-fm (11 handlers)
+[GIN-debug] POST   /api/v2/change-password   --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).ChangePassword-fm (11 handlers)
+2025/07/13 02:24:28 Registered authenticated user routes: /api/v2/me, /api/v2/change-password
+[GIN-debug] GET    /api/v2/personas          --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).ListAllPersonasGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/personas          --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).CreatePersonaGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/personas/:id      --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetPersonaByIDGin-fm (11 handlers)
+[GIN-debug] PUT    /api/v2/personas/:id      --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdatePersonaGin-fm (11 handlers)
+[GIN-debug] DELETE /api/v2/personas/:id      --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).DeletePersonaGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/personas/:id/test --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).TestPersonaGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/personas/http/:id --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetHttpPersonaByIDGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/personas/dns/:id  --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetDnsPersonaByIDGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/proxies           --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).ListProxiesGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/proxies           --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).AddProxyGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/proxies/status    --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetProxyStatusesGin-fm (11 handlers)
+[GIN-debug] PUT    /api/v2/proxies/:proxyId  --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateProxyGin-fm (11 handlers)
+[GIN-debug] DELETE /api/v2/proxies/:proxyId  --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).DeleteProxyGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/proxies/:proxyId/test --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).TestProxyGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/proxies/:proxyId/health-check --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).ForceCheckSingleProxyGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/proxies/health-check --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).ForceCheckAllProxiesGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/proxy-pools       --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).ListProxyPoolsGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/proxy-pools       --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).CreateProxyPoolGin-fm (11 handlers)
+[GIN-debug] PUT    /api/v2/proxy-pools/:poolId --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateProxyPoolGin-fm (11 handlers)
+[GIN-debug] DELETE /api/v2/proxy-pools/:poolId --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).DeleteProxyPoolGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/proxy-pools/:poolId/proxies --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).AddProxyToPoolGin-fm (11 handlers)
+[GIN-debug] DELETE /api/v2/proxy-pools/:poolId/proxies/:proxyId --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).RemoveProxyFromPoolGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/dns        --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetDNSConfigGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/config/dns        --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateDNSConfigGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/http       --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetHTTPConfigGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/config/http       --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateHTTPConfigGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/worker     --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetWorkerConfigGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/config/worker     --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateWorkerConfigGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/rate-limit --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetRateLimiterConfigGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/config/rate-limit --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateRateLimiterConfigGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/auth       --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetAuthConfigGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/config/auth       --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateAuthConfigGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/logging    --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetLoggingConfigGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/config/logging    --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateLoggingConfigGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/proxy-manager --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetProxyManagerConfigGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/config/proxy-manager --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateProxyManagerConfigGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/server     --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetServerConfigGin-fm (11 handlers)
+[GIN-debug] PUT    /api/v2/config/server     --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateServerConfigGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/config/features   --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetFeatureFlagsGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/config/features   --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateFeatureFlagsGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/keywords/sets     --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).CreateKeywordSetGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/keywords/sets     --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).ListKeywordSetsGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/keywords/sets/:setId --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetKeywordSetGin-fm (11 handlers)
+[GIN-debug] PUT    /api/v2/keywords/sets/:setId --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateKeywordSetGin-fm (11 handlers)
+[GIN-debug] DELETE /api/v2/keywords/sets/:setId --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).DeleteKeywordSetGin-fm (11 handlers)
+[GIN-debug] POST   /api/v2/extract/keywords  --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).BatchExtractKeywordsGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/extract/keywords/stream --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).StreamExtractKeywordsGin-fm (11 handlers)
+[GIN-debug] GET    /api/v2/broadcast-test    --> main.main.func2 (11 handlers)
+2025/07/13 02:24:28 Registered WebSocket test broadcast route under /api/v2/broadcast-test.
+[GIN-debug] GET    /api/v2/test-campaign-ws/:campaignId --> main.main.func3 (11 handlers)
+2025/07/13 02:24:28 Registered WebSocket campaign test route under /api/v2/test-campaign-ws/:campaignId.
+[GIN-debug] POST   /api/v2/campaigns         --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).createCampaign-fm (11 handlers)
+[GIN-debug] GET    /api/v2/campaigns         --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).listCampaigns-fm (11 handlers)
+[GIN-debug] GET    /api/v2/campaigns/:campaignId --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getCampaignDetails-fm (11 handlers)
+[GIN-debug] POST   /api/v2/campaigns/:campaignId/start --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).startCampaign-fm (11 handlers)
+[GIN-debug] POST   /api/v2/campaigns/:campaignId/pause --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).pauseCampaign-fm (11 handlers)
+[GIN-debug] POST   /api/v2/campaigns/:campaignId/resume --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).resumeCampaign-fm (11 handlers)
+[GIN-debug] POST   /api/v2/campaigns/:campaignId/cancel --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).cancelCampaign-fm (11 handlers)
+[GIN-debug] POST   /api/v2/campaigns/:campaignId/validate-dns --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).validateDNSForCampaign-fm (11 handlers)
+[GIN-debug] POST   /api/v2/campaigns/:campaignId/validate-http --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).validateHTTPForCampaign-fm (11 handlers)
+[GIN-debug] PUT    /api/v2/campaigns/:campaignId --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).updateCampaign-fm (11 handlers)
+2025/07/13 02:24:28 CampaignWorkerService [Lino]: Starting 5 workers (poll interval: 5s)...
+[GIN-debug] DELETE /api/v2/campaigns/:campaignId --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).deleteCampaign-fm (11 handlers)
+[GIN-debug] DELETE /api/v2/campaigns         --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).bulkDeleteCampaigns-fm (11 handlers)
+[GIN-debug] GET    /api/v2/campaigns/:campaignId/results/generated-domains --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getGeneratedDomains-fm (11 handlers)
+[GIN-debug] GET    /api/v2/campaigns/:campaignId/results/dns-validation --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getDNSValidationResults-fm (11 handlers)
+[GIN-debug] GET    /api/v2/campaigns/:campaignId/results/http-keyword --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getHTTPKeywordResults-fm (11 handlers)
+[GIN-debug] POST   /api/v2/campaigns/domain-generation/pattern-offset --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getPatternOffset-fm (11 handlers)
+2025/07/13 02:24:28 Worker [Lino-4]: Started.
+2025/07/13 02:24:28 Registered new campaign orchestration routes under /api/v2/campaigns.
+[GIN-debug] POST   /campaigns                --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).createCampaign-fm (11 handlers)
+2025/07/13 02:24:28 Worker [Lino-0]: Started.
+[GIN-debug] GET    /campaigns                --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).listCampaigns-fm (11 handlers)
+[GIN-debug] GET    /campaigns/:campaignId    --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getCampaignDetails-fm (11 handlers)
+[GIN-debug] POST   /campaigns/:campaignId/start --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).startCampaign-fm (11 handlers)
+[GIN-debug] POST   /campaigns/:campaignId/pause --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).pauseCampaign-fm (11 handlers)
+[GIN-debug] POST   /campaigns/:campaignId/resume --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).resumeCampaign-fm (11 handlers)
+[GIN-debug] POST   /campaigns/:campaignId/cancel --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).cancelCampaign-fm (11 handlers)
+[GIN-debug] POST   /campaigns/:campaignId/validate-dns --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).validateDNSForCampaign-fm (11 handlers)
+[GIN-debug] POST   /campaigns/:campaignId/validate-http --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).validateHTTPForCampaign-fm (11 handlers)
+[GIN-debug] PUT    /campaigns/:campaignId    --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).updateCampaign-fm (11 handlers)
+[GIN-debug] DELETE /campaigns/:campaignId    --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).deleteCampaign-fm (11 handlers)
+[GIN-debug] DELETE /campaigns                --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).bulkDeleteCampaigns-fm (11 handlers)
+[GIN-debug] GET    /campaigns/:campaignId/results/generated-domains --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getGeneratedDomains-fm (11 handlers)
+[GIN-debug] GET    /campaigns/:campaignId/results/dns-validation --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getDNSValidationResults-fm (11 handlers)
+[GIN-debug] GET    /campaigns/:campaignId/results/http-keyword --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getHTTPKeywordResults-fm (11 handlers)
+2025/07/13 02:24:28 Worker [Lino-1]: Started.
+[GIN-debug] POST   /campaigns/domain-generation/pattern-offset --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getPatternOffset-fm (11 handlers)
+2025/07/13 02:24:28 Worker [Lino-2]: Started.
+2025/07/13 02:24:28 Registered legacy campaign orchestration routes under /campaigns for backward compatibility.
+2025/07/13 02:24:28 Worker [Lino-3]: Started.
+2025/07/13 02:24:28 Server starting on :8080 (Gin Mode: debug)

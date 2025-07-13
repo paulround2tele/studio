@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { CreateKeywordSetRequest } from 'api-client';
+import { CreateKeywordSetRequest } from './api';
 
 const instance: CreateKeywordSetRequest = {
     description,

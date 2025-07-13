@@ -203,12 +203,43 @@ export const KeywordsApiFactory = function (configuration?: Configuration, baseP
 };
 
 /**
+ * KeywordsApi - interface
+ * @export
+ * @interface KeywordsApi
+ */
+export interface KeywordsApiInterface {
+    /**
+     * Extracts keywords from multiple URLs in a single batch request
+     * @summary Batch keyword extraction
+     * @param {BatchKeywordExtractionRequest} batchKeywordExtractionRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordsApiInterface
+     */
+    batchExtractKeywords(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<BatchKeywordExtractionResponse>;
+
+    /**
+     * Extracts keywords from a single URL with real-time streaming results
+     * @summary Streaming keyword extraction
+     * @param {string} url URL to extract keywords from
+     * @param {string} keywordSetId UUID of the keyword set to use for extraction
+     * @param {string} [httpPersonaId] Optional UUID of HTTP persona to use
+     * @param {string} [dnsPersonaId] Optional UUID of DNS persona to use
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordsApiInterface
+     */
+    streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<string>;
+
+}
+
+/**
  * KeywordsApi - object-oriented interface
  * @export
  * @class KeywordsApi
  * @extends {BaseAPI}
  */
-export class KeywordsApi extends BaseAPI {
+export class KeywordsApi extends BaseAPI implements KeywordsApiInterface {
     /**
      * Extracts keywords from multiple URLs in a single batch request
      * @summary Batch keyword extraction

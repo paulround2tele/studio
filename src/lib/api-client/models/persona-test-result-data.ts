@@ -52,11 +52,13 @@ export interface PersonaTestResultData {
     'testedAt'?: string;
 }
 
-export const PersonaTestResultDataPersonaTypeEnum = {
-    Dns: 'dns',
-    Http: 'http'
-} as const;
-
-export type PersonaTestResultDataPersonaTypeEnum = typeof PersonaTestResultDataPersonaTypeEnum[keyof typeof PersonaTestResultDataPersonaTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PersonaTestResultDataPersonaTypeEnum {
+    Dns = 'dns',
+    Http = 'http'
+}
 
 

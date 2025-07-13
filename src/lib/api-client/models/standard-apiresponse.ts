@@ -46,11 +46,13 @@ export interface StandardAPIResponse {
     'status': StandardAPIResponseStatusEnum;
 }
 
-export const StandardAPIResponseStatusEnum = {
-    Success: 'success',
-    Error: 'error'
-} as const;
-
-export type StandardAPIResponseStatusEnum = typeof StandardAPIResponseStatusEnum[keyof typeof StandardAPIResponseStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum StandardAPIResponseStatusEnum {
+    Success = 'success',
+    Error = 'error'
+}
 
 

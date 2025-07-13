@@ -194,8 +194,23 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 
-      // Create the campaign
-      const response = await apiClient.createCampaign(payload);
+      // For DNS validation, this should be a phase transition, not a new campaign
+      let response;
+      if (phaseType === 'dns_validation') {
+        // Update existing campaign to transition to DNS validation phase
+        response = await apiClient.updateCampaign(sourceCampaign.id!, {
+          campaignType: 'dns_validation', // This will trigger the phase transition in backend
+          name: data.name,
+          personaIds: [data.assignedDnsPersonaId!], // Safe to use ! because we validated this above
+          rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
+          processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
+          batchSize: Number(data.batchSize),
+          retryAttempts: Number(data.retryAttempts),
+        });
+      } else {
+        // Create new campaign for other phase types (like HTTP keyword validation)
+        response = await apiClient.createCampaign(payload);
+      }
 
       // Extract campaign from response
       let campaign;

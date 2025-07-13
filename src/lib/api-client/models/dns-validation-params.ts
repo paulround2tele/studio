@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 /**
  * DomainFlow API
  * DomainFlow API for domain generation, validation, and campaign management.
@@ -14,46 +15,52 @@
 
 
 /**
- * Parameters for DNS validation campaigns
+ * 
  * @export
  * @interface DnsValidationParams
  */
 export interface DnsValidationParams {
     /**
-     * Batch size for processing
+     * 
      * @type {number}
      * @memberof DnsValidationParams
      */
     'batchSize'?: number;
     /**
-     * DNS personas to use for validation
+     * 
      * @type {Array<string>}
      * @memberof DnsValidationParams
      */
-    'personaIds': Array<string>;
+    'personaIds'?: Array<string>;
     /**
-     * Processing speed per minute
+     * 
      * @type {number}
      * @memberof DnsValidationParams
      */
     'processingSpeedPerMinute'?: number;
     /**
-     * Number of retry attempts
+     * 
      * @type {number}
      * @memberof DnsValidationParams
      */
     'retryAttempts'?: number;
     /**
-     * Persona rotation interval in seconds
+     * 
      * @type {number}
      * @memberof DnsValidationParams
      */
     'rotationIntervalSeconds'?: number;
     /**
-     * Source domain generation campaign ID
+     * 
      * @type {string}
      * @memberof DnsValidationParams
      */
-    'sourceCampaignId': string;
+    'sourceCampaignId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DnsValidationParams
+     */
+    'sourceGenerationCampaignId'?: string;
 }
 

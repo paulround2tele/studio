@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { RateLimiterConfig } from 'api-client';
+import { RateLimiterConfig } from './api';
 
 const instance: RateLimiterConfig = {
     maxRequests,

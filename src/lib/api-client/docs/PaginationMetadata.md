@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PaginationMetadata } from 'api-client';
+import { PaginationMetadata } from './api';
 
 const instance: PaginationMetadata = {
     page,

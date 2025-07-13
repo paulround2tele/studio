@@ -16,40 +16,36 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { Campaign } from './campaign';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { PaginationMetadata } from './pagination-metadata';
 
 /**
- * Response for campaign list with pagination metadata
+ * Paginated list of campaigns
  * @export
  * @interface CampaignListResponse
  */
 export interface CampaignListResponse {
     /**
-     * 
+     * List of campaigns
      * @type {Array<Campaign>}
      * @memberof CampaignListResponse
      */
-    'data'?: Array<Campaign>;
+    'campaigns': Array<Campaign>;
     /**
-     * 
-     * @type {PaginationMetadata}
+     * Number of items per page
+     * @type {number}
      * @memberof CampaignListResponse
      */
-    'metadata'?: PaginationMetadata;
+    'limit': number;
     /**
-     * 
-     * @type {string}
+     * Current page number
+     * @type {number}
      * @memberof CampaignListResponse
      */
-    'status'?: CampaignListResponseStatusEnum;
+    'page': number;
+    /**
+     * Total number of campaigns
+     * @type {number}
+     * @memberof CampaignListResponse
+     */
+    'total': number;
 }
-
-export const CampaignListResponseStatusEnum = {
-    Success: 'success'
-} as const;
-
-export type CampaignListResponseStatusEnum = typeof CampaignListResponseStatusEnum[keyof typeof CampaignListResponseStatusEnum];
-
 

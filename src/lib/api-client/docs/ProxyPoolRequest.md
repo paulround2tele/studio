@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ProxyPoolRequest } from 'api-client';
+import { ProxyPoolRequest } from './api';
 
 const instance: ProxyPoolRequest = {
     description,

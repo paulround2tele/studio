@@ -1,12 +1,44 @@
 import React, { memo, useEffect, useState, useMemo } from 'react';
 import { Control, UseFormWatch, UseFormSetValue } from 'react-hook-form';
+import { AxiosError } from 'axios';
 import { apiClient } from '@/lib/api-client/client';
+import { PatternOffsetRequestPatternTypeEnum } from '@/lib/api-client/models/pattern-offset-request';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // Import shared types to prevent conflicts
 import type { CampaignFormValues } from '../types/CampaignFormTypes';
+
+// WebSocket message data interfaces
+interface DNSValidationResult {
+  offsetUpdates?: OffsetUpdate[];
+  [key: string]: unknown;
+}
+
+interface DomainGeneratedResult {
+  patternSignature?: {
+    patternType: string;
+    variableLength: number;
+    characterSet: string;
+    constantString: string;
+    tld: string;
+  };
+  currentOffset?: number;
+  [key: string]: unknown;
+}
+
+interface OffsetUpdate {
+  patternSignature?: {
+    patternType: string;
+    variableLength: number;
+    characterSet: string;
+    constantString: string;
+    tld: string;
+  };
+  newOffset?: number;
+  [key: string]: unknown;
+}
 
 interface DomainGenerationConfigProps {
   control: Control<CampaignFormValues>;
@@ -65,16 +97,16 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
     }
     
     const patternTypeMap = {
-      "prefix_variable": "prefix",
-      "suffix_variable": "suffix",
-      "both_variable": "both"
+      "prefix_variable": PatternOffsetRequestPatternTypeEnum.Prefix,
+      "suffix_variable": PatternOffsetRequestPatternTypeEnum.Suffix,
+      "both_variable": PatternOffsetRequestPatternTypeEnum.Both
     } as const;
     
     const tlds = tldsInput.split(',').map(tld => tld.trim()).filter(tld => tld.length > 0);
     // Ensure TLD format is consistent (remove leading dot if present, then add it)
     const primaryTld = tlds[0] || 'com';
     const normalizedTld = primaryTld.startsWith('.') ? primaryTld.substring(1) : primaryTld;
-    const variableLength = prefixVariableLength || 3;
+    const variableLength = parseInt(String(prefixVariableLength || 3), 10);
     
     return {
       patternType: patternTypeMap[generationPattern],
@@ -105,7 +137,7 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
       try {
         // Call the pattern offset endpoint with proper request format
         const patternRequest = {
-          patternType: patternSignature.patternType as 'prefix' | 'suffix' | 'both',
+          patternType: patternSignature.patternType as PatternOffsetRequestPatternTypeEnum,
           variableLength: patternSignature.variableLength,
           characterSet: patternSignature.characterSet,
           constantString: patternSignature.constantString,
@@ -116,8 +148,6 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
         
         const response = await apiClient.getDomainGenerationPatternOffset(patternRequest);
         const data = response.data;
-
-        console.log('📊 [Offset] API response:', data);
 
         if (cancelled) return;
         
@@ -142,13 +172,13 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
           if (err instanceof Error) {
             errorMessage = err.message;
           } else if (typeof err === 'object' && err !== null && 'response' in err) {
-            const axiosError = err as any;
+            const axiosError = err as AxiosError;
             if (axiosError.response?.status === 404) {
               errorMessage = 'Pattern not found - this is a new pattern combination';
-            } else if (axiosError.response?.status >= 500) {
+            } else if (axiosError.response?.status !== undefined && axiosError.response.status >= 500) {
               errorMessage = 'Server error while fetching offset';
-            } else if (axiosError.response?.data?.message) {
-              errorMessage = axiosError.response.data.message;
+            } else if (axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data) {
+              errorMessage = String(axiosError.response.data.message);
             }
           }
           
@@ -163,6 +193,90 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
 
     fetchCurrentOffset();
     return () => { cancelled = true; };
+  }, [patternSignature]);
+
+  // WebSocket subscription for real-time offset updates
+  useEffect(() => {
+    if (!patternSignature) return;
+
+    let wsCleanup: (() => void) | null = null;
+
+    // Dynamically import WebSocket service to avoid SSR issues
+    const setupWebSocket = async () => {
+      try {
+        const { websocketService } = await import('@/lib/services/websocketService.simple');
+        
+        wsCleanup = websocketService.connect('global', {
+          onMessage: (message) => {
+            console.log('🔄 [Offset] WebSocket message received:', message);
+            
+            // Handle DNS validation results that might contain offset updates
+            if (message.type === 'dns.validation.result' && message.data) {
+              const data = message.data as DNSValidationResult;
+              
+              // Check if this message contains offset information for our pattern
+              if (data.offsetUpdates && Array.isArray(data.offsetUpdates)) {
+                for (const offsetUpdate of data.offsetUpdates) {
+                  if (offsetUpdate.patternSignature &&
+                      offsetUpdate.patternSignature.patternType === patternSignature.patternType &&
+                      offsetUpdate.patternSignature.variableLength === patternSignature.variableLength &&
+                      offsetUpdate.patternSignature.characterSet === patternSignature.characterSet &&
+                      offsetUpdate.patternSignature.constantString === patternSignature.constantString &&
+                      offsetUpdate.patternSignature.tld === patternSignature.tld) {
+                    
+                    console.log('🔄 [Offset] Real-time offset update:', offsetUpdate.newOffset);
+                    setCurrentOffset(prev => ({
+                      ...prev,
+                      value: typeof offsetUpdate.newOffset === 'number' ? offsetUpdate.newOffset : prev.value,
+                      error: null
+                    }));
+                    break;
+                  }
+                }
+              }
+            }
+            
+            // Handle general offset updates
+            if (message.type === 'domain_generated' && message.data) {
+              const data = message.data as DomainGeneratedResult;
+              
+              // Check if this domain generation relates to our pattern
+              if (data.patternSignature &&
+                  data.patternSignature.patternType === patternSignature.patternType &&
+                  data.patternSignature.variableLength === patternSignature.variableLength &&
+                  data.patternSignature.characterSet === patternSignature.characterSet &&
+                  data.patternSignature.constantString === patternSignature.constantString &&
+                  data.patternSignature.tld === patternSignature.tld &&
+                  typeof data.newOffset === 'number') {
+                
+                console.log('🔄 [Offset] Domain generation offset update:', data.newOffset);
+                setCurrentOffset(prev => ({
+                  ...prev,
+                  value: typeof data.newOffset === 'number' ? data.newOffset : prev.value,
+                  error: null
+                }));
+              }
+            }
+          },
+          onError: (error) => {
+            console.error('❌ [Offset] WebSocket error:', error);
+          }
+        });
+        
+        console.log('🔗 [Offset] WebSocket subscription established for offset updates');
+      } catch (error) {
+        console.error('❌ [Offset] Failed to setup WebSocket subscription:', error);
+      }
+    };
+
+    setupWebSocket();
+
+    return () => {
+      if (wsCleanup) {
+        console.log('🔌 [Offset] Cleaning up WebSocket subscription');
+        wsCleanup();
+      }
+    };
   }, [patternSignature]);
   
   // Determine if suffix variable length input should be shown
@@ -326,25 +440,63 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
           </FormItem>
         )} />
 
-        {/* Current Offset Display (Read-Only) */}
-        <div className="p-3 rounded-md bg-blue-50 border border-blue-200">
-          <div className="text-sm font-medium text-blue-700 mb-2">
+        {/* Current Offset Display (Read-Only) with Enhanced Error Handling */}
+        <div className={`p-3 rounded-md border ${
+          currentOffset.error
+            ? currentOffset.error.includes('limit') || currentOffset.error.includes('maximum')
+              ? 'bg-red-50 border-red-200'
+              : 'bg-yellow-50 border-yellow-200'
+            : 'bg-blue-50 border-blue-200'
+        }`}>
+          <div className={`text-sm font-medium mb-2 ${
+            currentOffset.error
+              ? currentOffset.error.includes('limit') || currentOffset.error.includes('maximum')
+                ? 'text-red-700'
+                : 'text-yellow-700'
+              : 'text-blue-700'
+          }`}>
             Current Offset for This Pattern
             {currentOffset.isLoading && (
               <span className="ml-2 text-xs text-blue-600">(loading...)</span>
             )}
           </div>
-          <div className="text-2xl font-bold text-blue-800 mb-1">
+          <div className={`text-2xl font-bold mb-1 ${
+            currentOffset.error
+              ? currentOffset.error.includes('limit') || currentOffset.error.includes('maximum')
+                ? 'text-red-800'
+                : 'text-yellow-800'
+              : 'text-blue-800'
+          }`}>
             {currentOffset.value.toLocaleString()}
           </div>
           {currentOffset.error && (
-            <div className="text-xs text-red-500 mb-2">
-              <strong>Error:</strong> {currentOffset.error}
+            <div className={`text-xs mb-2 ${
+              currentOffset.error.includes('limit') || currentOffset.error.includes('maximum')
+                ? 'text-red-600'
+                : 'text-yellow-600'
+            }`}>
+              <strong>
+                {currentOffset.error.includes('limit') || currentOffset.error.includes('maximum')
+                  ? '🚫 Offset Limit:'
+                  : '⚠️ Warning:'
+                }
+              </strong> {currentOffset.error}
+              {(currentOffset.error.includes('limit') || currentOffset.error.includes('maximum')) && (
+                <div className="mt-1 text-xs">
+                  💡 Try using a different pattern combination or character set to continue domain generation.
+                </div>
+              )}
             </div>
           )}
-          <div className="text-xs text-blue-600">
+          <div className={`text-xs ${
+            currentOffset.error
+              ? currentOffset.error.includes('limit') || currentOffset.error.includes('maximum')
+                ? 'text-red-600'
+                : 'text-yellow-600'
+              : 'text-blue-600'
+          }`}>
             ℹ️ Domain generation will resume from this offset for this exact pattern combination.
-            This value is automatically managed by the backend.
+            This value is automatically managed by the backend and updates in real-time.
           </div>
         </div>
 

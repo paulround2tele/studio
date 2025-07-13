@@ -15,87 +15,76 @@
 
 
 /**
- * DNS validation result information
+ * 
  * @export
  * @interface DNSValidationResult
  */
 export interface DNSValidationResult {
     /**
-     * Number of validation attempts
+     * 
      * @type {number}
      * @memberof DNSValidationResult
      */
     'attempts'?: number;
     /**
-     * Business status
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
     'businessStatus'?: string;
     /**
-     * Record creation timestamp
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
     'createdAt'?: string;
     /**
-     * DNS campaign ID
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
     'dnsCampaignId'?: string;
     /**
-     * DNS records found
+     * 
      * @type {object}
      * @memberof DNSValidationResult
      */
     'dnsRecords'?: object;
     /**
-     * Domain name validated
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
     'domainName'?: string;
     /**
-     * Generated domain ID
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
     'generatedDomainId'?: string;
     /**
-     * Result unique identifier
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
     'id'?: string;
     /**
-     * Last validation timestamp
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
     'lastCheckedAt'?: string;
     /**
-     * Persona used for validation
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
     'validatedByPersonaId'?: string;
     /**
-     * Validation status
+     * 
      * @type {string}
      * @memberof DNSValidationResult
      */
-    'validationStatus'?: DNSValidationResultValidationStatusEnum;
+    'validationStatus'?: string;
 }
-
-export const DNSValidationResultValidationStatusEnum = {
-    Pending: 'pending',
-    Valid: 'valid',
-    Invalid: 'invalid',
-    Error: 'error',
-    Skipped: 'skipped'
-} as const;
-
-export type DNSValidationResultValidationStatusEnum = typeof DNSValidationResultValidationStatusEnum[keyof typeof DNSValidationResultValidationStatusEnum];
-
 

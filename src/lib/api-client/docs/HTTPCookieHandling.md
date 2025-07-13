@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { HTTPCookieHandling } from 'api-client';
+import { HTTPCookieHandling } from './api';
 
 const instance: HTTPCookieHandling = {
     mode,

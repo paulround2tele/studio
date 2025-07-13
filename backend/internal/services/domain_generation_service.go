@@ -747,10 +747,11 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		processedItems = *campaign.ProcessedItems
 	}
 
-	if (genParams.NumDomainsToGenerate > 0 && processedItems >= int64(genParams.NumDomainsToGenerate)) ||
-		(genParams.CurrentOffset >= genParams.TotalPossibleCombinations) {
-		log.Printf("ProcessGenerationCampaignBatch: Campaign %s completion condition met before batch processing. Processed: %d, Target: %d, Global offset: %d / %d.",
-			campaignID, processedItems, genParams.NumDomainsToGenerate, genParams.CurrentOffset, genParams.TotalPossibleCombinations)
+	// CRITICAL FIX: Only complete if THIS campaign has generated its target domains
+	// Don't complete due to global offset exhaustion unless this campaign has actually processed domains
+	if genParams.NumDomainsToGenerate > 0 && processedItems >= int64(genParams.NumDomainsToGenerate) {
+		log.Printf("ProcessGenerationCampaignBatch: Campaign %s completed its target. Processed: %d, Target: %d",
+			campaignID, processedItems, genParams.NumDomainsToGenerate)
 
 		if campaign.Status != models.CampaignStatusCompleted {
 			campaign.Status = models.CampaignStatusCompleted
@@ -763,6 +764,12 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			}
 		}
 		return true, 0, opErr
+	}
+
+	// DIAGNOSTIC: Log global offset status but don't auto-complete
+	if genParams.CurrentOffset >= genParams.TotalPossibleCombinations {
+		log.Printf("ProcessGenerationCampaignBatch: DIAGNOSTIC - Campaign %s pattern may be globally exhausted. Global offset: %d / %d. Will attempt generation anyway.",
+			campaignID, genParams.CurrentOffset, genParams.TotalPossibleCombinations)
 	}
 
 	// 🚨 ROOT CAUSE FIX: Calculate batch size based on user's remaining domains, not hardcoded value
@@ -923,11 +930,49 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		log.Printf("ProcessGenerationCampaignBatch: Saved %d domains for campaign %s.", processedInThisBatch, campaignID)
 
 		// Real-time streaming: Broadcast each domain individually as it's generated
+		log.Printf("🔵 [DOMAIN_STREAMING_DEBUG] Starting to stream %d domains for campaign %s", len(generatedDomainsToStore), campaignID)
+		
+		broadcaster := websocket.GetBroadcaster()
+		if broadcaster == nil {
+			log.Printf("❌ [DOMAIN_STREAMING_CRITICAL] No broadcaster available! Cannot stream domains for campaign %s", campaignID)
+		} else {
+			log.Printf("✅ [DOMAIN_STREAMING_DEBUG] Broadcaster available, proceeding with streaming for campaign %s", campaignID)
+		}
+		
 		for i, domain := range generatedDomainsToStore {
-			if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
-				message := websocket.CreateDomainGeneratedMessage(campaignID.String(), domain.ID.String(), domain.DomainName, int(domain.OffsetIndex), len(generatedDomainsToStore))
-				broadcaster.BroadcastToCampaign(campaignID.String(), message)
-				log.Printf("ProcessGenerationCampaignBatch: Streamed domain %d/%d: %s for campaign %s", i+1, len(generatedDomainsToStore), domain.DomainName, campaignID)
+			if broadcaster != nil {
+				// CRITICAL FIX: Send both old and new message formats for compatibility
+				
+				// 1. Send old format message (domain_generated)
+				oldMessage := websocket.CreateDomainGeneratedMessage(campaignID.String(), domain.ID.String(), domain.DomainName, int(domain.OffsetIndex), len(generatedDomainsToStore))
+				broadcaster.BroadcastToCampaign(campaignID.String(), oldMessage)
+				
+				log.Printf("✅ [DOMAIN_STREAMING_DEBUG] Broadcasted OLD format domain %d/%d: %s (Type: %s) for campaign %s",
+					i+1, len(generatedDomainsToStore), domain.DomainName, oldMessage.Type, campaignID)
+				
+				// 2. Send new format message (domain.generated) by creating a compatible message manually
+				newFormatMessage := websocket.WebSocketMessage{
+					ID:             uuid.New().String(),
+					Timestamp:      time.Now().UTC().Format(time.RFC3339),
+					Type:           "domain.generated", // New format type
+					CampaignID:     campaignID.String(),
+					Data: map[string]interface{}{
+						"campaignId":     campaignID.String(),
+						"domainId":       domain.ID.String(),
+						"domain":         domain.DomainName,
+						"offset":         int64(domain.OffsetIndex),
+						"batchSize":      len(generatedDomainsToStore),
+						"totalGenerated": int64(i + 1),
+					},
+				}
+				broadcaster.BroadcastToCampaign(campaignID.String(), newFormatMessage)
+				
+				log.Printf("✅ [DOMAIN_STREAMING_DEBUG] Broadcasted NEW format domain %d/%d: %s (Type: %s) for campaign %s",
+					i+1, len(generatedDomainsToStore), domain.DomainName, newFormatMessage.Type, campaignID)
+				
+			} else {
+				log.Printf("❌ [DOMAIN_STREAMING_DEBUG] No broadcaster available for domain %d/%d: %s for campaign %s",
+					i+1, len(generatedDomainsToStore), domain.DomainName, campaignID)
 			}
 		}
 
@@ -1369,3 +1414,4 @@ func (cm *ConfigManager) UpdateDomainGenerationConfig(ctx context.Context, confi
 	
 	return updatedState, nil
 }
+

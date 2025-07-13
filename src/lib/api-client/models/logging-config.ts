@@ -76,13 +76,15 @@ export interface LoggingConfig {
     'maxFileSize'?: number;
 }
 
-export const LoggingConfigLevelEnum = {
-    Debug: 'DEBUG',
-    Info: 'INFO',
-    Warn: 'WARN',
-    Error: 'ERROR'
-} as const;
-
-export type LoggingConfigLevelEnum = typeof LoggingConfigLevelEnum[keyof typeof LoggingConfigLevelEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum LoggingConfigLevelEnum {
+    Debug = 'DEBUG',
+    Info = 'INFO',
+    Warn = 'WARN',
+    Error = 'ERROR'
+}
 
 

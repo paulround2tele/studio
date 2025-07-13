@@ -1,40 +1,57 @@
 # UpdateCampaignRequest
 
-Request to update an existing campaign
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**adHocKeywords** | **Array&lt;string&gt;** | Ad-hoc keywords | [optional] [default to undefined]
-**batchSize** | **number** | Batch size for processing | [optional] [default to undefined]
-**campaignType** | **string** | Campaign type for phase transitions | [optional] [default to undefined]
-**keywordSetIds** | **Array&lt;string&gt;** | Keyword set IDs | [optional] [default to undefined]
-**name** | **string** | Campaign name | [optional] [default to undefined]
-**personaIds** | **Array&lt;string&gt;** | Persona IDs | [optional] [default to undefined]
-**processingSpeedPerMinute** | **number** | Processing speed per minute | [optional] [default to undefined]
-**proxyPoolId** | **string** | Proxy pool ID | [optional] [default to undefined]
-**retryAttempts** | **number** | Number of retry attempts | [optional] [default to undefined]
-**status** | **string** | Campaign status | [optional] [default to undefined]
-**targetHttpPorts** | **Array&lt;number&gt;** | Target HTTP ports | [optional] [default to undefined]
+**adHocKeywords** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**batchSize** | **number** |  | [optional] [default to undefined]
+**campaignType** | **string** |  | [optional] [default to undefined]
+**characterSet** | **string** |  | [optional] [default to undefined]
+**constantString** | **string** |  | [optional] [default to undefined]
+**keywordSetIds** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**name** | **string** |  | [optional] [default to undefined]
+**numDomainsToGenerate** | **number** |  | [optional] [default to undefined]
+**personaIds** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**processingSpeedPerMinute** | **number** |  | [optional] [default to undefined]
+**proxyPoolId** | **string** |  | [optional] [default to undefined]
+**proxySelectionStrategy** | **string** |  | [optional] [default to undefined]
+**retryAttempts** | **number** |  | [optional] [default to undefined]
+**rotationIntervalSeconds** | **number** |  | [optional] [default to undefined]
+**sourceDnsCampaignId** | **string** |  | [optional] [default to undefined]
+**sourceGenerationCampaignId** | **string** |  | [optional] [default to undefined]
+**status** | **string** |  | [optional] [default to undefined]
+**targetHttpPorts** | **Array&lt;number&gt;** |  | [optional] [default to undefined]
+**tld** | **string** |  | [optional] [default to undefined]
+**variableLength** | **number** |  | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { UpdateCampaignRequest } from 'api-client';
+import { UpdateCampaignRequest } from './api';
 
 const instance: UpdateCampaignRequest = {
     adHocKeywords,
     batchSize,
     campaignType,
+    characterSet,
+    constantString,
     keywordSetIds,
     name,
+    numDomainsToGenerate,
     personaIds,
     processingSpeedPerMinute,
     proxyPoolId,
+    proxySelectionStrategy,
     retryAttempts,
+    rotationIntervalSeconds,
+    sourceDnsCampaignId,
+    sourceGenerationCampaignId,
     status,
     targetHttpPorts,
+    tld,
+    variableLength,
 };
 ```
 

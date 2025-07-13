@@ -2,6 +2,7 @@
 // Production Proxy Service - Direct OpenAPI integration without adapters
 
 import { ProxiesApi, Configuration } from '@/lib/api-client';
+import { CreateProxyRequestProtocolEnum, UpdateProxyRequestProtocolEnum } from '@/lib/api-client/models';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
 import type { components } from '@/lib/api-client/types';
 
@@ -18,6 +19,27 @@ const proxiesApi = new ProxiesApi(config);
 export type Proxy = components['schemas']['Proxy'];
 export type ProxyCreationPayload = components['schemas']['CreateProxyRequest'];
 export type ProxyUpdatePayload = components['schemas']['UpdateProxyRequest'];
+
+// Protocol conversion utilities
+const convertProtocolToCreateEnum = (protocol: string): CreateProxyRequestProtocolEnum => {
+  switch (protocol) {
+    case 'http': return CreateProxyRequestProtocolEnum.Http;
+    case 'https': return CreateProxyRequestProtocolEnum.Https;
+    case 'socks5': return CreateProxyRequestProtocolEnum.Socks5;
+    case 'socks4': return CreateProxyRequestProtocolEnum.Socks4;
+    default: return CreateProxyRequestProtocolEnum.Http;
+  }
+};
+
+const convertProtocolToUpdateEnum = (protocol: string): UpdateProxyRequestProtocolEnum => {
+  switch (protocol) {
+    case 'http': return UpdateProxyRequestProtocolEnum.Http;
+    case 'https': return UpdateProxyRequestProtocolEnum.Https;
+    case 'socks5': return UpdateProxyRequestProtocolEnum.Socks5;
+    case 'socks4': return UpdateProxyRequestProtocolEnum.Socks4;
+    default: return UpdateProxyRequestProtocolEnum.Http;
+  }
+};
 
 // Service layer response wrappers using OpenAPI types as base
 export interface ProxiesListResponse {
@@ -153,7 +175,11 @@ class ProxyService {
 
   async createProxy(payload: ProxyCreationPayload): Promise<ProxyCreationResponse> {
     try {
-      const response = await proxiesApi.createProxy(payload);
+      const convertedPayload = {
+        ...payload,
+        protocol: convertProtocolToCreateEnum(payload.protocol)
+      };
+      const response = await proxiesApi.createProxy(convertedPayload);
       return {
         status: 'success',
         data: response.data as Proxy,
@@ -169,7 +195,12 @@ class ProxyService {
 
   async updateProxy(proxyId: string, payload: ProxyUpdatePayload): Promise<ProxyUpdateResponse> {
     try {
-      const response = await proxiesApi.updateProxy(proxyId, payload);
+      const { protocol, ...restPayload } = payload;
+      const convertedPayload = {
+        ...restPayload,
+        ...(protocol && { protocol: convertProtocolToUpdateEnum(protocol) })
+      };
+      const response = await proxiesApi.updateProxy(proxyId, convertedPayload);
       return {
         status: 'success',
         data: response.data as Proxy,

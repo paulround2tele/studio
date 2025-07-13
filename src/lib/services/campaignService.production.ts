@@ -309,7 +309,15 @@ class CampaignService {
   async validateDNSForCampaign(campaignId: string): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Triggering DNS validation for campaign:', campaignId);
-      const response = await campaignsApi.validateDNSForCampaign(campaignId);
+      const response = await campaignsApi.validateDNSForCampaign(campaignId, {
+        campaignId: campaignId,
+        personaIds: [],
+        rotationIntervalSeconds: 0,
+        processingSpeedPerMinute: 0,
+        batchSize: 10,
+        retryAttempts: 3,
+        onlyInvalidDomains: false
+      });
       const result = 'data' in response ? response.data : response;
       
       return {
@@ -360,7 +368,10 @@ class CampaignService {
   ): Promise<CampaignResultsResponse<unknown[]>> {
     try {
       console.log('[CampaignService] Getting DNS validation results for campaign:', campaignId, options);
-      const response = await campaignsApi.getDNSValidationResults(campaignId, options?.limit, options?.cursor);
+      const response = await campaignsApi.getDNSValidationResults(campaignId,
+        options?.cursor ? parseInt(options.cursor, 10) : undefined,
+        options?.limit
+      );
       
       // Extract data from AxiosResponse
       const result = 'data' in response ? response.data : response;

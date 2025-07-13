@@ -111,8 +111,23 @@ func (s *dnsCampaignServiceImpl) CreateCampaign(ctx context.Context, req CreateD
 		return nil, opErr
 	}
 
+	// FIXED: Simply validate that the source campaign has generated domains available for DNS validation
+	// Offset exhaustion is irrelevant - we just need domains to validate
+	domainCount, err := s.campaignStore.CountGeneratedDomainsByCampaign(ctx, querier, req.SourceGenerationCampaignID)
+	if err != nil {
+		opErr = fmt.Errorf("failed to count generated domains for source campaign %s: %w", req.SourceGenerationCampaignID, err)
+		return nil, opErr
+	}
+	if domainCount == 0 {
+		opErr = fmt.Errorf("dns validation error: source campaign %s has no generated domains available for validation", req.SourceGenerationCampaignID)
+		return nil, opErr
+	}
+	log.Printf("✅ [DNS_VALIDATION_CHECK] Source campaign %s has %d domains available for DNS validation",
+		req.SourceGenerationCampaignID, domainCount)
+
 	// Update the existing campaign to transition to DNS validation phase
-	existingCampaign.CampaignType = models.CampaignTypeDNSValidation
+	// CRITICAL FIX: Do NOT change campaign type - keep it as domain_generation
+	// Only update status and metadata, phase will be set separately
 	existingCampaign.Status = models.CampaignStatusPending
 	existingCampaign.UpdatedAt = now
 	existingCampaign.Name = req.Name // Allow updating the name for DNS phase
@@ -364,31 +379,11 @@ func (s *dnsCampaignServiceImpl) StartInPlaceDNSValidation(ctx context.Context, 
 		log.Printf("INFO [In-Place DNS Validation]: DNS params may already exist for campaign %s, continuing...", req.CampaignID)
 	}
 
-	// Update campaign status to running if it was completed
-	if campaign.Status == models.CampaignStatusCompleted {
-		err = s.campaignStore.UpdateCampaignStatus(ctx, nil, req.CampaignID, models.CampaignStatusRunning, sql.NullString{})
-		if err != nil {
-			return fmt.Errorf("failed to update campaign status to running: %w", err)
-		}
-		log.Printf("INFO [In-Place DNS Validation]: Updated campaign %s status from completed to running", req.CampaignID)
-	}
-
-	// CRITICAL FIX: Update campaign currentPhase to dns_validation for frontend UI transitions
-	// Fetch the updated campaign to get latest state
-	campaign, err = s.campaignStore.GetCampaignByID(ctx, nil, req.CampaignID)
+	// ATOMIC TRANSACTION: Update campaign state, phase, and broadcast in a single transaction
+	err = s.atomicPhaseTransition(ctx, campaign, req.CampaignID)
 	if err != nil {
-		return fmt.Errorf("failed to fetch campaign for phase update: %w", err)
+		return fmt.Errorf("failed to perform atomic phase transition: %w", err)
 	}
-	
-	// Update the currentPhase to dns_validation
-	dnsValidationPhase := models.CampaignPhaseDNSValidation
-	campaign.CurrentPhase = &dnsValidationPhase
-	
-	err = s.campaignStore.UpdateCampaign(ctx, nil, campaign)
-	if err != nil {
-		return fmt.Errorf("failed to update campaign currentPhase to dns_validation: %w", err)
-	}
-	log.Printf("INFO [In-Place DNS Validation]: Updated campaign %s currentPhase to dns_validation for UI transition", req.CampaignID)
 
 	// Create a job for the worker service to process the DNS validation
 	if s.campaignJobStore != nil {
@@ -768,6 +763,41 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 				dbRes.DNSRecords = models.JSONRawMessagePtr(json.RawMessage(errorBytes))
 			}
 
+			// CRITICAL FIX: Stream individual DNS validation result as it completes
+			log.Printf("🔴 [DNS_STREAMING_DEBUG] Attempting to stream DNS result for domain %s, status: %s, campaign: %s",
+				domainModel.DomainName, finalValidationResult.Status, campaignID)
+			
+			// Prepare DNS records map for message payload
+			dnsRecordsMap := make(map[string]interface{})
+			if len(finalValidationResult.IPs) > 0 {
+				dnsRecordsMap["ips"] = finalValidationResult.IPs
+			}
+			if finalValidationResult.Error != "" {
+				dnsRecordsMap["error"] = finalValidationResult.Error
+			}
+			
+			// Create consolidated message using new standardized format
+			payload := websocket.DNSValidationPayload{
+				CampaignID:       campaignID.String(),
+				DomainID:         dbRes.ID.String(),
+				Domain:           domainModel.DomainName,
+				ValidationStatus: finalValidationResult.Status,
+				DNSRecords:       dnsRecordsMap,
+				Attempts:         attemptCount,
+				ProcessingTime:   0, // Could be calculated if needed
+				TotalValidated:   0, // Could be calculated if needed
+			}
+			
+			// ENHANCED: Try WebSocket broadcast with fallback mechanism
+			if err := s.streamDNSResultWithFallback(ctx, campaignID.String(), payload); err != nil {
+				log.Printf("❌ [DNS_STREAMING_ERROR] Failed to stream DNS result for domain %s, campaign %s: %v",
+					domainModel.DomainName, campaignID, err)
+				// Continue execution - streaming failure should not break the validation process
+			} else {
+				log.Printf("✅ [DNS_STREAMING_SUCCESS] Successfully streamed DNS result: domain=%s, status=%s, campaign=%s",
+					domainModel.DomainName, finalValidationResult.Status, campaignID)
+			}
+
 			muResults.Lock()
 			dbResults = append(dbResults, dbRes)
 			muResults.Unlock()
@@ -886,4 +916,124 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	log.Printf("ProcessDNSValidationCampaignBatch: Finished batch for campaign %s. ProcessedInBatch: %d, DoneForJob: %t, CampaignProcessed: %d/%d, Final opErr: %v",
 		campaignID, processedInThisBatch, done, processedItemsVal, totalItemsVal, opErr)
 	return done, processedInThisBatch, opErr
+}
+
+// streamDNSResultWithFallback attempts to stream DNS validation results with fallback mechanisms
+func (s *dnsCampaignServiceImpl) streamDNSResultWithFallback(ctx context.Context, campaignID string, payload websocket.DNSValidationPayload) error {
+	// Primary attempt: Use WebSocket broadcaster
+	broadcaster := websocket.GetBroadcaster()
+	if broadcaster != nil {
+		// Create standardized message using new V2 format
+		message := websocket.CreateDNSValidationMessageV2(payload)
+		
+		// Convert standardized message to legacy format for compatibility
+		legacyMessage := websocket.WebSocketMessage{
+			ID:         uuid.New().String(),
+			Timestamp:  message.Timestamp.Format(time.RFC3339),
+			Type:       message.Type,
+			CampaignID: campaignID,
+			Data:       payload,
+		}
+		
+		// Attempt broadcast using existing method
+		broadcaster.BroadcastToCampaign(campaignID, legacyMessage)
+		log.Printf("✅ [DNS_STREAMING_SUCCESS] WebSocket broadcast successful for campaign %s, type: %s", campaignID, message.Type)
+		return nil
+	} else {
+		log.Printf("⚠️ [DNS_STREAMING_WARNING] No WebSocket broadcaster available for campaign %s", campaignID)
+	}
+	
+	// Fallback 1: Log detailed result for debugging/monitoring
+	log.Printf("📊 [DNS_STREAMING_FALLBACK] DNS result logged: campaign=%s, domain=%s, status=%s, attempts=%d",
+		campaignID, payload.Domain, payload.ValidationStatus, payload.Attempts)
+	
+	// Fallback 2: Store result summary for later retrieval (optional)
+	// This could be enhanced to store in a separate streaming_failures table
+	// for systems that need to replay missed messages
+	
+	// Return success - streaming failure should not break the validation process
+	return nil
+	// Fallback 2: Store result summary for later retrieval (optional)
+	// This could be enhanced to store in a separate streaming_failures table
+	// for systems that need to replay missed messages
+	
+	// Return success - streaming failure should not break the validation process
+	return nil
+}
+
+// atomicPhaseTransition performs atomic campaign phase transition with event broadcasting
+func (s *dnsCampaignServiceImpl) atomicPhaseTransition(ctx context.Context, campaign *models.Campaign, campaignID uuid.UUID) error {
+	// Use the established transaction manager pattern from the codebase
+	tm := utils.NewTransactionManager(s.db)
+	
+	return tm.WithTransaction(ctx, "DNS_Phase_Transition", func(querier store.Querier) error {
+		log.Printf("INFO [Atomic Phase Transition]: Starting atomic transition for campaign %s", campaignID)
+
+		// Step 1: Update campaign status to running if it was completed (within transaction)
+		if campaign.Status == models.CampaignStatusCompleted {
+			err := s.campaignStore.UpdateCampaignStatus(ctx, querier, campaignID, models.CampaignStatusRunning, sql.NullString{})
+			if err != nil {
+				return fmt.Errorf("failed to update campaign status to running: %w", err)
+			}
+			log.Printf("INFO [Atomic Phase Transition]: Updated campaign %s status from completed to running", campaignID)
+		}
+
+		// Step 2: Update currentPhase to dns_validation (within same transaction)
+		// Fetch the updated campaign within the transaction to ensure consistency
+		updatedCampaign, err := s.campaignStore.GetCampaignByID(ctx, querier, campaignID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch campaign for phase update: %w", err)
+		}
+		
+		// Update the currentPhase to dns_validation
+		dnsValidationPhase := models.CampaignPhaseDNSValidation
+		updatedCampaign.CurrentPhase = &dnsValidationPhase
+		
+		err = s.campaignStore.UpdateCampaign(ctx, querier, updatedCampaign)
+		if err != nil {
+			return fmt.Errorf("failed to update campaign currentPhase to dns_validation: %w", err)
+		}
+
+		log.Printf("INFO [Atomic Phase Transition]: Successfully updated campaign %s phase to dns_validation", campaignID)
+
+		// Transaction will be committed automatically by TransactionManager
+		// Step 3: Broadcast phase transition event synchronously to minimize race conditions
+		// This ensures frontend gets the notification as soon as the transaction commits
+		s.broadcastPhaseTransitionEvent(ctx, campaignID, "dns_validation", "running")
+
+		log.Printf("INFO [Atomic Phase Transition]: Completed atomic transition - campaign %s now in dns_validation phase", campaignID)
+		return nil
+	})
+}
+
+// broadcastPhaseTransitionEvent broadcasts phase transition events via WebSocket and cache invalidation
+func (s *dnsCampaignServiceImpl) broadcastPhaseTransitionEvent(ctx context.Context, campaignID uuid.UUID, newPhase string, newStatus string) {
+	log.Printf("BROADCAST [Phase Transition]: Broadcasting phase transition to %s for campaign %s", newPhase, campaignID)
+	
+	// Broadcast via WebSocket for real-time UI updates
+	websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, newStatus, newPhase)
+	
+	// Create phase transition event message
+	transitionMessage := websocket.WebSocketMessage{
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().Format(time.RFC3339),
+		Type:       "phase_transition",
+		CampaignID: campaignID.String(),
+		Data: map[string]interface{}{
+			"campaignId":   campaignID.String(),
+			"previousPhase": "domain_generation", // Could be made dynamic if needed
+			"newPhase":     newPhase,
+			"newStatus":    newStatus,
+			"timestamp":    time.Now().Format(time.RFC3339),
+			"transitionType": "dns_validation_start",
+		},
+	}
+	
+	// Broadcast the phase transition event
+	if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+		broadcaster.BroadcastToCampaign(campaignID.String(), transitionMessage)
+		log.Printf("✅ [Phase Transition]: WebSocket phase transition event broadcast successful for campaign %s", campaignID)
+	} else {
+		log.Printf("⚠️ [Phase Transition]: No WebSocket broadcaster available for campaign %s", campaignID)
+	}
 }

@@ -15,98 +15,130 @@
 
 
 /**
- * Request to update an existing campaign
+ * 
  * @export
  * @interface UpdateCampaignRequest
  */
 export interface UpdateCampaignRequest {
     /**
-     * Ad-hoc keywords
+     * 
      * @type {Array<string>}
      * @memberof UpdateCampaignRequest
      */
     'adHocKeywords'?: Array<string>;
     /**
-     * Batch size for processing
+     * 
      * @type {number}
      * @memberof UpdateCampaignRequest
      */
     'batchSize'?: number;
     /**
-     * Campaign type for phase transitions
+     * 
      * @type {string}
      * @memberof UpdateCampaignRequest
      */
-    'campaignType'?: UpdateCampaignRequestCampaignTypeEnum;
+    'campaignType'?: string;
     /**
-     * Keyword set IDs
+     * 
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'characterSet'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'constantString'?: string;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof UpdateCampaignRequest
      */
     'keywordSetIds'?: Array<string>;
     /**
-     * Campaign name
+     * 
      * @type {string}
      * @memberof UpdateCampaignRequest
      */
     'name'?: string;
     /**
-     * Persona IDs
+     * 
+     * @type {number}
+     * @memberof UpdateCampaignRequest
+     */
+    'numDomainsToGenerate'?: number;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof UpdateCampaignRequest
      */
     'personaIds'?: Array<string>;
     /**
-     * Processing speed per minute
+     * 
      * @type {number}
      * @memberof UpdateCampaignRequest
      */
     'processingSpeedPerMinute'?: number;
     /**
-     * Proxy pool ID
+     * 
      * @type {string}
      * @memberof UpdateCampaignRequest
      */
     'proxyPoolId'?: string;
     /**
-     * Number of retry attempts
+     * 
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'proxySelectionStrategy'?: string;
+    /**
+     * 
      * @type {number}
      * @memberof UpdateCampaignRequest
      */
     'retryAttempts'?: number;
     /**
-     * Campaign status
+     * 
+     * @type {number}
+     * @memberof UpdateCampaignRequest
+     */
+    'rotationIntervalSeconds'?: number;
+    /**
+     * 
      * @type {string}
      * @memberof UpdateCampaignRequest
      */
-    'status'?: UpdateCampaignRequestStatusEnum;
+    'sourceDnsCampaignId'?: string;
     /**
-     * Target HTTP ports
+     * 
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'sourceGenerationCampaignId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'status'?: string;
+    /**
+     * 
      * @type {Array<number>}
      * @memberof UpdateCampaignRequest
      */
     'targetHttpPorts'?: Array<number>;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateCampaignRequest
+     */
+    'tld'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof UpdateCampaignRequest
+     */
+    'variableLength'?: number;
 }
-
-export const UpdateCampaignRequestCampaignTypeEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation'
-} as const;
-
-export type UpdateCampaignRequestCampaignTypeEnum = typeof UpdateCampaignRequestCampaignTypeEnum[keyof typeof UpdateCampaignRequestCampaignTypeEnum];
-
-export const UpdateCampaignRequestStatusEnum = {
-    Pending: 'pending',
-    Queued: 'queued',
-    Running: 'running',
-    Paused: 'paused',
-    Completed: 'completed',
-    Failed: 'failed',
-    Cancelled: 'cancelled',
-    Archived: 'archived'
-} as const;
-
-export type UpdateCampaignRequestStatusEnum = typeof UpdateCampaignRequestStatusEnum[keyof typeof UpdateCampaignRequestStatusEnum];
-
 

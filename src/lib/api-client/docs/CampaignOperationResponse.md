@@ -6,16 +6,16 @@ Response for campaign operations
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaign_id** | **string** | Campaign ID | [optional] [default to undefined]
+**campaignId** | **string** | Campaign ID | [optional] [default to undefined]
 **message** | **string** | Operation result message | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { CampaignOperationResponse } from 'api-client';
+import { CampaignOperationResponse } from './api';
 
 const instance: CampaignOperationResponse = {
-    campaign_id,
+    campaignId,
     message,
 };
 ```

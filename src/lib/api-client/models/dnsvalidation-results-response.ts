@@ -18,28 +18,34 @@
 import type { DNSValidationResult } from './dnsvalidation-result';
 
 /**
- * Response for DNS validation results
+ * Paginated list of DNS validation results
  * @export
  * @interface DNSValidationResultsResponse
  */
 export interface DNSValidationResultsResponse {
     /**
-     * 
-     * @type {Array<DNSValidationResult>}
-     * @memberof DNSValidationResultsResponse
-     */
-    'data'?: Array<DNSValidationResult>;
-    /**
-     * Next cursor for pagination
-     * @type {string}
-     * @memberof DNSValidationResultsResponse
-     */
-    'nextCursor'?: string;
-    /**
-     * Total number of DNS validation results
+     * Number of items per page
      * @type {number}
      * @memberof DNSValidationResultsResponse
      */
-    'totalCount'?: number;
+    'limit': number;
+    /**
+     * Current page number
+     * @type {number}
+     * @memberof DNSValidationResultsResponse
+     */
+    'page': number;
+    /**
+     * List of DNS validation results
+     * @type {Array<DNSValidationResult>}
+     * @memberof DNSValidationResultsResponse
+     */
+    'results': Array<DNSValidationResult>;
+    /**
+     * Total number of results
+     * @type {number}
+     * @memberof DNSValidationResultsResponse
+     */
+    'total': number;
 }
 

@@ -40,11 +40,13 @@ export interface ComponentStatus {
     'timestamp': string;
 }
 
-export const ComponentStatusStatusEnum = {
-    Ok: 'ok',
-    Error: 'error'
-} as const;
-
-export type ComponentStatusStatusEnum = typeof ComponentStatusStatusEnum[keyof typeof ComponentStatusStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum ComponentStatusStatusEnum {
+    Ok = 'ok',
+    Error = 'error'
+}
 
 

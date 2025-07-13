@@ -1,0 +1,222 @@
+=== HTTP Validation Streaming Test Started at 2025-07-12T19:09:37.631Z ===
+[2025-07-12T19:09:37.632Z] === HTTP Validation Streaming Test Started ===
+[2025-07-12T19:09:37.633Z] 🎯 Testing domain streaming during HTTP validation phase
+[2025-07-12T19:09:40.438Z] 🔐 Logging in...
+[2025-07-12T19:09:42.349Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:42.306Z, sessionCheckStarted: false, currentPath: /login, timeSinceLastCheck: 1752347382306, force: false}
+[2025-07-12T19:09:42.353Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Skipping session check - no stored auth data and not forced
+[2025-07-12T19:09:42.380Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:42.362Z, sessionCheckStarted: false, currentPath: /login, timeSinceLastCheck: 1752347382362, force: false}
+[2025-07-12T19:09:42.394Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Skipping session check - no stored auth data and not forced
+[2025-07-12T19:09:42.510Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:42.489Z, sessionCheckStarted: false, currentPath: /login, timeSinceLastCheck: 1752347382489, force: false}
+[2025-07-12T19:09:42.511Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Skipping session check - no stored auth data and not forced
+[2025-07-12T19:09:42.511Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:42.493Z, sessionCheckStarted: false, currentPath: /login, timeSinceLastCheck: 1752347382493, force: false}
+[2025-07-12T19:09:42.511Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Skipping session check - no stored auth data and not forced
+[2025-07-12T19:09:45.496Z] ✅ Login successful
+[2025-07-12T19:09:45.497Z] 🔍 Looking for existing completed domain generation campaign...
+[2025-07-12T19:09:45.530Z] 🔍 [FRONTEND LOG] [AppLayout] Cleaning up global WebSocket services
+[2025-07-12T19:09:45.550Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting all channels
+[2025-07-12T19:09:45.780Z] 🔍 [FRONTEND LOG] [DashboardActivity] Connecting to WebSocket for dashboard activity updates...
+[2025-07-12T19:09:45.785Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: dashboard-activity
+[2025-07-12T19:09:45.794Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Establishing WebSocket connection for dashboard-activity: ws://localhost:8080/api/v2/ws
+[2025-07-12T19:09:45.798Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber 8b28smsoi0a to channel dashboard-activity. Total subscribers: 1
+[2025-07-12T19:09:45.802Z] 🔍 [FRONTEND LOG] [DashboardActivity] Connecting to WebSocket for dashboard activity updates...
+[2025-07-12T19:09:45.823Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: dashboard-activity
+[2025-07-12T19:09:45.826Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber o4bk0c4fw8 to channel dashboard-activity. Total subscribers: 2
+[2025-07-12T19:09:45.833Z] 🔍 [FRONTEND LOG] [DashboardActivity] Connecting to WebSocket for dashboard activity updates...
+[2025-07-12T19:09:45.833Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: dashboard-activity
+[2025-07-12T19:09:45.839Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber 2rxdd9ohrwt to channel dashboard-activity. Total subscribers: 3
+[2025-07-12T19:09:45.842Z] 🔍 [FRONTEND LOG] [DashboardActivity] Connecting to WebSocket for dashboard activity updates...
+[2025-07-12T19:09:45.842Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: dashboard-activity
+[2025-07-12T19:09:45.851Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber o3w3u53objf to channel dashboard-activity. Total subscribers: 4
+[2025-07-12T19:09:46.117Z] 🔍 [FRONTEND LOG] ✅ [WebSocketService] Connected to channel: dashboard-activity
+[2025-07-12T19:09:46.133Z] 🔍 [FRONTEND LOG] [DashboardActivity] WebSocket connected for dashboard activity push updates
+[2025-07-12T19:09:46.133Z] 🔍 [FRONTEND LOG] [DashboardActivity] WebSocket connected for dashboard activity push updates
+[2025-07-12T19:09:46.133Z] 🔍 [FRONTEND LOG] [DashboardActivity] WebSocket connected for dashboard activity push updates
+[2025-07-12T19:09:46.133Z] 🔍 [FRONTEND LOG] [DashboardActivity] WebSocket connected for dashboard activity push updates
+[2025-07-12T19:09:46.204Z] 🔍 [FRONTEND LOG] 📤 [WebSocketService] Sending message to channel dashboard-activity: {type: connection_init, timestamp: 2025-07-12T19:09:46.178Z}
+[2025-07-12T19:09:46.215Z] 🔍 [FRONTEND LOG] 📤 [WebSocketService] Sending message to channel dashboard-activity: {type: subscribe_dashboard_activity, timestamp: 2025-07-12T19:09:46.179Z}
+[2025-07-12T19:09:46.243Z] 🔍 [FRONTEND LOG] [2025-07-12T19:09:46.235Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...
+[2025-07-12T19:09:46.243Z] 🔍 [FRONTEND LOG] [2025-07-12T19:09:46.235Z] [ProductionReadinessCheck] ✅ WebSocket connectivity check PASSED - active persistent connections found
+[2025-07-12T19:09:46.246Z] 🔍 [FRONTEND LOG] [2025-07-12T19:09:46.235Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...
+[2025-07-12T19:09:46.247Z] 🔍 [FRONTEND LOG] [2025-07-12T19:09:46.235Z] [ProductionReadinessCheck] ✅ WebSocket connectivity check PASSED - active persistent connections found
+[2025-07-12T19:09:46.248Z] 🔍 [FRONTEND LOG] [2025-07-12T19:09:46.236Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...
+[2025-07-12T19:09:46.250Z] 🔍 [FRONTEND LOG] [2025-07-12T19:09:46.236Z] [ProductionReadinessCheck] ✅ WebSocket connectivity check PASSED - active persistent connections found
+[2025-07-12T19:09:46.250Z] 🔍 [FRONTEND LOG] [2025-07-12T19:09:46.237Z] [ProductionReadinessCheck] 🔌 Checking WebSocket connection status...
+[2025-07-12T19:09:46.251Z] 🔍 [FRONTEND LOG] [2025-07-12T19:09:46.237Z] [ProductionReadinessCheck] ✅ WebSocket connectivity check PASSED - active persistent connections found
+[2025-07-12T19:09:46.279Z] 🔍 [FRONTEND LOG] 📥 [WebSocketService] Received message on dashboard-activity: {type: connection_ack, campaignId: undefined, timestamp: 2025-07-12T19:09:46Z}
+[2025-07-12T19:09:46.296Z] 🔍 [FRONTEND LOG] [DashboardActivity] WebSocket message received: {id: f7ffca6a-d5a9-48c7-bc53-eec8bdcb8a18, timestamp: 2025-07-12T19:09:46Z, type: connection_ack, sequenceNumber: 21, data: Object}
+[2025-07-12T19:09:46.303Z] 🔍 [FRONTEND LOG] [DashboardActivity] WebSocket message received: {id: f7ffca6a-d5a9-48c7-bc53-eec8bdcb8a18, timestamp: 2025-07-12T19:09:46Z, type: connection_ack, sequenceNumber: 21, data: Object}
+[2025-07-12T19:09:46.313Z] 🔍 [FRONTEND LOG] [DashboardActivity] WebSocket message received: {id: f7ffca6a-d5a9-48c7-bc53-eec8bdcb8a18, timestamp: 2025-07-12T19:09:46Z, type: connection_ack, sequenceNumber: 21, data: Object}
+[2025-07-12T19:09:46.313Z] 🔍 [FRONTEND LOG] [DashboardActivity] WebSocket message received: {id: f7ffca6a-d5a9-48c7-bc53-eec8bdcb8a18, timestamp: 2025-07-12T19:09:46Z, type: connection_ack, sequenceNumber: 21, data: Object}
+[2025-07-12T19:09:46.480Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 0adcc194-9b7f-4fba-8bd5-d310bfe518e2 {limit: 1000}
+[2025-07-12T19:09:46.667Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 7e903b18-1c50-45ce-8da5-7dbdcc5be9d9, name: Phase-Test-1752342787750, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:46.670Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 7e903b18-1c50-45ce-8da5-7dbdcc5be9d9 {limit: 1000}
+[2025-07-12T19:09:46.685Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 8ca05a7c-b733-42e2-8ceb-74cab042f91d, name: Phase-Test-1752284690102, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:46.732Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 8ca05a7c-b733-42e2-8ceb-74cab042f91d {limit: 1000}
+[2025-07-12T19:09:46.800Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: d2589c6c-ec52-4bb9-9834-612278fb245b, name: Phase-Test-1752340769428, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:46.808Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: d2589c6c-ec52-4bb9-9834-612278fb245b {limit: 1000}
+[2025-07-12T19:09:46.862Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: e5a4c382-7c37-45b4-923a-451ea077e160, name: Phase-Test-1752343899458, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:46.868Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: e5a4c382-7c37-45b4-923a-451ea077e160 {limit: 1000}
+[2025-07-12T19:09:46.956Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 8ca05a7c-b733-42e2-8ceb-74cab042f91d, name: Phase-Test-1752284690102, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:46.963Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 8ca05a7c-b733-42e2-8ceb-74cab042f91d {limit: 1000}
+[2025-07-12T19:09:47.021Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: e5a4c382-7c37-45b4-923a-451ea077e160, name: Phase-Test-1752343899458, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:47.036Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: e5a4c382-7c37-45b4-923a-451ea077e160 {limit: 1000}
+[2025-07-12T19:09:47.083Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: d2589c6c-ec52-4bb9-9834-612278fb245b, name: Phase-Test-1752340769428, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:47.092Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: d2589c6c-ec52-4bb9-9834-612278fb245b {limit: 1000}
+[2025-07-12T19:09:47.169Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: 7e903b18-1c50-45ce-8da5-7dbdcc5be9d9, name: Phase-Test-1752342787750, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:47.170Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 7e903b18-1c50-45ce-8da5-7dbdcc5be9d9 {limit: 1000}
+[2025-07-12T19:09:47.184Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: 0adcc194-9b7f-4fba-8bd5-d310bfe518e2 {limit: 1000}
+[2025-07-12T19:09:47.215Z] 🔍 [FRONTEND LOG] [CampaignService] Extracted campaign data: {id: d2589c6c-ec52-4bb9-9834-612278fb245b, name: Phase-Test-1752340769428, campaignType: dns_validation, status: completed, launchSequence: false}
+[2025-07-12T19:09:47.230Z] 🔍 [FRONTEND LOG] [CampaignService] Getting DNS validation results for campaign: d2589c6c-ec52-4bb9-9834-612278fb245b {limit: 1000}
+[2025-07-12T19:09:48.153Z] 🔍 [FRONTEND LOG] [AppLayout] Cleaning up global WebSocket services
+[2025-07-12T19:09:48.165Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting all channels
+[2025-07-12T19:09:48.233Z] 🔍 [FRONTEND LOG] [AppLayout] Cleaning up global WebSocket services
+[2025-07-12T19:09:48.236Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting all channels
+[2025-07-12T19:09:48.262Z] 🔍 [FRONTEND LOG] [AppLayout] Cleaning up global WebSocket services
+[2025-07-12T19:09:48.262Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting all channels
+[2025-07-12T19:09:48.304Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:48.259Z, sessionCheckStarted: false, currentPath: /campaigns, timeSinceLastCheck: 1752347388259, force: true}
+[2025-07-12T19:09:48.334Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Starting session check... {hasStoredAuth: true, hasCurrentUser: true, reason: forced}
+[2025-07-12T19:09:48.347Z] 🔍 [FRONTEND LOG] [AuthContext] Checking session via backend cookie validation...
+[2025-07-12T19:09:48.587Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:48.550Z, sessionCheckStarted: true, currentPath: /campaigns, timeSinceLastCheck: 291, force: true}
+[2025-07-12T19:09:48.598Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Session check already in progress, skipping
+[2025-07-12T19:09:48.616Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: getCurrentUser result: {hasUser: false, userId: undefined, userEmail: undefined, hasId: false, hasEmail: false}
+[2025-07-12T19:09:48.618Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Backend validation failed but preserving stored auth state with grace period
+[2025-07-12T19:09:48.618Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Session check completed, flag reset
+[2025-07-12T19:09:48.705Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:48.643Z, sessionCheckStarted: false, currentPath: /campaigns, timeSinceLastCheck: 1752347388643, force: true}
+[2025-07-12T19:09:48.709Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Starting session check... {hasStoredAuth: true, hasCurrentUser: true, reason: forced}
+[2025-07-12T19:09:48.709Z] 🔍 [FRONTEND LOG] [AuthContext] Checking session via backend cookie validation...
+[2025-07-12T19:09:48.725Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:48.706Z, sessionCheckStarted: true, currentPath: /campaigns, timeSinceLastCheck: 63, force: true}
+[2025-07-12T19:09:48.734Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Session check already in progress, skipping
+[2025-07-12T19:09:48.910Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: getCurrentUser result: {hasUser: false, userId: undefined, userEmail: undefined, hasId: false, hasEmail: false}
+[2025-07-12T19:09:48.911Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Backend validation failed but preserving stored auth state with grace period
+[2025-07-12T19:09:48.911Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Session check completed, flag reset
+[2025-07-12T19:09:49.047Z] 🔍 [FRONTEND LOG] [CampaignsPage] Using WebSocket push model - no polling needed
+[2025-07-12T19:09:49.050Z] 🔍 [FRONTEND LOG] [CampaignsPage] Using WebSocket push model - no polling needed
+[2025-07-12T19:09:49.089Z] 🔍 [FRONTEND LOG] [CampaignsPage] Connecting to WebSocket...
+[2025-07-12T19:09:49.089Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to all campaigns
+[2025-07-12T19:09:49.093Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: all-campaigns
+[2025-07-12T19:09:49.107Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Establishing WebSocket connection for all-campaigns: ws://localhost:8080/api/v2/ws
+[2025-07-12T19:09:49.109Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber qszi6xhkc68 to channel all-campaigns. Total subscribers: 1
+[2025-07-12T19:09:49.109Z] 🔍 [FRONTEND LOG] [CampaignsPage] WebSocket connection attempt completed
+[2025-07-12T19:09:49.109Z] 🔍 [FRONTEND LOG] [CampaignsPage] Connecting to WebSocket...
+[2025-07-12T19:09:49.129Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to all campaigns
+[2025-07-12T19:09:49.143Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: all-campaigns
+[2025-07-12T19:09:49.181Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber wl119du3sac to channel all-campaigns. Total subscribers: 2
+[2025-07-12T19:09:49.183Z] 🔍 [FRONTEND LOG] [CampaignsPage] WebSocket connection attempt completed
+[2025-07-12T19:09:49.312Z] 🔍 [FRONTEND LOG] ✅ [WebSocketService] Connected to channel: all-campaigns
+[2025-07-12T19:09:49.319Z] 🔍 [FRONTEND LOG] ✅ [WebSocketService] Connected to all campaigns
+[2025-07-12T19:09:49.329Z] 🔍 [FRONTEND LOG] ✅ [WebSocketService] Connected to all campaigns
+[2025-07-12T19:09:49.355Z] 🔍 [FRONTEND LOG] 📤 [WebSocketService] Sending message to channel all-campaigns: {type: connection_init, timestamp: 2025-07-12T19:09:49.338Z}
+[2025-07-12T19:09:49.377Z] 🔍 [FRONTEND LOG] 📤 [WebSocketService] Sending message to channel all-campaigns: {type: subscribe_all_campaigns, timestamp: 2025-07-12T19:09:49.339Z}
+[2025-07-12T19:09:49.537Z] 🔍 [FRONTEND LOG] 📥 [WebSocketService] Received message on all-campaigns: {type: connection_ack, campaignId: undefined, timestamp: 2025-07-12T19:09:49Z}
+[2025-07-12T19:09:49.556Z] 🔍 [FRONTEND LOG] [CampaignsPage] WebSocket message received - connection established
+[2025-07-12T19:09:49.556Z] 🔍 [FRONTEND LOG] [CampaignsPage] WebSocket message received - connection established
+[2025-07-12T19:09:49.658Z] 🔍 [FRONTEND LOG] 🗑️ [WebSocketService] Removing subscriber wl119du3sac from channel all-campaigns
+[2025-07-12T19:09:49.682Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Channel all-campaigns still has 1 subscribers
+[2025-07-12T19:09:49.685Z] 🔍 [FRONTEND LOG] [CampaignsPage] Connecting to WebSocket...
+[2025-07-12T19:09:49.707Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to all campaigns
+[2025-07-12T19:09:49.723Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: all-campaigns
+[2025-07-12T19:09:49.723Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber oz0pq8j1el to channel all-campaigns. Total subscribers: 2
+[2025-07-12T19:09:49.732Z] 🔍 [FRONTEND LOG] [CampaignsPage] WebSocket connection attempt completed
+[2025-07-12T19:09:50.218Z] 🔍 [FRONTEND LOG] [DEBUG] useEffect triggered for campaign 17166a30-6bd6-4d82-97d0-297fdf44d992 - shouldConnect: true, phase: dns_validation, status: running
+[2025-07-12T19:09:50.219Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: campaign-17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T19:09:50.227Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Establishing WebSocket connection for campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: ws://localhost:8080/api/v2/ws
+[2025-07-12T19:09:50.263Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber b5xxg15gux to channel campaign-17166a30-6bd6-4d82-97d0-297fdf44d992. Total subscribers: 1
+[2025-07-12T19:09:50.265Z] 🔍 [FRONTEND LOG] [CampaignProgressMonitor] Campaign prop changed for 17166a30-6bd6-4d82-97d0-297fdf44d992: {progress: 0, status: running, currentPhase: dns_validation}
+[2025-07-12T19:09:50.351Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: campaign-798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T19:09:50.351Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Establishing WebSocket connection for campaign-798e64f0-cecd-4069-b9d8-253929446543: ws://localhost:8080/api/v2/ws
+[2025-07-12T19:09:50.358Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber juqk1jlb5ph to channel campaign-798e64f0-cecd-4069-b9d8-253929446543. Total subscribers: 1
+[2025-07-12T19:09:50.377Z] 🔍 [FRONTEND LOG] [CampaignProgressMonitor] Campaign prop changed for 798e64f0-cecd-4069-b9d8-253929446543: {progress: 100, status: running, currentPhase: domain_generation}
+[2025-07-12T19:09:50.384Z] 🔍 [FRONTEND LOG] 🗑️ [WebSocketService] Removing subscriber b5xxg15gux from channel campaign-17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T19:09:50.388Z] 🔍 [FRONTEND LOG] 📭 [WebSocketService] No more subscribers for campaign-17166a30-6bd6-4d82-97d0-297fdf44d992, disconnecting...
+[2025-07-12T19:09:50.404Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting from channel: campaign-17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T19:09:50.421Z] 🔍 [FRONTEND WARNING] WebSocket connection to 'ws://localhost:8080/api/v2/ws' failed: WebSocket is closed before the connection is established.
+[2025-07-12T19:09:50.428Z] 🔍 [FRONTEND LOG] [DEBUG] useEffect triggered for campaign 17166a30-6bd6-4d82-97d0-297fdf44d992 - shouldConnect: true, phase: dns_validation, status: running
+[2025-07-12T19:09:50.429Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: campaign-17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T19:09:50.436Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Establishing WebSocket connection for campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: ws://localhost:8080/api/v2/ws
+[2025-07-12T19:09:50.437Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber 9zo78wfxvxc to channel campaign-17166a30-6bd6-4d82-97d0-297fdf44d992. Total subscribers: 1
+[2025-07-12T19:09:50.446Z] 🔍 [FRONTEND LOG] [CampaignProgressMonitor] Campaign prop changed for 17166a30-6bd6-4d82-97d0-297fdf44d992: {progress: 0, status: running, currentPhase: dns_validation}
+[2025-07-12T19:09:50.448Z] 🔍 [FRONTEND LOG] 🗑️ [WebSocketService] Removing subscriber juqk1jlb5ph from channel campaign-798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T19:09:50.450Z] 🔍 [FRONTEND LOG] 📭 [WebSocketService] No more subscribers for campaign-798e64f0-cecd-4069-b9d8-253929446543, disconnecting...
+[2025-07-12T19:09:50.450Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting from channel: campaign-798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T19:09:50.450Z] 🔍 [FRONTEND WARNING] WebSocket connection to 'ws://localhost:8080/api/v2/ws' failed: WebSocket is closed before the connection is established.
+[2025-07-12T19:09:50.450Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Connecting to channel: campaign-798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T19:09:50.451Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Establishing WebSocket connection for campaign-798e64f0-cecd-4069-b9d8-253929446543: ws://localhost:8080/api/v2/ws
+[2025-07-12T19:09:50.452Z] 🔍 [FRONTEND LOG] 📝 [WebSocketService] Added subscriber 6x2797ogdor to channel campaign-798e64f0-cecd-4069-b9d8-253929446543. Total subscribers: 1
+[2025-07-12T19:09:50.454Z] 🔍 [FRONTEND LOG] [CampaignProgressMonitor] Campaign prop changed for 798e64f0-cecd-4069-b9d8-253929446543: {progress: 100, status: running, currentPhase: domain_generation}
+[2025-07-12T19:09:50.906Z] 🔍 [FRONTEND ERROR] ❌ [WebSocketService] Connection error for campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: Event
+[2025-07-12T19:09:50.907Z] 🔍 [FRONTEND ERROR] ❌ [WebSocketService] Error on channel campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: Event
+[2025-07-12T19:09:50.908Z] 🔍 [FRONTEND ERROR] WebSocket error: Error: [object Event]
+    at WebSocketServiceImpl.handleError (http://localhost:3000/_next/static/chunks/src_c2e5394c._.js:8035:59)
+    at connection.ws.onerror (http://localhost:3000/_next/static/chunks/src_c2e5394c._.js:7932:22)
+[2025-07-12T19:09:50.913Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Connection closed for campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: {code: 1006, reason: , wasClean: false}
+[2025-07-12T19:09:50.914Z] 🔍 [FRONTEND LOG] 🔄 [WebSocketService] Scheduling reconnect for campaign-17166a30-6bd6-4d82-97d0-297fdf44d992 in 1252ms (attempt 1/10)
+[2025-07-12T19:09:50.914Z] 🔍 [FRONTEND ERROR] ❌ [WebSocketService] Connection error for campaign-798e64f0-cecd-4069-b9d8-253929446543: Event
+[2025-07-12T19:09:50.914Z] 🔍 [FRONTEND ERROR] ❌ [WebSocketService] Error on channel campaign-798e64f0-cecd-4069-b9d8-253929446543: Event
+[2025-07-12T19:09:50.915Z] 🔍 [FRONTEND ERROR] WebSocket error: Error: [object Event]
+    at WebSocketServiceImpl.handleError (http://localhost:3000/_next/static/chunks/src_c2e5394c._.js:8035:59)
+    at connection.ws.onerror (http://localhost:3000/_next/static/chunks/src_c2e5394c._.js:7932:22)
+[2025-07-12T19:09:50.915Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Connection closed for campaign-798e64f0-cecd-4069-b9d8-253929446543: {code: 1006, reason: , wasClean: false}
+[2025-07-12T19:09:50.916Z] 🔍 [FRONTEND LOG] 🔄 [WebSocketService] Scheduling reconnect for campaign-798e64f0-cecd-4069-b9d8-253929446543 in 1730ms (attempt 1/10)
+[2025-07-12T19:09:51.175Z] 🔍 [FRONTEND LOG] ✅ [WebSocketService] Connected to channel: campaign-17166a30-6bd6-4d82-97d0-297fdf44d992
+[2025-07-12T19:09:51.175Z] 🔍 [FRONTEND LOG] ✅ [WebSocketService] Connected to channel: campaign-798e64f0-cecd-4069-b9d8-253929446543
+[2025-07-12T19:09:51.249Z] 🔍 [FRONTEND LOG] 📤 [WebSocketService] Sending message to channel campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: {type: connection_init, timestamp: 2025-07-12T19:09:51.240Z}
+[2025-07-12T19:09:51.259Z] 🔍 [FRONTEND LOG] 📤 [WebSocketService] Sending message to channel campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: {type: subscribe_campaign, campaignId: 17166a30-6bd6-4d82-97d0-297fdf44d992, timestamp: 2025-07-12T19:09:51.241Z, CampaignID: 17166a30-6bd6-4d82-97d0-297fdf44d992}
+[2025-07-12T19:09:51.264Z] 🔍 [FRONTEND LOG] 📤 [WebSocketService] Sending message to channel campaign-798e64f0-cecd-4069-b9d8-253929446543: {type: connection_init, timestamp: 2025-07-12T19:09:51.243Z}
+[2025-07-12T19:09:51.265Z] 🔍 [FRONTEND LOG] 📤 [WebSocketService] Sending message to channel campaign-798e64f0-cecd-4069-b9d8-253929446543: {type: subscribe_campaign, campaignId: 798e64f0-cecd-4069-b9d8-253929446543, timestamp: 2025-07-12T19:09:51.244Z, CampaignID: 798e64f0-cecd-4069-b9d8-253929446543}
+[2025-07-12T19:09:51.350Z] 🔍 Checking campaign: /campaigns/new
+[2025-07-12T19:09:51.364Z] 🔍 [FRONTEND LOG] 📥 [WebSocketService] Received message on campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: {type: connection_ack, campaignId: undefined, timestamp: 2025-07-12T19:09:51Z}
+[2025-07-12T19:09:51.370Z] 🔍 [FRONTEND LOG] [CampaignProgressMonitor] Received WebSocket message: {type: subscription_confirmed, campaignId: 00000000-0000-0000-0000-000000000000, data: Object, message: Connection acknowledged, timestamp: 2025-07-12T19:09:51.000Z}
+[2025-07-12T19:09:51.371Z] 🔍 [FRONTEND LOG] 📥 [WebSocketService] Received message on campaign-798e64f0-cecd-4069-b9d8-253929446543: {type: connection_ack, campaignId: undefined, timestamp: 2025-07-12T19:09:51Z}
+[2025-07-12T19:09:51.378Z] 🔍 [FRONTEND LOG] [CampaignProgressMonitor] Received WebSocket message: {type: subscription_confirmed, campaignId: 00000000-0000-0000-0000-000000000000, data: Object, message: Connection acknowledged, timestamp: 2025-07-12T19:09:51.000Z}
+[2025-07-12T19:09:51.379Z] 🔍 [FRONTEND LOG] 📥 [WebSocketService] Received message on campaign-798e64f0-cecd-4069-b9d8-253929446543: {type: subscription_confirmed, campaignId: 798e64f0-cecd-4069-b9d8-253929446543, timestamp: 2025-07-12T19:09:51Z}
+[2025-07-12T19:09:51.386Z] 🔍 [FRONTEND WARNING] Unknown WebSocket message type: subscription_confirmed
+[2025-07-12T19:09:51.391Z] 🔍 [FRONTEND LOG] [CampaignProgressMonitor] Received WebSocket message: {type: subscription_confirmed, campaignId: 00000000-0000-0000-0000-000000000000, data: Object, message: Unknown message type, timestamp: 2025-07-12T19:09:51.000Z}
+[2025-07-12T19:09:51.565Z] 🔍 [FRONTEND LOG] 📥 [WebSocketService] Received message on campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: {type: subscription_confirmed, campaignId: 17166a30-6bd6-4d82-97d0-297fdf44d992, timestamp: 2025-07-12T19:09:51Z}
+[2025-07-12T19:09:51.566Z] 🔍 [FRONTEND WARNING] Unknown WebSocket message type: subscription_confirmed
+[2025-07-12T19:09:51.566Z] 🔍 [FRONTEND LOG] [CampaignProgressMonitor] Received WebSocket message: {type: subscription_confirmed, campaignId: 00000000-0000-0000-0000-000000000000, data: Object, message: Unknown message type, timestamp: 2025-07-12T19:09:51.000Z}
+[2025-07-12T19:09:52.202Z] 🔍 [FRONTEND LOG] 🔗 [WebSocketService] Establishing WebSocket connection for campaign-17166a30-6bd6-4d82-97d0-297fdf44d992: ws://localhost:8080/api/v2/ws
+[2025-07-12T19:09:52.897Z] 🔍 [FRONTEND LOG] [AppLayout] Cleaning up global WebSocket services
+[2025-07-12T19:09:52.905Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting all channels
+[2025-07-12T19:09:53.064Z] 🔍 [FRONTEND LOG] [AppLayout] Cleaning up global WebSocket services
+[2025-07-12T19:09:53.096Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting all channels
+[2025-07-12T19:09:53.133Z] 🔍 [FRONTEND LOG] [AppLayout] Cleaning up global WebSocket services
+[2025-07-12T19:09:53.139Z] 🔍 [FRONTEND LOG] 🔌 [WebSocketService] Disconnecting all channels
+[2025-07-12T19:09:53.420Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:53.399Z, sessionCheckStarted: false, currentPath: /campaigns/new, timeSinceLastCheck: 1752347393399, force: true}
+[2025-07-12T19:09:53.424Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Starting session check... {hasStoredAuth: true, hasCurrentUser: true, reason: forced}
+[2025-07-12T19:09:53.425Z] 🔍 [FRONTEND LOG] [AuthContext] Checking session via backend cookie validation...
+[2025-07-12T19:09:53.444Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:53.404Z, sessionCheckStarted: true, currentPath: /campaigns/new, timeSinceLastCheck: 5, force: true}
+[2025-07-12T19:09:53.456Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Session check already in progress, skipping
+[2025-07-12T19:09:53.456Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:53.407Z, sessionCheckStarted: false, currentPath: /campaigns/new, timeSinceLastCheck: 1752347393407, force: true}
+[2025-07-12T19:09:53.458Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Starting session check... {hasStoredAuth: true, hasCurrentUser: true, reason: forced}
+[2025-07-12T19:09:53.458Z] 🔍 [FRONTEND LOG] [AuthContext] Checking session via backend cookie validation...
+[2025-07-12T19:09:53.458Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: checkSession called {timestamp: 2025-07-12T19:09:53.417Z, sessionCheckStarted: true, currentPath: /campaigns/new, timeSinceLastCheck: 10, force: true}
+[2025-07-12T19:09:53.458Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Session check already in progress, skipping
+[2025-07-12T19:09:53.586Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: getCurrentUser result: {hasUser: false, userId: undefined, userEmail: undefined, hasId: false, hasEmail: false}
+[2025-07-12T19:09:53.590Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Backend validation failed but preserving stored auth state with grace period
+[2025-07-12T19:09:53.595Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Session check completed, flag reset
+[2025-07-12T19:09:53.639Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: getCurrentUser result: {hasUser: false, userId: undefined, userEmail: undefined, hasId: false, hasEmail: false}
+[2025-07-12T19:09:53.645Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Backend validation failed but preserving stored auth state with grace period
+[2025-07-12T19:09:53.647Z] 🔍 [FRONTEND LOG] [AuthContext] DIAGNOSTIC: Session check completed, flag reset
+[2025-07-12T19:10:25.820Z] ⚠️ Error checking campaign: locator.getAttribute: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('a[href*="/campaigns/"]').nth(1)[22m
+
+[2025-07-12T19:10:28.589Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for locator('a[href*="/campaigns/"]').nth(2)[22m
+
+[2025-07-12T19:10:28.593Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.593Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.594Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.594Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.595Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.595Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.596Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.596Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.596Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.596Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.600Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.603Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.609Z] ⚠️ Error checking campaign: locator.getAttribute: Target page, context or browser has been closed
+[2025-07-12T19:10:28.611Z] ❌ No suitable existing campaign found
+[2025-07-12T19:10:28.611Z] ❌ Test error: No suitable campaign found for testing

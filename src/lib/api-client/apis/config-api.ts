@@ -169,12 +169,39 @@ export const ConfigApiFactory = function (configuration?: Configuration, basePat
 };
 
 /**
+ * ConfigApi - interface
+ * @export
+ * @interface ConfigApi
+ */
+export interface ConfigApiInterface {
+    /**
+     * Returns current feature flag settings
+     * @summary Get feature flags
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigApiInterface
+     */
+    getFeatureFlags(options?: RawAxiosRequestConfig): AxiosPromise<FeatureFlags>;
+
+    /**
+     * Updates feature flag settings
+     * @summary Update feature flags
+     * @param {FeatureFlags} featureFlags 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ConfigApiInterface
+     */
+    updateFeatureFlags(featureFlags: FeatureFlags, options?: RawAxiosRequestConfig): AxiosPromise<FeatureFlags>;
+
+}
+
+/**
  * ConfigApi - object-oriented interface
  * @export
  * @class ConfigApi
  * @extends {BaseAPI}
  */
-export class ConfigApi extends BaseAPI {
+export class ConfigApi extends BaseAPI implements ConfigApiInterface {
     /**
      * Returns current feature flag settings
      * @summary Get feature flags

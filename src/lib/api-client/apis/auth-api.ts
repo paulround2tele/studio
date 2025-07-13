@@ -344,12 +344,67 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
 };
 
 /**
+ * AuthApi - interface
+ * @export
+ * @interface AuthApi
+ */
+export interface AuthApiInterface {
+    /**
+     * Changes the password for the currently authenticated user
+     * @summary Change password
+     * @param {ChangePasswordRequest} changePasswordRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthApiInterface
+     */
+    changePassword(changePasswordRequest: ChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse>;
+
+    /**
+     * Returns information about the currently authenticated user
+     * @summary Get current user
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthApiInterface
+     */
+    getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<User>;
+
+    /**
+     * Authenticates a user and creates a session
+     * @summary User login
+     * @param {LoginRequest} loginRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthApiInterface
+     */
+    login(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<LoginResponse>;
+
+    /**
+     * Invalidates the current session and clears session cookie
+     * @summary User logout
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthApiInterface
+     */
+    logout(options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse>;
+
+    /**
+     * Refreshes the current session
+     * @summary Refresh session
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthApiInterface
+     */
+    refreshSession(options?: RawAxiosRequestConfig): AxiosPromise<RefreshResponse>;
+
+}
+
+/**
  * AuthApi - object-oriented interface
  * @export
  * @class AuthApi
  * @extends {BaseAPI}
  */
-export class AuthApi extends BaseAPI {
+export class AuthApi extends BaseAPI implements AuthApiInterface {
     /**
      * Changes the password for the currently authenticated user
      * @summary Change password

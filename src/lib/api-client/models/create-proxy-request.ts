@@ -70,13 +70,15 @@ export interface CreateProxyRequest {
     'username'?: string;
 }
 
-export const CreateProxyRequestProtocolEnum = {
-    Http: 'http',
-    Https: 'https',
-    Socks5: 'socks5',
-    Socks4: 'socks4'
-} as const;
-
-export type CreateProxyRequestProtocolEnum = typeof CreateProxyRequestProtocolEnum[keyof typeof CreateProxyRequestProtocolEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+export enum CreateProxyRequestProtocolEnum {
+    Http = 'http',
+    Https = 'https',
+    Socks5 = 'socks5',
+    Socks4 = 'socks4'
+}
 
 

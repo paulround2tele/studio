@@ -15,7 +15,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { TLSClientHello } from 'api-client';
+import { TLSClientHello } from './api';
 
 const instance: TLSClientHello = {
     cipherSuites,

@@ -1,6 +1,8 @@
 // WebSocket Service - Single, unified WebSocket solution
 // Supports multiple simultaneous connections with proper error handling and reconnection
 
+import { getApiBaseUrlSync } from '../config/environment';
+
 // Legacy message format
 export interface WebSocketMessage {
   type: string;
@@ -50,12 +52,35 @@ class WebSocketServiceImpl {
   private baseUrl: string;
 
   constructor() {
-    // Get WebSocket URL from environment
-    this.baseUrl = process.env.NEXT_PUBLIC_WS_URL || '';
-    
-    if (!this.baseUrl || !this.baseUrl.trim()) {
-      console.warn('⚠️ [WebSocketService] NEXT_PUBLIC_WS_URL not configured. WebSocket connections will fail.');
+    this.baseUrl = this.getWebSocketUrl();
+  }
+
+  /**
+   * Get WebSocket URL with auto-detection fallback (synchronous)
+   */
+  private getWebSocketUrl(): string {
+    // First try configured URL
+    const configured = process.env.NEXT_PUBLIC_WS_URL;
+    if (configured && configured.trim()) {
+      return configured;
     }
+    
+    // Auto-detection: Use same centralized logic as API client
+    if (typeof window !== 'undefined') {
+      try {
+        // Use the same auto-detection logic as the API client
+        const apiUrl = getApiBaseUrlSync();
+        const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws';
+        console.log(`🔗 [WebSocketService] Auto-detected WebSocket URL from API: ${wsUrl}`);
+        return wsUrl;
+      } catch (error) {
+        console.error('Failed to get API base URL for WebSocket auto-detection:', error);
+      }
+    }
+    
+    // Fallback warning
+    console.warn('⚠️ [WebSocketService] NEXT_PUBLIC_WS_URL not configured and auto-detection failed. WebSocket connections will fail.');
+    return '';
   }
 
   /**
@@ -289,8 +314,14 @@ class WebSocketServiceImpl {
         this.handleMessage(channel, event);
       };
       
-      connection.ws.onerror = (error) => {
-        console.error(`❌ [WebSocketService] Connection error for ${channel}:`, error);
+      connection.ws.onerror = (event) => {
+        console.error(`❌ [WebSocketService] Connection error for ${channel}:`, {
+          type: event.type,
+          timeStamp: event.timeStamp,
+          readyState: (event.target as WebSocket)?.readyState
+        });
+        // Create a meaningful error for WebSocket connection failures
+        const error = new Error(`WebSocket connection failed for channel ${channel}`);
         this.handleError(channel, error);
       };
       

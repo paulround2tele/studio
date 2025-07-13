@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { GetDomainGenerationPatternOffset200Response } from 'api-client';
+import { GetDomainGenerationPatternOffset200Response } from './api';
 
 const instance: GetDomainGenerationPatternOffset200Response = {
     currentOffset,
