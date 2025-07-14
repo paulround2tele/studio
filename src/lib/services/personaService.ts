@@ -5,10 +5,10 @@ import { CookieHandlingModeEnum } from '@/lib/api-client/models/cookie-handling'
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
-type Persona = components["schemas"]["Persona"];
-type CreatePersonaRequest = components["schemas"]["CreatePersonaRequest"];
-type UpdatePersonaRequest = components["schemas"]["UpdatePersonaRequest"];
-type PersonaTestResult = components["schemas"]["PersonaTestResult"];
+type Persona = components["schemas"]["api.PersonaResponse"];
+type CreatePersonaRequest = components["schemas"]["api.CreatePersonaRequest"];
+type UpdatePersonaRequest = components["schemas"]["api.UpdatePersonaRequest"];
+type PersonaTestResult = components["schemas"]["api.PersonaTestResultData"];
 
 // Import unified API response wrapper
 import type { ApiResponse } from '@/lib/types';
@@ -44,12 +44,12 @@ const convertPersonaPayload = (payload: any): any => {
 };
 
 // Import additional OpenAPI persona types
-export type PersonaListResponse = components["schemas"]["PersonaListResponse"];
+export type PersonaListResponse = components["schemas"]["api.PersonaResponse"];
 
 export async function createPersona(payload: CreatePersonaRequest): Promise<ApiResponse<Persona>> {
   try {
     const convertedPayload = convertPersonaPayload(payload);
-    const response = await personasApi.createPersona(convertedPayload);
+    const response = await personasApi.personasPost(convertedPayload);
     // Axios response structure: response.data = API wrapper object
     const apiResponse = 'data' in response ? response.data : response;
     
@@ -74,11 +74,21 @@ export async function createPersona(payload: CreatePersonaRequest): Promise<ApiR
   }
 }
 
-export async function listPersonas(): Promise<ApiResponse<Persona[]>> {
+export async function listPersonas(options?: {
+  limit?: number;
+  offset?: number;
+  isEnabled?: boolean;
+  personaType?: string;
+}): Promise<ApiResponse<Persona[]>> {
   try {
     // Request all personas with high limit to avoid pagination truncation
     // Database has 39 total personas (7 DNS + 32 HTTP), so 100 is safe
-    const response = await personasApi.listPersonas(100);
+    const response = await personasApi.personasGet(
+      options?.limit || 100,
+      options?.offset,
+      options?.isEnabled,
+      options?.personaType
+    );
     // Axios response structure: response.data = PersonaListResponse
     const personaListResponse = 'data' in response ? response.data : response;
     

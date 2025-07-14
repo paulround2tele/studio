@@ -1,28 +1,28 @@
 // src/lib/services/configService.ts
 // Production Config Service - Feature flags and configuration management
 
-import { ConfigApi, Configuration } from '@/lib/api-client';
+import { FeatureFlagsApi, Configuration } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
 
-// Create configured ConfigApi instance
+// Create configured FeatureFlagsApi instance
 import { getApiConfig } from '../config/environment';
 
 const config = new Configuration({
   basePath: getApiConfig().baseUrl
 });
-const configApi = new ConfigApi(config);
+const configApi = new FeatureFlagsApi(config);
 
 // Use generated types
-export type FeatureFlags = components['schemas']['FeatureFlags'];
+export type FeatureFlags = components['schemas']['api.FeatureFlags'];
 
 // Import unified API response wrapper
 import type { ApiResponse } from '@/lib/types';
 export type ConfigResponse<T = unknown> = ApiResponse<T>;
 
 // Import additional OpenAPI config types
-export type AuthConfig = components['schemas']['AuthConfig'];
-export type DNSConfig = components['schemas']['DNSConfig'];
-export type HTTPConfig = components['schemas']['HTTPConfig'];
+export type AuthConfig = components['schemas']['api.AuthConfig'];
+export type DNSConfig = components['schemas']['api.DNSValidatorConfigJSON'];
+export type HTTPConfig = components['schemas']['api.HTTPValidatorConfigJSON'];
 
 class ConfigService {
   private static instance: ConfigService;

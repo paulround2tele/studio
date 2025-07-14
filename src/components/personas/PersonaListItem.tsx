@@ -110,7 +110,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
           
           <p><strong>Timeout:</strong> {config.requestTimeoutSeconds}s</p>
           {config.followRedirects !== undefined && <p><strong>Follow Redirects:</strong> {config.followRedirects ? "Yes" : "No"}</p>}
-          {config.cookieHandling?.mode && <p><strong>Cookie Handling:</strong> {config.cookieHandling.mode}</p>}
+          {(config.cookieHandling as { mode?: string })?.mode && <p><strong>Cookie Handling:</strong> {(config.cookieHandling as { mode?: string }).mode}</p>}
           {config.notes && <p><strong>Notes:</strong> <span className="text-muted-foreground italic truncate" title={config.notes}>{config.notes}</span></p>}
         </div>
         <Separator className="my-3" />
@@ -248,7 +248,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
             <Separator className="my-2" />
             <h4 className="font-semibold text-xs text-muted-foreground mb-1 flex items-center"><Tag className="mr-1 h-3 w-3"/>Tags:</h4>
             <div className="flex flex-wrap gap-1">
-              {persona.tags.map(tag => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
+              {persona.tags.map((tag: string) => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
             </div>
           </div>
         )}

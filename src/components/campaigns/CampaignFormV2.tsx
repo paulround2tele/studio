@@ -32,19 +32,19 @@ import type {
 } from './types/CampaignFormTypes';
 
 // Import OpenAPI types
-type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
+type CreateCampaignRequest = components['schemas']['services.CreateCampaignRequest'];
 
 // Base campaign type from OpenAPI
-type BaseCampaign = components['schemas']['Campaign'];
-type DnsValidationParams = components['schemas']['DnsValidationParams'];
-type HttpKeywordParams = components['schemas']['HttpKeywordParams'];
-type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
+type BaseCampaign = components['schemas']['models.Campaign'];
+type DnsValidationParams = components['schemas']['services.DnsValidationParams'];
+type HttpKeywordParams = components['schemas']['services.HttpKeywordParams'];
+type DomainGenerationParams = components['schemas']['services.DomainGenerationParams'];
 
 // CampaignViewModel interface using OpenAPI base with UI extensions
-export interface CampaignViewModel extends Omit<BaseCampaign, 'dnsValidationParams' | 'httpKeywordParams' | 'domainGenerationParams' | 'failedItems' | 'processedItems' | 'successfulItems' | 'totalItems' | 'metadata'> {
+export interface CampaignViewModel extends Omit<BaseCampaign, 'dnsValidationParams' | 'httpKeywordParams' | 'domainGenerationParams' | 'failedItems' | 'processedItems' | 'successfulItems' | 'totalItems' | 'metadata' | 'httpKeywordValidationParams'> {
   description?: string;
   selectedType?: CampaignSelectedType;
-  currentPhase?: components['schemas']['Campaign']['currentPhase'];
+  currentPhase?: components['schemas']['models.Campaign']['currentPhase'];
   
   // Flexible parameter types that can handle both OpenAPI and legacy formats
   dnsValidationParams?: DnsValidationParams | Record<string, unknown>;
@@ -662,7 +662,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                   <FormLabel>Campaign Type</FormLabel>
                   <Select onValueChange={(value) => {
                     field.onChange(value);
-                    setValue("domainSourceSelectionMode", getDefaultSourceMode(value as CampaignSelectedType));
+                    (setValue as any)("domainSourceSelectionMode", getDefaultSourceMode(value as CampaignSelectedType));
                   }} value={field.value} disabled={isEditing}>
                     <FormControl>
                       <SelectTrigger>

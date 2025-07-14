@@ -138,6 +138,7 @@ func NewWebSocketHandler(hub internalwebsocket.Broadcaster, sessionService *serv
 // @Summary WebSocket connection
 // @Description Upgrade HTTP connection to WebSocket for real-time communication
 // @Tags websocket
+// @ID connectWebSocket
 // @Param domainflow_session header string false "Session cookie for authentication"
 // @Success 101 {string} string "WebSocket connection established"
 // @Failure 401 {object} WebSocketErrorResponse "Authentication required"

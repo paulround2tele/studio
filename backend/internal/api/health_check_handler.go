@@ -61,6 +61,7 @@ func NewHealthCheckHandler(db *sql.DB) *HealthCheckHandler {
 // @Summary Health check
 // @Description Get overall system health status including component checks
 // @Tags health
+// @ID healthCheck
 // @Produce json
 // @Success 200 {object} HealthStatus "System health status"
 // @Router /health [get]
@@ -97,6 +98,7 @@ func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 // @Summary Readiness check
 // @Description Check if the service is ready to accept requests
 // @Tags health
+// @ID healthReadiness
 // @Produce json
 // @Success 200 {object} HealthCheckResponse "Service is ready"
 // @Failure 503 {object} StandardErrorResponse "Service not ready"
@@ -117,6 +119,7 @@ func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 // @Summary Liveness check
 // @Description Check if the service is alive and responding
 // @Tags health
+// @ID healthLiveness
 // @Produce json
 // @Success 200 {object} HealthCheckResponse "Service is alive"
 // @Router /health/live [get]

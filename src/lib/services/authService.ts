@@ -2,7 +2,10 @@
 // Clean authentication service using auto-generated API clients
 
 import { authApi } from '@/lib/api-client/client';
-import { User, LoginRequest } from '@/lib/api-client';
+import type { components } from '@/lib/api-client/types';
+
+type User = components['schemas']['models.User'];
+type LoginRequest = components['schemas']['models.LoginRequest'];
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
@@ -81,7 +84,7 @@ class AuthService {
     });
 
     try {
-      const response = await authApi.login({
+      const response = await authApi.loginUser({
         email: credentials.email,
         password: credentials.password,
         rememberMe: credentials.rememberMe
@@ -118,7 +121,7 @@ class AuthService {
     logger.info('AUTH_SERVICE', 'Logout started');
 
     try {
-      await authApi.logout();
+      await authApi.logoutUser();
       logger.info('AUTH_SERVICE', 'Logout successful');
       return { success: true };
     } catch (error) {

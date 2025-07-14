@@ -94,6 +94,7 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 // @Summary Create new campaign
 // @Description Create a new campaign with specified configuration parameters
 // @Tags campaigns
+// @ID createCampaign
 // @Accept json
 // @Produce json
 // @Param request body services.CreateCampaignRequest true "Campaign creation request"
@@ -208,6 +209,7 @@ func (h *CampaignOrchestratorAPIHandler) validateCampaignRequest(req services.Cr
 // @Summary Update campaign configuration
 // @Description Update an existing campaign's configuration parameters
 // @Tags campaigns
+// @ID updateCampaign
 // @Accept json
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
@@ -334,6 +336,7 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 // @Summary List all campaigns
 // @Description Retrieve a list of all campaigns with optional filtering and pagination
 // @Tags campaigns
+// @ID listCampaigns
 // @Produce json
 // @Param limit query int false "Maximum number of campaigns to return" default(20)
 // @Param offset query int false "Number of campaigns to skip" default(0)
@@ -404,6 +407,7 @@ func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 // @Summary Get campaign details
 // @Description Retrieve detailed information about a specific campaign including its configuration parameters
 // @Tags campaigns
+// @ID getCampaignDetails
 // @Accept json
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
@@ -459,6 +463,7 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 // @Summary Start campaign
 // @Description Start the execution of a campaign
 // @Tags campaigns
+// @ID startCampaign
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Success 200 {object} CampaignOperationResponse "Campaign started successfully"
@@ -518,6 +523,7 @@ func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 // @Summary Pause campaign
 // @Description Pause the execution of a running campaign
 // @Tags campaigns
+// @ID pauseCampaign
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Success 200 {object} CampaignOperationResponse "Campaign paused successfully"
@@ -533,6 +539,7 @@ func (h *CampaignOrchestratorAPIHandler) pauseCampaign(c *gin.Context) {
 // @Summary Resume campaign
 // @Description Resume the execution of a paused campaign
 // @Tags campaigns
+// @ID resumeCampaign
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Success 200 {object} CampaignOperationResponse "Campaign resumed successfully"
@@ -548,6 +555,7 @@ func (h *CampaignOrchestratorAPIHandler) resumeCampaign(c *gin.Context) {
 // @Summary Cancel campaign
 // @Description Cancel the execution of a campaign
 // @Tags campaigns
+// @ID cancelCampaign
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Success 200 {object} CampaignOperationResponse "Campaign cancelled successfully"
@@ -563,6 +571,7 @@ func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
 // @Summary Delete campaign
 // @Description Delete a campaign and all associated data
 // @Tags campaigns
+// @ID deleteCampaign
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Success 200 {object} DeletionResponse "Campaign deleted successfully"
@@ -583,6 +592,7 @@ type BulkDeleteRequest struct {
 // @Summary Bulk delete campaigns
 // @Description Delete multiple campaigns in a single operation
 // @Tags campaigns
+// @ID bulkDeleteCampaigns
 // @Accept json
 // @Produce json
 // @Param request body BulkDeleteRequest true "Bulk delete request with campaign IDs"
@@ -677,11 +687,14 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 
 // getGeneratedDomains gets generated domains for a campaign.
 // @Summary Get generated domains
-// @Description Retrieve all generated domains for a specific campaign
+// @Description Retrieve all generated domains for a specific campaign with pagination support
 // @Tags campaigns
+// @ID getGeneratedDomains
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
-// @Success 200 {array} models.GeneratedDomain "List of generated domains"
+// @Param limit query int false "Number of domains to return (default: 20, max: 1000)"
+// @Param cursor query int false "Cursor for pagination (offset index, default: 0)"
+// @Success 200 {object} services.GeneratedDomainsResponse "Paginated list of generated domains"
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 404 {object} map[string]string "Campaign not found"
 // @Failure 500 {object} map[string]string "Internal Server Error"
@@ -709,11 +722,14 @@ func (h *CampaignOrchestratorAPIHandler) getGeneratedDomains(c *gin.Context) {
 
 // getDNSValidationResults gets DNS validation results for a campaign.
 // @Summary Get DNS validation results
-// @Description Retrieve DNS validation results for a specific campaign
+// @Description Retrieve DNS validation results for a specific campaign with pagination support
 // @Tags campaigns
+// @ID getDNSValidationResults
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
-// @Success 200 {array} models.DNSValidationResult "List of DNS validation results"
+// @Param limit query int false "Number of results to return (default: 20)"
+// @Param cursor query string false "Cursor for pagination (default: empty)"
+// @Success 200 {object} services.DNSValidationResultsResponse "Paginated list of DNS validation results"
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 404 {object} map[string]string "Campaign not found"
 // @Failure 500 {object} map[string]string "Internal Server Error"
@@ -747,11 +763,14 @@ func (h *CampaignOrchestratorAPIHandler) getDNSValidationResults(c *gin.Context)
 
 // getHTTPKeywordResults gets HTTP keyword results for a campaign.
 // @Summary Get HTTP keyword results
-// @Description Retrieve HTTP keyword validation results for a specific campaign
+// @Description Retrieve HTTP keyword validation results for a specific campaign with pagination support
 // @Tags campaigns
+// @ID getHTTPKeywordResults
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
-// @Success 200 {array} models.HTTPKeywordResult "List of HTTP keyword results"
+// @Param limit query int false "Number of results to return (default: 20)"
+// @Param cursor query string false "Cursor for pagination (default: empty)"
+// @Success 200 {object} services.HTTPKeywordResultsResponse "Paginated list of HTTP keyword results"
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 404 {object} map[string]string "Campaign not found"
 // @Failure 500 {object} map[string]string "Internal Server Error"
@@ -787,6 +806,7 @@ func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 // @Summary Validate DNS for campaign
 // @Description Trigger DNS validation for all domains in a specific campaign
 // @Tags campaigns
+// @ID validateDNSForCampaign
 // @Accept json
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
@@ -959,6 +979,7 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 // @Summary Validate HTTP for campaign
 // @Description Trigger HTTP keyword validation for all domains in a specific campaign
 // @Tags campaigns
+// @ID validateHTTPForCampaign
 // @Accept json
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
@@ -1179,6 +1200,7 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 // @Summary Get domain generation pattern offset
 // @Description Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
 // @Tags campaigns
+// @ID getPatternOffset
 // @Accept json
 // @Produce json
 // @Param request body PatternOffsetRequest true "Pattern configuration"

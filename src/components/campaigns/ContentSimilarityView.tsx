@@ -13,8 +13,8 @@ import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';
 
-type ExtractedContentItem = components['schemas']['ExtractedContentItem'];
-type LeadItem = components['schemas']['LeadItem'];
+type ExtractedContentItem = components['schemas']['models.ExtractedContentItem'];
+type LeadItem = components['schemas']['models.LeadItem'];
 
 interface ContentSimilarityViewProps {
   campaign: CampaignViewModel;
@@ -174,7 +174,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
                         </Badge>
                       </TableCell>
                       <TableCell>
-                         {item.advancedAnalysis?.sentiment && item.advancedAnalysis.sentiment !== 'N/A' ? (
+                         {item.advancedAnalysis?.sentiment ? (
                            <Badge variant={
                                item.advancedAnalysis.sentiment === 'Positive' ? 'default' : 
                                item.advancedAnalysis.sentiment === 'Negative' ? 'destructive' : 'secondary'

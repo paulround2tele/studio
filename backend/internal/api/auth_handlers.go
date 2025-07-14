@@ -36,6 +36,7 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 // @Summary User login
 // @Description Authenticate user credentials and create session
 // @Tags authentication
+// @ID loginUser
 // @Accept json
 // @Produce json
 // @Param request body models.LoginRequest true "Login credentials"
@@ -148,6 +149,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Summary User logout
 // @Description Invalidate current user session and clear cookies
 // @Tags authentication
+// @ID logoutUser
 // @Produce json
 // @Success 200 {object} SuccessMessageResponse "Logout successful"
 // @Router /auth/logout [post]
@@ -198,8 +200,9 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Summary Get current user
 // @Description Get information about the currently authenticated user
 // @Tags authentication
+// @ID getCurrentUser
 // @Produce json
-// @Success 200 {object} User "Current user information"
+// @Success 200 {object} models.User "Current user information"
 // @Failure 401 {object} StandardErrorResponse "Authentication required"
 // @Failure 404 {object} StandardErrorResponse "User not found"
 // @Failure 500 {object} StandardErrorResponse "Internal server error"
@@ -239,6 +242,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 // @Summary Change user password
 // @Description Change password for the currently authenticated user
 // @Tags authentication
+// @ID changePassword
 // @Accept json
 // @Produce json
 // @Param request body models.ChangePasswordRequest true "Password change request"
@@ -262,6 +266,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 // @Summary Refresh user session
 // @Description Extend the current session expiry time
 // @Tags authentication
+// @ID refreshSession
 // @Produce json
 // @Success 200 {object} SessionRefreshResponse "Session refreshed with new expiry"
 // @Failure 401 {object} StandardErrorResponse "Invalid or expired session"

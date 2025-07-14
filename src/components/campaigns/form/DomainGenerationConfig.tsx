@@ -102,7 +102,7 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
       "both_variable": PatternOffsetRequestPatternTypeEnum.Both
     } as const;
     
-    const tlds = tldsInput.split(',').map(tld => tld.trim()).filter(tld => tld.length > 0);
+    const tlds = (tldsInput as string).split(',').map(tld => tld.trim()).filter(tld => tld.length > 0);
     // Ensure TLD format is consistent (remove leading dot if present, then add it)
     const primaryTld = tlds[0] || 'com';
     const normalizedTld = primaryTld.startsWith('.') ? primaryTld.substring(1) : primaryTld;
@@ -146,7 +146,7 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
         
         console.log('🔍 [Offset] Fetching offset for pattern:', patternRequest);
         
-        const response = await apiClient.getDomainGenerationPatternOffset(patternRequest);
+        const response = await apiClient.getPatternOffset(patternRequest);
         const data = response.data;
 
         if (cancelled) return;

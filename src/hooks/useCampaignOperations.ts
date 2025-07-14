@@ -10,9 +10,9 @@ import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import type { CampaignViewModel, CampaignValidationItem } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 
-type Campaign = components['schemas']['Campaign'];
+type Campaign = components['schemas']['models.Campaign'];
 type CampaignType = NonNullable<Campaign['campaignType']>;
-type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
+type GeneratedDomainBackend = components['schemas']['models.GeneratedDomain'];
 import { useCampaignDetailsStore } from '@/lib/stores/campaignDetailsStore';
 
 export const useCampaignOperations = (campaignId: string) => {
@@ -133,7 +133,7 @@ export const useCampaignOperations = (campaignId: string) => {
 
       if (campaignData.campaignType === 'dns_validation' || isDNSValidationPhase) {
         console.log('📡 [Domain Loading] Fetching DNS validation items...');
-        const dnsResponse = await campaignsApi.getDNSValidationResults(campaignId, 1, 1000);
+        const dnsResponse = await campaignsApi.getDNSValidationResults(campaignId, 1000);
         const dnsItems = Array.isArray(dnsResponse?.data) ? dnsResponse.data : [];
         updates.dnsCampaignItems = dnsItems as CampaignValidationItem[];
         console.log('✅ [Domain Loading] DNS items loaded:', dnsItems.length);
@@ -142,7 +142,7 @@ export const useCampaignOperations = (campaignId: string) => {
       // CRITICAL FIX: For HTTP validation phase, ensure we load both generated domains AND HTTP results
       if (campaignData.campaignType === 'http_keyword_validation' || isHTTPValidationPhase) {
         console.log('📡 [Domain Loading] Fetching HTTP validation items...');
-        const httpResponse = await campaignsApi.getHTTPKeywordResults(campaignId, 1, 1000);
+        const httpResponse = await campaignsApi.getHTTPKeywordResults(campaignId, 1000);
         const httpItems = Array.isArray(httpResponse?.data) ? httpResponse.data : [];
         updates.httpCampaignItems = httpItems as CampaignValidationItem[];
         console.log('✅ [Domain Loading] HTTP items loaded:', httpItems.length);
@@ -151,7 +151,7 @@ export const useCampaignOperations = (campaignId: string) => {
         // we need to also load the generated domains if we haven't already
         if (isHTTPValidationPhase && campaignData.campaignType === 'domain_generation' && !updates.generatedDomains) {
           console.log('📡 [Domain Loading] Loading generated domains for HTTP validation phase...');
-          const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId, 1000, 0);
+          const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId);
           const domains = extractDomainsFromResponse(domainsResponse.data);
           updates.generatedDomains = domains as GeneratedDomainBackend[];
           console.log('✅ [Domain Loading] Generated domains loaded for HTTP validation:', domains.length);

@@ -40,8 +40,8 @@ type LoginResponseAPI struct {
 type CampaignAPI struct {
 	ID                    uuid.UUID          `json:"id" example:"123e4567-e89b-12d3-a456-426614174000"`
 	Name                  string             `json:"name" example:"Domain Discovery Campaign"`
-	CampaignType          CampaignTypeEnum   `json:"campaignType" example:"domain_generation"`
-	Status                CampaignStatusEnum `json:"status" example:"running"`
+	CampaignType          CampaignTypeEnum   `json:"campaignType" example:"domain_generation" enums:"domain_generation,dns_validation,http_keyword_validation"`
+	Status                CampaignStatusEnum `json:"status" example:"running" enums:"pending,queued,running,pausing,paused,completed,failed,archived,cancelled"`
 	UserID                *uuid.UUID         `json:"userId,omitempty" example:"123e4567-e89b-12d3-a456-426614174001"`
 	CreatedAt             time.Time          `json:"createdAt"`
 	UpdatedAt             time.Time          `json:"updatedAt"`

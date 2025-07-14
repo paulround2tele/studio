@@ -35,7 +35,7 @@ export default function EditKeywordSetPage() {
   useEffect(() => {
     async function load() {
       try {
-        const resp = await keywordSetsApi.getKeywordSet(params.id as string);
+        const resp = await keywordSetsApi.keywordSetsSetIdGet(params.id as string);
         form.reset({
           name: resp.data.name,
           description: resp.data.description || '',
@@ -56,7 +56,7 @@ export default function EditKeywordSetPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await keywordSetsApi.updateKeywordSet(params.id as string, data);
+      await keywordSetsApi.keywordSetsSetIdPut(params.id as string, data);
       setSuccessMessage('Keyword set updated');
       setTimeout(() => router.push('/keyword-sets'), 500);
     } catch (e) {

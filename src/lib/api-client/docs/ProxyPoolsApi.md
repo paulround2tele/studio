@@ -1,73 +1,20 @@
 # ProxyPoolsApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**addProxyToPoolGin**](#addproxytopoolgin) | **POST** /proxy-pools/{poolId}/proxies | Add proxy to pool|
-|[**createProxyPoolGin**](#createproxypoolgin) | **POST** /proxy-pools | Create proxy pool|
-|[**deleteProxyPoolGin**](#deleteproxypoolgin) | **DELETE** /proxy-pools/{poolId} | Delete proxy pool|
-|[**listProxyPoolsGin**](#listproxypoolsgin) | **GET** /proxy-pools | List proxy pools|
-|[**removeProxyFromPoolGin**](#removeproxyfrompoolgin) | **DELETE** /proxy-pools/{poolId}/proxies/{proxyId} | Remove proxy from pool|
-|[**updateProxyPoolGin**](#updateproxypoolgin) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
+|[**listProxyPools**](#listproxypools) | **GET** /proxy-pools | List proxy pools|
+|[**proxyPoolsPoolIdDelete**](#proxypoolspooliddelete) | **DELETE** /proxy-pools/{poolId} | Delete proxy pool|
+|[**proxyPoolsPoolIdProxiesPost**](#proxypoolspoolidproxiespost) | **POST** /proxy-pools/{poolId}/proxies | Add proxy to pool|
+|[**proxyPoolsPoolIdProxiesProxyIdDelete**](#proxypoolspoolidproxiesproxyiddelete) | **DELETE** /proxy-pools/{poolId}/proxies/{proxyId} | Remove proxy from pool|
+|[**proxyPoolsPoolIdPut**](#proxypoolspoolidput) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
+|[**proxyPoolsPost**](#proxypoolspost) | **POST** /proxy-pools | Create proxy pool|
 
-# **addProxyToPoolGin**
-> ListCampaigns200Response addProxyToPoolGin()
+# **listProxyPools**
+> Array<ModelsProxyPool> listProxyPools()
 
-Assign a proxy to a proxy pool with optional weight
-
-### Example
-
-```typescript
-import {
-    ProxyPoolsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxyPoolsApi(configuration);
-
-let poolId: string; //Proxy pool ID (default to undefined)
-
-const { status, data } = await apiInstance.addProxyToPoolGin(
-    poolId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
-
-
-### Return type
-
-**ListCampaigns200Response**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **createProxyPoolGin**
-> ListCampaigns200Response createProxyPoolGin()
-
-Create a new proxy pool with configuration settings
+Retrieve all proxy pools with their associated proxies
 
 ### Example
 
@@ -80,7 +27,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
-const { status, data } = await apiInstance.createProxyPoolGin();
+const { status, data } = await apiInstance.listProxyPools();
 ```
 
 ### Parameters
@@ -89,7 +36,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ListCampaigns200Response**
+**Array<ModelsProxyPool>**
 
 ### Authorization
 
@@ -104,14 +51,13 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | List of proxy pools |  -  |
+|**500** | Failed to list proxy pools |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **deleteProxyPoolGin**
-> StandardSuccessResponse deleteProxyPoolGin()
+# **proxyPoolsPoolIdDelete**
+> { [key: string]: boolean; } proxyPoolsPoolIdDelete()
 
 Delete a proxy pool
 
@@ -128,7 +74,7 @@ const apiInstance = new ProxyPoolsApi(configuration);
 
 let poolId: string; //Proxy pool ID (default to undefined)
 
-const { status, data } = await apiInstance.deleteProxyPoolGin(
+const { status, data } = await apiInstance.proxyPoolsPoolIdDelete(
     poolId
 );
 ```
@@ -142,7 +88,7 @@ const { status, data } = await apiInstance.deleteProxyPoolGin(
 
 ### Return type
 
-**StandardSuccessResponse**
+**{ [key: string]: boolean; }**
 
 ### Authorization
 
@@ -157,38 +103,50 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Deletion confirmation |  -  |
+|**400** | Invalid ID |  -  |
+|**404** | Failed to delete pool |  -  |
+|**500** | Failed to delete pool |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **listProxyPoolsGin**
-> ListCampaigns200Response listProxyPoolsGin()
+# **proxyPoolsPoolIdProxiesPost**
+> ModelsProxyPoolMembership proxyPoolsPoolIdProxiesPost(proxyPoolsPoolIdProxiesPostRequest)
 
-Retrieve all proxy pools with their associated proxies
+Assign a proxy to a proxy pool with optional weight
 
 ### Example
 
 ```typescript
 import {
     ProxyPoolsApi,
-    Configuration
+    Configuration,
+    ProxyPoolsPoolIdProxiesPostRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
-const { status, data } = await apiInstance.listProxyPoolsGin();
+let poolId: string; //Proxy pool ID (default to undefined)
+let proxyPoolsPoolIdProxiesPostRequest: ProxyPoolsPoolIdProxiesPostRequest; //Proxy assignment request
+
+const { status, data } = await apiInstance.proxyPoolsPoolIdProxiesPost(
+    poolId,
+    proxyPoolsPoolIdProxiesPostRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **proxyPoolsPoolIdProxiesPostRequest** | **ProxyPoolsPoolIdProxiesPostRequest**| Proxy assignment request | |
+| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
 
 
 ### Return type
 
-**ListCampaigns200Response**
+**ModelsProxyPoolMembership**
 
 ### Authorization
 
@@ -196,21 +154,21 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**201** | Created membership |  -  |
+|**400** | Invalid pool ID, payload, or proxy ID |  -  |
+|**500** | Failed to add proxy |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **removeProxyFromPoolGin**
-> ProxyPoolMembershipResponse removeProxyFromPoolGin()
+# **proxyPoolsPoolIdProxiesProxyIdDelete**
+> ApiProxyPoolMembershipResponse proxyPoolsPoolIdProxiesProxyIdDelete()
 
 Remove a proxy from a specific proxy pool
 
@@ -228,7 +186,7 @@ const apiInstance = new ProxyPoolsApi(configuration);
 let poolId: string; //Pool ID (UUID) (default to undefined)
 let proxyId: string; //Proxy ID (UUID) (default to undefined)
 
-const { status, data } = await apiInstance.removeProxyFromPoolGin(
+const { status, data } = await apiInstance.proxyPoolsPoolIdProxiesProxyIdDelete(
     poolId,
     proxyId
 );
@@ -244,7 +202,7 @@ const { status, data } = await apiInstance.removeProxyFromPoolGin(
 
 ### Return type
 
-**ProxyPoolMembershipResponse**
+**ApiProxyPoolMembershipResponse**
 
 ### Authorization
 
@@ -259,14 +217,15 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
+|**200** | Proxy removed from pool successfully |  -  |
 |**400** | Bad Request |  -  |
+|**404** | Pool or proxy not found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateProxyPoolGin**
-> ProxyPool updateProxyPoolGin()
+# **proxyPoolsPoolIdPut**
+> ModelsProxyPool proxyPoolsPoolIdPut(apiProxyPoolRequest)
 
 Update an existing proxy pool configuration
 
@@ -275,16 +234,19 @@ Update an existing proxy pool configuration
 ```typescript
 import {
     ProxyPoolsApi,
-    Configuration
+    Configuration,
+    ApiProxyPoolRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
 let poolId: string; //Proxy pool ID (default to undefined)
+let apiProxyPoolRequest: ApiProxyPoolRequest; //Proxy pool update request
 
-const { status, data } = await apiInstance.updateProxyPoolGin(
-    poolId
+const { status, data } = await apiInstance.proxyPoolsPoolIdPut(
+    poolId,
+    apiProxyPoolRequest
 );
 ```
 
@@ -292,12 +254,13 @@ const { status, data } = await apiInstance.updateProxyPoolGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **apiProxyPoolRequest** | **ApiProxyPoolRequest**| Proxy pool update request | |
 | **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
 
 
 ### Return type
 
-**ProxyPool**
+**ModelsProxyPool**
 
 ### Authorization
 
@@ -305,16 +268,71 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Updated proxy pool |  -  |
+|**400** | Invalid ID or request payload |  -  |
+|**404** | Pool not found |  -  |
+|**500** | Failed to update pool |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxyPoolsPost**
+> ModelsProxyPool proxyPoolsPost(apiProxyPoolRequest)
+
+Create a new proxy pool with configuration settings
+
+### Example
+
+```typescript
+import {
+    ProxyPoolsApi,
+    Configuration,
+    ApiProxyPoolRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxyPoolsApi(configuration);
+
+let apiProxyPoolRequest: ApiProxyPoolRequest; //Proxy pool creation request
+
+const { status, data } = await apiInstance.proxyPoolsPost(
+    apiProxyPoolRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **apiProxyPoolRequest** | **ApiProxyPoolRequest**| Proxy pool creation request | |
+
+
+### Return type
+
+**ModelsProxyPool**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created proxy pool |  -  |
+|**400** | Invalid request payload |  -  |
+|**500** | Failed to create pool |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

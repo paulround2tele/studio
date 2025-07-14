@@ -2,9 +2,12 @@
 // Production Proxy Service - Direct OpenAPI integration without adapters
 
 import { ProxiesApi, Configuration } from '@/lib/api-client';
-import { CreateProxyRequestProtocolEnum, UpdateProxyRequestProtocolEnum } from '@/lib/api-client/models';
+import {
+  ModelsCreateProxyRequest,
+  ModelsUpdateProxyRequest,
+  ModelsProxy
+} from '@/lib/api-client/models';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
-import type { components } from '@/lib/api-client/types';
 
 // Create configured ProxiesApi instance with authentication
 const config = new Configuration({
@@ -16,29 +19,14 @@ const config = new Configuration({
 const proxiesApi = new ProxiesApi(config);
 
 // Use OpenAPI types directly
-export type Proxy = components['schemas']['Proxy'];
-export type ProxyCreationPayload = components['schemas']['CreateProxyRequest'];
-export type ProxyUpdatePayload = components['schemas']['UpdateProxyRequest'];
+export type Proxy = ModelsProxy;
+export type ProxyCreationPayload = ModelsCreateProxyRequest;
+export type ProxyUpdatePayload = ModelsUpdateProxyRequest;
 
-// Protocol conversion utilities
-const convertProtocolToCreateEnum = (protocol: string): CreateProxyRequestProtocolEnum => {
-  switch (protocol) {
-    case 'http': return CreateProxyRequestProtocolEnum.Http;
-    case 'https': return CreateProxyRequestProtocolEnum.Https;
-    case 'socks5': return CreateProxyRequestProtocolEnum.Socks5;
-    case 'socks4': return CreateProxyRequestProtocolEnum.Socks4;
-    default: return CreateProxyRequestProtocolEnum.Http;
-  }
-};
-
-const convertProtocolToUpdateEnum = (protocol: string): UpdateProxyRequestProtocolEnum => {
-  switch (protocol) {
-    case 'http': return UpdateProxyRequestProtocolEnum.Http;
-    case 'https': return UpdateProxyRequestProtocolEnum.Https;
-    case 'socks5': return UpdateProxyRequestProtocolEnum.Socks5;
-    case 'socks4': return UpdateProxyRequestProtocolEnum.Socks4;
-    default: return UpdateProxyRequestProtocolEnum.Http;
-  }
+// Protocol validation utilities
+const validateProtocol = (protocol: string): string => {
+  const validProtocols = ['http', 'https', 'socks5', 'socks4'];
+  return validProtocols.includes(protocol) ? protocol : 'http';
 };
 
 // Service layer response wrappers using OpenAPI types as base
@@ -69,9 +57,13 @@ export interface ProxyDeleteResponse {
 // Import unified API response wrapper
 import type { ApiResponse } from '@/lib/types';
 
-// Import additional OpenAPI types for proxy operations
-export type ProxyStatus = components['schemas']['ProxyStatus'];
-export type ProxyTestResult = components['schemas']['ProxyTestResult'];
+// Define proxy status and test result types
+export type ProxyStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
+export interface ProxyTestResult {
+  success: boolean;
+  message: string;
+  latency?: number;
+}
 
 
 class ProxyService {
@@ -177,7 +169,7 @@ class ProxyService {
     try {
       const convertedPayload = {
         ...payload,
-        protocol: convertProtocolToCreateEnum(payload.protocol)
+        protocol: validateProtocol(payload.protocol)
       };
       const response = await proxiesApi.createProxy(convertedPayload);
       return {
@@ -198,7 +190,7 @@ class ProxyService {
       const { protocol, ...restPayload } = payload;
       const convertedPayload = {
         ...restPayload,
-        ...(protocol && { protocol: convertProtocolToUpdateEnum(protocol) })
+        ...(protocol && { protocol: validateProtocol(protocol) })
       };
       const response = await proxiesApi.updateProxy(proxyId, convertedPayload);
       return {

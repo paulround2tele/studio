@@ -30,6 +30,9 @@ type TypeInfo struct {
 	IsPointer   bool
 	IsSlice     bool
 	IsMap       bool
+	IsEnum      bool
+	BaseType    string
+	EnumValues  []string
 	ElementType *TypeInfo
 	KeyType     *TypeInfo
 	ValueType   *TypeInfo
@@ -76,6 +79,7 @@ const (
 	TypeKindPointer
 	TypeKindFunc
 	TypeKindChan
+	TypeKindEnum
 )
 
 // NewTypeInspector creates a new type inspector
@@ -213,7 +217,20 @@ func (ti *TypeInspector) inspectTypeSpec(typeSpec *ast.TypeSpec) (*TypeInfo, err
 	case *ast.StarExpr:
 		return ti.inspectPointerType(t, typeInfo)
 	case *ast.Ident:
-		// Type alias
+		// Type alias - check if this is an enum type
+		if t.Name == "string" {
+			// Check if this is an enum type by looking for constants with the type name
+			enumValues := ti.findEnumConstants(typeInfo.Name)
+			if len(enumValues) > 0 {
+				typeInfo.Kind = TypeKindEnum
+				typeInfo.IsEnum = true
+				typeInfo.EnumValues = enumValues
+				typeInfo.BaseType = "string"
+				return typeInfo, nil
+			}
+		}
+		
+		// Regular type alias
 		aliasedType, err := ti.InspectType(t.Name)
 		if err != nil {
 			return typeInfo, nil
@@ -511,4 +528,55 @@ func (ti *TypeInspector) GetExportedFields(typeInfo *TypeInfo) []FieldInfo {
 	}
 	
 	return exportedFields
+}
+
+// findEnumConstants searches for constants that match the given enum type name
+func (ti *TypeInspector) findEnumConstants(enumTypeName string) []string {
+	var enumValues []string
+	
+	// Parse packages if not already done
+	if len(ti.packages) == 0 {
+		err := ti.parsePackages()
+		if err != nil {
+			return nil
+		}
+	}
+	
+	// Search through all packages for constants of the enum type
+	for _, pkg := range ti.packages {
+		for _, file := range pkg.Files {
+			for _, decl := range file.Decls {
+				genDecl, ok := decl.(*ast.GenDecl)
+				if !ok || genDecl.Tok != token.CONST {
+					continue
+				}
+				
+				// Check each constant declaration
+				for _, spec := range genDecl.Specs {
+					valueSpec, ok := spec.(*ast.ValueSpec)
+					if !ok {
+						continue
+					}
+					
+					// Check if this constant is of our enum type
+					if valueSpec.Type != nil {
+						if ident, ok := valueSpec.Type.(*ast.Ident); ok && ident.Name == enumTypeName {
+							// Extract the constant values
+							for i := range valueSpec.Names {
+								if i < len(valueSpec.Values) {
+									if basicLit, ok := valueSpec.Values[i].(*ast.BasicLit); ok && basicLit.Kind == token.STRING {
+										// Remove quotes from string literal
+										value := strings.Trim(basicLit.Value, `"`)
+										enumValues = append(enumValues, value)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	return enumValues
 }

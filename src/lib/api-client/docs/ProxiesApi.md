@@ -1,22 +1,22 @@
 # ProxiesApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**addProxyGin**](#addproxygin) | **POST** /proxies | Create proxy|
-|[**deleteProxyGin**](#deleteproxygin) | **DELETE** /proxies/{proxyId} | Delete proxy|
-|[**forceCheckAllProxiesGin**](#forcecheckallproxiesgin) | **POST** /proxies/health-check | Force health check on all proxies|
-|[**forceCheckSingleProxyGin**](#forcechecksingleproxygin) | **POST** /proxies/{proxyId}/health-check | Force proxy health check|
-|[**getProxyStatusesGin**](#getproxystatusesgin) | **GET** /proxies/status | Get proxy statuses|
-|[**listProxiesGin**](#listproxiesgin) | **GET** /proxies | List proxies|
-|[**testProxyGin**](#testproxygin) | **POST** /proxies/{proxyId}/test | Test proxy|
-|[**updateProxyGin**](#updateproxygin) | **PUT** /proxies/{proxyId} | Update proxy|
+|[**proxiesGet**](#proxiesget) | **GET** /proxies | List proxies|
+|[**proxiesHealthCheckPost**](#proxieshealthcheckpost) | **POST** /proxies/health-check | Force health check on all proxies|
+|[**proxiesPost**](#proxiespost) | **POST** /proxies | Create proxy|
+|[**proxiesProxyIdDelete**](#proxiesproxyiddelete) | **DELETE** /proxies/{proxyId} | Delete proxy|
+|[**proxiesProxyIdHealthCheckPost**](#proxiesproxyidhealthcheckpost) | **POST** /proxies/{proxyId}/health-check | Force proxy health check|
+|[**proxiesProxyIdPut**](#proxiesproxyidput) | **PUT** /proxies/{proxyId} | Update proxy|
+|[**proxiesProxyIdTestPost**](#proxiesproxyidtestpost) | **POST** /proxies/{proxyId}/test | Test proxy|
+|[**proxiesStatusGet**](#proxiesstatusget) | **GET** /proxies/status | Get proxy statuses|
 
-# **addProxyGin**
-> ListCampaigns200Response addProxyGin()
+# **proxiesGet**
+> Array<ModelsProxy> proxiesGet()
 
-Add a new proxy configuration
+Retrieve a list of proxies with optional filtering by protocol, status, and health
 
 ### Example
 
@@ -29,16 +29,35 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.addProxyGin();
+let limit: number; //Maximum number of results (optional) (default to 100)
+let offset: number; //Number of results to skip (optional) (default to 0)
+let protocol: string; //Filter by protocol (http, https, socks4, socks5) (optional) (default to undefined)
+let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
+let isHealthy: boolean; //Filter by health status (optional) (default to undefined)
+
+const { status, data } = await apiInstance.proxiesGet(
+    limit,
+    offset,
+    protocol,
+    isEnabled,
+    isHealthy
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **limit** | [**number**] | Maximum number of results | (optional) defaults to 100|
+| **offset** | [**number**] | Number of results to skip | (optional) defaults to 0|
+| **protocol** | [**string**] | Filter by protocol (http, https, socks4, socks5) | (optional) defaults to undefined|
+| **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
+| **isHealthy** | [**boolean**] | Filter by health status | (optional) defaults to undefined|
 
 
 ### Return type
 
-**ListCampaigns200Response**
+**Array<ModelsProxy>**
 
 ### Authorization
 
@@ -53,14 +72,113 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
+|**200** | List of proxies |  -  |
+|**500** | Failed to list proxies |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxiesHealthCheckPost**
+> ApiBulkHealthCheckResponse proxiesHealthCheckPost()
+
+Force health checks on all registered proxies
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+const { status, data } = await apiInstance.proxiesHealthCheckPost();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ApiBulkHealthCheckResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Health checks completed |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **deleteProxyGin**
-> ListCampaigns200Response deleteProxyGin()
+# **proxiesPost**
+> ModelsProxy proxiesPost(modelsCreateProxyRequest)
+
+Add a new proxy configuration
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration,
+    ModelsCreateProxyRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let modelsCreateProxyRequest: ModelsCreateProxyRequest; //Proxy creation request
+
+const { status, data } = await apiInstance.proxiesPost(
+    modelsCreateProxyRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **modelsCreateProxyRequest** | **ModelsCreateProxyRequest**| Proxy creation request | |
+
+
+### Return type
+
+**ModelsProxy**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created proxy |  -  |
+|**400** | Invalid request payload or validation failed |  -  |
+|**409** | Proxy with address already exists |  -  |
+|**500** | Failed to create proxy |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxiesProxyIdDelete**
+> proxiesProxyIdDelete()
 
 Delete a proxy configuration
 
@@ -77,7 +195,7 @@ const apiInstance = new ProxiesApi(configuration);
 
 let proxyId: string; //Proxy ID (default to undefined)
 
-const { status, data } = await apiInstance.deleteProxyGin(
+const { status, data } = await apiInstance.proxiesProxyIdDelete(
     proxyId
 );
 ```
@@ -91,7 +209,7 @@ const { status, data } = await apiInstance.deleteProxyGin(
 
 ### Return type
 
-**ListCampaigns200Response**
+void (empty response body)
 
 ### Authorization
 
@@ -106,60 +224,15 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**204** | Proxy deleted successfully |  -  |
+|**400** | Invalid proxy ID format |  -  |
+|**404** | Proxy not found |  -  |
+|**500** | Failed to delete proxy |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **forceCheckAllProxiesGin**
-> BulkHealthCheckResponse forceCheckAllProxiesGin()
-
-Force health checks on all registered proxies
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-const { status, data } = await apiInstance.forceCheckAllProxiesGin();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**BulkHealthCheckResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **forceCheckSingleProxyGin**
-> ProxyHealthCheckResponse forceCheckSingleProxyGin()
+# **proxiesProxyIdHealthCheckPost**
+> ApiProxyHealthCheckResponse proxiesProxyIdHealthCheckPost()
 
 Force a health check on a specific proxy
 
@@ -176,7 +249,7 @@ const apiInstance = new ProxiesApi(configuration);
 
 let proxyId: string; //Proxy ID (UUID) (default to undefined)
 
-const { status, data } = await apiInstance.forceCheckSingleProxyGin(
+const { status, data } = await apiInstance.proxiesProxyIdHealthCheckPost(
     proxyId
 );
 ```
@@ -190,7 +263,7 @@ const { status, data } = await apiInstance.forceCheckSingleProxyGin(
 
 ### Return type
 
-**ProxyHealthCheckResponse**
+**ApiProxyHealthCheckResponse**
 
 ### Authorization
 
@@ -205,86 +278,36 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
+|**200** | Health check completed |  -  |
 |**400** | Bad Request |  -  |
+|**404** | Proxy not found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getProxyStatusesGin**
-> ProxyStatusResponse getProxyStatusesGin()
+# **proxiesProxyIdPut**
+> ModelsProxy proxiesProxyIdPut(modelsUpdateProxyRequest)
 
-Retrieve health status information for all proxies
+Update an existing proxy configuration
 
 ### Example
 
 ```typescript
 import {
     ProxiesApi,
-    Configuration
+    Configuration,
+    ModelsUpdateProxyRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.getProxyStatusesGin();
-```
+let proxyId: string; //Proxy ID (default to undefined)
+let modelsUpdateProxyRequest: ModelsUpdateProxyRequest; //Proxy update request
 
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ProxyStatusResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **listProxiesGin**
-> ListCampaigns200Response listProxiesGin()
-
-Retrieve a list of proxies with optional filtering by protocol, status, and health
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-let limit: number; //Maximum number of results (optional) (default to undefined)
-let offset: number; //Number of results to skip (optional) (default to undefined)
-let protocol: string; //Filter by protocol (http, https, socks4, socks5) (optional) (default to undefined)
-let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
-let isHealthy: boolean; //Filter by health status (optional) (default to undefined)
-
-const { status, data } = await apiInstance.listProxiesGin(
-    limit,
-    offset,
-    protocol,
-    isEnabled,
-    isHealthy
+const { status, data } = await apiInstance.proxiesProxyIdPut(
+    proxyId,
+    modelsUpdateProxyRequest
 );
 ```
 
@@ -292,16 +315,13 @@ const { status, data } = await apiInstance.listProxiesGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **limit** | [**number**] | Maximum number of results | (optional) defaults to undefined|
-| **offset** | [**number**] | Number of results to skip | (optional) defaults to undefined|
-| **protocol** | [**string**] | Filter by protocol (http, https, socks4, socks5) | (optional) defaults to undefined|
-| **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
-| **isHealthy** | [**boolean**] | Filter by health status | (optional) defaults to undefined|
+| **modelsUpdateProxyRequest** | **ModelsUpdateProxyRequest**| Proxy update request | |
+| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
 
 
 ### Return type
 
-**ListCampaigns200Response**
+**ModelsProxy**
 
 ### Authorization
 
@@ -309,21 +329,22 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Updated proxy |  -  |
+|**400** | Invalid request payload or validation failed |  -  |
+|**404** | Proxy not found |  -  |
+|**500** | Failed to update proxy |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **testProxyGin**
-> ProxyTestResponse testProxyGin()
+# **proxiesProxyIdTestPost**
+> ApiProxyTestResponse proxiesProxyIdTestPost()
 
 Test a proxy configuration to verify it works correctly
 
@@ -340,7 +361,7 @@ const apiInstance = new ProxiesApi(configuration);
 
 let proxyId: string; //Proxy ID (UUID) (default to undefined)
 
-const { status, data } = await apiInstance.testProxyGin(
+const { status, data } = await apiInstance.proxiesProxyIdTestPost(
     proxyId
 );
 ```
@@ -354,7 +375,7 @@ const { status, data } = await apiInstance.testProxyGin(
 
 ### Return type
 
-**ProxyTestResponse**
+**ApiProxyTestResponse**
 
 ### Authorization
 
@@ -369,16 +390,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
+|**200** | Proxy test results |  -  |
 |**400** | Bad Request |  -  |
+|**404** | Proxy not found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateProxyGin**
-> Proxy updateProxyGin()
+# **proxiesStatusGet**
+> ApiProxyStatusResponse proxiesStatusGet()
 
-Update an existing proxy configuration
+Retrieve health status information for all proxies
 
 ### Example
 
@@ -391,23 +413,16 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let proxyId: string; //Proxy ID (default to undefined)
-
-const { status, data } = await apiInstance.updateProxyGin(
-    proxyId
-);
+const { status, data } = await apiInstance.proxiesStatusGet();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**Proxy**
+**ApiProxyStatusResponse**
 
 ### Authorization
 
@@ -422,8 +437,7 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
+|**200** | Proxy status information |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

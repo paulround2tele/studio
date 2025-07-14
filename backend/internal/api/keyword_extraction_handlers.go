@@ -23,6 +23,7 @@ import (
 // @Summary Batch keyword extraction
 // @Description Extract keywords from multiple URLs using specified keyword sets and personas
 // @Tags keyword-extraction
+// @ID batchExtractKeywords
 // @Accept json
 // @Produce json
 // @Param request body BatchKeywordExtractionRequest true "Batch extraction request"
@@ -192,6 +193,7 @@ sendResponseGin:
 // @Summary Stream keyword extraction
 // @Description Extract keywords from a single URL with real-time streaming results
 // @Tags keyword-extraction
+// @ID streamExtractKeywords
 // @Produce text/event-stream
 // @Param url query string true "URL to extract keywords from"
 // @Param keywordSetId query string true "Keyword set ID to use for extraction"

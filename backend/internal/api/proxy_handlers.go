@@ -25,28 +25,7 @@ import (
 )
 
 // --- DTOs for Proxy API ---
-
-type CreateProxyRequest struct {
-	Name        string                   `json:"name" validate:"required,min=1,max=255"`
-	Description string                   `json:"description,omitempty"`
-	Protocol    models.ProxyProtocolEnum `json:"protocol" validate:"required,oneof=http https socks5 socks4"`
-	Address     string                   `json:"address" validate:"required,hostname_port_or_url"`
-	Username    string                   `json:"username,omitempty"`
-	Password    string                   `json:"password,omitempty"`
-	CountryCode string                   `json:"countryCode,omitempty"`
-	IsEnabled   *bool                    `json:"isEnabled,omitempty"`
-}
-
-type UpdateProxyRequest struct {
-	Name        *string                   `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
-	Description *string                   `json:"description,omitempty"`
-	Protocol    *models.ProxyProtocolEnum `json:"protocol,omitempty" validate:"omitempty,oneof=http https socks5 socks4"`
-	Address     *string                   `json:"address,omitempty" validate:"omitempty,hostname_port_or_url"`
-	Username    *string                   `json:"username,omitempty"`
-	Password    *string                   `json:"password,omitempty"`
-	CountryCode *string                   `json:"countryCode,omitempty"`
-	IsEnabled   *bool                     `json:"isEnabled,omitempty"`
-}
+// Using DTOs from models package to get correct schema names without api. prefix
 
 // Helper to convert models.Proxy to config.ProxyConfigEntry
 func proxyToProxyConfigEntry(p *models.Proxy) config.ProxyConfigEntry {
@@ -152,14 +131,14 @@ func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 // @Tags proxies
 // @Accept json
 // @Produce json
-// @Param request body CreateProxyRequest true "Proxy creation request"
+// @Param request body models.CreateProxyRequest true "Proxy creation request"
 // @Success 201 {object} models.Proxy "Created proxy"
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 409 {object} map[string]string "Proxy with address already exists"
 // @Failure 500 {object} map[string]string "Failed to create proxy"
 // @Router /proxies [post]
 func (h *APIHandler) AddProxyGin(c *gin.Context) {
-	var req CreateProxyRequest
+	var req models.CreateProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
@@ -282,7 +261,7 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param proxyId path string true "Proxy ID"
-// @Param request body UpdateProxyRequest true "Proxy update request"
+// @Param request body models.UpdateProxyRequest true "Proxy update request"
 // @Success 200 {object} models.Proxy "Updated proxy"
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 404 {object} map[string]string "Proxy not found"
@@ -296,7 +275,7 @@ func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 		return
 	}
 
-	var req UpdateProxyRequest
+	var req models.UpdateProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return

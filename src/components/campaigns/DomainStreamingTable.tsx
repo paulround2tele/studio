@@ -31,7 +31,7 @@ import {
 import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 
-type GeneratedDomain = components['schemas']['GeneratedDomain'];
+type GeneratedDomain = components['schemas']['models.GeneratedDomain'];
 import { cn } from '@/lib/utils';
 
 // Table filter interface

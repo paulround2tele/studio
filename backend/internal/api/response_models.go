@@ -341,8 +341,8 @@ type CampaignDetailsResponse struct {
 type CampaignData struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Status      string `json:"status"`
+	Type        string `json:"type" enums:"domain_generation,dns_validation,http_keyword_validation"`
+	Status      string `json:"status" enums:"pending,queued,running,pausing,paused,completed,failed,archived,cancelled"`
 	CreatedAt   string `json:"createdAt"`
 	UpdatedAt   string `json:"updatedAt"`
 	Description string `json:"description,omitempty"`

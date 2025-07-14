@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { CampaignViewModel } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 
-type HttpPersona = components['schemas']['Persona'] & { personaType: 'http' };
-type DnsPersona = components['schemas']['Persona'] & { personaType: 'dns' };
+type HttpPersona = components['schemas']['api.PersonaResponse'] & { personaType: 'http' };
+type DnsPersona = components['schemas']['api.PersonaResponse'] & { personaType: 'dns' };
 import { getPersonas } from "@/lib/services/personaService";
 import { getProxies } from "@/lib/services/proxyService.production";
 import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
-type Campaign = components['schemas']['Campaign'];
-type Proxy = components['schemas']['Proxy'];
+type Campaign = components['schemas']['models.Campaign'];
+type Proxy = components['schemas']['models.Proxy'];
 
 interface CampaignFormData {
   httpPersonas: HttpPersona[];
@@ -141,12 +141,12 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
 
   // Memoize active personas for better performance in selects
   const activeHttpPersonas = useMemo(() =>
-    httpPersonas.filter(p => !p.status || p.status === 'Active' || p.status === 'active' || p.status === 'enabled'),
+    httpPersonas.filter(p => p.isEnabled !== false),
     [httpPersonas]
   );
 
   const activeDnsPersonas = useMemo(() =>
-    dnsPersonas.filter(p => !p.status || p.status === 'Active' || p.status === 'active' || p.status === 'enabled'),
+    dnsPersonas.filter(p => p.isEnabled !== false),
     [dnsPersonas]
   );
 
@@ -166,12 +166,12 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
  * Reduces re-renders when personas haven't changed
  */
 export function usePersonaSelectionOptions(personas: HttpPersona[] | DnsPersona[]) {
-  return useMemo(() => 
+  return useMemo(() =>
     personas.map(persona => ({
       id: persona.id,
       name: persona.name,
-      status: persona.status
-    })), 
+      isEnabled: persona.isEnabled
+    })),
     [personas]
   );
 }

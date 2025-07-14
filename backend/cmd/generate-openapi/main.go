@@ -5,20 +5,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/fntelecomllc/studio/backend/internal/openapi/config"
-	"github.com/fntelecomllc/studio/backend/internal/openapi/generators"
-	"github.com/fntelecomllc/studio/backend/internal/openapi/reflection"
 )
 
 func main() {
 	// Command line flags
 	var (
 		outputPath = flag.String("output", "docs", "Output directory path")
-		format     = flag.String("format", "both", "Output format: yaml, json, or both")
-		validate   = flag.Bool("validate", true, "Validate the generated specification")
 		verbose    = flag.Bool("verbose", false, "Enable verbose logging")
 		help       = flag.Bool("help", false, "Show help message")
 	)
@@ -30,168 +24,97 @@ func main() {
 	}
 
 	if *verbose {
-		log.Println("Starting OpenAPI generation using reflection-based system...")
+		log.Println("Starting OpenAPI generation using swag...")
 	}
 
-	// Create configuration
-	cfg := config.CLIConfig(*outputPath, *format, *verbose)
-
-	// Create reflection engine
-	engine := reflection.NewReflectionEngine(cfg)
-
-	// Generate OpenAPI specification
-	spec, err := engine.GenerateSpec()
+	// Use swag init to generate OpenAPI spec
+	err := generateWithSwag(*outputPath, *verbose)
 	if err != nil {
 		log.Fatalf("Failed to generate OpenAPI specification: %v", err)
 	}
 
 	if *verbose {
-		log.Printf("Generated OpenAPI specification with %d paths", len(spec.Paths.Map()))
+		log.Println("OpenAPI specification generated successfully")
 	}
+}
 
-	// Validate specification if requested
-	if *validate {
-		if *verbose {
-			log.Println("Validating OpenAPI specification...")
-		}
-		validator := generators.NewValidator(false)
-		if err := validator.Validate(spec); err != nil {
-			log.Fatalf("OpenAPI specification validation failed: %v", err)
-		}
-		if *verbose {
-			log.Println("✓ OpenAPI specification validation passed")
-		}
-	}
-
+func generateWithSwag(outputPath string, verbose bool) error {
 	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(*outputPath, 0755); err != nil {
-		log.Fatalf("Failed to create output directory: %v", err)
-	}
-
-	// Generate outputs based on format
-	switch *format {
-	case "yaml":
-		if err := generateYAML(spec, *outputPath, *verbose); err != nil {
-			log.Fatalf("Failed to generate YAML: %v", err)
-		}
-	case "json":
-		if err := generateJSON(spec, *outputPath, *verbose); err != nil {
-			log.Fatalf("Failed to generate JSON: %v", err)
-		}
-	case "both":
-		if err := generateYAML(spec, *outputPath, *verbose); err != nil {
-			log.Fatalf("Failed to generate YAML: %v", err)
-		}
-		if err := generateJSON(spec, *outputPath, *verbose); err != nil {
-			log.Fatalf("Failed to generate JSON: %v", err)
-		}
-	default:
-		log.Fatalf("Invalid format: %s. Must be yaml, json, or both", *format)
-	}
-
-	fmt.Println("✓ OpenAPI specification generated successfully")
-	
-	if *verbose {
-		fmt.Printf("Output files:\n")
-		if *format == "yaml" || *format == "both" {
-			fmt.Printf("  - %s\n", filepath.Join(*outputPath, "openapi-3.yaml"))
-		}
-		if *format == "json" || *format == "both" {
-			fmt.Printf("  - %s\n", filepath.Join(*outputPath, "openapi-3.json"))
-		}
-	}
-}
-
-// generateYAML generates YAML output
-func generateYAML(spec interface{}, outputPath string, verbose bool) error {
-	generator := generators.NewYAMLGenerator(true)
-	
-	// Convert spec to the expected type
-	openAPISpec, ok := spec.(*openapi3.T)
-	if !ok {
-		return fmt.Errorf("invalid spec type")
-	}
-	
-	yamlData, err := generator.Generate(openAPISpec)
+	err := os.MkdirAll(outputPath, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to generate YAML: %w", err)
+		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	outputFile := filepath.Join(outputPath, "openapi-3.yaml")
-	if err := os.WriteFile(outputFile, yamlData, 0644); err != nil {
-		return fmt.Errorf("failed to write YAML file: %w", err)
-	}
-
+	// Run swag init command
+	cmd := exec.Command("swag", "init",
+		"--dir", "./cmd/apiserver,./internal/api,./internal/models",
+		"--generalInfo", "main.go",
+		"--output", outputPath,
+		"--ot", "json,yaml,go",
+		"--parseInternal",
+		"--parseDependency",
+		"--parseDepth", "1",
+		"--v3.1",
+	)
+	
 	if verbose {
-		log.Printf("✓ Generated YAML: %s (%d bytes)", outputFile, len(yamlData))
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 	}
-
+	
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("swag init failed: %w", err)
+	}
+	
+	// Rename the generated files to match expected names
+	err = renameGeneratedFiles(outputPath)
+	if err != nil {
+		return fmt.Errorf("failed to rename generated files: %w", err)
+	}
+	
 	return nil
 }
 
-// generateJSON generates JSON output
-func generateJSON(spec interface{}, outputPath string, verbose bool) error {
-	generator := generators.NewJSONGenerator(true)
-	
-	// Convert spec to the expected type
-	openAPISpec, ok := spec.(*openapi3.T)
-	if !ok {
-		return fmt.Errorf("invalid spec type")
+func renameGeneratedFiles(outputPath string) error {
+	// Rename swagger.yaml to openapi-3.yaml
+	yamlSrc := filepath.Join(outputPath, "swagger.yaml")
+	yamlDst := filepath.Join(outputPath, "openapi-3.yaml")
+	if _, err := os.Stat(yamlSrc); err == nil {
+		err = os.Rename(yamlSrc, yamlDst)
+		if err != nil {
+			return fmt.Errorf("failed to rename yaml file: %w", err)
+		}
 	}
 	
-	jsonData, err := generator.Generate(openAPISpec)
-	if err != nil {
-		return fmt.Errorf("failed to generate JSON: %w", err)
+	// Rename swagger.json to openapi-3.json
+	jsonSrc := filepath.Join(outputPath, "swagger.json")
+	jsonDst := filepath.Join(outputPath, "openapi-3.json")
+	if _, err := os.Stat(jsonSrc); err == nil {
+		err = os.Rename(jsonSrc, jsonDst)
+		if err != nil {
+			return fmt.Errorf("failed to rename json file: %w", err)
+		}
 	}
-
-	outputFile := filepath.Join(outputPath, "openapi-3.json")
-	if err := os.WriteFile(outputFile, jsonData, 0644); err != nil {
-		return fmt.Errorf("failed to write JSON file: %w", err)
-	}
-
-	if verbose {
-		log.Printf("✓ Generated JSON: %s (%d bytes)", outputFile, len(jsonData))
-	}
-
+	
 	return nil
 }
 
-// showHelp displays help information
 func showHelp() {
-	fmt.Println("OpenAPI Generator - Reflection-based OpenAPI 3.0 specification generator")
-	fmt.Println()
-	fmt.Println("USAGE:")
-	fmt.Println("  go run backend/cmd/generate-openapi/main.go [flags]")
-	fmt.Println()
-	fmt.Println("FLAGS:")
+	fmt.Println("OpenAPI Generator using Swag")
+	fmt.Println("")
+	fmt.Println("Usage:")
+	fmt.Println("  generate-openapi [flags]")
+	fmt.Println("")
+	fmt.Println("Flags:")
 	fmt.Println("  -output string")
-	fmt.Println("        Output directory path (default \"backend/docs\")")
-	fmt.Println("  -format string")
-	fmt.Println("        Output format: yaml, json, or both (default \"both\")")
-	fmt.Println("  -validate")
-	fmt.Println("        Validate the generated specification (default true)")
+	fmt.Println("        Output directory path (default \"docs\")")
 	fmt.Println("  -verbose")
-	fmt.Println("        Enable verbose logging (default false)")
+	fmt.Println("        Enable verbose logging")
 	fmt.Println("  -help")
-	fmt.Println("        Show this help message")
-	fmt.Println()
-	fmt.Println("EXAMPLES:")
-	fmt.Println("  # Generate both YAML and JSON with validation")
-	fmt.Println("  go run backend/cmd/generate-openapi/main.go")
-	fmt.Println()
-	fmt.Println("  # Generate only YAML with verbose output")
-	fmt.Println("  go run backend/cmd/generate-openapi/main.go -format yaml -verbose")
-	fmt.Println()
-	fmt.Println("  # Generate to custom directory without validation")
-	fmt.Println("  go run backend/cmd/generate-openapi/main.go -output /tmp/openapi -validate=false")
-	fmt.Println()
-	fmt.Println("PACKAGE PATHS SCANNED:")
-	cfg := config.DefaultConfig()
-	for _, path := range cfg.PackagePaths {
-		fmt.Printf("  - %s\n", path)
-	}
-	fmt.Println()
-	fmt.Println("This tool scans Go source code using AST analysis to automatically")
-	fmt.Println("discover API routes and generate OpenAPI 3.0 specifications without")
-	fmt.Println("requiring a running server.")
+	fmt.Println("        Show help message")
+	fmt.Println("")
+	fmt.Println("Examples:")
+	fmt.Println("  generate-openapi -output docs -verbose")
+	fmt.Println("  generate-openapi -help")
 }

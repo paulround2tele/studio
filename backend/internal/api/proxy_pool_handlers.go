@@ -29,6 +29,7 @@ type ProxyPoolRequest struct {
 // @Summary List proxy pools
 // @Description Retrieve all proxy pools with their associated proxies
 // @Tags proxy-pools
+// @ID listProxyPools
 // @Produce json
 // @Success 200 {array} models.ProxyPool "List of proxy pools"
 // @Failure 500 {object} map[string]string "Failed to list proxy pools"

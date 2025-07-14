@@ -1,14 +1,14 @@
 # FeatureFlagsApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**getFeatureFlagsGin**](#getfeatureflagsgin) | **GET** /feature-flags | Get feature flags|
-|[**updateFeatureFlagsGin**](#updatefeatureflagsgin) | **PUT** /feature-flags | Update feature flags|
+|[**getFeatureFlags**](#getfeatureflags) | **GET** /feature-flags | Get feature flags|
+|[**updateFeatureFlags**](#updatefeatureflags) | **PUT** /feature-flags | Update feature flags|
 
-# **getFeatureFlagsGin**
-> string getFeatureFlagsGin()
+# **getFeatureFlags**
+> ApiFeatureFlags getFeatureFlags()
 
 Retrieve current feature flag settings
 
@@ -23,7 +23,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new FeatureFlagsApi(configuration);
 
-const { status, data } = await apiInstance.getFeatureFlagsGin();
+const { status, data } = await apiInstance.getFeatureFlags();
 ```
 
 ### Parameters
@@ -32,7 +32,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**ApiFeatureFlags**
 
 ### Authorization
 
@@ -47,14 +47,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Feature flags settings |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateFeatureFlagsGin**
-> string updateFeatureFlagsGin()
+# **updateFeatureFlags**
+> ApiFeatureFlags updateFeatureFlags(apiFeatureFlags)
 
 Update feature flag settings
 
@@ -63,22 +61,30 @@ Update feature flag settings
 ```typescript
 import {
     FeatureFlagsApi,
-    Configuration
+    Configuration,
+    ApiFeatureFlags
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new FeatureFlagsApi(configuration);
 
-const { status, data } = await apiInstance.updateFeatureFlagsGin();
+let apiFeatureFlags: ApiFeatureFlags; //Feature flags settings
+
+const { status, data } = await apiInstance.updateFeatureFlags(
+    apiFeatureFlags
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **apiFeatureFlags** | **ApiFeatureFlags**| Feature flags settings | |
 
 
 ### Return type
 
-**string**
+**ApiFeatureFlags**
 
 ### Authorization
 
@@ -86,16 +92,16 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Updated feature flags |  -  |
+|**400** | Invalid request body |  -  |
+|**500** | Failed to save feature flags |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

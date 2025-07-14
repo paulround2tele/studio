@@ -12,6 +12,7 @@ import (
 // @Summary Get feature flags
 // @Description Retrieve current feature flag settings
 // @Tags feature-flags
+// @ID getFeatureFlags
 // @Produce json
 // @Success 200 {object} FeatureFlags "Feature flags settings"
 // @Router /feature-flags [get]
@@ -26,6 +27,7 @@ func (h *APIHandler) GetFeatureFlagsGin(c *gin.Context) {
 // @Summary Update feature flags
 // @Description Update feature flag settings
 // @Tags feature-flags
+// @ID updateFeatureFlags
 // @Accept json
 // @Produce json
 // @Param request body FeatureFlags true "Feature flags settings"

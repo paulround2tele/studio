@@ -646,7 +646,7 @@ func (sg *SchemaGenerator) buildTypeRegistry() {
 					for _, spec := range genDecl.Specs {
 						if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 							typeName := typeSpec.Name.Name
-							
+
 							// Skip excluded handler types
 							if excludedTypes[typeName] {
 								if sg.config.VerboseLogging {
@@ -654,7 +654,7 @@ func (sg *SchemaGenerator) buildTypeRegistry() {
 								}
 								continue
 							}
-							
+
 							sg.typeRegistry[typeName] = typeSpec
 						}
 					}

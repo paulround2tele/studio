@@ -7,7 +7,7 @@ import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { components } from '@/lib/api-client/types';
 
 // Frontend-specific view model based on auto-generated Campaign type
-type CampaignViewModel = components['schemas']['Campaign'] & {
+type CampaignViewModel = components['schemas']['models.Campaign'] & {
   // Add any frontend-specific fields if needed
 };
 import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff, Trash2, Loader2 } from 'lucide-react';
@@ -184,7 +184,7 @@ function CampaignsPageContent() {
                     case 'create':
                       if (campaign) {
                         console.log('[CampaignsPage] Adding new campaign via WebSocket');
-                        setCampaigns(prev => [...prev, campaign]);
+                        setCampaigns(prev => [...prev, campaign as CampaignViewModel]);
                       }
                       break;
                       
@@ -192,7 +192,7 @@ function CampaignsPageContent() {
                       if (campaign) {
                         console.log('[CampaignsPage] Updating campaign via WebSocket');
                         setCampaigns(prev => prev.map(c =>
-                          c.id === campaignId ? { ...c, ...campaign } : c
+                          c.id === campaignId ? { ...c, ...(campaign as CampaignViewModel) } : c
                         ));
                       }
                       break;

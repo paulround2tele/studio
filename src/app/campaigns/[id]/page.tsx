@@ -32,9 +32,9 @@ import useCampaignOperations from '@/hooks/useCampaignOperations';
 import { handlePhaseTransition } from '@/lib/services/campaignDataService';
 
 // Types
-import type { components } from '@/lib/api-client/types';
+import type { ModelsCampaign } from '@/lib/api-client/models';
 
-type CampaignType = components['schemas']['Campaign']['campaignType'];
+type CampaignType = ModelsCampaign['campaignType'];
 
 export default function RefactoredCampaignDetailsPage() {
   const params = useParams();
@@ -123,12 +123,13 @@ export default function RefactoredCampaignDetailsPage() {
     
     // Allow WebSocket connections for domain generation and validation campaigns
     const allowedCampaignTypes = ['domain_generation', 'dns_validation', 'http_keyword_validation'];
-    if (!campaign.campaignType || !allowedCampaignTypes.includes(campaign.campaignType)) {
-      console.log(`❌ [DEBUG] WebSocket DISCONNECTED - Campaign type not supported for streaming:`, campaign.campaignType);
+    const campaignType = String(campaign.campaignType || '');
+    if (!campaignType || !allowedCampaignTypes.includes(campaignType)) {
+      console.log(`❌ [DEBUG] WebSocket DISCONNECTED - Campaign type not supported for streaming:`, campaignType);
       return {
         shouldConnect: false,
         campaignId: campaign.id,
-        campaignType: campaign.campaignType,
+        campaignType: campaignType,
         status: campaign.status,
         progress: campaign.progress || 0
       };

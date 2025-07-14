@@ -3,7 +3,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import type { components } from '@/lib/api-client/types';
 import type { DomainGenerationPattern } from '@/lib/types/openapi-extensions';
 
-type CampaignSelectedType = components['schemas']['Campaign']['campaignType'];
+type CampaignSelectedType = components['schemas']['models.Campaign']['campaignType'];
 
 /**
  * Performance-optimized hook for domain calculation with safeguards

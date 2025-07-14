@@ -16,11 +16,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
 import type { components } from '@/lib/api-client/types';
 
-type Proxy = components['schemas']['Proxy'];
+type Proxy = components['schemas']['models.Proxy'];
 type ProxiesListResponse = { status: 'success' | 'error'; data: Proxy[]; message?: string };
 type ProxyActionResponse = { status: 'success' | 'error'; message: string };
 type ProxyDeleteResponse = { status: 'success' | 'error'; message?: string };
-type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
+type UpdateProxyPayload = components['schemas']['models.UpdateProxyRequest'];
 import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
 import type { ProxyCreationPayload } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';

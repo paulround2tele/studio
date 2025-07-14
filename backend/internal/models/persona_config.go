@@ -1,8 +1,8 @@
 package models
 
-import ()
-
 // HttpPersonaConfig defines structured configuration for HTTP personas
+// @Description Configuration for HTTP persona validation behavior
+// @id HttpPersonaConfig
 type HttpPersonaConfig struct {
 	UserAgent      string               `json:"userAgent" validate:"required"`
 	Headers        map[string]string    `json:"headers"`
@@ -12,12 +12,12 @@ type HttpPersonaConfig struct {
 	CookieHandling *CookieHandling      `json:"cookieHandling"`
 
 	// Validation settings
-	AllowInsecureTLS     bool    `json:"allowInsecureTls"`
-	RequestTimeoutSec    int     `json:"requestTimeoutSec" validate:"min=1,max=300"`
-	RequestTimeoutSeconds int    `json:"requestTimeoutSeconds" validate:"min=1,max=300"` // Alternative field name
-	MaxRedirects         int     `json:"maxRedirects" validate:"min=0,max=20"`
-	RateLimitDps         float64 `json:"rateLimitDps" validate:"min=0"`
-	RateLimitBurst       int     `json:"rateLimitBurst" validate:"min=1"`
+	AllowInsecureTLS      bool    `json:"allowInsecureTls"`
+	RequestTimeoutSec     int     `json:"requestTimeoutSec" validate:"min=1,max=300"`
+	RequestTimeoutSeconds int     `json:"requestTimeoutSeconds" validate:"min=1,max=300"` // Alternative field name
+	MaxRedirects          int     `json:"maxRedirects" validate:"min=0,max=20"`
+	RateLimitDps          float64 `json:"rateLimitDps" validate:"min=0"`
+	RateLimitBurst        int     `json:"rateLimitBurst" validate:"min=1"`
 
 	// Headless browser settings
 	UseHeadless            bool   `json:"useHeadless"`
@@ -50,6 +50,8 @@ type CookieHandling struct {
 }
 
 // DnsPersonaConfig defines structured configuration for DNS personas
+// @Description Configuration for DNS persona validation behavior
+// @id DnsPersonaConfig
 type DnsPersonaConfig struct {
 	Resolvers                  []string           `json:"resolvers" validate:"required,min=1"`
 	UseSystemResolvers         bool               `json:"useSystemResolvers"`

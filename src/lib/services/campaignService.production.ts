@@ -3,11 +3,11 @@
 
 import { campaignsApi } from '@/lib/api-client/client';
 import type { components } from '@/lib/api-client/types';
-import type { UpdateCampaignRequest } from '@/lib/api-client';
+import type { ServicesUpdateCampaignRequest } from '@/lib/api-client';
 
 // Use OpenAPI types directly
-export type Campaign = components['schemas']['Campaign'];
-export type CampaignCreationPayload = components['schemas']['CreateCampaignRequest'];
+export type Campaign = components['schemas']['models.Campaign'];
+export type CampaignCreationPayload = components['schemas']['services.CreateCampaignRequest'];
 
 // Service layer response wrappers using OpenAPI types as base
 export interface CampaignsListResponse {
@@ -48,9 +48,9 @@ export interface CampaignResultsResponse<T = unknown> {
 }
 
 // Import additional OpenAPI result types for direct use
-export type GeneratedDomainsResponse = components['schemas']['GeneratedDomainsResponse'];
-export type DNSValidationResultsResponse = components['schemas']['DNSValidationResultsResponse'];
-export type HTTPKeywordResultsResponse = components['schemas']['HTTPKeywordResultsResponse'];
+export type GeneratedDomainsResponse = components['schemas']['services.GeneratedDomainsResponse'];
+export type DNSValidationResultsResponse = components['schemas']['services.DNSValidationResultsResponse'];
+export type HTTPKeywordResultsResponse = components['schemas']['services.HTTPKeywordResultsResponse'];
 
 class CampaignService {
   private static instance: CampaignService;
@@ -175,7 +175,7 @@ class CampaignService {
   }
 
   // Campaign Update Operation using auto-generated OpenAPI client
-  async updateCampaign(campaignId: string, updatePayload: UpdateCampaignRequest): Promise<CampaignServiceResponse> {
+  async updateCampaign(campaignId: string, updatePayload: ServicesUpdateCampaignRequest): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Updating campaign:', campaignId, updatePayload);
       
@@ -310,13 +310,11 @@ class CampaignService {
     try {
       console.log('[CampaignService] Triggering DNS validation for campaign:', campaignId);
       const response = await campaignsApi.validateDNSForCampaign(campaignId, {
-        campaignId: campaignId,
-        personaIds: [],
-        rotationIntervalSeconds: 0,
-        processingSpeedPerMinute: 0,
-        batchSize: 10,
-        retryAttempts: 3,
-        onlyInvalidDomains: false
+        queryTimeoutSeconds: 10,
+        maxDomainsPerRequest: 100,
+        rateLimitDps: 10,
+        rateLimitBurst: 20,
+        useSystemResolvers: true
       });
       const result = 'data' in response ? response.data : response;
       
@@ -370,7 +368,7 @@ class CampaignService {
       console.log('[CampaignService] Getting DNS validation results for campaign:', campaignId, options);
       const response = await campaignsApi.getDNSValidationResults(campaignId,
         options?.cursor ? parseInt(options.cursor, 10) : undefined,
-        options?.limit
+        options?.limit ? options.limit.toString() : undefined
       );
       
       // Extract data from AxiosResponse

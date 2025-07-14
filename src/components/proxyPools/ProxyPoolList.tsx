@@ -15,7 +15,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
 import { proxyPoolsApi, type components } from "@/lib/api-client/client";
 
-type ProxyPool = components['schemas']['ProxyPool'];
+type ProxyPool = components['schemas']['models.ProxyPool'];
 import {
   Dialog,
   DialogContent,
@@ -45,7 +45,7 @@ export default function ProxyPoolList() {
 
   const handleDelete = async (id: string) => {
     try {
-      await proxyPoolsApi.deleteProxyPool(id);
+      await proxyPoolsApi.proxyPoolsPoolIdDelete(id);
       toast({ title: "Deleted" });
       loadPools();
     } catch (error) {
@@ -89,7 +89,7 @@ export default function ProxyPoolList() {
               {pools.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell>{p.name}</TableCell>
-                  <TableCell>{p.description}</TableCell>
+                  <TableCell>{typeof p.description === 'string' ? p.description : (p.description?.string || "")}</TableCell>
                   <TableCell>{p.isEnabled ? "Yes" : "No"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button

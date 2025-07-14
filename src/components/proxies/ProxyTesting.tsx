@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import type { components } from '@/lib/api-client/types';
 
-type Proxy = components['schemas']['Proxy'];
+type Proxy = components['schemas']['models.Proxy'];
 import { testProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';

@@ -31,7 +31,7 @@ import type { components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 
 // Types
-type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
+type CreateCampaignRequest = components['schemas']['services.CreateCampaignRequest'];
 
 // Constants
 const CampaignFormConstants = {
@@ -481,7 +481,7 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
                             <SelectItem value={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}>None</SelectItem>
                             {proxies.filter(p => p.id && p.isEnabled).map(p => (
                               <SelectItem key={p.id} value={p.id!}>
-                                {p.host}:{p.port} ({p.isHealthy ? 'Healthy' : 'Unhealthy'})
+                                {p.host?.string}:{p.port?.int32} ({p.isHealthy ? 'Healthy' : 'Unhealthy'})
                               </SelectItem>
                             ))}
                             {proxies.filter(p => p.id && p.isEnabled).length === 0 && !loadingData && (

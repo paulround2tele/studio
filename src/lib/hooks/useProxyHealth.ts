@@ -6,14 +6,8 @@ import { getProxies, testProxy, testAllProxies } from '@/lib/services/proxyServi
 import type { Proxy as OpenAPIProxy, ProxiesListResponse } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 
-// Extended Proxy type that includes OpenAPI fields plus frontend-specific fields
-interface ExtendedProxy extends OpenAPIProxy {
-  status?: string;
-  successCount?: number;
-  failureCount?: number;
-  lastTested?: string;
-  lastError?: string;
-}
+// Use OpenAPIProxy directly - no extension needed since all fields are already there
+type ExtendedProxy = OpenAPIProxy;
 
 
 export interface ProxyHealthMetrics {
@@ -76,19 +70,19 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     const testingProxies = 0; // OpenAPI doesn't have testing status
     const disabledProxies = safeProxyData.filter(p => !p.isEnabled).length;
 
-    const proxiesWithLatency = safeProxyData.filter(p => p.latencyMs && p.latencyMs > 0);
+    const proxiesWithLatency = safeProxyData.filter(p => p.latencyMs?.valid && p.latencyMs?.int32 && p.latencyMs.int32 > 0);
     const averageResponseTime = proxiesWithLatency.length > 0
-      ? proxiesWithLatency.reduce((sum, p) => sum + (p.latencyMs || 0), 0) / proxiesWithLatency.length
+      ? proxiesWithLatency.reduce((sum, p) => sum + (p.latencyMs?.int32 || 0), 0) / proxiesWithLatency.length
       : 0;
 
     const totalTests = safeProxyData.reduce((sum, p) => {
-      const successCount = p.successCount || 0;
-      const failureCount = p.failureCount || 0;
+      const successCount = p.successCount?.int32 || 0;
+      const failureCount = p.failureCount?.int32 || 0;
       return sum + successCount + failureCount;
     }, 0);
     
     const totalSuccesses = safeProxyData.reduce((sum, p) => {
-      const successCount = p.successCount || 0;
+      const successCount = p.successCount?.int32 || 0;
       return sum + successCount;
     }, 0);
     
@@ -114,11 +108,11 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       id: proxy.id || '',
       address: proxy.address || '',
       status: proxy.isHealthy ? 'Active' : 'Failed',
-      latencyMs: proxy.latencyMs || null,
-      lastTested: proxy.lastCheckedAt ? new Date(proxy.lastCheckedAt) : null,
-      successCount: proxy.successCount || 0,
-      failureCount: proxy.failureCount || 0,
-      lastError: proxy.lastError || null,
+      latencyMs: proxy.latencyMs?.int32 || null,
+      lastTested: proxy.lastCheckedAt?.valid && proxy.lastCheckedAt?.time ? new Date(proxy.lastCheckedAt.time) : null,
+      successCount: proxy.successCount?.int32 || 0,
+      failureCount: proxy.failureCount?.int32 || 0,
+      lastError: proxy.lastError?.string || null,
       isHealthy: Boolean(proxy.isHealthy)
     }));
   }, [proxies]);
@@ -246,8 +240,8 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     const proxy = proxies.find(p => p.id === proxyId);
     if (!proxy) return 0;
     
-    const successCount = proxy.successCount || 0;
-    const failureCount = proxy.failureCount || 0;
+    const successCount = proxy.successCount?.int32 || 0;
+    const failureCount = proxy.failureCount?.int32 || 0;
     const totalTests = successCount + failureCount;
     
     if (totalTests === 0) return 100; // Assume 100% if no tests

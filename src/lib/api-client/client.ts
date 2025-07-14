@@ -11,6 +11,7 @@ import {
   ProxiesApi,
   ProxyPoolsApi,
   HealthApi,
+  FeatureFlagsApi,
   Configuration
 } from './index';
 
@@ -47,6 +48,7 @@ export const proxiesApi = new ProxiesApi(apiConfiguration);
 export const proxyPoolsApi = new ProxyPoolsApi(apiConfiguration);
 export const healthApi = new HealthApi(apiConfiguration);
 export const utilitiesApi = healthApi; // Alias - utilities like ping are under health
+export const featureFlagsApi = new FeatureFlagsApi(apiConfiguration);
 
 // Legacy alias - use campaignsApi directly instead
 export const apiClient = campaignsApi;
@@ -58,5 +60,5 @@ export type { components } from './types';
 import type { components } from './types';
 
 // Re-export specific types that are commonly used
-export type CreateKeywordSetRequest = components['schemas']['CreateKeywordSetRequest'];
-export type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
+export type CreateKeywordSetRequest = components['schemas']['api.CreateKeywordSetRequest'];
+export type CreateCampaignRequest = components['schemas']['services.CreateCampaignRequest'];

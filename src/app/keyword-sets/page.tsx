@@ -10,7 +10,7 @@ import { Loader2, Plus, Edit } from 'lucide-react';
 import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import { keywordSetsApi, type components } from '@/lib/api-client/client';
 
-type KeywordSet = components['schemas']['KeywordSet'];
+type KeywordSet = components['schemas']['api.KeywordSetResponse'];
 
 export default function KeywordSetsPage() {
   const [sets, setSets] = useState<KeywordSet[]>([]);
@@ -20,7 +20,7 @@ export default function KeywordSetsPage() {
   const loadSets = useCallback(async () => {
     setIsLoading(true);
     try {
-      const resp = await keywordSetsApi.listKeywordSets();
+      const resp = await keywordSetsApi.keywordSetsGet();
       setSets(resp.data);
     } catch (e) {
       console.error(e);

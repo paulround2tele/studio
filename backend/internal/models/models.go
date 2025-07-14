@@ -10,50 +10,58 @@ import (
 )
 
 // CampaignTypeEnum defines the type of campaign
+// @enum string
+// @example domain_generation
 type CampaignTypeEnum string
 
 const (
-	CampaignTypeDomainGeneration      CampaignTypeEnum = "domain_generation"
-	CampaignTypeDNSValidation         CampaignTypeEnum = "dns_validation"
-	CampaignTypeHTTPKeywordValidation CampaignTypeEnum = "http_keyword_validation"
+	CampaignTypeDomainGeneration      CampaignTypeEnum = "domain_generation"      // @enum domain_generation
+	CampaignTypeDNSValidation         CampaignTypeEnum = "dns_validation"         // @enum dns_validation
+	CampaignTypeHTTPKeywordValidation CampaignTypeEnum = "http_keyword_validation" // @enum http_keyword_validation
 )
 
 // CampaignPhaseEnum defines the current phase of a campaign
+// @enum string
+// @example setup
 type CampaignPhaseEnum string
 
 const (
-	CampaignPhaseSetup        CampaignPhaseEnum = "setup"
-	CampaignPhaseGeneration   CampaignPhaseEnum = "generation"
-	CampaignPhaseDNSValidation CampaignPhaseEnum = "dns_validation"
-	CampaignPhaseHTTPValidation CampaignPhaseEnum = "http_validation"
-	CampaignPhaseAnalysis     CampaignPhaseEnum = "analysis"
-	CampaignPhaseCleanup      CampaignPhaseEnum = "cleanup"
+	CampaignPhaseSetup          CampaignPhaseEnum = "setup"          // @enum setup
+	CampaignPhaseGeneration     CampaignPhaseEnum = "generation"     // @enum generation
+	CampaignPhaseDNSValidation  CampaignPhaseEnum = "dns_validation" // @enum dns_validation
+	CampaignPhaseHTTPValidation CampaignPhaseEnum = "http_validation" // @enum http_validation
+	CampaignPhaseAnalysis       CampaignPhaseEnum = "analysis"       // @enum analysis
+	CampaignPhaseCleanup        CampaignPhaseEnum = "cleanup"        // @enum cleanup
 )
 
 // CampaignPhaseStatusEnum defines the status of a campaign phase
+// @enum string
+// @example not_started
 type CampaignPhaseStatusEnum string
 
 const (
-	CampaignPhaseStatusPending    CampaignPhaseStatusEnum = "not_started"
-	CampaignPhaseStatusInProgress CampaignPhaseStatusEnum = "in_progress"
-	CampaignPhaseStatusPaused     CampaignPhaseStatusEnum = "paused"
-	CampaignPhaseStatusSucceeded  CampaignPhaseStatusEnum = "completed"
-	CampaignPhaseStatusFailed     CampaignPhaseStatusEnum = "failed"
+	CampaignPhaseStatusPending    CampaignPhaseStatusEnum = "not_started"  // @enum not_started
+	CampaignPhaseStatusInProgress CampaignPhaseStatusEnum = "in_progress"  // @enum in_progress
+	CampaignPhaseStatusPaused     CampaignPhaseStatusEnum = "paused"       // @enum paused
+	CampaignPhaseStatusSucceeded  CampaignPhaseStatusEnum = "completed"    // @enum completed
+	CampaignPhaseStatusFailed     CampaignPhaseStatusEnum = "failed"       // @enum failed
 )
 
 // CampaignStatusEnum defines the status of a campaign
+// @enum string
+// @example pending
 type CampaignStatusEnum string
 
 const (
-	CampaignStatusPending   CampaignStatusEnum = "pending"
-	CampaignStatusQueued    CampaignStatusEnum = "queued"
-	CampaignStatusRunning   CampaignStatusEnum = "running"
-	CampaignStatusPausing   CampaignStatusEnum = "pausing" // User or system initiated pause
-	CampaignStatusPaused    CampaignStatusEnum = "paused"
-	CampaignStatusCompleted CampaignStatusEnum = "completed"
-	CampaignStatusFailed    CampaignStatusEnum = "failed"    // Terminal failure after retries or critical error
-	CampaignStatusArchived  CampaignStatusEnum = "archived"  // For long-term storage, not active
-	CampaignStatusCancelled CampaignStatusEnum = "cancelled" // User initiated cancellation
+	CampaignStatusPending   CampaignStatusEnum = "pending"   // @enum pending
+	CampaignStatusQueued    CampaignStatusEnum = "queued"    // @enum queued
+	CampaignStatusRunning   CampaignStatusEnum = "running"   // @enum running
+	CampaignStatusPausing   CampaignStatusEnum = "pausing"   // @enum pausing (User or system initiated pause)
+	CampaignStatusPaused    CampaignStatusEnum = "paused"    // @enum paused
+	CampaignStatusCompleted CampaignStatusEnum = "completed" // @enum completed
+	CampaignStatusFailed    CampaignStatusEnum = "failed"    // @enum failed (Terminal failure after retries or critical error)
+	CampaignStatusArchived  CampaignStatusEnum = "archived"  // @enum archived (For long-term storage, not active)
+	CampaignStatusCancelled CampaignStatusEnum = "cancelled" // @enum cancelled (User initiated cancellation)
 )
 
 // PersonaTypeEnum defines the type of persona
@@ -65,13 +73,15 @@ const (
 )
 
 // ProxyProtocolEnum defines the protocol for a proxy
+// @enum string
+// @example http
 type ProxyProtocolEnum string
 
 const (
-	ProxyProtocolHTTP   ProxyProtocolEnum = "http"
-	ProxyProtocolHTTPS  ProxyProtocolEnum = "https"
-	ProxyProtocolSOCKS5 ProxyProtocolEnum = "socks5"
-	ProxyProtocolSOCKS4 ProxyProtocolEnum = "socks4"
+	ProxyProtocolHTTP   ProxyProtocolEnum = "http"   // @enum http
+	ProxyProtocolHTTPS  ProxyProtocolEnum = "https"  // @enum https
+	ProxyProtocolSOCKS5 ProxyProtocolEnum = "socks5" // @enum socks5
+	ProxyProtocolSOCKS4 ProxyProtocolEnum = "socks4" // @enum socks4
 )
 
 // ProxyStatusEnum defines the status of a proxy
@@ -722,3 +732,29 @@ func UUIDSlicePtr(v []uuid.UUID) *[]uuid.UUID {
 }
 
 // SchemaValidationHelper functions are removed as models now directly use nullable types.
+
+// CreateProxyRequest represents a request to create a new proxy
+type CreateProxyRequest struct {
+	Name        string            `json:"name" validate:"required,min=1,max=255"`
+	Description string            `json:"description,omitempty"`
+	Address     string            `json:"address" validate:"required"`
+	Protocol    ProxyProtocolEnum `json:"protocol,omitempty"`
+	Username    string            `json:"username,omitempty"`
+	Password    string            `json:"password,omitempty"`
+	CountryCode string            `json:"countryCode,omitempty"`
+	IsEnabled   *bool             `json:"isEnabled,omitempty"`
+	Notes       string            `json:"notes,omitempty"`
+}
+
+// UpdateProxyRequest represents a request to update an existing proxy
+type UpdateProxyRequest struct {
+	Name        *string            `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
+	Description *string            `json:"description,omitempty"`
+	Address     *string            `json:"address,omitempty"`
+	Protocol    *ProxyProtocolEnum `json:"protocol,omitempty"`
+	Username    *string            `json:"username,omitempty"`
+	Password    *string            `json:"password,omitempty"`
+	CountryCode *string            `json:"countryCode,omitempty"`
+	IsEnabled   *bool              `json:"isEnabled,omitempty"`
+	Notes       *string            `json:"notes,omitempty"`
+}

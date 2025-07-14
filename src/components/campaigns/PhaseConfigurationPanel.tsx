@@ -299,14 +299,16 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
         const campaignId = campaignData.id || sourceCampaign.id;
         console.log('[DEBUG] Success! Campaign ID:', campaignId);
         
-        const phaseDisplayNames = {
+        const phaseDisplayNames: Record<string, string> = {
           'dns_validation': 'DNS Validation',
           'http_keyword_validation': 'HTTP Keyword Validation'
         };
         
+        const displayName = phaseDisplayNames[phaseType as string] || 'Unknown Phase';
+        
         toast({
-          title: `${phaseDisplayNames[phaseType]} Started Successfully`,
-          description: `${phaseDisplayNames[phaseType]} phase has been configured and started on the existing campaign.`,
+          title: `${displayName} Started Successfully`,
+          description: `${displayName} phase has been configured and started on the existing campaign.`,
           variant: "default"
         });
 
@@ -628,7 +630,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
                                 <SelectItem value={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}>None</SelectItem>
                                 {proxies.filter(p => p.id && p.isEnabled).map(p => (
                                   <SelectItem key={p.id} value={p.id!}>
-                                    {p.host}:{p.port} ({p.isHealthy ? 'Healthy' : 'Unhealthy'})
+                                    {p.host?.string}:{p.port?.int32} ({p.isHealthy ? 'Healthy' : 'Unhealthy'})
                                   </SelectItem>
                                 ))}
                                 {proxies.filter(p => p.id && p.isEnabled).length === 0 && !loadingData && (

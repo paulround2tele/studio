@@ -24,36 +24,43 @@ type CreatePersonaRequest struct {
 	Name          string                 `json:"name" validate:"required,min=1,max=255"`
 	PersonaType   models.PersonaTypeEnum `json:"personaType" validate:"required,oneof=dns http"`
 	Description   string                 `json:"description,omitempty"`
-	ConfigDetails json.RawMessage        `json:"configDetails" validate:"required"` // Accept structured config as JSON
+	ConfigDetails interface{}            `json:"configDetails" validate:"required" swaggertype:"object" example:"{}"` // Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
 	IsEnabled     *bool                  `json:"isEnabled,omitempty"`
 }
 
 type UpdatePersonaRequest struct {
 	Name          *string     `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
 	Description   *string     `json:"description,omitempty"`
-	ConfigDetails json.RawMessage `json:"configDetails,omitempty"` // Accept structured config as JSON
+	ConfigDetails interface{} `json:"configDetails,omitempty" swaggertype:"object" example:"{}"` // Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
 	IsEnabled     *bool       `json:"isEnabled,omitempty"`
 }
 
 // PersonaResponse formats a persona for API responses.
+// @Description API response containing persona details
 type PersonaResponse struct {
 	ID            uuid.UUID              `json:"id"`
 	Name          string                 `json:"name"`
 	PersonaType   models.PersonaTypeEnum `json:"personaType"`
 	Description   string                 `json:"description,omitempty"`
-	ConfigDetails json.RawMessage        `json:"configDetails"` // Return structured config as JSON
+	ConfigDetails interface{}            `json:"configDetails" swaggertype:"object"` // Return structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
 	IsEnabled     bool                   `json:"isEnabled"`
 	CreatedAt     time.Time              `json:"createdAt"`
 	UpdatedAt     time.Time              `json:"updatedAt"`
 }
 
 func toPersonaResponse(p *models.Persona) PersonaResponse {
+	// Convert json.RawMessage to interface{} for proper OpenAPI typing
+	var configDetails interface{}
+	if len(p.ConfigDetails) > 0 {
+		json.Unmarshal(p.ConfigDetails, &configDetails)
+	}
+	
 	return PersonaResponse{
 		ID:            p.ID,
 		Name:          p.Name,
 		PersonaType:   p.PersonaType,
 		Description:   p.Description.String,
-		ConfigDetails: p.ConfigDetails, // Use raw JSON directly for type safety
+		ConfigDetails: configDetails, // Convert JSON to proper object for OpenAPI
 		IsEnabled:     p.IsEnabled,
 		CreatedAt:     p.CreatedAt,
 		UpdatedAt:     p.UpdatedAt,

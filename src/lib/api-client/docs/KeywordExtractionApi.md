@@ -1,14 +1,14 @@
 # KeywordExtractionApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**batchExtractKeywordsGin**](#batchextractkeywordsgin) | **POST** /keyword-extraction/batch | Batch keyword extraction|
-|[**streamExtractKeywordsGin**](#streamextractkeywordsgin) | **GET** /keyword-extraction/stream | Stream keyword extraction|
+|[**batchExtractKeywords**](#batchextractkeywords) | **POST** /keyword-extraction/batch | Batch keyword extraction|
+|[**streamExtractKeywords**](#streamextractkeywords) | **GET** /keyword-extraction/stream | Stream keyword extraction|
 
-# **batchExtractKeywordsGin**
-> BatchKeywordExtractionResponse batchExtractKeywordsGin()
+# **batchExtractKeywords**
+> ApiBatchKeywordExtractionResponse batchExtractKeywords(apiBatchKeywordExtractionRequest)
 
 Extract keywords from multiple URLs using specified keyword sets and personas
 
@@ -17,22 +17,30 @@ Extract keywords from multiple URLs using specified keyword sets and personas
 ```typescript
 import {
     KeywordExtractionApi,
-    Configuration
+    Configuration,
+    ApiBatchKeywordExtractionRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordExtractionApi(configuration);
 
-const { status, data } = await apiInstance.batchExtractKeywordsGin();
+let apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest; //Batch extraction request
+
+const { status, data } = await apiInstance.batchExtractKeywords(
+    apiBatchKeywordExtractionRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **apiBatchKeywordExtractionRequest** | **ApiBatchKeywordExtractionRequest**| Batch extraction request | |
 
 
 ### Return type
 
-**BatchKeywordExtractionResponse**
+**ApiBatchKeywordExtractionResponse**
 
 ### Authorization
 
@@ -40,21 +48,20 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Extraction results |  -  |
+|**400** | Invalid request body or validation failed |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **streamExtractKeywordsGin**
-> ListCampaigns200Response streamExtractKeywordsGin()
+# **streamExtractKeywords**
+> string streamExtractKeywords()
 
 Extract keywords from a single URL with real-time streaming results
 
@@ -74,7 +81,7 @@ let keywordSetId: string; //Keyword set ID to use for extraction (default to und
 let httpPersonaId: string; //HTTP persona ID for request customization (optional) (default to undefined)
 let dnsPersonaId: string; //DNS persona ID for DNS customization (optional) (default to undefined)
 
-const { status, data } = await apiInstance.streamExtractKeywordsGin(
+const { status, data } = await apiInstance.streamExtractKeywords(
     url,
     keywordSetId,
     httpPersonaId,
@@ -94,7 +101,7 @@ const { status, data } = await apiInstance.streamExtractKeywordsGin(
 
 ### Return type
 
-**ListCampaigns200Response**
+**string**
 
 ### Authorization
 
@@ -103,15 +110,14 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: application/json
+ - **Accept**: application/json, text/event-stream
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Server-sent events stream with extraction results |  -  |
+|**400** | Invalid query parameters |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

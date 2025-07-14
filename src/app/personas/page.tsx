@@ -9,8 +9,7 @@ import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
-type PersonaBase = components['schemas']['Persona'];
-type CreatePersonaRequest = components['schemas']['CreatePersonaRequest'];
+type PersonaBase = components['schemas']['api.PersonaResponse'];
 
 // Legacy compatibility types - add missing properties from old types
 interface Persona extends PersonaBase {
@@ -24,6 +23,15 @@ interface HttpPersona extends Persona {
 
 interface DnsPersona extends Persona {
   personaType: 'dns';
+}
+
+// Define proper create persona payload types
+interface CreatePersonaRequest {
+  name: string;
+  personaType: 'http' | 'dns';
+  description?: string;
+  configDetails: object;
+  isEnabled?: boolean;
 }
 
 type CreateHttpPersonaPayload = CreatePersonaRequest & { personaType: 'http' };
@@ -303,7 +311,7 @@ function PersonasPageContent() {
                         allowInsecureTls: validatedData.allowInsecureTls,
                         requestTimeoutSec: validatedData.requestTimeoutSec,
                         maxRedirects: validatedData.maxRedirects
-                    }
+                    } as any
                 };
             } else {
                 const validatedData = validationResult.data as z.infer<typeof DnsPersonaImportSchema>;
@@ -336,7 +344,7 @@ function PersonasPageContent() {
                         maxConcurrentGoroutines: validatedData.config.maxConcurrentGoroutines,
                         rateLimitDps: validatedData.config.rateLimitDps ?? 100.0,
                         rateLimitBurst: validatedData.config.rateLimitBurst ?? 10,
-                    },
+                    } as any,
                 };
             }
             const response = await createPersona(createPayload);
