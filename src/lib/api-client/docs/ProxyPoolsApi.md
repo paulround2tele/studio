@@ -1,136 +1,20 @@
 # ProxyPoolsApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**addProxyToPool**](#addproxytopool) | **POST** /proxy-pools/{poolId}/proxies | Add proxy to pool|
-|[**createProxyPool**](#createproxypool) | **POST** /proxy-pools | Create proxy pool|
-|[**deleteProxyPool**](#deleteproxypool) | **DELETE** /proxy-pools/{poolId} | Delete proxy pool|
-|[**listProxyPools**](#listproxypools) | **GET** /proxy-pools | List proxy pools|
-|[**removeProxyFromPool**](#removeproxyfrompool) | **DELETE** /proxy-pools/{poolId}/proxies/{proxyId} | Remove proxy from pool|
-|[**updateProxyPool**](#updateproxypool) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
+|[**addProxyToPoolGin**](#addproxytopoolgin) | **POST** /proxy-pools/{poolId}/proxies | Add proxy to pool|
+|[**createProxyPoolGin**](#createproxypoolgin) | **POST** /proxy-pools | Create proxy pool|
+|[**deleteProxyPoolGin**](#deleteproxypoolgin) | **DELETE** /proxy-pools/{poolId} | Delete proxy pool|
+|[**listProxyPoolsGin**](#listproxypoolsgin) | **GET** /proxy-pools | List proxy pools|
+|[**removeProxyFromPoolGin**](#removeproxyfrompoolgin) | **DELETE** /proxy-pools/{poolId}/proxies/{proxyId} | Remove proxy from pool|
+|[**updateProxyPoolGin**](#updateproxypoolgin) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
 
-# **addProxyToPool**
-> ProxyPoolMembership addProxyToPool(addProxyToPoolRequest)
+# **addProxyToPoolGin**
+> ListCampaigns200Response addProxyToPoolGin()
 
-Assigns a proxy to a pool
-
-### Example
-
-```typescript
-import {
-    ProxyPoolsApi,
-    Configuration,
-    AddProxyToPoolRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxyPoolsApi(configuration);
-
-let poolId: string; //Pool ID (default to undefined)
-let addProxyToPoolRequest: AddProxyToPoolRequest; //
-
-const { status, data } = await apiInstance.addProxyToPool(
-    poolId,
-    addProxyToPoolRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **addProxyToPoolRequest** | **AddProxyToPoolRequest**|  | |
-| **poolId** | [**string**] | Pool ID | defaults to undefined|
-
-
-### Return type
-
-**ProxyPoolMembership**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** | Proxy added to pool successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Proxy pool not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **createProxyPool**
-> ProxyPool createProxyPool(proxyPoolRequest)
-
-Creates a new proxy pool
-
-### Example
-
-```typescript
-import {
-    ProxyPoolsApi,
-    Configuration,
-    ProxyPoolRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxyPoolsApi(configuration);
-
-let proxyPoolRequest: ProxyPoolRequest; //
-
-const { status, data } = await apiInstance.createProxyPool(
-    proxyPoolRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **proxyPoolRequest** | **ProxyPoolRequest**|  | |
-
-
-### Return type
-
-**ProxyPool**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** | Proxy pool created successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **deleteProxyPool**
-> DeleteProxyPool200Response deleteProxyPool()
-
-Deletes a proxy pool by ID
+Assign a proxy to a proxy pool with optional weight
 
 ### Example
 
@@ -143,9 +27,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
-let poolId: string; //Pool ID (default to undefined)
+let poolId: string; //Proxy pool ID (default to undefined)
 
-const { status, data } = await apiInstance.deleteProxyPool(
+const { status, data } = await apiInstance.addProxyToPoolGin(
     poolId
 );
 ```
@@ -154,16 +38,16 @@ const { status, data } = await apiInstance.deleteProxyPool(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **poolId** | [**string**] | Pool ID | defaults to undefined|
+| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
 
 
 ### Return type
 
-**DeleteProxyPool200Response**
+**ListCampaigns200Response**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -174,19 +58,16 @@ const { status, data } = await apiInstance.deleteProxyPool(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy pool deleted successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Proxy pool not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **listProxyPools**
-> Array<ProxyPool> listProxyPools()
+# **createProxyPoolGin**
+> ListCampaigns200Response createProxyPoolGin()
 
-Returns all proxy pools
+Create a new proxy pool with configuration settings
 
 ### Example
 
@@ -199,7 +80,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
-const { status, data } = await apiInstance.listProxyPools();
+const { status, data } = await apiInstance.createProxyPoolGin();
 ```
 
 ### Parameters
@@ -208,11 +89,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**Array<ProxyPool>**
+**ListCampaigns200Response**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -223,16 +104,16 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy pools retrieved successfully |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **removeProxyFromPool**
-> RemoveProxyFromPool200Response removeProxyFromPool()
+# **deleteProxyPoolGin**
+> StandardSuccessResponse deleteProxyPoolGin()
 
-Removes a proxy from a pool
+Delete a proxy pool
 
 ### Example
 
@@ -245,10 +126,109 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
-let poolId: string; //Pool ID (default to undefined)
-let proxyId: string; //Proxy ID (default to undefined)
+let poolId: string; //Proxy pool ID (default to undefined)
 
-const { status, data } = await apiInstance.removeProxyFromPool(
+const { status, data } = await apiInstance.deleteProxyPoolGin(
+    poolId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
+
+
+### Return type
+
+**StandardSuccessResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listProxyPoolsGin**
+> ListCampaigns200Response listProxyPoolsGin()
+
+Retrieve all proxy pools with their associated proxies
+
+### Example
+
+```typescript
+import {
+    ProxyPoolsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxyPoolsApi(configuration);
+
+const { status, data } = await apiInstance.listProxyPoolsGin();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ListCampaigns200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **removeProxyFromPoolGin**
+> ProxyPoolMembershipResponse removeProxyFromPoolGin()
+
+Remove a proxy from a specific proxy pool
+
+### Example
+
+```typescript
+import {
+    ProxyPoolsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxyPoolsApi(configuration);
+
+let poolId: string; //Pool ID (UUID) (default to undefined)
+let proxyId: string; //Proxy ID (UUID) (default to undefined)
+
+const { status, data } = await apiInstance.removeProxyFromPoolGin(
     poolId,
     proxyId
 );
@@ -258,17 +238,17 @@ const { status, data } = await apiInstance.removeProxyFromPool(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **poolId** | [**string**] | Pool ID | defaults to undefined|
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
+| **poolId** | [**string**] | Pool ID (UUID) | defaults to undefined|
+| **proxyId** | [**string**] | Proxy ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**RemoveProxyFromPool200Response**
+**ProxyPoolMembershipResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -279,38 +259,32 @@ const { status, data } = await apiInstance.removeProxyFromPool(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy removed from pool successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Proxy pool not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateProxyPool**
-> ProxyPool updateProxyPool(proxyPoolRequest)
+# **updateProxyPoolGin**
+> ProxyPool updateProxyPoolGin()
 
-Updates a proxy pool by ID
+Update an existing proxy pool configuration
 
 ### Example
 
 ```typescript
 import {
     ProxyPoolsApi,
-    Configuration,
-    ProxyPoolRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
-let poolId: string; //Pool ID (default to undefined)
-let proxyPoolRequest: ProxyPoolRequest; //
+let poolId: string; //Proxy pool ID (default to undefined)
 
-const { status, data } = await apiInstance.updateProxyPool(
-    poolId,
-    proxyPoolRequest
+const { status, data } = await apiInstance.updateProxyPoolGin(
+    poolId
 );
 ```
 
@@ -318,8 +292,7 @@ const { status, data } = await apiInstance.updateProxyPool(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **proxyPoolRequest** | **ProxyPoolRequest**|  | |
-| **poolId** | [**string**] | Pool ID | defaults to undefined|
+| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
 
 
 ### Return type
@@ -328,23 +301,20 @@ const { status, data } = await apiInstance.updateProxyPool(
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy pool updated successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Proxy pool not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

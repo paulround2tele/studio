@@ -4,22 +4,22 @@ All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**getAuthConfig**](#getauthconfig) | **GET** /api/v2/config/auth | Get authentication configuration|
-|[**getDNSConfig**](#getdnsconfig) | **GET** /api/v2/config/dns | Get DNS configuration|
-|[**getHTTPConfig**](#gethttpconfig) | **GET** /api/v2/config/http | Get HTTP configuration|
-|[**getLoggingConfig**](#getloggingconfig) | **GET** /api/v2/config/logging | Get logging configuration|
-|[**getProxyManagerConfig**](#getproxymanagerconfig) | **GET** /api/v2/config/proxy-manager | Get proxy manager configuration|
-|[**getRateLimiterConfig**](#getratelimiterconfig) | **GET** /api/v2/config/rate-limit | Get rate limiter configuration|
-|[**getServerConfig**](#getserverconfig) | **GET** /api/v2/config/server | Get server configuration|
-|[**getWorkerConfig**](#getworkerconfig) | **GET** /api/v2/config/worker | Get worker configuration|
-|[**updateAuthConfig**](#updateauthconfig) | **POST** /api/v2/config/auth | Update authentication configuration|
-|[**updateDNSConfig**](#updatednsconfig) | **POST** /api/v2/config/dns | Update DNS configuration|
-|[**updateHTTPConfig**](#updatehttpconfig) | **POST** /api/v2/config/http | Update HTTP configuration|
-|[**updateLoggingConfig**](#updateloggingconfig) | **POST** /api/v2/config/logging | Update logging configuration|
-|[**updateProxyManagerConfig**](#updateproxymanagerconfig) | **POST** /api/v2/config/proxy-manager | Update proxy manager configuration|
-|[**updateRateLimiterConfig**](#updateratelimiterconfig) | **POST** /api/v2/config/rate-limit | Update rate limiter configuration|
-|[**updateServerConfig**](#updateserverconfig) | **PUT** /api/v2/config/server | Update server configuration|
-|[**updateWorkerConfig**](#updateworkerconfig) | **POST** /api/v2/config/worker | Update worker configuration|
+|[**getAuthConfig**](#getauthconfig) | **GET** /config/auth | Get authentication configuration|
+|[**getDNSConfig**](#getdnsconfig) | **GET** /config/dns | Get DNS configuration|
+|[**getHTTPConfig**](#gethttpconfig) | **GET** /config/http | Get HTTP configuration|
+|[**getLoggingConfig**](#getloggingconfig) | **GET** /config/logging | Get logging configuration|
+|[**getProxyManagerConfig**](#getproxymanagerconfig) | **GET** /config/proxy-manager | Get proxy manager configuration|
+|[**getRateLimiterConfig**](#getratelimiterconfig) | **GET** /config/rate-limit | Get rate limiter configuration|
+|[**getServerConfig**](#getserverconfig) | **GET** /config/server | Get server configuration|
+|[**getWorkerConfig**](#getworkerconfig) | **GET** /config/worker | Get worker configuration|
+|[**updateAuthConfig**](#updateauthconfig) | **POST** /config/auth | Update authentication configuration|
+|[**updateDNSConfig**](#updatednsconfig) | **POST** /config/dns | Update DNS configuration|
+|[**updateHTTPConfig**](#updatehttpconfig) | **POST** /config/http | Update HTTP configuration|
+|[**updateLoggingConfig**](#updateloggingconfig) | **POST** /config/logging | Update logging configuration|
+|[**updateProxyManagerConfig**](#updateproxymanagerconfig) | **POST** /config/proxy-manager | Update proxy manager configuration|
+|[**updateRateLimiterConfig**](#updateratelimiterconfig) | **POST** /config/rate-limit | Update rate limiter configuration|
+|[**updateServerConfig**](#updateserverconfig) | **PUT** /config/server | Update server configuration|
+|[**updateWorkerConfig**](#updateworkerconfig) | **POST** /config/worker | Update worker configuration|
 
 # **getAuthConfig**
 > AuthConfig getAuthConfig()

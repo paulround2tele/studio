@@ -1,28 +1,21 @@
 # BulkDeleteResponse
 
-Response for bulk delete operation
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**errors** | **Array&lt;string&gt;** | List of error messages for failed deletions | [optional] [default to undefined]
-**failedDeletions** | **number** | Number of campaigns that failed to delete | [optional] [default to undefined]
-**message** | **string** | Operation result message | [optional] [default to undefined]
-**successfulDeletions** | **number** | Number of campaigns successfully deleted | [optional] [default to undefined]
-**totalRequested** | **number** | Total number of campaigns requested for deletion | [optional] [default to undefined]
+**deleted_count** | **number** |  | [optional] [default to undefined]
+**errors** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { BulkDeleteResponse } from './api';
+import { BulkDeleteResponse } from 'domainflow-api-client';
 
 const instance: BulkDeleteResponse = {
+    deleted_count,
     errors,
-    failedDeletions,
-    message,
-    successfulDeletions,
-    totalRequested,
 };
 ```
 

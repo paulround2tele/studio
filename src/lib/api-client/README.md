@@ -1,4 +1,4 @@
-## api-client@1.0.0
+## domainflow-api-client@1.0.0
 
 This generator creates TypeScript/JavaScript client that utilizes [axios](https://github.com/axios/axios). The generated Node module can be used in the following environments:
 
@@ -36,7 +36,7 @@ navigate to the folder of your consuming project and run one of the following co
 _published:_
 
 ```
-npm install api-client@1.0.0 --save
+npm install domainflow-api-client@1.0.0 --save
 ```
 
 _unPublished (not recommended):_
@@ -56,7 +56,7 @@ Class | Method | HTTP request | Description
 *AuthApi* | [**login**](docs/AuthApi.md#login) | **POST** /auth/login | User login
 *AuthApi* | [**logout**](docs/AuthApi.md#logout) | **POST** /auth/logout | User logout
 *AuthApi* | [**refreshSession**](docs/AuthApi.md#refreshsession) | **POST** /auth/refresh | Refresh session
-*CampaignsApi* | [**bulkDeleteCampaigns**](docs/CampaignsApi.md#bulkdeletecampaigns) | **DELETE** /campaigns | Bulk delete campaigns
+*CampaignsApi* | [**bulkDeleteCampaigns**](docs/CampaignsApi.md#bulkdeletecampaigns) | **POST** /campaigns/bulk-delete | Bulk delete campaigns
 *CampaignsApi* | [**cancelCampaign**](docs/CampaignsApi.md#cancelcampaign) | **POST** /campaigns/{campaignId}/cancel | Cancel campaign
 *CampaignsApi* | [**createCampaign**](docs/CampaignsApi.md#createcampaign) | **POST** /campaigns | Create campaign
 *CampaignsApi* | [**deleteCampaign**](docs/CampaignsApi.md#deletecampaign) | **DELETE** /campaigns/{campaignId} | Delete campaign
@@ -72,148 +72,92 @@ Class | Method | HTTP request | Description
 *CampaignsApi* | [**updateCampaign**](docs/CampaignsApi.md#updatecampaign) | **PUT** /campaigns/{campaignId} | Update campaign
 *CampaignsApi* | [**validateDNSForCampaign**](docs/CampaignsApi.md#validatednsforcampaign) | **POST** /campaigns/{campaignId}/validate-dns | Validate DNS for campaign domains
 *CampaignsApi* | [**validateHTTPForCampaign**](docs/CampaignsApi.md#validatehttpforcampaign) | **POST** /campaigns/{campaignId}/validate-http | Validate HTTP for campaign domains
-*ConfigApi* | [**getFeatureFlags**](docs/ConfigApi.md#getfeatureflags) | **GET** /config/features | Get feature flags
-*ConfigApi* | [**updateFeatureFlags**](docs/ConfigApi.md#updatefeatureflags) | **POST** /config/features | Update feature flags
-*ConfigurationApi* | [**getAuthConfig**](docs/ConfigurationApi.md#getauthconfig) | **GET** /api/v2/config/auth | Get authentication configuration
-*ConfigurationApi* | [**getDNSConfig**](docs/ConfigurationApi.md#getdnsconfig) | **GET** /api/v2/config/dns | Get DNS configuration
-*ConfigurationApi* | [**getHTTPConfig**](docs/ConfigurationApi.md#gethttpconfig) | **GET** /api/v2/config/http | Get HTTP configuration
-*ConfigurationApi* | [**getLoggingConfig**](docs/ConfigurationApi.md#getloggingconfig) | **GET** /api/v2/config/logging | Get logging configuration
-*ConfigurationApi* | [**getProxyManagerConfig**](docs/ConfigurationApi.md#getproxymanagerconfig) | **GET** /api/v2/config/proxy-manager | Get proxy manager configuration
-*ConfigurationApi* | [**getRateLimiterConfig**](docs/ConfigurationApi.md#getratelimiterconfig) | **GET** /api/v2/config/rate-limit | Get rate limiter configuration
-*ConfigurationApi* | [**getServerConfig**](docs/ConfigurationApi.md#getserverconfig) | **GET** /api/v2/config/server | Get server configuration
-*ConfigurationApi* | [**getWorkerConfig**](docs/ConfigurationApi.md#getworkerconfig) | **GET** /api/v2/config/worker | Get worker configuration
-*ConfigurationApi* | [**updateAuthConfig**](docs/ConfigurationApi.md#updateauthconfig) | **POST** /api/v2/config/auth | Update authentication configuration
-*ConfigurationApi* | [**updateDNSConfig**](docs/ConfigurationApi.md#updatednsconfig) | **POST** /api/v2/config/dns | Update DNS configuration
-*ConfigurationApi* | [**updateHTTPConfig**](docs/ConfigurationApi.md#updatehttpconfig) | **POST** /api/v2/config/http | Update HTTP configuration
-*ConfigurationApi* | [**updateLoggingConfig**](docs/ConfigurationApi.md#updateloggingconfig) | **POST** /api/v2/config/logging | Update logging configuration
-*ConfigurationApi* | [**updateProxyManagerConfig**](docs/ConfigurationApi.md#updateproxymanagerconfig) | **POST** /api/v2/config/proxy-manager | Update proxy manager configuration
-*ConfigurationApi* | [**updateRateLimiterConfig**](docs/ConfigurationApi.md#updateratelimiterconfig) | **POST** /api/v2/config/rate-limit | Update rate limiter configuration
-*ConfigurationApi* | [**updateServerConfig**](docs/ConfigurationApi.md#updateserverconfig) | **PUT** /api/v2/config/server | Update server configuration
-*ConfigurationApi* | [**updateWorkerConfig**](docs/ConfigurationApi.md#updateworkerconfig) | **POST** /api/v2/config/worker | Update worker configuration
-*HealthApi* | [**getHealthCheck**](docs/HealthApi.md#gethealthcheck) | **GET** /health | Basic health check
-*HealthApi* | [**getLivenessCheck**](docs/HealthApi.md#getlivenesscheck) | **GET** /health/live | Liveness probe
-*HealthApi* | [**getReadinessCheck**](docs/HealthApi.md#getreadinesscheck) | **GET** /health/ready | Readiness probe
-*KeywordSetsApi* | [**createKeywordSet**](docs/KeywordSetsApi.md#createkeywordset) | **POST** /keywords/sets | Create keyword set
-*KeywordSetsApi* | [**deleteKeywordSet**](docs/KeywordSetsApi.md#deletekeywordset) | **DELETE** /keywords/sets/{setId} | Delete keyword set
-*KeywordSetsApi* | [**getKeywordSet**](docs/KeywordSetsApi.md#getkeywordset) | **GET** /keywords/sets/{setId} | Get keyword set
-*KeywordSetsApi* | [**listKeywordSets**](docs/KeywordSetsApi.md#listkeywordsets) | **GET** /keywords/sets | List keyword sets
-*KeywordSetsApi* | [**updateKeywordSet**](docs/KeywordSetsApi.md#updatekeywordset) | **PUT** /keywords/sets/{setId} | Update keyword set
-*KeywordsApi* | [**batchExtractKeywords**](docs/KeywordsApi.md#batchextractkeywords) | **POST** /api/v2/extract/keywords | Batch keyword extraction
-*KeywordsApi* | [**streamExtractKeywords**](docs/KeywordsApi.md#streamextractkeywords) | **GET** /api/v2/extract/keywords/stream | Streaming keyword extraction
+*ConfigApi* | [**extractKeywords**](docs/ConfigApi.md#extractkeywords) | **POST** /extract-keywords | Extract keywords
+*ConfigApi* | [**getServerSettings**](docs/ConfigApi.md#getserversettings) | **GET** /settings | Get server settings
+*ConfigApi* | [**healthCheck**](docs/ConfigApi.md#healthcheck) | **GET** /health | Health check
+*ConfigApi* | [**webSocketConnection**](docs/ConfigApi.md#websocketconnection) | **GET** /ws | WebSocket connection
+*KeywordSetsApi* | [**createKeywordSet**](docs/KeywordSetsApi.md#createkeywordset) | **POST** /keyword-sets | Create keyword set
+*KeywordSetsApi* | [**deleteKeywordSet**](docs/KeywordSetsApi.md#deletekeywordset) | **DELETE** /keyword-sets/{keywordSetId} | Delete keyword set
+*KeywordSetsApi* | [**getKeywordSet**](docs/KeywordSetsApi.md#getkeywordset) | **GET** /keyword-sets/{keywordSetId} | Get keyword set
+*KeywordSetsApi* | [**listKeywordSets**](docs/KeywordSetsApi.md#listkeywordsets) | **GET** /keyword-sets | List keyword sets
+*KeywordSetsApi* | [**updateKeywordSet**](docs/KeywordSetsApi.md#updatekeywordset) | **PUT** /keyword-sets/{keywordSetId} | Update keyword set
 *PersonasApi* | [**createPersona**](docs/PersonasApi.md#createpersona) | **POST** /personas | Create persona
-*PersonasApi* | [**deletePersona**](docs/PersonasApi.md#deletepersona) | **DELETE** /personas/{id} | Delete persona
-*PersonasApi* | [**getDnsPersonaById**](docs/PersonasApi.md#getdnspersonabyid) | **GET** /personas/dns/{id} | Get DNS persona by ID
-*PersonasApi* | [**getHttpPersonaById**](docs/PersonasApi.md#gethttppersonabyid) | **GET** /personas/http/{id} | Get HTTP persona by ID
-*PersonasApi* | [**getPersonaById**](docs/PersonasApi.md#getpersonabyid) | **GET** /personas/{id} | Get persona by ID
+*PersonasApi* | [**deletePersona**](docs/PersonasApi.md#deletepersona) | **DELETE** /personas/{personaId} | Delete persona
+*PersonasApi* | [**getDnsPersonaByID**](docs/PersonasApi.md#getdnspersonabyid) | **GET** /personas/{personaId}/dns | Get DNS persona by ID
+*PersonasApi* | [**getHttpPersonaByID**](docs/PersonasApi.md#gethttppersonabyid) | **GET** /personas/{personaId}/http | Get HTTP persona by ID
+*PersonasApi* | [**getPersonaByID**](docs/PersonasApi.md#getpersonabyid) | **GET** /personas/{personaId} | Get persona by ID
 *PersonasApi* | [**listPersonas**](docs/PersonasApi.md#listpersonas) | **GET** /personas | List personas
-*PersonasApi* | [**testPersona**](docs/PersonasApi.md#testpersona) | **POST** /personas/{id}/test | Test persona
-*PersonasApi* | [**updatePersona**](docs/PersonasApi.md#updatepersona) | **PUT** /personas/{id} | Update persona
-*ProxiesApi* | [**createProxy**](docs/ProxiesApi.md#createproxy) | **POST** /proxies | Add proxy
+*PersonasApi* | [**testPersona**](docs/PersonasApi.md#testpersona) | **POST** /personas/{personaId}/test | Test persona
+*PersonasApi* | [**updatePersona**](docs/PersonasApi.md#updatepersona) | **PUT** /personas/{personaId} | Update persona
+*ProxiesApi* | [**createProxy**](docs/ProxiesApi.md#createproxy) | **POST** /proxies | Create proxy
 *ProxiesApi* | [**deleteProxy**](docs/ProxiesApi.md#deleteproxy) | **DELETE** /proxies/{proxyId} | Delete proxy
-*ProxiesApi* | [**forceCheckAllProxies**](docs/ProxiesApi.md#forcecheckallproxies) | **POST** /proxies/health-check | Force all proxies health check
-*ProxiesApi* | [**forceCheckSingleProxy**](docs/ProxiesApi.md#forcechecksingleproxy) | **POST** /proxies/{proxyId}/health-check | Force single proxy health check
-*ProxiesApi* | [**getProxyStatuses**](docs/ProxiesApi.md#getproxystatuses) | **GET** /proxies/status | Get proxy statuses
+*ProxiesApi* | [**getProxy**](docs/ProxiesApi.md#getproxy) | **GET** /proxies/{proxyId} | Get proxy
 *ProxiesApi* | [**listProxies**](docs/ProxiesApi.md#listproxies) | **GET** /proxies | List proxies
 *ProxiesApi* | [**testProxy**](docs/ProxiesApi.md#testproxy) | **POST** /proxies/{proxyId}/test | Test proxy
 *ProxiesApi* | [**updateProxy**](docs/ProxiesApi.md#updateproxy) | **PUT** /proxies/{proxyId} | Update proxy
-*ProxyPoolsApi* | [**addProxyToPool**](docs/ProxyPoolsApi.md#addproxytopool) | **POST** /proxy-pools/{poolId}/proxies | Add proxy to pool
 *ProxyPoolsApi* | [**createProxyPool**](docs/ProxyPoolsApi.md#createproxypool) | **POST** /proxy-pools | Create proxy pool
-*ProxyPoolsApi* | [**deleteProxyPool**](docs/ProxyPoolsApi.md#deleteproxypool) | **DELETE** /proxy-pools/{poolId} | Delete proxy pool
+*ProxyPoolsApi* | [**deleteProxyPool**](docs/ProxyPoolsApi.md#deleteproxypool) | **DELETE** /proxy-pools/{proxyPoolId} | Delete proxy pool
+*ProxyPoolsApi* | [**getProxyPool**](docs/ProxyPoolsApi.md#getproxypool) | **GET** /proxy-pools/{proxyPoolId} | Get proxy pool
 *ProxyPoolsApi* | [**listProxyPools**](docs/ProxyPoolsApi.md#listproxypools) | **GET** /proxy-pools | List proxy pools
-*ProxyPoolsApi* | [**removeProxyFromPool**](docs/ProxyPoolsApi.md#removeproxyfrompool) | **DELETE** /proxy-pools/{poolId}/proxies/{proxyId} | Remove proxy from pool
-*ProxyPoolsApi* | [**updateProxyPool**](docs/ProxyPoolsApi.md#updateproxypool) | **PUT** /proxy-pools/{poolId} | Update proxy pool
-*UtilitiesApi* | [**ping**](docs/UtilitiesApi.md#ping) | **GET** /ping | Basic connectivity test
-*WebSocketApi* | [**connectWebSocket**](docs/WebSocketApi.md#connectwebsocket) | **GET** /api/v2/ws | WebSocket connection endpoint
+*ProxyPoolsApi* | [**updateProxyPool**](docs/ProxyPoolsApi.md#updateproxypool) | **PUT** /proxy-pools/{proxyPoolId} | Update proxy pool
 
 
 ### Documentation For Models
 
- - [AddProxyToPoolRequest](docs/AddProxyToPoolRequest.md)
- - [AuthConfig](docs/AuthConfig.md)
- - [BatchKeywordExtractionRequest](docs/BatchKeywordExtractionRequest.md)
- - [BatchKeywordExtractionResponse](docs/BatchKeywordExtractionResponse.md)
  - [BulkDeleteRequest](docs/BulkDeleteRequest.md)
  - [BulkDeleteResponse](docs/BulkDeleteResponse.md)
  - [Campaign](docs/Campaign.md)
- - [CampaignDetailsResponse](docs/CampaignDetailsResponse.md)
- - [CampaignListResponse](docs/CampaignListResponse.md)
  - [CampaignOperationResponse](docs/CampaignOperationResponse.md)
+ - [CampaignsResponse](docs/CampaignsResponse.md)
  - [ChangePasswordRequest](docs/ChangePasswordRequest.md)
- - [ComponentStatus](docs/ComponentStatus.md)
- - [CookieHandling](docs/CookieHandling.md)
- - [CreateCampaignRequest](docs/CreateCampaignRequest.md)
  - [CreateKeywordSetRequest](docs/CreateKeywordSetRequest.md)
  - [CreatePersonaRequest](docs/CreatePersonaRequest.md)
- - [CreatePersonaRequestConfigDetails](docs/CreatePersonaRequestConfigDetails.md)
+ - [CreateProxyPoolRequest](docs/CreateProxyPoolRequest.md)
  - [CreateProxyRequest](docs/CreateProxyRequest.md)
- - [DNSConfig](docs/DNSConfig.md)
- - [DNSConfigDetails](docs/DNSConfigDetails.md)
  - [DNSValidationCampaignParams](docs/DNSValidationCampaignParams.md)
  - [DNSValidationResult](docs/DNSValidationResult.md)
  - [DNSValidationResultsResponse](docs/DNSValidationResultsResponse.md)
- - [DeleteProxyPool200Response](docs/DeleteProxyPool200Response.md)
- - [DnsPersonaConfig](docs/DnsPersonaConfig.md)
- - [DnsValidationParams](docs/DnsValidationParams.md)
  - [DomainGenerationCampaignParams](docs/DomainGenerationCampaignParams.md)
- - [DomainGenerationParams](docs/DomainGenerationParams.md)
  - [ErrorResponse](docs/ErrorResponse.md)
  - [ExtractedContentAnalysis](docs/ExtractedContentAnalysis.md)
  - [ExtractedContentItem](docs/ExtractedContentItem.md)
- - [FeatureFlags](docs/FeatureFlags.md)
- - [ForceCheckAllProxies202Response](docs/ForceCheckAllProxies202Response.md)
- - [ForceCheckProxiesRequest](docs/ForceCheckProxiesRequest.md)
  - [GeneratedDomain](docs/GeneratedDomain.md)
  - [GeneratedDomainsResponse](docs/GeneratedDomainsResponse.md)
  - [GetDomainGenerationPatternOffset200Response](docs/GetDomainGenerationPatternOffset200Response.md)
- - [HTTP2SettingsConfig](docs/HTTP2SettingsConfig.md)
- - [HTTPConfig](docs/HTTPConfig.md)
- - [HTTPConfigDetails](docs/HTTPConfigDetails.md)
- - [HTTPCookieHandling](docs/HTTPCookieHandling.md)
  - [HTTPKeywordCampaignParams](docs/HTTPKeywordCampaignParams.md)
  - [HTTPKeywordResult](docs/HTTPKeywordResult.md)
  - [HTTPKeywordResultsResponse](docs/HTTPKeywordResultsResponse.md)
- - [HealthStatus](docs/HealthStatus.md)
- - [HttpKeywordParams](docs/HttpKeywordParams.md)
- - [HttpPersonaConfig](docs/HttpPersonaConfig.md)
- - [KeywordExtractionAPIResult](docs/KeywordExtractionAPIResult.md)
- - [KeywordExtractionRequestItem](docs/KeywordExtractionRequestItem.md)
- - [KeywordExtractionResult](docs/KeywordExtractionResult.md)
+ - [HealthCheckResponse](docs/HealthCheckResponse.md)
+ - [InPlaceDNSValidationRequest](docs/InPlaceDNSValidationRequest.md)
+ - [InPlaceHTTPValidationRequest](docs/InPlaceHTTPValidationRequest.md)
+ - [KeywordExtractionRequest](docs/KeywordExtractionRequest.md)
+ - [KeywordExtractionResponse](docs/KeywordExtractionResponse.md)
  - [KeywordRule](docs/KeywordRule.md)
- - [KeywordRuleRequest](docs/KeywordRuleRequest.md)
  - [KeywordSet](docs/KeywordSet.md)
+ - [KeywordSetsResponse](docs/KeywordSetsResponse.md)
  - [LeadItem](docs/LeadItem.md)
- - [LoggingConfig](docs/LoggingConfig.md)
  - [LoginRequest](docs/LoginRequest.md)
  - [LoginResponse](docs/LoginResponse.md)
- - [PageInfo](docs/PageInfo.md)
- - [PaginationMetadata](docs/PaginationMetadata.md)
  - [PatternOffsetRequest](docs/PatternOffsetRequest.md)
  - [Persona](docs/Persona.md)
- - [PersonaListResponse](docs/PersonaListResponse.md)
- - [PersonaTestResult](docs/PersonaTestResult.md)
- - [PersonaTestResultData](docs/PersonaTestResultData.md)
- - [Ping200Response](docs/Ping200Response.md)
+ - [PersonasResponse](docs/PersonasResponse.md)
+ - [ProxiesResponse](docs/ProxiesResponse.md)
  - [Proxy](docs/Proxy.md)
- - [ProxyManagerConfig](docs/ProxyManagerConfig.md)
  - [ProxyPool](docs/ProxyPool.md)
- - [ProxyPoolMembership](docs/ProxyPoolMembership.md)
- - [ProxyPoolRequest](docs/ProxyPoolRequest.md)
- - [ProxyStatus](docs/ProxyStatus.md)
- - [ProxyTestResult](docs/ProxyTestResult.md)
- - [RateLimiterConfig](docs/RateLimiterConfig.md)
- - [RefreshResponse](docs/RefreshResponse.md)
- - [RemoveProxyFromPool200Response](docs/RemoveProxyFromPool200Response.md)
- - [ServerConfig](docs/ServerConfig.md)
- - [SimpleStatus](docs/SimpleStatus.md)
+ - [ProxyPoolsResponse](docs/ProxyPoolsResponse.md)
+ - [ServerSettingsResponse](docs/ServerSettingsResponse.md)
  - [StandardAPIResponse](docs/StandardAPIResponse.md)
- - [SystemInfo](docs/SystemInfo.md)
- - [TLSClientHello](docs/TLSClientHello.md)
+ - [TestPersonaRequest](docs/TestPersonaRequest.md)
+ - [TestPersonaResponse](docs/TestPersonaResponse.md)
+ - [TestProxyRequest](docs/TestProxyRequest.md)
+ - [TestProxyResponse](docs/TestProxyResponse.md)
  - [UpdateCampaignRequest](docs/UpdateCampaignRequest.md)
  - [UpdateKeywordSetRequest](docs/UpdateKeywordSetRequest.md)
  - [UpdatePersonaRequest](docs/UpdatePersonaRequest.md)
+ - [UpdateProxyPoolRequest](docs/UpdateProxyPoolRequest.md)
  - [UpdateProxyRequest](docs/UpdateProxyRequest.md)
  - [User](docs/User.md)
- - [WorkerConfig](docs/WorkerConfig.md)
+ - [WebSocketResponse](docs/WebSocketResponse.md)
 
 
 <a id="documentation-for-authorization"></a>

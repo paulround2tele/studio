@@ -13,7 +13,7 @@ All URIs are relative to */api/v2*
 # **changePassword**
 > StandardAPIResponse changePassword(changePasswordRequest)
 
-Changes the password for the currently authenticated user
+Changes the current user\'s password
 
 ### Example
 
@@ -22,7 +22,7 @@ import {
     AuthApi,
     Configuration,
     ChangePasswordRequest
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -59,9 +59,6 @@ const { status, data } = await apiInstance.changePassword(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Password changed successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
 |**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -69,7 +66,7 @@ const { status, data } = await apiInstance.changePassword(
 # **getCurrentUser**
 > User getCurrentUser()
 
-Returns information about the currently authenticated user
+Gets the current authenticated user\'s information
 
 ### Example
 
@@ -77,7 +74,7 @@ Returns information about the currently authenticated user
 import {
     AuthApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -107,8 +104,6 @@ This endpoint does not have any parameters.
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Current user information |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
 |**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -125,7 +120,7 @@ import {
     AuthApi,
     Configuration,
     LoginRequest
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -162,9 +157,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Login successful |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
+|**401** | Invalid credentials |  -  |
 |**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -172,7 +165,7 @@ No authorization required
 # **logout**
 > StandardAPIResponse logout()
 
-Invalidates the current session and clears session cookie
+Logs out the current user and invalidates the session
 
 ### Example
 
@@ -180,7 +173,7 @@ Invalidates the current session and clears session cookie
 import {
     AuthApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -210,15 +203,14 @@ This endpoint does not have any parameters.
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Logout successful |  -  |
-|**500** | Internal server error |  -  |
 |**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **refreshSession**
-> RefreshResponse refreshSession()
+> LoginResponse refreshSession()
 
-Refreshes the current session
+Refreshes the current user session
 
 ### Example
 
@@ -226,7 +218,7 @@ Refreshes the current session
 import {
     AuthApi,
     Configuration
-} from './api';
+} from 'domainflow-api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AuthApi(configuration);
@@ -240,7 +232,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**RefreshResponse**
+**LoginResponse**
 
 ### Authorization
 
@@ -256,8 +248,6 @@ This endpoint does not have any parameters.
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Session refreshed successfully |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
 |**0** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

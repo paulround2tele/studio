@@ -1,55 +1,47 @@
 # CampaignsApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**bulkDeleteCampaigns**](#bulkdeletecampaigns) | **POST** /api/campaigns/bulk-delete | Bulk delete campaigns|
-|[**cancelCampaign**](#cancelcampaign) | **POST** /api/campaigns/{id}/cancel | Cancel campaign|
-|[**createCampaign**](#createcampaign) | **POST** /api/campaigns | Create campaign|
-|[**deleteCampaign**](#deletecampaign) | **DELETE** /api/campaigns/{id} | Delete campaign|
-|[**getCampaignDetails**](#getcampaigndetails) | **GET** /api/campaigns/{id} | Get campaign details|
-|[**getDNSValidationResults**](#getdnsvalidationresults) | **GET** /api/campaigns/{id}/dns-results | Get DNS validation results|
-|[**getDomainGenerationPatternOffset**](#getdomaingenerationpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get domain generation pattern offset|
-|[**getGeneratedDomains**](#getgenerateddomains) | **GET** /api/campaigns/{id}/domains | Get generated domains|
-|[**getHTTPKeywordResults**](#gethttpkeywordresults) | **GET** /api/campaigns/{id}/http-results | Get HTTP keyword results|
-|[**listCampaigns**](#listcampaigns) | **GET** /api/campaigns | List campaigns|
-|[**pauseCampaign**](#pausecampaign) | **POST** /api/campaigns/{id}/pause | Pause campaign|
-|[**resumeCampaign**](#resumecampaign) | **POST** /api/campaigns/{id}/resume | Resume campaign|
-|[**startCampaign**](#startcampaign) | **POST** /api/campaigns/{id}/start | Start campaign|
-|[**updateCampaign**](#updatecampaign) | **PUT** /api/campaigns/{id} | Update campaign|
-|[**validateDNSForCampaign**](#validatednsforcampaign) | **POST** /campaigns/{campaignId}/validate-dns | Validate DNS for campaign domains|
-|[**validateHTTPForCampaign**](#validatehttpforcampaign) | **POST** /campaigns/{campaignId}/validate-http | Validate HTTP for campaign domains|
+|[**bulkDeleteCampaigns**](#bulkdeletecampaigns) | **DELETE** /campaigns | Bulk delete campaigns|
+|[**cancelCampaign**](#cancelcampaign) | **POST** /campaigns/{campaignId}/cancel | Cancel campaign|
+|[**createCampaign**](#createcampaign) | **POST** /campaigns | Create new campaign|
+|[**deleteCampaign**](#deletecampaign) | **DELETE** /campaigns/{campaignId} | Delete campaign|
+|[**getCampaignDetails**](#getcampaigndetails) | **GET** /campaigns/{campaignId} | Get campaign details|
+|[**getDNSValidationResults**](#getdnsvalidationresults) | **GET** /campaigns/{campaignId}/results/dns-validation | Get DNS validation results|
+|[**getGeneratedDomains**](#getgenerateddomains) | **GET** /campaigns/{campaignId}/results/generated-domains | Get generated domains|
+|[**getHTTPKeywordResults**](#gethttpkeywordresults) | **GET** /campaigns/{campaignId}/results/http-keyword | Get HTTP keyword results|
+|[**getPatternOffset**](#getpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get domain generation pattern offset|
+|[**listCampaigns**](#listcampaigns) | **GET** /campaigns | List all campaigns|
+|[**pauseCampaign**](#pausecampaign) | **POST** /campaigns/{campaignId}/pause | Pause campaign|
+|[**resumeCampaign**](#resumecampaign) | **POST** /campaigns/{campaignId}/resume | Resume campaign|
+|[**startCampaign**](#startcampaign) | **POST** /campaigns/{campaignId}/start | Start campaign|
+|[**updateCampaign**](#updatecampaign) | **PUT** /campaigns/{campaignId} | Update campaign configuration|
+|[**validateDNSForCampaign**](#validatednsforcampaign) | **POST** /campaigns/{campaignId}/validate-dns | Validate DNS for campaign|
+|[**validateHTTPForCampaign**](#validatehttpforcampaign) | **POST** /campaigns/{campaignId}/validate-http | Validate HTTP for campaign|
 
 # **bulkDeleteCampaigns**
-> BulkDeleteResult bulkDeleteCampaigns(bulkDeleteRequest)
+> BulkDeleteResult bulkDeleteCampaigns()
 
-Deletes multiple campaigns and all associated data
+Delete multiple campaigns in a single operation
 
 ### Example
 
 ```typescript
 import {
     CampaignsApi,
-    Configuration,
-    BulkDeleteRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let bulkDeleteRequest: BulkDeleteRequest; //
-
-const { status, data } = await apiInstance.bulkDeleteCampaigns(
-    bulkDeleteRequest
-);
+const { status, data } = await apiInstance.bulkDeleteCampaigns();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **bulkDeleteRequest** | **BulkDeleteRequest**|  | |
+This endpoint does not have any parameters.
 
 
 ### Return type
@@ -58,29 +50,27 @@ const { status, data } = await apiInstance.bulkDeleteCampaigns(
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Bulk delete completed |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **cancelCampaign**
-> Campaign cancelCampaign()
+> CampaignOperationResponse cancelCampaign()
 
-Cancels a campaign execution
+Cancel the execution of a campaign
 
 ### Example
 
@@ -93,10 +83,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.cancelCampaign(
-    id
+    campaignId
 );
 ```
 
@@ -104,16 +94,16 @@ const { status, data } = await apiInstance.cancelCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Campaign**
+**CampaignOperationResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -124,75 +114,62 @@ const { status, data } = await apiInstance.cancelCampaign(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Campaign cancelled successfully |  -  |
-|**400** | Bad request - campaign cannot be cancelled |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **createCampaign**
-> Campaign createCampaign(createCampaignRequest)
+> CampaignOperationResponse createCampaign()
 
-Creates a new campaign using unified endpoint supporting all campaign types
+Create a new campaign with specified configuration parameters
 
 ### Example
 
 ```typescript
 import {
     CampaignsApi,
-    Configuration,
-    CreateCampaignRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let createCampaignRequest: CreateCampaignRequest; //
-
-const { status, data } = await apiInstance.createCampaign(
-    createCampaignRequest
-);
+const { status, data } = await apiInstance.createCampaign();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **createCampaignRequest** | **CreateCampaignRequest**|  | |
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**Campaign**
+**CampaignOperationResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Campaign created successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deleteCampaign**
-> deleteCampaign()
+> DeletionResponse deleteCampaign()
 
-Deletes a campaign and all associated data
+Delete a campaign and all associated data
 
 ### Example
 
@@ -205,10 +182,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.deleteCampaign(
-    id
+    campaignId
 );
 ```
 
@@ -216,16 +193,16 @@ const { status, data } = await apiInstance.deleteCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-void (empty response body)
+**DeletionResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -236,19 +213,16 @@ void (empty response body)
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | Campaign deleted successfully |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**409** | Conflict - campaign has dependencies |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getCampaignDetails**
-> Campaign getCampaignDetails()
+> CampaignDetailsResponse getCampaignDetails()
 
-Retrieves detailed information about a specific campaign
+Retrieve detailed information about a specific campaign including its configuration parameters
 
 ### Example
 
@@ -261,10 +235,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.getCampaignDetails(
-    id
+    campaignId
 );
 ```
 
@@ -272,16 +246,16 @@ const { status, data } = await apiInstance.getCampaignDetails(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Campaign**
+**CampaignDetailsResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -292,18 +266,16 @@ const { status, data } = await apiInstance.getCampaignDetails(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Campaign details |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getDNSValidationResults**
-> DNSValidationResultsResponse getDNSValidationResults()
+> ListCampaigns200Response getDNSValidationResults()
 
-Retrieves DNS validation results for a campaign
+Retrieve DNS validation results for a specific campaign
 
 ### Example
 
@@ -316,14 +288,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
-let page: number; //Page number (1-based) (optional) (default to 1)
-let limit: number; //Number of items per page (optional) (default to 100)
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.getDNSValidationResults(
-    id,
-    page,
-    limit
+    campaignId
 );
 ```
 
@@ -331,18 +299,16 @@ const { status, data } = await apiInstance.getDNSValidationResults(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
-| **page** | [**number**] | Page number (1-based) | (optional) defaults to 1|
-| **limit** | [**number**] | Number of items per page | (optional) defaults to 100|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**DNSValidationResultsResponse**
+**ListCampaigns200Response**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -353,16 +319,120 @@ const { status, data } = await apiInstance.getDNSValidationResults(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | DNS validation results |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getDomainGenerationPatternOffset**
-> GetDomainGenerationPatternOffset200Response getDomainGenerationPatternOffset(patternOffsetRequest)
+# **getGeneratedDomains**
+> ListCampaigns200Response getGeneratedDomains()
+
+Retrieve all generated domains for a specific campaign
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
+
+const { status, data } = await apiInstance.getGeneratedDomains(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
+
+
+### Return type
+
+**ListCampaigns200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getHTTPKeywordResults**
+> ListCampaigns200Response getHTTPKeywordResults()
+
+Retrieve HTTP keyword validation results for a specific campaign
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
+
+const { status, data } = await apiInstance.getHTTPKeywordResults(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
+
+
+### Return type
+
+**ListCampaigns200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getPatternOffset**
+> StandardSuccessResponse getPatternOffset()
 
 Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
 
@@ -371,95 +441,26 @@ Gets the current offset for a domain generation pattern to prevent duplicate dom
 ```typescript
 import {
     CampaignsApi,
-    Configuration,
-    PatternOffsetRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new CampaignsApi(configuration);
-
-let patternOffsetRequest: PatternOffsetRequest; //Pattern configuration
-
-const { status, data } = await apiInstance.getDomainGenerationPatternOffset(
-    patternOffsetRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **patternOffsetRequest** | **PatternOffsetRequest**| Pattern configuration | |
-
-
-### Return type
-
-**GetDomainGenerationPatternOffset200Response**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Current offset for the pattern |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getGeneratedDomains**
-> GeneratedDomainsResponse getGeneratedDomains()
-
-Retrieves the list of generated domains for a campaign
-
-### Example
-
-```typescript
-import {
-    CampaignsApi,
     Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
-let page: number; //Page number (1-based) (optional) (default to 1)
-let limit: number; //Number of items per page (optional) (default to 100)
-
-const { status, data } = await apiInstance.getGeneratedDomains(
-    id,
-    page,
-    limit
-);
+const { status, data } = await apiInstance.getPatternOffset();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
-| **page** | [**number**] | Page number (1-based) | (optional) defaults to 1|
-| **limit** | [**number**] | Number of items per page | (optional) defaults to 100|
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**GeneratedDomainsResponse**
+**StandardSuccessResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -470,79 +471,16 @@ const { status, data } = await apiInstance.getGeneratedDomains(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | List of generated domains |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getHTTPKeywordResults**
-> HTTPKeywordResultsResponse getHTTPKeywordResults()
-
-Retrieves HTTP keyword validation results for a campaign
-
-### Example
-
-```typescript
-import {
-    CampaignsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new CampaignsApi(configuration);
-
-let id: string; //Campaign ID (default to undefined)
-let page: number; //Page number (1-based) (optional) (default to 1)
-let limit: number; //Number of items per page (optional) (default to 100)
-
-const { status, data } = await apiInstance.getHTTPKeywordResults(
-    id,
-    page,
-    limit
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
-| **page** | [**number**] | Page number (1-based) | (optional) defaults to 1|
-| **limit** | [**number**] | Number of items per page | (optional) defaults to 100|
-
-
-### Return type
-
-**HTTPKeywordResultsResponse**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | HTTP keyword results |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listCampaigns**
-> CampaignListResponse listCampaigns()
+> ListCampaigns200Response listCampaigns()
 
-Retrieves a paginated list of campaigns with optional filtering
+Retrieve a list of all campaigns with optional filtering and pagination
 
 ### Example
 
@@ -555,15 +493,13 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let page: number; //Page number (1-based) (optional) (default to 1)
-let limit: number; //Number of items per page (optional) (default to 20)
-let campaignType: object; //Filter by campaign type (optional) (default to undefined)
-let status: object; //Filter by campaign status (optional) (default to undefined)
+let limit: number; //Maximum number of campaigns to return (optional) (default to undefined)
+let offset: number; //Number of campaigns to skip (optional) (default to undefined)
+let status: string; //Filter by campaign status (optional) (default to undefined)
 
 const { status, data } = await apiInstance.listCampaigns(
-    page,
     limit,
-    campaignType,
+    offset,
     status
 );
 ```
@@ -572,19 +508,18 @@ const { status, data } = await apiInstance.listCampaigns(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **page** | [**number**] | Page number (1-based) | (optional) defaults to 1|
-| **limit** | [**number**] | Number of items per page | (optional) defaults to 20|
-| **campaignType** | **object** | Filter by campaign type | (optional) defaults to undefined|
-| **status** | **object** | Filter by campaign status | (optional) defaults to undefined|
+| **limit** | [**number**] | Maximum number of campaigns to return | (optional) defaults to undefined|
+| **offset** | [**number**] | Number of campaigns to skip | (optional) defaults to undefined|
+| **status** | [**string**] | Filter by campaign status | (optional) defaults to undefined|
 
 
 ### Return type
 
-**CampaignListResponse**
+**ListCampaigns200Response**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -595,17 +530,16 @@ const { status, data } = await apiInstance.listCampaigns(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | List of campaigns |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **pauseCampaign**
-> Campaign pauseCampaign()
+> CampaignOperationResponse pauseCampaign()
 
-Pauses a running campaign
+Pause the execution of a running campaign
 
 ### Example
 
@@ -618,10 +552,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.pauseCampaign(
-    id
+    campaignId
 );
 ```
 
@@ -629,16 +563,16 @@ const { status, data } = await apiInstance.pauseCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Campaign**
+**CampaignOperationResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -649,19 +583,16 @@ const { status, data } = await apiInstance.pauseCampaign(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Campaign paused successfully |  -  |
-|**400** | Bad request - campaign cannot be paused |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **resumeCampaign**
-> Campaign resumeCampaign()
+> CampaignOperationResponse resumeCampaign()
 
-Resumes a paused campaign
+Resume the execution of a paused campaign
 
 ### Example
 
@@ -674,10 +605,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.resumeCampaign(
-    id
+    campaignId
 );
 ```
 
@@ -685,16 +616,16 @@ const { status, data } = await apiInstance.resumeCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Campaign**
+**CampaignOperationResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -705,19 +636,16 @@ const { status, data } = await apiInstance.resumeCampaign(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Campaign resumed successfully |  -  |
-|**400** | Bad request - campaign cannot be resumed |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **startCampaign**
-> Campaign startCampaign()
+> CampaignOperationResponse startCampaign()
 
-Starts a campaign execution
+Start the execution of a campaign
 
 ### Example
 
@@ -730,10 +658,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.startCampaign(
-    id
+    campaignId
 );
 ```
 
@@ -741,16 +669,16 @@ const { status, data } = await apiInstance.startCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Campaign**
+**CampaignOperationResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -761,38 +689,32 @@ const { status, data } = await apiInstance.startCampaign(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Campaign started successfully |  -  |
-|**400** | Bad request - campaign cannot be started |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateCampaign**
-> Campaign updateCampaign(updateCampaignRequest)
+> Campaign updateCampaign()
 
-Updates campaign details and configuration
+Update an existing campaign\'s configuration parameters
 
 ### Example
 
 ```typescript
 import {
     CampaignsApi,
-    Configuration,
-    UpdateCampaignRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let id: string; //Campaign ID (default to undefined)
-let updateCampaignRequest: UpdateCampaignRequest; //
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.updateCampaign(
-    id,
-    updateCampaignRequest
+    campaignId
 );
 ```
 
@@ -800,8 +722,7 @@ const { status, data } = await apiInstance.updateCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **updateCampaignRequest** | **UpdateCampaignRequest**|  | |
-| **id** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
@@ -810,49 +731,43 @@ const { status, data } = await apiInstance.updateCampaign(
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Campaign updated successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **validateDNSForCampaign**
-> Campaign validateDNSForCampaign(inPlaceDNSValidationRequest)
+> ValidationOperationResponse validateDNSForCampaign()
 
-Starts DNS validation for a domain generation campaign
+Trigger DNS validation for all domains in a specific campaign
 
 ### Example
 
 ```typescript
 import {
     CampaignsApi,
-    Configuration,
-    InPlaceDNSValidationRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let campaignId: string; //Campaign ID (default to undefined)
-let inPlaceDNSValidationRequest: InPlaceDNSValidationRequest; //
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.validateDNSForCampaign(
-    campaignId,
-    inPlaceDNSValidationRequest
+    campaignId
 );
 ```
 
@@ -860,59 +775,52 @@ const { status, data } = await apiInstance.validateDNSForCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **inPlaceDNSValidationRequest** | **InPlaceDNSValidationRequest**|  | |
-| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Campaign**
+**ValidationOperationResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | DNS validation started successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **validateHTTPForCampaign**
-> Campaign validateHTTPForCampaign(createHTTPKeywordCampaignRequest)
+> ValidationOperationResponse validateHTTPForCampaign()
 
-Starts HTTP validation for a campaign
+Trigger HTTP keyword validation for all domains in a specific campaign
 
 ### Example
 
 ```typescript
 import {
     CampaignsApi,
-    Configuration,
-    CreateHTTPKeywordCampaignRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let campaignId: string; //Campaign ID (default to undefined)
-let createHTTPKeywordCampaignRequest: CreateHTTPKeywordCampaignRequest; //
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
 
 const { status, data } = await apiInstance.validateHTTPForCampaign(
-    campaignId,
-    createHTTPKeywordCampaignRequest
+    campaignId
 );
 ```
 
@@ -920,33 +828,29 @@ const { status, data } = await apiInstance.validateHTTPForCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **createHTTPKeywordCampaignRequest** | **CreateHTTPKeywordCampaignRequest**|  | |
-| **campaignId** | [**string**] | Campaign ID | defaults to undefined|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Campaign**
+**ValidationOperationResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | HTTP validation started successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

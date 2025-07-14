@@ -36,7 +36,7 @@ export const WebSocketApiAxiosParamCreator = function (configuration?: Configura
          * @throws {RequiredError}
          */
         connectWebSocket: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/ws`;
+            const localVarPath = `/ws`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;

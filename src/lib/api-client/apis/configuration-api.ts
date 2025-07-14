@@ -50,7 +50,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
          * @throws {RequiredError}
          */
         getAuthConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/auth`;
+            const localVarPath = `/config/auth`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -82,7 +82,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
          * @throws {RequiredError}
          */
         getDNSConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/dns`;
+            const localVarPath = `/config/dns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -114,7 +114,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
          * @throws {RequiredError}
          */
         getHTTPConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/http`;
+            const localVarPath = `/config/http`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -146,7 +146,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
          * @throws {RequiredError}
          */
         getLoggingConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/logging`;
+            const localVarPath = `/config/logging`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -178,7 +178,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
          * @throws {RequiredError}
          */
         getProxyManagerConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/proxy-manager`;
+            const localVarPath = `/config/proxy-manager`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -210,7 +210,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
          * @throws {RequiredError}
          */
         getRateLimiterConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/rate-limit`;
+            const localVarPath = `/config/rate-limit`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -242,7 +242,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
          * @throws {RequiredError}
          */
         getServerConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/server`;
+            const localVarPath = `/config/server`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -274,7 +274,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
          * @throws {RequiredError}
          */
         getWorkerConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/v2/config/worker`;
+            const localVarPath = `/config/worker`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -309,7 +309,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
         updateAuthConfig: async (authConfig: AuthConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'authConfig' is not null or undefined
             assertParamExists('updateAuthConfig', 'authConfig', authConfig)
-            const localVarPath = `/api/v2/config/auth`;
+            const localVarPath = `/config/auth`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -347,7 +347,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
         updateDNSConfig: async (dNSConfig: DNSConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'dNSConfig' is not null or undefined
             assertParamExists('updateDNSConfig', 'dNSConfig', dNSConfig)
-            const localVarPath = `/api/v2/config/dns`;
+            const localVarPath = `/config/dns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -385,7 +385,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
         updateHTTPConfig: async (hTTPConfig: HTTPConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'hTTPConfig' is not null or undefined
             assertParamExists('updateHTTPConfig', 'hTTPConfig', hTTPConfig)
-            const localVarPath = `/api/v2/config/http`;
+            const localVarPath = `/config/http`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -423,7 +423,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
         updateLoggingConfig: async (loggingConfig: LoggingConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'loggingConfig' is not null or undefined
             assertParamExists('updateLoggingConfig', 'loggingConfig', loggingConfig)
-            const localVarPath = `/api/v2/config/logging`;
+            const localVarPath = `/config/logging`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -461,7 +461,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
         updateProxyManagerConfig: async (proxyManagerConfig: ProxyManagerConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'proxyManagerConfig' is not null or undefined
             assertParamExists('updateProxyManagerConfig', 'proxyManagerConfig', proxyManagerConfig)
-            const localVarPath = `/api/v2/config/proxy-manager`;
+            const localVarPath = `/config/proxy-manager`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -499,7 +499,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
         updateRateLimiterConfig: async (rateLimiterConfig: RateLimiterConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'rateLimiterConfig' is not null or undefined
             assertParamExists('updateRateLimiterConfig', 'rateLimiterConfig', rateLimiterConfig)
-            const localVarPath = `/api/v2/config/rate-limit`;
+            const localVarPath = `/config/rate-limit`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -537,7 +537,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
         updateServerConfig: async (serverConfig: ServerConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'serverConfig' is not null or undefined
             assertParamExists('updateServerConfig', 'serverConfig', serverConfig)
-            const localVarPath = `/api/v2/config/server`;
+            const localVarPath = `/config/server`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -575,7 +575,7 @@ export const ConfigurationApiAxiosParamCreator = function (configuration?: Confi
         updateWorkerConfig: async (workerConfig: WorkerConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'workerConfig' is not null or undefined
             assertParamExists('updateWorkerConfig', 'workerConfig', workerConfig)
-            const localVarPath = `/api/v2/config/worker`;
+            const localVarPath = `/config/worker`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;

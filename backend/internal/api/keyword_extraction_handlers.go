@@ -19,6 +19,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// BatchExtractKeywordsGin performs batch keyword extraction on multiple URLs.
+// @Summary Batch keyword extraction
+// @Description Extract keywords from multiple URLs using specified keyword sets and personas
+// @Tags keyword-extraction
+// @Accept json
+// @Produce json
+// @Param request body BatchKeywordExtractionRequest true "Batch extraction request"
+// @Success 200 {object} BatchKeywordExtractionResponse "Extraction results"
+// @Failure 400 {object} map[string]string "Invalid request body or validation failed"
+// @Router /keyword-extraction/batch [post]
 func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 	var req BatchKeywordExtractionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -178,6 +188,18 @@ sendResponseGin:
 	respondWithJSONGin(c, http.StatusOK, BatchKeywordExtractionResponse{Results: results})
 }
 
+// StreamExtractKeywordsGin performs streaming keyword extraction on a single URL.
+// @Summary Stream keyword extraction
+// @Description Extract keywords from a single URL with real-time streaming results
+// @Tags keyword-extraction
+// @Produce text/event-stream
+// @Param url query string true "URL to extract keywords from"
+// @Param keywordSetId query string true "Keyword set ID to use for extraction"
+// @Param httpPersonaId query string false "HTTP persona ID for request customization"
+// @Param dnsPersonaId query string false "DNS persona ID for DNS customization"
+// @Success 200 {string} string "Server-sent events stream with extraction results"
+// @Failure 400 {object} map[string]string "Invalid query parameters"
+// @Router /keyword-extraction/stream [get]
 func (h *APIHandler) StreamExtractKeywordsGin(c *gin.Context) {
 	flusher, ok := c.Writer.(http.Flusher)
 	if !ok {

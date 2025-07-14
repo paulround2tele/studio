@@ -83,6 +83,18 @@ func toListProxyResponse(proxies []*models.Proxy) []*models.Proxy {
 // --- Gin Handlers for Proxies ---
 
 // ListProxiesGin lists all proxies.
+// @Summary List proxies
+// @Description Retrieve a list of proxies with optional filtering by protocol, status, and health
+// @Tags proxies
+// @Produce json
+// @Param limit query int false "Maximum number of results" default(100)
+// @Param offset query int false "Number of results to skip" default(0)
+// @Param protocol query string false "Filter by protocol (http, https, socks4, socks5)"
+// @Param isEnabled query bool false "Filter by enabled status"
+// @Param isHealthy query bool false "Filter by health status"
+// @Success 200 {array} models.Proxy "List of proxies"
+// @Failure 500 {object} map[string]string "Failed to list proxies"
+// @Router /proxies [get]
 func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -135,6 +147,17 @@ func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 }
 
 // AddProxyGin adds a new proxy.
+// @Summary Create proxy
+// @Description Add a new proxy configuration
+// @Tags proxies
+// @Accept json
+// @Produce json
+// @Param request body CreateProxyRequest true "Proxy creation request"
+// @Success 201 {object} models.Proxy "Created proxy"
+// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
+// @Failure 409 {object} map[string]string "Proxy with address already exists"
+// @Failure 500 {object} map[string]string "Failed to create proxy"
+// @Router /proxies [post]
 func (h *APIHandler) AddProxyGin(c *gin.Context) {
 	var req CreateProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -253,6 +276,18 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 }
 
 // UpdateProxyGin updates a proxy.
+// @Summary Update proxy
+// @Description Update an existing proxy configuration
+// @Tags proxies
+// @Accept json
+// @Produce json
+// @Param proxyId path string true "Proxy ID"
+// @Param request body UpdateProxyRequest true "Proxy update request"
+// @Success 200 {object} models.Proxy "Updated proxy"
+// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
+// @Failure 404 {object} map[string]string "Proxy not found"
+// @Failure 500 {object} map[string]string "Failed to update proxy"
+// @Router /proxies/{proxyId} [put]
 func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
 	proxyID, err := uuid.Parse(proxyIDStr)
@@ -400,6 +435,15 @@ func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 }
 
 // DeleteProxyGin deletes a proxy.
+// @Summary Delete proxy
+// @Description Delete a proxy configuration
+// @Tags proxies
+// @Param proxyId path string true "Proxy ID"
+// @Success 204 "Proxy deleted successfully"
+// @Failure 400 {object} map[string]string "Invalid proxy ID format"
+// @Failure 404 {object} map[string]string "Proxy not found"
+// @Failure 500 {object} map[string]string "Failed to delete proxy"
+// @Router /proxies/{proxyId} [delete]
 func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
 	proxyID, err := uuid.Parse(proxyIDStr)
@@ -487,6 +531,13 @@ func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 }
 
 // GetProxyStatusesGin gets proxy statuses.
+// @Summary Get proxy statuses
+// @Description Retrieve health status information for all proxies
+// @Tags proxies
+// @Produce json
+// @Success 200 {object} ProxyStatusResponse "Proxy status information"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /proxies/status [get]
 func (h *APIHandler) GetProxyStatusesGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
 		respondWithErrorGin(c, http.StatusInternalServerError, "ProxyManager not available")
@@ -498,6 +549,16 @@ func (h *APIHandler) GetProxyStatusesGin(c *gin.Context) {
 }
 
 // ForceCheckSingleProxyGin forces a health check on a single proxy.
+// @Summary Force proxy health check
+// @Description Force a health check on a specific proxy
+// @Tags proxies
+// @Produce json
+// @Param proxyId path string true "Proxy ID (UUID)"
+// @Success 200 {object} ProxyHealthCheckResponse "Health check completed"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Proxy not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /proxies/{proxyId}/health-check [post]
 func (h *APIHandler) ForceCheckSingleProxyGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
 		respondWithErrorGin(c, http.StatusInternalServerError, "ProxyManager not available")
@@ -522,6 +583,13 @@ func (h *APIHandler) ForceCheckSingleProxyGin(c *gin.Context) {
 }
 
 // ForceCheckAllProxiesGin forces a health check on all proxies.
+// @Summary Force health check on all proxies
+// @Description Force health checks on all registered proxies
+// @Tags proxies
+// @Produce json
+// @Success 200 {object} BulkHealthCheckResponse "Health checks completed"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /proxies/health-check [post]
 func (h *APIHandler) ForceCheckAllProxiesGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
 		respondWithErrorGin(c, http.StatusInternalServerError, "ProxyManager not available")
@@ -551,6 +619,16 @@ func (h *APIHandler) ForceCheckAllProxiesGin(c *gin.Context) {
 }
 
 // TestProxyGin tests a proxy.
+// @Summary Test proxy
+// @Description Test a proxy configuration to verify it works correctly
+// @Tags proxies
+// @Produce json
+// @Param proxyId path string true "Proxy ID (UUID)"
+// @Success 200 {object} ProxyTestResponse "Proxy test results"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Proxy not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /proxies/{proxyId}/test [post]
 func (h *APIHandler) TestProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
 	proxyID, err := uuid.Parse(proxyIDStr)

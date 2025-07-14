@@ -9,9 +9,15 @@ import (
 )
 
 // PingHandlerGin responds to ping requests to check server health using Gin.
+// @Summary Ping server
+// @Description Simple ping endpoint to verify server is responding
+// @Tags health
+// @Produce json
+// @Success 200 {object} PingResponse "Pong response with timestamp"
+// @Router /ping [get]
 func PingHandlerGin(c *gin.Context) {
-	respondWithJSONGin(c, http.StatusOK, map[string]string{
-		"message":   "pong",
-		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	respondWithJSONGin(c, http.StatusOK, PingResponse{
+		Message:   "pong",
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 }

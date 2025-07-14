@@ -4,59 +4,7 @@
  */
 
 export interface paths {
-    "/api/campaigns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List campaigns
-         * @description Retrieves a paginated list of campaigns with optional filtering
-         */
-        get: operations["listCampaigns"];
-        put?: never;
-        /**
-         * Create campaign
-         * @description Creates a new campaign using unified endpoint supporting all campaign types
-         */
-        post: operations["createCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get campaign details
-         * @description Retrieves detailed information about a specific campaign
-         */
-        get: operations["getCampaignDetails"];
-        /**
-         * Update campaign
-         * @description Updates campaign details and configuration
-         */
-        put: operations["updateCampaign"];
-        post?: never;
-        /**
-         * Delete campaign
-         * @description Deletes a campaign and all associated data
-         */
-        delete: operations["deleteCampaign"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/{id}/cancel": {
+    "/auth/change-password": {
         parameters: {
             query?: never;
             header?: never;
@@ -66,402 +14,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Cancel campaign
-         * @description Cancels a campaign execution
+         * Change user password
+         * @description Change password for the currently authenticated user
          */
-        post: operations["cancelCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/{id}/dns-results": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get DNS validation results
-         * @description Retrieves DNS validation results for a campaign
-         */
-        get: operations["getDNSValidationResults"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/{id}/domains": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get generated domains
-         * @description Retrieves the list of generated domains for a campaign
-         */
-        get: operations["getGeneratedDomains"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/{id}/http-results": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get HTTP keyword results
-         * @description Retrieves HTTP keyword validation results for a campaign
-         */
-        get: operations["getHTTPKeywordResults"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/{id}/pause": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Pause campaign
-         * @description Pauses a running campaign
-         */
-        post: operations["pauseCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/{id}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Resume campaign
-         * @description Resumes a paused campaign
-         */
-        post: operations["resumeCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/{id}/start": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start campaign
-         * @description Starts a campaign execution
-         */
-        post: operations["startCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/campaigns/bulk-delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Bulk delete campaigns
-         * @description Deletes multiple campaigns and all associated data
-         */
-        post: operations["bulkDeleteCampaigns"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/config/auth": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get authentication configuration
-         * @description Retrieves sanitized authentication configuration
-         */
-        get: operations["getAuthConfig"];
-        put?: never;
-        /**
-         * Update authentication configuration
-         * @description Updates authentication configuration
-         */
-        post: operations["updateAuthConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/config/dns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get DNS configuration
-         * @description Retrieves the default DNS validator configuration
-         */
-        get: operations["getDNSConfig"];
-        put?: never;
-        /**
-         * Update DNS configuration
-         * @description Updates the default DNS validator configuration
-         */
-        post: operations["updateDNSConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/config/http": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get HTTP configuration
-         * @description Retrieves the default HTTP validator configuration
-         */
-        get: operations["getHTTPConfig"];
-        put?: never;
-        /**
-         * Update HTTP configuration
-         * @description Updates the default HTTP validator configuration
-         */
-        post: operations["updateHTTPConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/config/logging": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get logging configuration
-         * @description Retrieves the current logging configuration
-         */
-        get: operations["getLoggingConfig"];
-        put?: never;
-        /**
-         * Update logging configuration
-         * @description Updates the logging configuration
-         */
-        post: operations["updateLoggingConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/config/proxy-manager": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get proxy manager configuration
-         * @description Retrieves proxy manager settings
-         */
-        get: operations["getProxyManagerConfig"];
-        put?: never;
-        /**
-         * Update proxy manager configuration
-         * @description Updates proxy manager settings
-         */
-        post: operations["updateProxyManagerConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/config/rate-limit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get rate limiter configuration
-         * @description Retrieves global rate limiter settings
-         */
-        get: operations["getRateLimiterConfig"];
-        put?: never;
-        /**
-         * Update rate limiter configuration
-         * @description Updates global rate limiter settings
-         */
-        post: operations["updateRateLimiterConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/config/server": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get server configuration
-         * @description Retrieves current server-wide configurations
-         */
-        get: operations["getServerConfig"];
-        /**
-         * Update server configuration
-         * @description Updates server-wide configurations
-         */
-        put: operations["updateServerConfig"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/config/worker": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get worker configuration
-         * @description Retrieves the worker configuration
-         */
-        get: operations["getWorkerConfig"];
-        put?: never;
-        /**
-         * Update worker configuration
-         * @description Updates the worker configuration
-         */
-        post: operations["updateWorkerConfig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/extract/keywords": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Batch keyword extraction
-         * @description Extracts keywords from multiple URLs in a single batch request
-         */
-        post: operations["batchExtractKeywords"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/extract/keywords/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Streaming keyword extraction
-         * @description Extracts keywords from a single URL with real-time streaming results
-         */
-        get: operations["streamExtractKeywords"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/ws": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * WebSocket connection endpoint
-         * @description Upgrades HTTP connection to WebSocket for real-time communication
-         */
-        get: operations["connectWebSocket"];
-        put?: never;
-        post?: never;
+        post: operations["ChangePassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -479,9 +35,9 @@ export interface paths {
         put?: never;
         /**
          * User login
-         * @description Authenticates a user and creates a session
+         * @description Authenticate user credentials and create session
          */
-        post: operations["login"];
+        post: operations["Login"];
         delete?: never;
         options?: never;
         head?: never;
@@ -499,9 +55,29 @@ export interface paths {
         put?: never;
         /**
          * User logout
-         * @description Invalidates the current session and clears session cookie
+         * @description Invalidate current user session and clear cookies
          */
-        post: operations["logout"];
+        post: operations["Logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current user
+         * @description Get information about the currently authenticated user
+         */
+        get: operations["Me"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -518,50 +94,30 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Refresh session
-         * @description Refreshes the current session
+         * Refresh user session
+         * @description Extend the current session expiry time
          */
-        post: operations["refreshSession"];
+        post: operations["RefreshSession"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/campaigns/{campaignId}/validate-dns": {
+    "/campaigns/{campaignId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Validate DNS for campaign domains
-         * @description Starts DNS validation for a domain generation campaign
+         * Get campaign details
+         * @description Retrieve detailed information about a specific campaign including its configuration parameters
          */
-        post: operations["validateDNSForCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/validate-http": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
+        get: operations["getCampaignDetails"];
         put?: never;
-        /**
-         * Validate HTTP for campaign domains
-         * @description Starts HTTP validation for a campaign
-         */
-        post: operations["validateHTTPForCampaign"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -581,34 +137,14 @@ export interface paths {
          * Get domain generation pattern offset
          * @description Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
          */
-        post: operations["getDomainGenerationPatternOffset"];
+        post: operations["getPatternOffset"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/change-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Change password
-         * @description Changes the password for the currently authenticated user
-         */
-        post: operations["changePassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/config/features": {
+    "/feature-flags": {
         parameters: {
             query?: never;
             header?: never;
@@ -617,15 +153,15 @@ export interface paths {
         };
         /**
          * Get feature flags
-         * @description Returns current feature flag settings
+         * @description Retrieve current feature flag settings
          */
-        get: operations["getFeatureFlags"];
-        put?: never;
+        get: operations["GetFeatureFlagsGin"];
         /**
          * Update feature flags
-         * @description Updates feature flag settings
+         * @description Update feature flag settings
          */
-        post: operations["updateFeatureFlags"];
+        put: operations["UpdateFeatureFlagsGin"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -640,10 +176,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Basic health check
-         * @description Returns overall health status of the application and its components
+         * Health check
+         * @description Get overall system health status including component checks
          */
-        get: operations["getHealthCheck"];
+        get: operations["HandleHealthCheck"];
         put?: never;
         post?: never;
         delete?: never;
@@ -660,10 +196,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Liveness probe
-         * @description Checks if the service is alive and running
+         * Liveness check
+         * @description Check if the service is alive and responding
          */
-        get: operations["getLivenessCheck"];
+        get: operations["HandleLivenessCheck"];
         put?: never;
         post?: never;
         delete?: never;
@@ -680,10 +216,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Readiness probe
-         * @description Checks if the service is ready to receive traffic
+         * Readiness check
+         * @description Check if the service is ready to accept requests
          */
-        get: operations["getReadinessCheck"];
+        get: operations["HandleReadinessCheck"];
         put?: never;
         post?: never;
         delete?: never;
@@ -692,7 +228,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/keywords/sets": {
+    "/keyword-extraction/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch keyword extraction
+         * @description Extract keywords from multiple URLs using specified keyword sets and personas
+         */
+        post: operations["BatchExtractKeywordsGin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/keyword-extraction/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream keyword extraction
+         * @description Extract keywords from a single URL with real-time streaming results
+         */
+        get: operations["StreamExtractKeywordsGin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/keyword-sets": {
         parameters: {
             query?: never;
             header?: never;
@@ -701,22 +277,22 @@ export interface paths {
         };
         /**
          * List keyword sets
-         * @description Lists all keyword sets with optional filtering and pagination
+         * @description Retrieve a list of keyword sets with optional filtering
          */
-        get: operations["listKeywordSets"];
+        get: operations["ListKeywordSetsGin"];
         put?: never;
         /**
          * Create keyword set
-         * @description Creates a new keyword set with optional rules
+         * @description Create a new keyword set with optional rules
          */
-        post: operations["createKeywordSet"];
+        post: operations["CreateKeywordSetGin"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/keywords/sets/{setId}": {
+    "/keyword-sets/{setId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -725,38 +301,14 @@ export interface paths {
         };
         /**
          * Get keyword set
-         * @description Gets a keyword set by ID including its rules
+         * @description Retrieve a specific keyword set by ID including its rules
          */
-        get: operations["getKeywordSet"];
+        get: operations["GetKeywordSetGin"];
         /**
          * Update keyword set
-         * @description Updates a keyword set by ID including its rules
+         * @description Update an existing keyword set and its rules
          */
-        put: operations["updateKeywordSet"];
-        post?: never;
-        /**
-         * Delete keyword set
-         * @description Deletes a keyword set by ID including all its rules
-         */
-        delete: operations["deleteKeywordSet"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get current user
-         * @description Returns information about the currently authenticated user
-         */
-        get: operations["getCurrentUser"];
-        put?: never;
+        put: operations["UpdateKeywordSetGin"];
         post?: never;
         delete?: never;
         options?: never;
@@ -772,16 +324,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List personas
-         * @description Lists all personas with optional filtering by type and enabled status
+         * List all personas
+         * @description Retrieve a list of all personas with optional filtering by type and status
          */
-        get: operations["listPersonas"];
+        get: operations["ListAllPersonasGin"];
         put?: never;
         /**
          * Create persona
-         * @description Creates a new persona with structured configuration
+         * @description Create a new persona (DNS or HTTP) with configuration details
          */
-        post: operations["createPersona"];
+        post: operations["CreatePersonaGin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -797,57 +349,9 @@ export interface paths {
         };
         /**
          * Get persona by ID
-         * @description Gets a persona by ID regardless of type
+         * @description Retrieve a specific persona by ID regardless of type
          */
-        get: operations["getPersonaById"];
-        /**
-         * Update persona
-         * @description Updates a persona by ID with structured configuration
-         */
-        put: operations["updatePersona"];
-        post?: never;
-        /**
-         * Delete persona
-         * @description Deletes a persona by ID
-         */
-        delete: operations["deletePersona"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/personas/{id}/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Test persona
-         * @description Tests a persona by ID
-         */
-        post: operations["testPersona"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/personas/dns/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get DNS persona by ID
-         * @description Gets a DNS persona by ID with typed configuration
-         */
-        get: operations["getDnsPersonaById"];
+        get: operations["GetPersonaByIDGin"];
         put?: never;
         post?: never;
         delete?: never;
@@ -865,9 +369,9 @@ export interface paths {
         };
         /**
          * Get HTTP persona by ID
-         * @description Gets an HTTP persona by ID with typed configuration
+         * @description Retrieve a specific HTTP persona by ID
          */
-        get: operations["getHttpPersonaById"];
+        get: operations["GetHttpPersonaByIDGin"];
         put?: never;
         post?: never;
         delete?: never;
@@ -884,10 +388,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Basic connectivity test
-         * @description Simple ping endpoint to test server connectivity
+         * Ping server
+         * @description Simple ping endpoint to verify server is responding
          */
-        get: operations["ping"];
+        get: operations["PingHandlerGin"];
         put?: never;
         post?: never;
         delete?: never;
@@ -905,15 +409,15 @@ export interface paths {
         };
         /**
          * List proxies
-         * @description Lists all proxies with optional filtering
+         * @description Retrieve a list of proxies with optional filtering by protocol, status, and health
          */
-        get: operations["listProxies"];
+        get: operations["ListProxiesGin"];
         put?: never;
         /**
-         * Add proxy
-         * @description Adds a new proxy
+         * Create proxy
+         * @description Add a new proxy configuration
          */
-        post: operations["createProxy"];
+        post: operations["AddProxyGin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -930,95 +434,15 @@ export interface paths {
         get?: never;
         /**
          * Update proxy
-         * @description Updates a proxy by ID
+         * @description Update an existing proxy configuration
          */
-        put: operations["updateProxy"];
+        put: operations["UpdateProxyGin"];
         post?: never;
         /**
          * Delete proxy
-         * @description Deletes a proxy by ID
+         * @description Delete a proxy configuration
          */
-        delete: operations["deleteProxy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/proxies/{proxyId}/health-check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Force single proxy health check
-         * @description Forces a health check on a single proxy
-         */
-        post: operations["forceCheckSingleProxy"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/proxies/{proxyId}/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Test proxy
-         * @description Tests a proxy by ID
-         */
-        post: operations["testProxy"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/proxies/health-check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Force all proxies health check
-         * @description Forces a health check on all proxies
-         */
-        post: operations["forceCheckAllProxies"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/proxies/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get proxy statuses
-         * @description Gets the status of all proxies
-         */
-        get: operations["getProxyStatuses"];
-        put?: never;
-        post?: never;
-        delete?: never;
+        delete: operations["DeleteProxyGin"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1033,15 +457,15 @@ export interface paths {
         };
         /**
          * List proxy pools
-         * @description Returns all proxy pools
+         * @description Retrieve all proxy pools with their associated proxies
          */
-        get: operations["listProxyPools"];
+        get: operations["ListProxyPoolsGin"];
         put?: never;
         /**
          * Create proxy pool
-         * @description Creates a new proxy pool
+         * @description Create a new proxy pool with configuration settings
          */
-        post: operations["createProxyPool"];
+        post: operations["CreateProxyPoolGin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1058,15 +482,15 @@ export interface paths {
         get?: never;
         /**
          * Update proxy pool
-         * @description Updates a proxy pool by ID
+         * @description Update an existing proxy pool configuration
          */
-        put: operations["updateProxyPool"];
+        put: operations["UpdateProxyPoolGin"];
         post?: never;
         /**
          * Delete proxy pool
-         * @description Deletes a proxy pool by ID
+         * @description Delete a proxy pool
          */
-        delete: operations["deleteProxyPool"];
+        delete: operations["DeleteProxyPoolGin"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1083,30 +507,102 @@ export interface paths {
         put?: never;
         /**
          * Add proxy to pool
-         * @description Assigns a proxy to a pool
+         * @description Assign a proxy to a proxy pool with optional weight
          */
-        post: operations["addProxyToPool"];
+        post: operations["AddProxyToPoolGin"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/proxy-pools/{poolId}/proxies/{proxyId}": {
+    "/server/config": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get server configuration
+         * @description Retrieve current server-wide configuration settings
+         */
+        get: operations["GetServerConfigGin"];
+        /**
+         * Update server configuration
+         * @description Update server-wide configuration settings
+         */
+        put: operations["UpdateServerConfigGin"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/server/dns-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get DNS configuration
+         * @description Retrieve default DNS validator configuration
+         */
+        get: operations["GetDNSConfigGin"];
+        /**
+         * Update DNS configuration
+         * @description Update default DNS validator configuration
+         */
+        put: operations["UpdateDNSConfigGin"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/server/http-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get HTTP configuration
+         * @description Retrieve default HTTP validator configuration
+         */
+        get: operations["GetHTTPConfigGin"];
+        /**
+         * Update HTTP configuration
+         * @description Update default HTTP validator configuration
+         */
+        put: operations["UpdateHTTPConfigGin"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ws": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * WebSocket connection
+         * @description Upgrade HTTP connection to WebSocket for real-time communication
+         */
+        get: operations["HandleConnections"];
         put?: never;
         post?: never;
-        /**
-         * Remove proxy from pool
-         * @description Removes a proxy from a pool
-         */
-        delete: operations["removeProxyFromPool"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1116,952 +612,1790 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @description Request to add a proxy to a pool */
-        AddProxyToPoolRequest: {
+        APIHandler: {
+            AuditLogStore?: string;
+            CampaignJobStore?: string;
+            CampaignStore?: string;
+            Config?: string;
+            DB?: string;
+            KeywordStore?: string;
+            PersonaStore?: string;
+            ProxyMgr?: string;
+            ProxyPoolStore?: string;
+            ProxyStore?: string;
+        };
+        APIKey: {
+            /** Format: date-time */
+            CreatedAt?: string;
+            /** Format: date-time */
+            ExpiresAt?: string;
             /**
              * Format: uuid
-             * @description Proxy ID to add to the pool
+             * @description Unique identifier
              */
-            proxyId: string;
-            /** @description Weight for weighted pool strategies */
-            weight?: number;
-        };
-        /** @description Authentication configuration */
-        AuthConfig: {
-            /** @description Account lock duration (e.g., '15m') */
-            accountLockDuration?: string;
-            /** @description BCrypt cost factor for password hashing */
-            bcryptCost?: number;
-            /** @description Number of failed attempts before requiring CAPTCHA */
-            captchaThreshold?: number;
+            ID?: string;
+            Key?: string;
+            KeyHash?: string;
+            KeyHint?: string;
+            KeyName?: string;
+            /** Format: date-time */
+            LastUsedAt?: string;
+            /** Format: date-time */
+            UpdatedAt?: string;
             /**
-             * Format: email
-             * @description From email address for system emails
+             * Format: uuid
+             * @description Unique identifier
              */
-            fromEmail?: string;
-            /** @description From name for system emails */
-            fromName?: string;
-            /** @description Maximum failed login attempts before lockout */
-            maxFailedAttempts?: number;
-            /** @description Maximum login attempts per rate limit window */
-            maxLoginAttempts?: number;
-            /** @description Maximum password reset attempts per rate limit window */
-            maxPasswordResetAttempts?: number;
-            /** @description Minimum password length requirement */
-            passwordMinLength?: number;
-            /** @description Rate limit window (e.g., '15m') */
-            rateLimitWindow?: string;
-            /** @description reCAPTCHA site key */
-            recaptchaSiteKey?: string;
-            /** @description Password reset token expiry (e.g., '15m') */
-            resetTokenExpiry?: string;
-            /** @description Session cookie domain */
-            sessionCookieDomain?: string;
-            /** @description Session cookie name */
-            sessionCookieName?: string;
-            /** @description Whether session cookie requires HTTPS */
-            sessionCookieSecure?: boolean;
-            /** @description Session duration (e.g., '120m') */
-            sessionDuration?: string;
-            /** @description Session idle timeout (e.g., '30m') */
-            sessionIdleTimeout?: string;
-            /** @description SMTP server host */
-            smtpHost?: string;
-            /** @description SMTP server port */
-            smtpPort?: number;
-            /** @description SMTP username */
-            smtpUsername?: string;
+            UserID?: string;
         };
-        /** @description Request body for batch keyword extraction */
+        APIResponse: {
+            data?: Record<string, never>;
+            error?: string;
+            message?: string;
+            status?: string;
+        };
+        ArchitectureRefactorLog: {
+            afterPattern?: string;
+            beforePattern?: string;
+            /** Format: int32 */
+            complexityReduction?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            implementedAt?: string;
+            implementedBy?: string;
+            /** Format: double */
+            performanceImpact?: number;
+            refactorType?: string;
+            rollbackPlan?: string;
+            serviceName?: string;
+        };
+        AuditLog: {
+            action: string;
+            clientIp?: string;
+            details?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            entityId?: string;
+            entityType?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** Format: date-time */
+            timestamp?: string;
+            userAgent?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        AuthAuditLog: {
+            /** Format: date-time */
+            createdAt?: string;
+            details?: string;
+            eventStatus?: string;
+            eventType?: string;
+            /** Format: int64 */
+            id?: number;
+            ipAddress?: string;
+            /** Format: int32 */
+            riskScore?: number;
+            /** Format: uri */
+            securityFlags?: string;
+            sessionFingerprint?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            sessionId?: string;
+            userAgent?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        AuthHandler: Record<string, never>;
+        AuthResult: {
+            error?: string;
+            success?: boolean;
+            user?: components["schemas"]["User"];
+        };
+        AuthorizationDecision: {
+            action?: string;
+            conditionsMet?: Record<string, never>;
+            context?: Record<string, never>;
+            /** Format: date-time */
+            createdAt?: string;
+            decision?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            decisionId?: string;
+            /** Format: int32 */
+            decisionTimeMs?: number;
+            evaluatedPolicies?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            policyVersion?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            resourceId?: string;
+            resourceType?: string;
+            /**
+             * Format: uri
+             * @description Unique identifier
+             */
+            securityEventId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
         BatchKeywordExtractionRequest: {
-            /** @description Array of URLs and parameters for keyword extraction */
             items: components["schemas"]["KeywordExtractionRequestItem"][];
         };
-        /** @description Response body for batch keyword extraction */
         BatchKeywordExtractionResponse: {
-            /** @description Array of keyword extraction results */
-            results: components["schemas"]["KeywordExtractionAPIResult"][];
+            results?: components["schemas"]["KeywordExtractionAPIResult"][];
         };
-        /** @description Request to delete multiple campaigns */
         BulkDeleteRequest: {
-            /** @description List of campaign IDs to delete */
             campaignIds: string[];
         };
         BulkDeleteResult: {
             deleted_campaign_ids?: string[];
             errors?: string[];
             failed_campaign_ids?: string[];
+            /** Format: int32 */
             failed_deletions?: number;
+            /** Format: int32 */
             successfully_deleted?: number;
         };
+        CPUOptimizationConfig: {
+            /** Format: double */
+            BatchSizeScaleFactor?: number;
+            EnableAdaptiveBatching?: boolean;
+            /** Format: double */
+            MaxCPUUtilization?: number;
+            /** Format: int32 */
+            MaxWorkers?: number;
+            /** Format: int32 */
+            MinWorkers?: number;
+            ResourceMonitoringInterval?: string;
+            /** Format: double */
+            ScaleDownThreshold?: number;
+            /** Format: double */
+            ScaleUpThreshold?: number;
+            /**
+             * Format: date-time
+             * @description Unique identifier
+             */
+            WorkerIdleTimeout?: string;
+            /** Format: date-time */
+            WorkerTaskTimeout?: string;
+        };
+        CacheConfiguration: {
+            cacheName?: string;
+            cacheStatus?: string;
+            cacheType?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int32 */
+            currentEntries?: number;
+            /** Format: int64 */
+            currentSizeBytes?: number;
+            /** Format: int32 */
+            defaultTtlSeconds?: number;
+            evictionPolicy?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** Format: date-time */
+            lastCleanupAt?: string;
+            /** Format: int32 */
+            maxEntries?: number;
+            /** Format: int64 */
+            maxSizeBytes?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        CacheEntry: {
+            /** Format: double */
+            accessFrequency?: number;
+            cacheKey?: string;
+            cacheNamespace?: string;
+            cacheValue?: string;
+            cacheValueCompressed?: string[];
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            campaignType?: string;
+            contentType?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: int32 */
+            hitCount?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            isCompressed?: boolean;
+            /** Format: date-time */
+            lastAccessed?: string;
+            metadata?: Record<string, never>;
+            serviceName?: string;
+            /** Format: int32 */
+            sizeBytes?: number;
+            tags?: string;
+            /** Format: int32 */
+            ttlSeconds?: number;
+        };
+        CacheInvalidation: {
+            /** Format: int64 */
+            bytesFreed?: number;
+            cacheName?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /**
+             * Format: date-time
+             * @description Unique identifier
+             */
+            invalidatedAt?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            invalidationReason?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            invalidationType?: string;
+            /** Format: int32 */
+            keysInvalidated?: number;
+            operationContext?: Record<string, never>;
+        };
+        CacheInvalidationLog: {
+            /** Format: int32 */
+            affectedKeysCount?: number;
+            cacheNamespace?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            campaignType?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            executedAt?: string;
+            /** Format: double */
+            executionTimeMs?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            invalidationPattern?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            invalidationReason?: string;
+            serviceName?: string;
+            success?: boolean;
+            triggeredBy?: string;
+        };
+        CacheMetric: {
+            cacheKey?: string;
+            cacheNamespace?: string;
+            /** Format: int32 */
+            cacheSizeBytes?: number;
+            campaignType?: string;
+            /** Format: double */
+            executionTimeMs?: number;
+            /** Format: double */
+            hitRatioPct?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            operationType?: string;
+            /** Format: date-time */
+            recordedAt?: string;
+            serviceName?: string;
+            /** Format: int32 */
+            ttlUsedSeconds?: number;
+        };
         Campaign: {
+            /** Format: double */
             avgProcessingRate?: number;
             businessStatus?: string;
-            campaignType?: string;
+            campaignType: Record<string, never>;
             /** Format: date-time */
             completedAt?: string;
             /** Format: date-time */
             createdAt?: string;
-            currentPhase?: string;
+            /** @description Frontend-expected properties */
+            currentPhase?: Record<string, never>;
+            /** Format: int64 */
             dnsValidatedDomains?: number;
             dnsValidationParams?: components["schemas"]["DNSValidationCampaignParams"];
             domainGenerationParams?: components["schemas"]["DomainGenerationCampaignParams"];
+            /** Format: int64 */
             domains?: number;
             errorMessage?: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Additional tracking fields
+             */
             estimatedCompletionAt?: string;
+            /** @description Content analysis data expected by frontend */
             extractedContent?: components["schemas"]["ExtractedContentItem"][];
+            /** Format: int64 */
             failedItems?: number;
             httpKeywordValidationParams?: components["schemas"]["HTTPKeywordCampaignParams"];
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
             /** Format: date-time */
             lastHeartbeatAt?: string;
             launchSequence?: boolean;
             leadItems?: components["schemas"]["LeadItem"][];
+            /** Format: int64 */
             leads?: number;
             metadata?: Record<string, never>;
-            name?: string;
-            phaseStatus?: string;
+            name: string;
+            phaseStatus?: Record<string, never>;
+            /** Format: int64 */
             processedItems?: number;
+            /** Format: double */
             progress?: number;
+            /** Format: double */
             progressPercentage?: number;
             /** Format: date-time */
             startedAt?: string;
-            status?: string;
+            status: Record<string, never>;
+            /** Format: int64 */
             successfulItems?: number;
+            /** Format: int64 */
             totalItems?: number;
             /** Format: date-time */
             updatedAt?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        CampaignAPI: {
+            /** Format: double */
+            avgProcessingRate?: number;
+            campaignType?: Record<string, never>;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            estimatedCompletionAt?: string;
+            /** Format: int64 */
+            failedItems?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** Format: date-time */
+            lastHeartbeatAt?: string;
+            metadata?: Record<string, never>;
+            name?: string;
+            /** Format: int64 */
+            processedItems?: number;
+            /** Format: double */
+            progressPercentage?: number;
+            /** Format: date-time */
+            startedAt?: string;
+            status?: Record<string, never>;
+            /** Format: int64 */
+            successfulItems?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        CampaignAccessGrant: {
+            accessType?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: date-time */
+            grantedAt?: string;
+            grantedBy?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            isActive?: boolean;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             userId?: string;
         };
         CampaignDependencyInfo: {
-            campaign?: components["schemas"]["Campaign"];
+            campaign?: string;
             canDelete?: boolean;
-            dependentCampaigns?: components["schemas"]["Campaign"][];
+            dependentCampaigns?: string[];
             hasDependencies?: boolean;
         };
-        /** @description Paginated list of campaigns */
-        CampaignListResponse: {
-            /** @description List of campaigns */
-            campaigns: components["schemas"]["Campaign"][];
-            /** @description Number of items per page */
-            limit: number;
-            /** @description Current page number */
-            page: number;
-            /** @description Total number of campaigns */
-            total: number;
+        CampaignJob: {
+            /** Format: int32 */
+            attempts?: number;
+            businessStatus?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            jobPayload?: Record<string, never>;
+            jobType?: Record<string, never>;
+            /** Format: date-time */
+            lastAttemptedAt?: string;
+            lastError?: string;
+            /** Format: date-time */
+            lockedAt?: string;
+            lockedBy?: string;
+            /** Format: int32 */
+            maxAttempts?: number;
+            /** Format: date-time */
+            nextExecutionAt?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            processingServerId?: string;
+            /** Format: date-time */
+            scheduledAt?: string;
+            status?: Record<string, never>;
+            /** Format: date-time */
+            updatedAt?: string;
         };
-        CampaignPhaseEnum: Record<string, never>;
-        CampaignPhaseStatusEnum: Record<string, never>;
-        CampaignStatusEnum: Record<string, never>;
-        CampaignTypeEnum: Record<string, never>;
-        /** @description Password change request */
+        CampaignOrchestratorAPIHandler: Record<string, never>;
+        CampaignStateEvent: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            correlationId?: string;
+            eventData?: Record<string, never>;
+            eventType?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** Format: date-time */
+            occurredAt?: string;
+            operationContext?: Record<string, never>;
+            /** Format: date-time */
+            persistedAt?: string;
+            processingError?: string;
+            processingStatus?: string;
+            reason?: string;
+            /** Format: int64 */
+            sequenceNumber?: number;
+            sourceState?: string;
+            targetState?: string;
+            triggeredBy?: string;
+        };
+        CampaignStateSnapshot: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            checksum?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            currentState?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            isValid?: boolean;
+            /** Format: int64 */
+            lastEventSequence?: number;
+            snapshotMetadata?: Record<string, never>;
+            stateData?: Record<string, never>;
+        };
+        CampaignStateTransition: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            durationMs?: string;
+            fromState?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** Format: date-time */
+            initiatedAt?: string;
+            isValidTransition?: boolean;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            stateEventId?: string;
+            toState?: string;
+            transitionMetadata?: Record<string, never>;
+            triggeredBy?: string;
+            validationErrors?: Record<string, never>;
+        };
+        CampaignTransactionOptions: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            CampaignID?: string;
+            IsolationLevel?: string;
+            /** Format: int32 */
+            MaxRetries?: number;
+            Operation?: string;
+            ReadOnly?: boolean;
+            RetryDelay?: string;
+            /** Format: date-time */
+            Timeout?: string;
+        };
         ChangePasswordRequest: {
-            /** @description Current password */
+            /** Format: password */
             currentPassword: string;
-            /** @description New password (minimum 12 characters) */
+            /** Format: password */
             newPassword: string;
         };
-        /** @description Status of a single component */
-        ComponentStatus: {
-            /** @description Optional status message */
-            message?: string;
-            /**
-             * @description Component status
-             * @enum {string}
-             */
-            status: "ok" | "error";
-            /**
-             * Format: date-time
-             * @description Status check timestamp
-             */
-            timestamp: string;
+        CommunicationPattern: {
+            /** Format: double */
+            avgLatencyMs?: number;
+            circuitBreakerState?: string;
+            communicationType?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: double */
+            errorRate?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: date-time */
+            lastHealthCheck?: string;
+            /** Format: date-time */
+            messageFormat?: string;
+            protocol?: string;
+            /** Format: int32 */
+            retryCount?: number;
+            sourceService?: string;
+            /** Format: double */
+            successRate?: number;
+            targetService?: string;
+            /** Format: double */
+            throughputRps?: number;
+            /** Format: date-time */
+            updatedAt?: string;
         };
-        /** @description Cookie handling configuration */
-        CookieHandling: {
+        ConfigLock: {
+            /** Format: date-time */
+            acquiredAt?: string;
+            configHash?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
             /**
-             * @description Cookie handling mode
-             * @enum {string}
+             * Format: uuid
+             * @description Unique identifier
              */
-            mode?: "preserve" | "ignore" | "custom" | "clear" | "session_only";
+            id?: string;
+            isActive?: boolean;
+            lockType?: string;
+            metadata?: Record<string, never>;
+            owner?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ConfigManagerConfig: {
+            /** Format: date-time */
+            CacheEvictionTime?: string;
+            EnableCaching?: boolean;
+            EnableStateTracking?: boolean;
+            /** Format: int32 */
+            MaxCacheEntries?: number;
+        };
+        ConfigVersion: {
+            configHash?: string;
+            configState?: Record<string, never>;
+            /** Format: date-time */
+            createdAt?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            lockType?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        ConnectionPoolMetrics: {
+            /** Format: int32 */
+            activeConnections?: number;
+            /** Format: int32 */
+            connectionErrors?: number;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            idleConnections?: number;
+            /** Format: int32 */
+            maxConnections?: number;
+            /** Format: double */
+            poolUtilizationPercent?: number;
+            /** Format: date-time */
+            recordedAt?: string;
+            /** Format: int32 */
+            waitCount?: number;
+            /** Format: int32 */
+            waitDurationMs?: number;
+        };
+        ConnectionPoolReport: {
+            /** Format: double */
+            averageActiveConnections?: number;
+            /** Format: double */
+            averageIdleConnections?: number;
+            /** Format: double */
+            averageUtilizationPercent?: number;
+            /** Format: double */
+            averageWaitTimeMs?: number;
+            /** Format: double */
+            connectionErrorRate?: number;
+            /** Format: int32 */
+            maxActiveConnections?: number;
+            /** Format: double */
+            peakUtilizationPercent?: number;
+            period?: string;
+            /** Format: int64 */
+            totalConnectionErrors?: number;
+            /** Format: int64 */
+            totalWaitEvents?: number;
         };
         CreateCampaignRequest: {
-            campaignType?: string;
+            campaignType: string;
             description?: string;
             dnsValidationParams?: components["schemas"]["DnsValidationParams"];
             domainGenerationParams?: components["schemas"]["DomainGenerationParams"];
             httpKeywordParams?: components["schemas"]["HttpKeywordParams"];
             launchSequence?: boolean;
-            name?: string;
-            /** Format: uuid */
+            name: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             userId?: string;
         };
         CreateDNSValidationCampaignRequest: {
+            /** Format: int32 */
             batchSize?: number;
-            name?: string;
-            personaIds?: string[];
+            name: string;
+            personaIds: string[];
+            /** Format: int32 */
             processingSpeedPerMinute?: number;
+            /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /** Format: uuid */
-            sourceCampaignId?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            sourceCampaignId: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             userId?: string;
         };
         CreateDomainGenerationCampaignRequest: {
-            characterSet?: string;
-            constantString?: string;
-            name?: string;
+            characterSet: string;
+            constantString: string;
+            name: string;
+            /** Format: int64 */
             numDomainsToGenerate?: number;
-            patternType?: string;
-            tld?: string;
-            /** Format: uuid */
+            patternType: string;
+            tld: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             userId?: string;
-            variableLength?: number;
+            /** Format: int32 */
+            variableLength: number;
         };
         CreateHTTPKeywordCampaignRequest: {
             adHocKeywords?: string[];
+            /** Format: int32 */
             batchSize?: number;
             keywordSetIds?: string[];
-            name?: string;
-            personaIds?: string[];
+            name: string;
+            personaIds: string[];
+            /** Format: int32 */
             processingSpeedPerMinute?: number;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             proxyPoolId?: string;
             proxySelectionStrategy?: string;
+            /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /** Format: uuid */
-            sourceCampaignId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            sourceCampaignId: string;
             targetHttpPorts?: number[];
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             userId?: string;
         };
-        /** @description Request to create a new keyword set */
         CreateKeywordSetRequest: {
-            /** @description Keyword set description */
             description?: string;
-            /**
-             * @description Whether the keyword set is enabled
-             * @default true
-             */
-            isEnabled: boolean;
-            /** @description Keyword set name */
+            isEnabled?: boolean;
             name: string;
-            /** @description List of keyword rules to include in the set */
             rules?: components["schemas"]["KeywordRuleRequest"][];
         };
-        /** @description Request to create a new persona */
         CreatePersonaRequest: {
-            /** @description Type-specific configuration details */
-            configDetails: components["schemas"]["HttpPersonaConfig"] | components["schemas"]["DnsPersonaConfig"];
-            /** @description Persona description */
+            configDetails: Record<string, never>;
             description?: string;
-            /**
-             * @description Whether the persona is enabled
-             * @default false
-             */
-            isEnabled: boolean;
-            /** @description Persona name */
-            name: string;
-            /**
-             * @description Type of persona
-             * @enum {string}
-             */
-            personaType: "dns" | "http";
-        };
-        /** @description Request to create a new proxy */
-        CreateProxyRequest: {
-            /** @description Proxy address (host:port) */
-            address: string;
-            /** @description Country code for the proxy location */
-            countryCode?: string;
-            /** @description Proxy description */
-            description?: string;
-            /** @description Whether the proxy is enabled */
             isEnabled?: boolean;
-            /** @description Proxy name */
             name: string;
-            /** @description Proxy password for authentication */
+            personaType: string;
+        };
+        CreateProxyRequest: {
+            address: string;
+            countryCode?: string;
+            description?: string;
+            isEnabled?: boolean;
+            name: string;
+            /** Format: password */
             password?: string;
-            /**
-             * @description Proxy protocol
-             * @enum {string}
-             */
-            protocol: "http" | "https" | "socks5" | "socks4";
-            /** @description Proxy username for authentication */
+            protocol: string;
             username?: string;
         };
-        /** @description DNS validator configuration */
-        DNSConfig: {
-            /** @description Concurrent queries per domain */
+        CreateUserRequest: {
+            /** Format: email */
+            email: string;
+            firstName: string;
+            lastName: string;
+            /** Format: password */
+            password: string;
+        };
+        DNSConfigDetails: {
+            /** Format: int32 */
             concurrentQueriesPerDomain?: number;
-            /** @description Maximum concurrent goroutines */
+            /** Format: int32 */
             maxConcurrentGoroutines?: number;
-            /** @description Maximum domains per request */
+            /** Format: int32 */
             maxDomainsPerRequest?: number;
-            /** @description Maximum query delay in milliseconds */
+            /** Format: int32 */
             queryDelayMaxMs?: number;
-            /** @description Minimum query delay in milliseconds */
+            /** Format: int32 */
             queryDelayMinMs?: number;
-            /** @description DNS query timeout in seconds */
+            /** Format: int32 */
             queryTimeoutSeconds?: number;
-            /** @description Rate limit burst capacity */
+            /** Format: int32 */
             rateLimitBurst?: number;
-            /** @description Rate limit in queries per second */
+            /** Format: double */
             rateLimitDps?: number;
-            /**
-             * @description Strategy for selecting DNS resolvers
-             * @enum {string}
-             */
-            resolverStrategy?: "round_robin" | "random" | "weighted" | "priority";
-            /** @description DNS resolver IP addresses */
+            resolverStrategy?: string;
             resolvers?: string[];
-            /** @description Preferred order of resolvers */
             resolversPreferredOrder?: string[];
-            /** @description Weighted resolver configuration */
             resolversWeighted?: {
                 [key: string]: number;
             };
-            /** @description Use system DNS resolvers */
             useSystemResolvers?: boolean;
         };
         DNSValidationCampaignParams: {
+            /** Format: int32 */
             batchSize?: number;
             metadata?: Record<string, never>;
-            personaIds?: string[];
+            personaIds: string[];
+            /** Format: int32 */
             processingSpeedPerMinute?: number;
+            /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             sourceGenerationCampaignId?: string;
         };
+        DNSValidationRequest: {
+            /** Format: int32 */
+            batchSize?: number;
+            personaIds?: string[];
+            /** Format: int32 */
+            processingSpeedPerMinute?: number;
+            /** Format: int32 */
+            retryAttempts?: number;
+            /** Format: int32 */
+            rotationIntervalSeconds?: number;
+        };
         DNSValidationResult: {
+            /** Format: int32 */
             attempts?: number;
             businessStatus?: string;
             /** Format: date-time */
             createdAt?: string;
-            /** Format: uuid */
-            dnsCampaignId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            dnsCampaignId: string;
             dnsRecords?: Record<string, never>;
-            domainName?: string;
-            /** Format: uuid */
+            domainName: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             generatedDomainId?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
             /** Format: date-time */
             lastCheckedAt?: string;
-            /** Format: uuid */
-            validatedByPersonaId?: string;
-            validationStatus?: string;
-        };
-        /** @description Paginated list of DNS validation results */
-        DNSValidationResultsResponse: {
-            /** @description Number of items per page */
-            limit: number;
-            /** @description Current page number */
-            page: number;
-            /** @description List of DNS validation results */
-            results: components["schemas"]["DNSValidationResult"][];
-            /** @description Total number of results */
-            total: number;
-        };
-        /** @description DNS persona configuration details */
-        DnsPersonaConfig: {
-            /** @description Concurrent queries per domain */
-            concurrentQueriesPerDomain?: number;
-            /** @description Maximum concurrent goroutines */
-            maxConcurrentGoroutines?: number;
-            /** @description Maximum domains per request */
-            maxDomainsPerRequest: number;
-            /** @description Maximum query delay in milliseconds */
-            queryDelayMaxMs?: number;
-            /** @description Minimum query delay in milliseconds */
-            queryDelayMinMs?: number;
-            /** @description DNS query timeout in seconds */
-            queryTimeoutSeconds: number;
-            /** @description Rate limit burst capacity */
-            rateLimitBurst?: number;
-            /** @description Rate limit in queries per second */
-            rateLimitDps?: number;
             /**
-             * @description Strategy for selecting DNS resolvers
-             * @enum {string}
+             * Format: date-time
+             * @description Unique identifier
              */
-            resolverStrategy: "round_robin" | "random" | "weighted" | "priority";
-            /** @description DNS resolver IP addresses */
+            validatedByPersonaId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            validationStatus: string;
+        };
+        DNSValidationResultsResponse: {
+            data?: string[];
+            nextCursor?: string;
+            /** Format: int64 */
+            totalCount?: number;
+        };
+        DNSValidator: Record<string, never>;
+        DatabaseConnectionMetrics: Record<string, never>;
+        DatabaseOptimizationRecommendation: {
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            effort?: string;
+            impact?: string;
+            priority?: string;
+            sql?: string;
+            title?: string;
+            type?: string;
+        };
+        DnsPersonaConfig: {
+            /** Format: int32 */
+            concurrentQueriesPerDomain?: number;
+            /** Format: int32 */
+            maxConcurrentGoroutines?: number;
+            /** Format: int32 */
+            maxDomainsPerRequest?: number;
+            /** Format: int32 */
+            queryDelayMaxMs?: number;
+            /** Format: int32 */
+            queryDelayMinMs?: number;
+            /** Format: int32 */
+            queryTimeoutSeconds?: number;
+            /** Format: int32 */
+            rateLimitBurst?: number;
+            /** Format: double */
+            rateLimitDps?: number;
+            resolverStrategy: string;
             resolvers: string[];
-            /** @description Preferred order of resolvers */
             resolversPreferredOrder?: string[];
-            /** @description Weighted resolver configuration */
             resolversWeighted?: {
                 [key: string]: number;
             };
-            /** @description Use system DNS resolvers */
             useSystemResolvers?: boolean;
         };
         DnsValidationParams: {
+            /** Format: int32 */
             batchSize?: number;
-            personaIds?: string[];
+            personaIds: string[];
+            /** Format: int32 */
             processingSpeedPerMinute?: number;
+            /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             sourceCampaignId?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             sourceGenerationCampaignId?: string;
         };
+        DoHJSONResponse: {
+            AD?: boolean;
+            Answer?: Record<string, never>[];
+            CD?: boolean;
+            Question?: {
+                name?: string;
+                type?: number;
+            }[];
+            RA?: boolean;
+            RD?: boolean;
+            /** Format: int32 */
+            Status?: number;
+            TC?: boolean;
+        };
+        DomainBatch: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            CampaignID?: string;
+            Domains?: string[];
+        };
         DomainGenerationCampaignParams: {
-            characterSet?: string;
+            characterSet: string;
             constantString?: string;
             /** Format: date-time */
             createdAt?: string;
+            /** Format: int64 */
             currentOffset?: number;
-            numDomainsToGenerate?: number;
-            patternType?: string;
-            tld?: string;
-            totalPossibleCombinations?: number;
+            /** Format: int32 */
+            numDomainsToGenerate: number;
+            patternType: string;
+            tld: string;
+            /** Format: int64 */
+            totalPossibleCombinations: number;
             /** Format: date-time */
             updatedAt?: string;
+            /** Format: int32 */
             variableLength?: number;
+        };
+        DomainGenerationConfigState: {
+            configDetails?: Record<string, never>;
+            configHash?: string;
+            configState?: components["schemas"]["DomainGenerationConfigState"];
+            /** Format: int64 */
+            lastOffset?: number;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         DomainGenerationParams: {
-            characterSet?: string;
-            constantString?: string;
+            characterSet: string;
+            constantString: string;
+            /** Format: int64 */
             numDomainsToGenerate?: number;
-            patternType?: string;
-            tld?: string;
-            variableLength?: number;
+            patternType: string;
+            tld: string;
+            /** Format: int32 */
+            variableLength: number;
         };
-        /** @description Standard error response */
+        EfficientWorkerPool: Record<string, never>;
+        ErrorCode: string;
+        ErrorDetail: {
+            code?: components["schemas"]["ErrorCode"];
+            context?: Record<string, never>;
+            field?: string;
+            message?: string;
+        };
+        ErrorInfo: {
+            code?: components["schemas"]["ErrorCode"];
+            details?: components["schemas"]["ErrorDetail"][];
+            message?: string;
+            path?: string;
+            /** Format: date-time */
+            timestamp?: string;
+        };
         ErrorResponse: {
-            /** @description Additional error details */
-            details?: string;
-            /** @description Error message */
-            error: string;
+            /** Format: int32 */
+            code?: number;
+            message?: string;
+            status?: string;
+        };
+        EventProjection: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            aggregateId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            lastEventPosition?: number;
+            projectionData?: Record<string, never>;
+            projectionName?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        EventStoreRecord: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            aggregateId?: string;
+            aggregateType?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            causationId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            correlationId?: string;
+            eventData?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            eventId?: string;
+            eventType?: string;
+            /** Format: int32 */
+            eventVersion?: number;
+            /** Format: int64 */
+            globalPosition?: number;
+            /** Format: int64 */
+            id?: number;
+            metadata?: Record<string, never>;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** Format: date-time */
+            recordedAt?: string;
+            /** Format: int64 */
+            streamPosition?: number;
         };
         ExtractedContentAnalysis: {
             advancedKeywords?: string[];
             categories?: string[];
+            /** Format: date-time */
             sentiment?: string;
             summary?: string;
         };
         ExtractedContentItem: {
             advancedAnalysis?: components["schemas"]["ExtractedContentAnalysis"];
-            id?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             previousCampaignId?: string;
+            /** Format: int32 */
             similarityScore?: number;
+            /** Format: uri */
             sourceUrl?: string;
-            text?: string;
+            text: string;
         };
-        /** @description Feature flag settings */
-        FeatureFlags: {
-            /** @description Enable analytics feature */
-            enableAnalytics?: boolean;
-            /** @description Enable debug mode feature */
-            enableDebugMode?: boolean;
-            /** @description Enable offline mode feature */
-            enableOfflineMode?: boolean;
-            /** @description Enable real-time updates feature */
-            enableRealTimeUpdates?: boolean;
+        GeneralErrorResponse: {
+            details?: string;
+            error?: string;
         };
-        /** @description Request to force health check on specific proxies */
-        ForceCheckProxiesRequest: {
-            /** @description List of proxy IDs to check (empty for all) */
-            ids?: string[];
+        GenerateDomainGenerationConfigHashResult: {
+            HashString?: string;
+            NormalizedParams?: string;
         };
         GeneratedDomain: {
             /** Format: date-time */
             createdAt?: string;
             dnsIp?: string;
-            dnsStatus?: string;
-            domainName?: string;
+            /** @description Domain-centric validation status fields */
+            dnsStatus?: Record<string, never>;
+            domainName: string;
             /** Format: date-time */
             generatedAt?: string;
-            /** Format: uuid */
-            generationCampaignId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            generationCampaignId: string;
             httpKeywords?: string;
-            httpStatus?: string;
-            httpStatusCode?: number;
+            httpStatus?: Record<string, never>;
+            httpStatusCode?: string;
             httpTitle?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Unique identifier
+             */
             lastValidatedAt?: string;
-            leadScore?: number;
+            leadScore?: string;
+            /** Format: int64 */
             offsetIndex?: number;
             sourceKeyword?: string;
             sourcePattern?: string;
             tld?: string;
         };
-        /** @description Paginated list of generated domains */
         GeneratedDomainsResponse: {
-            /** @description List of generated domains */
-            domains: components["schemas"]["GeneratedDomain"][];
-            /** @description Number of items per page */
-            limit: number;
-            /** @description Current page number */
-            page: number;
-            /** @description Total number of domains */
-            total: number;
+            data?: string[];
+            /** Format: int64 */
+            nextCursor?: number;
+            /** Format: int64 */
+            totalCount?: number;
         };
-        /** @description HTTP/2 settings configuration */
         HTTP2SettingsConfig: {
-            /** @description Enable HTTP/2 */
             enabled?: boolean;
         };
-        /** @description HTTP validator configuration */
-        HTTPConfig: {
-            /** @description Allow insecure TLS connections */
-            allowInsecureTLS?: boolean;
-            /** @description Default HTTP headers */
-            defaultHeaders?: {
+        HTTPConfigDetails: {
+            allowedStatusCodes?: number[];
+            cookieHandling?: Record<string, never>;
+            followRedirects?: boolean;
+            headerOrder?: string[];
+            headers?: {
                 [key: string]: string;
             };
-            /** @description Default User-Agent string for HTTP requests */
-            defaultUserAgent?: string;
-            /** @description Whether to follow HTTP redirects */
-            followRedirects?: boolean;
-            /**
-             * Format: int64
-             * @description Maximum bytes to read from response body
-             */
-            maxBodyReadBytes?: number;
-            /** @description Maximum concurrent goroutines */
-            maxConcurrentGoroutines?: number;
-            /** @description Maximum domains per request */
-            maxDomainsPerRequest?: number;
-            /** @description Maximum number of redirects to follow */
-            maxRedirects?: number;
-            /** @description Rate limit burst capacity */
+            http2Settings?: Record<string, never>;
+            notes?: string;
+            /** Format: int32 */
             rateLimitBurst?: number;
-            /** @description Rate limit in requests per second */
+            /** Format: double */
             rateLimitDps?: number;
-            /** @description Request timeout in seconds */
+            /** Format: int32 */
             requestTimeoutSeconds?: number;
-            /** @description List of User-Agent strings to rotate through */
-            userAgents?: string[];
+            tlsClientHello?: Record<string, never>;
+            userAgent: string;
         };
         HTTPKeywordCampaignParams: {
             adHocKeywords?: string[];
+            /** Format: int32 */
             batchSize?: number;
             keywordSetIds?: string[];
             lastProcessedDomainName?: string;
             metadata?: Record<string, never>;
-            personaIds?: string[];
+            personaIds: string[];
+            /** Format: int32 */
             processingSpeedPerMinute?: number;
             proxyIds?: string[];
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             proxyPoolId?: string;
             proxySelectionStrategy?: string;
+            /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /** Format: uuid */
-            sourceCampaignId?: string;
-            sourceType?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            sourceCampaignId: string;
+            sourceType: string;
             targetHttpPorts?: number[];
         };
         HTTPKeywordResult: {
+            /** Format: int32 */
             attempts?: number;
             contentHash?: string;
             /** Format: date-time */
             createdAt?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             dnsResultId?: string;
-            domainName?: string;
+            domainName: string;
             extractedContentSnippet?: string;
             foundAdHocKeywords?: string[];
             foundKeywordsFromSets?: Record<string, never>;
-            /** Format: uuid */
-            httpKeywordCampaignId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            httpKeywordCampaignId: string;
+            /** Format: int32 */
             httpStatusCode?: number;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
             /** Format: date-time */
             lastCheckedAt?: string;
             pageTitle?: string;
             responseHeaders?: Record<string, never>;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             usedProxyId?: string;
-            /** Format: uuid */
-            validatedByPersonaId?: string;
-            validationStatus?: string;
-        };
-        /** @description Paginated list of HTTP keyword results */
-        HTTPKeywordResultsResponse: {
-            /** @description Number of items per page */
-            limit: number;
-            /** @description Current page number */
-            page: number;
-            /** @description List of HTTP keyword results */
-            results: components["schemas"]["HTTPKeywordResult"][];
-            /** @description Total number of results */
-            total: number;
-        };
-        /** @description Health status of the application and its components */
-        HealthStatus: {
             /**
              * Format: date-time
-             * @description Build timestamp
+             * @description Unique identifier
              */
-            buildTime: string;
-            /** @description Status of individual components */
-            components: {
-                [key: string]: components["schemas"]["ComponentStatus"];
-            };
-            /** @description Runtime environment */
-            environment: string;
+            validatedByPersonaId?: string;
             /**
-             * @description Overall health status
-             * @enum {string}
+             * Format: uuid
+             * @description Unique identifier
              */
-            status: "ok" | "degraded" | "error";
-            systemInfo: components["schemas"]["SystemInfo"];
-            /** @description Application version */
-            version: string;
+            validationStatus: string;
+        };
+        HTTPKeywordResultsResponse: {
+            data?: string[];
+            nextCursor?: string;
+            /** Format: int64 */
+            totalCount?: number;
+        };
+        HealthCheckHandler: Record<string, never>;
+        HealthStatus: {
+            /** Format: date-time */
+            buildTime?: string;
+            components?: {
+                [key: string]: components["schemas"]["Status"];
+            };
+            environment?: string;
+            status?: string;
+            systemInfo?: components["schemas"]["SystemInfo"];
+            version?: string;
         };
         HttpKeywordParams: {
             adHocKeywords?: string[];
+            /** Format: int32 */
             batchSize?: number;
             keywordSetIds?: string[];
-            personaIds?: string[];
+            personaIds: string[];
+            /** Format: int32 */
             processingSpeedPerMinute?: number;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             proxyPoolId?: string;
             proxySelectionStrategy?: string;
+            /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /** Format: uuid */
-            sourceCampaignId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            sourceCampaignId: string;
             targetHttpPorts?: number[];
         };
-        /** @description HTTP persona configuration details */
         HttpPersonaConfig: {
-            /** @description Allow insecure TLS connections */
+            /** @description Validation settings */
             allowInsecureTls?: boolean;
-            /** @description Allowed HTTP status codes */
-            allowedStatusCodes?: number[];
-            cookieHandling?: components["schemas"]["CookieHandling"];
-            /** @description Capture DOM snapshots in headless browser */
+            cookieHandling?: Record<string, never>;
             domSnapshot?: boolean;
-            /** @description Fetch response body for keyword scanning */
             fetchBodyForKeywords?: boolean;
-            /** @description Whether to follow HTTP redirects */
-            followRedirects?: boolean;
-            /** @description Order of HTTP headers */
             headerOrder?: string[];
-            /** @description Custom HTTP headers */
             headers?: {
                 [key: string]: string;
             };
-            /** @description Headless browser timeout in seconds */
+            /** Format: int32 */
             headlessTimeoutSeconds?: number;
-            /** @description User agent for headless browser */
             headlessUserAgent?: string;
             http2Settings?: components["schemas"]["HTTP2SettingsConfig"];
-            /** @description Skip TLS certificate verification */
-            insecureSkipVerify?: boolean;
-            /** @description Load images in headless browser */
             loadImages?: boolean;
-            /** @description Maximum number of redirects to follow */
+            /** Format: int32 */
             maxRedirects?: number;
-            /** @description Rate limit burst capacity */
+            /** Format: int32 */
             rateLimitBurst?: number;
-            /** @description Rate limit in requests per second */
+            /** Format: double */
             rateLimitDps?: number;
-            /** @description Request timeout in seconds */
+            /** Format: int32 */
             requestTimeoutSec?: number;
-            /** @description Take screenshots in headless browser */
+            /** Format: int32 */
+            requestTimeoutSeconds?: number;
             screenshot?: boolean;
-            /** @description Enable JavaScript execution in headless browser */
             scriptExecution?: boolean;
-            tlsClientHello?: components["schemas"]["TLSClientHello"];
-            /** @description Use headless browser for requests */
+            tlsClientHello?: Record<string, never>;
+            /** @description Headless browser settings */
             useHeadless?: boolean;
-            /** @description User agent string for HTTP requests */
             userAgent: string;
-            /** @description Viewport height for headless browser */
+            /** Format: int32 */
             viewportHeight?: number;
-            /** @description Viewport width for headless browser */
+            /** Format: int32 */
             viewportWidth?: number;
-            /** @description Wait delay before capturing content */
+            /** Format: int32 */
             waitDelaySeconds?: number;
         };
         InPlaceDNSValidationRequest: {
+            /** Format: int32 */
             batchSize?: number;
-            /** Format: uuid */
-            campaignId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId: string;
             onlyInvalidDomains?: boolean;
             personaIds?: string[];
+            /** Format: int32 */
             processingSpeedPerMinute?: number;
+            /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
             rotationIntervalSeconds?: number;
         };
-        /** @description Result of keyword extraction for a single URL */
         KeywordExtractionAPIResult: {
             /**
              * Format: uuid
-             * @description UUID of DNS persona actually used
+             * @description Unique identifier
              */
             dnsPersonaIdUsed?: string;
-            /** @description Error message if extraction failed */
             error?: string;
-            /**
-             * Format: uri
-             * @description Final URL after redirects
-             */
+            /** Format: uri */
             finalUrl?: string;
             /**
              * Format: uuid
-             * @description UUID of HTTP persona actually used
+             * @description Unique identifier
              */
             httpPersonaIdUsed?: string;
             /**
              * Format: uuid
-             * @description UUID of keyword set used
+             * @description Unique identifier
              */
-            keywordSetIdUsed: string;
-            /** @description Array of keyword extraction results */
-            matches?: components["schemas"]["KeywordExtractionResult"][];
+            keywordSetIdUsed?: string;
+            matches?: string[];
             /**
              * Format: uuid
-             * @description UUID of proxy actually used
+             * @description Unique identifier
              */
             proxyIdUsed?: string;
-            /** @description HTTP status code from the request */
+            /** Format: int32 */
             statusCode?: number;
-            /**
-             * Format: uri
-             * @description Original URL requested
-             */
-            url: string;
+            /** Format: uri */
+            url?: string;
         };
-        /** @description Single item in a batch keyword extraction request */
         KeywordExtractionRequestItem: {
             /**
              * Format: uuid
-             * @description Optional UUID of DNS persona to use
+             * @description Unique identifier
              */
             dnsPersonaId?: string;
             /**
              * Format: uuid
-             * @description Optional UUID of HTTP persona to use
+             * @description Unique identifier
              */
             httpPersonaId?: string;
             /**
              * Format: uuid
-             * @description UUID of the keyword set to use for extraction
+             * @description Unique identifier
              */
             keywordSetId: string;
-            /**
-             * Format: uri
-             * @description URL to extract keywords from
-             */
+            /** Format: uri */
             url: string;
-        };
-        /** @description Single keyword extraction match result */
-        KeywordExtractionResult: {
-            /** @description Number of matches found */
-            count: number;
-            /** @description The matched keyword or pattern */
-            keyword: string;
-            /** @description Array of text matches for this keyword */
-            matches: string[];
         };
         KeywordRule: {
             category?: string;
+            /** Format: int32 */
             contextChars?: number;
             /** Format: date-time */
             createdAt?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
             isCaseSensitive?: boolean;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             keywordSetId?: string;
-            pattern?: string;
-            ruleType?: string;
+            pattern: string;
+            ruleType: Record<string, never>;
             /** Format: date-time */
             updatedAt?: string;
         };
-        /** @description Request to create or update a keyword rule */
         KeywordRuleRequest: {
-            /** @description Category for organizing related rules */
             category?: string;
-            /**
-             * @description Number of context characters to include around matches
-             * @default 0
-             */
-            contextChars: number;
-            /**
-             * @description Whether pattern matching is case sensitive
-             * @default false
-             */
-            isCaseSensitive: boolean;
-            /** @description Pattern to match against content */
+            /** Format: int32 */
+            contextChars?: number;
+            isCaseSensitive?: boolean;
             pattern: string;
-            /**
-             * @description Type of rule pattern matching
-             * @enum {string}
-             */
-            ruleType: "string" | "regex";
+            ruleType: string;
         };
-        KeywordRuleTypeEnum: Record<string, never>;
         KeywordSet: {
             /** Format: date-time */
             createdAt?: string;
             description?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            isEnabled?: boolean;
+            name: string;
+            rules?: components["schemas"]["KeywordRule"][];
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        KeywordSetResponse: {
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
             isEnabled?: boolean;
             name?: string;
-            rules?: components["schemas"]["KeywordRule"][];
+            /** Format: int32 */
+            ruleCount?: number;
+            rules?: string[];
             /** Format: date-time */
             updatedAt?: string;
         };
         LeadItem: {
             company?: string;
+            /** Format: email */
             email?: string;
-            id?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id: string;
             name?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             previousCampaignId?: string;
+            /** Format: int32 */
             similarityScore?: number;
+            /** Format: uri */
             sourceUrl?: string;
         };
-        /** @description Logging configuration */
-        LoggingConfig: {
-            /** @description Enable file-based logging */
-            enableFileLogging?: boolean;
-            /** @description Enable JSON log format */
-            enableJSONFormat?: boolean;
-            /** @description Enable performance logging */
-            enablePerformanceLogging?: boolean;
-            /** @description Enable request logging */
-            enableRequestLogging?: boolean;
-            /**
-             * @description Log level
-             * @enum {string}
-             */
-            level?: "DEBUG" | "INFO" | "WARN" | "ERROR";
-            /** @description Directory for log files */
-            logDirectory?: string;
-            /** @description Maximum age of log files in days */
-            maxAge?: number;
-            /** @description Maximum number of backup log files */
-            maxBackups?: number;
-            /** @description Maximum log file size in MB */
-            maxFileSize?: number;
-        };
-        /** @description Login credentials */
         LoginRequest: {
-            /** @description CAPTCHA token for bot protection */
             captchaToken?: string;
-            /**
-             * Format: email
-             * @description User email address
-             */
+            /** Format: email */
             email: string;
-            /** @description User password (minimum 6 characters) */
+            /** Format: password */
             password: string;
-            /** @description Whether to remember the user session */
             rememberMe?: boolean;
         };
-        /** @description Login response */
         LoginResponse: {
-            /**
-             * Format: date-time
-             * @description Session expiration time
-             */
+            error?: string;
+            /** Format: date-time */
             expiresAt?: string;
-            /** @description Session identifier */
+            requires_captcha?: boolean;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             sessionId?: string;
+            success?: boolean;
             user?: components["schemas"]["User"];
         };
-        /** @description Request to get the current offset for a domain generation pattern */
-        PatternOffsetRequest: {
-            /** @description Character set for domain generation (e.g., 'abc', '123') */
-            characterSet: string;
-            /** @description Constant string part of the domain */
-            constantString: string;
+        LoginResponseAPI: {
+            error?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            requires_captcha?: boolean;
             /**
-             * @description Type of pattern (prefix, suffix, or both)
-             * @enum {string}
+             * Format: uuid
+             * @description Unique identifier
              */
-            patternType: "prefix" | "suffix" | "both";
-            /** @description Top-level domain (e.g., '.com', '.net') */
+            sessionId?: string;
+            success?: boolean;
+            user?: components["schemas"]["UserAPI"];
+        };
+        MFAChallenge: {
+            /** Format: int32 */
+            attempts?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            challengeId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: int32 */
+            maxAttempts?: number;
+            method?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        MFAEnrollment: {
+            /** Format: date-time */
+            enrolledAt?: string;
+            /** Format: date-time */
+            lastUsedAt?: string;
+            preferredMethod?: Record<string, never>;
+            totpEnabled?: boolean;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        MemoryEfficiencyConfig: {
+            /** Format: int32 */
+            batchSize?: number;
+            compressionEnabled?: boolean;
+            enableMemoryLogging?: boolean;
+            gcInterval?: string;
+            /** Format: int64 */
+            maxMemoryUsage?: number;
+            /** Format: int32 */
+            maxMemoryUsageMB?: number;
+            /** Format: int32 */
+            memoryLimitMB?: number;
+            optimizationLevel?: string;
+            /** Format: int32 */
+            poolSize?: number;
+            preallocationEnabled?: boolean;
+        };
+        Metadata: {
+            extra?: {
+                [key: string]: Record<string, never>;
+            };
+            page?: components["schemas"]["PageInfo"];
+            processing?: components["schemas"]["ProcessingInfo"];
+            rateLimit?: components["schemas"]["RateLimitInfo"];
+        };
+        NormalizedDomainGenerationParams: {
+            characterSet?: string;
+            constantString?: string;
+            patternType?: string;
+            tld?: string;
+            /** Format: int32 */
+            variableLength?: number;
+        };
+        PageInfo: {
+            /** Format: int32 */
+            count?: number;
+            /** Format: int32 */
+            current?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            total?: number;
+        };
+        PaginationPerformanceMetric: {
+            /** Format: int32 */
+            executionTimeMs?: number;
+            /** Format: int64 */
+            id?: number;
+            indexesUsed?: string;
+            /** Format: int32 */
+            memoryUsageKb?: number;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            paginationType?: string;
+            /** Format: date-time */
+            recordedAt?: string;
+            tableName?: string;
+            /** Format: int64 */
+            totalRows?: number;
+        };
+        PasswordResetToken: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            ipAddress?: string;
+            tokenHash?: string;
+            /** Format: date-time */
+            usedAt?: string;
+            userAgent?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        PatternOffsetRequest: {
+            characterSet: string;
+            constantString: string;
+            patternType: string;
             tld: string;
-            /** @description Length of the variable part */
+            /** Format: int32 */
             variableLength: number;
         };
+        PatternOffsetResponse: {
+            characterSet?: string;
+            constantString?: string;
+            /** Format: int64 */
+            currentOffset?: number;
+            patternType?: string;
+            tld?: string;
+            /** Format: int64 */
+            totalPossibleCombinations?: number;
+            /** Format: int32 */
+            variableLength?: number;
+        };
+        PerformanceThreshold: {
+            /** Format: int32 */
+            maxConnectionWaitTimeMs?: number;
+            /** Format: int32 */
+            maxExecutionTimeMs?: number;
+            /** Format: int32 */
+            maxMemoryUsageKb?: number;
+            /** Format: double */
+            maxRowsScannedRatio?: number;
+            /** Format: double */
+            minIndexUsageRate?: number;
+            queryType?: string;
+        };
         Persona: {
-            configDetails?: Record<string, never>;
+            configDetails: Record<string, never>;
             /** Format: date-time */
             createdAt?: string;
             description?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
             isEnabled?: boolean;
             lastError?: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Frontend-expected properties
+             */
             lastTested?: string;
-            name?: string;
-            personaType?: string;
-            status?: string;
+            name: string;
+            personaType: Record<string, never>;
+            status?: Record<string, never>;
             tags?: string[];
             /** Format: date-time */
             updatedAt?: string;
         };
-        /** @description Response for persona list */
-        PersonaListResponse: {
-            data?: components["schemas"]["Persona"][];
-            /** @description Response message */
-            message?: string;
-            /** @enum {string} */
-            status?: "success";
+        PersonaResponse: {
+            configDetails?: Record<string, never>;
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            isEnabled?: boolean;
+            name?: string;
+            personaType?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
-        PersonaStatusEnum: Record<string, never>;
-        /** @description Result of persona test operation */
-        PersonaTestResult: {
-            data?: {
-                /** @description Test result message */
-                message?: string;
-                /**
-                 * Format: uuid
-                 * @description Persona ID that was tested
-                 */
-                personaId?: string;
-                /**
-                 * @description Type of persona tested
-                 * @enum {string}
-                 */
-                personaType?: "dns" | "http";
-                /** @description Test result status */
-                status?: string;
-                /**
-                 * Format: date-time
-                 * @description Test execution timestamp
-                 */
-                testedAt?: string;
-            };
-            /** @description Response message */
-            message?: string;
-            /** @enum {string} */
-            status?: "success";
+        ProcessingInfo: {
+            duration?: string;
+            version?: string;
         };
-        PersonaTypeEnum: Record<string, never>;
         Proxy: {
-            address?: string;
+            address: string;
             city?: string;
             countryCode?: string;
             /** Format: date-time */
             createdAt?: string;
             description?: string;
-            failureCount?: number;
+            failureCount?: string;
             host?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
+            /** Format: password */
             inputPassword?: string;
+            /** @description Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash */
             inputUsername?: string;
             isEnabled?: boolean;
             isHealthy?: boolean;
@@ -2069,47 +2403,45 @@ export interface components {
             lastCheckedAt?: string;
             lastError?: string;
             lastStatus?: string;
-            /** Format: date-time */
             lastTested?: string;
-            latencyMs?: number;
-            name?: string;
+            latencyMs?: string;
+            name: string;
             notes?: string;
-            port?: number;
-            protocol?: string;
+            port?: string;
+            protocol?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             provider?: string;
-            status?: string;
-            successCount?: number;
+            /** @description Frontend-expected fields */
+            status?: Record<string, never>;
+            successCount?: string;
             /** Format: date-time */
             updatedAt?: string;
             username?: string;
         };
-        /** @description Proxy manager configuration */
-        ProxyManagerConfig: {
-            /** @description Initial health check timeout in seconds */
-            initialHealthCheckTimeoutSeconds?: number;
-            /** @description Maximum concurrent initial health checks */
-            maxConcurrentInitialChecks?: number;
-            /** @description Proxy test timeout in seconds */
-            testTimeoutSeconds: number;
-            /**
-             * Format: uri
-             * @description URL to use for proxy testing
-             */
-            testUrl?: string;
-        };
+        ProxyManager: Record<string, never>;
         ProxyPool: {
             /** Format: date-time */
             createdAt?: string;
             description?: string;
             healthCheckEnabled?: boolean;
+            /** Format: int32 */
             healthCheckIntervalSeconds?: number;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
             isEnabled?: boolean;
+            /** Format: int32 */
             maxRetries?: number;
-            name?: string;
+            name: string;
             poolStrategy?: string;
+            /** @description Computed fields (not stored in DB) */
             proxies?: components["schemas"]["Proxy"][];
+            /** Format: int32 */
             timeoutSeconds?: number;
             /** Format: date-time */
             updatedAt?: string;
@@ -2118,243 +2450,595 @@ export interface components {
             /** Format: date-time */
             addedAt?: string;
             isActive?: boolean;
-            /** Format: uuid */
-            poolId?: string;
-            /** Format: uuid */
-            proxyId?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            poolId: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            proxyId: string;
+            /** Format: int32 */
             weight?: number;
         };
-        /** @description Request to create or update a proxy pool */
         ProxyPoolRequest: {
-            /** @description Proxy pool description */
             description?: string;
-            /** @description Whether health checks are enabled for the pool */
             healthCheckEnabled?: boolean;
-            /** @description Health check interval in seconds */
+            /** Format: int32 */
             healthCheckIntervalSeconds?: number;
-            /** @description Whether the proxy pool is enabled */
             isEnabled?: boolean;
-            /** @description Maximum retry attempts for proxy requests */
+            /** Format: int32 */
             maxRetries?: number;
-            /** @description Proxy pool name */
             name: string;
-            /** @description Pool selection strategy (e.g., round_robin, random, weighted) */
             poolStrategy?: string;
-            /** @description Timeout for proxy requests in seconds */
+            /** Format: int32 */
             timeoutSeconds?: number;
         };
-        /** @description Proxy status information */
         ProxyStatus: {
-            /** @description Proxy address */
-            address?: string;
-            /** @description Number of consecutive failures */
+            /** Format: int32 */
             consecutiveFailures?: number;
-            /** @description Proxy description */
-            description?: string;
-            /** @description Proxy ID */
-            id?: string;
-            /** @description Whether the proxy is healthy */
             isHealthy?: boolean;
-            /**
-             * Format: date-time
-             * @description Last failure timestamp
-             */
+            /** Format: date-time */
             lastFailure?: string;
-            /** @description Proxy name */
-            name?: string;
-            /** @description Proxy password (may be masked) */
-            password?: string;
-            /** @description Proxy protocol */
-            protocol?: string;
-            /** @description Whether the proxy is enabled by user */
-            userEnabled?: boolean;
-            /** @description Proxy username */
-            username?: string;
         };
-        /** @description Result of proxy test operation */
         ProxyTestResult: {
-            /** @description Test duration in milliseconds */
+            /** Format: int64 */
             durationMs?: number;
-            /** @description Error message if test failed */
             error?: string;
-            /** @description Proxy ID that was tested */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             proxyId?: string;
-            /** @description IP address returned by the proxy test */
             returnedIp?: string;
-            /** @description HTTP status code from test request */
+            /** Format: int32 */
             statusCode?: number;
-            /** @description Whether the test was successful */
             success?: boolean;
         };
-        /** @description Rate limiter configuration */
-        RateLimiterConfig: {
-            /** @description Maximum requests per window */
-            maxRequests: number;
-            /** @description Rate limit window in seconds */
-            windowSeconds: number;
-        };
-        /** @description Session refresh response */
-        RefreshResponse: {
+        QueryPerformanceMetric: {
+            /** Format: int64 */
+            bufferHits?: number;
+            /** Format: int64 */
+            bufferReads?: number;
             /**
-             * Format: date-time
-             * @description New session expiration time
+             * Format: uuid
+             * @description Unique identifier
              */
-            expiresAt?: string;
-            /** @description New session identifier */
+            campaignId?: string;
+            campaignType?: string;
+            /** Format: double */
+            cpuTimeMs?: number;
+            /** Format: date-time */
+            executedAt?: string;
+            /** Format: double */
+            executionTimeMs?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            indexUsage?: Record<string, never>;
+            /** Format: double */
+            ioWaitMs?: number;
+            /** Format: double */
+            lockWaitMs?: number;
+            /** Format: int64 */
+            memoryUsedBytes?: number;
+            needsOptimization?: boolean;
+            optimizationApplied?: boolean;
+            /** Format: double */
+            optimizationScore?: number;
+            optimizationSuggestions?: Record<string, never>;
+            performanceCategory?: string;
+            queryHash?: string;
+            queryPlan?: Record<string, never>;
+            querySQL?: string;
+            queryType?: string;
+            /** Format: int64 */
+            rowsExamined?: number;
+            /** Format: int64 */
+            rowsReturned?: number;
+            serviceName?: string;
+            tableNames?: string[];
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        QueryPerformanceReport: {
+            /** Format: double */
+            averageRowsReturned?: number;
+            /** Format: double */
+            averageRowsScanned?: number;
+            /** Format: double */
+            averageTimeMs?: number;
+            /** Format: double */
+            errorRate?: number;
+            /** Format: double */
+            indexUsageRate?: number;
+            /** Format: int32 */
+            maxTimeMs?: number;
+            /** Format: int32 */
+            minTimeMs?: number;
+            /** Format: int32 */
+            p50TimeMs?: number;
+            /** Format: int32 */
+            p95TimeMs?: number;
+            /** Format: int32 */
+            p99TimeMs?: number;
+            period?: string;
+            queryType?: string;
+            /** Format: int64 */
+            totalQueries?: number;
+        };
+        RandomizedDomain: {
+            /** Format: int32 */
+            JitterDelay?: number;
+            /** Format: int64 */
+            OriginalOffset?: number;
+            /** Format: int32 */
+            Priority?: number;
+            /** Format: int64 */
+            RandomSeed?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            ValidationGroup?: string;
+            /** Format: int64 */
+            ValidationOrder?: number;
+        };
+        RateLimit: {
+            action?: string;
+            /** Format: int32 */
+            attempts?: number;
+            /** Format: date-time */
+            blockedUntil?: string;
+            /** Format: int64 */
+            id?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            identifier?: string;
+            /** Format: date-time */
+            windowStart?: string;
+        };
+        RateLimitInfo: {
+            /** Format: int32 */
+            limit?: number;
+            /** Format: int32 */
+            remaining?: number;
+            /** Format: date-time */
+            reset?: string;
+        };
+        ResourceUtilizationMetric: {
+            bottleneckDetected?: boolean;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            campaignType?: string;
+            component?: string;
+            /** Format: double */
+            currentUsage?: number;
+            /** Format: double */
+            efficiencyScore?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** Format: double */
+            maxCapacity?: number;
+            optimizationApplied?: Record<string, never>;
+            /** Format: date-time */
+            recordedAt?: string;
+            resourceType?: string;
+            serviceName?: string;
+            /** Format: double */
+            utilizationPct?: number;
+        };
+        SecurityContext: {
+            /** Format: date-time */
+            lastActivity?: string;
+            requiresPasswordChange?: boolean;
+            /** Format: int32 */
+            riskScore?: number;
+            /** Format: date-time */
+            sessionExpiry?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             sessionId?: string;
-        };
-        /** @description Server configuration */
-        ServerConfig: {
             /**
-             * @description Gin framework mode
-             * @enum {string}
+             * Format: uuid
+             * @description Unique identifier
              */
-            ginMode?: "debug" | "release" | "test";
-            /** @description Server port */
-            port?: string;
-            /** @description Stream chunk size in bytes */
-            streamChunkSize?: number;
+            userId?: string;
         };
-        /** @description Simple status response */
-        SimpleStatus: {
-            /** @description Status message */
-            status: string;
+        SecurityEvent: {
+            actionAttempted?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            auditLogId?: string;
+            authorizationResult?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            denialReason?: string;
+            eventType?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            requestContext?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            resourceId?: string;
+            resourceType?: string;
+            /** Format: int32 */
+            riskScore?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            sessionId?: string;
+            sourceIp?: string;
+            userAgent?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
         };
-        /** @description Standard API response wrapper */
+        ServiceArchitectureMetric: {
+            architecturePattern?: string;
+            /** Format: double */
+            couplingScore?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int32 */
+            dependencyCount?: number;
+            /** Format: int32 */
+            deploymentComplexityScore?: number;
+            /** Format: double */
+            errorRate?: number;
+            /** Format: int64 */
+            id?: number;
+            interfaceType?: string;
+            /** Format: date-time */
+            lastRefactorDate?: string;
+            /** Format: double */
+            performanceImpact?: number;
+            serviceName?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ServiceCapacityMetric: {
+            /** Format: double */
+            cpuUtilization?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** Format: int32 */
+            instanceCount?: number;
+            /** Format: double */
+            memoryUtilization?: number;
+            /** Format: date-time */
+            recordedAt?: string;
+            serviceName?: string;
+        };
+        ServiceDependency: {
+            /** Format: date-time */
+            createdAt?: string;
+            dependencyType?: string;
+            /** Format: int32 */
+            failureCount?: number;
+            /** Format: int64 */
+            id?: number;
+            interfaceContract?: string;
+            /** Format: date-time */
+            lastSuccess?: string;
+            /** Format: double */
+            latencyP95?: number;
+            /** Format: double */
+            reliabilityScore?: number;
+            sourceService?: string;
+            targetService?: string;
+        };
+        Session: {
+            browserFingerprint?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            ipAddress?: string;
+            isActive?: boolean;
+            /** Format: date-time */
+            lastActivityAt?: string;
+            screenResolution?: string;
+            sessionFingerprint?: string;
+            userAgent?: string;
+            userAgentHash?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        SessionData: {
+            BrowserFingerprint?: string;
+            /** Format: date-time */
+            CreatedAt?: string;
+            /** Format: date-time */
+            ExpiresAt?: string;
+            Fingerprint?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            ID?: string;
+            IPAddress?: string;
+            IsActive?: boolean;
+            /** Format: date-time */
+            LastActivity?: string;
+            RequiresPasswordChange?: boolean;
+            ScreenResolution?: string;
+            UserAgent?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            UserID?: string;
+        };
+        SessionMetrics: {
+            /** Format: int64 */
+            ActiveSessions?: number;
+            /** Format: date-time */
+            AvgLookupTime?: string;
+            /** Format: double */
+            CacheHitRate?: number;
+            /** Format: int64 */
+            CleanupCount?: number;
+            /** Format: int64 */
+            SecurityEvents?: number;
+            /** Format: int64 */
+            TotalSessions?: number;
+        };
         StandardAPIResponse: {
-            /** @description Response data (only present on success) */
-            data?: unknown;
-            /** @description Error details (only present on error) */
+            data?: Record<string, never>;
             error?: string;
-            /** @description Human-readable message */
-            message: string;
-            /**
-             * @description Status of the response
-             * @enum {string}
-             */
-            status: "success" | "error";
+            message?: string;
+            status?: string;
         };
-        /** @description System information and resources */
+        Status: {
+            message?: string;
+            status?: string;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        StatusResponseWriter: Record<string, never>;
+        StealthConfig: {
+            /** @description BatchRandomization randomizes order within validation batches */
+            batchRandomization?: boolean;
+            /** @description OffsetScrambling scrambles the starting offset to avoid predictable patterns */
+            offsetScrambling?: boolean;
+            /** @description ShuffleStrategy determines how domains are randomized */
+            shuffleStrategy?: Record<string, never>;
+            /** Format: double */
+            subsetPercentage?: number;
+            /** @description SubsetValidation validates random subsets instead of all domains */
+            subsetValidation?: boolean;
+            /** Format: int32 */
+            temporalJitterMax?: number;
+            /**
+             * Format: int32
+             * @description TemporalJitter adds random delays between validations (milliseconds)
+             */
+            temporalJitterMin?: number;
+            /** @description ValidationPriority allows prioritizing certain domain patterns */
+            validationPriority?: string[];
+        };
+        StealthMetrics: {
+            /** Format: int32 */
+            avgValidationDelayMs?: number;
+            /** Format: double */
+            patternDetectionRisk?: number;
+            /** Format: double */
+            randomizationRatio?: number;
+            /** Format: int64 */
+            shuffledDomains?: number;
+            temporalDistribution?: string;
+            /** Format: int64 */
+            totalDomains?: number;
+            /** Format: double */
+            validationCoverage?: number;
+        };
+        SuccessResponse: {
+            /** @description Response data */
+            data?: unknown;
+            /** @description Success message */
+            message?: string;
+        };
         SystemInfo: {
-            /** @description Go runtime version */
-            goVersion: string;
-            /** @description Number of CPU cores */
-            numCPU: number;
-            /** @description Number of active goroutines */
-            numGoroutine: number;
+            goVersion?: string;
+            /** Format: int32 */
+            numCPU?: number;
+            /** Format: int32 */
+            numGoroutine?: number;
         };
-        /** @description TLS ClientHello configuration */
-        TLSClientHello: {
-            /** @description Supported cipher suites */
-            cipherSuites?: string[];
-            /** @description Supported curve preferences */
-            curvePreferences?: string[];
-            /** @description JA3 fingerprint */
-            ja3?: string;
+        TOTPSecret: {
+            backupCodes?: string[];
+            /** Format: date-time */
+            createdAt?: string;
+            qrCode?: string;
+            /** Format: password */
+            secret?: string;
             /**
-             * @description Maximum TLS version
-             * @enum {string}
+             * Format: uuid
+             * @description Unique identifier
              */
-            maxVersion?: "TLS10" | "TLS11" | "TLS12" | "TLS13";
-            /**
-             * @description Minimum TLS version
-             * @enum {string}
-             */
-            minVersion?: "TLS10" | "TLS11" | "TLS12" | "TLS13";
+            userId?: string;
         };
-        /** Format: uuid */
-        UUID: string;
+        TestResult: {
+            /** Format: date-time */
+            avgResponseTime?: string;
+            details?: string;
+            duration?: string;
+            /** Format: int32 */
+            errorCount?: number;
+            /** Format: date-time */
+            maxResponseTime?: string;
+            /** Format: int64 */
+            memoryUsageKb?: number;
+            /** Format: date-time */
+            minResponseTime?: string;
+            /** Format: double */
+            queriesPerSec?: number;
+            /** Format: int32 */
+            recordsProcessed?: number;
+            success?: boolean;
+            testName?: string;
+        };
         UpdateCampaignRequest: {
             adHocKeywords?: string[];
+            /** Format: int32 */
             batchSize?: number;
             campaignType?: string;
             characterSet?: string;
             constantString?: string;
             keywordSetIds?: string[];
             name?: string;
+            /** Format: int64 */
             numDomainsToGenerate?: number;
             personaIds?: string[];
+            /** Format: int32 */
             processingSpeedPerMinute?: number;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             proxyPoolId?: string;
             proxySelectionStrategy?: string;
+            /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             sourceDnsCampaignId?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             sourceGenerationCampaignId?: string;
             status?: string;
             targetHttpPorts?: number[];
             tld?: string;
+            /** Format: int32 */
             variableLength?: number;
         };
-        /** @description Request to update an existing keyword set */
         UpdateKeywordSetRequest: {
-            /** @description Keyword set description */
             description?: string;
-            /** @description Whether the keyword set is enabled */
             isEnabled?: boolean;
-            /** @description Keyword set name */
             name?: string;
-            /** @description List of keyword rules (replaces all existing rules) */
             rules?: components["schemas"]["KeywordRuleRequest"][];
         };
-        /** @description Request to update domain generation pattern offset */
-        UpdatePatternOffsetRequest: {
-            /**
-             * Format: int64
-             * @description New pattern offset value
-             */
-            offset: number;
-        };
-        /** @description Request to update an existing persona */
         UpdatePersonaRequest: {
-            /** @description Type-specific configuration details */
-            configDetails?: components["schemas"]["HttpPersonaConfig"] | components["schemas"]["DnsPersonaConfig"];
-            /** @description Persona description */
+            configDetails?: Record<string, never>;
             description?: string;
-            /** @description Whether the persona is enabled */
             isEnabled?: boolean;
-            /** @description Persona name */
             name?: string;
         };
-        /** @description Request to update an existing proxy */
         UpdateProxyRequest: {
-            /** @description Proxy address (host:port) */
             address?: string;
-            /** @description Country code for the proxy location */
             countryCode?: string;
-            /** @description Proxy description */
             description?: string;
-            /** @description Whether the proxy is enabled */
             isEnabled?: boolean;
-            /** @description Proxy name */
             name?: string;
-            /** @description Proxy password for authentication */
+            /** Format: password */
             password?: string;
-            /**
-             * @description Proxy protocol
-             * @enum {string}
-             */
-            protocol?: "http" | "https" | "socks5" | "socks4";
-            /** @description Proxy username for authentication */
+            protocol?: string;
             username?: string;
         };
+        UpdateUserRequest: {
+            firstName?: string;
+            isActive?: boolean;
+            lastName?: string;
+        };
         User: {
+            /** Format: uri */
             avatarUrl?: string;
             /** Format: date-time */
             createdAt?: string;
+            /** Format: email */
             email?: string;
             emailVerified?: boolean;
             firstName?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
             id?: string;
             isActive?: boolean;
             isLocked?: boolean;
             /** Format: date-time */
             lastLoginAt?: string;
-            lastLoginIp?: Record<string, never>[];
+            lastLoginIp?: string;
+            lastName?: string;
+            /** @description MFA support fields */
+            mfaEnabled?: boolean;
+            /** Format: date-time */
+            mfaLastUsedAt?: string;
+            mustChangePassword?: boolean;
+            /** @description Computed fields (not stored in DB) */
+            name?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        UserAPI: {
+            /** Format: uri */
+            avatarUrl?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: email */
+            email?: string;
+            emailVerified?: boolean;
+            firstName?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            isActive?: boolean;
+            isLocked?: boolean;
+            /** Format: date-time */
+            lastLoginAt?: string;
+            lastLoginIp?: string;
             lastName?: string;
             mfaEnabled?: boolean;
             /** Format: date-time */
@@ -2364,28 +3048,34 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
-        /** @description Worker configuration */
-        WorkerConfig: {
-            /** @description Batch size for processing */
-            batchSize?: number;
-            /** @description DNS subtask concurrency */
-            dnsSubtaskConcurrency?: number;
-            /** @description Error retry delay in seconds */
-            errorRetryDelaySeconds?: number;
-            /** @description HTTP keyword subtask concurrency */
-            httpKeywordSubtaskConcurrency?: number;
-            /** @description Job processing timeout in minutes */
-            jobProcessingTimeoutMinutes?: number;
-            /** @description Maximum job retry attempts */
-            maxJobRetries?: number;
-            /** @description Maximum retry attempts */
-            maxRetries?: number;
-            /** @description Number of worker goroutines */
-            numWorkers?: number;
-            /** @description Polling interval in seconds */
-            pollIntervalSeconds?: number;
-            /** @description Retry delay in seconds */
-            retryDelaySeconds?: number;
+        ValidationResult: {
+            domain?: string;
+            /** Format: int64 */
+            durationMs?: number;
+            error?: string;
+            ips?: string[];
+            resolver?: string;
+            status?: string;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        WebSocketHandler: Record<string, never>;
+        WorkerCoordinationService: Record<string, never>;
+        WorkerPoolConfig: {
+            /** Format: int32 */
+            MaxWorkers?: number;
+            /** Format: int32 */
+            MinWorkers?: number;
+            /** Format: int32 */
+            QueueSize?: number;
+        };
+        WorkerPoolMetrics: {
+            /** Format: int32 */
+            ActiveWorkers?: number;
+            /** Format: int32 */
+            QueueSize?: number;
+            /** Format: int64 */
+            TotalJobs?: number;
         };
     };
     responses: never;
@@ -2396,82 +3086,30 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    listCampaigns: {
-        parameters: {
-            query?: {
-                /** @description Page number (1-based) */
-                page?: number;
-                /** @description Number of items per page */
-                limit?: number;
-                /** @description Filter by campaign type */
-                campaignType?: components["schemas"]["CampaignTypeEnum"];
-                /** @description Filter by campaign status */
-                status?: components["schemas"]["CampaignStatusEnum"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of campaigns */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignListResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createCampaign: {
+    ChangePassword: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCampaignRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Campaign created successfully */
-            201: {
+            /** @description Operation successful */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Campaign"];
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
-            /** @description Bad request */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2480,16 +3118,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -2498,11 +3127,177 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
+        };
+    };
+    Login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    Logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    Me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RefreshSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -2511,83 +3306,28 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Campaign ID */
-                id: string;
+                /** @description Campaign ID (UUID) */
+                campaignId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Campaign details */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Campaign"];
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCampaignRequest"];
-            };
-        };
-        responses: {
-            /** @description Campaign updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Campaign"];
-                };
-            };
-            /** @description Bad request */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2596,25 +3336,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -2623,99 +3345,32 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    deleteCampaign: {
+    getPatternOffset: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Campaign deleted successfully */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Conflict - campaign has dependencies */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignDependencyInfo"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    cancelCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Campaign cancelled successfully */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Campaign"];
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
-            /** @description Bad request - campaign cannot be cancelled */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2724,25 +3379,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -2751,219 +3388,32 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    getDNSValidationResults: {
-        parameters: {
-            query?: {
-                /** @description Page number (1-based) */
-                page?: number;
-                /** @description Number of items per page */
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description DNS validation results */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DNSValidationResultsResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getGeneratedDomains: {
-        parameters: {
-            query?: {
-                /** @description Page number (1-based) */
-                page?: number;
-                /** @description Number of items per page */
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of generated domains */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeneratedDomainsResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getHTTPKeywordResults: {
-        parameters: {
-            query?: {
-                /** @description Page number (1-based) */
-                page?: number;
-                /** @description Number of items per page */
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTTP keyword results */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPKeywordResultsResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    pauseCampaign: {
+    GetFeatureFlagsGin: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Campaign paused successfully */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Campaign"];
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
-            /** @description Bad request - campaign cannot be paused */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2972,25 +3422,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -2999,36 +3431,32 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    resumeCampaign: {
+    UpdateFeatureFlagsGin: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Campaign resumed successfully */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Campaign"];
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
-            /** @description Bad request - campaign cannot be resumed */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -3037,25 +3465,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -3064,36 +3474,32 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    startCampaign: {
+    HandleHealthCheck: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description Campaign ID */
-                id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Campaign started successfully */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Campaign"];
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
-            /** @description Bad request - campaign cannot be started */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -3102,25 +3508,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -3129,37 +3517,32 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    bulkDeleteCampaigns: {
+    HandleLivenessCheck: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkDeleteRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Bulk delete completed */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BulkDeleteResult"];
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
-            /** @description Bad request */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -3168,16 +3551,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -3186,15 +3560,9 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    getAuthConfig: {
+    HandleReadinessCheck: {
         parameters: {
             query?: never;
             header?: never;
@@ -3203,468 +3571,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Authentication configuration */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuthConfig"];
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateAuthConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuthConfig"];
-            };
-        };
-        responses: {
-            /** @description Updated authentication configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getDNSConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description DNS configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DNSConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateDNSConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DNSConfig"];
-            };
-        };
-        responses: {
-            /** @description Updated DNS configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DNSConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getHTTPConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTTP configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateHTTPConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HTTPConfig"];
-            };
-        };
-        responses: {
-            /** @description Updated HTTP configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getLoggingConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Logging configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoggingConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateLoggingConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoggingConfig"];
-            };
-        };
-        responses: {
-            /** @description Updated logging configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoggingConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getProxyManagerConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Proxy manager configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyManagerConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateProxyManagerConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProxyManagerConfig"];
-            };
-        };
-        responses: {
-            /** @description Updated proxy manager configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyManagerConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getRateLimiterConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Rate limiter configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RateLimiterConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateRateLimiterConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RateLimiterConfig"];
-            };
-        };
-        responses: {
-            /** @description Updated rate limiter configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RateLimiterConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getServerConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Server configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServerConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateServerConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ServerConfig"];
-            };
-        };
-        responses: {
-            /** @description Updated server configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServerConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getWorkerConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Worker configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkerConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateWorkerConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WorkerConfig"];
-            };
-        };
-        responses: {
-            /** @description Updated worker configuration */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkerConfig"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    batchExtractKeywords: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BatchKeywordExtractionRequest"];
-            };
-        };
-        responses: {
-            /** @description Batch extraction results */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BatchKeywordExtractionResponse"];
-                };
-            };
-            /** @description Bad request - Invalid input */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -3673,8 +3594,8 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
+            /** @description Internal Server Error */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3682,24 +3603,61 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
+        };
+    };
+    BatchExtractKeywordsGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
-    streamExtractKeywords: {
+    StreamExtractKeywordsGin: {
         parameters: {
             query: {
                 /** @description URL to extract keywords from */
                 url: string;
-                /** @description UUID of the keyword set to use for extraction */
+                /** @description Keyword set ID to use for extraction */
                 keywordSetId: string;
-                /** @description Optional UUID of HTTP persona to use */
+                /** @description HTTP persona ID for request customization */
                 httpPersonaId?: string;
-                /** @description Optional UUID of DNS persona to use */
+                /** @description DNS persona ID for DNS customization */
                 dnsPersonaId?: string;
             };
             header?: never;
@@ -3708,1624 +3666,466 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Server-sent events stream with keyword extraction results */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/event-stream": string;
-                };
-            };
-            /** @description Bad request - Invalid parameters */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    connectWebSocket: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Switching Protocols - WebSocket connection established */
-            101: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Bad Request - Cannot upgrade connection */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized - Invalid session */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Forbidden - Invalid origin or security validation failed */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    login: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
-        };
-        responses: {
-            /** @description Login successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoginResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Logout successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StandardAPIResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    refreshSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Session refreshed successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RefreshResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    validateDNSForCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InPlaceDNSValidationRequest"];
-            };
-        };
-        responses: {
-            /** @description DNS validation started successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Campaign"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    validateHTTPForCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateHTTPKeywordCampaignRequest"];
-            };
-        };
-        responses: {
-            /** @description HTTP validation started successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Campaign"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Campaign not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getDomainGenerationPatternOffset: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Pattern configuration */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PatternOffsetRequest"];
-            };
-        };
-        responses: {
-            /** @description Current offset for the pattern */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /**
-                         * Format: int64
-                         * @description Current global offset for this pattern signature
-                         */
-                        currentOffset: number;
-                    };
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    changePassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangePasswordRequest"];
-            };
-        };
-        responses: {
-            /** @description Password changed successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StandardAPIResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getFeatureFlags: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Feature flags retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeatureFlags"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateFeatureFlags: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FeatureFlags"];
-            };
-        };
-        responses: {
-            /** @description Feature flags updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeatureFlags"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getHealthCheck: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Health status */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthStatus"];
-                };
-            };
-            /** @description Service degraded */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthStatus"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getLivenessCheck: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Service is alive */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SimpleStatus"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getReadinessCheck: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Service is ready */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SimpleStatus"];
-                };
-            };
-            /** @description Service not ready */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listKeywordSets: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of keyword sets to return */
-                limit?: number;
-                /** @description Number of keyword sets to skip for pagination */
-                offset?: number;
-                /** @description Filter keyword sets by enabled status */
-                isEnabled?: boolean;
-                /** @description Include keyword rules in the response */
-                includeRules?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Keyword sets retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeywordSet"][];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createKeywordSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateKeywordSetRequest"];
-            };
-        };
-        responses: {
-            /** @description Keyword set created successfully */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeywordSet"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Keyword set with name already exists */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getKeywordSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Keyword set ID */
-                setId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Keyword set retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeywordSet"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Keyword set not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateKeywordSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Keyword set ID */
-                setId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateKeywordSetRequest"];
-            };
-        };
-        responses: {
-            /** @description Keyword set updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeywordSet"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Keyword set not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Keyword set name already exists */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    deleteKeywordSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Keyword set ID */
-                setId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Keyword set deleted successfully */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Keyword set not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getCurrentUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current user information */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listPersonas: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of personas to return */
-                limit?: number;
-                /** @description Number of personas to skip for pagination */
-                offset?: number;
-                /** @description Filter personas by type */
-                personaType?: "dns" | "http";
-                /** @description Filter personas by enabled status */
-                isEnabled?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Personas retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaListResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createPersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePersonaRequest"];
-            };
-        };
-        responses: {
-            /** @description Persona created successfully */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Persona"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Persona with name and type already exists */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getPersonaById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Persona retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Persona"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Persona not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updatePersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePersonaRequest"];
-            };
-        };
-        responses: {
-            /** @description Persona updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Persona"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Persona not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    deletePersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Persona deleted successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StandardAPIResponse"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Persona not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    testPersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Persona test completed successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaTestResult"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Persona not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getDnsPersonaById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description DNS persona retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Persona"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Persona not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getHttpPersonaById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTTP persona retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Persona"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Persona not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ping: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Pong response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example pong */
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
                         message?: string;
-                        /** Format: date-time */
-                        timestamp?: string;
                     };
                 };
             };
-            default: {
+            /** @description Bad Request */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
-    listProxies: {
+    ListKeywordSetsGin: {
         parameters: {
             query?: {
-                /** @description Number of items to return */
+                /** @description Maximum number of results */
                 limit?: number;
-                /** @description Number of items to skip */
+                /** @description Number of results to skip */
                 offset?: number;
-                /** @description Filter by proxy protocol */
-                protocol?: "http" | "https" | "socks5" | "socks4";
+                /** @description Include rules in response */
+                includeRules?: boolean;
+                /** @description Filter by enabled status */
+                isEnabled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CreateKeywordSetGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    GetKeywordSetGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Keyword set ID */
+                setId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UpdateKeywordSetGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Keyword set ID */
+                setId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ListAllPersonasGin: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of results */
+                limit?: number;
+                /** @description Number of results to skip */
+                offset?: number;
+                /** @description Filter by enabled status */
+                isEnabled?: boolean;
+                /** @description Filter by persona type (dns, http) */
+                personaType?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CreatePersonaGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    GetPersonaByIDGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Persona ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    GetHttpPersonaByIDGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description HTTP Persona ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PingHandlerGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ListProxiesGin: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of results */
+                limit?: number;
+                /** @description Number of results to skip */
+                offset?: number;
+                /** @description Filter by protocol (http, https, socks4, socks5) */
+                protocol?: string;
                 /** @description Filter by enabled status */
                 isEnabled?: boolean;
                 /** @description Filter by health status */
@@ -5337,332 +4137,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Proxies retrieved successfully */
+            /** @description Operation successful */
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Proxy"][];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateProxyRequest"];
-            };
-        };
-        responses: {
-            /** @description Proxy created successfully */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Proxy"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy ID */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateProxyRequest"];
-            };
-        };
-        responses: {
-            /** @description Proxy updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Proxy"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Proxy not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    deleteProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy ID */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Proxy deleted successfully */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Proxy not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    forceCheckSingleProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy ID */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Health check completed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyStatus"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Proxy not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    testProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy ID */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Proxy test completed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyTestResult"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Proxy not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    forceCheckAllProxies: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["ForceCheckProxiesRequest"];
-            };
-        };
-        responses: {
-            /** @description Health check process initiated */
-            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @description Status message */
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
                         message?: string;
                     };
                 };
             };
-            /** @description Bad request */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -5671,7 +4160,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -5680,15 +4169,9 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    getProxyStatuses: {
+    AddProxyGin: {
         parameters: {
             query?: never;
             header?: never;
@@ -5697,218 +4180,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Proxy statuses retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyStatus"][];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    listProxyPools: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Proxy pools retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyPool"][];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    createProxyPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProxyPoolRequest"];
-            };
-        };
-        responses: {
-            /** @description Proxy pool created successfully */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyPool"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    updateProxyPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Pool ID */
-                poolId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProxyPoolRequest"];
-            };
-        };
-        responses: {
-            /** @description Proxy pool updated successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyPool"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Proxy pool not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    deleteProxyPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Pool ID */
-                poolId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Proxy pool deleted successfully */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @description Deletion status */
-                        deleted?: boolean;
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
                     };
                 };
             };
-            /** @description Bad request */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -5917,25 +4203,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Proxy pool not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -5944,90 +4212,13 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
-    addProxyToPool: {
+    UpdateProxyGin: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Pool ID */
-                poolId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddProxyToPoolRequest"];
-            };
-        };
-        responses: {
-            /** @description Proxy added to pool successfully */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyPoolMembership"];
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Proxy pool not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    removeProxyFromPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Pool ID */
-                poolId: string;
                 /** @description Proxy ID */
                 proxyId: string;
             };
@@ -6035,19 +4226,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Proxy removed from pool successfully */
+            /** @description Operation successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @description Removal status */
-                        removed?: boolean;
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
                     };
                 };
             };
-            /** @description Bad request */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -6056,25 +4249,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Proxy pool not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal server error */
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -6083,11 +4258,579 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            default: {
+        };
+    };
+    DeleteProxyGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy ID */
+                proxyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ListProxyPoolsGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CreateProxyPoolGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UpdateProxyPoolGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy pool ID */
+                poolId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DeleteProxyPoolGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy pool ID */
+                poolId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AddProxyToPoolGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy pool ID */
+                poolId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    GetServerConfigGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UpdateServerConfigGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    GetDNSConfigGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UpdateDNSConfigGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    GetHTTPConfigGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UpdateHTTPConfigGin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    HandleConnections: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Session cookie for authentication */
+                domainflow_session?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };

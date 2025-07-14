@@ -43,7 +43,7 @@ export const KeywordsApiAxiosParamCreator = function (configuration?: Configurat
         batchExtractKeywords: async (batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'batchKeywordExtractionRequest' is not null or undefined
             assertParamExists('batchExtractKeywords', 'batchKeywordExtractionRequest', batchKeywordExtractionRequest)
-            const localVarPath = `/api/v2/extract/keywords`;
+            const localVarPath = `/extract/keywords`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -86,7 +86,7 @@ export const KeywordsApiAxiosParamCreator = function (configuration?: Configurat
             assertParamExists('streamExtractKeywords', 'url', url)
             // verify required parameter 'keywordSetId' is not null or undefined
             assertParamExists('streamExtractKeywords', 'keywordSetId', keywordSetId)
-            const localVarPath = `/api/v2/extract/keywords/stream`;
+            const localVarPath = `/extract/keywords/stream`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;

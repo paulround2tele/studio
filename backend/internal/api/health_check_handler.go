@@ -58,6 +58,12 @@ func NewHealthCheckHandler(db *sql.DB) *HealthCheckHandler {
 }
 
 // HandleHealthCheck handles GET /health requests
+// @Summary Health check
+// @Description Get overall system health status including component checks
+// @Tags health
+// @Produce json
+// @Success 200 {object} HealthStatus "System health status"
+// @Router /health [get]
 func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 	status := HealthStatus{
 		Status:      "ok",
@@ -88,6 +94,13 @@ func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 }
 
 // HandleReadinessCheck handles GET /health/ready requests
+// @Summary Readiness check
+// @Description Check if the service is ready to accept requests
+// @Tags health
+// @Produce json
+// @Success 200 {object} HealthCheckResponse "Service is ready"
+// @Failure 503 {object} StandardErrorResponse "Service not ready"
+// @Router /health/ready [get]
 func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 	// Check if database is ready
 	dbStatus := h.checkDatabaseStatus()
@@ -97,13 +110,19 @@ func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 		return
 	}
 
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"status": "ready"})
+	respondWithJSONGin(c, http.StatusOK, HealthCheckResponse{Status: "ready"})
 }
 
 // HandleLivenessCheck handles GET /health/live requests
+// @Summary Liveness check
+// @Description Check if the service is alive and responding
+// @Tags health
+// @Produce json
+// @Success 200 {object} HealthCheckResponse "Service is alive"
+// @Router /health/live [get]
 func (h *HealthCheckHandler) HandleLivenessCheck(c *gin.Context) {
 	// For liveness, we just check if the service is running
-	respondWithJSONGin(c, http.StatusOK, map[string]string{"status": "alive"})
+	respondWithJSONGin(c, http.StatusOK, HealthCheckResponse{Status: "alive"})
 }
 
 // checkDatabaseStatus checks the status of the database connection

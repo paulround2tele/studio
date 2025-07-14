@@ -5,15 +5,15 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**currentOffset** | **number** | Current global offset for this pattern signature | [default to undefined]
+**offset** | **number** |  | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { GetDomainGenerationPatternOffset200Response } from './api';
+import { GetDomainGenerationPatternOffset200Response } from 'domainflow-api-client';
 
 const instance: GetDomainGenerationPatternOffset200Response = {
-    currentOffset,
+    offset,
 };
 ```
 

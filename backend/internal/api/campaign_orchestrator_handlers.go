@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
@@ -90,6 +91,16 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 // --- Unified Campaign Creation Handler ---
 
 // createCampaign creates a new campaign.
+// @Summary Create new campaign
+// @Description Create a new campaign with specified configuration parameters
+// @Tags campaigns
+// @Accept json
+// @Produce json
+// @Param request body services.CreateCampaignRequest true "Campaign creation request"
+// @Success 200 {object} CampaignOperationResponse "Campaign created successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns [post]
 func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 	var req services.CreateCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -139,8 +150,8 @@ func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 				{
 					Code:    ErrorCodeInternalServer,
 					Message: err.Error(),
-					Context: map[string]interface{}{
-						"campaign_type": req.CampaignType,
+					Context: ErrorContext{
+						CampaignType: req.CampaignType,
 					},
 				},
 			})
@@ -194,6 +205,18 @@ func (h *CampaignOrchestratorAPIHandler) validateCampaignRequest(req services.Cr
 }
 
 // updateCampaign updates an existing campaign's configuration for DNS validation transition
+// @Summary Update campaign configuration
+// @Description Update an existing campaign's configuration parameters
+// @Tags campaigns
+// @Accept json
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Param request body services.UpdateCampaignRequest true "Campaign update request"
+// @Success 200 {object} models.Campaign "Campaign updated successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId} [put]
 func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -249,8 +272,8 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 					{
 						Code:    ErrorCodeInvalidState,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
+						Context: ErrorContext{
+							CampaignID: campaignID.String(),
 						},
 					},
 				})
@@ -263,9 +286,9 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 					{
 						Code:    ErrorCodeValidation,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-							"error_type":  "phase_transition",
+						Context: ErrorContext{
+							CampaignID: campaignID.String(),
+							ErrorType:  "phase_transition",
 						},
 					},
 				})
@@ -277,9 +300,9 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 					{
 						Code:    ErrorCodeValidation,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-							"error_type":  "unsupported_transition",
+						Context: ErrorContext{
+							CampaignID: campaignID.String(),
+							ErrorType:  "unsupported_transition",
 						},
 					},
 				})
@@ -289,9 +312,9 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 					{
 						Code:    ErrorCodeInternalServer,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-						},
+						Context: ErrorContext{
+					CampaignID: campaignID.String(),
+				},
 					},
 				})
 		}
@@ -308,6 +331,16 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 // --- Campaign Information Handlers ---
 
 // listCampaigns lists all campaigns.
+// @Summary List all campaigns
+// @Description Retrieve a list of all campaigns with optional filtering and pagination
+// @Tags campaigns
+// @Produce json
+// @Param limit query int false "Maximum number of campaigns to return" default(20)
+// @Param offset query int false "Number of campaigns to skip" default(0)
+// @Param status query string false "Filter by campaign status"
+// @Success 200 {object} APIResponse "List of campaigns"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /campaigns [get]
 func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 	// Parse and validate query parameters
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -368,7 +401,17 @@ func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
-// getCampaignDetails gets a campaign by ID.
+// @Summary Get campaign details
+// @Description Retrieve detailed information about a specific campaign including its configuration parameters
+// @Tags campaigns
+// @Accept json
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {object} CampaignDetailsResponse "Campaign details retrieved successfully"
+// @Failure 400 {object} ErrorResponse "Invalid campaign ID format"
+// @Failure 404 {object} ErrorResponse "Campaign not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /campaigns/{campaignId} [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -377,7 +420,7 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 		return
 	}
 
-	baseCampaign, params, err := h.orchestratorService.GetCampaignDetails(c.Request.Context(), campaignID)
+	baseCampaign, _, err := h.orchestratorService.GetCampaignDetails(c.Request.Context(), campaignID)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			respondWithErrorGin(c, http.StatusNotFound, "Campaign not found")
@@ -389,13 +432,23 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 	}
 
 	// Combine base campaign and specific params into a single response DTO
-	type CampaignDetailsResponse struct { // Corrected 'ype' to 'type'
-		*models.Campaign
-		Params interface{} `json:"params"`
-	}
 	resp := CampaignDetailsResponse{
-		Campaign: baseCampaign,
-		Params:   params,
+		Campaign: CampaignData{
+			ID:          baseCampaign.ID.String(),
+			Name:        baseCampaign.Name,
+			Type:        string(baseCampaign.CampaignType),
+			Status:      string(baseCampaign.Status),
+			CreatedAt:   baseCampaign.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:   baseCampaign.UpdatedAt.Format(time.RFC3339),
+			Description: "", // Description field will be populated from service layer
+		},
+		Params: CampaignParamsData{
+			DomainCount:   0, // Will be populated from actual params
+			KeywordSetID:  "", // Will be populated from actual params
+			PersonaID:     "", // Will be populated from actual params
+			ProxyPoolID:   "", // Will be populated from actual params
+			Configuration: "", // Will be populated from actual params
+		},
 	}
 	respondWithJSONGin(c, http.StatusOK, resp)
 }
@@ -403,6 +456,16 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 // --- Campaign Control Handlers ---
 
 // startCampaign starts a campaign.
+// @Summary Start campaign
+// @Description Start the execution of a campaign
+// @Tags campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {object} CampaignOperationResponse "Campaign started successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/start [post]
 func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -432,9 +495,9 @@ func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 					{
 						Code:    ErrorCodeInvalidState,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-						},
+						Context: ErrorContext{
+					CampaignID: campaignID.String(),
+				},
 					},
 				})
 		} else {
@@ -444,28 +507,69 @@ func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 		return
 	}
 
-	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
-		"message":     "Campaign queued for start",
-		"campaign_id": campaignID,
+	respondWithJSONGin(c, http.StatusOK, CampaignStartResponse{
+		Message:    "Campaign queued for start",
+		CampaignID: campaignID.String(),
+		QueuedAt:   time.Now().Format(time.RFC3339),
 	})
 }
 
 // pauseCampaign pauses a campaign.
+// @Summary Pause campaign
+// @Description Pause the execution of a running campaign
+// @Tags campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {object} CampaignOperationResponse "Campaign paused successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/pause [post]
 func (h *CampaignOrchestratorAPIHandler) pauseCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "pausing", h.orchestratorService.PauseCampaign)
 }
 
 // resumeCampaign resumes a campaign.
+// @Summary Resume campaign
+// @Description Resume the execution of a paused campaign
+// @Tags campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {object} CampaignOperationResponse "Campaign resumed successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/resume [post]
 func (h *CampaignOrchestratorAPIHandler) resumeCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "resuming", h.orchestratorService.ResumeCampaign)
 }
 
 // cancelCampaign cancels a campaign.
+// @Summary Cancel campaign
+// @Description Cancel the execution of a campaign
+// @Tags campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {object} CampaignOperationResponse "Campaign cancelled successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/cancel [post]
 func (h *CampaignOrchestratorAPIHandler) cancelCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "cancelling", h.orchestratorService.CancelCampaign)
 }
 
 // deleteCampaign deletes a campaign.
+// @Summary Delete campaign
+// @Description Delete a campaign and all associated data
+// @Tags campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {object} DeletionResponse "Campaign deleted successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId} [delete]
 func (h *CampaignOrchestratorAPIHandler) deleteCampaign(c *gin.Context) {
 	h.handleCampaignOperation(c, "deleting", h.orchestratorService.DeleteCampaign)
 }
@@ -476,6 +580,16 @@ type BulkDeleteRequest struct {
 }
 
 // bulkDeleteCampaigns deletes multiple campaigns at once.
+// @Summary Bulk delete campaigns
+// @Description Delete multiple campaigns in a single operation
+// @Tags campaigns
+// @Accept json
+// @Produce json
+// @Param request body BulkDeleteRequest true "Bulk delete request with campaign IDs"
+// @Success 200 {object} BulkDeleteResult "Bulk delete results"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns [delete]
 func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 	var req BulkDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -513,9 +627,9 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 						Field:   fmt.Sprintf("campaignIds[%d]", i),
 						Code:    ErrorCodeValidation,
 						Message: "Campaign ID must be a valid UUID",
-						Context: map[string]interface{}{
-							"provided_value": idStr,
-						},
+						Context: ErrorContext{
+						ProvidedValue: idStr,
+					},
 					},
 				})
 			return
@@ -532,8 +646,8 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 				{
 					Code:    ErrorCodeInternalServer,
 					Message: err.Error(),
-					Context: map[string]interface{}{
-						"campaign_count": len(campaignUUIDs),
+					Context: ErrorContext{
+						CampaignCount: len(campaignUUIDs),
 					},
 				},
 			})
@@ -546,16 +660,32 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 		log.Printf("Campaign bulk deleted and broadcasted: %s", deletedID)
 	}
 
-	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
-		"message":              "Bulk deletion completed",
-		"total_requested":      len(campaignUUIDs),
-		"successfully_deleted": result.SuccessfullyDeleted,
-		"failed_deletions":     result.FailedDeletions,
-		"deleted_campaign_ids": result.DeletedCampaignIDs,
+	// Convert UUIDs to strings
+	deletedIDStrings := make([]string, len(result.DeletedCampaignIDs))
+	for i, id := range result.DeletedCampaignIDs {
+		deletedIDStrings[i] = id.String()
+	}
+
+	respondWithJSONGin(c, http.StatusOK, BulkDeleteResult{
+		Message:             "Bulk deletion completed",
+		TotalRequested:      len(campaignUUIDs),
+		SuccessfullyDeleted: result.SuccessfullyDeleted,
+		FailedDeletions:     result.FailedDeletions,
+		DeletedCampaignIDs:  deletedIDStrings,
 	})
 }
 
 // getGeneratedDomains gets generated domains for a campaign.
+// @Summary Get generated domains
+// @Description Retrieve all generated domains for a specific campaign
+// @Tags campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {array} models.GeneratedDomain "List of generated domains"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/results/generated-domains [get]
 func (h *CampaignOrchestratorAPIHandler) getGeneratedDomains(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -578,6 +708,16 @@ func (h *CampaignOrchestratorAPIHandler) getGeneratedDomains(c *gin.Context) {
 }
 
 // getDNSValidationResults gets DNS validation results for a campaign.
+// @Summary Get DNS validation results
+// @Description Retrieve DNS validation results for a specific campaign
+// @Tags campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {array} models.DNSValidationResult "List of DNS validation results"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/results/dns-validation [get]
 func (h *CampaignOrchestratorAPIHandler) getDNSValidationResults(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -606,6 +746,16 @@ func (h *CampaignOrchestratorAPIHandler) getDNSValidationResults(c *gin.Context)
 }
 
 // getHTTPKeywordResults gets HTTP keyword results for a campaign.
+// @Summary Get HTTP keyword results
+// @Description Retrieve HTTP keyword validation results for a specific campaign
+// @Tags campaigns
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {array} models.HTTPKeywordResult "List of HTTP keyword results"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/results/http-keyword [get]
 func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -634,6 +784,18 @@ func (h *CampaignOrchestratorAPIHandler) getHTTPKeywordResults(c *gin.Context) {
 }
 
 // validateDNSForCampaign triggers domain-centric DNS validation for all domains in a campaign.
+// @Summary Validate DNS for campaign
+// @Description Trigger DNS validation for all domains in a specific campaign
+// @Tags campaigns
+// @Accept json
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Param request body DNSValidatorConfigJSON false "DNS validation configuration"
+// @Success 200 {object} ValidationOperationResponse "DNS validation started successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/validate-dns [post]
 func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -670,9 +832,9 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 				{
 					Code:    ErrorCodeNotFound,
 					Message: "The specified campaign could not be found or you do not have permission to access it",
-					Context: map[string]interface{}{
-						"campaign_id": campaignID,
-					},
+					Context: ErrorContext{
+					CampaignID: campaignID.String(),
+				},
 				},
 			})
 		return
@@ -686,9 +848,9 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 				{
 					Code:    ErrorCodeValidation,
 					Message: "DNS validation can only be performed on domain generation or DNS validation campaigns",
-					Context: map[string]interface{}{
-						"campaign_id":   campaignID,
-						"campaign_type": sourceCampaign.CampaignType,
+					Context: ErrorContext{
+						CampaignID:   campaignID.String(),
+						CampaignType: string(sourceCampaign.CampaignType),
 					},
 				},
 			})
@@ -701,9 +863,9 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 				{
 					Code:    ErrorCodeValidation,
 					Message: "Source campaign must be completed or running before in-place DNS validation can be performed",
-					Context: map[string]interface{}{
-						"campaign_id":     campaignID,
-						"campaign_status": sourceCampaign.Status,
+					Context: ErrorContext{
+						CampaignID:     campaignID.String(),
+						CampaignStatus: string(sourceCampaign.Status),
 					},
 				},
 			})
@@ -750,10 +912,10 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 					{
 						Code:    ErrorCodeValidation,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id":    campaignID,
-							"required_field": "personaIds",
-							"help":           "DNS personas define the validation profiles used for domain checking. Please configure DNS personas in the validation panel and try again.",
+						Context: ErrorContext{
+							CampaignID:    campaignID.String(),
+							RequiredField: "personaIds",
+							Help:          "DNS personas define the validation profiles used for domain checking. Please configure DNS personas in the validation panel and try again.",
 						},
 					},
 				})
@@ -763,9 +925,9 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 					{
 						Code:    ErrorCodeValidation,
 						Message: "Campaign must have generated domains before DNS validation can be performed",
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-						},
+						Context: ErrorContext{
+					CampaignID: campaignID.String(),
+				},
 					},
 				})
 		} else {
@@ -774,9 +936,9 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 					{
 						Code:    ErrorCodeInternalServer,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-						},
+						Context: ErrorContext{
+					CampaignID: campaignID.String(),
+				},
 					},
 				})
 		}
@@ -785,15 +947,27 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 
 	log.Printf("SUCCESS [DNS Validation]: In-place DNS validation started successfully for campaign %s", campaignID)
 
-	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
-		"message":         "In-place DNS validation started successfully",
-		"campaign_id":     campaignID,
-		"validation_mode": "in_place",
-		"status":          "validation_in_progress",
+	respondWithJSONGin(c, http.StatusOK, DNSValidationStartResponse{
+		Message:          "In-place DNS validation started successfully",
+		CampaignID:       campaignID.String(),
+		ValidationJobID:  "validation_in_progress", // Use status as job ID for now
+		DomainsToProcess: 0, // Will be populated from service layer
 	})
 }
 
 // validateHTTPForCampaign triggers domain-centric HTTP keyword validation for all domains in a campaign.
+// @Summary Validate HTTP for campaign
+// @Description Trigger HTTP keyword validation for all domains in a specific campaign
+// @Tags campaigns
+// @Accept json
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Param request body HTTPValidatorConfigJSON false "HTTP validation configuration"
+// @Success 200 {object} ValidationOperationResponse "HTTP validation started successfully"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 404 {object} map[string]string "Campaign not found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /campaigns/{campaignId}/validate-http [post]
 func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -895,9 +1069,9 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 					{
 						Code:    ErrorCodeValidation,
 						Message: "Source campaign must have DNS validation results before HTTP validation can be performed",
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-						},
+						Context: ErrorContext{
+					CampaignID: campaignID.String(),
+				},
 					},
 				})
 		} else {
@@ -906,9 +1080,9 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 					{
 						Code:    ErrorCodeInternalServer,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-						},
+						Context: ErrorContext{
+					CampaignID: campaignID.String(),
+				},
 					},
 				})
 		}
@@ -917,11 +1091,11 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 
 	log.Printf("SUCCESS [HTTP Validation]: HTTP keyword validation campaign created successfully for source %s, new campaign ID: %s", campaignID, httpCampaign.ID)
 
-	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
-		"message":            "HTTP keyword validation started successfully",
-		"source_campaign_id": campaignID,
-		"new_campaign_id":    httpCampaign.ID,
-		"status":             "validation_in_progress",
+	respondWithJSONGin(c, http.StatusOK, HTTPValidationStartResponse{
+		Message:         "HTTP keyword validation started successfully",
+		CampaignID:      httpCampaign.ID.String(),
+		ValidationJobID: campaignID.String(), // Source campaign ID as job reference
+		DomainsToTest:   0, // Will be populated from service layer
 	})
 }
 
@@ -963,9 +1137,9 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 					{
 						Code:    ErrorCodeInvalidState,
 						Message: err.Error(),
-						Context: map[string]interface{}{
-							"campaign_id": campaignID,
-						},
+						Context: ErrorContext{
+					CampaignID: campaignID.String(),
+				},
 					},
 				})
 		} else {
@@ -992,30 +1166,12 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 		message = fmt.Sprintf("Campaign %s successful", operationName)
 	}
 
-	respondWithJSONGin(c, http.StatusOK, map[string]interface{}{
-		"message":     message,
-		"campaign_id": campaignID,
+	respondWithJSONGin(c, http.StatusOK, CampaignOperationResponse{
+		Success:    true,
+		Message:    message,
+		CampaignID: campaignID.String(),
+		Status:     "completed",
 	})
-}
-
-// PatternOffsetRequest represents the request to get pattern offset
-type PatternOffsetRequest struct {
-	PatternType    string `json:"patternType" binding:"required" validate:"oneof=prefix suffix both"`
-	VariableLength int    `json:"variableLength" binding:"required,min=1"`
-	CharacterSet   string `json:"characterSet" binding:"required"`
-	ConstantString string `json:"constantString" binding:"required"`
-	TLD            string `json:"tld" binding:"required"`
-}
-
-// PatternOffsetResponse represents the pattern offset response
-type PatternOffsetResponse struct {
-	PatternType               string `json:"patternType"`
-	VariableLength            int    `json:"variableLength"`
-	CharacterSet              string `json:"characterSet"`
-	ConstantString            string `json:"constantString"`
-	TLD                       string `json:"tld"`
-	CurrentOffset             int64  `json:"currentOffset"`
-	TotalPossibleCombinations int64  `json:"totalPossibleCombinations"`
 }
 
 // getPatternOffset handles POST /campaigns/domain-generation/pattern-offset

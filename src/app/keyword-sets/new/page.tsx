@@ -31,7 +31,7 @@ export default function NewKeywordSetPage() {
     setErrorMessage(null);
     try {
       // Remove rules from payload since this form doesn't handle them
-      const { rules, ...cleanData } = data;
+      const { rules: _rules, ...cleanData } = data;
       await keywordSetsApi.createKeywordSet(cleanData);
       setSuccessMessage('Keyword set created');
       setTimeout(() => router.push('/keyword-sets'), 500);

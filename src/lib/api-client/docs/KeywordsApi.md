@@ -4,8 +4,8 @@ All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**batchExtractKeywords**](#batchextractkeywords) | **POST** /api/v2/extract/keywords | Batch keyword extraction|
-|[**streamExtractKeywords**](#streamextractkeywords) | **GET** /api/v2/extract/keywords/stream | Streaming keyword extraction|
+|[**batchExtractKeywords**](#batchextractkeywords) | **POST** /extract/keywords | Batch keyword extraction|
+|[**streamExtractKeywords**](#streamextractkeywords) | **GET** /extract/keywords/stream | Streaming keyword extraction|
 
 # **batchExtractKeywords**
 > BatchKeywordExtractionResponse batchExtractKeywords(batchKeywordExtractionRequest)

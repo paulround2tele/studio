@@ -33,6 +33,19 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 }
 
 // Login handles user login requests.
+// @Summary User login
+// @Description Authenticate user credentials and create session
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param request body models.LoginRequest true "Login credentials"
+// @Success 200 {object} LoginSuccessResponse "Login successful with user and session info"
+// @Failure 400 {object} StandardErrorResponse "Invalid request format"
+// @Failure 401 {object} StandardErrorResponse "Invalid credentials"
+// @Failure 423 {object} StandardErrorResponse "Account locked"
+// @Failure 403 {object} StandardErrorResponse "Account inactive"
+// @Failure 500 {object} StandardErrorResponse "Internal server error"
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Println("DEBUG: Login handler started")
 	var req models.LoginRequest
@@ -114,10 +127,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	h.updateLastLogin(user.ID, ipAddress)
 
 	// Create session data for response
-	sessionResponse := map[string]interface{}{
-		"user":      user.PublicUser(),
-		"sessionId": sessionData.ID,
-		"expiresAt": sessionData.ExpiresAt.Format(time.RFC3339),
+	publicUser := user.PublicUser()
+	sessionResponse := SessionResponse{
+		User: UserPublicResponse{
+			ID:       publicUser.ID.String(),
+			Username: publicUser.Name, // Use computed full name as username
+			Email:    publicUser.Email,
+			IsActive: publicUser.IsActive,
+		},
+		Token:        sessionData.ID,
+		RefreshToken: "", // Will be implemented later
+		ExpiresAt:    sessionData.ExpiresAt.Format(time.RFC3339),
 	}
 
 	// Return successful login response directly (unwrapped) to match OpenAPI spec
@@ -125,6 +145,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // Logout handles user logout requests.
+// @Summary User logout
+// @Description Invalidate current user session and clear cookies
+// @Tags authentication
+// @Produce json
+// @Success 200 {object} SuccessMessageResponse "Logout successful"
+// @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// Get session ID from any of the possible cookie names
 	sessionID, err := c.Cookie(h.config.CookieName)
@@ -134,8 +160,8 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		if err != nil {
 			// No active session - just clear cookies and return success
 			h.clearSessionCookies(c)
-			respondWithJSONGin(c, http.StatusOK, map[string]string{
-				"message": "Logged out successfully",
+			respondWithJSONGin(c, http.StatusOK, StandardSuccessResponse{
+				Message: "Logged out successfully",
 			})
 			return
 		}
@@ -145,7 +171,9 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	if err := h.sessionService.InvalidateSession(sessionID); err != nil {
 		// Still clear cookies even if logout fails
 		h.clearSessionCookies(c)
-		respondWithJSONGin(c, http.StatusOK, map[string]string{"message": "Logged out successfully"})
+		respondWithJSONGin(c, http.StatusOK, StandardSuccessResponse{
+			Message: "Logged out successfully",
+		})
 		return
 	}
 
@@ -161,12 +189,21 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	// Clear all session cookies
 	h.clearSessionCookies(c)
 
-	respondWithJSONGin(c, http.StatusOK, map[string]string{
-		"message": "Logged out successfully",
+	respondWithJSONGin(c, http.StatusOK, StandardSuccessResponse{
+		Message: "Logged out successfully",
 	})
 }
 
 // Me returns current user information.
+// @Summary Get current user
+// @Description Get information about the currently authenticated user
+// @Tags authentication
+// @Produce json
+// @Success 200 {object} User "Current user information"
+// @Failure 401 {object} StandardErrorResponse "Authentication required"
+// @Failure 404 {object} StandardErrorResponse "User not found"
+// @Failure 500 {object} StandardErrorResponse "Internal server error"
+// @Router /auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	// Get security context from middleware
 	securityContext, exists := c.Get("security_context")
@@ -199,6 +236,17 @@ func (h *AuthHandler) Me(c *gin.Context) {
 }
 
 // ChangePassword handles password change requests.
+// @Summary Change user password
+// @Description Change password for the currently authenticated user
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param request body models.ChangePasswordRequest true "Password change request"
+// @Success 200 {object} PasswordChangeResponse "Password changed successfully"
+// @Failure 400 {object} StandardErrorResponse "Invalid request format"
+// @Failure 401 {object} StandardErrorResponse "Authentication required"
+// @Failure 501 {object} StandardErrorResponse "Not implemented"
+// @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	var req models.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -211,6 +259,14 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 }
 
 // RefreshSession handles session refresh requests.
+// @Summary Refresh user session
+// @Description Extend the current session expiry time
+// @Tags authentication
+// @Produce json
+// @Success 200 {object} SessionRefreshResponse "Session refreshed with new expiry"
+// @Failure 401 {object} StandardErrorResponse "Invalid or expired session"
+// @Failure 500 {object} StandardErrorResponse "Failed to refresh session"
+// @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	// Get session ID from cookie
 	sessionID, err := c.Cookie(h.config.CookieName)

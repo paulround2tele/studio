@@ -3,15 +3,14 @@
 // DO NOT manually add custom methods - use the auto-generated APIs directly
 
 import {
-  AuthApi,
+  AuthenticationApi,
   CampaignsApi,
-  ConfigApi,
-  ConfigurationApi,
+  ServerSettingsApi,
   KeywordSetsApi,
   PersonasApi,
   ProxiesApi,
   ProxyPoolsApi,
-  UtilitiesApi,
+  HealthApi,
   Configuration
 } from './index';
 
@@ -36,16 +35,18 @@ const apiConfiguration = new Configuration({
 });
 
 // Export pre-configured API instances
-export const authApi = new AuthApi(apiConfiguration);
-export const authenticationApi = authApi; // Alias for backwards compatibility
+export const authenticationApi = new AuthenticationApi(apiConfiguration);
+export const authApi = authenticationApi; // Alias for backwards compatibility
 export const campaignsApi = new CampaignsApi(apiConfiguration);
-export const configApi = new ConfigApi(apiConfiguration);
-export const configurationApi = new ConfigurationApi(apiConfiguration);
+export const serverSettingsApi = new ServerSettingsApi(apiConfiguration);
+export const configApi = serverSettingsApi; // Alias - config endpoints are under server-settings
+export const configurationApi = serverSettingsApi; // Alias - config endpoints are under server-settings
 export const keywordSetsApi = new KeywordSetsApi(apiConfiguration);
 export const personasApi = new PersonasApi(apiConfiguration);
 export const proxiesApi = new ProxiesApi(apiConfiguration);
 export const proxyPoolsApi = new ProxyPoolsApi(apiConfiguration);
-export const utilitiesApi = new UtilitiesApi(apiConfiguration);
+export const healthApi = new HealthApi(apiConfiguration);
+export const utilitiesApi = healthApi; // Alias - utilities like ping are under health
 
 // Legacy alias - use campaignsApi directly instead
 export const apiClient = campaignsApi;

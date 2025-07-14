@@ -1,39 +1,84 @@
 # PersonasApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**createPersona**](#createpersona) | **POST** /personas | Create persona|
-|[**deletePersona**](#deletepersona) | **DELETE** /personas/{id} | Delete persona|
-|[**getDnsPersonaById**](#getdnspersonabyid) | **GET** /personas/dns/{id} | Get DNS persona by ID|
-|[**getHttpPersonaById**](#gethttppersonabyid) | **GET** /personas/http/{id} | Get HTTP persona by ID|
-|[**getPersonaById**](#getpersonabyid) | **GET** /personas/{id} | Get persona by ID|
-|[**listPersonas**](#listpersonas) | **GET** /personas | List personas|
-|[**testPersona**](#testpersona) | **POST** /personas/{id}/test | Test persona|
-|[**updatePersona**](#updatepersona) | **PUT** /personas/{id} | Update persona|
+|[**createPersonaGin**](#createpersonagin) | **POST** /personas | Create persona|
+|[**deletePersonaGin**](#deletepersonagin) | **DELETE** /personas/{id} | Delete persona|
+|[**getDnsPersonaByIDGin**](#getdnspersonabyidgin) | **GET** /personas/dns/{id} | Get DNS persona by ID|
+|[**getHttpPersonaByIDGin**](#gethttppersonabyidgin) | **GET** /personas/http/{id} | Get HTTP persona by ID|
+|[**getPersonaByIDGin**](#getpersonabyidgin) | **GET** /personas/{id} | Get persona by ID|
+|[**listAllPersonasGin**](#listallpersonasgin) | **GET** /personas | List all personas|
+|[**testPersonaGin**](#testpersonagin) | **POST** /personas/{id}/test | Test persona|
+|[**updatePersonaGin**](#updatepersonagin) | **PUT** /personas/{id} | Update persona|
 
-# **createPersona**
-> Persona createPersona(createPersonaRequest)
+# **createPersonaGin**
+> ListCampaigns200Response createPersonaGin()
 
-Creates a new persona with structured configuration
+Create a new persona (DNS or HTTP) with configuration details
 
 ### Example
 
 ```typescript
 import {
     PersonasApi,
-    Configuration,
-    CreatePersonaRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-let createPersonaRequest: CreatePersonaRequest; //
+const { status, data } = await apiInstance.createPersonaGin();
+```
 
-const { status, data } = await apiInstance.createPersona(
-    createPersonaRequest
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ListCampaigns200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deletePersonaGin**
+> PersonaDeleteResponse deletePersonaGin()
+
+Delete a persona by ID
+
+### Example
+
+```typescript
+import {
+    PersonasApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new PersonasApi(configuration);
+
+let id: string; //Persona ID (UUID) (default to undefined)
+
+const { status, data } = await apiInstance.deletePersonaGin(
+    id
 );
 ```
 
@@ -41,39 +86,142 @@ const { status, data } = await apiInstance.createPersona(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **createPersonaRequest** | **CreatePersonaRequest**|  | |
+| **id** | [**string**] | Persona ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Persona**
+**PersonaDeleteResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Persona created successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**409** | Persona with name and type already exists |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **deletePersona**
-> StandardAPIResponse deletePersona()
+# **getDnsPersonaByIDGin**
+> PersonaResponse getDnsPersonaByIDGin()
 
-Deletes a persona by ID
+Retrieve a specific DNS persona configuration by its unique identifier
+
+### Example
+
+```typescript
+import {
+    PersonasApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new PersonasApi(configuration);
+
+let id: string; //DNS Persona ID (default to undefined)
+
+const { status, data } = await apiInstance.getDnsPersonaByIDGin(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | DNS Persona ID | defaults to undefined|
+
+
+### Return type
+
+**PersonaResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getHttpPersonaByIDGin**
+> PersonaResponse getHttpPersonaByIDGin()
+
+Retrieve a specific HTTP persona by ID
+
+### Example
+
+```typescript
+import {
+    PersonasApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new PersonasApi(configuration);
+
+let id: string; //HTTP Persona ID (default to undefined)
+
+const { status, data } = await apiInstance.getHttpPersonaByIDGin(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | HTTP Persona ID | defaults to undefined|
+
+
+### Return type
+
+**PersonaResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getPersonaByIDGin**
+> PersonaResponse getPersonaByIDGin()
+
+Retrieve a specific persona by ID regardless of type
 
 ### Example
 
@@ -88,7 +236,7 @@ const apiInstance = new PersonasApi(configuration);
 
 let id: string; //Persona ID (default to undefined)
 
-const { status, data } = await apiInstance.deletePersona(
+const { status, data } = await apiInstance.getPersonaByIDGin(
     id
 );
 ```
@@ -102,11 +250,11 @@ const { status, data } = await apiInstance.deletePersona(
 
 ### Return type
 
-**StandardAPIResponse**
+**PersonaResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -117,19 +265,16 @@ const { status, data } = await apiInstance.deletePersona(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Persona deleted successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Persona not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getDnsPersonaById**
-> Persona getDnsPersonaById()
+# **listAllPersonasGin**
+> ListCampaigns200Response listAllPersonasGin()
 
-Gets a DNS persona by ID with typed configuration
+Retrieve a list of all personas with optional filtering by type and status
 
 ### Example
 
@@ -142,184 +287,16 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-let id: string; //Persona ID (default to undefined)
+let limit: number; //Maximum number of results (optional) (default to undefined)
+let offset: number; //Number of results to skip (optional) (default to undefined)
+let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
+let personaType: string; //Filter by persona type (dns, http) (optional) (default to undefined)
 
-const { status, data } = await apiInstance.getDnsPersonaById(
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Persona ID | defaults to undefined|
-
-
-### Return type
-
-**Persona**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | DNS persona retrieved successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Persona not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getHttpPersonaById**
-> Persona getHttpPersonaById()
-
-Gets an HTTP persona by ID with typed configuration
-
-### Example
-
-```typescript
-import {
-    PersonasApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new PersonasApi(configuration);
-
-let id: string; //Persona ID (default to undefined)
-
-const { status, data } = await apiInstance.getHttpPersonaById(
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Persona ID | defaults to undefined|
-
-
-### Return type
-
-**Persona**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | HTTP persona retrieved successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Persona not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getPersonaById**
-> Persona getPersonaById()
-
-Gets a persona by ID regardless of type
-
-### Example
-
-```typescript
-import {
-    PersonasApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new PersonasApi(configuration);
-
-let id: string; //Persona ID (default to undefined)
-
-const { status, data } = await apiInstance.getPersonaById(
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Persona ID | defaults to undefined|
-
-
-### Return type
-
-**Persona**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Persona retrieved successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Persona not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **listPersonas**
-> PersonaListResponse listPersonas()
-
-Lists all personas with optional filtering by type and enabled status
-
-### Example
-
-```typescript
-import {
-    PersonasApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new PersonasApi(configuration);
-
-let limit: number; //Maximum number of personas to return (optional) (default to 20)
-let offset: number; //Number of personas to skip for pagination (optional) (default to 0)
-let personaType: 'dns' | 'http'; //Filter personas by type (optional) (default to undefined)
-let isEnabled: boolean; //Filter personas by enabled status (optional) (default to undefined)
-
-const { status, data } = await apiInstance.listPersonas(
+const { status, data } = await apiInstance.listAllPersonasGin(
     limit,
     offset,
-    personaType,
-    isEnabled
+    isEnabled,
+    personaType
 );
 ```
 
@@ -327,19 +304,19 @@ const { status, data } = await apiInstance.listPersonas(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **limit** | [**number**] | Maximum number of personas to return | (optional) defaults to 20|
-| **offset** | [**number**] | Number of personas to skip for pagination | (optional) defaults to 0|
-| **personaType** | [**&#39;dns&#39; | &#39;http&#39;**]**Array<&#39;dns&#39; &#124; &#39;http&#39;>** | Filter personas by type | (optional) defaults to undefined|
-| **isEnabled** | [**boolean**] | Filter personas by enabled status | (optional) defaults to undefined|
+| **limit** | [**number**] | Maximum number of results | (optional) defaults to undefined|
+| **offset** | [**number**] | Number of results to skip | (optional) defaults to undefined|
+| **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
+| **personaType** | [**string**] | Filter by persona type (dns, http) | (optional) defaults to undefined|
 
 
 ### Return type
 
-**PersonaListResponse**
+**ListCampaigns200Response**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -350,18 +327,16 @@ const { status, data } = await apiInstance.listPersonas(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Personas retrieved successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **testPersona**
-> PersonaTestResult testPersona()
+# **testPersonaGin**
+> PersonaTestResponse testPersonaGin()
 
-Tests a persona by ID
+Test a persona configuration to verify it works correctly
 
 ### Example
 
@@ -374,9 +349,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-let id: string; //Persona ID (default to undefined)
+let id: string; //Persona ID (UUID) (default to undefined)
 
-const { status, data } = await apiInstance.testPersona(
+const { status, data } = await apiInstance.testPersonaGin(
     id
 );
 ```
@@ -385,16 +360,16 @@ const { status, data } = await apiInstance.testPersona(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Persona ID | defaults to undefined|
+| **id** | [**string**] | Persona ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**PersonaTestResult**
+**PersonaTestResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -405,38 +380,32 @@ const { status, data } = await apiInstance.testPersona(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Persona test completed successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Persona not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updatePersona**
-> Persona updatePersona(updatePersonaRequest)
+# **updatePersonaGin**
+> PersonaResponse updatePersonaGin()
 
-Updates a persona by ID with structured configuration
+Update an existing persona\'s configuration by ID
 
 ### Example
 
 ```typescript
 import {
     PersonasApi,
-    Configuration,
-    UpdatePersonaRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-let id: string; //Persona ID (default to undefined)
-let updatePersonaRequest: UpdatePersonaRequest; //
+let id: string; //Persona ID (UUID) (default to undefined)
 
-const { status, data } = await apiInstance.updatePersona(
-    id,
-    updatePersonaRequest
+const { status, data } = await apiInstance.updatePersonaGin(
+    id
 );
 ```
 
@@ -444,33 +413,29 @@ const { status, data } = await apiInstance.updatePersona(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **updatePersonaRequest** | **UpdatePersonaRequest**|  | |
-| **id** | [**string**] | Persona ID | defaults to undefined|
+| **id** | [**string**] | Persona ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**Persona**
+**PersonaResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Persona updated successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Persona not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

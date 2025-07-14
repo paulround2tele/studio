@@ -4,7 +4,7 @@ All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**connectWebSocket**](#connectwebsocket) | **GET** /api/v2/ws | WebSocket connection endpoint|
+|[**connectWebSocket**](#connectwebsocket) | **GET** /ws | WebSocket connection endpoint|
 
 # **connectWebSocket**
 > connectWebSocket()

@@ -1,36 +1,81 @@
 # KeywordSetsApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**createKeywordSet**](#createkeywordset) | **POST** /keywords/sets | Create keyword set|
-|[**deleteKeywordSet**](#deletekeywordset) | **DELETE** /keywords/sets/{setId} | Delete keyword set|
-|[**getKeywordSet**](#getkeywordset) | **GET** /keywords/sets/{setId} | Get keyword set|
-|[**listKeywordSets**](#listkeywordsets) | **GET** /keywords/sets | List keyword sets|
-|[**updateKeywordSet**](#updatekeywordset) | **PUT** /keywords/sets/{setId} | Update keyword set|
+|[**createKeywordSetGin**](#createkeywordsetgin) | **POST** /keyword-sets | Create keyword set|
+|[**deleteKeywordSetGin**](#deletekeywordsetgin) | **DELETE** /keyword-sets/{setId} | Delete keyword set|
+|[**getKeywordSetGin**](#getkeywordsetgin) | **GET** /keyword-sets/{setId} | Get keyword set|
+|[**listKeywordSetsGin**](#listkeywordsetsgin) | **GET** /keyword-sets | List keyword sets|
+|[**updateKeywordSetGin**](#updatekeywordsetgin) | **PUT** /keyword-sets/{setId} | Update keyword set|
 
-# **createKeywordSet**
-> KeywordSet createKeywordSet(createKeywordSetRequest)
+# **createKeywordSetGin**
+> ListCampaigns200Response createKeywordSetGin()
 
-Creates a new keyword set with optional rules
+Create a new keyword set with optional rules
 
 ### Example
 
 ```typescript
 import {
     KeywordSetsApi,
-    Configuration,
-    CreateKeywordSetRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
-let createKeywordSetRequest: CreateKeywordSetRequest; //
+const { status, data } = await apiInstance.createKeywordSetGin();
+```
 
-const { status, data } = await apiInstance.createKeywordSet(
-    createKeywordSetRequest
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ListCampaigns200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteKeywordSetGin**
+> KeywordSetDeleteResponse deleteKeywordSetGin()
+
+Delete a keyword set by ID
+
+### Example
+
+```typescript
+import {
+    KeywordSetsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new KeywordSetsApi(configuration);
+
+let setId: string; //Keyword Set ID (UUID) (default to undefined)
+
+const { status, data } = await apiInstance.deleteKeywordSetGin(
+    setId
 );
 ```
 
@@ -38,39 +83,36 @@ const { status, data } = await apiInstance.createKeywordSet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **createKeywordSetRequest** | **CreateKeywordSetRequest**|  | |
+| **setId** | [**string**] | Keyword Set ID (UUID) | defaults to undefined|
 
 
 ### Return type
 
-**KeywordSet**
+**KeywordSetDeleteResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Keyword set created successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**409** | Keyword set with name already exists |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **deleteKeywordSet**
-> deleteKeywordSet()
+# **getKeywordSetGin**
+> KeywordSetResponse getKeywordSetGin()
 
-Deletes a keyword set by ID including all its rules
+Retrieve a specific keyword set by ID including its rules
 
 ### Example
 
@@ -85,7 +127,7 @@ const apiInstance = new KeywordSetsApi(configuration);
 
 let setId: string; //Keyword set ID (default to undefined)
 
-const { status, data } = await apiInstance.deleteKeywordSet(
+const { status, data } = await apiInstance.getKeywordSetGin(
     setId
 );
 ```
@@ -99,11 +141,11 @@ const { status, data } = await apiInstance.deleteKeywordSet(
 
 ### Return type
 
-void (empty response body)
+**KeywordSetResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -114,19 +156,16 @@ void (empty response body)
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | Keyword set deleted successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Keyword set not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getKeywordSet**
-> KeywordSet getKeywordSet()
+# **listKeywordSetsGin**
+> ListCampaigns200Response listKeywordSetsGin()
 
-Gets a keyword set by ID including its rules
+Retrieve a list of keyword sets with optional filtering
 
 ### Example
 
@@ -139,72 +178,16 @@ import {
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
-let setId: string; //Keyword set ID (default to undefined)
+let limit: number; //Maximum number of results (optional) (default to undefined)
+let offset: number; //Number of results to skip (optional) (default to undefined)
+let includeRules: boolean; //Include rules in response (optional) (default to undefined)
+let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
 
-const { status, data } = await apiInstance.getKeywordSet(
-    setId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **setId** | [**string**] | Keyword set ID | defaults to undefined|
-
-
-### Return type
-
-**KeywordSet**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Keyword set retrieved successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Keyword set not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **listKeywordSets**
-> Array<KeywordSet> listKeywordSets()
-
-Lists all keyword sets with optional filtering and pagination
-
-### Example
-
-```typescript
-import {
-    KeywordSetsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordSetsApi(configuration);
-
-let limit: number; //Maximum number of keyword sets to return (optional) (default to 20)
-let offset: number; //Number of keyword sets to skip for pagination (optional) (default to 0)
-let isEnabled: boolean; //Filter keyword sets by enabled status (optional) (default to undefined)
-let includeRules: boolean; //Include keyword rules in the response (optional) (default to false)
-
-const { status, data } = await apiInstance.listKeywordSets(
+const { status, data } = await apiInstance.listKeywordSetsGin(
     limit,
     offset,
-    isEnabled,
-    includeRules
+    includeRules,
+    isEnabled
 );
 ```
 
@@ -212,19 +195,19 @@ const { status, data } = await apiInstance.listKeywordSets(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **limit** | [**number**] | Maximum number of keyword sets to return | (optional) defaults to 20|
-| **offset** | [**number**] | Number of keyword sets to skip for pagination | (optional) defaults to 0|
-| **isEnabled** | [**boolean**] | Filter keyword sets by enabled status | (optional) defaults to undefined|
-| **includeRules** | [**boolean**] | Include keyword rules in the response | (optional) defaults to false|
+| **limit** | [**number**] | Maximum number of results | (optional) defaults to undefined|
+| **offset** | [**number**] | Number of results to skip | (optional) defaults to undefined|
+| **includeRules** | [**boolean**] | Include rules in response | (optional) defaults to undefined|
+| **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
 
 
 ### Return type
 
-**Array<KeywordSet>**
+**ListCampaigns200Response**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -235,37 +218,32 @@ const { status, data } = await apiInstance.listKeywordSets(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Keyword sets retrieved successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateKeywordSet**
-> KeywordSet updateKeywordSet(updateKeywordSetRequest)
+# **updateKeywordSetGin**
+> KeywordSetResponse updateKeywordSetGin()
 
-Updates a keyword set by ID including its rules
+Update an existing keyword set and its rules
 
 ### Example
 
 ```typescript
 import {
     KeywordSetsApi,
-    Configuration,
-    UpdateKeywordSetRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
 let setId: string; //Keyword set ID (default to undefined)
-let updateKeywordSetRequest: UpdateKeywordSetRequest; //
 
-const { status, data } = await apiInstance.updateKeywordSet(
-    setId,
-    updateKeywordSetRequest
+const { status, data } = await apiInstance.updateKeywordSetGin(
+    setId
 );
 ```
 
@@ -273,34 +251,29 @@ const { status, data } = await apiInstance.updateKeywordSet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **updateKeywordSetRequest** | **UpdateKeywordSetRequest**|  | |
 | **setId** | [**string**] | Keyword set ID | defaults to undefined|
 
 
 ### Return type
 
-**KeywordSet**
+**KeywordSetResponse**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Keyword set updated successfully |  -  |
-|**400** | Bad request |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Keyword set not found |  -  |
-|**409** | Keyword set name already exists |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -1,77 +1,22 @@
 # ProxiesApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**createProxy**](#createproxy) | **POST** /proxies | Add proxy|
-|[**deleteProxy**](#deleteproxy) | **DELETE** /proxies/{proxyId} | Delete proxy|
-|[**forceCheckAllProxies**](#forcecheckallproxies) | **POST** /proxies/health-check | Force all proxies health check|
-|[**forceCheckSingleProxy**](#forcechecksingleproxy) | **POST** /proxies/{proxyId}/health-check | Force single proxy health check|
-|[**getProxyStatuses**](#getproxystatuses) | **GET** /proxies/status | Get proxy statuses|
-|[**listProxies**](#listproxies) | **GET** /proxies | List proxies|
-|[**testProxy**](#testproxy) | **POST** /proxies/{proxyId}/test | Test proxy|
-|[**updateProxy**](#updateproxy) | **PUT** /proxies/{proxyId} | Update proxy|
+|[**addProxyGin**](#addproxygin) | **POST** /proxies | Create proxy|
+|[**deleteProxyGin**](#deleteproxygin) | **DELETE** /proxies/{proxyId} | Delete proxy|
+|[**forceCheckAllProxiesGin**](#forcecheckallproxiesgin) | **POST** /proxies/health-check | Force health check on all proxies|
+|[**forceCheckSingleProxyGin**](#forcechecksingleproxygin) | **POST** /proxies/{proxyId}/health-check | Force proxy health check|
+|[**getProxyStatusesGin**](#getproxystatusesgin) | **GET** /proxies/status | Get proxy statuses|
+|[**listProxiesGin**](#listproxiesgin) | **GET** /proxies | List proxies|
+|[**testProxyGin**](#testproxygin) | **POST** /proxies/{proxyId}/test | Test proxy|
+|[**updateProxyGin**](#updateproxygin) | **PUT** /proxies/{proxyId} | Update proxy|
 
-# **createProxy**
-> Proxy createProxy(createProxyRequest)
+# **addProxyGin**
+> ListCampaigns200Response addProxyGin()
 
-Adds a new proxy
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration,
-    CreateProxyRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-let createProxyRequest: CreateProxyRequest; //
-
-const { status, data } = await apiInstance.createProxy(
-    createProxyRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **createProxyRequest** | **CreateProxyRequest**|  | |
-
-
-### Return type
-
-**Proxy**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** | Proxy created successfully |  -  |
-|**400** | Bad request |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **deleteProxy**
-> deleteProxy()
-
-Deletes a proxy by ID
+Add a new proxy configuration
 
 ### Example
 
@@ -84,172 +29,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let proxyId: string; //Proxy ID (default to undefined)
-
-const { status, data } = await apiInstance.deleteProxy(
-    proxyId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
-
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**204** | Proxy deleted successfully |  -  |
-|**400** | Bad request |  -  |
-|**404** | Proxy not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **forceCheckAllProxies**
-> ForceCheckAllProxies202Response forceCheckAllProxies()
-
-Forces a health check on all proxies
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration,
-    ForceCheckProxiesRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-let forceCheckProxiesRequest: ForceCheckProxiesRequest; // (optional)
-
-const { status, data } = await apiInstance.forceCheckAllProxies(
-    forceCheckProxiesRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **forceCheckProxiesRequest** | **ForceCheckProxiesRequest**|  | |
-
-
-### Return type
-
-**ForceCheckAllProxies202Response**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**202** | Health check process initiated |  -  |
-|**400** | Bad request |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **forceCheckSingleProxy**
-> ProxyStatus forceCheckSingleProxy()
-
-Forces a health check on a single proxy
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-let proxyId: string; //Proxy ID (default to undefined)
-
-const { status, data } = await apiInstance.forceCheckSingleProxy(
-    proxyId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
-
-
-### Return type
-
-**ProxyStatus**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Health check completed |  -  |
-|**400** | Bad request |  -  |
-|**404** | Proxy not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getProxyStatuses**
-> Array<ProxyStatus> getProxyStatuses()
-
-Gets the status of all proxies
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-const { status, data } = await apiInstance.getProxyStatuses();
+const { status, data } = await apiInstance.addProxyGin();
 ```
 
 ### Parameters
@@ -258,11 +38,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**Array<ProxyStatus>**
+**ListCampaigns200Response**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -273,16 +53,16 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy statuses retrieved successfully |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **listProxies**
-> Array<Proxy> listProxies()
+# **deleteProxyGin**
+> ListCampaigns200Response deleteProxyGin()
 
-Lists all proxies with optional filtering
+Delete a proxy configuration
 
 ### Example
 
@@ -295,13 +75,211 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let limit: number; //Number of items to return (optional) (default to 100)
-let offset: number; //Number of items to skip (optional) (default to 0)
-let protocol: 'http' | 'https' | 'socks5' | 'socks4'; //Filter by proxy protocol (optional) (default to undefined)
+let proxyId: string; //Proxy ID (default to undefined)
+
+const { status, data } = await apiInstance.deleteProxyGin(
+    proxyId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
+
+
+### Return type
+
+**ListCampaigns200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **forceCheckAllProxiesGin**
+> BulkHealthCheckResponse forceCheckAllProxiesGin()
+
+Force health checks on all registered proxies
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+const { status, data } = await apiInstance.forceCheckAllProxiesGin();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**BulkHealthCheckResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **forceCheckSingleProxyGin**
+> ProxyHealthCheckResponse forceCheckSingleProxyGin()
+
+Force a health check on a specific proxy
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let proxyId: string; //Proxy ID (UUID) (default to undefined)
+
+const { status, data } = await apiInstance.forceCheckSingleProxyGin(
+    proxyId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **proxyId** | [**string**] | Proxy ID (UUID) | defaults to undefined|
+
+
+### Return type
+
+**ProxyHealthCheckResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getProxyStatusesGin**
+> ProxyStatusResponse getProxyStatusesGin()
+
+Retrieve health status information for all proxies
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+const { status, data } = await apiInstance.getProxyStatusesGin();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ProxyStatusResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listProxiesGin**
+> ListCampaigns200Response listProxiesGin()
+
+Retrieve a list of proxies with optional filtering by protocol, status, and health
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let limit: number; //Maximum number of results (optional) (default to undefined)
+let offset: number; //Number of results to skip (optional) (default to undefined)
+let protocol: string; //Filter by protocol (http, https, socks4, socks5) (optional) (default to undefined)
 let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
 let isHealthy: boolean; //Filter by health status (optional) (default to undefined)
 
-const { status, data } = await apiInstance.listProxies(
+const { status, data } = await apiInstance.listProxiesGin(
     limit,
     offset,
     protocol,
@@ -314,20 +292,20 @@ const { status, data } = await apiInstance.listProxies(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **limit** | [**number**] | Number of items to return | (optional) defaults to 100|
-| **offset** | [**number**] | Number of items to skip | (optional) defaults to 0|
-| **protocol** | [**&#39;http&#39; | &#39;https&#39; | &#39;socks5&#39; | &#39;socks4&#39;**]**Array<&#39;http&#39; &#124; &#39;https&#39; &#124; &#39;socks5&#39; &#124; &#39;socks4&#39;>** | Filter by proxy protocol | (optional) defaults to undefined|
+| **limit** | [**number**] | Maximum number of results | (optional) defaults to undefined|
+| **offset** | [**number**] | Number of results to skip | (optional) defaults to undefined|
+| **protocol** | [**string**] | Filter by protocol (http, https, socks4, socks5) | (optional) defaults to undefined|
 | **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
 | **isHealthy** | [**boolean**] | Filter by health status | (optional) defaults to undefined|
 
 
 ### Return type
 
-**Array<Proxy>**
+**ListCampaigns200Response**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -338,16 +316,69 @@ const { status, data } = await apiInstance.listProxies(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxies retrieved successfully |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **testProxy**
-> ProxyTestResult testProxy()
+# **testProxyGin**
+> ProxyTestResponse testProxyGin()
 
-Tests a proxy by ID
+Test a proxy configuration to verify it works correctly
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let proxyId: string; //Proxy ID (UUID) (default to undefined)
+
+const { status, data } = await apiInstance.testProxyGin(
+    proxyId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **proxyId** | [**string**] | Proxy ID (UUID) | defaults to undefined|
+
+
+### Return type
+
+**ProxyTestResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateProxyGin**
+> Proxy updateProxyGin()
+
+Update an existing proxy configuration
 
 ### Example
 
@@ -362,7 +393,7 @@ const apiInstance = new ProxiesApi(configuration);
 
 let proxyId: string; //Proxy ID (default to undefined)
 
-const { status, data } = await apiInstance.testProxy(
+const { status, data } = await apiInstance.updateProxyGin(
     proxyId
 );
 ```
@@ -376,11 +407,11 @@ const { status, data } = await apiInstance.testProxy(
 
 ### Return type
 
-**ProxyTestResult**
+**Proxy**
 
 ### Authorization
 
-[sessionAuth](../README.md#sessionAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -391,70 +422,9 @@ const { status, data } = await apiInstance.testProxy(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy test completed |  -  |
-|**400** | Bad request |  -  |
-|**404** | Proxy not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **updateProxy**
-> Proxy updateProxy(updateProxyRequest)
-
-Updates a proxy by ID
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration,
-    UpdateProxyRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-let proxyId: string; //Proxy ID (default to undefined)
-let updateProxyRequest: UpdateProxyRequest; //
-
-const { status, data } = await apiInstance.updateProxy(
-    proxyId,
-    updateProxyRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **updateProxyRequest** | **UpdateProxyRequest**|  | |
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
-
-
-### Return type
-
-**Proxy**
-
-### Authorization
-
-[sessionAuth](../README.md#sessionAuth)
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Proxy updated successfully |  -  |
-|**400** | Bad request |  -  |
-|**404** | Proxy not found |  -  |
-|**500** | Internal server error |  -  |
-|**0** |  |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -18,6 +18,8 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/fntelecomllc/studio/backend/internal/services"
+	api_pkg "github.com/fntelecomllc/studio/backend/api"
+	"gopkg.in/yaml.v3"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
@@ -502,6 +504,22 @@ func main() {
 	legacyCampaignGroup.Use(securityMiddleware.SessionProtection())
 	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(legacyCampaignGroup, authMiddleware)
 	log.Println("Registered legacy campaign orchestration routes under /campaigns for backward compatibility.")
+
+	// Generate OpenAPI specification using TRUE automatic reflection from real server routes
+	log.Println("Generating OpenAPI specification using automatic reflection...")
+	spec := api_pkg.GenerateOpenAPISpecWithEngine(router)
+	
+	// Save to file
+	specData, err := yaml.Marshal(spec)
+	if err != nil {
+		log.Printf("Warning: Failed to marshal OpenAPI spec: %v", err)
+	} else {
+		if err := os.WriteFile("docs/openapi-3.yaml", specData, 0644); err != nil {
+			log.Printf("Warning: Failed to write OpenAPI spec: %v", err)
+		} else {
+			log.Printf("✓ OpenAPI specification generated successfully using automatic reflection: docs/openapi-3.yaml")
+		}
+	}
 
 	// Use environment variable for port if set, otherwise use config
 	serverPort := os.Getenv("SERVER_PORT")
