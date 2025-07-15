@@ -217,6 +217,8 @@ type HTTPConfigDetails struct {
 }
 
 // Persona represents a DNS or HTTP persona
+// Persona represents a persona configuration
+// @Description Persona settings and validation rules
 type Persona struct {
 	ID            uuid.UUID        `db:"id" json:"id"`
 	Name          string           `db:"name" json:"name" validate:"required"`
@@ -235,6 +237,7 @@ type Persona struct {
 }
 
 // Proxy represents a proxy server configuration
+// @Description Proxy server connection and authentication details
 type Proxy struct {
 	ID            uuid.UUID          `db:"id" json:"id"`
 	Name          string             `db:"name" json:"name" validate:"required"`
@@ -294,6 +297,7 @@ type KeywordRule struct {
 }
 
 // Campaign represents a generic campaign
+// @Description Campaign configuration and status
 type Campaign struct {
 	ID                 uuid.UUID          `db:"id" json:"id"`
 	Name               string             `db:"name" json:"name" validate:"required"`

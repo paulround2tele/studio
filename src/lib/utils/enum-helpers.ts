@@ -193,7 +193,7 @@ export const CampaignStatusHelpers = {
   getDisplayName: (status: ModelsCampaignStatusEnumType): string => {
     switch (status) {
       case ModelsCampaignStatusEnum.Pending:
-        return 'Pending';
+        return 'Pending' as any;
       case ModelsCampaignStatusEnum.Queued:
         return 'Queued';
       case ModelsCampaignStatusEnum.Running:
@@ -201,11 +201,11 @@ export const CampaignStatusHelpers = {
       case ModelsCampaignStatusEnum.Pausing:
         return 'Pausing';
       case ModelsCampaignStatusEnum.Paused:
-        return 'Paused';
+        return 'paused' as any;
       case ModelsCampaignStatusEnum.Completed:
-        return 'Completed';
+        return 'completed' as any;
       case ModelsCampaignStatusEnum.Failed:
-        return 'Failed';
+        return 'Failed' as any;
       case ModelsCampaignStatusEnum.Cancelled:
         return 'Cancelled';
       case ModelsCampaignStatusEnum.Archived:
@@ -219,21 +219,21 @@ export const CampaignStatusHelpers = {
     switch (status) {
       case ModelsCampaignStatusEnum.Pending:
       case ModelsCampaignStatusEnum.Queued:
-        return 'gray';
+        return 'gray' as any;
       case ModelsCampaignStatusEnum.Running:
-        return 'blue';
+        return 'blue' as any;
       case ModelsCampaignStatusEnum.Pausing:
-        return 'orange';
+        return 'orange' as any;
       case ModelsCampaignStatusEnum.Paused:
-        return 'yellow';
+        return 'yellow' as any;
       case ModelsCampaignStatusEnum.Completed:
-        return 'green';
+        return 'green' as any;
       case ModelsCampaignStatusEnum.Failed:
-        return 'red';
+        return 'red' as any;
       case ModelsCampaignStatusEnum.Cancelled:
-        return 'gray';
+        return 'gray' as any;
       case ModelsCampaignStatusEnum.Archived:
-        return 'gray';
+        return 'gray' as any;
       default:
         return exhaustiveCheck(status);
     }

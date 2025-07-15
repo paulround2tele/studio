@@ -16,9 +16,9 @@ type _Campaign = components['schemas']['Campaign']; // Unused
 
 // WebSocket message types aligned with backend contract
 export interface StreamingMessage {
-  type: string;
-  timestamp: string;
-  data: unknown;
+type: string;
+timestamp: string;
+data: unknown;
   campaignId?: string;
   messageId?: string;
   sequenceNumber?: number;
@@ -28,12 +28,12 @@ export interface StreamingMessage {
 }
 
 export interface DomainGenerationPayload {
-  campaignId: string;
-  domainId: string;
-  domain: string;
-  offset: number;
-  batchSize: number;
-  totalGenerated: number;
+campaignId: string;
+domainId: string;
+domain: string;
+offset: number;
+batchSize: number;
+totalGenerated: number;
   generatedAt?: string;
   id?: string;
   offsetIndex?: number;
@@ -41,102 +41,102 @@ export interface DomainGenerationPayload {
 
 // Table filters and pagination state
 export interface TableFilters {
-  searchTerm: string;
-  statusFilter: DomainActivityStatus | 'all';
-  sortBy: 'domainName' | 'generatedDate' | 'dnsStatus' | 'httpStatus';
-  sortOrder: 'asc' | 'desc';
+searchTerm: string;
+statusFilter: DomainActivityStatus | 'all';
+sortBy: 'domainName' | 'generatedDate' | 'dnsStatus' | 'httpStatus';
+sortOrder: 'asc' | 'desc';
 }
 
 export interface PaginationState {
-  currentPage: number;
-  pageSize: number;
-  totalCount: number;
+currentPage: number;
+pageSize: number;
+totalCount: number;
 }
 
 // Streaming statistics for performance monitoring
 export interface StreamingStats {
-  domainsPerSecond: number;
-  lastMessageTime: number;
-  connectionStatus: 'connected' | 'disconnected' | 'reconnecting';
-  messagesReceived: number;
-  lastSequenceNumber: number;
-  averageLatency: number;
+domainsPerSecond: number;
+lastMessageTime: number;
+connectionStatus: 'connected' | 'disconnected' | 'reconnecting';
+messagesReceived: number;
+lastSequenceNumber: number;
+averageLatency: number;
 }
 
 // Domain cache for memory-efficient management
 export interface DomainCacheEntry {
-  domain: GeneratedDomainBackend | CampaignValidationItem;
-  lastAccessed: number;
-  isVisible: boolean;
+domain: GeneratedDomainBackend | CampaignValidationItem;
+lastAccessed: number;
+isVisible: boolean;
 }
 
 // Campaign details store interface
 export interface CampaignDetailsStore {
-  // Campaign metadata (source of truth: backend)
-  campaign: CampaignViewModel | null;
-  campaignStatus: CampaignStatus | null;
-  loading: boolean;
-  error: string | null;
+  // Campaign metadata (source of truth: backend),
+campaign: CampaignViewModel | null;
+campaignStatus: CampaignStatus | null;
+loading: boolean;
+error: string | null;
   
-  // Domain data (source of truth: WebSocket + API)
-  domains: Map<string, DomainCacheEntry>;
-  generatedDomains: GeneratedDomainBackend[];
-  dnsCampaignItems: CampaignValidationItem[];
-  httpCampaignItems: CampaignValidationItem[];
-  totalDomainCount: number;
+  // Domain data (source of truth: WebSocket + API),
+domains: Map<string, DomainCacheEntry>;
+generatedDomains: GeneratedDomainBackend[];
+dnsCampaignItems: CampaignValidationItem[];
+httpCampaignItems: CampaignValidationItem[];
+totalDomainCount: number;
   
-  // Real-time streaming state
-  streamingStats: StreamingStats;
+  // Real-time streaming state,
+streamingStats: StreamingStats;
   
-  // UI state (frontend-only)
-  filters: TableFilters;
-  pagination: PaginationState;
-  selectedDomains: Set<string>;
-  actionLoading: Record<string, boolean>;
+  // UI state (frontend-only),
+filters: TableFilters;
+pagination: PaginationState;
+selectedDomains: Set<string>;
+actionLoading: Record<string, boolean>;
   
-  // Actions
-  setCampaign: (campaign: CampaignViewModel | null) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  updateFromWebSocket: (message: StreamingMessage) => void;
-  updateFromAPI: (data: { 
+  // Actions,
+setCampaign: (campaign: CampaignViewModel | null) => void;
+setLoading: (loading: boolean) => void;
+setError: (error: string | null) => void;
+updateFromWebSocket: (message: StreamingMessage) => void;
+updateFromAPI: (data: { 
     generatedDomains?: GeneratedDomainBackend[];
     dnsCampaignItems?: CampaignValidationItem[];
     httpCampaignItems?: CampaignValidationItem[];
   }) => void;
-  updateFilters: (filters: Partial<TableFilters>) => void;
-  updatePagination: (pagination: Partial<PaginationState>) => void;
-  setActionLoading: (action: string, loading: boolean) => void;
-  addDomain: (domain: GeneratedDomainBackend) => void;
-  updateStreamingStats: (stats: Partial<StreamingStats>) => void;
-  selectDomain: (domainId: string, selected: boolean) => void;
-  clearSelectedDomains: () => void;
-  getDomainsBatch: (offset: number, limit: number) => DomainCacheEntry[];
-  pruneCache: () => void;
-  reset: () => void;
+updateFilters: (filters: Partial<TableFilters>) => void;
+updatePagination: (pagination: Partial<PaginationState>) => void;
+setActionLoading: (action: string, loading: boolean) => void;
+addDomain: (domain: GeneratedDomainBackend) => void;
+updateStreamingStats: (stats: Partial<StreamingStats>) => void;
+selectDomain: (domainId: string, selected: boolean) => void;
+clearSelectedDomains: () => void;
+getDomainsBatch: (offset: number, limit: number) => DomainCacheEntry[];
+pruneCache: () => void;
+reset: () => void;
 }
 
 // Default states
 const defaultFilters: TableFilters = {
-  searchTerm: '',
+searchTerm: '',
   statusFilter: 'all',
   sortBy: 'domainName',
-  sortOrder: 'asc',
+  sortOrder: 'asc'
 };
 
 const defaultPagination: PaginationState = {
-  currentPage: 1,
+currentPage: 1,
   pageSize: 50,
-  totalCount: 0,
+  totalCount: 0
 };
 
 const defaultStreamingStats: StreamingStats = {
-  domainsPerSecond: 0,
+domainsPerSecond: 0,
   lastMessageTime: 0,
   connectionStatus: 'disconnected',
   messagesReceived: 0,
   lastSequenceNumber: 0,
-  averageLatency: 0,
+  averageLatency: 0
 };
 
 // Cache configuration
@@ -146,8 +146,8 @@ const CACHE_ACCESS_TIMEOUT = 300000; // 5 minutes
 
 export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
   subscribeWithSelector((set, get) => ({
-    // Initial state
-    campaign: null,
+    // Initial state,
+campaign: null,
     campaignStatus: null,
     loading: false,
     error: null,
@@ -162,8 +162,8 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
     selectedDomains: new Set(),
     actionLoading: {},
 
-    // Actions
-    setCampaign: (campaign) => set({ campaign, campaignStatus: campaign?.status || null }),
+    // Actions,
+setCampaign: (campaign) => set({ campaign, campaignStatus: campaign?.status || null }),
     
     setLoading: (loading) => set({ loading }),
     
@@ -175,10 +175,10 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       // Update streaming stats
       const now = Date.now();
       const newStats: Partial<StreamingStats> = {
-        lastMessageTime: now,
+lastMessageTime: now,
         messagesReceived: state.streamingStats.messagesReceived + 1,
-        lastSequenceNumber: message.sequenceNumber || state.streamingStats.lastSequenceNumber,
-      };
+        lastSequenceNumber: message.sequenceNumber || state.streamingStats.lastSequenceNumber
+};
 
       // Calculate domains per second
       if (state.streamingStats.lastMessageTime > 0) {
@@ -189,7 +189,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       }
 
       set({
-        streamingStats: { ...state.streamingStats, ...newStats }
+streamingStats: { ...state.streamingStats, ...newStats }
       });
 
       // Handle domain generation events
@@ -197,13 +197,13 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
         const payload = message.data as DomainGenerationPayload;
         if (payload.domain) {
           const newDomain: GeneratedDomainBackend = {
-            id: payload.domainId || `${payload.domain}-${Date.now()}`,
+id: payload.domainId || `${payload.domain}-${Date.now()}`,
             generationCampaignId: payload.campaignId,
             domainName: payload.domain,
             offsetIndex: payload.offset,
             generatedAt: payload.generatedAt || new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-          };
+            createdAt: new Date().toISOString()
+};
           
           get().addDomain(newDomain);
         }
@@ -216,7 +216,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
         if (state.campaign && payload.campaignId === state.campaign.id) {
           // 🔥 CRITICAL: Preserve existing domain data during status transitions
           set({
-            campaign: {
+campaign: {
               ...state.campaign,
               status: payload.status as CampaignStatus
             }
@@ -228,33 +228,33 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       // Handle phase completion updates - PRESERVE domain data during phase transitions
       if (message.type === 'phase_complete' && message.data) {
         const payload = message.data as {
-          campaignId: string;
-          phase: string;
-          status: string;
+campaignId: string;
+phase: string;
+status: string;
           progress?: number;
         };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
           console.log('🔄 [Phase Transition] Phase completion update:', {
-            oldPhase: state.campaign.currentPhase,
+oldPhase: state.campaign.currentPhase,
             newPhase: payload.phase,
             status: payload.status,
             preservingDomains: {
-              generatedDomains: state.generatedDomains.length,
+generatedDomains: state.generatedDomains.length,
               dnsCampaignItems: state.dnsCampaignItems.length,
               httpCampaignItems: state.httpCampaignItems.length
             }
           });
           
           set({
-            campaign: {
+campaign: {
               ...state.campaign,
-              currentPhase: payload.phase as any,
-              phaseStatus: payload.status as any,
-              progress: payload.progress || 100,
-              progressPercentage: payload.progress || 100, // CRITICAL: Update both progress fields
-              processedItems: state.totalDomainCount, // Use WebSocket domain count as processed items
-              status: payload.status === 'Succeeded' ? 'completed' : state.campaign.status
+              currentPhase: payload.phase  as any,
+phaseStatus: payload.status  as any,
+progress: payload.progress || 100,
+              progressPercentage: payload.progress || 100, // CRITICAL: Update both progress fields,
+processedItems: state.totalDomainCount, // Use WebSocket domain count as processed items,
+status: payload.status === 'completed' ? 'completed' : state.campaign.status
             }
             // 🔥 CRITICAL: Domain data (generatedDomains, dnsCampaignItems, httpCampaignItems)
             // is intentionally NOT modified here to preserve domains during phase transitions
@@ -265,7 +265,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       // Handle phase progress updates
       if (message.type === 'campaign_progress' && message.data) {
         const payload = message.data as {
-          campaignId: string;
+campaignId: string;
           progress?: number;
           progressPercentage?: number;
         };
@@ -289,23 +289,23 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
           const updatedCampaign = {
             ...state.campaign,
             progress: progress,
-            progressPercentage: progress, // CRITICAL: Keep both progress fields in sync
-            processedItems: Math.floor((progress / 100) * (state.campaign.totalItems || 0)), // Calculate from progress
-            currentPhase: messagePhase ? messagePhase as any : state.campaign.currentPhase,
-            phaseStatus: messageStatus ? messageStatus as any : state.campaign.phaseStatus,
+            progressPercentage: progress, // CRITICAL: Keep both progress fields in sync,
+processedItems: Math.floor((progress / 100) * (state.campaign.totalItems || 0)), // Calculate from progress,
+currentPhase: messagePhase ? messagePhase as any : state.campaign.currentPhase  as any,
+phaseStatus: messageStatus ? messageStatus as any : state.campaign.phaseStatus as any,
             // CRITICAL: Update status during phase transitions
             status: messageStatus === 'running' ? 'running' :
                    messageStatus === 'completed' ? 'completed' :
-                   state.campaign.status
+                   messageStatus || state.campaign.status
           };
           
           console.log(`🔧 [STORE_UPDATE] Updated campaign state:`, {
-            oldPhase: state.campaign.currentPhase,
+oldPhase: state.campaign.currentPhase,
             newPhase: updatedCampaign.currentPhase,
             oldStatus: state.campaign.status,
             newStatus: updatedCampaign.status,
             preservingDomains: {
-              generatedDomains: state.generatedDomains.length,
+generatedDomains: state.generatedDomains.length,
               dnsCampaignItems: state.dnsCampaignItems.length,
               httpCampaignItems: state.httpCampaignItems.length
             }
@@ -313,7 +313,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
           
           // 🔥 CRITICAL: Preserve domain data during campaign progress updates
           set({
-            campaign: updatedCampaign
+campaign: updatedCampaign
             // IMPORTANT: Domain data is NOT cleared during progress updates
           });
         }
@@ -322,25 +322,25 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       // Handle validation progress updates (DNS, HTTP, etc.)
       if (message.type === 'validation_progress' && message.data) {
         const payload = message.data as {
-          campaignId: string;
-          progress: number;
-          validationsProcessed: number;
-          totalValidations: number;
-          validationType: string;
-          phase: string;
+campaignId: string;
+progress: number;
+validationsProcessed: number;
+totalValidations: number;
+validationType: string;
+phase: string;
         };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
           set({
-            campaign: {
+campaign: {
               ...state.campaign,
               progress: payload.progress,
               progressPercentage: payload.progress,
               processedItems: payload.validationsProcessed,
               totalItems: payload.totalValidations,
-              currentPhase: payload.phase as any,
-              phaseStatus: 'InProgress' as any,
-              status: 'running' as CampaignStatus
+              currentPhase: payload.phase  as any,
+phaseStatus: 'in_progress'  as any,
+status: 'running' as CampaignStatus
             }
           });
         }
@@ -349,7 +349,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       // Handle DNS validation results with error handling
       if (message.type === 'dns_validation_result' && message.data) {
         const payload = message.data as {
-          campaignId: string;
+campaignId: string;
           results?: any[];
           errors?: any[];
           offsetUpdates?: any[];
@@ -377,7 +377,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
             if (offsetError) {
               console.error('🚫 [Store] Offset limit exceeded:', offsetError);
               set({
-                error: `Domain generation stopped: ${offsetError.message || 'Maximum offset limit reached for this pattern'}`
+error: `Domain generation stopped: ${offsetError.message || 'Maximum offset limit reached for this pattern'}`
               });
             }
           }
@@ -385,7 +385,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
           // Update campaign status if provided
           if (payload.status) {
             set({
-              campaign: {
+campaign: {
                 ...state.campaign,
                 status: payload.status === 'failed' ? 'failed' :
                        payload.status === 'completed' ? 'completed' :
@@ -399,7 +399,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       // Handle HTTP validation results with error handling
       if (message.type === 'http_validation_result' && message.data) {
         const payload = message.data as {
-          campaignId: string;
+campaignId: string;
           results?: any[];
           errors?: any[];
           status?: string;
@@ -418,7 +418,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
           // Update campaign status if provided
           if (payload.status) {
             set({
-              campaign: {
+campaign: {
                 ...state.campaign,
                 status: payload.status === 'failed' ? 'failed' :
                        payload.status === 'completed' ? 'completed' :
@@ -442,8 +442,8 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
             domains.set(domain.id, {
               domain,
               lastAccessed: Date.now(),
-              isVisible: false,
-            });
+              isVisible: false
+});
           }
         });
         updates.domains = domains;
@@ -462,16 +462,16 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
     },
 
     updateFilters: (filters) => set((state) => ({
-      filters: { ...state.filters, ...filters },
+filters: { ...state.filters, ...filters },
       pagination: { ...state.pagination, currentPage: 1 }, // Reset to first page
     })),
 
     updatePagination: (pagination) => set((state) => ({
-      pagination: { ...state.pagination, ...pagination }
+pagination: { ...state.pagination, ...pagination }
     })),
 
     setActionLoading: (action, loading) => set((state) => ({
-      actionLoading: { ...state.actionLoading, [action]: loading }
+actionLoading: { ...state.actionLoading, [action]: loading }
     })),
 
     addDomain: (domain) => {
@@ -486,16 +486,16 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       domains.set(domain.id, {
         domain,
         lastAccessed: Date.now(),
-        isVisible: false,
-      });
+        isVisible: false
+});
       
       const newGeneratedDomains = [domain, ...state.generatedDomains];
       
       set({
         domains,
         generatedDomains: newGeneratedDomains,
-        totalDomainCount: newGeneratedDomains.length,
-      });
+        totalDomainCount: newGeneratedDomains.length
+});
       
       // Prune cache if necessary
       if (domains.size > CACHE_PRUNE_THRESHOLD) {
@@ -504,7 +504,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
     },
 
     updateStreamingStats: (stats) => set((state) => ({
-      streamingStats: { ...state.streamingStats, ...stats }
+streamingStats: { ...state.streamingStats, ...stats }
     })),
 
     selectDomain: (domainId, selected) => set((state) => {
@@ -556,7 +556,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
             comparison = new Date(domainA.generatedAt || '').getTime() - 
                         new Date(domainB.generatedAt || '').getTime();
             break;
-          default:
+default:
             comparison = 0;
         }
         
@@ -594,7 +594,7 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
     },
 
     reset: () => set({
-      campaign: null,
+campaign: null,
       campaignStatus: null,
       loading: false,
       error: null,
@@ -607,9 +607,9 @@ export const useCampaignDetailsStore = create<CampaignDetailsStore>()(
       filters: defaultFilters,
       pagination: defaultPagination,
       selectedDomains: new Set(),
-      actionLoading: {},
-    }),
-  }))
+      actionLoading: {}
+})
+}))
 );
 
 // 🔧 CRITICAL FIX: Stable selector hooks to prevent object recreation
@@ -633,8 +633,8 @@ export const useDomainData = () => {
     generatedDomains,
     dnsCampaignItems,
     httpCampaignItems,
-    totalDomainCount,
-  }), [generatedDomains, dnsCampaignItems, httpCampaignItems, totalDomainCount]);
+    totalDomainCount
+}), [generatedDomains, dnsCampaignItems, httpCampaignItems, totalDomainCount]);
 };
 
 export const useStreamingStats = () => useCampaignDetailsStore(
@@ -649,8 +649,8 @@ export const useTableState = () => {
   return useMemo(() => ({
     filters,
     pagination,
-    selectedDomains,
-  }), [filters, pagination, selectedDomains]);
+    selectedDomains
+}), [filters, pagination, selectedDomains]);
 };
 
 export const useActionLoading = () => useCampaignDetailsStore(
@@ -680,6 +680,6 @@ export const useCampaignDetailsActions = () => {
     setActionLoading,
     updateFromWebSocket,
     updateStreamingStats,
-    reset,
-  }), [setCampaign, setLoading, setError, updateFromAPI, updateFilters, updatePagination, setActionLoading, updateFromWebSocket, updateStreamingStats, reset]);
+    reset
+}), [setCampaign, setLoading, setError, updateFromAPI, updateFilters, updatePagination, setActionLoading, updateFromWebSocket, updateStreamingStats, reset]);
 };

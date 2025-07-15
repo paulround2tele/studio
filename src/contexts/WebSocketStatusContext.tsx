@@ -86,15 +86,15 @@ export function WebSocketStatusProvider({ children }: { children: React.ReactNod
     const connectedOperational = operationalConnections.filter(conn => conn.status === 'connected');
     
     if (operationalConnections.length === 0) {
-      return 'offline';
+      return 'offline' as any;
     }
     
     if (connectedOperational.length === operationalConnections.length) {
-      return 'healthy';
+      return 'healthy' as any;
     } else if (connectedOperational.length > 0) {
-      return 'degraded';
+      return 'degraded' as any;
     } else {
-      return 'offline';
+      return 'offline' as any;
     }
   }, []);
 

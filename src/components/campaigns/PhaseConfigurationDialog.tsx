@@ -31,7 +31,7 @@ import type { components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 
 // Types
-type CreateCampaignRequest = components['schemas']['services.CreateCampaignRequest'];
+type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
 
 // Constants
 const CampaignFormConstants = {
@@ -198,7 +198,7 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
       let response;
       if (phaseType === 'dns_validation') {
         // Update existing campaign to transition to DNS validation phase
-        response = await apiClient.updateCampaign(sourceCampaign.id!, {
+        const updateRequest = {
           campaignType: 'dns_validation', // This will trigger the phase transition in backend
           name: data.name,
           personaIds: [data.assignedDnsPersonaId!], // Safe to use ! because we validated this above
@@ -206,10 +206,11 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
           processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
           batchSize: Number(data.batchSize),
           retryAttempts: Number(data.retryAttempts),
-        });
+        };
+        response = await apiClient.updateCampaign(sourceCampaign.id!, { data: updateRequest });
       } else {
         // Create new campaign for other phase types (like HTTP keyword validation)
-        response = await apiClient.createCampaign(payload);
+        response = await apiClient.createCampaign({ data: payload });
       }
 
       // Extract campaign from response
@@ -481,7 +482,7 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
                             <SelectItem value={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}>None</SelectItem>
                             {proxies.filter(p => p.id && p.isEnabled).map(p => (
                               <SelectItem key={p.id} value={p.id!}>
-                                {p.host?.string}:{p.port?.int32} ({p.isHealthy ? 'Healthy' : 'Unhealthy'})
+                                {p.host}:{p.port} ({p.isHealthy ? 'Healthy' : 'Unhealthy'})
                               </SelectItem>
                             ))}
                             {proxies.filter(p => p.id && p.isEnabled).length === 0 && !loadingData && (

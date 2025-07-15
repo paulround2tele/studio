@@ -1,10 +1,10 @@
 // Shared types for Campaign Forms to prevent conflicts
 import type { components } from '@/lib/api-client/types';
 
-export type CampaignSelectedType = components['schemas']['services.CreateCampaignRequest']['campaignType'];
+export type CampaignSelectedType = components['schemas']['CreateCampaignRequest']['campaignType'];
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-export type CampaignPhase = components['schemas']['models.Campaign']['currentPhase'];
+export type CampaignPhase = components['schemas']['Campaign']['currentPhase'];
 
 // Unified CampaignFormValues interface used across all form components
 export interface CampaignFormValues {

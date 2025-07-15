@@ -4,14 +4,21 @@
 import { ProxyPoolsApi } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
 
+// Import types directly from models
+import type { ProxyPoolRequest } from '@/lib/api-client/models/proxy-pool-request';
+import type { AddProxyToPoolRequest } from '@/lib/api-client/models/add-proxy-to-pool-request';
+
 // Initialize the API client
 const proxyPoolsApi = new ProxyPoolsApi();
 
-// Use generated types
+// Use generated types with correct package-prefixed names
 export type ProxyPool = components['schemas']['ProxyPool'];
-export type ProxyPoolCreationPayload = components['schemas']['ProxyPoolRequest'];
+export type ProxyPoolCreationPayload = ProxyPoolRequest;
 export type Proxy = components['schemas']['Proxy'];
 export type ProxyPoolMembership = components['schemas']['ProxyPoolMembership'];
+
+// Export the imported types for use in other files
+export type { ProxyPoolRequest, AddProxyToPoolRequest };
 
 // Service layer response wrappers using OpenAPI types as base
 export interface ProxyPoolListResponse {
@@ -56,9 +63,6 @@ export interface ProxyPoolMembershipResponse {
   message?: string;
 }
 
-// Import additional OpenAPI types for proxy pool operations
-export type ProxyPoolRequest = components['schemas']['ProxyPoolRequest'];
-export type AddProxyToPoolRequest = components['schemas']['AddProxyToPoolRequest'];
 
 class ProxyPoolService {
   private static instance: ProxyPoolService;
@@ -115,7 +119,7 @@ class ProxyPoolService {
 
   async createPool(payload: ProxyPoolCreationPayload): Promise<ProxyPoolCreationResponse> {
     try {
-      const response = await proxyPoolsApi.createProxyPool(payload);
+      const response = await proxyPoolsApi.createProxyPool({ data: payload });
       return {
         status: 'success',
         data: response.data as ProxyPool,
@@ -131,7 +135,7 @@ class ProxyPoolService {
 
   async updatePool(poolId: string, payload: ProxyPoolCreationPayload): Promise<ProxyPoolUpdateResponse> {
     try {
-      const response = await proxyPoolsApi.updateProxyPool(poolId, payload);
+      const response = await proxyPoolsApi.updateProxyPool(poolId, { data: payload });
       return {
         status: 'success',
         data: response.data as ProxyPool,
@@ -163,7 +167,7 @@ class ProxyPoolService {
 
   async addProxy(poolId: string, proxyId: string, weight?: number): Promise<ProxyPoolMembershipResponse> {
     try {
-      const response = await proxyPoolsApi.addProxyToPool(poolId, { proxyId, weight });
+      const response = await proxyPoolsApi.addProxyToPool(poolId, { data: { proxyId, weight } });
       return {
         status: 'success',
         data: response.data as ProxyPoolMembership,

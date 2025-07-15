@@ -15,7 +15,7 @@
 
 
 /**
- * 
+ * User account information
  * @export
  * @interface ModelsUser
  */

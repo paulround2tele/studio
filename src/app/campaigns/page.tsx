@@ -7,7 +7,7 @@ import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { components } from '@/lib/api-client/types';
 
 // Frontend-specific view model based on auto-generated Campaign type
-type CampaignViewModel = components['schemas']['models.Campaign'] & {
+type CampaignViewModel = components['schemas']['Campaign'] & {
   // Add any frontend-specific fields if needed
 };
 import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff, Trash2, Loader2 } from 'lucide-react';
@@ -35,10 +35,10 @@ const serializeError = (obj: unknown): string => {
   // Handle Error instances - extract non-enumerable properties
   if (obj instanceof Error) {
     const errorData: Record<string, unknown> = {
-      name: obj.name,
+name: obj.name,
       message: obj.message,
-      stack: obj.stack,
-    };
+      stack: obj.stack
+};
     
     // Include cause if available (modern Error objects)
     if ('cause' in obj && obj.cause !== undefined) {
@@ -58,11 +58,11 @@ const serializeError = (obj: unknown): string => {
   // Handle Event instances - extract relevant non-enumerable properties
   if (obj instanceof Event) {
     const eventData: Record<string, unknown> = {
-      type: obj.type,
+type: obj.type,
       isTrusted: obj.isTrusted,
       timeStamp: obj.timeStamp,
-      target: obj.target?.constructor?.name || 'Unknown',
-    };
+      target: obj.target?.constructor?.name || 'Unknown'
+};
     
     // Add currentTarget if available
     if (obj.currentTarget) {
@@ -210,16 +210,16 @@ function CampaignsPageContent() {
                 // Update campaign progress
                 if (message.campaignId) {
                   const progressData = message.data as { progress?: number; phase?: string; status?: string };
-                  setCampaigns(prev => prev.map(campaign =>
+                  setCampaigns(prev => prev.map((campaign: any) =>
                     campaign.id === message.campaignId
                       ? {
                           ...campaign,
                           progressPercentage: typeof progressData.progress === 'number'
                             ? progressData.progress
                             : campaign.progressPercentage,
-                          currentPhase: progressData.phase || campaign.currentPhase,
-                          phaseStatus: progressData.status || campaign.phaseStatus
-                        }
+                          currentPhase: progressData.phase || campaign.currentPhase  as any,
+phaseStatus: progressData.status || campaign.phaseStatus as any
+}
                       : campaign
                   ));
                 }
@@ -229,15 +229,15 @@ function CampaignsPageContent() {
                 // Update campaign status and phase
                 if (message.campaignId && message.data.status) {
                   const phaseData = message.data as { phase?: string; status?: string; progress?: number };
-                  setCampaigns(prev => prev.map(campaign =>
+                  setCampaigns(prev => prev.map((campaign: any) =>
                     campaign.id === message.campaignId
                       ? {
                           ...campaign,
-                          status: phaseData.status === 'Succeeded' ? 'completed' : normalizeStatus(phaseData.status),
-                          currentPhase: phaseData.phase as CampaignViewModel['currentPhase'] || campaign.currentPhase,
-                          phaseStatus: phaseData.status || campaign.phaseStatus,
-                          progressPercentage: phaseData.progress || 100
-                        }
+                          status: phaseData.status === 'completed' ? 'completed' : normalizeStatus(phaseData.status),
+                          currentPhase: phaseData.phase as CampaignViewModel['currentPhase'] || campaign.currentPhase  as any,
+phaseStatus: phaseData.status || campaign.phaseStatus  as any,
+progressPercentage: phaseData.progress || 100
+}
                       : campaign
                   ));
                 }
@@ -247,7 +247,7 @@ function CampaignsPageContent() {
                 // Handle campaign status updates
                 if (message.campaignId) {
                   const statusData = message.data as { status?: string };
-                  setCampaigns(prev => prev.map(campaign =>
+                  setCampaigns(prev => prev.map((campaign: any) =>
                     campaign.id === message.campaignId
                       ? { ...campaign, status: statusData.status || campaign.status }
                       : campaign
@@ -258,7 +258,7 @@ function CampaignsPageContent() {
               case 'error':
                 // Handle campaign errors
                 if (message.campaignId && message.data && typeof message.data === 'object' && 'error' in message.data) {
-                  setCampaigns(prev => prev.map(campaign =>
+                  setCampaigns(prev => prev.map((campaign: any) =>
                     campaign.id === message.campaignId
                       ? { ...campaign, errorMessage: String((message.data as { error: unknown }).error) }
                       : campaign
@@ -279,7 +279,7 @@ function CampaignsPageContent() {
             // Only log as error if it's a true application error, not a connection attempt
             if (isEvent) {
               console.warn('[CampaignsPage] WebSocket connection event (normal):', {
-                type: error.type,
+type: error.type,
                 target: error.target?.constructor?.name,
                 timeStamp: error.timeStamp,
                 isTrusted: error.isTrusted
@@ -381,12 +381,12 @@ function CampaignsPageContent() {
       
       // 🔍 DIAGNOSTIC: Log raw API response structure
       console.log('📥 [CAMPAIGNS_LIST_DEBUG] Raw listCampaigns API response:', {
-        responseReceived: !!response,
+responseReceived: !!response,
         responseType: typeof response,
         responseKeys: response ? Object.keys(response) : null,
         status: response?.status,
         dataProperty: {
-          exists: !!(response && response.data),
+exists: !!(response && response.data),
           type: response && response.data ? typeof response.data : null,
           isArray: response && response.data ? Array.isArray(response.data) : false,
           length: response && response.data && Array.isArray(response.data) ? response.data.length : 'N/A',
@@ -407,7 +407,7 @@ function CampaignsPageContent() {
       
       // 🔍 DIAGNOSTIC: Enhanced logging for response processing
       console.log('📋 [CAMPAIGNS_LIST_DEBUG] Processing successful API response:', {
-        signal_aborted: signal?.aborted || false,
+signal_aborted: signal?.aborted || false,
         component_mounted: isMountedRef.current,
         response_status: response?.status,
         response_data_type: typeof response?.data,
@@ -418,7 +418,7 @@ function CampaignsPageContent() {
 
       // 🔧 FINAL FIX: Handle empty backend responses and authentication issues
       console.log('🔧 [BACKEND_INTEGRATION] Processing campaign list response:', {
-        responseType: typeof response,
+responseType: typeof response,
         responseKeys: response ? Object.keys(response) : null,
         responseKeysCount: response ? Object.keys(response).length : 0,
         hasStatus: !!(response && 'status' in response),
@@ -434,7 +434,7 @@ function CampaignsPageContent() {
 
       // 🔧 CRITICAL FIX: More robust response format handling
       console.log('🔧 [BACKEND_INTEGRATION] Analyzing response structure:', {
-        responseType: typeof response,
+responseType: typeof response,
         isArray: Array.isArray(response),
         isNull: response === null,
         isUndefined: response === undefined,
@@ -644,11 +644,11 @@ function CampaignsPageContent() {
 
       if (responseValid) {
         console.log('✅ [BACKEND_INTEGRATION] Valid response processed:', {
-          rawCampaignsCount: campaignsData.length,
+rawCampaignsCount: campaignsData.length,
           isEmpty: campaignsData.length === 0,
           isEmptyButValid,
           sampleCampaign: campaignsData[0] ? {
-            id: (campaignsData[0] as Record<string, unknown>).id,
+id: (campaignsData[0] as Record<string, unknown>).id,
             name: (campaignsData[0] as Record<string, unknown>).name,
             status: (campaignsData[0] as Record<string, unknown>).status
           } : 'No campaigns available',
@@ -658,10 +658,10 @@ function CampaignsPageContent() {
         // Transform campaigns using proper backend data
         const transformedCampaigns = transformCampaignsToViewModels(campaignsData as Parameters<typeof transformCampaignsToViewModels>[0]);
         console.log('🔧 [BACKEND_INTEGRATION] Campaigns transformation completed:', {
-          originalCount: campaignsData.length,
+originalCount: campaignsData.length,
           transformedCount: transformedCampaigns.length,
           transformedSample: transformedCampaigns.slice(0, 2).map(c => ({
-            id: c.id,
+id: c.id,
             name: c.name,
             status: c.status,
             campaignType: c.campaignType
@@ -673,7 +673,7 @@ function CampaignsPageContent() {
         if (isMountedRef.current) {
           setCampaigns(transformedCampaigns);
           console.log('📝 [BACKEND_INTEGRATION] Campaign state updated successfully:', {
-            newStateCount: transformedCampaigns.length,
+newStateCount: transformedCampaigns.length,
             stateUpdateSuccess: true,
             phase1Complete: true,
             willShowEmptyState: transformedCampaigns.length === 0
@@ -687,7 +687,7 @@ function CampaignsPageContent() {
         }
       } else {
         console.error('❌ [BACKEND_INTEGRATION] PHASE 1 FAILED - Invalid response format:', {
-          responseType: typeof response,
+responseType: typeof response,
           hasStatus: !!(response && 'status' in response),
           status: response && 'status' in response ? (response as any).status : 'missing',
           hasData: !!(response && 'data' in response),
@@ -707,7 +707,7 @@ function CampaignsPageContent() {
         if (isMountedRef.current) {
           setCampaigns([]);
           toast({
-            title: "Backend Connection Error",
+title: "Backend Connection Error",
             description: "Failed to load campaigns. Please check your connection and try again.",
             variant: "destructive"
           });
@@ -725,7 +725,7 @@ function CampaignsPageContent() {
         setCampaigns([]);
         const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
         toast({
-          title: "Error",
+title: "Error",
           description: errorMessage,
           variant: "destructive"
         });
@@ -793,7 +793,7 @@ function CampaignsPageContent() {
     // Apply optimistic update
     const campaign = campaigns.find(c => c.id === campaignId);
     const updateId = await applyUpdate({
-      type: 'DELETE',
+type: 'DELETE',
       entityType: 'campaigns',
       entityId: campaignId,
       optimisticData: null,
@@ -814,14 +814,14 @@ function CampaignsPageContent() {
       await apiClient.deleteCampaign(campaignId);
       await confirmUpdate(updateId);
       toast({
-        title: "Campaign Deleted",
+title: "Campaign Deleted",
         description: "Campaign successfully deleted."
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Could not delete campaign.";
       await rollbackUpdate(updateId, errorMessage);
       toast({
-        title: "Error",
+title: "Error",
         description: errorMessage,
         variant: "destructive"
       });
@@ -838,11 +838,11 @@ function CampaignsPageContent() {
 
     // Apply optimistic update
     const campaign = campaigns.find(c => c.id === campaignId);
-    const optimisticStatus = action === 'pause' ? 'paused' : action === 'resume' ? 'running' : 'cancelled';
+    const optimisticStatus = action === 'pause' ? 'paused' : action === 'resume' ? 'InProgress' : 'cancelled';
     const optimisticData = campaign ? { ...campaign, status: normalizeStatus(optimisticStatus) } : null;
 
     const updateId = await applyUpdate({
-      type: 'UPDATE',
+type: 'UPDATE',
       entityType: 'campaigns',
       entityId: campaignId,
       optimisticData,
@@ -888,7 +888,7 @@ function CampaignsPageContent() {
     // DEBUGGING: Log campaign statuses to identify filtering issues
     if (campaigns.length > 0 && Math.random() < 0.1) { // Sample logging
       console.log('[CAMPAIGNS_FILTER_DEBUG] Campaign filtering:', {
-        campaignId: campaign.id,
+campaignId: campaign.id,
         rawStatus: campaign.status,
         normalizedStatus: normalizeStatus(campaign.status),
         activeTab,
@@ -919,11 +919,11 @@ function CampaignsPageContent() {
 
   // DEBUGGING: Log filtering results
   console.log('[CAMPAIGNS_FILTER_DEBUG] Filtering results:', {
-    totalCampaigns: campaigns.length,
+totalCampaigns: campaigns.length,
     filteredCampaigns: filteredCampaigns.length,
     activeTab,
     sampleCampaignStatuses: campaigns.slice(0, 3).map(c => ({
-      id: c.id,
+id: c.id,
       status: c.status,
       normalized: normalizeStatus(c.status)
     }))
@@ -980,19 +980,18 @@ function CampaignsPageContent() {
       
       // Use proper bulk delete API - let backend handle the business logic
       await apiClient.bulkDeleteCampaigns({
-        campaignIds: campaignsToDelete
+data: { campaignIds: campaignsToDelete }
       });
 
       // Clear selection
       setSelectedCampaigns(new Set());
 
       toast({
-        title: "Campaigns Deleted Successfully",
-        description: `${campaignsToDelete.length} campaigns deleted: ${campaignNames}${campaignsToDelete.length > 3 ? '...' : ''}`,
-      });
+title: "Campaigns Deleted Successfully",
+        description: `${campaignsToDelete.length} campaigns deleted: ${campaignNames}${campaignsToDelete.length > 3 ? '...' : ''}`
+});
 
       // REMOVED: Redundant refresh - optimistic update already handled this
-
     } catch (error: unknown) {
       // FIXED: Proper rollback without unnecessary API calls
       // Restore campaigns from previous state instead of making API call
@@ -1009,7 +1008,7 @@ function CampaignsPageContent() {
       
       const errorMessage = error instanceof Error ? error.message : "Failed to delete campaigns.";
       toast({
-        title: "Bulk Delete Failed",
+title: "Bulk Delete Failed",
         description: errorMessage,
         variant: "destructive"
       });

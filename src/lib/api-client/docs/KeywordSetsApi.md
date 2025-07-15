@@ -1,19 +1,19 @@
 # KeywordSetsApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**keywordSetsGet**](#keywordsetsget) | **GET** /keyword-sets | List keyword sets|
-|[**keywordSetsPost**](#keywordsetspost) | **POST** /keyword-sets | Create keyword set|
-|[**keywordSetsSetIdDelete**](#keywordsetssetiddelete) | **DELETE** /keyword-sets/{setId} | Delete keyword set|
-|[**keywordSetsSetIdGet**](#keywordsetssetidget) | **GET** /keyword-sets/{setId} | Get keyword set|
-|[**keywordSetsSetIdPut**](#keywordsetssetidput) | **PUT** /keyword-sets/{setId} | Update keyword set|
+|[**createKeywordSet**](#createkeywordset) | **POST** /keyword-sets | Create keyword set|
+|[**deleteKeywordSet**](#deletekeywordset) | **DELETE** /keyword-sets/{setId} | Delete keyword set|
+|[**getKeywordSet**](#getkeywordset) | **GET** /keyword-sets/{setId} | Get keyword set|
+|[**listKeywordSets**](#listkeywordsets) | **GET** /keyword-sets | List keyword sets|
+|[**updateKeywordSet**](#updatekeywordset) | **PUT** /keyword-sets/{setId} | Update keyword set|
 
-# **keywordSetsGet**
-> Array<ApiKeywordSetResponse> keywordSetsGet()
+# **createKeywordSet**
+> StreamExtractKeywords200Response createKeywordSet()
 
-Retrieve a list of keyword sets with optional filtering
+Create a new keyword set with optional rules
 
 ### Example
 
@@ -26,32 +26,16 @@ import {
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
-let limit: number; //Maximum number of results (optional) (default to 20)
-let offset: number; //Number of results to skip (optional) (default to 0)
-let includeRules: boolean; //Include rules in response (optional) (default to false)
-let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
-
-const { status, data } = await apiInstance.keywordSetsGet(
-    limit,
-    offset,
-    includeRules,
-    isEnabled
-);
+const { status, data } = await apiInstance.createKeywordSet();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **limit** | [**number**] | Maximum number of results | (optional) defaults to 20|
-| **offset** | [**number**] | Number of results to skip | (optional) defaults to 0|
-| **includeRules** | [**boolean**] | Include rules in response | (optional) defaults to false|
-| **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**Array<ApiKeywordSetResponse>**
+**StreamExtractKeywords200Response**
 
 ### Authorization
 
@@ -66,68 +50,14 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | List of keyword sets |  -  |
-|**500** | Failed to list keyword sets |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **keywordSetsPost**
-> ApiKeywordSetResponse keywordSetsPost(apiCreateKeywordSetRequest)
-
-Create a new keyword set with optional rules
-
-### Example
-
-```typescript
-import {
-    KeywordSetsApi,
-    Configuration,
-    ApiCreateKeywordSetRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordSetsApi(configuration);
-
-let apiCreateKeywordSetRequest: ApiCreateKeywordSetRequest; //Keyword set creation request
-
-const { status, data } = await apiInstance.keywordSetsPost(
-    apiCreateKeywordSetRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **apiCreateKeywordSetRequest** | **ApiCreateKeywordSetRequest**| Keyword set creation request | |
-
-
-### Return type
-
-**ApiKeywordSetResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**201** | Created keyword set |  -  |
-|**400** | Invalid request payload or validation failed |  -  |
-|**409** | Keyword set with name already exists |  -  |
-|**500** | Failed to create keyword set |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **keywordSetsSetIdDelete**
-> ApiKeywordSetDeleteResponse keywordSetsSetIdDelete()
+# **deleteKeywordSet**
+> KeywordSetDeleteResponse deleteKeywordSet()
 
 Delete a keyword set by ID
 
@@ -144,7 +74,7 @@ const apiInstance = new KeywordSetsApi(configuration);
 
 let setId: string; //Keyword Set ID (UUID) (default to undefined)
 
-const { status, data } = await apiInstance.keywordSetsSetIdDelete(
+const { status, data } = await apiInstance.deleteKeywordSet(
     setId
 );
 ```
@@ -158,7 +88,7 @@ const { status, data } = await apiInstance.keywordSetsSetIdDelete(
 
 ### Return type
 
-**ApiKeywordSetDeleteResponse**
+**KeywordSetDeleteResponse**
 
 ### Authorization
 
@@ -173,15 +103,14 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Keyword set deleted successfully |  -  |
+|**200** | Operation successful |  -  |
 |**400** | Bad Request |  -  |
-|**404** | Keyword set not found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **keywordSetsSetIdGet**
-> ApiKeywordSetResponse keywordSetsSetIdGet()
+# **getKeywordSet**
+> KeywordSetResponse getKeywordSet()
 
 Retrieve a specific keyword set by ID including its rules
 
@@ -198,7 +127,7 @@ const apiInstance = new KeywordSetsApi(configuration);
 
 let setId: string; //Keyword set ID (default to undefined)
 
-const { status, data } = await apiInstance.keywordSetsSetIdGet(
+const { status, data } = await apiInstance.getKeywordSet(
     setId
 );
 ```
@@ -212,7 +141,7 @@ const { status, data } = await apiInstance.keywordSetsSetIdGet(
 
 ### Return type
 
-**ApiKeywordSetResponse**
+**KeywordSetResponse**
 
 ### Authorization
 
@@ -227,15 +156,76 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Keyword set with rules |  -  |
-|**400** | Invalid keyword set ID format |  -  |
-|**404** | Keyword set not found |  -  |
-|**500** | Failed to fetch keyword set |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **keywordSetsSetIdPut**
-> ApiKeywordSetResponse keywordSetsSetIdPut(apiUpdateKeywordSetRequest)
+# **listKeywordSets**
+> StreamExtractKeywords200Response listKeywordSets()
+
+Retrieve a list of keyword sets with optional filtering
+
+### Example
+
+```typescript
+import {
+    KeywordSetsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new KeywordSetsApi(configuration);
+
+let limit: number; //Maximum number of results (optional) (default to undefined)
+let offset: number; //Number of results to skip (optional) (default to undefined)
+let includeRules: boolean; //Include rules in response (optional) (default to undefined)
+let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
+
+const { status, data } = await apiInstance.listKeywordSets(
+    limit,
+    offset,
+    includeRules,
+    isEnabled
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **limit** | [**number**] | Maximum number of results | (optional) defaults to undefined|
+| **offset** | [**number**] | Number of results to skip | (optional) defaults to undefined|
+| **includeRules** | [**boolean**] | Include rules in response | (optional) defaults to undefined|
+| **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
+
+
+### Return type
+
+**StreamExtractKeywords200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateKeywordSet**
+> KeywordSetResponse updateKeywordSet()
 
 Update an existing keyword set and its rules
 
@@ -244,19 +234,16 @@ Update an existing keyword set and its rules
 ```typescript
 import {
     KeywordSetsApi,
-    Configuration,
-    ApiUpdateKeywordSetRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
 let setId: string; //Keyword set ID (default to undefined)
-let apiUpdateKeywordSetRequest: ApiUpdateKeywordSetRequest; //Keyword set update request
 
-const { status, data } = await apiInstance.keywordSetsSetIdPut(
-    setId,
-    apiUpdateKeywordSetRequest
+const { status, data } = await apiInstance.updateKeywordSet(
+    setId
 );
 ```
 
@@ -264,13 +251,12 @@ const { status, data } = await apiInstance.keywordSetsSetIdPut(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiUpdateKeywordSetRequest** | **ApiUpdateKeywordSetRequest**| Keyword set update request | |
 | **setId** | [**string**] | Keyword set ID | defaults to undefined|
 
 
 ### Return type
 
-**ApiKeywordSetResponse**
+**KeywordSetResponse**
 
 ### Authorization
 
@@ -278,18 +264,16 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated keyword set |  -  |
-|**400** | Invalid request payload or validation failed |  -  |
-|**404** | Keyword set not found |  -  |
-|**409** | Keyword set name already exists |  -  |
-|**500** | Failed to update keyword set |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

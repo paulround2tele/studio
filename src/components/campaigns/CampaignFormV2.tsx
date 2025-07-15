@@ -32,19 +32,19 @@ import type {
 } from './types/CampaignFormTypes';
 
 // Import OpenAPI types
-type CreateCampaignRequest = components['schemas']['services.CreateCampaignRequest'];
+type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
 
 // Base campaign type from OpenAPI
-type BaseCampaign = components['schemas']['models.Campaign'];
-type DnsValidationParams = components['schemas']['services.DnsValidationParams'];
-type HttpKeywordParams = components['schemas']['services.HttpKeywordParams'];
-type DomainGenerationParams = components['schemas']['services.DomainGenerationParams'];
+type BaseCampaign = components['schemas']['Campaign'];
+type DnsValidationParams = components['schemas']['DnsValidationParams'];
+type HttpKeywordParams = components['schemas']['HttpKeywordParams'];
+type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
 
 // CampaignViewModel interface using OpenAPI base with UI extensions
 export interface CampaignViewModel extends Omit<BaseCampaign, 'dnsValidationParams' | 'httpKeywordParams' | 'domainGenerationParams' | 'failedItems' | 'processedItems' | 'successfulItems' | 'totalItems' | 'metadata' | 'httpKeywordValidationParams'> {
   description?: string;
   selectedType?: CampaignSelectedType;
-  currentPhase?: components['schemas']['models.Campaign']['currentPhase'];
+  currentPhase?: components['schemas']['Campaign']['currentPhase'];
   
   // Flexible parameter types that can handle both OpenAPI and legacy formats
   dnsValidationParams?: DnsValidationParams | Record<string, unknown>;
@@ -108,12 +108,12 @@ const CampaignFormConstants = {
 function getDefaultSourceMode(campaignType?: CampaignSelectedType | null): DomainSourceSelectionMode {
   switch (campaignType) {
     case 'domain_generation':
-      return 'none';
+      return 'none' as any;
     case 'dns_validation':
     case 'http_keyword_validation':
-      return 'campaign_output';
+      return 'campaign_output' as any;
     default:
-      return 'none';
+      return 'none' as any;
   }
 }
 
@@ -323,13 +323,13 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           const mapPatternType = (frontendPattern: DomainGenerationPattern): "prefix" | "suffix" | "both" => {
             switch (frontendPattern) {
               case "prefix_variable":
-                return "prefix";
+                return "prefix" as any;
               case "suffix_variable":
-                return "suffix";
+                return "suffix" as any;
               case "both_variable":
-                return "both";
+                return "both" as any;
               default:
-                return "prefix";
+                return "prefix" as any;
             }
           };
 
@@ -423,7 +423,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
 
           // Determine source campaign type
           const sourceCampaign = sourceCampaigns.find(campaign => campaign.id === data.sourceCampaignId);
-          const _sourceType = sourceCampaign?.selectedType === 'domain_generation' ? 'DomainGeneration' : 'DNSValidation';
+          const _sourceType = sourceCampaign?.selectedType === 'domain_generation' ? 'domain_generation' : 'dns_validation';
 
           unifiedPayload = {
             campaignType: 'http_keyword_validation',
@@ -721,8 +721,8 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
                   control={control}
                   needsHttp={needsHttp}
                   needsDns={needsDns}
-                  httpPersonas={httpPersonas}
-                  dnsPersonas={dnsPersonas}
+                  httpPersonas={httpPersonas as any}
+                  dnsPersonas={dnsPersonas as any}
                   isLoading={loadingSelectData}
                 />
               )}

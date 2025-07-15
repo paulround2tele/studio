@@ -55,6 +55,12 @@ export interface UpdateProxyRequest {
      * @type {string}
      * @memberof UpdateProxyRequest
      */
+    'notes'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateProxyRequest
+     */
     'password'?: string;
     /**
      * 

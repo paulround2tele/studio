@@ -20,7 +20,7 @@ export const ExperimentSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
-  status: z.enum(['draft', 'running', 'paused', 'completed']),
+  status: z.enum(['draft', 'InProgress', 'paused', 'completed']),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   variants: z.array(z.object({
@@ -103,7 +103,7 @@ class ABTestingService {
    */
   getVariant(experimentId: string, userId?: string): VariantAssignment | null {
     const experiment = this.experiments.get(experimentId);
-    if (!experiment || experiment.status !== 'running') {
+    if (!experiment || experiment.status !== 'InProgress') {
       return null;
     }
 
@@ -266,7 +266,7 @@ class ABTestingService {
     
     // Create feature flag for experiment
     featureFlags.override(`experiment_${experiment.id}`, {
-      enabled: experiment.status === 'running',
+      enabled: experiment.status === 'InProgress',
       variants: experiment.variants.map(v => ({
         key: v.id,
         value: v.config || {},

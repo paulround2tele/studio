@@ -14,14 +14,14 @@ import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
 
 interface CampaignProgressMonitorProps {
-  campaign: CampaignViewModel;
+campaign: CampaignViewModel;
   onCampaignUpdate?: (updatedCampaign: Partial<CampaignViewModel>) => void;
   onDomainReceived?: (domain: string) => void;
 }
 
 interface ConnectionHealth {
-  isConnected: boolean;
-  lastHeartbeat: Date | null;
+isConnected: boolean;
+lastHeartbeat: Date | null;
 }
 
 // Memoized status icon component for better performance
@@ -31,7 +31,7 @@ const StatusIcon = memo(({ status }: { status: CampaignStatus }) => {
     case 'completed': return <CheckCircle className="h-4 w-4" />;
     case 'failed': return <AlertCircle className="h-4 w-4" />;
     case 'paused': return <Pause className="h-4 w-4" />;
-    default: return <Clock className="h-4 w-4" />;
+default: return <Clock className="h-4 w-4" />;
   }
 });
 
@@ -68,32 +68,32 @@ const CampaignProgressMonitor = memo(({
   const cleanupRef = useRef<(() => void) | null>(null);
   
   const [connectionHealth, setConnectionHealth] = useState<ConnectionHealth>({
-    isConnected: false,
+isConnected: false,
     lastHeartbeat: null
   });
 
   const [realtimeData, setRealtimeData] = useState({
-    domainsGenerated: 0,
+domainsGenerated: 0,
     currentProgress: campaign.progress || 0,
     currentStatus: normalizeStatus(campaign.status),
-    currentPhase: campaign.currentPhase || 'Idle',
-    lastActivity: new Date(),
+    currentPhase: campaign.currentPhase || 'Pending'  as any,
+lastActivity: new Date(),
     errors: [] as string[]
   });
 
   // Memoize connection condition to prevent unnecessary effect triggers
   const shouldConnect = useMemo(() => {
-    return campaign.currentPhase !== 'Idle' &&
-           campaign.currentPhase !== 'Completed' &&
-           campaign.phaseStatus === 'InProgress';
+    return campaign.currentPhase !== undefined &&
+           campaign.currentPhase !== 'setup' &&
+           campaign.phaseStatus === 'in_progress';
   }, [campaign.currentPhase, campaign.phaseStatus]);
 
   // Memoize campaign key properties to prevent unnecessary effect triggers
   const campaignKey = useMemo(() => ({
-    id: campaign.id,
-    currentPhase: campaign.currentPhase,
-    phaseStatus: campaign.phaseStatus,
-    status: campaign.status
+id: campaign.id,
+    currentPhase: campaign.currentPhase  as any,
+phaseStatus: campaign.phaseStatus  as any,
+status: campaign.status
   }), [campaign.id, campaign.currentPhase, campaign.phaseStatus, campaign.status]);
 
   // Optimized WebSocket message handler with stable dependencies
@@ -107,7 +107,7 @@ const CampaignProgressMonitor = memo(({
         const campaignId = (message as unknown as { campaignId?: string }).campaignId;
         console.log(`[DEBUG] Campaign subscription confirmed for ${campaignId}`);
         toast({
-          title: "Campaign Subscription Active",
+title: "Campaign Subscription Active",
           description: `Now monitoring campaign ${campaignKey.id} for real-time updates.`
         });
         break;
@@ -141,19 +141,19 @@ const CampaignProgressMonitor = memo(({
         if (phaseData && phaseData.phase && phaseData.status) {
           setRealtimeData(prev => ({
             ...prev,
-            currentPhase: phaseData.phase as CampaignPhase,
-            currentStatus: normalizeStatus(phaseData.status),
+            currentPhase: phaseData.phase as CampaignPhase  as any,
+currentStatus: normalizeStatus(phaseData.status),
             currentProgress: phaseData.progress || 100,
             lastActivity: new Date()
           }));
           onCampaignUpdate?.({
-            currentPhase: phaseData.phase as CampaignPhase,
-            phaseStatus: phaseData.status as any,
-            status: phaseData.status === 'Succeeded' ? 'completed' : normalizeStatus(phaseData.status),
+currentPhase: phaseData.phase as CampaignPhase  as any,
+phaseStatus: phaseData.status  as any,
+status: phaseData.status === 'completed' ? 'completed' : normalizeStatus(phaseData.status),
             progress: phaseData.progress || 100
           });
           toast({
-            title: "Phase Completed",
+title: "Phase Completed",
             description: `${phaseData.phase} phase has completed successfully.`
           });
         }
@@ -165,14 +165,14 @@ const CampaignProgressMonitor = memo(({
           setRealtimeData(prev => ({
             ...prev,
             currentProgress: campaignProgressData.progress || prev.currentProgress,
-            currentPhase: (campaignProgressData.phase as CampaignPhase) || prev.currentPhase,
-            currentStatus: campaignProgressData.status ? normalizeStatus(campaignProgressData.status) : prev.currentStatus,
+            currentPhase: (campaignProgressData.phase as CampaignPhase) || prev.currentPhase  as any,
+currentStatus: campaignProgressData.status ? normalizeStatus(campaignProgressData.status) : prev.currentStatus,
             lastActivity: new Date()
           }));
           onCampaignUpdate?.({
-            progress: campaignProgressData.progress,
-            currentPhase: campaignProgressData.phase as CampaignPhase,
-            phaseStatus: campaignProgressData.status as any
+progress: campaignProgressData.progress,
+            currentPhase: campaignProgressData.phase as CampaignPhase  as any,
+phaseStatus: campaignProgressData.status as any
           });
         }
         break;
@@ -186,7 +186,7 @@ const CampaignProgressMonitor = memo(({
             lastActivity: new Date()
           }));
           onCampaignUpdate?.({
-            status: normalizeStatus(statusData.status)
+status: normalizeStatus(statusData.status)
           });
         }
         break;
@@ -196,17 +196,16 @@ const CampaignProgressMonitor = memo(({
         const errorMsg = errorData?.error || (message as unknown as { message?: string }).message || 'Unknown error occurred';
         setRealtimeData(prev => ({
           ...prev,
-          errors: [...prev.errors.slice(-4), String(errorMsg)], // Keep last 5 errors
-          lastActivity: new Date()
+          errors: [...prev.errors.slice(-4), String(errorMsg)], // Keep last 5 errors,
+lastActivity: new Date()
         }));
         toast({
-          title: "Campaign Error",
+title: "Campaign Error",
           description: String(errorMsg),
           variant: "destructive"
         });
         break;
-
-      default:
+default:
         console.log('Unknown WebSocket message type:', message.type);
     }
   }, [campaignKey.id, toast, onDomainReceived, onCampaignUpdate]);
@@ -221,7 +220,7 @@ const CampaignProgressMonitor = memo(({
       cleanupRef.current = websocketService.connect(
         `campaign-${campaignKey.id}`,
         {
-          onMessage: (standardMessage: WebSocketMessage) => {
+onMessage: (standardMessage: WebSocketMessage) => {
             // Convert to legacy format and then back to compatible format
             const legacyMessage = adaptWebSocketMessage(standardMessage);
             const compatibleMessage: WebSocketMessage & { campaignId?: string; message?: string } = {
@@ -234,7 +233,7 @@ const CampaignProgressMonitor = memo(({
             console.error('WebSocket error:', error);
             setConnectionHealth({ isConnected: false, lastHeartbeat: null });
             toast({
-              title: "Connection Error",
+title: "Connection Error",
               description: "Lost connection to real-time updates.",
               variant: "destructive"
             });
@@ -245,7 +244,7 @@ const CampaignProgressMonitor = memo(({
       setConnectionHealth({ isConnected: true, lastHeartbeat: new Date() });
       
       toast({
-        title: "Real-time Monitoring Connected",
+title: "Real-time Monitoring Connected",
         description: "Now receiving live updates for this campaign."
       });
     }
@@ -263,15 +262,15 @@ const CampaignProgressMonitor = memo(({
   // Optimized campaign state sync effect with memoized dependencies
   useEffect(() => {
     console.log(`[CampaignProgressMonitor] Campaign prop changed for ${campaignKey.id}:`, {
-      progress: campaign.progress,
+progress: campaign.progress,
       status: campaign.status,
-      currentPhase: campaign.currentPhase
+      currentPhase: campaign.currentPhase as any
     });
     setRealtimeData(prev => ({
       ...prev,
       currentProgress: campaign.progress || 0,
       currentStatus: normalizeStatus(campaign.status),
-      currentPhase: campaign.currentPhase || 'Idle'
+      currentPhase: campaign.currentPhase || 'Pending' as any
     }));
   }, [campaignKey.id, campaign.progress, campaign.status, campaign.currentPhase]);
 

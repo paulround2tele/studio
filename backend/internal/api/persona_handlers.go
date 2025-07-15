@@ -197,8 +197,19 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 		return
 	}
 
+	// Convert ConfigDetails from interface{} to json.RawMessage
+	var configDetails json.RawMessage
+	if req.ConfigDetails != nil {
+		configBytes, err := json.Marshal(req.ConfigDetails)
+		if err != nil {
+			respondWithStandardError(c, http.StatusBadRequest, "Invalid configuration details format", err)
+			return
+		}
+		configDetails = configBytes
+	}
+	
 	// Parse and validate configuration details
-	parsedConfig, err := parseConfigDetails(req.PersonaType, req.ConfigDetails)
+	parsedConfig, err := parseConfigDetails(req.PersonaType, configDetails)
 	if err != nil {
 		respondWithStandardError(c, http.StatusBadRequest, "Invalid configuration details", err)
 		return
@@ -434,8 +445,17 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 		existingPersona.Description = sql.NullString{String: *req.Description, Valid: *req.Description != ""}
 	}
 	if req.ConfigDetails != nil {
+		// Convert ConfigDetails from interface{} to json.RawMessage
+		var configDetails json.RawMessage
+		configBytes, err := json.Marshal(req.ConfigDetails)
+		if err != nil {
+			respondWithStandardError(c, http.StatusBadRequest, "Invalid configuration details format", err)
+			return
+		}
+		configDetails = configBytes
+		
 		// Parse and validate configuration details
-		parsedConfig, err := parseConfigDetails(existingPersona.PersonaType, req.ConfigDetails)
+		parsedConfig, err := parseConfigDetails(existingPersona.PersonaType, configDetails)
 		if err != nil {
 			respondWithStandardError(c, http.StatusBadRequest, "Invalid configuration details", err)
 			return

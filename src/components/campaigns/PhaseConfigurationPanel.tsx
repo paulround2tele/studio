@@ -630,7 +630,7 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
                                 <SelectItem value={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}>None</SelectItem>
                                 {proxies.filter(p => p.id && p.isEnabled).map(p => (
                                   <SelectItem key={p.id} value={p.id!}>
-                                    {p.host?.string}:{p.port?.int32} ({p.isHealthy ? 'Healthy' : 'Unhealthy'})
+                                    {p.host}:{p.port} ({p.isHealthy ? 'Healthy' : 'Unhealthy'})
                                   </SelectItem>
                                 ))}
                                 {proxies.filter(p => p.id && p.isEnabled).length === 0 && !loadingData && (

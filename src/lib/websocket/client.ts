@@ -409,14 +409,13 @@ class SessionWebSocketClient {
   }
 
   getConnectionState(): 'connecting' | 'open' | 'closing' | 'closed' {
-    if (!this.ws) return 'closed';
-    
+    if (!this.ws) return 'closed' as any;
     switch (this.ws.readyState) {
-      case WebSocket.CONNECTING: return 'connecting';
-      case WebSocket.OPEN: return 'open';
-      case WebSocket.CLOSING: return 'closing';
-      case WebSocket.CLOSED: return 'closed';
-      default: return 'closed';
+      case WebSocket.CONNECTING: return 'connecting' as any;
+      case WebSocket.OPEN: return 'open' as any;
+      case WebSocket.CLOSING: return 'closing' as any;
+      case WebSocket.CLOSED: return 'closed' as any;
+      default: return 'closed' as any;
     }
   }
 

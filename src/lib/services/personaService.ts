@@ -1,27 +1,31 @@
 // src/lib/services/personaService.ts
 // Production-ready Persona Service using OpenAPI types directly
 import { personasApi } from '@/lib/api-client/client';
-import { CookieHandlingModeEnum } from '@/lib/api-client/models/cookie-handling';
-import type { components } from '@/lib/api-client/types';
+import { CookieHandling } from '@/lib/api-client/models/cookie-handling';
 
-// Use OpenAPI types directly
-type Persona = components["schemas"]["api.PersonaResponse"];
-type CreatePersonaRequest = components["schemas"]["api.CreatePersonaRequest"];
-type UpdatePersonaRequest = components["schemas"]["api.UpdatePersonaRequest"];
-type PersonaTestResult = components["schemas"]["api.PersonaTestResultData"];
+// Use proper OpenAPI types from models (not the broken schemas)
+import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
+import type { UpdatePersonaRequest } from '@/lib/api-client/models/update-persona-request';
+
+type Persona = FrontendPersona;
+type PersonaTestResult = FrontendPersonaTestResult;
+
+// Export the types for use in other files
+export type { CreatePersonaRequest, UpdatePersonaRequest };
 
 // Import unified API response wrapper
 import type { ApiResponse } from '@/lib/types';
+import type { FrontendPersona, FrontendPersonaTestResult } from '@/lib/types/frontend-safe-types';
 
 // Cookie mode conversion utility
-const convertCookieMode = (mode: string): CookieHandlingModeEnum => {
+const convertCookieMode = (mode: string): CookieHandling => {
   switch (mode) {
-    case 'preserve': return CookieHandlingModeEnum.Preserve;
-    case 'ignore': return CookieHandlingModeEnum.Ignore;
-    case 'custom': return CookieHandlingModeEnum.Custom;
-    case 'clear': return CookieHandlingModeEnum.Clear;
-    case 'session_only': return CookieHandlingModeEnum.SessionOnly;
-    default: return CookieHandlingModeEnum.Preserve;
+    case 'preserve': return 'preserve' as any;
+    case 'ignore': return 'ignore' as any;
+    case 'custom': return 'custom' as any;
+    case 'clear': return 'clear' as any;
+    case 'session_only': return 'session_only' as any;
+    default: return 'preserve' as any;
   }
 };
 
@@ -44,12 +48,12 @@ const convertPersonaPayload = (payload: any): any => {
 };
 
 // Import additional OpenAPI persona types
-export type PersonaListResponse = components["schemas"]["api.PersonaResponse"];
+export type PersonaListResponse = FrontendPersona;
 
 export async function createPersona(payload: CreatePersonaRequest): Promise<ApiResponse<Persona>> {
   try {
     const convertedPayload = convertPersonaPayload(payload);
-    const response = await personasApi.personasPost(convertedPayload);
+    const response = await personasApi.createPersona({ data: convertedPayload });
     // Axios response structure: response.data = API wrapper object
     const apiResponse = 'data' in response ? response.data : response;
     
@@ -83,7 +87,7 @@ export async function listPersonas(options?: {
   try {
     // Request all personas with high limit to avoid pagination truncation
     // Database has 39 total personas (7 DNS + 32 HTTP), so 100 is safe
-    const response = await personasApi.personasGet(
+    const response = await personasApi.listAllPersonas(
       options?.limit || 100,
       options?.offset,
       options?.isEnabled,
@@ -92,13 +96,13 @@ export async function listPersonas(options?: {
     // Axios response structure: response.data = PersonaListResponse
     const personaListResponse = 'data' in response ? response.data : response;
     
-    // Extract personas array from PersonaListResponse.data
-    const personasArray = (personaListResponse?.data || []) as Persona[];
+    // The response is directly an array of ApiPersonaResponse
+    const personasArray = (personaListResponse || []) as Persona[];
     
     return {
       status: 'success',
       data: personasArray,
-      message: personaListResponse?.message || 'Personas retrieved successfully'
+      message: 'Personas retrieved successfully'
     };
   } catch (error) {
     return {
@@ -111,7 +115,7 @@ export async function listPersonas(options?: {
 
 export async function getPersonaById(personaId: string, _personaType?: 'http' | 'dns'): Promise<ApiResponse<Persona>> {
   try {
-    const response = await personasApi.getPersonaById(personaId);
+    const response = await personasApi.getPersonaByID(personaId);
     const result = 'data' in response ? response.data : response;
     return {
       status: 'success',
@@ -129,7 +133,7 @@ export async function getPersonaById(personaId: string, _personaType?: 'http' | 
 export async function updatePersona(personaId: string, payload: UpdatePersonaRequest, _personaType?: 'http' | 'dns'): Promise<ApiResponse<Persona>> {
   try {
     const convertedPayload = convertPersonaPayload(payload);
-    const response = await personasApi.updatePersona(personaId, convertedPayload);
+    const response = await personasApi.updatePersona(personaId, { data: convertedPayload });
     // Axios response structure: response.data = API wrapper object
     const apiResponse = 'data' in response ? response.data : response;
     

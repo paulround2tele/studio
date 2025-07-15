@@ -32,9 +32,9 @@ import useCampaignOperations from '@/hooks/useCampaignOperations';
 import { handlePhaseTransition } from '@/lib/services/campaignDataService';
 
 // Types
-import type { ModelsCampaign } from '@/lib/api-client/models';
+import type { Campaign } from '@/lib/api-client/models';
 
-type CampaignType = ModelsCampaign['campaignType'];
+type CampaignType = Campaign['campaignType'];
 
 export default function RefactoredCampaignDetailsPage() {
   const params = useParams();
@@ -104,7 +104,7 @@ export default function RefactoredCampaignDetailsPage() {
   // 🔧 CRITICAL FIX: WebSocket connection for post-completion activities (DNS validation)
   const webSocketConditions = useMemo(() => {
     console.log(`🔍 [DEBUG] WebSocket conditions check:`, {
-      campaign: campaign?.id,
+campaign: campaign?.id,
       campaignType: campaign?.campaignType,
       status: campaign?.status,
       progress: campaign?.progress
@@ -113,7 +113,7 @@ export default function RefactoredCampaignDetailsPage() {
     if (!campaign) {
       console.log(`⏳ [DEBUG] WebSocket WAITING - Campaign data not loaded yet`);
       return {
-        shouldConnect: false,
+shouldConnect: false,
         campaignId: undefined,
         campaignType: undefined,
         status: undefined,
@@ -127,7 +127,7 @@ export default function RefactoredCampaignDetailsPage() {
     if (!campaignType || !allowedCampaignTypes.includes(campaignType)) {
       console.log(`❌ [DEBUG] WebSocket DISCONNECTED - Campaign type not supported for streaming:`, campaignType);
       return {
-        shouldConnect: false,
+shouldConnect: false,
         campaignId: campaign.id,
         campaignType: campaignType,
         status: campaign.status,
@@ -136,19 +136,16 @@ export default function RefactoredCampaignDetailsPage() {
     }
 
     // Active statuses that definitely need WebSocket connection
-    const isActiveStatus = ['pending', 'queued', 'running'].includes(campaign.status || '');
+    const isActiveStatus = ['Pending', 'queued', 'InProgress'].includes(campaign.status || '');
     
     // For domain generation campaigns, also connect for "completed" status to receive DNS validation updates
     const isCompletedDomainGeneration = campaign.status === 'completed';
     
     // CRITICAL: Also connect when DNS validation is active (currentPhase = dns_validation)
-    const isDNSValidationActive = campaign.currentPhase === 'dns_validation' ||
-                                  campaign.currentPhase === 'DNSValidation';
+    const isDNSValidationActive = campaign.currentPhase === 'dns_validation';
     
     // FIXED: Check if HTTP validation phase is active
-    const isHTTPValidationActive = campaign.currentPhase === 'http_validation' ||
-                                   campaign.currentPhase === 'HTTPValidation' ||
-                                   campaign.currentPhase === 'http_keyword_validation';
+    const isHTTPValidationActive = campaign.currentPhase === 'http_validation';
     
     // Connect if active OR if it's a completed domain generation campaign (for DNS validation)
     // OR if DNS validation phase is active OR if HTTP validation phase is active
@@ -159,7 +156,7 @@ export default function RefactoredCampaignDetailsPage() {
       isCompletedDomainGeneration,
       isDNSValidationActive,
       isHTTPValidationActive,
-      currentPhase: campaign.currentPhase,
+      currentPhase: campaign.currentPhase  as any,
       shouldConnect
     });
       
@@ -169,7 +166,7 @@ export default function RefactoredCampaignDetailsPage() {
       campaignType: campaign?.campaignType,
       status: campaign?.status,
       progress: campaign?.progress || 0,
-      currentPhase: campaign?.currentPhase
+      currentPhase: campaign?.currentPhase as any
     };
   }, [campaign]);
 
@@ -192,10 +189,10 @@ export default function RefactoredCampaignDetailsPage() {
     const connectAndSubscribe = () => {
       try {
         const cleanup = websocketService.connect(`campaign-${campaignId}`, {
-          onMessage: (message: any) => {
+onMessage: (message: any) => {
             // Route messages based on type
             console.log(`🔍 [WEBSOCKET_DEBUG] Message received:`, {
-              type: message.type,
+type: message.type,
               campaignId: message.campaignId,
               data: message.data,
               phase: message.data?.phase,
@@ -221,12 +218,12 @@ export default function RefactoredCampaignDetailsPage() {
               case 'domain.generated':
                 console.log(`🔵 [DOMAIN_GENERATED_DEBUG] Received domain generated message:`, message.data);
                 updateFromWebSocket({
-                  type: 'domain_generated',
+type: 'domain_generated',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
                   campaignId: message.campaignId || campaignId,
-                  sequenceNumber: message.sequenceNumber || Date.now(),
-                });
+                  sequenceNumber: message.sequenceNumber || Date.now()
+});
                 break;
                 
               case 'campaign_progress':
@@ -235,25 +232,25 @@ export default function RefactoredCampaignDetailsPage() {
                 console.log(`🟢 [CAMPAIGN_PROGRESS_DEBUG] Received campaign progress message:`, message.data);
                 // CRITICAL FIX: Forward phase and status from message level to store
                 updateFromWebSocket({
-                  type: 'campaign_progress',
+type: 'campaign_progress',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
                   campaignId: message.campaignId || campaignId,
-                  // Forward phase and status from message level
-                  phase: (message as any).phase,
-                  status: (message as any).status,
-                });
+                  // Forward phase and status from message level,
+phase: (message as any).phase,
+                  status: (message as any).status
+});
                 break;
                 
               case 'validation_progress':
                 // CRITICAL: Handle DNS/HTTP validation progress messages
                 console.log(`🧬 [VALIDATION_PROGRESS_DEBUG] Validation progress message:`, message);
                 updateFromWebSocket({
-                  type: 'validation_progress',
+type: 'validation_progress',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
-                  campaignId: message.campaignId || campaignId,
-                });
+                  campaignId: message.campaignId || campaignId
+});
                 break;
                 
               case 'campaign_status':
@@ -263,51 +260,50 @@ export default function RefactoredCampaignDetailsPage() {
               case 'campaign_phase_complete':
                 console.log(`🟣 [CAMPAIGN_STATUS_DEBUG] Received campaign status message:`, message.data);
                 updateFromWebSocket({
-                  type: 'campaign_status',
+type: 'campaign_status',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
-                  campaignId: message.campaignId || campaignId,
-                });
+                  campaignId: message.campaignId || campaignId
+});
                 break;
                 
               case 'dns.validation.result':
                 console.log(`🔴 [DNS_VALIDATION_RESULT_DEBUG] Received DNS validation result:`, message.data);
                 updateFromWebSocket({
-                  type: 'dns_validation_result',
+type: 'dns_validation_result',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
-                  campaignId: message.campaignId || campaignId,
-                });
+                  campaignId: message.campaignId || campaignId
+});
                 break;
                 
               case 'http.validation.result':
                 console.log(`🟠 [HTTP_VALIDATION_RESULT_DEBUG] Received HTTP validation result:`, message.data);
                 updateFromWebSocket({
-                  type: 'http_validation_result',
+type: 'http_validation_result',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
-                  campaignId: message.campaignId || campaignId,
-                });
+                  campaignId: message.campaignId || campaignId
+});
                 break;
                 
               case 'phase_transition':
                 console.log(`🔄 [PHASE_TRANSITION] Phase transition detected:`, message.data);
                 // Handle phase transition with real-time cache invalidation
                 handlePhaseTransition({
-                  type: 'phase_transition',
+type: 'phase_transition',
                   timestamp: message.timestamp || new Date().toISOString(),
                   data: message.data
                 });
                 // Update local campaign state immediately
                 updateFromWebSocket({
-                  type: 'phase_transition',
+type: 'phase_transition',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
-                  campaignId: message.campaignId || campaignId,
-                });
+                  campaignId: message.campaignId || campaignId
+});
                 break;
-                
-              default:
+default:
                 console.log(`📝 [WebSocket] Unhandled message type: ${message.type}`);
             }
           },

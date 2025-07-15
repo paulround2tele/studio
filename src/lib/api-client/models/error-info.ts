@@ -28,7 +28,7 @@ export interface ErrorInfo {
      * @type {string}
      * @memberof ErrorInfo
      */
-    'code'?: string;
+    'code'?: ErrorInfoCodeEnum;
     /**
      * 
      * @type {Array<ErrorDetail>}
@@ -54,4 +54,25 @@ export interface ErrorInfo {
      */
     'timestamp'?: string;
 }
+
+export const ErrorInfoCodeEnum = {
+    BadRequest: 'BAD_REQUEST',
+    Unauthorized: 'UNAUTHORIZED',
+    Forbidden: 'FORBIDDEN',
+    NotFound: 'NOT_FOUND',
+    Conflict: 'CONFLICT',
+    ValidationError: 'VALIDATION_ERROR',
+    RateLimitExceeded: 'RATE_LIMIT_EXCEEDED',
+    RequestTimeout: 'REQUEST_TIMEOUT',
+    InternalServerError: 'INTERNAL_SERVER_ERROR',
+    DatabaseError: 'DATABASE_ERROR',
+    ServiceUnavailable: 'SERVICE_UNAVAILABLE',
+    GatewayTimeout: 'GATEWAY_TIMEOUT',
+    CampaignInProgress: 'CAMPAIGN_IN_PROGRESS',
+    QuotaExceeded: 'QUOTA_EXCEEDED',
+    InvalidState: 'INVALID_STATE'
+} as const;
+
+export type ErrorInfoCodeEnum = typeof ErrorInfoCodeEnum[keyof typeof ErrorInfoCodeEnum];
+
 

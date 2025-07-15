@@ -6,16 +6,16 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **allowedStatusCodes** | **Array&lt;number&gt;** |  | [optional] [default to undefined]
-**cookieHandling** | **object** |  | [optional] [default to undefined]
+**cookieHandling** | [**HTTPCookieHandling**](HTTPCookieHandling.md) |  | [optional] [default to undefined]
 **followRedirects** | **boolean** |  | [optional] [default to undefined]
 **headerOrder** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 **headers** | **{ [key: string]: string; }** |  | [optional] [default to undefined]
-**http2Settings** | **object** |  | [optional] [default to undefined]
+**http2Settings** | [**HTTP2Settings**](HTTP2Settings.md) |  | [optional] [default to undefined]
 **notes** | **string** |  | [optional] [default to undefined]
 **rateLimitBurst** | **number** |  | [optional] [default to undefined]
 **rateLimitDps** | **number** |  | [optional] [default to undefined]
 **requestTimeoutSeconds** | **number** |  | [optional] [default to undefined]
-**tlsClientHello** | **object** |  | [optional] [default to undefined]
+**tlsClientHello** | [**HTTPTLSClientHello**](HTTPTLSClientHello.md) |  | [optional] [default to undefined]
 **userAgent** | **string** |  | [default to undefined]
 
 ## Example

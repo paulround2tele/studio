@@ -7,8 +7,8 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/fntelecomllc/studio/backend/internal/openapi/config"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/fntelecomllc/studio/backend/internal/openapi/config"
 )
 
 // SchemaGenerator generates OpenAPI schemas from Go types
@@ -69,7 +69,9 @@ func (sg *SchemaGenerator) GenerateSchemas(spec *openapi3.T) error {
 		}
 
 		if schema != nil {
-			spec.Components.Schemas[typeName] = schema
+			// Clean type name of package prefixes before storing schema
+			cleanTypeName := sg.cleanTypeName(typeName)
+			spec.Components.Schemas[cleanTypeName] = schema
 		}
 	}
 
@@ -107,9 +109,11 @@ func (sg *SchemaGenerator) generateBusinessEntitySchemas(spec *openapi3.T) error
 		}
 
 		if schema != nil {
-			spec.Components.Schemas[entity.Name] = schema
+			// Clean entity name of package prefixes before storing schema
+			cleanEntityName := sg.cleanTypeName(entity.Name)
+			spec.Components.Schemas[cleanEntityName] = schema
 			if sg.config.VerboseLogging {
-				fmt.Printf("Generated schema for business entity: %s\n", entity.Name)
+				fmt.Printf("Generated schema for business entity: %s (clean name: %s)\n", entity.Name, cleanEntityName)
 			}
 		}
 	}
@@ -363,7 +367,20 @@ func (sg *SchemaGenerator) convertIdentToSchemaAdvanced(ident *ast.Ident) (*open
 			}, nil
 		}
 		// Check if this is a reference to another type
-		if _, exists := sg.typeRegistry[ident.Name]; exists {
+		if typeSpec, exists := sg.typeRegistry[ident.Name]; exists {
+			// Check if this is a string-based enum
+			if sg.isStringEnum(typeSpec, ident.Name) {
+				enumValues := sg.extractEnumValues(ident.Name)
+				schema := &openapi3.SchemaRef{
+					Value: &openapi3.Schema{
+						Type: &openapi3.Types{"string"},
+					},
+				}
+				if len(enumValues) > 0 {
+					sg.applyEnumConstraints(schema, enumValues)
+				}
+				return schema, nil
+			}
 			return &openapi3.SchemaRef{
 				Ref: "#/components/schemas/" + ident.Name,
 			}, nil
@@ -477,6 +494,23 @@ func (sg *SchemaGenerator) extractFieldInfoFromEntity(field *ast.Field, defaultN
 		}
 	}
 
+	// Check if field type is a string enum type
+	if field.Type != nil {
+		if ident, ok := field.Type.(*ast.Ident); ok && ident.Name != "" {
+			if sg.config.VerboseLogging && entity.Name == "Campaign" {
+				fmt.Printf("Checking field %s.%s with type %s\n", entity.Name, fieldName, ident.Name)
+			}
+			if sg.isStringEnumByName(ident.Name) {
+				enumValues = sg.extractEnumValues(ident.Name)
+				if sg.config.VerboseLogging && len(enumValues) > 0 {
+					fmt.Printf("Applied enum constraints to field %s.%s: %v\n", entity.Name, fieldName, enumValues)
+				}
+			} else if sg.config.VerboseLogging && entity.Name == "Campaign" {
+				fmt.Printf("Type %s is not detected as string enum for field %s.%s\n", ident.Name, entity.Name, fieldName)
+			}
+		}
+	}
+
 	// Check for validation tags that might indicate required fields and enum values
 	if field.Tag != nil {
 		tag := strings.Trim(field.Tag.Value, "`")
@@ -488,7 +522,11 @@ func (sg *SchemaGenerator) extractFieldInfoFromEntity(field *ast.Field, defaultN
 				isRequired = true
 			}
 			if strings.Contains(validateTag, "oneof=") {
-				enumValues = sg.extractOneOfValues(validateTag)
+				validationEnumValues := sg.extractOneOfValues(validateTag)
+				// Prefer field type enum values over validation tag enum values
+				if len(enumValues) == 0 && len(validationEnumValues) > 0 {
+					enumValues = validationEnumValues
+				}
 			}
 		}
 
@@ -1002,4 +1040,87 @@ func (sg *SchemaGenerator) applyEnumConstraints(fieldSchema *openapi3.SchemaRef,
 	if sg.config.VerboseLogging {
 		fmt.Printf("Applied enum constraints to field: %v\n", enumValues)
 	}
+}
+
+// cleanTypeName removes package prefixes from type names to create clean schema names
+func (sg *SchemaGenerator) cleanTypeName(typeName string) string {
+	// Strip package prefixes if present to match schema naming
+	cleanName := strings.TrimPrefix(typeName, "models.")
+	cleanName = strings.TrimPrefix(cleanName, "config.")
+	cleanName = strings.TrimPrefix(cleanName, "services.")
+	cleanName = strings.TrimPrefix(cleanName, "api.")
+	return cleanName
+}
+
+// isStringEnum checks if a type is a string-based enum
+func (sg *SchemaGenerator) isStringEnum(typeSpec *ast.TypeSpec, typeName string) bool {
+	// Check if the underlying type is a string
+	if ident, ok := typeSpec.Type.(*ast.Ident); ok {
+		return ident.Name == "string"
+	}
+	return false
+}
+
+// isStringEnumByName checks if a type name is a string-based enum by looking up its TypeSpec
+func (sg *SchemaGenerator) isStringEnumByName(typeName string) bool {
+	if sg.config.VerboseLogging && (typeName == "CampaignTypeEnum" || typeName == "CampaignStatusEnum") {
+		fmt.Printf("Looking for enum type %s in %d packages\n", typeName, len(sg.packages))
+	}
+	
+	// Look up the type spec in our parsed files
+	for pkgName, pkg := range sg.packages {
+		for fileName, file := range pkg.Files {
+			for _, decl := range file.Decls {
+				if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
+					for _, spec := range genDecl.Specs {
+						if typeSpec, ok := spec.(*ast.TypeSpec); ok && typeSpec.Name.Name == typeName {
+							if sg.config.VerboseLogging && (typeName == "CampaignTypeEnum" || typeName == "CampaignStatusEnum") {
+								fmt.Printf("Found enum type %s in package %s, file %s\n", typeName, pkgName, fileName)
+							}
+							return sg.isStringEnum(typeSpec, typeName)
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	if sg.config.VerboseLogging && (typeName == "CampaignTypeEnum" || typeName == "CampaignStatusEnum") {
+		fmt.Printf("Enum type %s not found in any package\n", typeName)
+	}
+	return false
+}
+
+// extractEnumValues extracts enum values from Go const declarations
+func (sg *SchemaGenerator) extractEnumValues(typeName string) []string {
+	var enumValues []string
+	
+	// Look through all packages for const declarations of this type
+	for _, pkg := range sg.packages {
+		for _, file := range pkg.Files {
+			for _, decl := range file.Decls {
+				if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.CONST {
+					for _, spec := range genDecl.Specs {
+						if valueSpec, ok := spec.(*ast.ValueSpec); ok {
+							// Check if this const is of our enum type
+							if valueSpec.Type != nil {
+								if ident, ok := valueSpec.Type.(*ast.Ident); ok && ident.Name == typeName {
+									// Extract the string value
+									for _, value := range valueSpec.Values {
+										if basicLit, ok := value.(*ast.BasicLit); ok && basicLit.Kind == token.STRING {
+											// Remove quotes from string literal
+											enumValue := strings.Trim(basicLit.Value, `"`)
+											enumValues = append(enumValues, enumValue)
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	return enumValues
 }

@@ -49,7 +49,7 @@ export interface CreateDomainGenerationCampaignRequest {
      * @type {string}
      * @memberof CreateDomainGenerationCampaignRequest
      */
-    'patternType': string;
+    'patternType': CreateDomainGenerationCampaignRequestPatternTypeEnum;
     /**
      * 
      * @type {string}
@@ -69,4 +69,13 @@ export interface CreateDomainGenerationCampaignRequest {
      */
     'variableLength': number;
 }
+
+export const CreateDomainGenerationCampaignRequestPatternTypeEnum = {
+    Prefix: 'prefix',
+    Suffix: 'suffix',
+    Both: 'both'
+} as const;
+
+export type CreateDomainGenerationCampaignRequestPatternTypeEnum = typeof CreateDomainGenerationCampaignRequestPatternTypeEnum[keyof typeof CreateDomainGenerationCampaignRequestPatternTypeEnum];
+
 

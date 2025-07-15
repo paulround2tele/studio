@@ -76,10 +76,10 @@ export interface Persona {
     'personaType': PersonaPersonaTypeEnum;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof Persona
      */
-    'status'?: object;
+    'status'?: PersonaStatusEnum;
     /**
      * 
      * @type {Array<string>}
@@ -100,5 +100,13 @@ export const PersonaPersonaTypeEnum = {
 } as const;
 
 export type PersonaPersonaTypeEnum = typeof PersonaPersonaTypeEnum[keyof typeof PersonaPersonaTypeEnum];
+export const PersonaStatusEnum = {
+    Active: 'Active',
+    Disabled: 'Disabled',
+    Testing: 'Testing',
+    Failed: 'Failed'
+} as const;
+
+export type PersonaStatusEnum = typeof PersonaStatusEnum[keyof typeof PersonaStatusEnum];
 
 

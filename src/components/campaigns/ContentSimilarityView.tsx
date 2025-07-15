@@ -13,8 +13,8 @@ import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';
 
-type ExtractedContentItem = components['schemas']['models.ExtractedContentItem'];
-type LeadItem = components['schemas']['models.LeadItem'];
+type ExtractedContentItem = components['schemas']['ExtractedContentItem'];
+type LeadItem = components['schemas']['LeadItem'];
 
 interface ContentSimilarityViewProps {
   campaign: CampaignViewModel;
@@ -22,10 +22,10 @@ interface ContentSimilarityViewProps {
 }
 
 const getSimilarityBadgeVariant = (score: number) => {
-  if (score > 75) return "default"; 
-  if (score > 50) return "secondary";
-  if (score > 25) return "outline"; 
-  return "destructive"; 
+  if (score > 75) return "default" as any;
+  if (score > 50) return "secondary" as any;
+  if (score > 25) return "outline" as any;
+  return "destructive" as any;
 };
 
 export default function ContentSimilarityView({ campaign, onAnalysisComplete }: ContentSimilarityViewProps) {
@@ -80,7 +80,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
   };
 
 
-  if (extractedContent.length === 0 && leads.length === 0 && campaign.currentPhase !== 'LeadGeneration' && campaign.phaseStatus !== 'InProgress') {
+  if (extractedContent.length === 0 && leads.length === 0 && campaign.currentPhase !== 'analysis' && campaign.phaseStatus !== 'in_progress') {
     return (
       <Card className="shadow-md mt-6">
         <CardHeader>
@@ -95,7 +95,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
       </Card>
     );
   }
-   if (extractedContent.length === 0 && leads.length === 0 && campaign.currentPhase === 'LeadGeneration' && campaign.phaseStatus === 'InProgress') {
+   if (extractedContent.length === 0 && leads.length === 0 && campaign.currentPhase === 'analysis' && campaign.phaseStatus === 'in_progress') {
      return (
       <Card className="shadow-md mt-6">
         <CardHeader>

@@ -1,12 +1,11 @@
 # CookieHandling
 
-Cookie handling configuration
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**mode** | **string** | Cookie handling mode | [optional] [default to undefined]
+**mode** | **string** |  | [optional] [default to undefined]
 
 ## Example
 

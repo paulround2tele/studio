@@ -24,7 +24,7 @@ describe('Campaign Transformers', () => {
         id: '12345',
         name: 'Test Campaign',
         campaignType: 'dns_validation' as any,
-        status: 'running' as any,
+        status: 'InProgress' as any,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
         startedAt: '2024-01-01T10:00:00Z',
@@ -48,7 +48,7 @@ describe('Campaign Transformers', () => {
         id: '12345',
         name: 'Test Campaign',
         campaignType: 'dns_validation',
-        status: 'running',
+        status: 'InProgress',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
         startedAt: '2024-01-01T10:00:00Z',
@@ -159,7 +159,7 @@ describe('Campaign Transformers', () => {
           id: '1',
           name: 'Campaign 1',
           campaignType: 'dns_validation',
-          status: 'running'
+          status: 'InProgress'
         },
         {
           id: '2',
@@ -289,7 +289,7 @@ describe('Campaign Transformers', () => {
         processedItems: BigInt(500) as any,
         progressPercentage: 50,
         startedAt: '2024-01-01T10:00:00Z' as any,
-        status: 'running',
+        status: 'InProgress',
         successfulItems: BigInt(450) as any,
         totalItems: BigInt(1000) as any,
         updatedAt: '2024-01-02T00:00:00Z' as any,

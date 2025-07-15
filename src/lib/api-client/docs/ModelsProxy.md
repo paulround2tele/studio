@@ -1,5 +1,6 @@
 # ModelsProxy
 
+Proxy server connection and authentication details
 
 ## Properties
 

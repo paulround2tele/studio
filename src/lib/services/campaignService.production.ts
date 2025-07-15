@@ -3,22 +3,23 @@
 
 import { campaignsApi } from '@/lib/api-client/client';
 import type { components } from '@/lib/api-client/types';
-import type { ServicesUpdateCampaignRequest } from '@/lib/api-client';
+import type { UpdateCampaignRequest } from '@/lib/api-client';
+import type { FrontendCampaign } from '@/lib/types/frontend-safe-types';
 
 // Use OpenAPI types directly
-export type Campaign = components['schemas']['models.Campaign'];
-export type CampaignCreationPayload = components['schemas']['services.CreateCampaignRequest'];
+export type Campaign = components['schemas']['Campaign'];
+export type CampaignCreationPayload = components['schemas']['CreateCampaignRequest'];
 
-// Service layer response wrappers using OpenAPI types as base
+// Service layer response wrappers using frontend-safe types
 export interface CampaignsListResponse {
   status: 'success' | 'error';
-  data: Campaign[];
+  data: FrontendCampaign[];
   message?: string;
 }
 
 export interface CampaignDetailResponse {
   status: 'success' | 'error';
-  data?: Campaign;
+  data?: FrontendCampaign;
   message?: string;
 }
 
@@ -48,9 +49,9 @@ export interface CampaignResultsResponse<T = unknown> {
 }
 
 // Import additional OpenAPI result types for direct use
-export type GeneratedDomainsResponse = components['schemas']['services.GeneratedDomainsResponse'];
-export type DNSValidationResultsResponse = components['schemas']['services.DNSValidationResultsResponse'];
-export type HTTPKeywordResultsResponse = components['schemas']['services.HTTPKeywordResultsResponse'];
+export type GeneratedDomainsResponse = components['schemas']['GeneratedDomainsResponse'];
+export type DNSValidationResultsResponse = components['schemas']['DNSValidationResultsResponse'];
+export type HTTPKeywordResultsResponse = components['schemas']['HTTPKeywordResultsResponse'];
 
 class CampaignService {
   private static instance: CampaignService;
@@ -156,7 +157,7 @@ class CampaignService {
     try {
       console.log('[CampaignService] Creating campaign with payload:', payload);
       
-      const response = await campaignsApi.createCampaign(payload);
+      const response = await campaignsApi.createCampaign({ data: payload });
       const result = 'data' in response ? response.data : response;
       
       console.log('[CampaignService] Campaign created successfully:', result);
@@ -175,11 +176,11 @@ class CampaignService {
   }
 
   // Campaign Update Operation using auto-generated OpenAPI client
-  async updateCampaign(campaignId: string, updatePayload: ServicesUpdateCampaignRequest): Promise<CampaignServiceResponse> {
+  async updateCampaign(campaignId: string, updatePayload: UpdateCampaignRequest): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Updating campaign:', campaignId, updatePayload);
       
-      const response = await campaignsApi.updateCampaign(campaignId, updatePayload);
+      const response = await campaignsApi.updateCampaign(campaignId, { data: updatePayload });
       const result = 'data' in response ? response.data : response;
       
       return {
@@ -309,13 +310,7 @@ class CampaignService {
   async validateDNSForCampaign(campaignId: string): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Triggering DNS validation for campaign:', campaignId);
-      const response = await campaignsApi.validateDNSForCampaign(campaignId, {
-        queryTimeoutSeconds: 10,
-        maxDomainsPerRequest: 100,
-        rateLimitDps: 10,
-        rateLimitBurst: 20,
-        useSystemResolvers: true
-      });
+      const response = await campaignsApi.validateDNSForCampaign(campaignId);
       const result = 'data' in response ? response.data : response;
       
       return {
@@ -396,8 +391,16 @@ class CampaignService {
     try {
       console.log('[CampaignService] Getting HTTP keyword results for campaign:', campaignId, options);
       // TODO: These results methods need to be implemented with correct API client
-      // const response = await campaignsApi.campaignsCampaignIdResultsHttpKeywordGet(campaignId, options?.limit, options?.cursor);
-      throw new Error('getHttpKeywordResults method needs to be implemented with correct API client');
+      const response = await campaignsApi.getHTTPKeywordResults(campaignId, options?.limit, options?.cursor);
+      
+      // Extract data from AxiosResponse
+      const result = 'data' in response ? response.data : response;
+      
+      return {
+        status: 'success',
+        data: Array.isArray(result) ? result : (result as any)?.results || [],
+        message: 'HTTP keyword results retrieved successfully'
+      };
     } catch (error) {
       console.error('[CampaignService] Failed to get HTTP keyword results:', error);
       return {

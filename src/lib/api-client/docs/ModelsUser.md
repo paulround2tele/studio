@@ -1,5 +1,6 @@
 # ModelsUser
 
+User account information
 
 ## Properties
 

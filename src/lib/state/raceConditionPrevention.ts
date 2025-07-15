@@ -110,7 +110,7 @@ class RaceConditionPrevention {
 
     const features = getFeatureFlags();
     if (features.enableDebugMode) {
-      console.log(`[RaceCondition] Completed request:`, requestId, success ? 'success' : 'failed');
+      console.log(`[RaceCondition] Completed request:`, requestId, success ? 'success' : 'Failed');
     }
   }
 

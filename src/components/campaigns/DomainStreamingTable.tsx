@@ -31,7 +31,7 @@ import {
 import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 
-type GeneratedDomain = components['schemas']['models.GeneratedDomain'];
+type GeneratedDomain = components['schemas']['GeneratedDomain'];
 import { cn } from '@/lib/utils';
 
 // Table filter interface
@@ -82,9 +82,9 @@ const StatusBadge = React.memo<{ status: DomainActivityStatus; score?: number }>
       case 'generating': return { icon: Dna, variant: 'secondary' as const, text: 'Generating', className: 'bg-blue-500 text-white hover:bg-blue-600' };
       case 'scanned': return { icon: Search, variant: 'default' as const, text: 'Scanned', className: 'bg-emerald-500 text-white hover:bg-emerald-600' };
       case 'not_validated': return { icon: XCircle, variant: 'destructive' as const, text: 'Not Validated', className: 'bg-red-500 text-white hover:bg-red-600' };
-      case 'failed': return { icon: AlertCircle, variant: 'destructive' as const, text: 'Failed', className: 'bg-red-600 text-white hover:bg-red-700' };
+      case 'Failed': return { icon: AlertCircle, variant: 'destructive' as const, text: 'Failed', className: 'bg-red-600 text-white hover:bg-red-700' };
       case 'no_leads': return { icon: ShieldQuestion, variant: 'secondary' as const, text: 'No Leads', className: 'bg-gray-500 text-white hover:bg-gray-600' };
-      case 'pending': return { icon: Clock, variant: 'secondary' as const, text: 'Pending', className: 'bg-yellow-500 text-black hover:bg-yellow-600' };
+      case 'Pending': return { icon: Clock, variant: 'secondary' as const, text: 'Pending', className: 'bg-yellow-500 text-black hover:bg-yellow-600' };
       case 'n_a': return { icon: HelpCircle, variant: 'outline' as const, text: 'N/A', className: 'bg-gray-200 text-gray-600 border-gray-300' };
       default: return { icon: HelpCircle, variant: 'outline' as const, text: 'Unknown', className: 'bg-gray-200 text-gray-600 border-gray-300' };
     }
@@ -140,7 +140,7 @@ const DomainTableRow = React.memo<{
             <Percent className="mr-1 h-3 w-3" /> {domain.leadScore}%
           </Badge>
         ) : (
-          domain.leadScanStatus !== 'pending' && domain.leadScanStatus !== 'n_a' ? 
+          domain.leadScanStatus !== 'Pending' && domain.leadScanStatus !== 'n_a' ? 
             <span className="text-xs text-muted-foreground">-</span> : null
         )}
       </TableCell>
@@ -167,36 +167,34 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
 
   // Helper function to convert backend status to frontend DomainActivityStatus
   const convertBackendStatus = useCallback((backendStatus?: string): DomainActivityStatus => {
-    if (!backendStatus) return 'n_a';
-    
+    if (!backendStatus) return 'n_a' as any;
     switch (backendStatus.toLowerCase()) {
       case 'ok':
       case 'valid':
       case 'resolved':
       case 'validated':
       case 'succeeded':
-        return 'validated';
+        return 'validated' as any;
       case 'error':
       case 'invalid':
       case 'unresolved':
-      case 'failed':
-        return 'failed';
-      case 'pending':
+      case 'Failed':
+        return 'Failed' as any;
+      case 'Pending':
       case 'processing':
       case 'queued':
-        return 'pending';
+        return 'Pending' as any;
       case 'timeout':
-        return 'failed';
+        return 'Failed' as any;
       default:
-        return 'not_validated';
+        return 'not_validated' as any;
     }
   }, []);
 
   // Legacy helper function for backward compatibility with validation items
   const getDomainStatusFromValidation = useCallback((domainName: string, items: CampaignValidationItem[]): DomainActivityStatus => {
     const item = items.find(item => item.domainName === domainName || item.domain === domainName);
-    if (!item) return 'n_a';
-    
+    if (!item) return 'n_a' as any;
     const status = (item.validationStatus || item.status || '').toString().toLowerCase();
     return convertBackendStatus(status);
   }, [convertBackendStatus]);
@@ -256,10 +254,10 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
         switch (filters.statusFilter) {
           case 'validated':
             return domain.dnsStatus === 'validated' || domain.httpStatus === 'validated';
-          case 'failed':
-            return domain.dnsStatus === 'failed' || domain.httpStatus === 'failed';
-          case 'pending':
-            return domain.dnsStatus === 'pending' || domain.httpStatus === 'pending';
+          case 'Failed':
+            return domain.dnsStatus === 'Failed' || domain.httpStatus === 'Failed';
+          case 'Pending':
+            return domain.dnsStatus === 'Pending' || domain.httpStatus === 'Pending';
           default:
             return true;
         }

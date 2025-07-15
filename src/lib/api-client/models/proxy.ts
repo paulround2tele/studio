@@ -142,10 +142,10 @@ export interface Proxy {
     'port'?: string;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof Proxy
      */
-    'protocol'?: object;
+    'protocol'?: ProxyProtocolEnum;
     /**
      * Unique identifier
      * @type {string}
@@ -154,10 +154,10 @@ export interface Proxy {
     'provider'?: string;
     /**
      * Frontend-expected fields
-     * @type {object}
+     * @type {string}
      * @memberof Proxy
      */
-    'status'?: object;
+    'status'?: ProxyStatusEnum;
     /**
      * 
      * @type {string}
@@ -177,4 +177,22 @@ export interface Proxy {
      */
     'username'?: string;
 }
+
+export const ProxyProtocolEnum = {
+    Http: 'http',
+    Https: 'https',
+    Socks5: 'socks5',
+    Socks4: 'socks4'
+} as const;
+
+export type ProxyProtocolEnum = typeof ProxyProtocolEnum[keyof typeof ProxyProtocolEnum];
+export const ProxyStatusEnum = {
+    Active: 'Active',
+    Disabled: 'Disabled',
+    Testing: 'Testing',
+    Failed: 'Failed'
+} as const;
+
+export type ProxyStatusEnum = typeof ProxyStatusEnum[keyof typeof ProxyStatusEnum];
+
 

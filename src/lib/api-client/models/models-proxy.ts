@@ -24,165 +24,165 @@ import type { SqlNullString } from './sql-null-string';
 import type { SqlNullTime } from './sql-null-time';
 
 /**
- * 
+ * Proxy server connection and authentication details
  * @export
- * @interface ModelsProxy
+ * @interface Proxy
  */
-export interface ModelsProxy {
+export interface Proxy {
     /**
      * Full proxy address (e.g., \'http://user:pass@host:port\')
      * @type {string}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'address': string;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'city'?: SqlNullString;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'countryCode'?: SqlNullString;
     /**
      * 
      * @type {string}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'createdAt'?: string;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'description'?: SqlNullString;
     /**
      * 
      * @type {SqlNullInt32}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'failureCount'?: SqlNullInt32;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'host'?: SqlNullString;
     /**
      * 
      * @type {string}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'id'?: string;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'inputPassword'?: SqlNullString;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'inputUsername'?: SqlNullString;
     /**
      * 
      * @type {boolean}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'isEnabled'?: boolean;
     /**
      * 
      * @type {boolean}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'isHealthy'?: boolean;
     /**
      * 
      * @type {SqlNullTime}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'lastCheckedAt'?: SqlNullTime;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'lastError'?: SqlNullString;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'lastStatus'?: SqlNullString;
     /**
      * 
      * @type {SqlNullTime}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'lastTested'?: SqlNullTime;
     /**
      * 
      * @type {SqlNullInt32}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'latencyMs'?: SqlNullInt32;
     /**
      * 
      * @type {string}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'name': string;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'notes'?: SqlNullString;
     /**
      * 
      * @type {SqlNullInt32}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'port'?: SqlNullInt32;
     /**
      * 
      * @type {string}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'protocol'?: string;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'provider'?: SqlNullString;
     /**
      * Frontend-expected fields
      * @type {string}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'status'?: string;
     /**
      * 
      * @type {SqlNullInt32}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'successCount'?: SqlNullInt32;
     /**
      * 
      * @type {string}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'updatedAt'?: string;
     /**
      * 
      * @type {SqlNullString}
-     * @memberof ModelsProxy
+     * @memberof Proxy
      */
     'username'?: SqlNullString;
 }

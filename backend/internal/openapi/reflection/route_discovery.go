@@ -101,8 +101,9 @@ func (rd *RouteDiscoverer) DiscoverBusinessEntities(packages []string) ([]Busine
 	// Define business entity packages to scan
 	// ONLY include packages with API data models, NOT internal service implementations
 	businessEntityPackages := []string{
-		"./internal/models", // Core business models (Campaign, Persona, Proxy, etc.)
-		"./internal/api",    // API request/response types (CreateCampaignRequest, etc.)
+		"./internal/models",   // Core business models (Campaign, Persona, Proxy, etc.)
+		"./internal/api",      // API request/response types (CreateCampaignRequest, etc.)
+		"./internal/services", // Service response types (DNSValidationResultsResponse, etc.)
 	}
 
 	// Use provided packages or default business entity packages
@@ -403,7 +404,7 @@ func (rd *RouteDiscoverer) extractRouteFromFunction(funcDecl *ast.FuncDecl) *Dis
 	// Only create route if we have both path and method
 	if path != "" && method != "" {
 		if operationID == "" {
-			operationID = funcDecl.Name.Name
+			operationID = rd.generateOperationID(funcDecl.Name.Name, method)
 		}
 
 		route = &DiscoveredRoute{
@@ -448,18 +449,37 @@ func (rd *RouteDiscoverer) generateOperationID(handlerName, method string) strin
 	// Extract the actual function name
 	funcName := extractFunctionName(handlerName)
 
-	// Remove common suffixes
-	funcName = strings.TrimSuffix(funcName, "Gin")
+	// Debug logging to understand what's happening
+	fmt.Printf("DEBUG: generateOperationID - handlerName=%s, funcName=%s\n", handlerName, funcName)
+
+	// Handle specific auth endpoint naming for TypeScript generator consistency
+	if funcName == "Me" {
+		fmt.Printf("DEBUG: Converting Me to getCurrentUser\n")
+		return "getCurrentUser"
+	}
+
+	// Remove standard suffixes but preserve Gin for config endpoints to match TypeScript expectations
+	fmt.Printf("DEBUG: Removing standard suffixes from: %s\n", funcName)
+	if !strings.Contains(funcName, "Config") {
+		fmt.Printf("DEBUG: Removing Gin suffix from %s\n", funcName)
+		funcName = strings.TrimSuffix(funcName, "Gin")
+	} else {
+		fmt.Printf("DEBUG: Preserving Gin suffix for config endpoint %s\n", funcName)
+	}
 	funcName = strings.TrimSuffix(funcName, "Handler")
 	funcName = strings.TrimSuffix(funcName, "Endpoint")
 
 	// Convert to camelCase
 	if len(funcName) > 0 {
-		return strings.ToLower(funcName[:1]) + funcName[1:]
+		result := strings.ToLower(funcName[:1]) + funcName[1:]
+		fmt.Printf("DEBUG: Final operationId: %s\n", result)
+		return result
 	}
 
 	// Fallback to method-based naming
-	return strings.ToLower(method) + "Operation"
+	fallback := strings.ToLower(method) + "Operation"
+	fmt.Printf("DEBUG: Using fallback operationId: %s\n", fallback)
+	return fallback
 }
 
 // generateSummary generates a human-readable summary
@@ -778,6 +798,7 @@ func (rd *RouteDiscoverer) parseSuccessAnnotation(text string) *openapi3.SchemaR
 	responseModel = strings.TrimPrefix(responseModel, "models.")
 	responseModel = strings.TrimPrefix(responseModel, "config.")
 	responseModel = strings.TrimPrefix(responseModel, "services.")
+	responseModel = strings.TrimPrefix(responseModel, "api.")
 
 	// Create schema reference to the response model
 	return &openapi3.SchemaRef{

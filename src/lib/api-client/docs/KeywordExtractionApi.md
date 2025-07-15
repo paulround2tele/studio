@@ -1,6 +1,6 @@
 # KeywordExtractionApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -8,7 +8,7 @@ All URIs are relative to */api/v2*
 |[**streamExtractKeywords**](#streamextractkeywords) | **GET** /keyword-extraction/stream | Stream keyword extraction|
 
 # **batchExtractKeywords**
-> ApiBatchKeywordExtractionResponse batchExtractKeywords(apiBatchKeywordExtractionRequest)
+> BatchKeywordExtractionResponse batchExtractKeywords()
 
 Extract keywords from multiple URLs using specified keyword sets and personas
 
@@ -17,30 +17,22 @@ Extract keywords from multiple URLs using specified keyword sets and personas
 ```typescript
 import {
     KeywordExtractionApi,
-    Configuration,
-    ApiBatchKeywordExtractionRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordExtractionApi(configuration);
 
-let apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest; //Batch extraction request
-
-const { status, data } = await apiInstance.batchExtractKeywords(
-    apiBatchKeywordExtractionRequest
-);
+const { status, data } = await apiInstance.batchExtractKeywords();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **apiBatchKeywordExtractionRequest** | **ApiBatchKeywordExtractionRequest**| Batch extraction request | |
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**ApiBatchKeywordExtractionResponse**
+**BatchKeywordExtractionResponse**
 
 ### Authorization
 
@@ -48,20 +40,21 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Extraction results |  -  |
-|**400** | Invalid request body or validation failed |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **streamExtractKeywords**
-> string streamExtractKeywords()
+> StreamExtractKeywords200Response streamExtractKeywords()
 
 Extract keywords from a single URL with real-time streaming results
 
@@ -101,7 +94,7 @@ const { status, data } = await apiInstance.streamExtractKeywords(
 
 ### Return type
 
-**string**
+**StreamExtractKeywords200Response**
 
 ### Authorization
 
@@ -110,14 +103,15 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: application/json, text/event-stream
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Server-sent events stream with extraction results |  -  |
-|**400** | Invalid query parameters |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

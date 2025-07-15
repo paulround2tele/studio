@@ -221,25 +221,25 @@ function getCurrentEnvironment(): string {
     const port = window.location.port;
     // If port 3000, assume development (Next.js dev server)
     if (port === '3000') {
-      return 'development';
+      return 'development' as any;
     }
     // If no port specified (port 80) or explicitly port 80, assume production
     if (!port || port === '80') {
-      return 'production';
+      return 'production' as any;
     }
     // For any other port on localhost, assume development
-    return 'development';
+    return 'development' as any;
   }
   
   // Check for development indicators on any hostname
   const port = window.location.port;
   // If port 3000, assume development (Next.js dev server) regardless of hostname
   if (port === '3000') {
-    return 'development';
+    return 'development' as any;
   }
   
   // Default to production for offline deployments
-  return 'production';
+  return 'production' as any;
 }
 
 // Get current environment configuration

@@ -30,201 +30,201 @@ import type { ModelsHTTPKeywordCampaignParams } from './models-httpkeyword-campa
 import type { ModelsLeadItem } from './models-lead-item';
 
 /**
- * 
+ * Campaign configuration and status
  * @export
- * @interface ModelsCampaign
+ * @interface Campaign
  */
-export interface ModelsCampaign {
+export interface Campaign {
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'avgProcessingRate'?: number;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'businessStatus'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'campaignType': string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'completedAt'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'createdAt'?: string;
     /**
      * Frontend-expected properties
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'currentPhase'?: string;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'dnsValidatedDomains'?: number;
     /**
      * 
      * @type {ModelsDNSValidationCampaignParams}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'dnsValidationParams'?: ModelsDNSValidationCampaignParams;
     /**
      * 
      * @type {ModelsDomainGenerationCampaignParams}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'domainGenerationParams'?: ModelsDomainGenerationCampaignParams;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'domains'?: number;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'errorMessage'?: string;
     /**
      * Additional tracking fields
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'estimatedCompletionAt'?: string;
     /**
      * Content analysis data expected by frontend
      * @type {Array<ModelsExtractedContentItem>}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'extractedContent'?: Array<ModelsExtractedContentItem>;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'failedItems'?: number;
     /**
      * 
      * @type {ModelsHTTPKeywordCampaignParams}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'httpKeywordValidationParams'?: ModelsHTTPKeywordCampaignParams;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'id'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'lastHeartbeatAt'?: string;
     /**
      * Whether to automatically chain to next campaign types when this campaign completes
      * @type {boolean}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'launchSequence'?: boolean;
     /**
      * 
      * @type {Array<ModelsLeadItem>}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'leadItems'?: Array<ModelsLeadItem>;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'leads'?: number;
     /**
      * 
      * @type {Array<number>}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'metadata'?: Array<number>;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'name': string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'phaseStatus'?: string;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'processedItems'?: number;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'progress'?: number;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'progressPercentage'?: number;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'startedAt'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'status': string;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'successfulItems'?: number;
     /**
      * 
      * @type {number}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'totalItems'?: number;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'updatedAt'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCampaign
+     * @memberof Campaign
      */
     'userId'?: string;
 }

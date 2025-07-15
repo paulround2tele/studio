@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **description** | **string** |  | [optional] [default to undefined]
 **isEnabled** | **boolean** |  | [optional] [default to undefined]
 **name** | **string** |  | [optional] [default to undefined]
+**notes** | **string** |  | [optional] [default to undefined]
 **password** | **string** |  | [optional] [default to undefined]
 **protocol** | **string** |  | [optional] [default to undefined]
 **username** | **string** |  | [optional] [default to undefined]
@@ -25,6 +26,7 @@ const instance: UpdateProxyRequest = {
     description,
     isEnabled,
     name,
+    notes,
     password,
     protocol,
     username,

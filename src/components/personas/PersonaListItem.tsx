@@ -102,7 +102,13 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
   };
 
   const renderHttpPersonaDetails = (p: HttpPersona) => {
-    const config = p.configDetails as import('@/lib/types').HTTPConfigDetails;
+    const config = (p.configDetails as unknown as import('@/lib/types').HTTPConfigDetails) || {
+      userAgent: 'Not set',
+      headers: {},
+      timeout: 30000,
+      followRedirects: true,
+      maxRedirects: 5
+    };
     return (
       <>
         <div className="text-sm space-y-1 mb-3">

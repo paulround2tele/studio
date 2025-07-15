@@ -38,12 +38,12 @@ import {
 } from 'lucide-react';
 import type { components } from '@/lib/api-client/types';
 
-type Proxy = components['schemas']['models.Proxy'];
-import type { ProxyUpdateResponse, ProxyDeleteResponse } from '@/lib/services/proxyService.production';
+type Proxy = components['schemas']['Proxy'];
+import type { ProxyModelUpdateResponse, ProxyModelDeleteResponse } from '@/lib/services/proxyService.production';
 import type { ApiResponse } from '@/lib/types';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
-type UpdateProxyPayload = components['schemas']['models.UpdateProxyRequest'];
+type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { testProxy, cleanProxies, updateProxy, deleteProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 
@@ -111,7 +111,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
   /**
    * Select proxies by status
    */
-  const selectByStatus = useCallback((status: 'active' | 'disabled' | 'failed' | 'enabled') => {
+  const selectByStatus = useCallback((status: 'active' | 'disabled' | 'Failed' | 'enabled') => {
     let filteredProxies: Proxy[] = [];
     
     switch (status) {
@@ -121,7 +121,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
       case 'disabled':
         filteredProxies = disabledProxies;
         break;
-      case 'failed':
+      case 'Failed':
         filteredProxies = failedProxies;
         break;
       case 'enabled':
@@ -150,7 +150,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
       if (!proxy) continue;
       
       try {
-        let response: ProxyUpdateResponse | ProxyDeleteResponse | ApiResponse<unknown> | ProxyActionResponse;
+        let response: ProxyModelUpdateResponse | ProxyModelDeleteResponse | ApiResponse<unknown> | ProxyActionResponse;
         
         switch (action) {
           case 'enable':

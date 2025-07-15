@@ -31,12 +31,12 @@ const getStatusIcon = (status: CampaignStatus) => {
 
 const getStatusVariant = (status: CampaignStatus): 'default' | 'secondary' | 'destructive' | 'outline' => {
   switch (status) {
-    case 'completed': return 'default';
-    case 'failed': return 'destructive';
-    case 'running': return 'secondary';
-    case 'paused': return 'outline';
-    case 'pending': return 'outline';
-    default: return 'outline';
+    case 'completed': return 'default' as any;
+    case 'failed': return 'destructive' as any;
+    case 'running': return 'secondary' as any;
+    case 'paused': return 'outline' as any;
+    case 'pending': return 'outline' as any;
+    default: return 'outline' as any;
   }
 };
 
@@ -74,7 +74,7 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
   onRefresh,
   className
 }) => {
-  const campaignStatus = campaign.status || 'pending';
+  const campaignStatus = campaign.status || 'Pending';
   const campaignType = campaign.campaignType || '';
   
   const StatusIcon = getStatusIcon(campaignStatus);

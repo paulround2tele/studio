@@ -6,12 +6,12 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **attempts** | **number** |  | [optional] [default to undefined]
-**businessStatus** | **object** |  | [optional] [default to undefined]
+**businessStatus** | **string** |  | [optional] [default to undefined]
 **campaignId** | **string** | Unique identifier | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **id** | **string** | Unique identifier | [optional] [default to undefined]
 **jobPayload** | **object** |  | [optional] [default to undefined]
-**jobType** | **object** |  | [optional] [default to undefined]
+**jobType** | **string** |  | [optional] [default to undefined]
 **lastAttemptedAt** | **string** |  | [optional] [default to undefined]
 **lastError** | **string** |  | [optional] [default to undefined]
 **lockedAt** | **string** |  | [optional] [default to undefined]
@@ -20,7 +20,7 @@ Name | Type | Description | Notes
 **nextExecutionAt** | **string** |  | [optional] [default to undefined]
 **processingServerId** | **string** | Unique identifier | [optional] [default to undefined]
 **scheduledAt** | **string** |  | [optional] [default to undefined]
-**status** | **object** |  | [optional] [default to undefined]
+**status** | **string** |  | [optional] [default to undefined]
 **updatedAt** | **string** |  | [optional] [default to undefined]
 
 ## Example

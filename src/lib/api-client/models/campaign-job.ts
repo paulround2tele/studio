@@ -28,10 +28,10 @@ export interface CampaignJob {
     'attempts'?: number;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof CampaignJob
      */
-    'businessStatus'?: object;
+    'businessStatus'?: CampaignJobBusinessStatusEnum;
     /**
      * Unique identifier
      * @type {string}
@@ -58,10 +58,10 @@ export interface CampaignJob {
     'jobPayload'?: object;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof CampaignJob
      */
-    'jobType'?: object;
+    'jobType'?: CampaignJobJobTypeEnum;
     /**
      * 
      * @type {string}
@@ -112,10 +112,10 @@ export interface CampaignJob {
     'scheduledAt'?: string;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof CampaignJob
      */
-    'status'?: object;
+    'status'?: CampaignJobStatusEnum;
     /**
      * 
      * @type {string}
@@ -123,4 +123,31 @@ export interface CampaignJob {
      */
     'updatedAt'?: string;
 }
+
+export const CampaignJobBusinessStatusEnum = {
+    Processing: 'processing',
+    Retry: 'retry',
+    PriorityQueued: 'priority_queued',
+    BatchOptimized: 'batch_optimized'
+} as const;
+
+export type CampaignJobBusinessStatusEnum = typeof CampaignJobBusinessStatusEnum[keyof typeof CampaignJobBusinessStatusEnum];
+export const CampaignJobJobTypeEnum = {
+    DomainGeneration: 'domain_generation',
+    DnsValidation: 'dns_validation',
+    HttpKeywordValidation: 'http_keyword_validation'
+} as const;
+
+export type CampaignJobJobTypeEnum = typeof CampaignJobJobTypeEnum[keyof typeof CampaignJobJobTypeEnum];
+export const CampaignJobStatusEnum = {
+    Pending: 'pending',
+    Queued: 'queued',
+    Running: 'running',
+    Completed: 'completed',
+    Failed: 'failed',
+    Cancelled: 'cancelled'
+} as const;
+
+export type CampaignJobStatusEnum = typeof CampaignJobStatusEnum[keyof typeof CampaignJobStatusEnum];
+
 

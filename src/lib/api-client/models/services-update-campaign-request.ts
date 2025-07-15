@@ -17,127 +17,127 @@
 /**
  * 
  * @export
- * @interface ServicesUpdateCampaignRequest
+ * @interface UpdateCampaignRequest
  */
-export interface ServicesUpdateCampaignRequest {
+export interface UpdateCampaignRequest {
     /**
      * 
      * @type {Array<string>}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'adHocKeywords'?: Array<string>;
     /**
      * 
      * @type {number}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'batchSize'?: number;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'campaignType'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'characterSet'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'constantString'?: string;
     /**
      * 
      * @type {Array<string>}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'keywordSetIds'?: Array<string>;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'name'?: string;
     /**
      * 
      * @type {number}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'numDomainsToGenerate'?: number;
     /**
      * 
      * @type {Array<string>}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'personaIds'?: Array<string>;
     /**
      * 
      * @type {number}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'processingSpeedPerMinute'?: number;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'proxyPoolId'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'proxySelectionStrategy'?: string;
     /**
      * 
      * @type {number}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'retryAttempts'?: number;
     /**
      * 
      * @type {number}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'rotationIntervalSeconds'?: number;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'sourceDnsCampaignId'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'sourceGenerationCampaignId'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'status'?: string;
     /**
      * 
      * @type {Array<number>}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'targetHttpPorts'?: Array<number>;
     /**
      * 
      * @type {string}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'tld'?: string;
     /**
      * 
      * @type {number}
-     * @memberof ServicesUpdateCampaignRequest
+     * @memberof UpdateCampaignRequest
      */
     'variableLength'?: number;
 }

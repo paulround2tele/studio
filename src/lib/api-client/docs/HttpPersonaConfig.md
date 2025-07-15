@@ -6,7 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **allowInsecureTls** | **boolean** | Validation settings | [optional] [default to undefined]
-**cookieHandling** | **object** |  | [optional] [default to undefined]
+**cookieHandling** | [**CookieHandling**](CookieHandling.md) |  | [optional] [default to undefined]
 **domSnapshot** | **boolean** |  | [optional] [default to undefined]
 **fetchBodyForKeywords** | **boolean** |  | [optional] [default to undefined]
 **headerOrder** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
@@ -22,7 +22,7 @@ Name | Type | Description | Notes
 **requestTimeoutSeconds** | **number** |  | [optional] [default to undefined]
 **screenshot** | **boolean** |  | [optional] [default to undefined]
 **scriptExecution** | **boolean** |  | [optional] [default to undefined]
-**tlsClientHello** | **object** |  | [optional] [default to undefined]
+**tlsClientHello** | [**TLSClientHello**](TLSClientHello.md) |  | [optional] [default to undefined]
 **useHeadless** | **boolean** | Headless browser settings | [optional] [default to undefined]
 **userAgent** | **string** |  | [default to undefined]
 **viewportHeight** | **number** |  | [optional] [default to undefined]

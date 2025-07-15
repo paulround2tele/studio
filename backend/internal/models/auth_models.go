@@ -8,6 +8,7 @@ import (
 )
 
 // User represents a user in the authentication system
+// @Description User account information
 type User struct {
 	ID                       uuid.UUID  `json:"id" db:"id"`
 	Email                    string     `json:"email" db:"email"`

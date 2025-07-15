@@ -1,6 +1,6 @@
 # FeatureFlagsApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -8,7 +8,7 @@ All URIs are relative to */api/v2*
 |[**updateFeatureFlags**](#updatefeatureflags) | **PUT** /feature-flags | Update feature flags|
 
 # **getFeatureFlags**
-> ApiFeatureFlags getFeatureFlags()
+> string getFeatureFlags()
 
 Retrieve current feature flag settings
 
@@ -32,7 +32,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiFeatureFlags**
+**string**
 
 ### Authorization
 
@@ -47,12 +47,14 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Feature flags settings |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateFeatureFlags**
-> ApiFeatureFlags updateFeatureFlags(apiFeatureFlags)
+> string updateFeatureFlags()
 
 Update feature flag settings
 
@@ -61,30 +63,22 @@ Update feature flag settings
 ```typescript
 import {
     FeatureFlagsApi,
-    Configuration,
-    ApiFeatureFlags
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new FeatureFlagsApi(configuration);
 
-let apiFeatureFlags: ApiFeatureFlags; //Feature flags settings
-
-const { status, data } = await apiInstance.updateFeatureFlags(
-    apiFeatureFlags
-);
+const { status, data } = await apiInstance.updateFeatureFlags();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **apiFeatureFlags** | **ApiFeatureFlags**| Feature flags settings | |
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**ApiFeatureFlags**
+**string**
 
 ### Authorization
 
@@ -92,16 +86,16 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated feature flags |  -  |
-|**400** | Invalid request body |  -  |
-|**500** | Failed to save feature flags |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

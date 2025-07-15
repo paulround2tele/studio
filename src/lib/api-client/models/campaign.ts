@@ -49,10 +49,10 @@ export interface Campaign {
     'businessStatus'?: string;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof Campaign
      */
-    'campaignType': object;
+    'campaignType': CampaignCampaignTypeEnum;
     /**
      * 
      * @type {string}
@@ -67,10 +67,10 @@ export interface Campaign {
     'createdAt'?: string;
     /**
      * Frontend-expected properties
-     * @type {object}
+     * @type {string}
      * @memberof Campaign
      */
-    'currentPhase'?: object;
+    'currentPhase'?: CampaignCurrentPhaseEnum;
     /**
      * 
      * @type {number}
@@ -169,10 +169,10 @@ export interface Campaign {
     'name': string;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof Campaign
      */
-    'phaseStatus'?: object;
+    'phaseStatus'?: CampaignPhaseStatusEnum;
     /**
      * 
      * @type {number}
@@ -199,10 +199,10 @@ export interface Campaign {
     'startedAt'?: string;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof Campaign
      */
-    'status': object;
+    'status': CampaignStatusEnum;
     /**
      * 
      * @type {number}
@@ -228,4 +228,45 @@ export interface Campaign {
      */
     'userId'?: string;
 }
+
+export const CampaignCampaignTypeEnum = {
+    DomainGeneration: 'domain_generation',
+    DnsValidation: 'dns_validation',
+    HttpKeywordValidation: 'http_keyword_validation'
+} as const;
+
+export type CampaignCampaignTypeEnum = typeof CampaignCampaignTypeEnum[keyof typeof CampaignCampaignTypeEnum];
+export const CampaignCurrentPhaseEnum = {
+    Setup: 'setup',
+    Generation: 'generation',
+    DnsValidation: 'dns_validation',
+    HttpValidation: 'http_validation',
+    Analysis: 'analysis',
+    Cleanup: 'cleanup'
+} as const;
+
+export type CampaignCurrentPhaseEnum = typeof CampaignCurrentPhaseEnum[keyof typeof CampaignCurrentPhaseEnum];
+export const CampaignPhaseStatusEnum = {
+    NotStarted: 'not_started',
+    InProgress: 'in_progress',
+    Paused: 'paused',
+    Completed: 'completed',
+    Failed: 'failed'
+} as const;
+
+export type CampaignPhaseStatusEnum = typeof CampaignPhaseStatusEnum[keyof typeof CampaignPhaseStatusEnum];
+export const CampaignStatusEnum = {
+    Pending: 'pending',
+    Queued: 'queued',
+    Running: 'running',
+    Pausing: 'pausing',
+    Paused: 'paused',
+    Completed: 'completed',
+    Failed: 'failed',
+    Archived: 'archived',
+    Cancelled: 'cancelled'
+} as const;
+
+export type CampaignStatusEnum = typeof CampaignStatusEnum[keyof typeof CampaignStatusEnum];
+
 

@@ -77,6 +77,6 @@ export type CampaignViewModel = Campaign & CampaignUIExtensions;
 // Form-specific types
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable" | "constant_only";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-export type CampaignPhase = NonNullable<CampaignSelectedType>;
+export type CampaignPhase = components['schemas']['Campaign']['currentPhase'];
 
 // Note: ApiResponse moved to main types/index.ts for unified usage across all services

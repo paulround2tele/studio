@@ -1,5 +1,6 @@
 # ModelsCampaign
 
+Campaign configuration and status
 
 ## Properties
 

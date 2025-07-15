@@ -44,8 +44,8 @@ export interface ApiResponse<T = unknown> {
 }
 
 // Legacy type aliases for backwards compatibility - with proper null handling
-export type CampaignPhase = NonNullable<CampaignType>;
-export type CampaignPhaseStatus = CampaignStatus;
+export type CampaignPhase = components['schemas']['Campaign']['currentPhase'];
+export type CampaignPhaseStatus = "not_started" | "in_progress" | "paused" | "completed" | "failed";
 
 // Persona type aliases
 export type HttpPersona = Persona;
@@ -79,8 +79,8 @@ export type KeywordExtractionResult = components["schemas"]["KeywordExtractionAP
 
 export type DomainActivityStatus =
   | 'validated'
-  | 'pending'
-  | 'failed'
+  | 'Pending'
+  | 'Failed'
   | 'not_validated'
   | 'scanned'
   | 'no_leads'
@@ -118,7 +118,7 @@ export interface DomainDetail {
 // Auth types using OpenAPI base types
 export type LoginRequest = components["schemas"]["LoginRequest"];
 export type LoginResponse = components["schemas"]["LoginResponse"];
-export type RefreshResponse = components["schemas"]["RefreshResponse"];
+export type RefreshResponse = components['schemas']['SessionRefreshResponse'];
 export type ChangePasswordRequest = components["schemas"]["ChangePasswordRequest"];
 
 // Session management (extending OpenAPI User type)

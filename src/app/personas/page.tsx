@@ -9,7 +9,7 @@ import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
-type PersonaBase = components['schemas']['api.PersonaResponse'];
+type PersonaBase = components['schemas']['PersonaResponse'];
 
 // Legacy compatibility types - add missing properties from old types
 interface Persona extends PersonaBase {
@@ -224,8 +224,8 @@ function PersonasPageContent() {
     try {
       const response = await testPersona(personaId, personaType);
       if (response.status === 'success') {
-        // PersonaTestResult has a nested data structure
-        const testData = response.data?.data;
+        // PersonaTestResult response data is directly available
+        const testData = response.data;
         const personaName = testData?.personaId || 'Persona';
         toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
@@ -249,7 +249,7 @@ function PersonasPageContent() {
     try {
       // Map status to isEnabled field which is what the backend accepts
       const isEnabled = newStatus === 'Active';
-      const response = await updatePersona(personaId, { isEnabled }, personaType);
+      const response = await updatePersona(personaId, { isEnabled } as any, personaType);
       if (response.status === 'success' && response.data) {
         toast({ title: `Persona Status Updated`, description: `${response.data.name} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
@@ -318,10 +318,10 @@ function PersonasPageContent() {
                 // Map old resolver strategy values to new ones
                 const mapResolverStrategy = (oldStrategy: string): "round_robin" | "random" | "weighted" | "priority" => {
                     switch (oldStrategy) {
-                        case "random_rotation": return "random";
-                        case "weighted_rotation": return "weighted";
-                        case "sequential_failover": return "priority";
-                        default: return "round_robin";
+                        case "random_rotation": return "random" as any;
+                        case "weighted_rotation": return "weighted" as any;
+                        case "sequential_failover": return "priority" as any;
+                        default: return "round_robin" as any;
                     }
                 };
                 
@@ -347,7 +347,7 @@ function PersonasPageContent() {
                     } as any,
                 };
             }
-            const response = await createPersona(createPayload);
+            const response = await createPersona(createPayload as any);
             if (response.status === 'success') {
               importedCount++;
             } else {

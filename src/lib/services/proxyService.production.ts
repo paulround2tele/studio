@@ -3,11 +3,13 @@
 
 import { ProxiesApi, Configuration } from '@/lib/api-client';
 import {
-  ModelsCreateProxyRequest,
-  ModelsUpdateProxyRequest,
-  ModelsProxy
+  CreateProxyRequest,
+  UpdateProxyRequest,
+  Proxy as ProxyModel,
 } from '@/lib/api-client/models';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
+import type { FrontendProxy } from '@/lib/types/frontend-safe-types';
+import { transformSqlNullString, transformSqlNullInt32 } from '@/lib/utils/sqlNullTransformers';
 
 // Create configured ProxiesApi instance with authentication
 const config = new Configuration({
@@ -19,9 +21,9 @@ const config = new Configuration({
 const proxiesApi = new ProxiesApi(config);
 
 // Use OpenAPI types directly
-export type Proxy = ModelsProxy;
-export type ProxyCreationPayload = ModelsCreateProxyRequest;
-export type ProxyUpdatePayload = ModelsUpdateProxyRequest;
+// Removed circular type reference
+export type ProxyModelCreationPayload = CreateProxyRequest;
+export type ProxyModelUpdatePayload = UpdateProxyRequest;
 
 // Protocol validation utilities
 const validateProtocol = (protocol: string): string => {
@@ -29,26 +31,26 @@ const validateProtocol = (protocol: string): string => {
   return validProtocols.includes(protocol) ? protocol : 'http';
 };
 
-// Service layer response wrappers using OpenAPI types as base
+// Service layer response wrappers using frontend-safe types
 export interface ProxiesListResponse {
   status: 'success' | 'error';
-  data: Proxy[];
+  data: FrontendProxy[];
   message?: string;
 }
 
-export interface ProxyCreationResponse {
+export interface ProxyModelCreationResponse {
   status: 'success' | 'error';
-  data?: Proxy;
+  data?: FrontendProxy;
   message?: string;
 }
 
-export interface ProxyUpdateResponse {
+export interface ProxyModelUpdateResponse {
   status: 'success' | 'error';
-  data?: Proxy;
+  data?: ProxyModel;
   message?: string;
 }
 
-export interface ProxyDeleteResponse {
+export interface ProxyModelDeleteResponse {
   status: 'success' | 'error';
   data?: null;
   message?: string;
@@ -58,22 +60,22 @@ export interface ProxyDeleteResponse {
 import type { ApiResponse } from '@/lib/types';
 
 // Define proxy status and test result types
-export type ProxyStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
-export interface ProxyTestResult {
+export type ProxyModelStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
+export interface ProxyModelTestResult {
   success: boolean;
   message: string;
   latency?: number;
 }
 
 
-class ProxyService {
-  private static instance: ProxyService;
+class ProxyModelService {
+  private static instance: ProxyModelService;
 
-  static getInstance(): ProxyService {
-    if (!ProxyService.instance) {
-      ProxyService.instance = new ProxyService();
+  static getInstance(): ProxyModelService {
+    if (!ProxyModelService.instance) {
+      ProxyModelService.instance = new ProxyModelService();
     }
-    return ProxyService.instance;
+    return ProxyModelService.instance;
   }
 
   async getProxies(): Promise<ProxiesListResponse> {
@@ -97,7 +99,7 @@ class ProxyService {
       }
       
       // Transform SQL null types to simple values for React
-      const cleanedProxies = proxiesData.map((proxy: any) => ({
+      const cleanedProxies: FrontendProxy[] = proxiesData.map((proxy: any) => ({
         id: proxy.id,
         name: proxy.name || "",
         description: (proxy.description?.String !== undefined ? proxy.description.String : proxy.description) || "",
@@ -139,7 +141,7 @@ class ProxyService {
     }
   }
 
-  async getProxyById(proxyId: string): Promise<ProxyCreationResponse> {
+  async getProxyModelById(proxyId: string): Promise<ProxyModelCreationResponse> {
     // Backend doesn't have individual GET endpoint, fetch from list
     try {
       const response = await this.getProxies();
@@ -165,16 +167,44 @@ class ProxyService {
     }
   }
 
-  async createProxy(payload: ProxyCreationPayload): Promise<ProxyCreationResponse> {
+  async createProxy(payload: ProxyModelCreationPayload): Promise<ProxyModelCreationResponse> {
     try {
       const convertedPayload = {
         ...payload,
-        protocol: validateProtocol(payload.protocol)
+        protocol: validateProtocol(payload.protocol || 'http')
       };
-      const response = await proxiesApi.createProxy(convertedPayload);
+      const response = await proxiesApi.addProxy({ data: convertedPayload });
+      // Transform the response data to frontend-safe format
+      const proxy = response.data as any;
+      const transformedProxy: FrontendProxy = {
+        id: proxy.id,
+        name: proxy.name || "",
+        description: transformSqlNullString(proxy.description) || "",
+        address: proxy.address || "",
+        protocol: proxy.protocol || "http",
+        username: transformSqlNullString(proxy.username) || "",
+        host: transformSqlNullString(proxy.host) || "",
+        port: transformSqlNullInt32(proxy.port),
+        isEnabled: proxy.isEnabled || false,
+        isHealthy: proxy.isHealthy || false,
+        lastStatus: transformSqlNullString(proxy.lastStatus) || "",
+        lastCheckedAt: transformSqlNullString(proxy.lastCheckedAt),
+        latencyMs: transformSqlNullInt32(proxy.latencyMs),
+        city: transformSqlNullString(proxy.city) || "",
+        countryCode: transformSqlNullString(proxy.countryCode) || "",
+        provider: transformSqlNullString(proxy.provider) || "",
+        createdAt: proxy.createdAt,
+        updatedAt: proxy.updatedAt,
+        status: !proxy.isEnabled ? 'Disabled' : (proxy.isHealthy ? 'Active' : 'Failed'),
+        lastTested: transformSqlNullString(proxy.lastCheckedAt),
+        successCount: 0,
+        failureCount: 0,
+        lastError: transformSqlNullString(proxy.lastStatus) || "",
+        notes: transformSqlNullString(proxy.notes) || ""
+      };
       return {
         status: 'success',
-        data: response.data as Proxy,
+        data: transformedProxy,
         message: 'Proxy created successfully'
       };
     } catch (error) {
@@ -185,17 +215,17 @@ class ProxyService {
     }
   }
 
-  async updateProxy(proxyId: string, payload: ProxyUpdatePayload): Promise<ProxyUpdateResponse> {
+  async updateProxy(proxyId: string, payload: ProxyModelUpdatePayload): Promise<ProxyModelUpdateResponse> {
     try {
       const { protocol, ...restPayload } = payload;
       const convertedPayload = {
         ...restPayload,
         ...(protocol && { protocol: validateProtocol(protocol) })
       };
-      const response = await proxiesApi.updateProxy(proxyId, convertedPayload);
+      const response = await proxiesApi.updateProxy(proxyId, { data: convertedPayload });
       return {
         status: 'success',
-        data: response.data as Proxy,
+        data: response.data as ProxyModel,
         message: 'Proxy updated successfully'
       };
     } catch (error) {
@@ -206,7 +236,7 @@ class ProxyService {
     }
   }
 
-  async deleteProxy(proxyId: string): Promise<ProxyDeleteResponse> {
+  async deleteProxy(proxyId: string): Promise<ProxyModelDeleteResponse> {
     try {
       await proxiesApi.deleteProxy(proxyId);
       return {
@@ -238,7 +268,7 @@ class ProxyService {
     }
   }
 
-  async forceProxyHealthCheck(proxyId: string): Promise<ApiResponse<unknown>> {
+  async forceProxyModelHealthCheck(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await proxiesApi.forceCheckSingleProxy(proxyId);
       return {
@@ -270,7 +300,7 @@ class ProxyService {
     }
   }
 
-  async getProxyStatuses(): Promise<ApiResponse<unknown>> {
+  async getProxyModelStatuses(): Promise<ApiResponse<unknown>> {
     try {
       const response = await proxiesApi.getProxyStatuses();
       return {
@@ -289,7 +319,7 @@ class ProxyService {
   // Helper methods for enable/disable via update
   async enableProxy(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
-      const proxy = await this.getProxyById(proxyId);
+      const proxy = await this.getProxyModelById(proxyId);
       if (proxy.status !== 'success' || !proxy.data) {
         return {
           status: 'error',
@@ -297,7 +327,7 @@ class ProxyService {
         };
       }
 
-      const updatePayload: ProxyUpdatePayload = {
+      const updatePayload: ProxyModelUpdatePayload = {
         isEnabled: true
       };
 
@@ -318,7 +348,7 @@ class ProxyService {
 
   async disableProxy(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
-      const proxy = await this.getProxyById(proxyId);
+      const proxy = await this.getProxyModelById(proxyId);
       if (proxy.status !== 'success' || !proxy.data) {
         return {
           status: 'error',
@@ -326,7 +356,7 @@ class ProxyService {
         };
       }
 
-      const updatePayload: ProxyUpdatePayload = {
+      const updatePayload: ProxyModelUpdatePayload = {
         isEnabled: false
       };
 
@@ -347,19 +377,19 @@ class ProxyService {
 }
 
 // Export singleton and functions
-export const proxyService = ProxyService.getInstance();
+export const proxyService = ProxyModelService.getInstance();
 
 export const getProxies = () => proxyService.getProxies();
-export const getProxyById = (proxyId: string) => proxyService.getProxyById(proxyId);
-export const createProxy = (payload: ProxyCreationPayload) => proxyService.createProxy(payload);
-export const updateProxy = (proxyId: string, payload: ProxyUpdatePayload) => proxyService.updateProxy(proxyId, payload);
+export const getProxyModelById = (proxyId: string) => proxyService.getProxyModelById(proxyId);
+export const createProxy = (payload: ProxyModelCreationPayload) => proxyService.createProxy(payload);
+export const updateProxy = (proxyId: string, payload: ProxyModelUpdatePayload) => proxyService.updateProxy(proxyId, payload);
 export const deleteProxy = (proxyId: string) => proxyService.deleteProxy(proxyId);
 export const testProxy = (proxyId: string) => proxyService.testProxy(proxyId);
 export const enableProxy = (proxyId: string) => proxyService.enableProxy(proxyId);
 export const disableProxy = (proxyId: string) => proxyService.disableProxy(proxyId);
-export const forceProxyHealthCheck = (proxyId: string) => proxyService.forceProxyHealthCheck(proxyId);
+export const forceProxyModelHealthCheck = (proxyId: string) => proxyService.forceProxyModelHealthCheck(proxyId);
 export const forceAllProxiesHealthCheck = () => proxyService.forceAllProxiesHealthCheck();
-export const getProxyStatuses = () => proxyService.getProxyStatuses();
+export const getProxyModelStatuses = () => proxyService.getProxyModelStatuses();
 
 // Bulk operations for backward compatibility
 export const testAllProxies = forceAllProxiesHealthCheck;

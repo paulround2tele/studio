@@ -19,10 +19,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { components } from '@/lib/api-client/types';
 
-type Proxy = components['schemas']['models.Proxy'];
-type UpdateProxyPayload = components['schemas']['models.UpdateProxyRequest'];
-type _ProxyProtocol = components['schemas']['models.Proxy']['protocol']; // Unused
-type _ProxyStatus = components['schemas']['models.ProxyStatusEnum']; // Unused
+type Proxy = components['schemas']['Proxy'];
+type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
+type _ProxyProtocol = components['schemas']['Proxy']['protocol']; // Unused
+type _ProxyStatus = components['schemas']['ProxyStatusEnum']; // Unused
 import { createProxy, updateProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,13 +65,13 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
     resolver: zodResolver(proxyFormSchema),
     defaultValues: isEditing && proxyToEdit ? {
       name: proxyToEdit.name,
-      description: typeof proxyToEdit.description === 'string' ? proxyToEdit.description : (proxyToEdit.description?.string || ""),
+      description: typeof proxyToEdit.description === 'string' ? proxyToEdit.description : (proxyToEdit.description || ""),
       address: proxyToEdit.address,
       protocol: (proxyToEdit.protocol as typeof PROXY_PROTOCOLS[number]) || "http",
-      username: typeof proxyToEdit.username === 'string' ? proxyToEdit.username : (proxyToEdit.username?.string || ""),
+      username: typeof proxyToEdit.username === 'string' ? proxyToEdit.username : (proxyToEdit.username || ""),
       password: "",
-      countryCode: typeof proxyToEdit.countryCode === 'string' ? proxyToEdit.countryCode : (proxyToEdit.countryCode?.string || ""),
-      notes: typeof proxyToEdit.notes === 'string' ? proxyToEdit.notes : (proxyToEdit.notes?.string || ""),
+      countryCode: typeof proxyToEdit.countryCode === 'string' ? proxyToEdit.countryCode : (proxyToEdit.countryCode || ""),
+      notes: typeof proxyToEdit.notes === 'string' ? proxyToEdit.notes : (proxyToEdit.notes || ""),
       userEnabled: proxyToEdit.isEnabled,
       // initialStatus is not used for editing, status is managed by test/toggle
     } : {

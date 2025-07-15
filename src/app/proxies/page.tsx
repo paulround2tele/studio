@@ -16,13 +16,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
 import type { components } from '@/lib/api-client/types';
 
-type Proxy = components['schemas']['models.Proxy'];
-type ProxiesListResponse = { status: 'success' | 'error'; data: Proxy[]; message?: string };
 type ProxyActionResponse = { status: 'success' | 'error'; message: string };
-type ProxyDeleteResponse = { status: 'success' | 'error'; message?: string };
-type UpdateProxyPayload = components['schemas']['models.UpdateProxyRequest'];
+type ProxyModelDeleteResponse = { status: 'success' | 'error'; message?: string };
+type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
-import type { ProxyCreationPayload } from '@/lib/services/proxyService.production';
+import type { ProxyModelCreationPayload } from '@/lib/services/proxyService.production';
+import type { FrontendProxy } from '@/lib/types/frontend-safe-types';
+
+// Keep using OpenAPI Proxy type for components, convert from FrontendProxy as needed
+type Proxy = components['schemas']['Proxy'];
+
+// Convert FrontendProxy to component-expected Proxy type
+const convertToComponentProxy = (frontendProxy: FrontendProxy): Proxy => ({
+  ...frontendProxy,
+  failureCount: frontendProxy.failureCount?.toString(),
+  successCount: frontendProxy.successCount?.toString(),
+  latencyMs: frontendProxy.latencyMs?.toString(),
+  port: frontendProxy.port?.toString(),
+  protocol: frontendProxy.protocol as "http" | "https" | "socks5" | "socks4" | undefined,
+  status: frontendProxy.status as "Active" | "Disabled" | "Testing" | "Failed" | undefined,
+});
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';
 import {
@@ -63,11 +76,11 @@ function ProxiesPageContent() {
   const fetchProxiesData = useCallback(async (showLoadingSpinner = true) => {
     if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading proxies");
     try {
-      const response: ProxiesListResponse = await getProxies();
+      const response = await getProxies();
       if (response.status === 'success' && response.data) {
         // Ensure data is always an array
         const proxiesArray = Array.isArray(response.data) ? response.data : [];
-        setProxies(proxiesArray);
+        setProxies(proxiesArray.map(convertToComponentProxy));
       } else {
         toast({ title: "Error Loading Proxies", description: response.message || "Failed to load proxies.", variant: "destructive" });
       }
@@ -181,7 +194,7 @@ function ProxiesPageContent() {
         toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
         return;
       }
-      const response: ProxyDeleteResponse = await deleteProxy(proxyToDelete.id);
+      const response: ProxyModelDeleteResponse = await deleteProxy(proxyToDelete.id);
       if (response.status === 'success') {
         toast({ title: "Proxy Deleted", description: response.message || "Proxy deleted successfully" });
         setProxies(prev => prev.filter(p => p.id !== proxyToDelete!.id));
@@ -289,7 +302,7 @@ function ProxiesPageContent() {
           }
 
           const [, ip, port] = match;
-          const payload: ProxyCreationPayload = {
+          const payload: ProxyModelCreationPayload = {
             name: `Proxy ${ip}:${port}`,
             description: `Imported proxy from file`,
             protocol: 'http' as const,

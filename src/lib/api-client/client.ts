@@ -60,5 +60,5 @@ export type { components } from './types';
 import type { components } from './types';
 
 // Re-export specific types that are commonly used
-export type CreateKeywordSetRequest = components['schemas']['api.CreateKeywordSetRequest'];
-export type CreateCampaignRequest = components['schemas']['services.CreateCampaignRequest'];
+export type CreateKeywordSetRequest = components['schemas']['CreateKeywordSetRequest'];
+export type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];

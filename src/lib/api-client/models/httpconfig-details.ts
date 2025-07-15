@@ -13,6 +13,15 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { HTTP2Settings } from './http2-settings';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { HTTPCookieHandling } from './httpcookie-handling';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { HTTPTLSClientHello } from './httptlsclient-hello';
 
 /**
  * 
@@ -28,10 +37,10 @@ export interface HTTPConfigDetails {
     'allowedStatusCodes'?: Array<number>;
     /**
      * 
-     * @type {object}
+     * @type {HTTPCookieHandling}
      * @memberof HTTPConfigDetails
      */
-    'cookieHandling'?: object;
+    'cookieHandling'?: HTTPCookieHandling;
     /**
      * 
      * @type {boolean}
@@ -52,10 +61,10 @@ export interface HTTPConfigDetails {
     'headers'?: { [key: string]: string; };
     /**
      * 
-     * @type {object}
+     * @type {HTTP2Settings}
      * @memberof HTTPConfigDetails
      */
-    'http2Settings'?: object;
+    'http2Settings'?: HTTP2Settings;
     /**
      * 
      * @type {string}
@@ -82,10 +91,10 @@ export interface HTTPConfigDetails {
     'requestTimeoutSeconds'?: number;
     /**
      * 
-     * @type {object}
+     * @type {HTTPTLSClientHello}
      * @memberof HTTPConfigDetails
      */
-    'tlsClientHello'?: object;
+    'tlsClientHello'?: HTTPTLSClientHello;
     /**
      * 
      * @type {string}

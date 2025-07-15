@@ -34,7 +34,7 @@ export interface CreateCampaignRequest {
      * @type {string}
      * @memberof CreateCampaignRequest
      */
-    'campaignType': string;
+    'campaignType': CreateCampaignRequestCampaignTypeEnum;
     /**
      * 
      * @type {string}
@@ -78,4 +78,13 @@ export interface CreateCampaignRequest {
      */
     'userId'?: string;
 }
+
+export const CreateCampaignRequestCampaignTypeEnum = {
+    DomainGeneration: 'domain_generation',
+    DnsValidation: 'dns_validation',
+    HttpKeywordValidation: 'http_keyword_validation'
+} as const;
+
+export type CreateCampaignRequestCampaignTypeEnum = typeof CreateCampaignRequestCampaignTypeEnum[keyof typeof CreateCampaignRequestCampaignTypeEnum];
+
 

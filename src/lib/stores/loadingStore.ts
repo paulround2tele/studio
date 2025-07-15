@@ -133,7 +133,7 @@ interface LoadingState {
   description: string;
   progress?: number;
   error?: string;
-  status: 'loading' | 'succeeded' | 'failed' | 'timeout';
+  status: 'loading' | 'succeeded' | 'Failed' | 'timeout';
   config: LoadingOperationConfig;
   timeoutId?: NodeJS.Timeout;
 }
@@ -165,7 +165,7 @@ interface LoadingStoreState {
 interface LoadingStoreActions {
   // Start/stop operations
   startLoading: (operation: LoadingOperation, description?: string, config?: PartialLoadingOperationConfig) => void;
-  stopLoading: (operation: LoadingOperation, status?: 'succeeded' | 'failed', error?: string) => void;
+  stopLoading: (operation: LoadingOperation, status?: 'succeeded' | 'Failed', error?: string) => void;
   
   // Progress updates
   updateProgress: (operation: LoadingOperation, progress: number) => void;
@@ -253,7 +253,7 @@ export const useLoadingStore = create<LoadingStore>()(
       // Set timeout if configured
       if (operationConfig.timeout && operationConfig.timeout > 0) {
         loadingState.timeoutId = setTimeout(() => {
-          get().stopLoading(operation, 'failed', 'Operation timed out');
+          get().stopLoading(operation, 'Failed', 'Operation timed out');
         }, operationConfig.timeout);
       }
 
@@ -279,7 +279,7 @@ export const useLoadingStore = create<LoadingStore>()(
       });
     },
 
-    stopLoading: (operation: LoadingOperation, status: 'succeeded' | 'failed' = 'succeeded', error?: string) => {
+    stopLoading: (operation: LoadingOperation, status: 'succeeded' | 'Failed' = 'succeeded', error?: string) => {
       const state = get();
       const loadingState = state.operations[operation];
 
@@ -333,7 +333,7 @@ export const useLoadingStore = create<LoadingStore>()(
           isAnyLoading,
           isUIBlocked,
           successfulOperations: status === 'succeeded' ? state.successfulOperations + 1 : state.successfulOperations,
-          failedOperations: status === 'failed' ? state.failedOperations + 1 : state.failedOperations,
+          failedOperations: status === 'Failed' ? state.failedOperations + 1 : state.failedOperations,
         };
       });
     },

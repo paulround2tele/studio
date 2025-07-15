@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { ModelsProxy } from './models-proxy';
+import type { Proxy } from './models-proxy';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { SqlNullString } from './sql-null-string';
@@ -82,10 +82,10 @@ export interface ModelsProxyPool {
     'poolStrategy'?: SqlNullString;
     /**
      * Computed fields (not stored in DB)
-     * @type {Array<ModelsProxy>}
+     * @type {Array<Proxy>}
      * @memberof ModelsProxyPool
      */
-    'proxies'?: Array<ModelsProxy>;
+    'proxies'?: Array<Proxy>;
     /**
      * 
      * @type {number}

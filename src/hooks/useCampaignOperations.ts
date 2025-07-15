@@ -10,9 +10,9 @@ import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import type { CampaignViewModel, CampaignValidationItem } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 
-type Campaign = components['schemas']['models.Campaign'];
+type Campaign = components['schemas']['Campaign'];
 type CampaignType = NonNullable<Campaign['campaignType']>;
-type GeneratedDomainBackend = components['schemas']['models.GeneratedDomain'];
+type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
 import { useCampaignDetailsStore } from '@/lib/stores/campaignDetailsStore';
 
 export const useCampaignOperations = (campaignId: string) => {
@@ -79,7 +79,7 @@ export const useCampaignOperations = (campaignId: string) => {
   // 🔧 CRITICAL FIX: Load domain data with direct store access and enhanced logging
   const loadDomainData = useCallback(async (campaignData: CampaignViewModel) => {
     console.log('🔍 [Domain Loading] Starting for campaign:', {
-      id: campaignId,
+id: campaignId,
       type: campaignData.campaignType,
       status: campaignData.status
     });
@@ -93,8 +93,8 @@ export const useCampaignOperations = (campaignId: string) => {
 
       // 🔧 CRITICAL FIX: Check currentPhase for validation transitions
       const isDNSValidationPhase = (campaignData as { currentPhase?: string }).currentPhase === 'dns_validation';
-      const isHTTPValidationPhase = (campaignData as { currentPhase?: string }).currentPhase === 'http_validation' ||
-                                    (campaignData as { currentPhase?: string }).currentPhase === 'HTTPValidation' ||
+      const isHTTPValidationPhase = (campaignData as { currentPhase?: string }).currentPhase === 'http_keyword_validation' ||
+                                    (campaignData as { currentPhase?: string }).currentPhase === 'http_keyword_validation' ||
                                     (campaignData as { currentPhase?: string }).currentPhase === 'http_keyword_validation';
       
       // 🔥 CRITICAL FIX: PHASE-AWARE DOMAIN LOADING
@@ -108,9 +108,9 @@ export const useCampaignOperations = (campaignId: string) => {
       
       if (hasDomainGenerationHistory) {
         console.log('📡 [Domain Loading] Loading generated domains (phase-aware)...', {
-          campaignType: campaignData.campaignType,
-          currentPhase: (campaignData as { currentPhase?: string }).currentPhase,
-          hasDomainGenParams: !!campaignData.domainGenerationParams,
+campaignType: campaignData.campaignType,
+          currentPhase: (campaignData as { currentPhase?: string }).currentPhase  as any,
+hasDomainGenParams: !!campaignData.domainGenerationParams,
           reason: campaignData.campaignType === 'domain_generation' ? 'direct_domain_generation' :
                   campaignData.campaignType === 'dns_validation' ? 'dns_validation_campaign' :
                   campaignData.campaignType === 'http_keyword_validation' ? 'http_validation_campaign' :
@@ -124,10 +124,10 @@ export const useCampaignOperations = (campaignId: string) => {
         updates.generatedDomains = domains as GeneratedDomainBackend[];
         
         console.log('✅ [Domain Loading] Generated domains loaded (phase-aware):', {
-          count: domains.length,
+count: domains.length,
           sampleDomains: domains.slice(0, 3).map(d => d.domainName),
-          currentPhase: isDNSValidationPhase ? 'DNS_VALIDATION' : isHTTPValidationPhase ? 'HTTP_VALIDATION' : 'DOMAIN_GENERATION',
-          campaignType: campaignData.campaignType
+          currentPhase: isDNSValidationPhase ? 'DNS_VALIDATION' : isHTTPValidationPhase ? 'HTTP_VALIDATION' : 'DOMAIN_GENERATION'  as any,
+campaignType: campaignData.campaignType
         });
       }
 
@@ -160,7 +160,7 @@ export const useCampaignOperations = (campaignId: string) => {
 
       // 🔧 Direct store access to avoid dependency cycles
       console.log('💾 [Domain Loading] Updating store with:', {
-        generatedDomainsCount: updates.generatedDomains?.length || 0,
+generatedDomainsCount: updates.generatedDomains?.length || 0,
         dnsItemsCount: updates.dnsCampaignItems?.length || 0,
         httpItemsCount: updates.httpCampaignItems?.length || 0
       });
@@ -227,7 +227,7 @@ export const useCampaignOperations = (campaignId: string) => {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load campaign';
       useCampaignDetailsStore.getState().setError(errorMessage);
       toast({
-        title: "Error Loading Campaign",
+title: "Error Loading Campaign",
         description: errorMessage,
         variant: "destructive"
       });
@@ -246,7 +246,7 @@ export const useCampaignOperations = (campaignId: string) => {
 
     try {
       console.log(`🚀 [Campaign Operations] Starting phase ${phaseToStart} for campaign ${campaignId}`, {
-        campaignStatus: campaign.status,
+campaignStatus: campaign.status,
         campaignType: campaign.campaignType,
         phaseToStart
       });
@@ -263,9 +263,9 @@ export const useCampaignOperations = (campaignId: string) => {
       if (responseData && typeof responseData === 'object' &&
           ('campaign_id' in responseData || 'message' in responseData)) {
         toast({
-          title: `${phaseToStart.replace('_', ' ').toUpperCase()} Started`,
-          description: (responseData as any)?.message || 'Campaign phase started successfully',
-        });
+title: `${phaseToStart.replace('_', ' ').toUpperCase()} Started`,
+          description: (responseData as any)?.message || 'Campaign phase started successfully'
+});
         
         // Refresh campaign data
         await loadCampaignData(false);
@@ -278,7 +278,7 @@ export const useCampaignOperations = (campaignId: string) => {
       console.error(`❌ [Campaign Operations] Error starting phase:`, error);
       
       toast({
-        title: "Error Starting Phase",
+title: "Error Starting Phase",
         description: errorMessage,
         variant: "destructive"
       });
@@ -298,7 +298,7 @@ export const useCampaignOperations = (campaignId: string) => {
       
       if (response && typeof response === 'object' && 'campaign_id' in response) {
         toast({
-          title: "Campaign Paused",
+title: "Campaign Paused",
           description: (response as { message?: string }).message || 'Campaign paused successfully'
         });
         await loadCampaignData(false);
@@ -309,7 +309,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to pause campaign';
       toast({
-        title: "Error Pausing Campaign",
+title: "Error Pausing Campaign",
         description: errorMessage,
         variant: "destructive"
       });
@@ -329,7 +329,7 @@ export const useCampaignOperations = (campaignId: string) => {
       
       if (response && typeof response === 'object' && 'campaign_id' in response) {
         toast({
-          title: "Campaign Resumed",
+title: "Campaign Resumed",
           description: (response as { message?: string }).message || 'Campaign resumed successfully'
         });
         await loadCampaignData(false);
@@ -340,7 +340,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to resume campaign';
       toast({
-        title: "Error Resuming Campaign",
+title: "Error Resuming Campaign",
         description: errorMessage,
         variant: "destructive"
       });
@@ -360,7 +360,7 @@ export const useCampaignOperations = (campaignId: string) => {
       
       if (response && typeof response === 'object' && 'campaign_id' in response) {
         toast({
-          title: "Campaign Cancelled",
+title: "Campaign Cancelled",
           description: (response as { message?: string }).message || 'Campaign cancelled successfully'
         });
         await loadCampaignData(false);
@@ -371,7 +371,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to cancel campaign';
       toast({
-        title: "Error Cancelling Campaign",
+title: "Error Cancelling Campaign",
         description: errorMessage,
         variant: "destructive"
       });
@@ -384,7 +384,7 @@ export const useCampaignOperations = (campaignId: string) => {
   const downloadDomains = useCallback((domains: string[], fileNamePrefix: string) => {
     if (!domains || domains.length === 0) {
       toast({
-        title: "No Domains",
+title: "No Domains",
         description: "There are no domains to export.",
         variant: "destructive"
       });
@@ -403,7 +403,7 @@ export const useCampaignOperations = (campaignId: string) => {
     URL.revokeObjectURL(url);
 
     toast({
-      title: "Export Started",
+title: "Export Started",
       description: `${domains.length} domains are being downloaded.`
     });
   }, [campaign?.name, toast]);
@@ -419,7 +419,7 @@ export const useCampaignOperations = (campaignId: string) => {
       
       if (response && typeof response === 'object' && 'success' in response && response.success) {
         toast({
-          title: "Campaign Deleted",
+title: "Campaign Deleted",
           description: (response as { message?: string }).message || 'Campaign deleted successfully'
         });
         // Note: Don't reload campaign data since campaign is deleted
@@ -431,7 +431,7 @@ export const useCampaignOperations = (campaignId: string) => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete campaign';
       toast({
-        title: "Error Deleting Campaign",
+title: "Error Deleting Campaign",
         description: errorMessage,
         variant: "destructive"
       });
@@ -454,8 +454,8 @@ export const useCampaignOperations = (campaignId: string) => {
     resumeCampaign,
     stopCampaign,
     deleteCampaign,
-    downloadDomains,
-  };
+    downloadDomains
+};
 };
 
 export default useCampaignOperations;

@@ -134,7 +134,7 @@ class EnhancedApiService {
     if (config.loadingOperation) {
       useLoadingStore.getState().stopLoading(
         config.loadingOperation, 
-        'failed', 
+        'Failed', 
         lastError?.message || 'Request failed'
       );
     }

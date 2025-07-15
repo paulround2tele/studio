@@ -41,7 +41,7 @@ export function SimpleCampaignProgress({ campaignId }: CampaignProgressProps) {
         
       case 'campaign_complete':
         setProgress(100);
-        setStatus('Completed');
+        setStatus('completed');
         break;
         
       case 'campaign_error':

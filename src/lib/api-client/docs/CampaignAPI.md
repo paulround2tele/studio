@@ -6,7 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **avgProcessingRate** | **number** |  | [optional] [default to undefined]
-**campaignType** | **object** |  | [optional] [default to undefined]
+**campaignType** | **string** |  | [optional] [default to undefined]
 **completedAt** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **errorMessage** | **string** |  | [optional] [default to undefined]
@@ -19,7 +19,7 @@ Name | Type | Description | Notes
 **processedItems** | **number** |  | [optional] [default to undefined]
 **progressPercentage** | **number** |  | [optional] [default to undefined]
 **startedAt** | **string** |  | [optional] [default to undefined]
-**status** | **object** |  | [optional] [default to undefined]
+**status** | **string** |  | [optional] [default to undefined]
 **successfulItems** | **number** |  | [optional] [default to undefined]
 **totalItems** | **number** |  | [optional] [default to undefined]
 **updatedAt** | **string** |  | [optional] [default to undefined]

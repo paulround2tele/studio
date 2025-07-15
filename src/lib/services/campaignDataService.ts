@@ -13,9 +13,9 @@ import { CampaignViewModel, components } from '../types';
 import { PhaseTransitionMessage, WebSocketMessageTypes as _WebSocketMessageTypes } from '../websocket/message-handlers';
 
 // Extract types from the OpenAPI schema
-type _GeneratedDomain = components["schemas"]["models.GeneratedDomain"]; // Unused
-type _DNSValidationResult = components["schemas"]["models.DNSValidationResult"]; // Unused
-type HTTPKeywordResult = components["schemas"]["models.HTTPKeywordResult"];
+type _GeneratedDomain = components['schemas']['GeneratedDomain']; // Unused
+type _DNSValidationResult = components['schemas']['DNSValidationResult']; // Unused
+type HTTPKeywordResult = components['schemas']['HTTPKeywordResult'];
 
 // Rich campaign data with arrays instead of counts
 export interface RichCampaignData extends Omit<CampaignViewModel, 'domains' | 'dnsValidatedDomains' | 'leads'> {

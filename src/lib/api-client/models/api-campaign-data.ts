@@ -65,13 +65,13 @@ export interface ApiCampaignData {
 }
 
 export const ApiCampaignDataStatusEnum = {
-    Pending: 'pending',
+    Pending: 'Pending',
     Queued: 'queued',
-    Running: 'running',
+    Running: 'InProgress',
     Pausing: 'pausing',
     Paused: 'paused',
     Completed: 'completed',
-    Failed: 'failed',
+    Failed: 'Failed',
     Archived: 'archived',
     Cancelled: 'cancelled'
 } as const;

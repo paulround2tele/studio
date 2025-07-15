@@ -55,13 +55,19 @@ export interface CreateProxyRequest {
      * @type {string}
      * @memberof CreateProxyRequest
      */
+    'notes'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateProxyRequest
+     */
     'password'?: string;
     /**
      * 
      * @type {string}
      * @memberof CreateProxyRequest
      */
-    'protocol': CreateProxyRequestProtocolEnum;
+    'protocol'?: CreateProxyRequestProtocolEnum;
     /**
      * 
      * @type {string}

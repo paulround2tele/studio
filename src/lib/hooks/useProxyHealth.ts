@@ -3,11 +3,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getProxies, testProxy, testAllProxies } from '@/lib/services/proxyService.production';
-import type { Proxy as OpenAPIProxy, ProxiesListResponse } from '@/lib/services/proxyService.production';
+import type { ProxiesListResponse } from '@/lib/services/proxyService.production';
+import type { Proxy } from '@/lib/api-client/models';
 import { useToast } from '@/hooks/use-toast';
 
-// Use OpenAPIProxy directly - no extension needed since all fields are already there
-type ExtendedProxy = OpenAPIProxy;
+// Use Proxy directly - no extension needed since all fields are already there
+type ExtendedProxy = Proxy;
 
 
 export interface ProxyHealthMetrics {
@@ -70,20 +71,20 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     const testingProxies = 0; // OpenAPI doesn't have testing status
     const disabledProxies = safeProxyData.filter(p => !p.isEnabled).length;
 
-    const proxiesWithLatency = safeProxyData.filter(p => p.latencyMs?.valid && p.latencyMs?.int32 && p.latencyMs.int32 > 0);
+    const proxiesWithLatency = safeProxyData.filter(p => (typeof p.latencyMs === "object" && p.latencyMs && (p.latencyMs as any).valid) && p.latencyMs && p.latencyMs > 0);
     const averageResponseTime = proxiesWithLatency.length > 0
-      ? proxiesWithLatency.reduce((sum, p) => sum + (p.latencyMs?.int32 || 0), 0) / proxiesWithLatency.length
+      ? proxiesWithLatency.reduce((sum, p) => sum + (typeof p.latencyMs === "number" ? p.latencyMs : 0), 0) / proxiesWithLatency.length
       : 0;
 
     const totalTests = safeProxyData.reduce((sum, p) => {
-      const successCount = p.successCount?.int32 || 0;
-      const failureCount = p.failureCount?.int32 || 0;
-      return sum + successCount + failureCount;
+      const successCount = p.successCount || 0;
+      const failureCount = p.failureCount || 0;
+      return sum + (typeof successCount === "number" ? successCount : parseInt(String(successCount)) || 0) + (typeof failureCount === "number" ? failureCount : parseInt(String(failureCount)) || 0);
     }, 0);
     
     const totalSuccesses = safeProxyData.reduce((sum, p) => {
-      const successCount = p.successCount?.int32 || 0;
-      return sum + successCount;
+      const successCount = p.successCount || 0;
+      return sum + (typeof successCount === "number" ? successCount : parseInt(String(successCount)) || 0);
     }, 0);
     
     const successRate = totalTests > 0 ? (totalSuccesses / totalTests) * 100 : 0;
@@ -108,11 +109,11 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       id: proxy.id || '',
       address: proxy.address || '',
       status: proxy.isHealthy ? 'Active' : 'Failed',
-      latencyMs: proxy.latencyMs?.int32 || null,
-      lastTested: proxy.lastCheckedAt?.valid && proxy.lastCheckedAt?.time ? new Date(proxy.lastCheckedAt.time) : null,
-      successCount: proxy.successCount?.int32 || 0,
-      failureCount: proxy.failureCount?.int32 || 0,
-      lastError: proxy.lastError?.string || null,
+      latencyMs: proxy.latencyMs ? (typeof proxy.latencyMs === 'string' ? parseFloat(proxy.latencyMs) : proxy.latencyMs) : null,
+      lastTested: proxy.lastCheckedAt ? new Date(proxy.lastCheckedAt as any) : null,
+      successCount: typeof proxy.successCount === 'string' ? parseInt(proxy.successCount, 10) : (proxy.successCount || 0),
+      failureCount: typeof proxy.failureCount === 'string' ? parseInt(proxy.failureCount, 10) : (proxy.failureCount || 0),
+      lastError: proxy.lastError || null,
       isHealthy: Boolean(proxy.isHealthy)
     }));
   }, [proxies]);
@@ -240,13 +241,13 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     const proxy = proxies.find(p => p.id === proxyId);
     if (!proxy) return 0;
     
-    const successCount = proxy.successCount?.int32 || 0;
-    const failureCount = proxy.failureCount?.int32 || 0;
-    const totalTests = successCount + failureCount;
+    const successCount = proxy.successCount || 0;
+    const failureCount = proxy.failureCount || 0;
+    const totalTests = (typeof successCount === "number" ? successCount : parseInt(String(successCount)) || 0) + (typeof failureCount === "number" ? failureCount : parseInt(String(failureCount)) || 0);
     
     if (totalTests === 0) return 100; // Assume 100% if no tests
     
-    return Math.round((successCount / totalTests) * 100);
+    return Math.round(((typeof successCount === "number" ? successCount : parseInt(String(successCount)) || 0) / totalTests) * 100);
   }, [proxies]);
 
   // 🚀 WEBSOCKET PUSH MODEL: Remove polling, use WebSocket events instead

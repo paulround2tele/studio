@@ -43,7 +43,7 @@ export interface DomainGenerationParams {
      * @type {string}
      * @memberof DomainGenerationParams
      */
-    'patternType': string;
+    'patternType': DomainGenerationParamsPatternTypeEnum;
     /**
      * 
      * @type {string}
@@ -57,4 +57,13 @@ export interface DomainGenerationParams {
      */
     'variableLength': number;
 }
+
+export const DomainGenerationParamsPatternTypeEnum = {
+    Prefix: 'prefix',
+    Suffix: 'suffix',
+    Both: 'both'
+} as const;
+
+export type DomainGenerationParamsPatternTypeEnum = typeof DomainGenerationParamsPatternTypeEnum[keyof typeof DomainGenerationParamsPatternTypeEnum];
+
 

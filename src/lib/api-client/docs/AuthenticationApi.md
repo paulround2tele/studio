@@ -1,17 +1,17 @@
 # AuthenticationApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
 |[**changePassword**](#changepassword) | **POST** /auth/change-password | Change user password|
 |[**getCurrentUser**](#getcurrentuser) | **GET** /auth/me | Get current user|
-|[**loginUser**](#loginuser) | **POST** /auth/login | User login|
-|[**logoutUser**](#logoutuser) | **POST** /auth/logout | User logout|
+|[**login**](#login) | **POST** /auth/login | User login|
+|[**logout**](#logout) | **POST** /auth/logout | User logout|
 |[**refreshSession**](#refreshsession) | **POST** /auth/refresh | Refresh user session|
 
 # **changePassword**
-> ApiPasswordChangeResponse changePassword(modelsChangePasswordRequest)
+> PasswordChangeResponse changePassword()
 
 Change password for the currently authenticated user
 
@@ -20,30 +20,22 @@ Change password for the currently authenticated user
 ```typescript
 import {
     AuthenticationApi,
-    Configuration,
-    ModelsChangePasswordRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-let modelsChangePasswordRequest: ModelsChangePasswordRequest; //Password change request
-
-const { status, data } = await apiInstance.changePassword(
-    modelsChangePasswordRequest
-);
+const { status, data } = await apiInstance.changePassword();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **modelsChangePasswordRequest** | **ModelsChangePasswordRequest**| Password change request | |
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**ApiPasswordChangeResponse**
+**PasswordChangeResponse**
 
 ### Authorization
 
@@ -51,22 +43,21 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Password changed successfully |  -  |
-|**400** | Invalid request format |  -  |
-|**401** | Authentication required |  -  |
-|**501** | Not implemented |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getCurrentUser**
-> ModelsUser getCurrentUser()
+> User getCurrentUser()
 
 Get information about the currently authenticated user
 
@@ -90,7 +81,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ModelsUser**
+**User**
 
 ### Authorization
 
@@ -105,15 +96,14 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Current user information |  -  |
-|**401** | Authentication required |  -  |
-|**404** | User not found |  -  |
-|**500** | Internal server error |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **loginUser**
-> ApiLoginSuccessResponse loginUser(modelsLoginRequest)
+# **login**
+> LoginSuccessResponse login()
 
 Authenticate user credentials and create session
 
@@ -122,30 +112,22 @@ Authenticate user credentials and create session
 ```typescript
 import {
     AuthenticationApi,
-    Configuration,
-    ModelsLoginRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-let modelsLoginRequest: ModelsLoginRequest; //Login credentials
-
-const { status, data } = await apiInstance.loginUser(
-    modelsLoginRequest
-);
+const { status, data } = await apiInstance.login();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **modelsLoginRequest** | **ModelsLoginRequest**| Login credentials | |
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**ApiLoginSuccessResponse**
+**LoginSuccessResponse**
 
 ### Authorization
 
@@ -153,24 +135,21 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Login successful with user and session info |  -  |
-|**400** | Invalid request format |  -  |
-|**401** | Invalid credentials |  -  |
-|**403** | Account inactive |  -  |
-|**423** | Account locked |  -  |
-|**500** | Internal server error |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **logoutUser**
-> ApiSuccessMessageResponse logoutUser()
+# **logout**
+> SuccessMessageResponse logout()
 
 Invalidate current user session and clear cookies
 
@@ -185,7 +164,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-const { status, data } = await apiInstance.logoutUser();
+const { status, data } = await apiInstance.logout();
 ```
 
 ### Parameters
@@ -194,7 +173,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiSuccessMessageResponse**
+**SuccessMessageResponse**
 
 ### Authorization
 
@@ -209,12 +188,14 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Logout successful |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **refreshSession**
-> ApiSessionRefreshResponse refreshSession()
+> SessionRefreshResponse refreshSession()
 
 Extend the current session expiry time
 
@@ -238,7 +219,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiSessionRefreshResponse**
+**SessionRefreshResponse**
 
 ### Authorization
 
@@ -253,9 +234,9 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Session refreshed with new expiry |  -  |
-|**401** | Invalid or expired session |  -  |
-|**500** | Failed to refresh session |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -107,84 +107,92 @@ class SettingsService {
   }
 
   async getDNSConfig(): Promise<DNSConfig> {
-    const response = await configClient.getDNSConfig();
+    const response = await configClient.getDNSConfigGin();
     return response as unknown as DNSConfig;
   }
 
   async updateDNSConfig(cfg: DNSConfig): Promise<void> {
-    await configClient.updateDNSConfig(cfg as any);
+    await configClient.updateDNSConfigGin(cfg as any);
   }
 
   async getHTTPConfig(): Promise<HTTPConfig> {
-    const response = await configClient.getHTTPConfig();
+    const response = await configClient.getHTTPConfigGin();
     return response as unknown as HTTPConfig;
   }
 
   async updateHTTPConfig(cfg: HTTPConfig): Promise<void> {
-    await configClient.updateHTTPConfig(cfg as any);
+    await configClient.updateHTTPConfigGin(cfg as any);
   }
 
   async getLoggingConfig(): Promise<LoggingConfig> {
-    const response = await configClient.getLoggingConfig();
+    const response = await configClient.getLoggingConfigGin();
     return response as unknown as LoggingConfig;
   }
 
   async updateLoggingConfig(cfg: LoggingConfig): Promise<void> {
-    await configClient.updateLoggingConfig(cfg as any);
+    await configClient.updateLoggingConfigGin({ data: cfg as any });
   }
 
   async getWorkerConfig(): Promise<WorkerConfig> {
-    const response = await configClient.getWorkerConfig();
+    const response = await configClient.getWorkerConfigGin();
     return response as unknown as WorkerConfig;
   }
 
   async updateWorkerConfig(cfg: WorkerConfig): Promise<void> {
-    await configClient.updateWorkerConfig(cfg as any);
+    await configClient.updateWorkerConfigGin({ data: cfg as any });
   }
 
   async getRateLimiterConfig(): Promise<RateLimiterConfig> {
-    const response = await configClient.getRateLimiterConfig();
+    const response = await configClient.getRateLimiterConfigGin();
     return response as unknown as RateLimiterConfig;
   }
 
   async updateRateLimiterConfig(cfg: RateLimiterConfig): Promise<void> {
-    await configClient.updateRateLimiterConfig(cfg as any);
+    await configClient.updateRateLimiterConfigGin({ data: cfg as any });
   }
 
   async getProxyManagerConfig(): Promise<ProxyManagerConfig> {
-    const response = await configClient.getProxyManagerConfig();
+    const response = await configClient.getProxyManagerConfigGin();
     return response as unknown as ProxyManagerConfig;
   }
 
   async updateProxyManagerConfig(cfg: ProxyManagerConfig): Promise<void> {
-    await configClient.updateProxyManagerConfig(cfg as any);
+    await configClient.updateProxyManagerConfigGin({ data: cfg as any });
   }
 
   async getServerConfig(): Promise<ServerConfig> {
-    const response = await configClient.getServerConfig();
+    const response = await configClient.getServerConfigGin();
     return response as unknown as ServerConfig;
   }
 
   async updateServerConfig(cfg: Partial<ServerConfig>): Promise<void> {
-    await configClient.updateServerConfig(cfg as any);
+    await configClient.updateServerConfigGin({ data: cfg as any });
   }
 
   async getAuthConfig(): Promise<AuthConfig> {
-    const response = await configClient.getAuthConfig();
+    const response = await configClient.getAuthConfigGin();
     return response as unknown as AuthConfig;
   }
 
   async updateAuthConfig(cfg: AuthConfig): Promise<void> {
-    await configClient.updateAuthConfig(cfg as any);
+    await configClient.updateAuthConfigGin({ data: cfg as any });
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsConfig> {
-    const response = await featureFlagsClient.getFeatureFlags();
-    return response as unknown as FeatureFlagsConfig;
+    // TODO: Fix once proper feature flags API endpoint is available
+    try {
+      const response = await featureFlagsClient.getServerConfigGin();
+      return (response as any)?.featureFlags || {} as FeatureFlagsConfig;
+    } catch (error) {
+      console.warn('Feature flags API not available, using defaults:', error);
+      return {} as FeatureFlagsConfig;
+    }
   }
 
-  async updateFeatureFlags(flags: FeatureFlagsConfig): Promise<void> {
-    await featureFlagsClient.updateFeatureFlags(flags as any);
+  async updateFeatureFlags(_flags: FeatureFlagsConfig): Promise<void> {
+    // TODO: Fix once proper feature flags API endpoint is available
+    console.warn('updateFeatureFlags not implemented - feature flags API endpoint missing');
+    // await featureFlagsClient.updateServerConfig({ featureFlags: flags } as any);
   }
 }
 

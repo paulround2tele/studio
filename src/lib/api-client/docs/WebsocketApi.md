@@ -1,13 +1,13 @@
 # WebsocketApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**connectWebSocket**](#connectwebsocket) | **GET** /ws | WebSocket connection|
+|[**handleConnections**](#handleconnections) | **GET** /ws | WebSocket connection|
 
-# **connectWebSocket**
-> connectWebSocket()
+# **handleConnections**
+> StreamExtractKeywords200Response handleConnections()
 
 Upgrade HTTP connection to WebSocket for real-time communication
 
@@ -24,7 +24,7 @@ const apiInstance = new WebsocketApi(configuration);
 
 let domainflowSession: string; //Session cookie for authentication (optional) (default to undefined)
 
-const { status, data } = await apiInstance.connectWebSocket(
+const { status, data } = await apiInstance.handleConnections(
     domainflowSession
 );
 ```
@@ -38,7 +38,7 @@ const { status, data } = await apiInstance.connectWebSocket(
 
 ### Return type
 
-void (empty response body)
+**StreamExtractKeywords200Response**
 
 ### Authorization
 
@@ -53,9 +53,9 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**101** | WebSocket connection established |  -  |
-|**401** | Authentication required |  -  |
-|**403** | Invalid origin or session security validation failed |  -  |
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

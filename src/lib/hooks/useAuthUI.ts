@@ -32,14 +32,14 @@ export function useAuthUI() {
         loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'succeeded');
       } else {
         logger.warn('AUTH_UI', 'Login with UI failed', { error: result.error });
-        loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'failed', result.error || 'Login failed');
+        loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'Failed', result.error || 'Login failed');
       }
       
       return result;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Network error';
       logger.error('AUTH_UI', 'Login with UI error', { error: errorMsg });
-      loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'failed', errorMsg);
+      loadingStore.stopLoading(LOADING_OPERATIONS.LOGIN, 'Failed', errorMsg);
       
       // Return error result instead of throwing to match expected interface
       return {
@@ -63,7 +63,7 @@ export function useAuthUI() {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Logout error';
       logger.error('AUTH_UI', 'Logout with UI error', { error: errorMsg });
-      loadingStore.stopLoading(LOADING_OPERATIONS.LOGOUT, 'failed', errorMsg);
+      loadingStore.stopLoading(LOADING_OPERATIONS.LOGOUT, 'Failed', errorMsg);
       throw error;
     }
   }, [auth, loadingStore]);

@@ -2,11 +2,12 @@
 
 import PersonaForm from '@/components/personas/PersonaForm';
 import PageHeader from '@/components/shared/PageHeader';
-import type { components } from '@/lib/api-client/types';
+import type { FrontendPersona } from '@/lib/types/frontend-safe-types';
+import type { ApiResponse } from '@/lib/types';
 
-// Use OpenAPI types directly
-type Persona = components['schemas']['api.PersonaResponse'];
-type PersonaDetailResponse = { status: 'success' | 'error'; data?: Persona; message?: string };
+// Use frontend-safe types for consistency with service layer
+type Persona = FrontendPersona;
+type PersonaDetailResponse = ApiResponse<Persona>;
 import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
@@ -118,7 +119,7 @@ function EditPersonaPageContent() {
         description={`Modify the details for this ${typeNameDisplay} persona.`}
         icon={IconToUse}
       />
-      <PersonaForm persona={persona} isEditing={true} personaType={persona.personaType} />
+      <PersonaForm persona={persona as any} isEditing={true} personaType={persona.personaType} />
     </>
   );
 }

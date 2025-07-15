@@ -13,16 +13,16 @@ const config = new Configuration({
 const configApi = new FeatureFlagsApi(config);
 
 // Use generated types
-export type FeatureFlags = components['schemas']['api.FeatureFlags'];
+export type FeatureFlags = components['schemas']['FeatureFlags'];
 
 // Import unified API response wrapper
 import type { ApiResponse } from '@/lib/types';
 export type ConfigResponse<T = unknown> = ApiResponse<T>;
 
 // Import additional OpenAPI config types
-export type AuthConfig = components['schemas']['api.AuthConfig'];
-export type DNSConfig = components['schemas']['api.DNSValidatorConfigJSON'];
-export type HTTPConfig = components['schemas']['api.HTTPValidatorConfigJSON'];
+export type AuthConfig = components['schemas']['AuthConfig'];
+export type DNSConfig = components['schemas']['DNSValidatorConfigJSON'];
+export type HTTPConfig = components['schemas']['HTTPValidatorConfigJSON'];
 
 class ConfigService {
   private static instance: ConfigService;
@@ -52,7 +52,7 @@ class ConfigService {
 
   async updateFeatureFlags(flags: FeatureFlags): Promise<ConfigResponse<FeatureFlags>> {
     try {
-      const response = await configApi.updateFeatureFlags(flags);
+      const response = await configApi.updateFeatureFlags({ data: flags });
       return {
         status: 'success',
         data: response.data as FeatureFlags,

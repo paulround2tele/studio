@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { CampaignViewModel } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 
-type HttpPersona = components['schemas']['api.PersonaResponse'] & { personaType: 'http' };
-type DnsPersona = components['schemas']['api.PersonaResponse'] & { personaType: 'dns' };
+type HttpPersona = components['schemas']['PersonaResponse'] & { personaType: 'http' };
+type DnsPersona = components['schemas']['PersonaResponse'] & { personaType: 'dns' };
 import { getPersonas } from "@/lib/services/personaService";
 import { getProxies } from "@/lib/services/proxyService.production";
 import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
-type Campaign = components['schemas']['models.Campaign'];
-type Proxy = components['schemas']['models.Proxy'];
+type Campaign = components['schemas']['Campaign'];
+type Proxy = components['schemas']['Proxy'];
 
 interface CampaignFormData {
   httpPersonas: HttpPersona[];

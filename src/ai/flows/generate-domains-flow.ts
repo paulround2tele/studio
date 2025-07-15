@@ -30,7 +30,7 @@ export interface GeneratedDomain {
   index: number;
 }
 
-export type CampaignPhaseStatus = 'Pending' | 'InProgress' | 'Succeeded' | 'Failed' | 'Idle' | 'Paused';
+export type CampaignPhaseStatus = 'Pending' | 'InProgress' | 'completed' | 'Failed' | 'Pending' | 'paused';
 
 // Additional domain generation types
 export interface DomainGenerationResult {

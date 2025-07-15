@@ -14,31 +14,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { createPersona, updatePersona } from "@/lib/services/personaService";
+import { createPersona, updatePersona, type CreatePersonaRequest, type UpdatePersonaRequest } from "@/lib/services/personaService";
 import type { components } from '@/lib/api-client/types';
 
 // Import the actual generated types directly from their files
 import type { HttpPersonaConfig } from '@/lib/api-client/models/http-persona-config';
 import type { DnsPersonaConfig } from '@/lib/api-client/models/dns-persona-config';
 
-// Use OpenAPI types directly, but override the problematic ones
-type PersonaResponse = components['schemas']['api.PersonaResponse'];
-
-// Define proper types since the generated ones are Record<string, never>
-interface CreatePersonaRequest {
-  name: string;
-  personaType: 'http' | 'dns';
-  description?: string;
-  configDetails: HttpPersonaConfig | DnsPersonaConfig;
-  isEnabled?: boolean;
-}
-
-interface UpdatePersonaRequest {
-  name?: string;
-  description?: string;
-  configDetails?: HttpPersonaConfig | DnsPersonaConfig;
-  isEnabled?: boolean;
-}
+// Use OpenAPI types directly
+type PersonaResponse = components['schemas']['PersonaResponse'];
 
 // Create proper typed interfaces for personas with correct config types
 
@@ -248,9 +232,9 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           ...commonPayloadData,
           configDetails: httpConfigDetails
         };
-        response = await updatePersona(persona.id, updatePayload, 'http');
+        response = await updatePersona(persona.id, updatePayload as any, 'http');
       } else {
-        response = await createPersona(payload);
+        response = await createPersona(payload as any);
       }
 
       if (response.status === 'success') {

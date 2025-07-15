@@ -109,7 +109,7 @@ const logWithTimestamp = (level: 'log' | 'warn' | 'error', message: string, ...a
 
 interface SystemCheck {
   name: string;
-  status: 'passed' | 'failed' | 'warning' | 'checking';
+  status: 'passed' | 'Failed' | 'warning' | 'checking';
   message: string;
   details?: string;
   icon?: React.ReactNode;
@@ -160,7 +160,7 @@ export default function ProductionReadinessCheck() {
       } else {
         results.push({
           name: 'Authentication System',
-          status: 'failed',
+          status: 'Failed',
           message: 'Not authenticated',
           details: 'User must be logged in to access the application',
           icon: <Shield className="h-4 w-4" />
@@ -169,7 +169,7 @@ export default function ProductionReadinessCheck() {
     } catch (_error) {
       results.push({
         name: 'Authentication System',
-        status: 'failed',
+        status: 'Failed',
         message: 'Authentication check failed',
         details: 'Unknown error',
         icon: <Shield className="h-4 w-4" />
@@ -211,7 +211,7 @@ export default function ProductionReadinessCheck() {
       } else {
         results.push({
           name: 'API Backend',
-          status: 'failed',
+          status: 'Failed',
           message: 'Backend API returned unhealthy status',
           details: `Status: ${data.status} ${data.message || 'Check backend logs'} ${data.isCached ? '(Cached)' : ''}`,
           icon: <Database className="h-4 w-4" />
@@ -220,7 +220,7 @@ export default function ProductionReadinessCheck() {
     } catch (_error) {
       results.push({
         name: 'API Backend',
-        status: 'failed',
+        status: 'Failed',
         message: 'Cannot connect to backend API',
         details: 'Ensure backend is running on port 8080',
         icon: <Database className="h-4 w-4" />
@@ -297,7 +297,7 @@ export default function ProductionReadinessCheck() {
     }
 
     // Calculate overall status
-    const failedCount = results.filter(r => r.status === 'failed').length;
+    const failedCount = results.filter(r => r.status === 'Failed').length;
     const warningCount = results.filter(r => r.status === 'warning').length;
     
     if (failedCount > 0) {
@@ -343,7 +343,7 @@ export default function ProductionReadinessCheck() {
     switch (status) {
       case 'passed':
         return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'failed':
+      case 'Failed':
         return <XCircle className="h-5 w-5 text-destructive" />;
       case 'warning':
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
@@ -412,7 +412,7 @@ export default function ProductionReadinessCheck() {
               className={cn(
                 "flex items-start space-x-3 p-3 rounded-lg border",
                 check.status === 'passed' && "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800",
-                check.status === 'failed' && "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
+                check.status === 'Failed' && "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800",
                 check.status === 'warning' && "bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800",
                 check.status === 'checking' && "bg-muted"
               )}

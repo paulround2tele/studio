@@ -34,10 +34,10 @@ export interface GeneratedDomain {
     'dnsIp'?: string;
     /**
      * Domain-centric validation status fields
-     * @type {object}
+     * @type {string}
      * @memberof GeneratedDomain
      */
-    'dnsStatus'?: object;
+    'dnsStatus'?: GeneratedDomainDnsStatusEnum;
     /**
      * 
      * @type {string}
@@ -64,10 +64,10 @@ export interface GeneratedDomain {
     'httpKeywords'?: string;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof GeneratedDomain
      */
-    'httpStatus'?: object;
+    'httpStatus'?: GeneratedDomainHttpStatusEnum;
     /**
      * 
      * @type {string}
@@ -123,4 +123,22 @@ export interface GeneratedDomain {
      */
     'tld'?: string;
 }
+
+export const GeneratedDomainDnsStatusEnum = {
+    Pending: 'pending',
+    Ok: 'ok',
+    Error: 'error',
+    Timeout: 'timeout'
+} as const;
+
+export type GeneratedDomainDnsStatusEnum = typeof GeneratedDomainDnsStatusEnum[keyof typeof GeneratedDomainDnsStatusEnum];
+export const GeneratedDomainHttpStatusEnum = {
+    Pending: 'pending',
+    Ok: 'ok',
+    Error: 'error',
+    Timeout: 'timeout'
+} as const;
+
+export type GeneratedDomainHttpStatusEnum = typeof GeneratedDomainHttpStatusEnum[keyof typeof GeneratedDomainHttpStatusEnum];
+
 

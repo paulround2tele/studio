@@ -1,0 +1,150 @@
+🔍 OLD METHOD CALLS FOUND IN FRONTEND
+=====================================
+
+📋 Method calls:
+   authApi.changePassword
+   authApi.login
+   authApi.logout
+   authApi.me
+   authApi.refreshSession
+   campaignsApi.campaignsCampaignIdResultsHttpKeywordGet
+   campaignsApi.cancelCampaign
+   campaignsApi.createCampaign
+   campaignsApi.deleteCampaign
+   campaignsApi.getCampaignDetails
+   campaignsApi.getDNSValidationResults
+   campaignsApi.getGeneratedDomains
+   campaignsApi.getHTTPKeywordResults
+   campaignsApi.listCampaigns
+   campaignsApi.pauseCampaign
+   campaignsApi.resumeCampaign
+   campaignsApi.startCampaign
+   campaignsApi.updateCampaign
+   campaignsApi.validateDNSForCampaign
+   configApi.getFeatureFlags
+   configApi.updateFeatureFlags
+   featureFlagsApi.getFeatureFlagsGin
+   keywordSetsApi.createKeywordSetGin
+   keywordSetsApi.getKeywordSetGin
+   keywordSetsApi.listKeywordSetsGin
+   keywordSetsApi.updateKeywordSetGin
+   personasApi.createPersonaGin
+   personasApi.deletePersonaGin
+   personasApi.getPersonaByIDGin
+   personasApi.listAllPersonasGin
+   personasApi.testPersonaGin
+   personasApi.updatePersonaGin
+   proxiesApi.addProxyGin
+   proxiesApi.deleteProxyGin
+   proxiesApi.forceCheckAllProxiesGin
+   proxiesApi.forceCheckSingleProxyGin
+   proxiesApi.getProxyStatusesGin
+   proxiesApi.listProxiesGin
+   proxiesApi.testProxy
+   proxiesApi.updateProxyGin
+   proxyPoolsApi.addProxyToPoolGin
+   proxyPoolsApi.createProxyPoolGin
+   proxyPoolsApi.deleteProxyPoolGin
+   proxyPoolsApi.listProxyPoolsGin
+   proxyPoolsApi.removeProxyFromPoolGin
+   proxyPoolsApi.updateProxyPoolGin
+   resilientApi.execute
+
+📊 Total unique method calls: 47
+📊 Total call locations: 62
+
+📍 Call locations by file:
+
+   src/app/keyword-sets/[id]/edit/page.tsx:
+     Line 38: keywordSetsApi.getKeywordSetGin
+     Line 59: keywordSetsApi.updateKeywordSetGin
+
+   src/app/keyword-sets/new/page.tsx:
+     Line 35: keywordSetsApi.createKeywordSetGin
+
+   src/app/keyword-sets/page.tsx:
+     Line 23: keywordSetsApi.listKeywordSetsGin
+
+   src/components/dashboard/LatestActivityTable.tsx:
+     Line 264: campaignsApi.listCampaigns
+
+   src/components/proxyPools/ProxyPoolForm.tsx:
+     Line 60: proxyPoolsApi.updateProxyPoolGin
+     Line 64: proxyPoolsApi.createProxyPoolGin
+
+   src/components/proxyPools/ProxyPoolList.tsx:
+     Line 35: proxyPoolsApi.listProxyPoolsGin
+     Line 48: proxyPoolsApi.deleteProxyPoolGin
+
+   src/hooks/useCampaignOperations.ts:
+     Line 120: campaignsApi.getGeneratedDomains
+     Line 136: campaignsApi.getDNSValidationResults
+     Line 145: campaignsApi.getHTTPKeywordResults
+     Line 154: campaignsApi.getGeneratedDomains
+     Line 187: campaignsApi.getCampaignDetails
+     Line 258: campaignsApi.startCampaign
+     Line 297: campaignsApi.pauseCampaign
+     Line 328: campaignsApi.resumeCampaign
+     Line 359: campaignsApi.cancelCampaign
+     Line 418: campaignsApi.deleteCampaign
+
+   src/lib/features/feature-flags.ts:
+     Line 262: featureFlagsApi.getFeatureFlagsGin
+
+   src/lib/hooks/useCampaignFormData.ts:
+     Line 49: campaignsApi.listCampaigns
+
+   src/lib/services/authService.ts:
+     Line 47: authApi.me
+     Line 87: authApi.login
+     Line 124: authApi.logout
+     Line 144: authApi.refreshSession
+     Line 164: authApi.changePassword
+
+   src/lib/services/campaignService.production.ts:
+     Line 77: campaignsApi.listCampaigns
+     Line 100: campaignsApi.getCampaignDetails
+     Line 160: campaignsApi.createCampaign
+     Line 183: campaignsApi.updateCampaign
+     Line 204: campaignsApi.startCampaign
+     Line 224: campaignsApi.pauseCampaign
+     Line 244: campaignsApi.resumeCampaign
+     Line 264: campaignsApi.cancelCampaign
+     Line 293: campaignsApi.deleteCampaign
+     Line 313: campaignsApi.validateDNSForCampaign
+     Line 338: campaignsApi.getGeneratedDomains
+     Line 364: campaignsApi.getDNSValidationResults
+     Line 394: campaignsApi.campaignsCampaignIdResultsHttpKeywordGet
+
+   src/lib/services/configService.ts:
+     Line 39: configApi.getFeatureFlags
+     Line 55: configApi.updateFeatureFlags
+
+   src/lib/services/personaService.ts:
+     Line 56: personasApi.createPersonaGin
+     Line 90: personasApi.listAllPersonasGin
+     Line 118: personasApi.getPersonaByIDGin
+     Line 136: personasApi.updatePersonaGin
+     Line 163: personasApi.deletePersonaGin
+     Line 179: personasApi.testPersonaGin
+
+   src/lib/services/proxyPoolService.production.ts:
+     Line 79: proxyPoolsApi.listProxyPoolsGin
+     Line 122: proxyPoolsApi.createProxyPoolGin
+     Line 138: proxyPoolsApi.updateProxyPoolGin
+     Line 154: proxyPoolsApi.deleteProxyPoolGin
+     Line 170: proxyPoolsApi.addProxyToPoolGin
+     Line 186: proxyPoolsApi.removeProxyFromPoolGin
+
+   src/lib/services/proxyService.production.ts:
+     Line 83: proxiesApi.listProxiesGin
+     Line 176: proxiesApi.addProxyGin
+     Line 225: proxiesApi.updateProxyGin
+     Line 241: proxiesApi.deleteProxyGin
+     Line 257: proxiesApi.testProxy
+     Line 273: proxiesApi.forceCheckSingleProxyGin
+     Line 289: proxiesApi.forceCheckAllProxiesGin
+     Line 305: proxiesApi.getProxyStatusesGin
+
+   src/lib/utils/errorRecovery.ts:
+     Line 423: resilientApi.execute

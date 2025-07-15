@@ -17,61 +17,61 @@
 /**
  * 
  * @export
- * @interface ModelsCreateProxyRequest
+ * @interface CreateProxyRequest
  */
-export interface ModelsCreateProxyRequest {
+export interface CreateProxyRequest {
     /**
      * 
      * @type {string}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'address': string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'countryCode'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'description'?: string;
     /**
      * 
      * @type {boolean}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'isEnabled'?: boolean;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'name': string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'notes'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'password'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'protocol'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ModelsCreateProxyRequest
+     * @memberof CreateProxyRequest
      */
     'username'?: string;
 }

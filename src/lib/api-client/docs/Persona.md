@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 **lastTested** | **string** | Frontend-expected properties | [optional] [default to undefined]
 **name** | **string** |  | [default to undefined]
 **personaType** | **string** |  | [default to undefined]
-**status** | **object** |  | [optional] [default to undefined]
+**status** | **string** |  | [optional] [default to undefined]
 **tags** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 **updatedAt** | **string** |  | [optional] [default to undefined]
 

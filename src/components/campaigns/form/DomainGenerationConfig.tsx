@@ -146,13 +146,20 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
         
         console.log('🔍 [Offset] Fetching offset for pattern:', patternRequest);
         
-        const response = await apiClient.getPatternOffset(patternRequest);
-        const data = response.data;
+        // TODO: Fix getPatternOffset API call once OpenAPI client is properly regenerated
+        let offsetValue = 0;
+        try {
+          const response = await apiClient.getPatternOffset(patternRequest as any);
+          const data = response.data as { [key: string]: number };
+          offsetValue = data.currentOffset || data['currentOffset'] || 0;
+        } catch (error) {
+          console.warn('Failed to fetch pattern offset, using default:', error);
+          offsetValue = 0;
+        }
 
         if (cancelled) return;
         
         if (!cancelled) {
-          const offsetValue = data.currentOffset;
           if (typeof offsetValue === 'number') {
             setCurrentOffset({
               value: offsetValue,

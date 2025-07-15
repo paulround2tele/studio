@@ -10,22 +10,21 @@ import { getApiBaseUrl } from '@/lib/config/environment';
  * Normalize various health status formats to standardized values
  */
 function normalizeHealthStatus(status: string | undefined): string {
-  if (!status) return 'unknown';
-  
+  if (!status) return 'unknown' as any;
   const normalized = status.toLowerCase().trim();
   
   // Map common health status responses to 'ok'
-  const healthyStatuses = ['ok', 'healthy', 'up', 'online', 'running', 'good', 'success'];
+  const healthyStatuses = ['ok', 'healthy', 'up', 'online', 'InProgress', 'good', 'success'];
   
   if (healthyStatuses.includes(normalized)) {
-    return 'ok';
+    return 'ok' as any;
   }
   
   // Map common unhealthy statuses
-  const unhealthyStatuses = ['down', 'offline', 'error', 'failed', 'unhealthy', 'bad'];
+  const unhealthyStatuses = ['down', 'offline', 'error', 'Failed', 'unhealthy', 'bad'];
   
   if (unhealthyStatuses.includes(normalized)) {
-    return 'error';
+    return 'error' as any;
   }
   
   // Return original status if not recognized

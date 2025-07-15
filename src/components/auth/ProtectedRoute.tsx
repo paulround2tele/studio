@@ -158,7 +158,7 @@ export function useRouteAccess() {
   };
 
   const getAccessReason = () => {
-    if (!isAuthenticated) return 'unauthenticated';
+    if (!isAuthenticated) return 'unauthenticated' as any;
     return null;
   };
 

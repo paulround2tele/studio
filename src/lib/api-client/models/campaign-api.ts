@@ -28,10 +28,10 @@ export interface CampaignAPI {
     'avgProcessingRate'?: number;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof CampaignAPI
      */
-    'campaignType'?: object;
+    'campaignType'?: CampaignAPICampaignTypeEnum;
     /**
      * 
      * @type {string}
@@ -106,10 +106,10 @@ export interface CampaignAPI {
     'startedAt'?: string;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof CampaignAPI
      */
-    'status'?: object;
+    'status'?: CampaignAPIStatusEnum;
     /**
      * 
      * @type {number}
@@ -135,4 +135,26 @@ export interface CampaignAPI {
      */
     'userId'?: string;
 }
+
+export const CampaignAPICampaignTypeEnum = {
+    DomainGeneration: 'domain_generation',
+    DnsValidation: 'dns_validation',
+    HttpKeywordValidation: 'http_keyword_validation'
+} as const;
+
+export type CampaignAPICampaignTypeEnum = typeof CampaignAPICampaignTypeEnum[keyof typeof CampaignAPICampaignTypeEnum];
+export const CampaignAPIStatusEnum = {
+    Pending: 'pending',
+    Queued: 'queued',
+    Running: 'running',
+    Pausing: 'pausing',
+    Paused: 'paused',
+    Completed: 'completed',
+    Failed: 'failed',
+    Archived: 'archived',
+    Cancelled: 'cancelled'
+} as const;
+
+export type CampaignAPIStatusEnum = typeof CampaignAPIStatusEnum[keyof typeof CampaignAPIStatusEnum];
+
 

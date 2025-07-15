@@ -25,7 +25,7 @@ export function useAsyncOperation(operationId: string) {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-      stopLoading(operationId, 'failed', errorMessage);
+      stopLoading(operationId, 'Failed', errorMessage);
       throw error;
     }
   }, [operationId, startLoading, stopLoading]);
@@ -57,7 +57,7 @@ export function useAsyncOperations(baseOperationId: string) {
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-      stopLoading(fullOperationId, 'failed', errorMessage);
+      stopLoading(fullOperationId, 'Failed', errorMessage);
       throw error;
     }
   }, [baseOperationId, startLoading, stopLoading]);

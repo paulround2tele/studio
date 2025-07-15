@@ -15,7 +15,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
 import { proxyPoolsApi, type components } from "@/lib/api-client/client";
 
-type ProxyPool = components['schemas']['models.ProxyPool'];
+type ProxyPool = components['schemas']['ProxyPool'];
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,7 @@ export default function ProxyPoolList() {
   const loadPools = async () => {
     try {
       const pools = await proxyPoolsApi.listProxyPools();
-      setPools(pools.data.filter((pool: { id?: unknown }) => pool.id) as ProxyPool[]);
+      setPools((pools.data as any[]).filter((pool: { id?: unknown }) => pool.id) as ProxyPool[]);
     } catch (error) {
       console.error('Failed to load proxy pools:', error);
     }
@@ -45,7 +45,7 @@ export default function ProxyPoolList() {
 
   const handleDelete = async (id: string) => {
     try {
-      await proxyPoolsApi.proxyPoolsPoolIdDelete(id);
+      await proxyPoolsApi.deleteProxyPool(id);
       toast({ title: "Deleted" });
       loadPools();
     } catch (error) {
@@ -89,7 +89,7 @@ export default function ProxyPoolList() {
               {pools.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell>{p.name}</TableCell>
-                  <TableCell>{typeof p.description === 'string' ? p.description : (p.description?.string || "")}</TableCell>
+                  <TableCell>{typeof p.description === 'string' ? p.description : (p.description || "")}</TableCell>
                   <TableCell>{p.isEnabled ? "Yes" : "No"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button

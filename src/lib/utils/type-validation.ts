@@ -35,7 +35,7 @@ export function validateCampaignType(value: unknown): value is CampaignType {
 }
 
 export function validateCampaignStatus(value: unknown): value is CampaignStatus {
-  return typeof value === 'string' && 
+  return typeof value === 'string' &&
     ['pending', 'queued', 'running', 'pausing', 'paused', 'completed', 'failed', 'archived', 'cancelled'].includes(value);
 }
 
@@ -213,7 +213,7 @@ export function validateCampaignJob(data: unknown): data is CampaignJob {
     validateUUID(job.campaignId) &&
     validateCampaignType(job.jobType) &&
     typeof job.status === 'string' &&
-    ['pending', 'queued', 'running', 'processing', 'completed', 'failed', 'retry'].includes(job.status as string) &&
+    ['Pending', 'queued', 'InProgress', 'processing', 'completed', 'Failed', 'retry'].includes(job.status as string) &&
     validateISODateTime(job.scheduledAt) &&
     typeof job.attempts === 'number' &&
     typeof job.maxAttempts === 'number' &&

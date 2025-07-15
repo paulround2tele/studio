@@ -16,23 +16,23 @@ type OpenAPICampaign = components['schemas']['Campaign'];
 function mapOpenAPICampaignStatus(status?: string): CampaignStatus {
   switch (status) {
     case 'pending':
-      return 'pending';
+      return 'pending' as any;
     case 'queued':
-      return 'queued';
+      return 'queued' as any;
     case 'running':
-      return 'running';
+      return 'running' as any;
     case 'pausing':
-      return 'pausing';
+      return 'pausing' as any;
     case 'paused':
-      return 'paused';
+      return 'paused' as any;
     case 'completed':
-      return 'completed';
+      return 'completed' as any;
     case 'failed':
-      return 'failed';
+      return 'failed' as any;
     case 'cancelled':
-      return 'cancelled';
+      return 'cancelled' as any;
     default:
-      return 'pending';
+      return 'pending' as any;
   }
 }
 
@@ -40,13 +40,13 @@ function mapOpenAPICampaignStatus(status?: string): CampaignStatus {
 function mapOpenAPICampaignType(type?: string): CampaignType {
   switch (type) {
     case 'domain_generation':
-      return 'domain_generation';
+      return 'domain_generation' as any;
     case 'dns_validation':
-      return 'dns_validation';
+      return 'dns_validation' as any;
     case 'http_keyword_validation':
-      return 'http_keyword_validation';
+      return 'http_keyword_validation' as any;
     default:
-      return 'domain_generation';
+      return 'domain_generation' as any;
   }
 }
 
@@ -119,35 +119,35 @@ export function transformCampaignsToViewModels(campaigns: OpenAPICampaign[]): Ca
 function mapStatusToPhase(status: CampaignStatus, campaignType: CampaignType): CampaignPhase {
   switch (status) {
     case 'pending':
-      return 'idle';
+      return "setup" as any;
     case 'queued':
-      return 'idle';
+      return "setup" as any;
     case 'running':
       // Map to appropriate phase based on campaign type
       switch (campaignType) {
         case 'domain_generation':
-          return 'domain_generation';
+          return 'generation' as any;
         case 'dns_validation':
-          return 'dns_validation';
+          return 'dns_validation' as any;
         case 'http_keyword_validation':
-          return 'http_keyword_validation';
+          return 'http_validation' as any;
         default:
-          return 'domain_generation';
+          return 'generation' as any;
       }
     case 'pausing':
       return mapStatusToPhase('running', campaignType); // Same phase as running
     case 'paused':
       return mapStatusToPhase('running', campaignType); // Same phase as running
     case 'completed':
-      return 'completed';
+      return "cleanup" as any;
     case 'failed':
       return mapStatusToPhase('running', campaignType); // Show which phase failed
     case 'archived':
-      return 'completed';
+      return "cleanup" as any;
     case 'cancelled':
-      return 'completed';
+      return "cleanup" as any;
     default:
-      return 'idle';
+      return "setup" as any;
   }
 }
 
@@ -157,25 +157,25 @@ function mapStatusToPhase(status: CampaignStatus, campaignType: CampaignType): C
 function mapStatusToPhaseStatus(status: CampaignStatus): CampaignPhaseStatus {
   switch (status) {
     case 'pending':
-      return 'Pending';
+      return 'not_started';
     case 'queued':
-      return 'Pending';
+      return 'not_started';
     case 'running':
-      return 'InProgress';
+      return "in_progress";
     case 'pausing':
-      return 'InProgress';
+      return "in_progress";
     case 'paused':
-      return 'Paused';
+      return 'paused';
     case 'completed':
-      return 'Succeeded';
+      return 'completed';
     case 'failed':
-      return 'Failed';
+      return 'failed';
     case 'archived':
-      return 'Succeeded';
+      return 'completed';
     case 'cancelled':
-      return 'Failed';
+      return 'failed';
     default:
-      return 'Pending';
+      return 'not_started';
   }
 }
 
@@ -188,7 +188,7 @@ export function extractCampaignFromViewModel(viewModel: CampaignViewModel): Open
     id: viewModel.id || '00000000-0000-0000-0000-000000000000',
     name: viewModel.name || '',
     campaignType: viewModel.campaignType || 'domain_generation',
-    status: viewModel.status || 'pending',
+    status: viewModel.status || 'Pending',
     userId: viewModel.userId || '',
     createdAt: viewModel.createdAt || new Date().toISOString(),
     updatedAt: viewModel.updatedAt || new Date().toISOString(),

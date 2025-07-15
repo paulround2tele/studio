@@ -15,7 +15,13 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
+import type { CookieHandling } from './cookie-handling';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { HTTP2SettingsConfig } from './http2-settings-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { TLSClientHello } from './tlsclient-hello';
 
 /**
  * 
@@ -31,10 +37,10 @@ export interface HttpPersonaConfig {
     'allowInsecureTls'?: boolean;
     /**
      * 
-     * @type {object}
+     * @type {CookieHandling}
      * @memberof HttpPersonaConfig
      */
-    'cookieHandling'?: object;
+    'cookieHandling'?: CookieHandling;
     /**
      * 
      * @type {boolean}
@@ -127,10 +133,10 @@ export interface HttpPersonaConfig {
     'scriptExecution'?: boolean;
     /**
      * 
-     * @type {object}
+     * @type {TLSClientHello}
      * @memberof HttpPersonaConfig
      */
-    'tlsClientHello'?: object;
+    'tlsClientHello'?: TLSClientHello;
     /**
      * Headless browser settings
      * @type {boolean}

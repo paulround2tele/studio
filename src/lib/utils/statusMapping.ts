@@ -7,10 +7,10 @@ import type { components } from '@/lib/api-client/types';
 
 type CampaignStatus = NonNullable<components['schemas']['Campaign']['status']>;
 
-// Define the actual status values used by the system
+// Define the actual status values used by the system (aligned with API)
 export const CAMPAIGN_STATUSES = {
   PENDING: 'pending',
-  QUEUED: 'queued', 
+  QUEUED: 'queued',
   RUNNING: 'running',
   PAUSING: 'pausing',
   PAUSED: 'paused',
@@ -26,7 +26,7 @@ export type ValidCampaignStatus = typeof CAMPAIGN_STATUSES[keyof typeof CAMPAIGN
 export const ALL_CAMPAIGN_STATUSES: CampaignStatus[] = [
   'pending',
   'queued',
-  'running', 
+  'running',
   'pausing',
   'paused',
   'completed',
@@ -47,7 +47,7 @@ export function isValidCampaignStatus(status: string): status is CampaignStatus 
  */
 export function normalizeStatus(status: unknown): CampaignStatus {
   if (typeof status !== 'string') {
-    return 'pending';
+    return 'pending' as any;
   }
 
   const lowercaseStatus = status.toLowerCase();
@@ -62,47 +62,40 @@ export function normalizeStatus(status: unknown): CampaignStatus {
     case 'draft':
     case 'created':
     case 'new':
-      return 'pending';
-    
+    case 'pending':
+      return 'pending' as any;
     case 'scheduled':
     case 'ready':
-      return 'queued';
-    
+      return 'queued' as any;
     case 'active':
-    case 'in_progress':
     case 'inprogress':
-      return 'running';
-    
+    case 'running':
+      return 'running' as any;
     case 'stopping':
     case 'stop':
-      return 'pausing';
-    
+      return 'pausing' as any;
     case 'stopped':
     case 'halted':
-      return 'paused';
-    
+      return 'paused' as any;
     case 'done':
     case 'finished':
     case 'success':
     case 'succeeded':
-      return 'completed';
-    
+      return 'completed' as any;
     case 'error':
     case 'errored':
     case 'failure':
-      return 'failed';
-    
+    case 'failed':
+      return 'failed' as any;
     case 'deleted':
     case 'removed':
-      return 'archived';
-    
+      return 'archived' as any;
     case 'aborted':
     case 'terminated':
-      return 'cancelled';
-    
+      return 'cancelled' as any;
     default:
       console.warn(`Unknown status value: ${status}, defaulting to pending`);
-      return 'pending';
+      return 'pending' as any;
   }
 }
 

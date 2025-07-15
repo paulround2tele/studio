@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
+
+	"github.com/fntelecomllc/studio/backend/internal/openapi/config"
+	"github.com/fntelecomllc/studio/backend/internal/openapi/reflection"
+	"github.com/fntelecomllc/studio/backend/internal/openapi/generators"
 )
 
 func main() {
@@ -24,11 +27,11 @@ func main() {
 	}
 
 	if *verbose {
-		log.Println("Starting OpenAPI generation using swag...")
+		log.Println("Starting OpenAPI generation using reflection engine...")
 	}
 
-	// Use swag init to generate OpenAPI spec
-	err := generateWithSwag(*outputPath, *verbose)
+	// Use reflection engine to generate OpenAPI spec
+	err := generateWithReflection(*outputPath, *verbose)
 	if err != nil {
 		log.Fatalf("Failed to generate OpenAPI specification: %v", err)
 	}
@@ -38,41 +41,62 @@ func main() {
 	}
 }
 
-func generateWithSwag(outputPath string, verbose bool) error {
+func generateWithReflection(outputPath string, verbose bool) error {
 	// Create output directory if it doesn't exist
 	err := os.MkdirAll(outputPath, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	// Run swag init command
-	cmd := exec.Command("swag", "init",
-		"--dir", "./cmd/apiserver,./internal/api,./internal/models",
-		"--generalInfo", "main.go",
-		"--output", outputPath,
-		"--ot", "json,yaml,go",
-		"--parseInternal",
-		"--parseDependency",
-		"--parseDepth", "1",
-		"--v3.1",
-	)
-	
+	// Create configuration for OpenAPI generation
+	cfg := config.DefaultConfig()
+	cfg.VerboseLogging = verbose
+	cfg.OutputPath = outputPath
+
+	// Create reflection engine
+	reflectionEngine := reflection.NewReflectionEngine(cfg)
+
+	// Generate the specification
+	spec, err := reflectionEngine.GenerateSpec()
+	if err != nil {
+		return fmt.Errorf("reflection engine failed: %w", err)
+	}
+
+	// Generate YAML output
+	yamlGenerator := generators.NewYAMLGenerator(true) // Enable pretty printing
+	yamlData, err := yamlGenerator.Generate(spec)
+	if err != nil {
+		return fmt.Errorf("failed to generate YAML: %w", err)
+	}
+
+	// Write YAML file
+	yamlPath := filepath.Join(outputPath, "openapi-3.yaml")
+	err = os.WriteFile(yamlPath, yamlData, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write YAML file: %w", err)
+	}
+
+	// Generate JSON output
+	jsonData, err := spec.MarshalJSON()
+	if err != nil {
+		return fmt.Errorf("failed to generate JSON: %w", err)
+	}
+
+	// Write JSON file
+	jsonPath := filepath.Join(outputPath, "openapi-3.json")
+	err = os.WriteFile(jsonPath, jsonData, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write JSON file: %w", err)
+	}
+
 	if verbose {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		log.Printf("Generated OpenAPI specification:")
+		log.Printf("  YAML: %s", yamlPath)
+		log.Printf("  JSON: %s", jsonPath)
+		log.Printf("  Schemas: %d", len(spec.Components.Schemas))
+		log.Printf("  Paths: %d", len(spec.Paths.Map()))
 	}
-	
-	err = cmd.Run()
-	if err != nil {
-		return fmt.Errorf("swag init failed: %w", err)
-	}
-	
-	// Rename the generated files to match expected names
-	err = renameGeneratedFiles(outputPath)
-	if err != nil {
-		return fmt.Errorf("failed to rename generated files: %w", err)
-	}
-	
+
 	return nil
 }
 
