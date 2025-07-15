@@ -84,11 +84,11 @@ class AuthService {
     });
 
     try {
-      const response = await authApi.login({ data: { 
+      const response = await authApi.login({
         email: credentials.email,
         password: credentials.password,
         rememberMe: credentials.rememberMe
-       } });
+      });
       
       const userData = response.data?.user;
       if (!userData?.id || !userData?.email) {
