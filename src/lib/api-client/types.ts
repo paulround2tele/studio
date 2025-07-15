@@ -1130,6 +1130,15 @@ export interface components {
             message?: string;
             status?: string;
         };
+        AddProxyToPoolRequest: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            proxyId: string;
+            /** Format: int32 */
+            weight?: number;
+        };
         ArchitectureRefactorLog: {
             afterPattern?: string;
             beforePattern?: string;
@@ -1197,6 +1206,7 @@ export interface components {
             userId?: string;
         };
         AuthConfig: string;
+        AuthConfigUpdateRequest: string;
         AuthResult: {
             error?: string;
             success?: boolean;
@@ -2045,6 +2055,24 @@ export interface components {
             };
             useSystemResolvers?: boolean;
         };
+        DNSConfigUpdateRequest: string;
+        DNSValidationAPIRequest: {
+            /** Format: int32 */
+            batchSize?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId: string;
+            onlyInvalidDomains?: boolean;
+            personaIds?: string[];
+            /** Format: int32 */
+            processingSpeedPerMinute?: number;
+            /** Format: int32 */
+            retryAttempts?: number;
+            /** Format: int32 */
+            rotationIntervalSeconds?: number;
+        };
         DNSValidationCampaignParams: {
             /** Format: int32 */
             batchSize?: number;
@@ -2418,6 +2446,7 @@ export interface components {
             text: string;
         };
         FeatureFlags: string;
+        FeatureFlagsUpdateRequest: string;
         GeneralErrorResponse: {
             details?: string;
             error?: string;
@@ -2493,6 +2522,7 @@ export interface components {
             tlsClientHello?: components["schemas"]["HTTPTLSClientHello"];
             userAgent: string;
         };
+        HTTPConfigUpdateRequest: string;
         HTTPCookieHandling: {
             mode?: string;
         };
@@ -2583,6 +2613,23 @@ export interface components {
             curvePreferences?: string[];
             maxVersion?: string;
             minVersion?: string;
+        };
+        HTTPValidationRequest: {
+            adHocKeywords?: string[];
+            /** Format: int32 */
+            batchSize?: number;
+            keywordSetIds?: string[];
+            personaIds: string[];
+            /** Format: int32 */
+            processingSpeedPerMinute?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            proxyPoolId?: string;
+            /** Format: int32 */
+            retryAttempts?: number;
+            targetHttpPorts?: number[];
         };
         HTTPValidationStartResponse: {
             /**
@@ -2841,6 +2888,7 @@ export interface components {
             sourceUrl?: string;
         };
         LoggingConfig: string;
+        LoggingConfigUpdateRequest: string;
         LoginRequest: {
             captchaToken?: string;
             /** Format: email */
@@ -3165,6 +3213,9 @@ export interface components {
             protocol?: string;
             username?: string;
         };
+        ProxyHealthCheckRequest: {
+            ids?: string[];
+        };
         ProxyHealthCheckResponse: {
             message?: string;
             /**
@@ -3180,6 +3231,7 @@ export interface components {
             timestamp?: string;
         };
         ProxyManagerConfigJSON: string;
+        ProxyManagerConfigUpdateRequest: string;
         ProxyPool: {
             /** Format: date-time */
             createdAt?: string;
@@ -3405,6 +3457,7 @@ export interface components {
             reset?: string;
         };
         RateLimiterConfig: string;
+        RateLimiterConfigUpdateRequest: string;
         ResourceUtilizationMetric: {
             bottleneckDetected?: boolean;
             /**
@@ -3713,26 +3766,6 @@ export interface components {
              */
             userId?: string;
         };
-        TestResult: {
-            /** Format: date-time */
-            avgResponseTime?: string;
-            details?: string;
-            duration?: string;
-            /** Format: int32 */
-            errorCount?: number;
-            /** Format: date-time */
-            maxResponseTime?: string;
-            /** Format: int64 */
-            memoryUsageKb?: number;
-            /** Format: date-time */
-            minResponseTime?: string;
-            /** Format: double */
-            queriesPerSec?: number;
-            /** Format: int32 */
-            recordsProcessed?: number;
-            success?: boolean;
-            testName?: string;
-        };
         TestResultResponse: {
             message?: string;
             status?: string;
@@ -3922,6 +3955,7 @@ export interface components {
             message?: string;
         };
         WorkerConfig: string;
+        WorkerConfigUpdateRequest: string;
         WorkerPoolConfig: {
             /** Format: int32 */
             MaxWorkers?: number;
@@ -3954,7 +3988,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -3992,7 +4030,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -4189,7 +4231,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCampaignRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -4227,7 +4273,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDeleteRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -4309,7 +4359,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCampaignRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -4693,7 +4747,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DNSValidationAPIRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -4734,7 +4792,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HTTPValidationRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -4772,7 +4834,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatternOffsetRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -4848,7 +4914,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureFlagsUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5000,7 +5070,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchKeywordExtractionRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5142,7 +5216,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateKeywordSetRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5229,7 +5307,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateKeywordSetRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5360,7 +5442,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePersonaRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5447,7 +5533,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePersonaRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5741,7 +5831,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProxyRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5787,7 +5881,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProxyRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5953,7 +6051,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProxyHealthCheckRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6072,7 +6174,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProxyPoolRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6118,7 +6224,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProxyPoolRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6200,7 +6310,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddProxyToPoolRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6324,7 +6438,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthConfigUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6400,7 +6518,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServerConfigUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6476,7 +6598,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DNSConfigUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6552,7 +6678,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HTTPConfigUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6628,7 +6758,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoggingConfigUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6704,7 +6838,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProxyManagerConfigUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6780,7 +6918,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RateLimiterConfigUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -6856,7 +6998,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkerConfigUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Operation successful */
             200: {

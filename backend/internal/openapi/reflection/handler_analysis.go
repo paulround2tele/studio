@@ -43,7 +43,7 @@ func (ha *HandlerAnalyzer) AnalyzeHandler(route *DiscoveredRoute) (*HandlerInfo,
 			Documentation:  []string{},
 			PathParams:     ha.extractPathParamsFromRoute(route.Path),
 			QueryParams:    []string{},
-			HasRequestBody: route.Method != "GET" && route.Method != "DELETE",
+			HasRequestBody: route.Method != "GET", // Allow DELETE methods to have request bodies
 		}, nil
 	}
 
@@ -52,7 +52,7 @@ func (ha *HandlerAnalyzer) AnalyzeHandler(route *DiscoveredRoute) (*HandlerInfo,
 		FunctionDecl:  funcDecl,
 		PathParams:    ha.extractPathParamsFromRoute(route.Path),
 		QueryParams:   []string{},
-		HasRequestBody: route.Method != "GET" && route.Method != "DELETE",
+		HasRequestBody: false, // Will be set to true by analyzeHandlerBody if ShouldBindJSON is detected
 	}
 
 	// Extract documentation
@@ -153,19 +153,47 @@ func (ha *HandlerAnalyzer) extractDocumentation(fn *ast.FuncDecl) []string {
 // analyzeHandlerBody analyzes the handler function body to extract request/response types
 func (ha *HandlerAnalyzer) analyzeHandlerBody(fn *ast.FuncDecl, info *HandlerInfo) {
 	if fn.Body == nil {
+		fmt.Printf("[DEBUG] analyzeHandlerBody: function body is nil for %s\n", fn.Name.Name)
 		return
 	}
 
-	// Walk through the function body looking for patterns
+	fmt.Printf("[DEBUG] analyzeHandlerBody: analyzing function %s\n", fn.Name.Name)
+
+	// First pass: collect variable type mappings
+	varTypes := make(map[string]string)
+	ast.Inspect(fn.Body, func(n ast.Node) bool {
+		if declStmt, ok := n.(*ast.DeclStmt); ok {
+			if genDecl, ok := declStmt.Decl.(*ast.GenDecl); ok && genDecl.Tok == token.VAR {
+				for _, spec := range genDecl.Specs {
+					if valueSpec, ok := spec.(*ast.ValueSpec); ok && valueSpec.Type != nil {
+						if ident, ok := valueSpec.Type.(*ast.Ident); ok {
+							for _, name := range valueSpec.Names {
+								varTypes[name.Name] = ident.Name
+								fmt.Printf("[DEBUG] analyzeHandlerBody: found variable mapping %s -> %s\n", name.Name, ident.Name)
+							}
+						}
+					}
+				}
+			}
+		}
+		return true
+	})
+
+	fmt.Printf("[DEBUG] analyzeHandlerBody: collected %d variable type mappings\n", len(varTypes))
+
+	// Second pass: analyze calls and assignments with type context
 	ast.Inspect(fn.Body, func(n ast.Node) bool {
 		switch node := n.(type) {
 		case *ast.CallExpr:
 			ha.analyzeCallExpression(node, info)
+			ha.analyzeCallExpressionWithTypes(node, info, varTypes)
 		case *ast.AssignStmt:
 			ha.analyzeAssignment(node, info)
 		}
 		return true
 	})
+
+	fmt.Printf("[DEBUG] analyzeHandlerBody: final result - HasRequestBody: %v, RequestType: %s\n", info.HasRequestBody, info.RequestType)
 }
 
 // analyzeCallExpression analyzes function calls within the handler
@@ -207,15 +235,56 @@ func (ha *HandlerAnalyzer) analyzeCallExpression(call *ast.CallExpr, info *Handl
 		}
 	}
 }
+// analyzeCallExpressionWithTypes analyzes function calls with variable type context
+func (ha *HandlerAnalyzer) analyzeCallExpressionWithTypes(call *ast.CallExpr, info *HandlerInfo, varTypes map[string]string) {
+	if selExpr, ok := call.Fun.(*ast.SelectorExpr); ok {
+		methodName := selExpr.Sel.Name
+
+		switch methodName {
+		case "ShouldBindJSON", "BindJSON", "ShouldBind", "Bind":
+			fmt.Printf("[DEBUG] analyzeCallExpressionWithTypes: found %s call\n", methodName)
+			// This suggests a request body binding
+			info.HasRequestBody = true
+			if len(call.Args) > 0 {
+				// Try to extract the type being bound to
+				if unaryExpr, ok := call.Args[0].(*ast.UnaryExpr); ok {
+					if ident, ok := unaryExpr.X.(*ast.Ident); ok {
+						varName := ident.Name
+						fmt.Printf("[DEBUG] analyzeCallExpressionWithTypes: variable name: %s\n", varName)
+						// Look up the actual type from our variable mapping
+						if typeName, exists := varTypes[varName]; exists {
+							info.RequestType = typeName
+							fmt.Printf("[DEBUG] analyzeCallExpressionWithTypes: resolved type from mapping: %s -> %s\n", varName, typeName)
+						} else {
+							// Fallback to variable name if type not found
+							info.RequestType = varName
+							fmt.Printf("[DEBUG] analyzeCallExpressionWithTypes: no type mapping found, using variable name: %s\n", varName)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 
 // analyzeAssignment analyzes variable assignments within the handler
 func (ha *HandlerAnalyzer) analyzeAssignment(assign *ast.AssignStmt, info *HandlerInfo) {
 	// Look for patterns like: var request RequestType
+	// Only set RequestType if it hasn't already been detected from ShouldBindJSON calls
+	if info.RequestType != "" && info.HasRequestBody {
+		// RequestType already correctly detected from ShouldBindJSON, don't override
+		fmt.Printf("[DEBUG] analyzeAssignment: skipping assignment analysis, RequestType already detected: %s\n", info.RequestType)
+		return
+	}
+	
 	for i, lhs := range assign.Lhs {
 		if ident, ok := lhs.(*ast.Ident); ok {
 			if strings.Contains(strings.ToLower(ident.Name), "request") && i < len(assign.Rhs) {
 				if rhs := assign.Rhs[i]; rhs != nil {
-					info.RequestType = ha.extractTypeFromExpression(rhs)
+					extractedType := ha.extractTypeFromExpression(rhs)
+					fmt.Printf("[DEBUG] analyzeAssignment: found variable %s containing 'request', extracted type: %s, setting RequestType: %s\n", ident.Name, extractedType, extractedType)
+					info.RequestType = extractedType
 				}
 			}
 		}

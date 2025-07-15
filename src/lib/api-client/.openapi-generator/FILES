@@ -17,6 +17,7 @@ common.ts
 configuration.ts
 docs/APIKey.md
 docs/APIResponse.md
+docs/AddProxyToPoolRequest.md
 docs/ArchitectureRefactorLog.md
 docs/AuditLog.md
 docs/AuthAuditLog.md
@@ -67,6 +68,7 @@ docs/CreatePersonaRequest.md
 docs/CreateProxyRequest.md
 docs/CreateUserRequest.md
 docs/DNSConfigDetails.md
+docs/DNSValidationAPIRequest.md
 docs/DNSValidationCampaignParams.md
 docs/DNSValidationRequest.md
 docs/DNSValidationResult.md
@@ -103,6 +105,7 @@ docs/HTTPKeywordCampaignParams.md
 docs/HTTPKeywordResult.md
 docs/HTTPKeywordResultsResponse.md
 docs/HTTPTLSClientHello.md
+docs/HTTPValidationRequest.md
 docs/HTTPValidationStartResponse.md
 docs/HealthApi.md
 docs/HealthCheckResponse.md
@@ -147,6 +150,7 @@ docs/ProcessingInfo.md
 docs/ProxiesApi.md
 docs/Proxy.md
 docs/ProxyDetailsResponse.md
+docs/ProxyHealthCheckRequest.md
 docs/ProxyHealthCheckResponse.md
 docs/ProxyPool.md
 docs/ProxyPoolDeleteResponse.md
@@ -187,7 +191,6 @@ docs/SuccessResponse.md
 docs/SystemInfo.md
 docs/TLSClientHello.md
 docs/TOTPSecret.md
-docs/TestResult.md
 docs/TestResultResponse.md
 docs/UpdateCampaignRequest.md
 docs/UpdateKeywordSetRequest.md
@@ -205,6 +208,7 @@ docs/WorkerPoolConfig.md
 docs/WorkerPoolMetrics.md
 git_push.sh
 index.ts
+models/add-proxy-to-pool-request.ts
 models/apikey.ts
 models/apiresponse.ts
 models/architecture-refactor-log.ts
@@ -262,6 +266,7 @@ models/detailed-test-result-response.ts
 models/dns-persona-config.ts
 models/dns-validation-params.ts
 models/dnsconfig-details.ts
+models/dnsvalidation-apirequest.ts
 models/dnsvalidation-campaign-params.ts
 models/dnsvalidation-request.ts
 models/dnsvalidation-result.ts
@@ -294,6 +299,7 @@ models/httpkeyword-campaign-params.ts
 models/httpkeyword-result.ts
 models/httpkeyword-results-response.ts
 models/httptlsclient-hello.ts
+models/httpvalidation-request.ts
 models/httpvalidation-start-response.ts
 models/in-place-dnsvalidation-request.ts
 models/index.ts
@@ -329,6 +335,7 @@ models/persona.ts
 models/ping-response.ts
 models/processing-info.ts
 models/proxy-details-response.ts
+models/proxy-health-check-request.ts
 models/proxy-health-check-response.ts
 models/proxy-pool-delete-response.ts
 models/proxy-pool-membership-response.ts
@@ -367,7 +374,6 @@ models/success-message-response.ts
 models/success-response.ts
 models/system-info.ts
 models/test-result-response.ts
-models/test-result.ts
 models/tlsclient-hello.ts
 models/totpsecret.ts
 models/update-campaign-request.ts

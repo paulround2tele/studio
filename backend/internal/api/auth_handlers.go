@@ -49,7 +49,7 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Println("DEBUG: Login handler started")
-	var req models.LoginRequest
+	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		fmt.Printf("DEBUG: JSON binding failed: %v\n", err)
 		fmt.Printf("DEBUG: Validation error details: %T - %v\n", err, err)
@@ -252,7 +252,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 // @Failure 501 {object} StandardErrorResponse "Not implemented"
 // @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
-	var req models.ChangePasswordRequest
+	var req ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request format")
 		return

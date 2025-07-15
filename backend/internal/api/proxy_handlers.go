@@ -138,7 +138,7 @@ func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Failed to create proxy"
 // @Router /proxies [post]
 func (h *APIHandler) AddProxyGin(c *gin.Context) {
-	var req models.CreateProxyRequest
+	var req CreateProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
@@ -275,7 +275,7 @@ func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 		return
 	}
 
-	var req models.UpdateProxyRequest
+	var req UpdateProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
@@ -574,9 +574,7 @@ func (h *APIHandler) ForceCheckAllProxiesGin(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusInternalServerError, "ProxyManager not available")
 		return
 	}
-	var reqBody struct {
-		IDs []string `json:"ids"`
-	}
+	var reqBody ProxyHealthCheckRequest
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&reqBody); err != nil {
 			respondWithErrorGin(c, http.StatusBadRequest, "Invalid JSON in request body: "+err.Error())

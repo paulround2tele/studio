@@ -8,7 +8,7 @@ All URIs are relative to *http://localhost*
 |[**streamExtractKeywords**](#streamextractkeywords) | **GET** /keyword-extraction/stream | Stream keyword extraction|
 
 # **batchExtractKeywords**
-> BatchKeywordExtractionResponse batchExtractKeywords()
+> BatchKeywordExtractionResponse batchExtractKeywords(batchKeywordExtractionRequest)
 
 Extract keywords from multiple URLs using specified keyword sets and personas
 
@@ -17,17 +17,25 @@ Extract keywords from multiple URLs using specified keyword sets and personas
 ```typescript
 import {
     KeywordExtractionApi,
-    Configuration
+    Configuration,
+    BatchKeywordExtractionRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordExtractionApi(configuration);
 
-const { status, data } = await apiInstance.batchExtractKeywords();
+let batchKeywordExtractionRequest: BatchKeywordExtractionRequest; //
+
+const { status, data } = await apiInstance.batchExtractKeywords(
+    batchKeywordExtractionRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **batchKeywordExtractionRequest** | **BatchKeywordExtractionRequest**|  | |
 
 
 ### Return type
@@ -40,7 +48,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

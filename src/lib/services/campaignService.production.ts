@@ -73,15 +73,28 @@ class CampaignService {
     try {
       console.log('[CampaignService] Getting campaigns');
       // Request all campaigns with high limit to avoid pagination truncation
-      // Database has 22 campaigns, so 100 is safe buffer
       const response = await campaignsApi.listCampaigns(100);
       
-      // Extract data from AxiosResponse
-      const result = 'data' in response ? response.data : response;
+      // Handle new Swagger-generated API response format: { success: true, data: Campaign[] }
+      const responseData = 'data' in response ? response.data : response;
+      let campaignsArray: Campaign[] = [];
+      
+      if (responseData && typeof responseData === 'object') {
+        if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+          // New format: { success: true, data: Campaign[], requestId: string }
+          const nestedData = responseData.data;
+          if (Array.isArray(nestedData)) {
+            campaignsArray = nestedData as Campaign[];
+          }
+        } else if (Array.isArray(responseData)) {
+          // Legacy direct array format
+          campaignsArray = responseData as Campaign[];
+        }
+      }
       
       return {
         status: 'success',
-        data: Array.isArray(result) ? result as Campaign[] : [],
+        data: campaignsArray,
         message: 'Campaigns retrieved successfully'
       };
     } catch (error) {
@@ -99,45 +112,66 @@ class CampaignService {
       console.log('[CampaignService] Getting campaign by ID:', campaignId);
       const response = await campaignsApi.getCampaignDetails(campaignId);
       
-      // Add diagnostic logging to debug response structure
-      console.log('[CampaignService] Raw API response for', campaignId, ':', response);
+      // Enhanced diagnostic logging to debug response structure
+      console.log('[CampaignService] RAW API RESPONSE for', campaignId, ':', JSON.stringify(response, null, 2));
+      console.log('[CampaignService] Response type:', typeof response);
+      console.log('[CampaignService] Response constructor:', response?.constructor?.name);
+      console.log('[CampaignService] Response keys:', response && typeof response === 'object' ? Object.keys(response) : 'N/A');
       
-      // Handle different response wrapper formats while preserving data integrity
+      // The API should return CampaignDetailsResponse: { campaign: CampaignData, params: CampaignParamsData }
       let campaign: Campaign;
+      let responseData: any = response;
       
+      // Handle Axios wrapper if present
       if ('data' in response && response.data) {
-        // Handle Axios response wrapper: { data: { success: true, data: Campaign } }
-        const axiosData = response.data;
-        console.log('[CampaignService] Axios response data:', axiosData);
-        
-        if (axiosData && typeof axiosData === 'object' && 'data' in axiosData) {
-          // Triple-nested format: response.data.data contains the actual campaign
-          campaign = axiosData.data as Campaign;
-        } else if (axiosData && typeof axiosData === 'object' && 'campaign' in axiosData) {
-          // Campaign wrapped in { campaign: Campaign } format
-          campaign = (axiosData as { campaign: Campaign }).campaign;
+        responseData = response.data;
+        console.log('[CampaignService] Unwrapped Axios response.data:', JSON.stringify(responseData, null, 2));
+      }
+      
+      // Check if we have the expected CampaignDetailsResponse structure
+      if (responseData && typeof responseData === 'object' && 'campaign' in responseData) {
+        console.log('[CampaignService] Found campaign in response.campaign');
+        campaign = responseData.campaign as Campaign;
+      } else if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+        console.log('[CampaignService] Found data in response.data, checking if it contains campaign');
+        const nestedData = responseData.data;
+        if (nestedData && typeof nestedData === 'object' && 'campaign' in nestedData) {
+          campaign = nestedData.campaign as Campaign;
         } else {
-          // Direct campaign data in response.data
-          campaign = axiosData as Campaign;
+          // Assume the nested data is the campaign itself
+          campaign = nestedData as Campaign;
         }
       } else {
-        // Direct response format - cast to unknown first to avoid type conflicts
-        campaign = response as unknown as Campaign;
+        // Assume the response itself is the campaign (fallback)
+        console.log('[CampaignService] Treating entire response as campaign data');
+        campaign = responseData as Campaign;
       }
       
-      // Validate that we have a valid campaign with required fields
-      console.log('[CampaignService] Extracted campaign data:', campaign);
+      // Enhanced validation and debugging
+      console.log('[CampaignService] EXTRACTED CAMPAIGN:', JSON.stringify(campaign, null, 2));
+      console.log('[CampaignService] Campaign type:', typeof campaign);
+      console.log('[CampaignService] Campaign keys:', campaign && typeof campaign === 'object' ? Object.keys(campaign) : 'N/A');
       
       if (!campaign || typeof campaign !== 'object') {
-        throw new Error('Invalid campaign data structure received from API');
+        console.error('[CampaignService] VALIDATION FAILED: Invalid campaign data structure');
+        console.error('[CampaignService] Expected: object with campaign data');
+        console.error('[CampaignService] Received:', campaign);
+        throw new Error('Campaign not found in response');
       }
       
-      // Ensure campaignType field exists (this was causing the validation failures)
+      // Handle potential field name inconsistencies
       if (!campaign.campaignType && (campaign as any).campaign_type) {
-        // Handle backend using snake_case instead of camelCase
+        console.log('[CampaignService] Converting campaign_type to campaignType');
         (campaign as any).campaignType = (campaign as any).campaign_type;
       }
       
+      // Validate required fields
+      if (!campaign.id) {
+        console.error('[CampaignService] VALIDATION FAILED: Campaign missing required id field');
+        throw new Error('Campaign data missing required fields');
+      }
+      
+      console.log('[CampaignService] ✅ Campaign validation successful');
       return {
         status: 'success',
         data: campaign,
@@ -157,15 +191,68 @@ class CampaignService {
     try {
       console.log('[CampaignService] Creating campaign with payload:', payload);
       
-      const response = await campaignsApi.createCampaign({ data: payload });
+      const response = await campaignsApi.createCampaign(payload);
       const result = 'data' in response ? response.data : response;
       
-      console.log('[CampaignService] Campaign created successfully:', result);
-      return {
-        status: 'success' as const,
-        data: result as Campaign,
-        message: 'Campaign created successfully'
-      };
+      console.log('[CampaignService] Raw API response:', JSON.stringify(response, null, 2));
+      console.log('[CampaignService] Extracted result:', JSON.stringify(result, null, 2));
+      console.log('[CampaignService] Result type:', typeof result);
+      console.log('[CampaignService] Result has campaignId:', result && typeof result === 'object' && 'campaignId' in result);
+      
+      // Handle the actual response structure: { success: true, data: Campaign, requestId: "..." }
+      if (result && typeof result === 'object' && 'success' in result && result.success === true) {
+        console.log('[CampaignService] Found success response, checking for data field');
+        
+        if ('data' in result && result.data && typeof result.data === 'object') {
+          const campaignData = result.data as Campaign;
+          console.log('[CampaignService] Extracted campaign data from success response:', campaignData);
+          
+          if (campaignData.id) {
+            console.log('[CampaignService] ✅ Campaign created successfully with ID:', campaignData.id);
+            
+            return {
+              status: 'success' as const,
+              data: campaignData,
+              message: 'Campaign created successfully'
+            };
+          } else {
+            console.error('[CampaignService] Campaign data missing ID field:', campaignData);
+          }
+        } else {
+          console.error('[CampaignService] Success response missing data field:', result);
+        }
+      }
+      
+      // Legacy handling for CampaignOperationResponse (if backend still sends this format)
+      if (result && typeof result === 'object' && 'campaignId' in result) {
+        const operationResponse = result as { success?: boolean; message?: string; campaignId?: string; status?: string };
+        
+        console.log('[CampaignService] Found legacy campaignId format:', operationResponse.campaignId);
+        
+        if (operationResponse.campaignId) {
+          // Create a minimal Campaign object with the ID from the operation response
+          const campaignData = {
+            id: operationResponse.campaignId,
+            name: 'Created Campaign',
+            campaignType: 'domain_generation',
+            status: 'pending'
+          } as Campaign;
+          
+          return {
+            status: 'success' as const,
+            data: campaignData,
+            message: operationResponse.message || 'Campaign created successfully'
+          };
+        }
+      }
+      
+      // Enhanced debugging for unexpected response structure
+      console.error('[CampaignService] Response structure analysis:');
+      console.error('- Response keys:', result && typeof result === 'object' ? Object.keys(result) : 'N/A');
+      console.error('- Full response:', JSON.stringify(response, null, 2));
+      console.error('- Extracted result:', JSON.stringify(result, null, 2));
+      
+      throw new Error('Invalid response structure from campaign creation API');
     } catch (error) {
       console.error('[CampaignService] Campaign creation failed:', error);
       return {
@@ -180,7 +267,7 @@ class CampaignService {
     try {
       console.log('[CampaignService] Updating campaign:', campaignId, updatePayload);
       
-      const response = await campaignsApi.updateCampaign(campaignId, { data: updatePayload });
+      const response = await campaignsApi.updateCampaign(campaignId, updatePayload);
       const result = 'data' in response ? response.data : response;
       
       return {
@@ -310,7 +397,10 @@ class CampaignService {
   async validateDNSForCampaign(campaignId: string): Promise<CampaignServiceResponse> {
     try {
       console.log('[CampaignService] Triggering DNS validation for campaign:', campaignId);
-      const response = await campaignsApi.validateDNSForCampaign(campaignId);
+      const response = await campaignsApi.validateDNSForCampaign(campaignId, {
+        campaignId: campaignId,
+        onlyInvalidDomains: false
+      });
       const result = 'data' in response ? response.data : response;
       
       return {

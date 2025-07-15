@@ -5,8 +5,16 @@
  * (SqlNullInt32, SqlNullString, etc.) into simple frontend-safe types.
  */
 
-import type { SqlNullInt32 } from '@/lib/api-client/models/sql-null-int32';
-import type { SqlNullString } from '@/lib/api-client/models/sql-null-string';
+// Define inline types for SqlNull structures
+interface SqlNullInt32 {
+  int32?: number;
+  valid?: boolean;
+}
+
+interface SqlNullString {
+  string?: string;
+  valid?: boolean;
+}
 
 /**
  * Transform SqlNullInt32 to a simple number or undefined

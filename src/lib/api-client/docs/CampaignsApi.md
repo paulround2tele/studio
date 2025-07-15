@@ -22,7 +22,7 @@ All URIs are relative to *http://localhost*
 |[**validateHTTPForCampaign**](#validatehttpforcampaign) | **POST** /campaigns/{campaignId}/validate-http | Validate HTTP for campaign|
 
 # **bulkDeleteCampaigns**
-> BulkDeleteResult bulkDeleteCampaigns()
+> BulkDeleteResult bulkDeleteCampaigns(bulkDeleteRequest)
 
 Delete multiple campaigns in a single operation
 
@@ -31,17 +31,25 @@ Delete multiple campaigns in a single operation
 ```typescript
 import {
     CampaignsApi,
-    Configuration
+    Configuration,
+    BulkDeleteRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.bulkDeleteCampaigns();
+let bulkDeleteRequest: BulkDeleteRequest; //
+
+const { status, data } = await apiInstance.bulkDeleteCampaigns(
+    bulkDeleteRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkDeleteRequest** | **BulkDeleteRequest**|  | |
 
 
 ### Return type
@@ -54,7 +62,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -121,7 +129,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **createCampaign**
-> CampaignOperationResponse createCampaign()
+> CampaignOperationResponse createCampaign(createCampaignRequest)
 
 Create a new campaign with specified configuration parameters
 
@@ -130,17 +138,25 @@ Create a new campaign with specified configuration parameters
 ```typescript
 import {
     CampaignsApi,
-    Configuration
+    Configuration,
+    CreateCampaignRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.createCampaign();
+let createCampaignRequest: CreateCampaignRequest; //
+
+const { status, data } = await apiInstance.createCampaign(
+    createCampaignRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **createCampaignRequest** | **CreateCampaignRequest**|  | |
 
 
 ### Return type
@@ -153,7 +169,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -450,7 +466,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getPatternOffset**
-> StandardSuccessResponse getPatternOffset()
+> StandardSuccessResponse getPatternOffset(patternOffsetRequest)
 
 Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
 
@@ -459,17 +475,25 @@ Gets the current offset for a domain generation pattern to prevent duplicate dom
 ```typescript
 import {
     CampaignsApi,
-    Configuration
+    Configuration,
+    PatternOffsetRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-const { status, data } = await apiInstance.getPatternOffset();
+let patternOffsetRequest: PatternOffsetRequest; //
+
+const { status, data } = await apiInstance.getPatternOffset(
+    patternOffsetRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patternOffsetRequest** | **PatternOffsetRequest**|  | |
 
 
 ### Return type
@@ -482,7 +506,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -714,7 +738,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateCampaign**
-> Campaign updateCampaign()
+> Campaign updateCampaign(updateCampaignRequest)
 
 Update an existing campaign\'s configuration parameters
 
@@ -723,16 +747,19 @@ Update an existing campaign\'s configuration parameters
 ```typescript
 import {
     CampaignsApi,
-    Configuration
+    Configuration,
+    UpdateCampaignRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; //Campaign ID (UUID) (default to undefined)
+let updateCampaignRequest: UpdateCampaignRequest; //
 
 const { status, data } = await apiInstance.updateCampaign(
-    campaignId
+    campaignId,
+    updateCampaignRequest
 );
 ```
 
@@ -740,6 +767,7 @@ const { status, data } = await apiInstance.updateCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **updateCampaignRequest** | **UpdateCampaignRequest**|  | |
 | **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
@@ -753,7 +781,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -767,7 +795,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **validateDNSForCampaign**
-> ValidationOperationResponse validateDNSForCampaign()
+> ValidationOperationResponse validateDNSForCampaign(dNSValidationAPIRequest)
 
 Trigger DNS validation for all domains in a specific campaign
 
@@ -776,16 +804,19 @@ Trigger DNS validation for all domains in a specific campaign
 ```typescript
 import {
     CampaignsApi,
-    Configuration
+    Configuration,
+    DNSValidationAPIRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; //Campaign ID (UUID) (default to undefined)
+let dNSValidationAPIRequest: DNSValidationAPIRequest; //
 
 const { status, data } = await apiInstance.validateDNSForCampaign(
-    campaignId
+    campaignId,
+    dNSValidationAPIRequest
 );
 ```
 
@@ -793,6 +824,7 @@ const { status, data } = await apiInstance.validateDNSForCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **dNSValidationAPIRequest** | **DNSValidationAPIRequest**|  | |
 | **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
@@ -806,7 +838,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -820,7 +852,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **validateHTTPForCampaign**
-> ValidationOperationResponse validateHTTPForCampaign()
+> ValidationOperationResponse validateHTTPForCampaign(hTTPValidationRequest)
 
 Trigger HTTP keyword validation for all domains in a specific campaign
 
@@ -829,16 +861,19 @@ Trigger HTTP keyword validation for all domains in a specific campaign
 ```typescript
 import {
     CampaignsApi,
-    Configuration
+    Configuration,
+    HTTPValidationRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
 let campaignId: string; //Campaign ID (UUID) (default to undefined)
+let hTTPValidationRequest: HTTPValidationRequest; //
 
 const { status, data } = await apiInstance.validateHTTPForCampaign(
-    campaignId
+    campaignId,
+    hTTPValidationRequest
 );
 ```
 
@@ -846,6 +881,7 @@ const { status, data } = await apiInstance.validateHTTPForCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **hTTPValidationRequest** | **HTTPValidationRequest**|  | |
 | **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
 
 
@@ -859,7 +895,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

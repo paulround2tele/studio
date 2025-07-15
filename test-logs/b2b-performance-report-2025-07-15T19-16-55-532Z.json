@@ -1,0 +1,798 @@
+{
+  "summary": {
+    "totalApiCalls": 76,
+    "totalHealthChecks": 4,
+    "totalRerenders": 0,
+    "totalErrors": 4,
+    "totalWarnings": 0,
+    "avgApiResponseTime": 99
+  },
+  "b2bPerformanceIssues": {
+    "slowApiCalls": [],
+    "excessiveHealthChecks": false,
+    "performanceWarnings": [],
+    "criticalErrors": [
+      {
+        "timestamp": "2025-07-15T19:17:07.947Z",
+        "type": "requestfailed",
+        "url": "http://localhost:3000/dashboard?_rsc=ak96a",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "resourceType": "fetch"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.510Z",
+        "type": "requestfailed",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "resourceType": "xhr"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.510Z",
+        "type": "requestfailed",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "resourceType": "xhr"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.618Z",
+        "type": "pageerror",
+        "message": "Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.",
+        "stack": "TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.\n    at <anonymous>:66:16\n    at <anonymous>:71:7\n    at <anonymous>:72:7"
+      }
+    ],
+    "healthCheckFrequency": "4 checks detected"
+  },
+  "recommendations": [
+    "Address critical errors that impact user experience"
+  ],
+  "detailedMetrics": {
+    "healthChecks": [
+      {
+        "timestamp": "2025-07-15T19:17:08.418Z",
+        "url": "http://localhost:8080/api/v2/health",
+        "count": 1
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.419Z",
+        "url": "http://localhost:8080/api/v2/health",
+        "count": 2
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.441Z",
+        "url": "http://localhost:8080/api/v2/health",
+        "count": 3
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.441Z",
+        "url": "http://localhost:8080/api/v2/health",
+        "count": 4
+      }
+    ],
+    "apiCalls": [
+      {
+        "timestamp": "2025-07-15T19:17:07.278Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/auth/login",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 109,
+        "size": "239"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.592Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/health",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 151,
+        "size": "313"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.594Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 136,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.610Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/health",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "313"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.634Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/health",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "313"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.699Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/health",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "313"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.782Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.901Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 32,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.921Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 52,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.965Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 96,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:08.989Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 120,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.033Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.300Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.418Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 0,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.427Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 92,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.461Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 43,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.462Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 44,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.476Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 58,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.477Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.495Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.495Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.528Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.548Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.557Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.577Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.580Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.597Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.597Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 15,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.601Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.700Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.700Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 85,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.744Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 143,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.779Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 178,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.968Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 125,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:09.988Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 58,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.046Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 6,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.046Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.078Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 57,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.146Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 100,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.263Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 40,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.272Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 49,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.353Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 130,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.368Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 144,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.370Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.473Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 250,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.474Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.512Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.535Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.564Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.924Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 126,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.940Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 216,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:10.953Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 6,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.002Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 213,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.195Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.278Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 144,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.282Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 1,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.324Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 202,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.329Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 48,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.360Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 79,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.429Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.430Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.432Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.470Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/393fc5c3-a867-4672-aa11-665cbbdccefd",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 36,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.472Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/921b866d-722f-4292-8dc2-30cf50f2ba48",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 35,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.473Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns/1d44e51d-902f-4780-869e-a8742f68f2fb",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 28,
+        "size": "292"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:12.850Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/auth/me",
+        "status": 404,
+        "statusText": "Not Found",
+        "duration": 195,
+        "size": "18"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:12.891Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/auth/me",
+        "status": 404,
+        "statusText": "Not Found",
+        "duration": null,
+        "size": "18"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:13.108Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 31,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:19.145Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/proxies",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 74,
+        "size": "77"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:19.247Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 176,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:19.286Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/personas?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 215,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:19.339Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/proxies",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "77"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:19.354Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/personas?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:19.473Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/campaigns?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:19.481Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/personas?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "unknown"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:19.572Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/personas?limit=100",
+        "status": 200,
+        "statusText": "OK",
+        "duration": null,
+        "size": "unknown"
+      }
+    ],
+    "rerenders": [],
+    "pageLoads": [],
+    "networkRequests": [],
+    "errors": [
+      {
+        "timestamp": "2025-07-15T19:17:07.947Z",
+        "type": "requestfailed",
+        "url": "http://localhost:3000/dashboard?_rsc=ak96a",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "resourceType": "fetch"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.510Z",
+        "type": "requestfailed",
+        "url": "http://localhost:8080/api/v2/campaigns/d08000a3-8e11-4100-bf78-01fe4a448ede",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "resourceType": "xhr"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.510Z",
+        "type": "requestfailed",
+        "url": "http://localhost:8080/api/v2/campaigns/501131a5-fd91-4381-9a1c-47b72eaae9f8",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED",
+        "resourceType": "xhr"
+      },
+      {
+        "timestamp": "2025-07-15T19:17:11.618Z",
+        "type": "pageerror",
+        "message": "Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.",
+        "stack": "TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.\n    at <anonymous>:66:16\n    at <anonymous>:71:7\n    at <anonymous>:72:7"
+      }
+    ],
+    "warnings": [],
+    "memoryUsage": []
+  }
+}

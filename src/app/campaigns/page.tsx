@@ -980,7 +980,7 @@ id: c.id,
       
       // Use proper bulk delete API - let backend handle the business logic
       await apiClient.bulkDeleteCampaigns({
-data: { campaignIds: campaignsToDelete }
+        campaignIds: campaignsToDelete
       });
 
       // Clear selection

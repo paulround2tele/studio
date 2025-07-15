@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { CreateKeywordSetRequest } from '../models';
+// @ts-ignore
 import type { ErrorResponse } from '../models';
 // @ts-ignore
 import type { KeywordSetDeleteResponse } from '../models';
@@ -29,6 +31,8 @@ import type { KeywordSetDeleteResponse } from '../models';
 import type { KeywordSetResponse } from '../models';
 // @ts-ignore
 import type { StreamExtractKeywords200Response } from '../models';
+// @ts-ignore
+import type { UpdateKeywordSetRequest } from '../models';
 /**
  * KeywordSetsApi - axios parameter creator
  * @export
@@ -38,10 +42,13 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
         /**
          * Create a new keyword set with optional rules
          * @summary Create keyword set
+         * @param {CreateKeywordSetRequest} createKeywordSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createKeywordSet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createKeywordSet: async (createKeywordSetRequest: CreateKeywordSetRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createKeywordSetRequest' is not null or undefined
+            assertParamExists('createKeywordSet', 'createKeywordSetRequest', createKeywordSetRequest)
             const localVarPath = `/keyword-sets`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -56,9 +63,12 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createKeywordSetRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -187,12 +197,15 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
          * Update an existing keyword set and its rules
          * @summary Update keyword set
          * @param {string} setId Keyword set ID
+         * @param {UpdateKeywordSetRequest} updateKeywordSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateKeywordSet: async (setId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateKeywordSet: async (setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'setId' is not null or undefined
             assertParamExists('updateKeywordSet', 'setId', setId)
+            // verify required parameter 'updateKeywordSetRequest' is not null or undefined
+            assertParamExists('updateKeywordSet', 'updateKeywordSetRequest', updateKeywordSetRequest)
             const localVarPath = `/keyword-sets/{setId}`
                 .replace(`{${"setId"}}`, encodeURIComponent(String(setId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -208,9 +221,12 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateKeywordSetRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -230,11 +246,12 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
         /**
          * Create a new keyword set with optional rules
          * @summary Create keyword set
+         * @param {CreateKeywordSetRequest} createKeywordSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createKeywordSet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createKeywordSet(options);
+        async createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createKeywordSet(createKeywordSetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.createKeywordSet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -285,11 +302,12 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
          * Update an existing keyword set and its rules
          * @summary Update keyword set
          * @param {string} setId Keyword set ID
+         * @param {UpdateKeywordSetRequest} updateKeywordSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateKeywordSet(setId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateKeywordSet(setId, options);
+        async updateKeywordSet(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateKeywordSet(setId, updateKeywordSetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.updateKeywordSet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -307,11 +325,12 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
         /**
          * Create a new keyword set with optional rules
          * @summary Create keyword set
+         * @param {CreateKeywordSetRequest} createKeywordSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createKeywordSet(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
-            return localVarFp.createKeywordSet(options).then((request) => request(axios, basePath));
+        createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+            return localVarFp.createKeywordSet(createKeywordSetRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete a keyword set by ID
@@ -350,11 +369,12 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
          * Update an existing keyword set and its rules
          * @summary Update keyword set
          * @param {string} setId Keyword set ID
+         * @param {UpdateKeywordSetRequest} updateKeywordSetRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateKeywordSet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetResponse> {
-            return localVarFp.updateKeywordSet(setId, options).then((request) => request(axios, basePath));
+        updateKeywordSet(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetResponse> {
+            return localVarFp.updateKeywordSet(setId, updateKeywordSetRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -368,11 +388,12 @@ export interface KeywordSetsApiInterface {
     /**
      * Create a new keyword set with optional rules
      * @summary Create keyword set
+     * @param {CreateKeywordSetRequest} createKeywordSetRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof KeywordSetsApiInterface
      */
-    createKeywordSet(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
 
     /**
      * Delete a keyword set by ID
@@ -411,11 +432,12 @@ export interface KeywordSetsApiInterface {
      * Update an existing keyword set and its rules
      * @summary Update keyword set
      * @param {string} setId Keyword set ID
+     * @param {UpdateKeywordSetRequest} updateKeywordSetRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof KeywordSetsApiInterface
      */
-    updateKeywordSet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetResponse>;
+    updateKeywordSet(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetResponse>;
 
 }
 
@@ -429,12 +451,13 @@ export class KeywordSetsApi extends BaseAPI implements KeywordSetsApiInterface {
     /**
      * Create a new keyword set with optional rules
      * @summary Create keyword set
+     * @param {CreateKeywordSetRequest} createKeywordSetRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof KeywordSetsApi
      */
-    public createKeywordSet(options?: RawAxiosRequestConfig) {
-        return KeywordSetsApiFp(this.configuration).createKeywordSet(options).then((request) => request(this.axios, this.basePath));
+    public createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig) {
+        return KeywordSetsApiFp(this.configuration).createKeywordSet(createKeywordSetRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -480,12 +503,13 @@ export class KeywordSetsApi extends BaseAPI implements KeywordSetsApiInterface {
      * Update an existing keyword set and its rules
      * @summary Update keyword set
      * @param {string} setId Keyword set ID
+     * @param {UpdateKeywordSetRequest} updateKeywordSetRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof KeywordSetsApi
      */
-    public updateKeywordSet(setId: string, options?: RawAxiosRequestConfig) {
-        return KeywordSetsApiFp(this.configuration).updateKeywordSet(setId, options).then((request) => request(this.axios, this.basePath));
+    public updateKeywordSet(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig) {
+        return KeywordSetsApiFp(this.configuration).updateKeywordSet(setId, updateKeywordSetRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

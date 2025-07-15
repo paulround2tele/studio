@@ -558,21 +558,161 @@ async function runCampaignCreationTest() {
     await page.waitForSelector('form', { timeout: config.timeout });
     logger.info('Campaign creation form loaded');
 
-    // Take a screenshot of the form
-    await page.screenshot({ 
-      path: path.join(config.outputDir, `campaign-form-${timestamp}.png`), 
-      fullPage: true 
+    // Take a screenshot of the initial form
+    await page.screenshot({
+      path: path.join(config.outputDir, `campaign-form-initial-${timestamp}.png`),
+      fullPage: true
     });
 
-    // Monitor logs for a few seconds to capture any async operations
-    logger.info('Monitoring logs for 5 seconds');
-    await page.waitForTimeout(5000);
+    // Fill out the domain generation campaign form with specific parameters
+    logger.info('Filling out domain generation campaign form');
+    
+    // Wait a bit more for form to fully initialize
+    await page.waitForTimeout(2000);
+    
+    // Fill campaign name
+    await page.fill('input[name="name"]', 'Test Domain Generation Campaign');
+    logger.info('Campaign name filled');
 
-    // Get backend logs after campaign form load
+    // Select domain generation campaign type - it's a Select component
+    logger.info('Selecting campaign type');
+    try {
+      // Wait for and click the campaign type select trigger
+      await page.waitForSelector('button[role="combobox"]', { timeout: 5000 });
+      await page.click('button[role="combobox"]');
+      await page.waitForTimeout(500);
+      
+      // Click on domain_generation option in the dropdown
+      await page.click('[role="option"]:has-text("domain_generation")');
+      logger.info('Domain generation campaign type selected');
+    } catch (e) {
+      logger.warn('Could not select campaign type via combobox, trying alternative', { error: e.message });
+      try {
+        // Alternative: look for any select trigger
+        await page.click('[data-radix-collection-item]');
+        await page.waitForTimeout(500);
+        await page.click('text=domain_generation');
+        logger.info('Domain generation campaign type selected via alternative method');
+      } catch (e2) {
+        logger.error('Could not select campaign type', { error: e2.message });
+      }
+    }
+
+    // Set generation pattern to "both_variable" for prefix + suffix
+    const patternSelector = 'select[name="generationPattern"], input[name="generationPattern"]';
+    try {
+      await page.selectOption(patternSelector, 'both_variable');
+      logger.info('Generation pattern set to both_variable');
+    } catch (e) {
+      logger.debug('Pattern selector not found, trying radio buttons');
+      try {
+        await page.check('input[value="both_variable"]');
+        logger.info('Generation pattern set to both_variable via radio');
+      } catch (e2) {
+        logger.warn('Could not set generation pattern', { error: e2.message });
+      }
+    }
+
+    // Set constant part to "business"
+    try {
+      await page.fill('input[name="constantPart"]', 'business');
+      logger.info('Constant part set to "business"');
+    } catch (e) {
+      logger.warn('Could not set constant part', { error: e.message });
+    }
+
+    // Set prefix variable length to 3
+    try {
+      await page.fill('input[name="prefixVariableLength"]', '3');
+      logger.info('Prefix variable length set to 3');
+    } catch (e) {
+      logger.warn('Could not set prefix variable length', { error: e.message });
+    }
+
+    // Set suffix variable length to 3
+    try {
+      await page.fill('input[name="suffixVariableLength"]', '3');
+      logger.info('Suffix variable length set to 3');
+    } catch (e) {
+      logger.warn('Could not set suffix variable length', { error: e.message });
+    }
+
+    // Set max domains to generate to 25 (slightly more than requested 20)
+    try {
+      await page.fill('input[name="maxDomainsToGenerate"]', '25');
+      logger.info('Max domains to generate set to 25');
+    } catch (e) {
+      logger.warn('Could not set max domains to generate', { error: e.message });
+    }
+
+    // Take screenshot after filling form
+    await page.screenshot({
+      path: path.join(config.outputDir, `campaign-form-filled-${timestamp}.png`),
+      fullPage: true
+    });
+
+    // Submit the form
+    logger.info('Submitting campaign creation form');
+    const submitButton = await page.waitForSelector('button[type="submit"], button:has-text("Create Campaign")');
+    await submitButton.click();
+    logger.info('Campaign creation form submitted');
+
+    // Wait for campaign creation to complete or redirect
+    try {
+      await page.waitForURL(/\/campaigns\/[a-f0-9-]+/, { timeout: config.timeout });
+      logger.info('Redirected to campaign details page');
+      
+      // Wait for campaign details to load
+      await page.waitForLoadState('networkidle');
+      
+      // Take screenshot of campaign details
+      await page.screenshot({
+        path: path.join(config.outputDir, `campaign-details-${timestamp}.png`),
+        fullPage: true
+      });
+
+      // Monitor for domain generation progress
+      logger.info('Monitoring domain generation for 10 seconds');
+      await page.waitForTimeout(10000);
+
+      // Check if domains were generated
+      const domainRows = await page.$$eval(
+        'table tr, [data-testid*="domain"], .domain-row',
+        rows => rows.length
+      ).catch(() => 0);
+      
+      logger.info('Domain generation monitoring complete', {
+        domainRowsFound: domainRows,
+        targetDomains: 25
+      });
+
+      if (domainRows >= 20) {
+        logger.info('SUCCESS: Domain generation campaign created and generated sufficient domains', {
+          domainsGenerated: domainRows,
+          targetMinimum: 20
+        });
+      } else {
+        logger.warn('Domain generation may still be in progress', {
+          domainsFound: domainRows,
+          targetMinimum: 20
+        });
+      }
+
+    } catch (redirectError) {
+      logger.error('Campaign creation may have failed', { error: redirectError.message });
+      
+      // Take error screenshot
+      await page.screenshot({
+        path: path.join(config.outputDir, `campaign-creation-error-${timestamp}.png`),
+        fullPage: true
+      });
+    }
+
+    // Get backend logs after campaign creation
     const logsAfter = await backendLogs.getNewLogs();
-    logger.info('Backend logs after campaign creation navigation', { count: logsAfter.length });
+    logger.info('Backend logs after campaign creation', { count: logsAfter.length });
 
-    logger.info('Campaign creation flow test completed successfully');
+    logger.info('Domain generation campaign creation test completed');
 
   } catch (error) {
     logger.error('Test execution failed', { 

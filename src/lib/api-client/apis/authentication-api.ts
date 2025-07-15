@@ -22,7 +22,11 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { ChangePasswordRequest } from '../models';
+// @ts-ignore
 import type { ErrorResponse } from '../models';
+// @ts-ignore
+import type { LoginRequest } from '../models';
 // @ts-ignore
 import type { LoginSuccessResponse } from '../models';
 // @ts-ignore
@@ -42,10 +46,13 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Change password for the currently authenticated user
          * @summary Change user password
+         * @param {ChangePasswordRequest} changePasswordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        changePassword: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        changePassword: async (changePasswordRequest: ChangePasswordRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'changePasswordRequest' is not null or undefined
+            assertParamExists('changePassword', 'changePasswordRequest', changePasswordRequest)
             const localVarPath = `/auth/change-password`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -60,9 +67,12 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(changePasswordRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -102,10 +112,13 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Authenticate user credentials and create session
          * @summary User login
+         * @param {LoginRequest} loginRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        login: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        login: async (loginRequest: LoginRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'loginRequest' is not null or undefined
+            assertParamExists('login', 'loginRequest', loginRequest)
             const localVarPath = `/auth/login`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -120,9 +133,12 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(loginRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -202,11 +218,12 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         /**
          * Change password for the currently authenticated user
          * @summary Change user password
+         * @param {ChangePasswordRequest} changePasswordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async changePassword(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PasswordChangeResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.changePassword(options);
+        async changePassword(changePasswordRequest: ChangePasswordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PasswordChangeResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.changePassword(changePasswordRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.changePassword']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -226,11 +243,12 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         /**
          * Authenticate user credentials and create session
          * @summary User login
+         * @param {LoginRequest} loginRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async login(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LoginSuccessResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.login(options);
+        async login(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LoginSuccessResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.login(loginRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.login']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -272,11 +290,12 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
         /**
          * Change password for the currently authenticated user
          * @summary Change user password
+         * @param {ChangePasswordRequest} changePasswordRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        changePassword(options?: RawAxiosRequestConfig): AxiosPromise<PasswordChangeResponse> {
-            return localVarFp.changePassword(options).then((request) => request(axios, basePath));
+        changePassword(changePasswordRequest: ChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<PasswordChangeResponse> {
+            return localVarFp.changePassword(changePasswordRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Get information about the currently authenticated user
@@ -290,11 +309,12 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
         /**
          * Authenticate user credentials and create session
          * @summary User login
+         * @param {LoginRequest} loginRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        login(options?: RawAxiosRequestConfig): AxiosPromise<LoginSuccessResponse> {
-            return localVarFp.login(options).then((request) => request(axios, basePath));
+        login(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<LoginSuccessResponse> {
+            return localVarFp.login(loginRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Invalidate current user session and clear cookies
@@ -326,11 +346,12 @@ export interface AuthenticationApiInterface {
     /**
      * Change password for the currently authenticated user
      * @summary Change user password
+     * @param {ChangePasswordRequest} changePasswordRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    changePassword(options?: RawAxiosRequestConfig): AxiosPromise<PasswordChangeResponse>;
+    changePassword(changePasswordRequest: ChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<PasswordChangeResponse>;
 
     /**
      * Get information about the currently authenticated user
@@ -344,11 +365,12 @@ export interface AuthenticationApiInterface {
     /**
      * Authenticate user credentials and create session
      * @summary User login
+     * @param {LoginRequest} loginRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    login(options?: RawAxiosRequestConfig): AxiosPromise<LoginSuccessResponse>;
+    login(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<LoginSuccessResponse>;
 
     /**
      * Invalidate current user session and clear cookies
@@ -380,12 +402,13 @@ export class AuthenticationApi extends BaseAPI implements AuthenticationApiInter
     /**
      * Change password for the currently authenticated user
      * @summary Change user password
+     * @param {ChangePasswordRequest} changePasswordRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApi
      */
-    public changePassword(options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).changePassword(options).then((request) => request(this.axios, this.basePath));
+    public changePassword(changePasswordRequest: ChangePasswordRequest, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).changePassword(changePasswordRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -402,12 +425,13 @@ export class AuthenticationApi extends BaseAPI implements AuthenticationApiInter
     /**
      * Authenticate user credentials and create session
      * @summary User login
+     * @param {LoginRequest} loginRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApi
      */
-    public login(options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).login(options).then((request) => request(this.axios, this.basePath));
+    public login(loginRequest: LoginRequest, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).login(loginRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

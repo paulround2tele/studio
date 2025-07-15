@@ -52,7 +52,7 @@ class ConfigService {
 
   async updateFeatureFlags(flags: FeatureFlags): Promise<ConfigResponse<FeatureFlags>> {
     try {
-      const response = await configApi.updateFeatureFlags({ data: flags });
+      const response = await configApi.updateFeatureFlags(flags);
       return {
         status: 'success',
         data: response.data as FeatureFlags,

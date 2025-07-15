@@ -14,7 +14,7 @@ All URIs are relative to *http://localhost*
 |[**updateProxy**](#updateproxy) | **PUT** /proxies/{proxyId} | Update proxy|
 
 # **addProxy**
-> StreamExtractKeywords200Response addProxy()
+> StreamExtractKeywords200Response addProxy(createProxyRequest)
 
 Add a new proxy configuration
 
@@ -23,17 +23,25 @@ Add a new proxy configuration
 ```typescript
 import {
     ProxiesApi,
-    Configuration
+    Configuration,
+    CreateProxyRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.addProxy();
+let createProxyRequest: CreateProxyRequest; //
+
+const { status, data } = await apiInstance.addProxy(
+    createProxyRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **createProxyRequest** | **CreateProxyRequest**|  | |
 
 
 ### Return type
@@ -46,7 +54,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -113,7 +121,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **forceCheckAllProxies**
-> BulkHealthCheckResponse forceCheckAllProxies()
+> BulkHealthCheckResponse forceCheckAllProxies(proxyHealthCheckRequest)
 
 Force health checks on all registered proxies
 
@@ -122,17 +130,25 @@ Force health checks on all registered proxies
 ```typescript
 import {
     ProxiesApi,
-    Configuration
+    Configuration,
+    ProxyHealthCheckRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.forceCheckAllProxies();
+let proxyHealthCheckRequest: ProxyHealthCheckRequest; //
+
+const { status, data } = await apiInstance.forceCheckAllProxies(
+    proxyHealthCheckRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **proxyHealthCheckRequest** | **ProxyHealthCheckRequest**|  | |
 
 
 ### Return type
@@ -145,7 +161,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -376,7 +392,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateProxy**
-> Proxy updateProxy()
+> Proxy updateProxy(updateProxyRequest)
 
 Update an existing proxy configuration
 
@@ -385,16 +401,19 @@ Update an existing proxy configuration
 ```typescript
 import {
     ProxiesApi,
-    Configuration
+    Configuration,
+    UpdateProxyRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
 let proxyId: string; //Proxy ID (default to undefined)
+let updateProxyRequest: UpdateProxyRequest; //
 
 const { status, data } = await apiInstance.updateProxy(
-    proxyId
+    proxyId,
+    updateProxyRequest
 );
 ```
 
@@ -402,6 +421,7 @@ const { status, data } = await apiInstance.updateProxy(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **updateProxyRequest** | **UpdateProxyRequest**|  | |
 | **proxyId** | [**string**] | Proxy ID | defaults to undefined|
 
 
@@ -415,7 +435,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

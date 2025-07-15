@@ -130,7 +130,7 @@ class SettingsService {
   }
 
   async updateLoggingConfig(cfg: LoggingConfig): Promise<void> {
-    await configClient.updateLoggingConfigGin({ data: cfg as any });
+    await configClient.updateLoggingConfigGin(cfg as any);
   }
 
   async getWorkerConfig(): Promise<WorkerConfig> {
@@ -139,7 +139,7 @@ class SettingsService {
   }
 
   async updateWorkerConfig(cfg: WorkerConfig): Promise<void> {
-    await configClient.updateWorkerConfigGin({ data: cfg as any });
+    await configClient.updateWorkerConfigGin(cfg as any);
   }
 
   async getRateLimiterConfig(): Promise<RateLimiterConfig> {
@@ -148,7 +148,7 @@ class SettingsService {
   }
 
   async updateRateLimiterConfig(cfg: RateLimiterConfig): Promise<void> {
-    await configClient.updateRateLimiterConfigGin({ data: cfg as any });
+    await configClient.updateRateLimiterConfigGin(cfg as any);
   }
 
   async getProxyManagerConfig(): Promise<ProxyManagerConfig> {
@@ -157,7 +157,7 @@ class SettingsService {
   }
 
   async updateProxyManagerConfig(cfg: ProxyManagerConfig): Promise<void> {
-    await configClient.updateProxyManagerConfigGin({ data: cfg as any });
+    await configClient.updateProxyManagerConfigGin(cfg as any);
   }
 
   async getServerConfig(): Promise<ServerConfig> {
@@ -166,7 +166,7 @@ class SettingsService {
   }
 
   async updateServerConfig(cfg: Partial<ServerConfig>): Promise<void> {
-    await configClient.updateServerConfigGin({ data: cfg as any });
+    await configClient.updateServerConfigGin(cfg as any);
   }
 
   async getAuthConfig(): Promise<AuthConfig> {
@@ -175,7 +175,7 @@ class SettingsService {
   }
 
   async updateAuthConfig(cfg: AuthConfig): Promise<void> {
-    await configClient.updateAuthConfigGin({ data: cfg as any });
+    await configClient.updateAuthConfigGin(cfg as any);
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsConfig> {

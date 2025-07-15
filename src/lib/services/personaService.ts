@@ -53,17 +53,39 @@ export type PersonaListResponse = FrontendPersona;
 export async function createPersona(payload: CreatePersonaRequest): Promise<ApiResponse<Persona>> {
   try {
     const convertedPayload = convertPersonaPayload(payload);
-    const response = await personasApi.createPersona({ data: convertedPayload });
-    // Axios response structure: response.data = API wrapper object
-    const apiResponse = 'data' in response ? response.data : response;
+    const response = await personasApi.createPersona(convertedPayload);
     
-    // Extract persona from API response structure: { status, data: Persona, message }
-    const persona = (apiResponse as any)?.data || apiResponse;
-    const message = (apiResponse as any)?.message || 'Persona created successfully';
+    // Handle new Swagger-generated API response format: { success: true, data: Persona }
+    const responseData = 'data' in response ? response.data : response;
+    let personaData: Persona | null = null;
+    let message = 'Persona created successfully';
+    
+    if (responseData && typeof responseData === 'object') {
+      if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+        // New format: { success: true, data: Persona, requestId: string }
+        const nestedData = responseData.data;
+        if (nestedData && typeof nestedData === 'object') {
+          personaData = nestedData as Persona;
+        }
+        message = (responseData as any)?.message || message;
+      } else if ('id' in responseData) {
+        // Legacy direct persona format
+        personaData = responseData as Persona;
+        message = (responseData as any)?.message || message;
+      } else {
+        // Legacy API wrapper format: { status, data: Persona, message }
+        personaData = (responseData as any)?.data || responseData;
+        message = (responseData as any)?.message || message;
+      }
+    }
+    
+    if (!personaData) {
+      throw new Error('Persona not found in response');
+    }
     
     return {
       status: 'success',
-      data: persona as Persona,
+      data: personaData,
       message: message
     };
   } catch (error: any) {
@@ -86,18 +108,29 @@ export async function listPersonas(options?: {
 }): Promise<ApiResponse<Persona[]>> {
   try {
     // Request all personas with high limit to avoid pagination truncation
-    // Database has 39 total personas (7 DNS + 32 HTTP), so 100 is safe
     const response = await personasApi.listAllPersonas(
       options?.limit || 100,
       options?.offset,
       options?.isEnabled,
       options?.personaType
     );
-    // Axios response structure: response.data = PersonaListResponse
-    const personaListResponse = 'data' in response ? response.data : response;
     
-    // The response is directly an array of ApiPersonaResponse
-    const personasArray = (personaListResponse || []) as Persona[];
+    // Handle new Swagger-generated API response format: { success: true, data: Persona[] }
+    const responseData = 'data' in response ? response.data : response;
+    let personasArray: Persona[] = [];
+    
+    if (responseData && typeof responseData === 'object') {
+      if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+        // New format: { success: true, data: Persona[], requestId: string }
+        const nestedData = responseData.data;
+        if (Array.isArray(nestedData)) {
+          personasArray = nestedData as Persona[];
+        }
+      } else if (Array.isArray(responseData)) {
+        // Legacy direct array format
+        personasArray = responseData as Persona[];
+      }
+    }
     
     return {
       status: 'success',
@@ -116,10 +149,31 @@ export async function listPersonas(options?: {
 export async function getPersonaById(personaId: string, _personaType?: 'http' | 'dns'): Promise<ApiResponse<Persona>> {
   try {
     const response = await personasApi.getPersonaByID(personaId);
-    const result = 'data' in response ? response.data : response;
+    
+    // Handle new Swagger-generated API response format: { success: true, data: Persona }
+    const responseData = 'data' in response ? response.data : response;
+    let personaData: Persona | null = null;
+    
+    if (responseData && typeof responseData === 'object') {
+      if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+        // New format: { success: true, data: Persona, requestId: string }
+        const nestedData = responseData.data;
+        if (nestedData && typeof nestedData === 'object') {
+          personaData = nestedData as Persona;
+        }
+      } else if ('id' in responseData) {
+        // Legacy direct persona format
+        personaData = responseData as Persona;
+      }
+    }
+    
+    if (!personaData) {
+      throw new Error('Persona not found in response');
+    }
+    
     return {
       status: 'success',
-      data: result as Persona,
+      data: personaData,
       message: 'Persona retrieved successfully'
     };
   } catch (error) {
@@ -133,17 +187,39 @@ export async function getPersonaById(personaId: string, _personaType?: 'http' | 
 export async function updatePersona(personaId: string, payload: UpdatePersonaRequest, _personaType?: 'http' | 'dns'): Promise<ApiResponse<Persona>> {
   try {
     const convertedPayload = convertPersonaPayload(payload);
-    const response = await personasApi.updatePersona(personaId, { data: convertedPayload });
-    // Axios response structure: response.data = API wrapper object
-    const apiResponse = 'data' in response ? response.data : response;
+    const response = await personasApi.updatePersona(personaId, convertedPayload);
     
-    // Extract persona from API response structure: { status, data: Persona, message }
-    const persona = (apiResponse as any)?.data || apiResponse;
-    const message = (apiResponse as any)?.message || 'Persona updated successfully';
+    // Handle new Swagger-generated API response format: { success: true, data: Persona }
+    const responseData = 'data' in response ? response.data : response;
+    let personaData: Persona | null = null;
+    let message = 'Persona updated successfully';
+    
+    if (responseData && typeof responseData === 'object') {
+      if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+        // New format: { success: true, data: Persona, requestId: string }
+        const nestedData = responseData.data;
+        if (nestedData && typeof nestedData === 'object') {
+          personaData = nestedData as Persona;
+        }
+        message = (responseData as any)?.message || message;
+      } else if ('id' in responseData) {
+        // Legacy direct persona format
+        personaData = responseData as Persona;
+        message = (responseData as any)?.message || message;
+      } else {
+        // Legacy API wrapper format: { status, data: Persona, message }
+        personaData = (responseData as any)?.data || responseData;
+        message = (responseData as any)?.message || message;
+      }
+    }
+    
+    if (!personaData) {
+      throw new Error('Persona not found in response');
+    }
     
     return {
       status: 'success',
-      data: persona as Persona,
+      data: personaData,
       message: message
     };
   } catch (error: any) {
@@ -177,10 +253,31 @@ export async function deletePersona(personaId: string, _personaType?: 'http' | '
 export async function testPersona(personaId: string, _personaType?: 'http' | 'dns'): Promise<ApiResponse<PersonaTestResult>> {
   try {
     const response = await personasApi.testPersona(personaId);
-    const result = 'data' in response ? response.data : response;
+    
+    // Handle new Swagger-generated API response format: { success: true, data: PersonaTestResult }
+    const responseData = 'data' in response ? response.data : response;
+    let testResult: PersonaTestResult | null = null;
+    
+    if (responseData && typeof responseData === 'object') {
+      if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+        // New format: { success: true, data: PersonaTestResult, requestId: string }
+        const nestedData = responseData.data;
+        if (nestedData && typeof nestedData === 'object') {
+          testResult = nestedData as PersonaTestResult;
+        }
+      } else {
+        // Legacy direct result format
+        testResult = responseData as PersonaTestResult;
+      }
+    }
+    
+    if (!testResult) {
+      throw new Error('Test result not found in response');
+    }
+    
     return {
       status: 'success',
-      data: result,
+      data: testResult,
       message: 'Persona test completed successfully'
     };
   } catch (error) {

@@ -42,6 +42,18 @@ components:
                 status:
                     type: string
             type: object
+        AddProxyToPoolRequest:
+            properties:
+                proxyId:
+                    description: Unique identifier
+                    format: uuid
+                    type: string
+                weight:
+                    format: int32
+                    type: integer
+            required:
+                - proxyId
+            type: object
         ArchitectureRefactorLog:
             properties:
                 afterPattern:
@@ -135,6 +147,8 @@ components:
                     type: string
             type: object
         AuthConfig:
+            type: string
+        AuthConfigUpdateRequest:
             type: string
         AuthResult:
             properties:
@@ -1451,6 +1465,36 @@ components:
                 useSystemResolvers:
                     type: boolean
             type: object
+        DNSConfigUpdateRequest:
+            type: string
+        DNSValidationAPIRequest:
+            properties:
+                batchSize:
+                    format: int32
+                    type: integer
+                campaignId:
+                    description: Unique identifier
+                    format: uuid
+                    type: string
+                onlyInvalidDomains:
+                    type: boolean
+                personaIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                processingSpeedPerMinute:
+                    format: int32
+                    type: integer
+                retryAttempts:
+                    format: int32
+                    type: integer
+                rotationIntervalSeconds:
+                    format: int32
+                    type: integer
+            required:
+                - campaignId
+            type: object
         DNSValidationCampaignParams:
             properties:
                 batchSize:
@@ -2040,6 +2084,8 @@ components:
             type: object
         FeatureFlags:
             type: string
+        FeatureFlagsUpdateRequest:
+            type: string
         GeneralErrorResponse:
             properties:
                 details:
@@ -2169,6 +2215,8 @@ components:
             required:
                 - userAgent
             type: object
+        HTTPConfigUpdateRequest:
+            type: string
         HTTPCookieHandling:
             properties:
                 mode:
@@ -2318,6 +2366,43 @@ components:
                     type: string
                 minVersion:
                     type: string
+            type: object
+        HTTPValidationRequest:
+            properties:
+                adHocKeywords:
+                    items:
+                        type: string
+                    type: array
+                batchSize:
+                    format: int32
+                    type: integer
+                keywordSetIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                personaIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                processingSpeedPerMinute:
+                    format: int32
+                    type: integer
+                proxyPoolId:
+                    description: Unique identifier
+                    format: uuid
+                    type: string
+                retryAttempts:
+                    format: int32
+                    type: integer
+                targetHttpPorts:
+                    items:
+                        format: int32
+                        type: integer
+                    type: array
+            required:
+                - personaIds
             type: object
         HTTPValidationStartResponse:
             properties:
@@ -2707,6 +2792,8 @@ components:
                 - id
             type: object
         LoggingConfig:
+            type: string
+        LoggingConfigUpdateRequest:
             type: string
         LoginRequest:
             properties:
@@ -3219,6 +3306,13 @@ components:
                 username:
                     type: string
             type: object
+        ProxyHealthCheckRequest:
+            properties:
+                ids:
+                    items:
+                        type: string
+                    type: array
+            type: object
         ProxyHealthCheckResponse:
             properties:
                 message:
@@ -3239,6 +3333,8 @@ components:
                     type: string
             type: object
         ProxyManagerConfigJSON:
+            type: string
+        ProxyManagerConfigUpdateRequest:
             type: string
         ProxyPool:
             properties:
@@ -3562,6 +3658,8 @@ components:
                     type: string
             type: object
         RateLimiterConfig:
+            type: string
+        RateLimiterConfigUpdateRequest:
             type: string
         ResourceUtilizationMetric:
             properties:
@@ -4295,6 +4393,8 @@ components:
                     type: string
             type: object
         WorkerConfig:
+            type: string
+        WorkerConfigUpdateRequest:
             type: string
         WorkerPoolConfig:
             properties:

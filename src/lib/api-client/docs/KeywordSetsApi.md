@@ -11,7 +11,7 @@ All URIs are relative to *http://localhost*
 |[**updateKeywordSet**](#updatekeywordset) | **PUT** /keyword-sets/{setId} | Update keyword set|
 
 # **createKeywordSet**
-> StreamExtractKeywords200Response createKeywordSet()
+> StreamExtractKeywords200Response createKeywordSet(createKeywordSetRequest)
 
 Create a new keyword set with optional rules
 
@@ -20,17 +20,25 @@ Create a new keyword set with optional rules
 ```typescript
 import {
     KeywordSetsApi,
-    Configuration
+    Configuration,
+    CreateKeywordSetRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
-const { status, data } = await apiInstance.createKeywordSet();
+let createKeywordSetRequest: CreateKeywordSetRequest; //
+
+const { status, data } = await apiInstance.createKeywordSet(
+    createKeywordSetRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **createKeywordSetRequest** | **CreateKeywordSetRequest**|  | |
 
 
 ### Return type
@@ -43,7 +51,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -225,7 +233,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateKeywordSet**
-> KeywordSetResponse updateKeywordSet()
+> KeywordSetResponse updateKeywordSet(updateKeywordSetRequest)
 
 Update an existing keyword set and its rules
 
@@ -234,16 +242,19 @@ Update an existing keyword set and its rules
 ```typescript
 import {
     KeywordSetsApi,
-    Configuration
+    Configuration,
+    UpdateKeywordSetRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
 let setId: string; //Keyword set ID (default to undefined)
+let updateKeywordSetRequest: UpdateKeywordSetRequest; //
 
 const { status, data } = await apiInstance.updateKeywordSet(
-    setId
+    setId,
+    updateKeywordSetRequest
 );
 ```
 
@@ -251,6 +262,7 @@ const { status, data } = await apiInstance.updateKeywordSet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **updateKeywordSetRequest** | **UpdateKeywordSetRequest**|  | |
 | **setId** | [**string**] | Keyword set ID | defaults to undefined|
 
 
@@ -264,7 +276,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

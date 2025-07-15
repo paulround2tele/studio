@@ -1,6 +1,11 @@
 package api
 
-import "github.com/fntelecomllc/studio/backend/internal/config"
+import (
+	"github.com/google/uuid"
+	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/services"
+)
 
 // Common response models to prevent auto-generated inline schemas
 
@@ -219,9 +224,33 @@ type ServerConfigResponse struct {
 
 // ServerConfigUpdateRequest represents server configuration update
 type ServerConfigUpdateRequest struct {
-	StreamChunkSize int    `json:"streamChunkSize"`
-	GinMode         string `json:"ginMode"`
+	StreamChunkSize *int    `json:"streamChunkSize,omitempty"`
+	GinMode         *string `json:"ginMode,omitempty"`
 }
+
+// DNSConfigUpdateRequest represents DNS configuration update request
+type DNSConfigUpdateRequest = config.DNSValidatorConfigJSON
+
+// HTTPConfigUpdateRequest represents HTTP configuration update request
+type HTTPConfigUpdateRequest = config.HTTPValidatorConfigJSON
+
+// LoggingConfigUpdateRequest represents logging configuration update request
+type LoggingConfigUpdateRequest = config.LoggingConfig
+
+// WorkerConfigUpdateRequest represents worker configuration update request
+type WorkerConfigUpdateRequest = config.WorkerConfig
+
+// RateLimiterConfigUpdateRequest represents rate limiter configuration update request
+type RateLimiterConfigUpdateRequest = config.RateLimiterConfig
+
+// AuthConfigUpdateRequest represents authentication configuration update request
+type AuthConfigUpdateRequest = config.AuthConfig
+
+// ProxyManagerConfigUpdateRequest represents proxy manager configuration update request
+type ProxyManagerConfigUpdateRequest = config.ProxyManagerConfigJSON
+
+// FeatureFlagsUpdateRequest represents feature flags update request
+type FeatureFlagsUpdateRequest = config.FeatureFlags
 
 // LoginSuccessResponse represents a successful login response
 type LoginSuccessResponse struct {
@@ -395,4 +424,31 @@ type HTTPValidationStartResponse struct {
 	CampaignID      string `json:"campaignId"`
 	ValidationJobID string `json:"validationJobId"`
 	DomainsToTest   int    `json:"domainsToTest"`
+}
+
+// Type aliases for request types to ensure OpenAPI generation works properly
+type LoginRequest = models.LoginRequest
+type ChangePasswordRequest = models.ChangePasswordRequest
+type CreateCampaignRequest = services.CreateCampaignRequest
+type UpdateCampaignRequest = services.UpdateCampaignRequest
+type CreateProxyRequest = models.CreateProxyRequest
+type UpdateProxyRequest = models.UpdateProxyRequest
+type DNSValidationAPIRequest struct {
+	CampaignID              uuid.UUID   `json:"campaignId" validate:"required"`
+	PersonaIDs              []uuid.UUID `json:"personaIds" validate:"omitempty,min=1,dive,uuid"`
+	RotationIntervalSeconds int         `json:"rotationIntervalSeconds,omitempty" validate:"gte=0"`
+	ProcessingSpeedPerMinute int        `json:"processingSpeedPerMinute,omitempty" validate:"gte=0"`
+	BatchSize               int         `json:"batchSize,omitempty" validate:"gt=0"`
+	RetryAttempts           int         `json:"retryAttempts,omitempty" validate:"gte=0"`
+	OnlyInvalidDomains      bool        `json:"onlyInvalidDomains" validate:"omitempty"`
+}
+
+// Request types for handlers with anonymous structs
+type ProxyHealthCheckRequest struct {
+	IDs []string `json:"ids"`
+}
+
+type AddProxyToPoolRequest struct {
+	ProxyID string `json:"proxyId" binding:"required"`
+	Weight  *int   `json:"weight,omitempty"`
 }

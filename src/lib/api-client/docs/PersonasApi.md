@@ -14,7 +14,7 @@ All URIs are relative to *http://localhost*
 |[**updatePersona**](#updatepersona) | **PUT** /personas/{id} | Update persona|
 
 # **createPersona**
-> StreamExtractKeywords200Response createPersona()
+> StreamExtractKeywords200Response createPersona(createPersonaRequest)
 
 Create a new persona (DNS or HTTP) with configuration details
 
@@ -23,17 +23,25 @@ Create a new persona (DNS or HTTP) with configuration details
 ```typescript
 import {
     PersonasApi,
-    Configuration
+    Configuration,
+    CreatePersonaRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
-const { status, data } = await apiInstance.createPersona();
+let createPersonaRequest: CreatePersonaRequest; //
+
+const { status, data } = await apiInstance.createPersona(
+    createPersonaRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **createPersonaRequest** | **CreatePersonaRequest**|  | |
 
 
 ### Return type
@@ -46,7 +54,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -387,7 +395,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updatePersona**
-> PersonaResponse updatePersona()
+> PersonaResponse updatePersona(updatePersonaRequest)
 
 Update an existing persona\'s configuration by ID
 
@@ -396,16 +404,19 @@ Update an existing persona\'s configuration by ID
 ```typescript
 import {
     PersonasApi,
-    Configuration
+    Configuration,
+    UpdatePersonaRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new PersonasApi(configuration);
 
 let id: string; //Persona ID (UUID) (default to undefined)
+let updatePersonaRequest: UpdatePersonaRequest; //
 
 const { status, data } = await apiInstance.updatePersona(
-    id
+    id,
+    updatePersonaRequest
 );
 ```
 
@@ -413,6 +424,7 @@ const { status, data } = await apiInstance.updatePersona(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **updatePersonaRequest** | **UpdatePersonaRequest**|  | |
 | **id** | [**string**] | Persona ID (UUID) | defaults to undefined|
 
 
@@ -426,7 +438,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

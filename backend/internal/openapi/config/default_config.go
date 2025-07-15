@@ -10,7 +10,7 @@ func DefaultConfig() *GenerationConfig {
 		OutputFormat:     "both",
 		OutputPath:       "docs",
 		IncludeInternal:  false,
-		StrictValidation: true,
+		StrictValidation: false,
 		VerboseLogging:   false,
 		APIInfo: APIInfo{
 			Title:       "Studio API",

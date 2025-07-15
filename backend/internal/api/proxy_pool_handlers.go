@@ -241,10 +241,7 @@ func (h *APIHandler) AddProxyToPoolGin(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid pool ID")
 		return
 	}
-	var body struct {
-		ProxyID string `json:"proxyId"`
-		Weight  *int   `json:"weight,omitempty"`
-	}
+	var body AddProxyToPoolRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid payload")
 		return

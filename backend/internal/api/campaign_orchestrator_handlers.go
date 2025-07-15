@@ -103,7 +103,7 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /campaigns [post]
 func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
-	var req services.CreateCampaignRequest
+	var req CreateCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		// Use validation error response for binding errors
 		var validationErrors []ErrorDetail
@@ -234,7 +234,7 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 		return
 	}
 
-	var req services.UpdateCampaignRequest
+	var req UpdateCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		var validationErrors []ErrorDetail
 		validationErrors = append(validationErrors, ErrorDetail{
@@ -588,6 +588,18 @@ type BulkDeleteRequest struct {
 	CampaignIDs []string `json:"campaignIds" validate:"required,min=1,dive,uuid"`
 }
 
+// HTTPValidationRequest represents the request body for HTTP validation
+type HTTPValidationRequest struct {
+	PersonaIDs               []uuid.UUID `json:"personaIds" validate:"required,min=1,dive,uuid"`
+	KeywordSetIDs            []uuid.UUID `json:"keywordSetIds,omitempty" validate:"omitempty,dive,uuid"`
+	AdHocKeywords            []string    `json:"adHocKeywords,omitempty" validate:"omitempty,dive,min=1"`
+	ProxyPoolID              *uuid.UUID  `json:"proxyPoolId,omitempty"`
+	ProcessingSpeedPerMinute *int        `json:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=0"`
+	BatchSize                *int        `json:"batchSize,omitempty" validate:"omitempty,gt=0"`
+	RetryAttempts            *int        `json:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
+	TargetHTTPPorts          []int       `json:"targetHttpPorts,omitempty" validate:"omitempty,dive,gt=0,lte=65535"`
+}
+
 // bulkDeleteCampaigns deletes multiple campaigns at once.
 // @Summary Bulk delete campaigns
 // @Description Delete multiple campaigns in a single operation
@@ -595,14 +607,19 @@ type BulkDeleteRequest struct {
 // @ID bulkDeleteCampaigns
 // @Accept json
 // @Produce json
-// @Param request body BulkDeleteRequest true "Bulk delete request with campaign IDs"
+// @Param body body BulkDeleteRequest true "Bulk delete request with campaign IDs"
 // @Success 200 {object} BulkDeleteResult "Bulk delete results"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
 // @Router /campaigns [delete]
 func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
+	// Diagnostic logging for request body debugging
+	log.Printf("[DIAGNOSTIC] bulkDeleteCampaigns: Content-Length=%d, Content-Type=%s",
+		c.Request.ContentLength, c.Request.Header.Get("Content-Type"))
+	
 	var req BulkDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[DIAGNOSTIC] bulkDeleteCampaigns: ShouldBindJSON failed: %v", err)
 		var validationErrors []ErrorDetail
 		validationErrors = append(validationErrors, ErrorDetail{
 			Field:   "body",
@@ -834,7 +851,7 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 	log.Printf("[DNS_VALIDATION_TRIGGER] Starting validateDNSForCampaign handler for campaign %s", campaignID)
 
 	// Handle optional request body for persona configuration
-	var req services.DNSValidationRequest
+	var req DNSValidationAPIRequest
 
 	// Try to bind JSON for optional request parameters (for backward compatibility)
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -904,17 +921,17 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 	}
 
 	// Use override parameters if provided in the request
-	if req.RotationIntervalSeconds != nil {
-		inPlaceRequest.RotationIntervalSeconds = *req.RotationIntervalSeconds
+	if req.RotationIntervalSeconds != 0 {
+		inPlaceRequest.RotationIntervalSeconds = req.RotationIntervalSeconds
 	}
-	if req.ProcessingSpeedPerMinute != nil {
-		inPlaceRequest.ProcessingSpeedPerMinute = *req.ProcessingSpeedPerMinute
+	if req.ProcessingSpeedPerMinute != 0 {
+		inPlaceRequest.ProcessingSpeedPerMinute = req.ProcessingSpeedPerMinute
 	}
-	if req.BatchSize != nil {
-		inPlaceRequest.BatchSize = *req.BatchSize
+	if req.BatchSize != 0 {
+		inPlaceRequest.BatchSize = req.BatchSize
 	}
-	if req.RetryAttempts != nil {
-		inPlaceRequest.RetryAttempts = *req.RetryAttempts
+	if req.RetryAttempts != 0 {
+		inPlaceRequest.RetryAttempts = req.RetryAttempts
 	}
 
 	// Start in-place DNS validation using the DNS campaign service
@@ -1009,17 +1026,6 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 	// For domain-centric HTTP validation, we need to create a new HTTP keyword campaign
 	// that sources from the completed DNS validation campaign
 	// The request body could contain persona IDs and keyword configuration
-	type HTTPValidationRequest struct {
-		PersonaIDs               []uuid.UUID `json:"personaIds" validate:"required,min=1,dive,uuid"`
-		KeywordSetIDs            []uuid.UUID `json:"keywordSetIds,omitempty" validate:"omitempty,dive,uuid"`
-		AdHocKeywords            []string    `json:"adHocKeywords,omitempty" validate:"omitempty,dive,min=1"`
-		ProxyPoolID              *uuid.UUID  `json:"proxyPoolId,omitempty"`
-		ProcessingSpeedPerMinute *int        `json:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=0"`
-		BatchSize                *int        `json:"batchSize,omitempty" validate:"omitempty,gt=0"`
-		RetryAttempts            *int        `json:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
-		TargetHTTPPorts          []int       `json:"targetHttpPorts,omitempty" validate:"omitempty,dive,gt=0,lte=65535"`
-	}
-
 	var req HTTPValidationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,

@@ -1001,6 +1001,7 @@ func (sg *SchemaGenerator) addCommonSchemas(spec *openapi3.T) {
 		},
 	}
 	spec.Components.Schemas["SuccessResponse"] = successSchema
+
 }
 
 // getExplicitSchemaForType returns predefined schemas for known free-form object types

@@ -119,7 +119,7 @@ class ProxyPoolService {
 
   async createPool(payload: ProxyPoolCreationPayload): Promise<ProxyPoolCreationResponse> {
     try {
-      const response = await proxyPoolsApi.createProxyPool({ data: payload });
+      const response = await proxyPoolsApi.createProxyPool(payload);
       return {
         status: 'success',
         data: response.data as ProxyPool,
@@ -135,7 +135,7 @@ class ProxyPoolService {
 
   async updatePool(poolId: string, payload: ProxyPoolCreationPayload): Promise<ProxyPoolUpdateResponse> {
     try {
-      const response = await proxyPoolsApi.updateProxyPool(poolId, { data: payload });
+      const response = await proxyPoolsApi.updateProxyPool(poolId, payload);
       return {
         status: 'success',
         data: response.data as ProxyPool,
@@ -167,7 +167,7 @@ class ProxyPoolService {
 
   async addProxy(poolId: string, proxyId: string, weight?: number): Promise<ProxyPoolMembershipResponse> {
     try {
-      const response = await proxyPoolsApi.addProxyToPool(poolId, { data: { proxyId, weight } });
+      const response = await proxyPoolsApi.addProxyToPool(poolId, { proxyId, weight });
       return {
         status: 'success',
         data: response.data as ProxyPoolMembership,

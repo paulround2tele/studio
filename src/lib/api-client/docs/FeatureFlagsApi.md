@@ -54,7 +54,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateFeatureFlags**
-> string updateFeatureFlags()
+> string updateFeatureFlags(body)
 
 Update feature flag settings
 
@@ -69,11 +69,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new FeatureFlagsApi(configuration);
 
-const { status, data } = await apiInstance.updateFeatureFlags();
+let body: string; //
+
+const { status, data } = await apiInstance.updateFeatureFlags(
+    body
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **string**|  | |
 
 
 ### Return type
@@ -86,7 +93,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

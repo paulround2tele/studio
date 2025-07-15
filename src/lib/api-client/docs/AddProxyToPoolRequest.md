@@ -1,13 +1,12 @@
 # AddProxyToPoolRequest
 
-Request to add a proxy to a pool
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**proxyId** | **string** | Proxy ID to add to the pool | [default to undefined]
-**weight** | **number** | Weight for weighted pool strategies | [optional] [default to undefined]
+**proxyId** | **string** | Unique identifier | [default to undefined]
+**weight** | **number** |  | [optional] [default to undefined]
 
 ## Example
 

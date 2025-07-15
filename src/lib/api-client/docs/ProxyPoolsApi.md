@@ -12,7 +12,7 @@ All URIs are relative to *http://localhost*
 |[**updateProxyPool**](#updateproxypool) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
 
 # **addProxyToPool**
-> StreamExtractKeywords200Response addProxyToPool()
+> StreamExtractKeywords200Response addProxyToPool(addProxyToPoolRequest)
 
 Assign a proxy to a proxy pool with optional weight
 
@@ -21,16 +21,19 @@ Assign a proxy to a proxy pool with optional weight
 ```typescript
 import {
     ProxyPoolsApi,
-    Configuration
+    Configuration,
+    AddProxyToPoolRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
 let poolId: string; //Proxy pool ID (default to undefined)
+let addProxyToPoolRequest: AddProxyToPoolRequest; //
 
 const { status, data } = await apiInstance.addProxyToPool(
-    poolId
+    poolId,
+    addProxyToPoolRequest
 );
 ```
 
@@ -38,6 +41,7 @@ const { status, data } = await apiInstance.addProxyToPool(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **addProxyToPoolRequest** | **AddProxyToPoolRequest**|  | |
 | **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
 
 
@@ -51,7 +55,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -65,7 +69,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **createProxyPool**
-> StreamExtractKeywords200Response createProxyPool()
+> StreamExtractKeywords200Response createProxyPool(proxyPoolRequest)
 
 Create a new proxy pool with configuration settings
 
@@ -74,17 +78,25 @@ Create a new proxy pool with configuration settings
 ```typescript
 import {
     ProxyPoolsApi,
-    Configuration
+    Configuration,
+    ProxyPoolRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
-const { status, data } = await apiInstance.createProxyPool();
+let proxyPoolRequest: ProxyPoolRequest; //
+
+const { status, data } = await apiInstance.createProxyPool(
+    proxyPoolRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **proxyPoolRequest** | **ProxyPoolRequest**|  | |
 
 
 ### Return type
@@ -97,7 +109,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -266,7 +278,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateProxyPool**
-> ProxyPool updateProxyPool()
+> ProxyPool updateProxyPool(proxyPoolRequest)
 
 Update an existing proxy pool configuration
 
@@ -275,16 +287,19 @@ Update an existing proxy pool configuration
 ```typescript
 import {
     ProxyPoolsApi,
-    Configuration
+    Configuration,
+    ProxyPoolRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
 let poolId: string; //Proxy pool ID (default to undefined)
+let proxyPoolRequest: ProxyPoolRequest; //
 
 const { status, data } = await apiInstance.updateProxyPool(
-    poolId
+    poolId,
+    proxyPoolRequest
 );
 ```
 
@@ -292,6 +307,7 @@ const { status, data } = await apiInstance.updateProxyPool(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **proxyPoolRequest** | **ProxyPoolRequest**|  | |
 | **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
 
 
@@ -305,7 +321,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

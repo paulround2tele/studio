@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { CreatePersonaRequest } from '../models';
+// @ts-ignore
 import type { ErrorResponse } from '../models';
 // @ts-ignore
 import type { PersonaDeleteResponse } from '../models';
@@ -31,6 +33,8 @@ import type { PersonaResponse } from '../models';
 import type { PersonaTestResponse } from '../models';
 // @ts-ignore
 import type { StreamExtractKeywords200Response } from '../models';
+// @ts-ignore
+import type { UpdatePersonaRequest } from '../models';
 /**
  * PersonasApi - axios parameter creator
  * @export
@@ -40,10 +44,13 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
         /**
          * Create a new persona (DNS or HTTP) with configuration details
          * @summary Create persona
+         * @param {CreatePersonaRequest} createPersonaRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createPersona: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createPersona: async (createPersonaRequest: CreatePersonaRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createPersonaRequest' is not null or undefined
+            assertParamExists('createPersona', 'createPersonaRequest', createPersonaRequest)
             const localVarPath = `/personas`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -58,9 +65,12 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createPersonaRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -291,12 +301,15 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
          * Update an existing persona\'s configuration by ID
          * @summary Update persona
          * @param {string} id Persona ID (UUID)
+         * @param {UpdatePersonaRequest} updatePersonaRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updatePersona: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updatePersona: async (id: string, updatePersonaRequest: UpdatePersonaRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
             assertParamExists('updatePersona', 'id', id)
+            // verify required parameter 'updatePersonaRequest' is not null or undefined
+            assertParamExists('updatePersona', 'updatePersonaRequest', updatePersonaRequest)
             const localVarPath = `/personas/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -312,9 +325,12 @@ export const PersonasApiAxiosParamCreator = function (configuration?: Configurat
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updatePersonaRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -334,11 +350,12 @@ export const PersonasApiFp = function(configuration?: Configuration) {
         /**
          * Create a new persona (DNS or HTTP) with configuration details
          * @summary Create persona
+         * @param {CreatePersonaRequest} createPersonaRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createPersona(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createPersona(options);
+        async createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createPersona(createPersonaRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.createPersona']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -428,11 +445,12 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * Update an existing persona\'s configuration by ID
          * @summary Update persona
          * @param {string} id Persona ID (UUID)
+         * @param {UpdatePersonaRequest} updatePersonaRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updatePersona(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updatePersona(id, options);
+        async updatePersona(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updatePersona(id, updatePersonaRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.updatePersona']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -450,11 +468,12 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
         /**
          * Create a new persona (DNS or HTTP) with configuration details
          * @summary Create persona
+         * @param {CreatePersonaRequest} createPersonaRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createPersona(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
-            return localVarFp.createPersona(options).then((request) => request(axios, basePath));
+        createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+            return localVarFp.createPersona(createPersonaRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete a persona by ID
@@ -523,11 +542,12 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * Update an existing persona\'s configuration by ID
          * @summary Update persona
          * @param {string} id Persona ID (UUID)
+         * @param {UpdatePersonaRequest} updatePersonaRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updatePersona(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
-            return localVarFp.updatePersona(id, options).then((request) => request(axios, basePath));
+        updatePersona(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
+            return localVarFp.updatePersona(id, updatePersonaRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -541,11 +561,12 @@ export interface PersonasApiInterface {
     /**
      * Create a new persona (DNS or HTTP) with configuration details
      * @summary Create persona
+     * @param {CreatePersonaRequest} createPersonaRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    createPersona(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
 
     /**
      * Delete a persona by ID
@@ -614,11 +635,12 @@ export interface PersonasApiInterface {
      * Update an existing persona\'s configuration by ID
      * @summary Update persona
      * @param {string} id Persona ID (UUID)
+     * @param {UpdatePersonaRequest} updatePersonaRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    updatePersona(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
+    updatePersona(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
 
 }
 
@@ -632,12 +654,13 @@ export class PersonasApi extends BaseAPI implements PersonasApiInterface {
     /**
      * Create a new persona (DNS or HTTP) with configuration details
      * @summary Create persona
+     * @param {CreatePersonaRequest} createPersonaRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApi
      */
-    public createPersona(options?: RawAxiosRequestConfig) {
-        return PersonasApiFp(this.configuration).createPersona(options).then((request) => request(this.axios, this.basePath));
+    public createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig) {
+        return PersonasApiFp(this.configuration).createPersona(createPersonaRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -719,12 +742,13 @@ export class PersonasApi extends BaseAPI implements PersonasApiInterface {
      * Update an existing persona\'s configuration by ID
      * @summary Update persona
      * @param {string} id Persona ID (UUID)
+     * @param {UpdatePersonaRequest} updatePersonaRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof PersonasApi
      */
-    public updatePersona(id: string, options?: RawAxiosRequestConfig) {
-        return PersonasApiFp(this.configuration).updatePersona(id, options).then((request) => request(this.axios, this.basePath));
+    public updatePersona(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig) {
+        return PersonasApiFp(this.configuration).updatePersona(id, updatePersonaRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

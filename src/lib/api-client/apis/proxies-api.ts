@@ -24,9 +24,13 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { BulkHealthCheckResponse } from '../models';
 // @ts-ignore
+import type { CreateProxyRequest } from '../models';
+// @ts-ignore
 import type { ErrorResponse } from '../models';
 // @ts-ignore
 import type { Proxy } from '../models';
+// @ts-ignore
+import type { ProxyHealthCheckRequest } from '../models';
 // @ts-ignore
 import type { ProxyHealthCheckResponse } from '../models';
 // @ts-ignore
@@ -35,6 +39,8 @@ import type { ProxyStatusResponse } from '../models';
 import type { ProxyTestResponse } from '../models';
 // @ts-ignore
 import type { StreamExtractKeywords200Response } from '../models';
+// @ts-ignore
+import type { UpdateProxyRequest } from '../models';
 /**
  * ProxiesApi - axios parameter creator
  * @export
@@ -44,10 +50,13 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Add a new proxy configuration
          * @summary Create proxy
+         * @param {CreateProxyRequest} createProxyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        addProxy: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        addProxy: async (createProxyRequest: CreateProxyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createProxyRequest' is not null or undefined
+            assertParamExists('addProxy', 'createProxyRequest', createProxyRequest)
             const localVarPath = `/proxies`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -62,9 +71,12 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createProxyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -108,10 +120,13 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Force health checks on all registered proxies
          * @summary Force health check on all proxies
+         * @param {ProxyHealthCheckRequest} proxyHealthCheckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        forceCheckAllProxies: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        forceCheckAllProxies: async (proxyHealthCheckRequest: ProxyHealthCheckRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'proxyHealthCheckRequest' is not null or undefined
+            assertParamExists('forceCheckAllProxies', 'proxyHealthCheckRequest', proxyHealthCheckRequest)
             const localVarPath = `/proxies/health-check`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -126,9 +141,12 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(proxyHealthCheckRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -292,12 +310,15 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
          * Update an existing proxy configuration
          * @summary Update proxy
          * @param {string} proxyId Proxy ID
+         * @param {UpdateProxyRequest} updateProxyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateProxy: async (proxyId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateProxy: async (proxyId: string, updateProxyRequest: UpdateProxyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'proxyId' is not null or undefined
             assertParamExists('updateProxy', 'proxyId', proxyId)
+            // verify required parameter 'updateProxyRequest' is not null or undefined
+            assertParamExists('updateProxy', 'updateProxyRequest', updateProxyRequest)
             const localVarPath = `/proxies/{proxyId}`
                 .replace(`{${"proxyId"}}`, encodeURIComponent(String(proxyId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -313,9 +334,12 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateProxyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -335,11 +359,12 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
         /**
          * Add a new proxy configuration
          * @summary Create proxy
+         * @param {CreateProxyRequest} createProxyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async addProxy(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.addProxy(options);
+        async addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.addProxy(createProxyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.addProxy']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -360,11 +385,12 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
         /**
          * Force health checks on all registered proxies
          * @summary Force health check on all proxies
+         * @param {ProxyHealthCheckRequest} proxyHealthCheckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async forceCheckAllProxies(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkHealthCheckResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.forceCheckAllProxies(options);
+        async forceCheckAllProxies(proxyHealthCheckRequest: ProxyHealthCheckRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkHealthCheckResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.forceCheckAllProxies(proxyHealthCheckRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.forceCheckAllProxies']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -428,11 +454,12 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * Update an existing proxy configuration
          * @summary Update proxy
          * @param {string} proxyId Proxy ID
+         * @param {UpdateProxyRequest} updateProxyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateProxy(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Proxy>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateProxy(proxyId, options);
+        async updateProxy(proxyId: string, updateProxyRequest: UpdateProxyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Proxy>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateProxy(proxyId, updateProxyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.updateProxy']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -450,11 +477,12 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
         /**
          * Add a new proxy configuration
          * @summary Create proxy
+         * @param {CreateProxyRequest} createProxyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        addProxy(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
-            return localVarFp.addProxy(options).then((request) => request(axios, basePath));
+        addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+            return localVarFp.addProxy(createProxyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete a proxy configuration
@@ -469,11 +497,12 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
         /**
          * Force health checks on all registered proxies
          * @summary Force health check on all proxies
+         * @param {ProxyHealthCheckRequest} proxyHealthCheckRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        forceCheckAllProxies(options?: RawAxiosRequestConfig): AxiosPromise<BulkHealthCheckResponse> {
-            return localVarFp.forceCheckAllProxies(options).then((request) => request(axios, basePath));
+        forceCheckAllProxies(proxyHealthCheckRequest: ProxyHealthCheckRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkHealthCheckResponse> {
+            return localVarFp.forceCheckAllProxies(proxyHealthCheckRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Force a health check on a specific proxy
@@ -522,11 +551,12 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * Update an existing proxy configuration
          * @summary Update proxy
          * @param {string} proxyId Proxy ID
+         * @param {UpdateProxyRequest} updateProxyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<Proxy> {
-            return localVarFp.updateProxy(proxyId, options).then((request) => request(axios, basePath));
+        updateProxy(proxyId: string, updateProxyRequest: UpdateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<Proxy> {
+            return localVarFp.updateProxy(proxyId, updateProxyRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -540,11 +570,12 @@ export interface ProxiesApiInterface {
     /**
      * Add a new proxy configuration
      * @summary Create proxy
+     * @param {CreateProxyRequest} createProxyRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    addProxy(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
 
     /**
      * Delete a proxy configuration
@@ -559,11 +590,12 @@ export interface ProxiesApiInterface {
     /**
      * Force health checks on all registered proxies
      * @summary Force health check on all proxies
+     * @param {ProxyHealthCheckRequest} proxyHealthCheckRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    forceCheckAllProxies(options?: RawAxiosRequestConfig): AxiosPromise<BulkHealthCheckResponse>;
+    forceCheckAllProxies(proxyHealthCheckRequest: ProxyHealthCheckRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkHealthCheckResponse>;
 
     /**
      * Force a health check on a specific proxy
@@ -612,11 +644,12 @@ export interface ProxiesApiInterface {
      * Update an existing proxy configuration
      * @summary Update proxy
      * @param {string} proxyId Proxy ID
+     * @param {UpdateProxyRequest} updateProxyRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    updateProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<Proxy>;
+    updateProxy(proxyId: string, updateProxyRequest: UpdateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<Proxy>;
 
 }
 
@@ -630,12 +663,13 @@ export class ProxiesApi extends BaseAPI implements ProxiesApiInterface {
     /**
      * Add a new proxy configuration
      * @summary Create proxy
+     * @param {CreateProxyRequest} createProxyRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public addProxy(options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).addProxy(options).then((request) => request(this.axios, this.basePath));
+    public addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).addProxy(createProxyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -653,12 +687,13 @@ export class ProxiesApi extends BaseAPI implements ProxiesApiInterface {
     /**
      * Force health checks on all registered proxies
      * @summary Force health check on all proxies
+     * @param {ProxyHealthCheckRequest} proxyHealthCheckRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public forceCheckAllProxies(options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).forceCheckAllProxies(options).then((request) => request(this.axios, this.basePath));
+    public forceCheckAllProxies(proxyHealthCheckRequest: ProxyHealthCheckRequest, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).forceCheckAllProxies(proxyHealthCheckRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -716,12 +751,13 @@ export class ProxiesApi extends BaseAPI implements ProxiesApiInterface {
      * Update an existing proxy configuration
      * @summary Update proxy
      * @param {string} proxyId Proxy ID
+     * @param {UpdateProxyRequest} updateProxyRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public updateProxy(proxyId: string, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).updateProxy(proxyId, options).then((request) => request(this.axios, this.basePath));
+    public updateProxy(proxyId: string, updateProxyRequest: UpdateProxyRequest, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).updateProxy(proxyId, updateProxyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

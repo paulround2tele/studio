@@ -120,7 +120,21 @@ hasDomainGenParams: !!campaignData.domainGenerationParams,
         const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId, 1000, 0);
         console.log('📡 [Domain Loading] Raw API response:', domainsResponse);
         
-        const domains = extractDomainsFromResponse(domainsResponse.data);
+        // Handle new Swagger-generated API response format: { success: true, data: Domain[] }
+        const responseData = 'data' in domainsResponse ? domainsResponse.data : domainsResponse;
+        let domainsData: any = null;
+        
+        if (responseData && typeof responseData === 'object') {
+          if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+            // New format: { success: true, data: Domain[], requestId: string }
+            domainsData = responseData.data;
+          } else {
+            // Legacy direct data format
+            domainsData = responseData;
+          }
+        }
+        
+        const domains = extractDomainsFromResponse(domainsData);
         updates.generatedDomains = domains as GeneratedDomainBackend[];
         
         console.log('✅ [Domain Loading] Generated domains loaded (phase-aware):', {
@@ -134,7 +148,22 @@ campaignType: campaignData.campaignType
       if (campaignData.campaignType === 'dns_validation' || isDNSValidationPhase) {
         console.log('📡 [Domain Loading] Fetching DNS validation items...');
         const dnsResponse = await campaignsApi.getDNSValidationResults(campaignId, 1000);
-        const dnsItems = Array.isArray(dnsResponse?.data) ? dnsResponse.data : [];
+        
+        // Handle new Swagger-generated API response format: { success: true, data: ValidationResults[] }
+        const dnsResponseData = 'data' in dnsResponse ? dnsResponse.data : dnsResponse;
+        let dnsData: any = null;
+        
+        if (dnsResponseData && typeof dnsResponseData === 'object') {
+          if ('success' in dnsResponseData && dnsResponseData.success === true && 'data' in dnsResponseData) {
+            // New format: { success: true, data: ValidationResults[], requestId: string }
+            dnsData = dnsResponseData.data;
+          } else {
+            // Legacy direct data format
+            dnsData = dnsResponseData;
+          }
+        }
+        
+        const dnsItems = Array.isArray(dnsData) ? dnsData : [];
         updates.dnsCampaignItems = dnsItems as CampaignValidationItem[];
         console.log('✅ [Domain Loading] DNS items loaded:', dnsItems.length);
       }
@@ -143,7 +172,22 @@ campaignType: campaignData.campaignType
       if (campaignData.campaignType === 'http_keyword_validation' || isHTTPValidationPhase) {
         console.log('📡 [Domain Loading] Fetching HTTP validation items...');
         const httpResponse = await campaignsApi.getHTTPKeywordResults(campaignId, 1000);
-        const httpItems = Array.isArray(httpResponse?.data) ? httpResponse.data : [];
+        
+        // Handle new Swagger-generated API response format: { success: true, data: ValidationResults[] }
+        const httpResponseData = 'data' in httpResponse ? httpResponse.data : httpResponse;
+        let httpData: any = null;
+        
+        if (httpResponseData && typeof httpResponseData === 'object') {
+          if ('success' in httpResponseData && httpResponseData.success === true && 'data' in httpResponseData) {
+            // New format: { success: true, data: ValidationResults[], requestId: string }
+            httpData = httpResponseData.data;
+          } else {
+            // Legacy direct data format
+            httpData = httpResponseData;
+          }
+        }
+        
+        const httpItems = Array.isArray(httpData) ? httpData : [];
         updates.httpCampaignItems = httpItems as CampaignValidationItem[];
         console.log('✅ [Domain Loading] HTTP items loaded:', httpItems.length);
 
@@ -152,7 +196,22 @@ campaignType: campaignData.campaignType
         if (isHTTPValidationPhase && campaignData.campaignType === 'domain_generation' && !updates.generatedDomains) {
           console.log('📡 [Domain Loading] Loading generated domains for HTTP validation phase...');
           const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId);
-          const domains = extractDomainsFromResponse(domainsResponse.data);
+          
+          // Handle new Swagger-generated API response format for this call too
+          const domainResponseData = 'data' in domainsResponse ? domainsResponse.data : domainsResponse;
+          let domainData: any = null;
+          
+          if (domainResponseData && typeof domainResponseData === 'object') {
+            if ('success' in domainResponseData && domainResponseData.success === true && 'data' in domainResponseData) {
+              // New format: { success: true, data: Domain[], requestId: string }
+              domainData = domainResponseData.data;
+            } else {
+              // Legacy direct data format
+              domainData = domainResponseData;
+            }
+          }
+          
+          const domains = extractDomainsFromResponse(domainData);
           updates.generatedDomains = domains as GeneratedDomainBackend[];
           console.log('✅ [Domain Loading] Generated domains loaded for HTTP validation:', domains.length);
         }
@@ -190,18 +249,27 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
       // Extract data from AxiosResponse
       const responseData = rawResponse.data;
 
-      // Handle different response structures from backend
-      if (Array.isArray(responseData)) {
-        campaignData = responseData.find(item =>
-          item && typeof item === 'object' && 'id' in item && item.id === campaignId
-        ) || responseData[0] || null;
-      } else if (responseData && typeof responseData === 'object') {
-        if ('campaign' in responseData) {
+      // Handle new Swagger-generated API response format: { success: true, data: Campaign }
+      if (responseData && typeof responseData === 'object') {
+        if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+          // New format: { success: true, data: Campaign, requestId: string }
+          const nestedData = responseData.data;
+          if (nestedData && typeof nestedData === 'object') {
+            campaignData = nestedData as Campaign;
+          }
+        } else if (Array.isArray(responseData)) {
+          // Legacy array format
+          campaignData = responseData.find(item =>
+            item && typeof item === 'object' && 'id' in item && item.id === campaignId
+          ) || responseData[0] || null;
+        } else if ('campaign' in responseData) {
+          // Legacy campaign wrapper format
           campaignData = responseData.campaign as Campaign;
         } else if ('id' in responseData) {
+          // Direct campaign object format
           campaignData = responseData as Campaign;
         } else {
-          // Check for nested campaign structure
+          // Check for other nested structures (fallback)
           const possibleKeys = ['data', 'campaign', 'result', 'payload'];
           for (const key of possibleKeys) {
             const nested = (responseData as Record<string, unknown>)[key];

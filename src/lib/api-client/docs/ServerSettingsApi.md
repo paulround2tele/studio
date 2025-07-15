@@ -390,7 +390,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateAuthConfigGin**
-> string updateAuthConfigGin()
+> string updateAuthConfigGin(body)
 
 Update the authentication configuration settings
 
@@ -405,11 +405,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.updateAuthConfigGin();
+let body: string; //
+
+const { status, data } = await apiInstance.updateAuthConfigGin(
+    body
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **string**|  | |
 
 
 ### Return type
@@ -422,7 +429,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -436,7 +443,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateDNSConfigGin**
-> string updateDNSConfigGin()
+> string updateDNSConfigGin(body)
 
 Update default DNS validator configuration
 
@@ -451,11 +458,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.updateDNSConfigGin();
+let body: string; //
+
+const { status, data } = await apiInstance.updateDNSConfigGin(
+    body
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **string**|  | |
 
 
 ### Return type
@@ -468,7 +482,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -482,7 +496,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateHTTPConfigGin**
-> string updateHTTPConfigGin()
+> string updateHTTPConfigGin(body)
 
 Update default HTTP validator configuration
 
@@ -497,11 +511,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.updateHTTPConfigGin();
+let body: string; //
+
+const { status, data } = await apiInstance.updateHTTPConfigGin(
+    body
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **string**|  | |
 
 
 ### Return type
@@ -514,7 +535,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -528,7 +549,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateLoggingConfigGin**
-> string updateLoggingConfigGin()
+> string updateLoggingConfigGin(body)
 
 Update the logging configuration settings
 
@@ -543,11 +564,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.updateLoggingConfigGin();
+let body: string; //
+
+const { status, data } = await apiInstance.updateLoggingConfigGin(
+    body
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **string**|  | |
 
 
 ### Return type
@@ -560,7 +588,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -574,7 +602,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateProxyManagerConfigGin**
-> string updateProxyManagerConfigGin()
+> string updateProxyManagerConfigGin(body)
 
 Update the proxy manager configuration settings
 
@@ -589,11 +617,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.updateProxyManagerConfigGin();
+let body: string; //
+
+const { status, data } = await apiInstance.updateProxyManagerConfigGin(
+    body
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **string**|  | |
 
 
 ### Return type
@@ -606,7 +641,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -620,7 +655,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateRateLimiterConfigGin**
-> string updateRateLimiterConfigGin()
+> string updateRateLimiterConfigGin(body)
 
 Update the rate limiter configuration settings
 
@@ -635,11 +670,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.updateRateLimiterConfigGin();
+let body: string; //
+
+const { status, data } = await apiInstance.updateRateLimiterConfigGin(
+    body
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **string**|  | |
 
 
 ### Return type
@@ -652,7 +694,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -666,7 +708,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateServerConfigGin**
-> ServerConfigResponse updateServerConfigGin()
+> ServerConfigResponse updateServerConfigGin(serverConfigUpdateRequest)
 
 Update server-wide configuration settings
 
@@ -675,17 +717,25 @@ Update server-wide configuration settings
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    ServerConfigUpdateRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.updateServerConfigGin();
+let serverConfigUpdateRequest: ServerConfigUpdateRequest; //
+
+const { status, data } = await apiInstance.updateServerConfigGin(
+    serverConfigUpdateRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **serverConfigUpdateRequest** | **ServerConfigUpdateRequest**|  | |
 
 
 ### Return type
@@ -698,7 +748,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -712,7 +762,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateWorkerConfigGin**
-> string updateWorkerConfigGin()
+> string updateWorkerConfigGin(body)
 
 Update the worker configuration settings
 
@@ -727,11 +777,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.updateWorkerConfigGin();
+let body: string; //
+
+const { status, data } = await apiInstance.updateWorkerConfigGin(
+    body
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **string**|  | |
 
 
 ### Return type
@@ -744,7 +801,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

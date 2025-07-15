@@ -207,10 +207,10 @@ export const PhaseConfigurationDialog: React.FC<PhaseConfigurationDialogProps> =
           batchSize: Number(data.batchSize),
           retryAttempts: Number(data.retryAttempts),
         };
-        response = await apiClient.updateCampaign(sourceCampaign.id!, { data: updateRequest });
+        response = await apiClient.updateCampaign(sourceCampaign.id!, updateRequest);
       } else {
         // Create new campaign for other phase types (like HTTP keyword validation)
-        response = await apiClient.createCampaign({ data: payload });
+        response = await apiClient.createCampaign(payload);
       }
 
       // Extract campaign from response

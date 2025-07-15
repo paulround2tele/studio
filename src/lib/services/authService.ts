@@ -6,6 +6,7 @@ import type { components } from '@/lib/api-client/types';
 
 type User = components['schemas']['User'];
 type LoginRequest = components['schemas']['LoginRequest'];
+type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
@@ -157,13 +158,16 @@ class AuthService {
   /**
    * Change password using pure auto-generated API
    */
-  async changePassword(_currentPassword: string, _newPassword: string): Promise<AuthResult> {
-    logger.info('AUTH_SERVICE', 'Change password started');
+  async changePassword(currentPassword: string, newPassword: string): Promise<AuthResult> {
+    logger.debug('AUTH_SERVICE', 'Password change started');
 
     try {
-      await authApi.changePassword({
-        // newPassword - parameter issue
-      });
+      const request: ChangePasswordRequest = {
+        currentPassword,
+        newPassword
+      };
+      
+      await authApi.changePassword(request);
       logger.info('AUTH_SERVICE', 'Password change successful');
       return { success: true };
     } catch (error) {
@@ -175,6 +179,7 @@ class AuthService {
       };
     }
   }
+
 }
 
 // Export singleton instance

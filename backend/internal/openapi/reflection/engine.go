@@ -92,6 +92,14 @@ func (e *ReflectionEngine) GenerateSpec() (*openapi3.T, error) {
 			continue
 		}
 		route.HandlerInfo = handlerInfo
+		
+		// Convert RequestType string to RequestSchema object
+		if handlerInfo != nil && handlerInfo.RequestType != "" {
+			fmt.Printf("[DEBUG] engine.go: Converting RequestType '%s' to schema reference for route %s %s\n", handlerInfo.RequestType, route.Method, route.Path)
+			route.RequestSchema = &openapi3.SchemaRef{
+				Ref: "#/components/schemas/" + handlerInfo.RequestType,
+			}
+		}
 	}
 
 	// Step 4: Generate OpenAPI operations for each route
@@ -171,21 +179,6 @@ func (e *ReflectionEngine) GenerateSpecWithGinEngine(engine *gin.Engine) (*opena
 
 	if e.config.VerboseLogging {
 		log.Printf("Discovered %d routes", len(routes))
-	}
-
-	// Step 3: Analyze handlers for each route
-	if e.config.VerboseLogging {
-		log.Println("Analyzing handlers...")
-	}
-	for i, route := range routes {
-		handlerInfo, err := e.handlerAnalyzer.AnalyzeHandler(&route)
-		if err != nil {
-			if e.config.VerboseLogging {
-				log.Printf("Warning: Failed to analyze handler for route %s %s: %v", route.Method, route.Path, err)
-			}
-			continue
-		}
-		routes[i].HandlerInfo = handlerInfo
 	}
 
 	// Step 4: Generate OpenAPI operations for each route

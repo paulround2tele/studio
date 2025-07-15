@@ -62,10 +62,13 @@ export const FeatureFlagsApiAxiosParamCreator = function (configuration?: Config
         /**
          * Update feature flag settings
          * @summary Update feature flags
+         * @param {string} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateFeatureFlags: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateFeatureFlags: async (body: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'body' is not null or undefined
+            assertParamExists('updateFeatureFlags', 'body', body)
             const localVarPath = `/feature-flags`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -80,9 +83,12 @@ export const FeatureFlagsApiAxiosParamCreator = function (configuration?: Config
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -114,11 +120,12 @@ export const FeatureFlagsApiFp = function(configuration?: Configuration) {
         /**
          * Update feature flag settings
          * @summary Update feature flags
+         * @param {string} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateFeatureFlags(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateFeatureFlags(options);
+        async updateFeatureFlags(body: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateFeatureFlags(body, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['FeatureFlagsApi.updateFeatureFlags']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -145,11 +152,12 @@ export const FeatureFlagsApiFactory = function (configuration?: Configuration, b
         /**
          * Update feature flag settings
          * @summary Update feature flags
+         * @param {string} body 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateFeatureFlags(options?: RawAxiosRequestConfig): AxiosPromise<string> {
-            return localVarFp.updateFeatureFlags(options).then((request) => request(axios, basePath));
+        updateFeatureFlags(body: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.updateFeatureFlags(body, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -172,11 +180,12 @@ export interface FeatureFlagsApiInterface {
     /**
      * Update feature flag settings
      * @summary Update feature flags
+     * @param {string} body 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeatureFlagsApiInterface
      */
-    updateFeatureFlags(options?: RawAxiosRequestConfig): AxiosPromise<string>;
+    updateFeatureFlags(body: string, options?: RawAxiosRequestConfig): AxiosPromise<string>;
 
 }
 
@@ -201,12 +210,13 @@ export class FeatureFlagsApi extends BaseAPI implements FeatureFlagsApiInterface
     /**
      * Update feature flag settings
      * @summary Update feature flags
+     * @param {string} body 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof FeatureFlagsApi
      */
-    public updateFeatureFlags(options?: RawAxiosRequestConfig) {
-        return FeatureFlagsApiFp(this.configuration).updateFeatureFlags(options).then((request) => request(this.axios, this.basePath));
+    public updateFeatureFlags(body: string, options?: RawAxiosRequestConfig) {
+        return FeatureFlagsApiFp(this.configuration).updateFeatureFlags(body, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

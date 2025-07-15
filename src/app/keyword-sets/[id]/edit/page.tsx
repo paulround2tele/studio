@@ -56,7 +56,7 @@ export default function EditKeywordSetPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await keywordSetsApi.updateKeywordSet(params.id as string, { data: data });
+      await keywordSetsApi.updateKeywordSet(params.id as string, data);
       setSuccessMessage('Keyword set updated');
       setTimeout(() => router.push('/keyword-sets'), 500);
     } catch (e) {

@@ -45,11 +45,7 @@ func (h *APIHandler) GetServerConfigGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Failed to save server configuration"
 // @Router /server/config [put]
 func (h *APIHandler) UpdateServerConfigGin(c *gin.Context) {
-	var reqServerConfigUpdate struct {
-		StreamChunkSize *int    `json:"streamChunkSize,omitempty"`
-		GinMode         *string `json:"ginMode,omitempty"`
-		// Add other updatable, non-sensitive fields
-	}
+	var reqServerConfigUpdate ServerConfigUpdateRequest
 	if err := c.ShouldBindJSON(&reqServerConfigUpdate); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
@@ -131,7 +127,7 @@ func (h *APIHandler) GetDNSConfigGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Failed to save DNS configuration"
 // @Router /server/dns-config [put]
 func (h *APIHandler) UpdateDNSConfigGin(c *gin.Context) {
-	var reqJSON config.DNSValidatorConfigJSON
+	var reqJSON DNSConfigUpdateRequest
 	if err := c.ShouldBindJSON(&reqJSON); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
 		return
@@ -188,7 +184,7 @@ func (h *APIHandler) GetHTTPConfigGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Failed to save HTTP configuration"
 // @Router /server/http-config [put]
 func (h *APIHandler) UpdateHTTPConfigGin(c *gin.Context) {
-	var reqJSON config.HTTPValidatorConfigJSON
+	var reqJSON HTTPConfigUpdateRequest
 	if err := c.ShouldBindJSON(&reqJSON); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
 		return
@@ -240,7 +236,7 @@ func (h *APIHandler) GetLoggingConfigGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /server/logging-config [put]
 func (h *APIHandler) UpdateLoggingConfigGin(c *gin.Context) {
-	var reqLogging config.LoggingConfig
+	var reqLogging LoggingConfigUpdateRequest
 	if err := c.ShouldBindJSON(&reqLogging); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
 		return
@@ -293,7 +289,7 @@ func (h *APIHandler) GetWorkerConfigGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /server/worker-config [put]
 func (h *APIHandler) UpdateWorkerConfigGin(c *gin.Context) {
-	var req config.WorkerConfig
+	var req WorkerConfigUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
 		return
@@ -336,7 +332,7 @@ func (h *APIHandler) GetRateLimiterConfigGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /server/rate-limiter-config [put]
 func (h *APIHandler) UpdateRateLimiterConfigGin(c *gin.Context) {
-	var req config.RateLimiterConfig
+	var req RateLimiterConfigUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
 		return
@@ -383,7 +379,7 @@ func (h *APIHandler) GetAuthConfigGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /server/auth-config [put]
 func (h *APIHandler) UpdateAuthConfigGin(c *gin.Context) {
-	var req config.AuthConfig
+	var req AuthConfigUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
 		return
@@ -425,7 +421,7 @@ func (h *APIHandler) GetProxyManagerConfigGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /server/proxy-manager-config [put]
 func (h *APIHandler) UpdateProxyManagerConfigGin(c *gin.Context) {
-       var req config.ProxyManagerConfigJSON
+       var req ProxyManagerConfigUpdateRequest
        if err := c.ShouldBindJSON(&req); err != nil {
                respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
                return

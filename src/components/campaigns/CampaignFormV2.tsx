@@ -466,17 +466,21 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         });
         return;
       } else {
-        console.log('🚀 [CAMPAIGN_CREATION] Sending payload:', JSON.stringify(unifiedPayload, null, 2));
+        console.log('🚀 [CAMPAIGN_CREATION_DEBUG] Starting campaign creation');
+        console.log('📋 [FORM_DATA] Raw form data:', JSON.stringify(data, null, 2));
+        console.log('📦 [API_PAYLOAD] Sending payload:', JSON.stringify(unifiedPayload, null, 2));
         
-        const response = await campaignService.createCampaign(unifiedPayload);
+        try {
+          const response = await campaignService.createCampaign(unifiedPayload);
+          console.log('✅ [API_RESPONSE] Received response:', JSON.stringify(response, null, 2));
         
         if (response.status === 'success' && response.data) {
           // Handle nested response structure from the API
-          const apiResponse = response.data as { data?: unknown } | unknown;
-          const campaign = (typeof apiResponse === 'object' && apiResponse !== null && 'data' in apiResponse)
-            ? (apiResponse as { data: unknown }).data
-            : response.data;
+          const _apiResponse = response.data as { data?: unknown } | unknown;
+          const campaign = response.data;
           const campaignId = (campaign as { id?: string })?.id;
+          
+          console.log('✅ [CAMPAIGN_ID_EXTRACTED] Successfully extracted campaign ID:', campaignId);
           
           // Validate campaign ID exists
           if (!campaignId) {
@@ -511,8 +515,24 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
               window.location.href = redirectUrl;
             }
           }, 100);
-        } else {
-          const errorMessage = response.message || "Failed to create campaign. Please check your inputs and try again.";
+          } else {
+            console.log('❌ [API_ERROR] Campaign creation failed');
+            console.log('📄 [RESPONSE_DETAILS] Full response:', JSON.stringify(response, null, 2));
+            
+            const errorMessage = response.message || "Failed to create campaign. Please check your inputs and try again.";
+            setFormMainError(errorMessage);
+            setFormFieldErrors({});
+            
+            toast({
+              title: "Error Creating Campaign",
+              description: errorMessage,
+              variant: "destructive"
+            });
+          }
+        } catch (error: unknown) {
+          console.error('🚨 [CAMPAIGN_CREATION_ERROR] Exception caught:', error);
+          
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
           setFormMainError(errorMessage);
           setFormFieldErrors({});
           
@@ -524,37 +544,16 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         }
       }
     } catch (error: unknown) {
-      console.error('[CampaignForm] Campaign creation error:', error);
+      console.error('🚨 [FORM_SUBMISSION_ERROR] Top-level exception:', error);
       
-      // Handle specific error cases
-      if (error instanceof Error) {
-        if (error.message.includes('Authentication failed')) {
-          toast({
-            title: "Authentication Error",
-            description: "Your session has expired. Please log in again.",
-            variant: "destructive"
-          });
-          router.push('/login');
-        } else if (error.message.includes('Validation error')) {
-          toast({
-            title: "Validation Error",
-            description: error.message,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Error Creating Campaign",
-            description: error.message || "An unexpected error occurred. Please try again.",
-            variant: "destructive"
-          });
-        }
-      } else {
-        toast({
-          title: "Error Creating Campaign",
-          description: "An unexpected error occurred. Please try again.",
-          variant: "destructive"
-        });
-      }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setFormMainError(errorMessage);
+      
+      toast({
+        title: "Form Submission Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   }, [toast, router, isEditing, campaignToEdit, sourceCampaigns]);
 

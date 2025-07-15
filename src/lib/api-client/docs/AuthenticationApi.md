@@ -11,7 +11,7 @@ All URIs are relative to *http://localhost*
 |[**refreshSession**](#refreshsession) | **POST** /auth/refresh | Refresh user session|
 
 # **changePassword**
-> PasswordChangeResponse changePassword()
+> PasswordChangeResponse changePassword(changePasswordRequest)
 
 Change password for the currently authenticated user
 
@@ -20,17 +20,25 @@ Change password for the currently authenticated user
 ```typescript
 import {
     AuthenticationApi,
-    Configuration
+    Configuration,
+    ChangePasswordRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-const { status, data } = await apiInstance.changePassword();
+let changePasswordRequest: ChangePasswordRequest; //
+
+const { status, data } = await apiInstance.changePassword(
+    changePasswordRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **changePasswordRequest** | **ChangePasswordRequest**|  | |
 
 
 ### Return type
@@ -43,7 +51,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
@@ -103,7 +111,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **login**
-> LoginSuccessResponse login()
+> LoginSuccessResponse login(loginRequest)
 
 Authenticate user credentials and create session
 
@@ -112,17 +120,25 @@ Authenticate user credentials and create session
 ```typescript
 import {
     AuthenticationApi,
-    Configuration
+    Configuration,
+    LoginRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-const { status, data } = await apiInstance.login();
+let loginRequest: LoginRequest; //
+
+const { status, data } = await apiInstance.login(
+    loginRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **loginRequest** | **LoginRequest**|  | |
 
 
 ### Return type
@@ -135,7 +151,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

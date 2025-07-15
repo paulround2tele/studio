@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { BatchKeywordExtractionRequest } from '../models';
+// @ts-ignore
 import type { BatchKeywordExtractionResponse } from '../models';
 // @ts-ignore
 import type { ErrorResponse } from '../models';
@@ -36,10 +38,13 @@ export const KeywordExtractionApiAxiosParamCreator = function (configuration?: C
         /**
          * Extract keywords from multiple URLs using specified keyword sets and personas
          * @summary Batch keyword extraction
+         * @param {BatchKeywordExtractionRequest} batchKeywordExtractionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        batchExtractKeywords: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        batchExtractKeywords: async (batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'batchKeywordExtractionRequest' is not null or undefined
+            assertParamExists('batchExtractKeywords', 'batchKeywordExtractionRequest', batchKeywordExtractionRequest)
             const localVarPath = `/keyword-extraction/batch`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -54,9 +59,12 @@ export const KeywordExtractionApiAxiosParamCreator = function (configuration?: C
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(batchKeywordExtractionRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -130,11 +138,12 @@ export const KeywordExtractionApiFp = function(configuration?: Configuration) {
         /**
          * Extract keywords from multiple URLs using specified keyword sets and personas
          * @summary Batch keyword extraction
+         * @param {BatchKeywordExtractionRequest} batchKeywordExtractionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async batchExtractKeywords(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BatchKeywordExtractionResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.batchExtractKeywords(options);
+        async batchExtractKeywords(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BatchKeywordExtractionResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.batchExtractKeywords(batchKeywordExtractionRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordExtractionApi.batchExtractKeywords']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -168,11 +177,12 @@ export const KeywordExtractionApiFactory = function (configuration?: Configurati
         /**
          * Extract keywords from multiple URLs using specified keyword sets and personas
          * @summary Batch keyword extraction
+         * @param {BatchKeywordExtractionRequest} batchKeywordExtractionRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        batchExtractKeywords(options?: RawAxiosRequestConfig): AxiosPromise<BatchKeywordExtractionResponse> {
-            return localVarFp.batchExtractKeywords(options).then((request) => request(axios, basePath));
+        batchExtractKeywords(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<BatchKeywordExtractionResponse> {
+            return localVarFp.batchExtractKeywords(batchKeywordExtractionRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Extract keywords from a single URL with real-time streaming results
@@ -199,11 +209,12 @@ export interface KeywordExtractionApiInterface {
     /**
      * Extract keywords from multiple URLs using specified keyword sets and personas
      * @summary Batch keyword extraction
+     * @param {BatchKeywordExtractionRequest} batchKeywordExtractionRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof KeywordExtractionApiInterface
      */
-    batchExtractKeywords(options?: RawAxiosRequestConfig): AxiosPromise<BatchKeywordExtractionResponse>;
+    batchExtractKeywords(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<BatchKeywordExtractionResponse>;
 
     /**
      * Extract keywords from a single URL with real-time streaming results
@@ -230,12 +241,13 @@ export class KeywordExtractionApi extends BaseAPI implements KeywordExtractionAp
     /**
      * Extract keywords from multiple URLs using specified keyword sets and personas
      * @summary Batch keyword extraction
+     * @param {BatchKeywordExtractionRequest} batchKeywordExtractionRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof KeywordExtractionApi
      */
-    public batchExtractKeywords(options?: RawAxiosRequestConfig) {
-        return KeywordExtractionApiFp(this.configuration).batchExtractKeywords(options).then((request) => request(this.axios, this.basePath));
+    public batchExtractKeywords(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig) {
+        return KeywordExtractionApiFp(this.configuration).batchExtractKeywords(batchKeywordExtractionRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

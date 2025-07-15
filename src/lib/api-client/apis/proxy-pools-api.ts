@@ -22,11 +22,15 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { AddProxyToPoolRequest } from '../models';
+// @ts-ignore
 import type { ErrorResponse } from '../models';
 // @ts-ignore
 import type { ProxyPool } from '../models';
 // @ts-ignore
 import type { ProxyPoolMembershipResponse } from '../models';
+// @ts-ignore
+import type { ProxyPoolRequest } from '../models';
 // @ts-ignore
 import type { StandardSuccessResponse } from '../models';
 // @ts-ignore
@@ -41,12 +45,15 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
          * Assign a proxy to a proxy pool with optional weight
          * @summary Add proxy to pool
          * @param {string} poolId Proxy pool ID
+         * @param {AddProxyToPoolRequest} addProxyToPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        addProxyToPool: async (poolId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        addProxyToPool: async (poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'poolId' is not null or undefined
             assertParamExists('addProxyToPool', 'poolId', poolId)
+            // verify required parameter 'addProxyToPoolRequest' is not null or undefined
+            assertParamExists('addProxyToPool', 'addProxyToPoolRequest', addProxyToPoolRequest)
             const localVarPath = `/proxy-pools/{poolId}/proxies`
                 .replace(`{${"poolId"}}`, encodeURIComponent(String(poolId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -62,9 +69,12 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(addProxyToPoolRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -74,10 +84,13 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Create a new proxy pool with configuration settings
          * @summary Create proxy pool
+         * @param {ProxyPoolRequest} proxyPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createProxyPool: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        createProxyPool: async (proxyPoolRequest: ProxyPoolRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'proxyPoolRequest' is not null or undefined
+            assertParamExists('createProxyPool', 'proxyPoolRequest', proxyPoolRequest)
             const localVarPath = `/proxy-pools`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -92,9 +105,12 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(proxyPoolRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -207,12 +223,15 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
          * Update an existing proxy pool configuration
          * @summary Update proxy pool
          * @param {string} poolId Proxy pool ID
+         * @param {ProxyPoolRequest} proxyPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateProxyPool: async (poolId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateProxyPool: async (poolId: string, proxyPoolRequest: ProxyPoolRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'poolId' is not null or undefined
             assertParamExists('updateProxyPool', 'poolId', poolId)
+            // verify required parameter 'proxyPoolRequest' is not null or undefined
+            assertParamExists('updateProxyPool', 'proxyPoolRequest', proxyPoolRequest)
             const localVarPath = `/proxy-pools/{poolId}`
                 .replace(`{${"poolId"}}`, encodeURIComponent(String(poolId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -228,9 +247,12 @@ export const ProxyPoolsApiAxiosParamCreator = function (configuration?: Configur
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(proxyPoolRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -251,11 +273,12 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * Assign a proxy to a proxy pool with optional weight
          * @summary Add proxy to pool
          * @param {string} poolId Proxy pool ID
+         * @param {AddProxyToPoolRequest} addProxyToPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async addProxyToPool(poolId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.addProxyToPool(poolId, options);
+        async addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.addProxyToPool(poolId, addProxyToPoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.addProxyToPool']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -263,11 +286,12 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
         /**
          * Create a new proxy pool with configuration settings
          * @summary Create proxy pool
+         * @param {ProxyPoolRequest} proxyPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createProxyPool(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createProxyPool(options);
+        async createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createProxyPool(proxyPoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.createProxyPool']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -315,11 +339,12 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * Update an existing proxy pool configuration
          * @summary Update proxy pool
          * @param {string} poolId Proxy pool ID
+         * @param {ProxyPoolRequest} proxyPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateProxyPool(poolId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxyPool>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateProxyPool(poolId, options);
+        async updateProxyPool(poolId: string, proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxyPool>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateProxyPool(poolId, proxyPoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.updateProxyPool']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -338,20 +363,22 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * Assign a proxy to a proxy pool with optional weight
          * @summary Add proxy to pool
          * @param {string} poolId Proxy pool ID
+         * @param {AddProxyToPoolRequest} addProxyToPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        addProxyToPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
-            return localVarFp.addProxyToPool(poolId, options).then((request) => request(axios, basePath));
+        addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+            return localVarFp.addProxyToPool(poolId, addProxyToPoolRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Create a new proxy pool with configuration settings
          * @summary Create proxy pool
+         * @param {ProxyPoolRequest} proxyPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createProxyPool(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
-            return localVarFp.createProxyPool(options).then((request) => request(axios, basePath));
+        createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+            return localVarFp.createProxyPool(proxyPoolRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete a proxy pool
@@ -387,11 +414,12 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * Update an existing proxy pool configuration
          * @summary Update proxy pool
          * @param {string} poolId Proxy pool ID
+         * @param {ProxyPoolRequest} proxyPoolRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxyPool> {
-            return localVarFp.updateProxyPool(poolId, options).then((request) => request(axios, basePath));
+        updateProxyPool(poolId: string, proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxyPool> {
+            return localVarFp.updateProxyPool(poolId, proxyPoolRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -406,20 +434,22 @@ export interface ProxyPoolsApiInterface {
      * Assign a proxy to a proxy pool with optional weight
      * @summary Add proxy to pool
      * @param {string} poolId Proxy pool ID
+     * @param {AddProxyToPoolRequest} addProxyToPoolRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    addProxyToPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
 
     /**
      * Create a new proxy pool with configuration settings
      * @summary Create proxy pool
+     * @param {ProxyPoolRequest} proxyPoolRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    createProxyPool(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
 
     /**
      * Delete a proxy pool
@@ -455,11 +485,12 @@ export interface ProxyPoolsApiInterface {
      * Update an existing proxy pool configuration
      * @summary Update proxy pool
      * @param {string} poolId Proxy pool ID
+     * @param {ProxyPoolRequest} proxyPoolRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    updateProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxyPool>;
+    updateProxyPool(poolId: string, proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxyPool>;
 
 }
 
@@ -474,23 +505,25 @@ export class ProxyPoolsApi extends BaseAPI implements ProxyPoolsApiInterface {
      * Assign a proxy to a proxy pool with optional weight
      * @summary Add proxy to pool
      * @param {string} poolId Proxy pool ID
+     * @param {AddProxyToPoolRequest} addProxyToPoolRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxyPoolsApi
      */
-    public addProxyToPool(poolId: string, options?: RawAxiosRequestConfig) {
-        return ProxyPoolsApiFp(this.configuration).addProxyToPool(poolId, options).then((request) => request(this.axios, this.basePath));
+    public addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig) {
+        return ProxyPoolsApiFp(this.configuration).addProxyToPool(poolId, addProxyToPoolRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Create a new proxy pool with configuration settings
      * @summary Create proxy pool
+     * @param {ProxyPoolRequest} proxyPoolRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxyPoolsApi
      */
-    public createProxyPool(options?: RawAxiosRequestConfig) {
-        return ProxyPoolsApiFp(this.configuration).createProxyPool(options).then((request) => request(this.axios, this.basePath));
+    public createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig) {
+        return ProxyPoolsApiFp(this.configuration).createProxyPool(proxyPoolRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -533,12 +566,13 @@ export class ProxyPoolsApi extends BaseAPI implements ProxyPoolsApiInterface {
      * Update an existing proxy pool configuration
      * @summary Update proxy pool
      * @param {string} poolId Proxy pool ID
+     * @param {ProxyPoolRequest} proxyPoolRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxyPoolsApi
      */
-    public updateProxyPool(poolId: string, options?: RawAxiosRequestConfig) {
-        return ProxyPoolsApiFp(this.configuration).updateProxyPool(poolId, options).then((request) => request(this.axios, this.basePath));
+    public updateProxyPool(poolId: string, proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig) {
+        return ProxyPoolsApiFp(this.configuration).updateProxyPool(poolId, proxyPoolRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -57,11 +57,11 @@ export default function ProxyPoolForm({
   async function onSubmit(values: PoolFormValues) {
     try {
       if (isEditing && pool && pool.id) {
-        await proxyPoolsApi.updateProxyPool(pool.id, { data: values });
+        await proxyPoolsApi.updateProxyPool(pool.id, values);
         toast({ title: "Pool updated" });
         onSuccess();
       } else {
-        await proxyPoolsApi.createProxyPool({ data: values });
+        await proxyPoolsApi.createProxyPool(values);
         toast({ title: "Pool created" });
         onSuccess();
       }

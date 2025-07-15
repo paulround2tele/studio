@@ -6,6 +6,8 @@ import {
   CreateProxyRequest,
   UpdateProxyRequest,
   Proxy as ProxyModel,
+  CreateProxyRequestProtocolEnum,
+  UpdateProxyRequestProtocolEnum,
 } from '@/lib/api-client/models';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
 import type { FrontendProxy } from '@/lib/types/frontend-safe-types';
@@ -26,9 +28,16 @@ export type ProxyModelCreationPayload = CreateProxyRequest;
 export type ProxyModelUpdatePayload = UpdateProxyRequest;
 
 // Protocol validation utilities
-const validateProtocol = (protocol: string): string => {
+const validateProtocol = (protocol: string): CreateProxyRequestProtocolEnum => {
   const validProtocols = ['http', 'https', 'socks5', 'socks4'];
-  return validProtocols.includes(protocol) ? protocol : 'http';
+  const validatedProtocol = validProtocols.includes(protocol) ? protocol : 'http';
+  return validatedProtocol as CreateProxyRequestProtocolEnum;
+};
+
+const validateUpdateProtocol = (protocol: string): UpdateProxyRequestProtocolEnum => {
+  const validProtocols = ['http', 'https', 'socks5', 'socks4'];
+  const validatedProtocol = validProtocols.includes(protocol) ? protocol : 'http';
+  return validatedProtocol as UpdateProxyRequestProtocolEnum;
 };
 
 // Service layer response wrappers using frontend-safe types
@@ -82,19 +91,20 @@ class ProxyModelService {
     try {
       const response = await proxiesApi.listProxies();
       
-      // Backend wraps response in APIResponse format: { success: true, data: Proxy[], requestId: string }
+      // Handle new Swagger-generated API response format: { success: true, data: Proxy[] }
+      const responseData = 'data' in response ? response.data : response;
       let proxiesData: any[] = [];
       
-      if (response && typeof response === 'object') {
-        // Check if it's wrapped in APIResponse format
-        if ('data' in response && Array.isArray((response as any).data)) {
-          proxiesData = (response as any).data;
-        } else if (Array.isArray(response.data)) {
-          // Direct array response from axios
-          proxiesData = response.data as any[];
-        } else if (Array.isArray(response)) {
-          // Direct array response
-          proxiesData = response as any[];
+      if (responseData && typeof responseData === 'object') {
+        if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+          // New format: { success: true, data: Proxy[], requestId: string }
+          const nestedData = responseData.data;
+          if (Array.isArray(nestedData)) {
+            proxiesData = nestedData;
+          }
+        } else if (Array.isArray(responseData)) {
+          // Legacy direct array format
+          proxiesData = responseData;
         }
       }
       
@@ -173,9 +183,28 @@ class ProxyModelService {
         ...payload,
         protocol: validateProtocol(payload.protocol || 'http')
       };
-      const response = await proxiesApi.addProxy({ data: convertedPayload });
+      const response = await proxiesApi.addProxy(convertedPayload);
+      
+      // Handle new Swagger-generated API response format: { success: true, data: Proxy }
+      const responseData = 'data' in response ? response.data : response;
+      let proxyData: any = null;
+      
+      if (responseData && typeof responseData === 'object') {
+        if ('success' in responseData && responseData.success === true && 'data' in responseData) {
+          // New format: { success: true, data: Proxy, requestId: string }
+          proxyData = responseData.data;
+        } else {
+          // Legacy direct proxy format
+          proxyData = responseData;
+        }
+      }
+      
+      if (!proxyData) {
+        throw new Error('Proxy not found in response');
+      }
+      
       // Transform the response data to frontend-safe format
-      const proxy = response.data as any;
+      const proxy = proxyData;
       const transformedProxy: FrontendProxy = {
         id: proxy.id,
         name: proxy.name || "",
@@ -220,9 +249,9 @@ class ProxyModelService {
       const { protocol, ...restPayload } = payload;
       const convertedPayload = {
         ...restPayload,
-        ...(protocol && { protocol: validateProtocol(protocol) })
+        ...(protocol && { protocol: validateUpdateProtocol(protocol) })
       };
-      const response = await proxiesApi.updateProxy(proxyId, { data: convertedPayload });
+      const response = await proxiesApi.updateProxy(proxyId, convertedPayload);
       return {
         status: 'success',
         data: response.data as ProxyModel,
@@ -286,7 +315,7 @@ class ProxyModelService {
 
   async forceAllProxiesHealthCheck(): Promise<ApiResponse<unknown>> {
     try {
-      const response = await proxiesApi.forceCheckAllProxies();
+      const response = await proxiesApi.forceCheckAllProxies({});
       return {
         status: 'success',
         data: response.data,

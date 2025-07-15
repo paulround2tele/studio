@@ -6,8 +6,8 @@
  * to simple frontend-safe types (number, string, etc.).
  */
 
-import type { Proxy } from '@/lib/api-client/models/models-proxy';
-import type { Campaign } from '@/lib/api-client/models/models-campaign';
+import type { Proxy } from '@/lib/api-client/models/proxy';
+import type { Campaign } from '@/lib/api-client/models/campaign';
 import type { components } from '@/lib/api-client/types';
 
 /**
