@@ -378,9 +378,10 @@ func (ti *TypeInspector) parseFieldTags(tagValue string, fieldInfo *FieldInfo) {
 				fieldInfo.Tags[key] = value
 				
 				// Handle special tags
-				if key == "json" {
+				switch key {
+				case "json":
 					ti.parseJSONTag(value, fieldInfo)
-				} else if key == "validate" {
+				case "validate":
 					ti.parseValidateTag(value, fieldInfo)
 				}
 			}

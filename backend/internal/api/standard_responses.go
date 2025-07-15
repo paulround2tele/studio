@@ -5,10 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// respondWithStandardJSON sends a standardized JSON response
-func respondWithStandardJSON(c *gin.Context, statusCode int, response models.StandardAPIResponse) {
-	c.JSON(statusCode, response)
-}
 
 // respondWithStandardSuccess sends a standardized success response
 func respondWithStandardSuccess(c *gin.Context, statusCode int, data interface{}, message string) {

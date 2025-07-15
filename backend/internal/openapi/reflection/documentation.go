@@ -282,9 +282,7 @@ func (de *DocumentationExtractor) GenerateDefaultDocumentation(handlerName, meth
 	}
 
 	// Generate default summary based on handler name
-	if strings.HasSuffix(handlerName, "Gin") {
-		handlerName = strings.TrimSuffix(handlerName, "Gin")
-	}
+	handlerName = strings.TrimSuffix(handlerName, "Gin")
 
 	doc.Summary = de.generateDefaultSummary(handlerName, method)
 	doc.Description = de.generateDefaultDescription(method, path)

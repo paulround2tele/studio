@@ -482,38 +482,6 @@ func (rd *RouteDiscoverer) generateOperationID(handlerName, method string) strin
 	return fallback
 }
 
-// generateSummary generates a human-readable summary
-func (rd *RouteDiscoverer) generateSummary(handlerName, method, path string) string {
-	funcName := extractFunctionName(handlerName)
-	funcName = strings.TrimSuffix(funcName, "Gin")
-	funcName = strings.TrimSuffix(funcName, "Handler")
-
-	// Convert camelCase to sentence case
-	summary := camelToSentence(funcName)
-	if summary == "" {
-		summary = fmt.Sprintf("%s operation", strings.Title(strings.ToLower(method)))
-	}
-
-	return summary
-}
-
-// generateDescription generates a description based on the route
-func (rd *RouteDiscoverer) generateDescription(handlerName, method, path string) string {
-	resource := extractResourceFromPath(path)
-	return fmt.Sprintf("%s %s endpoint", strings.Title(strings.ToLower(method)), resource)
-}
-
-// extractTags extracts OpenAPI tags from the route path
-func (rd *RouteDiscoverer) extractTags(path string) []string {
-	parts := strings.Split(strings.Trim(path, "/"), "/")
-	for _, part := range parts {
-		if part != "api" && part != "v1" && part != "v2" &&
-			!strings.Contains(part, ":") && !strings.Contains(part, "{") {
-			return []string{strings.Title(part)}
-		}
-	}
-	return []string{"API"}
-}
 
 // extractPathParameters extracts path parameters from a route path
 func (rd *RouteDiscoverer) extractPathParameters(path string) openapi3.Parameters {
@@ -601,16 +569,6 @@ func (rd *RouteDiscoverer) filterRoutes(routes []DiscoveredRoute) []DiscoveredRo
 
 // Helper functions
 
-// isHTTPMethod checks if a string is a valid HTTP method
-func isHTTPMethod(method string) bool {
-	httpMethods := []string{"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"}
-	for _, m := range httpMethods {
-		if strings.EqualFold(method, m) {
-			return true
-		}
-	}
-	return false
-}
 
 // extractFunctionName extracts the function name from a handler identifier
 func extractFunctionName(handlerName string) string {

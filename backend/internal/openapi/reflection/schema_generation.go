@@ -605,7 +605,7 @@ func (sg *SchemaGenerator) enhanceFieldSchema(schema *openapi3.SchemaRef, fieldN
 
 	// Skip format enhancement for fields with enum constraints
 	// Enum fields should not have format constraints like "date-time"
-	if schema.Value.Enum != nil && len(schema.Value.Enum) > 0 {
+	if len(schema.Value.Enum) > 0 {
 		return
 	}
 
@@ -1005,7 +1005,7 @@ func (sg *SchemaGenerator) addCommonSchemas(spec *openapi3.T) {
 
 // getExplicitSchemaForType returns predefined schemas for known free-form object types
 // NOTE: Removed all hardcoded handler schemas to allow proper reflection-based generation
-func (sg *SchemaGenerator) getExplicitSchemaForType(typeName string) *openapi3.SchemaRef {
+func (sg *SchemaGenerator) getExplicitSchemaForType(_ string) *openapi3.SchemaRef {
 	// No explicit schemas - let reflection system handle all types properly
 	return nil
 }
@@ -1053,7 +1053,7 @@ func (sg *SchemaGenerator) cleanTypeName(typeName string) string {
 }
 
 // isStringEnum checks if a type is a string-based enum
-func (sg *SchemaGenerator) isStringEnum(typeSpec *ast.TypeSpec, typeName string) bool {
+func (sg *SchemaGenerator) isStringEnum(typeSpec *ast.TypeSpec, _ string) bool {
 	// Check if the underlying type is a string
 	if ident, ok := typeSpec.Type.(*ast.Ident); ok {
 		return ident.Name == "string"

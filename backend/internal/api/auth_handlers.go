@@ -104,7 +104,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	
 	// Calculate cookie max age to match session expiry exactly
-	sessionDuration := int(sessionData.ExpiresAt.Sub(time.Now()).Seconds())
+	sessionDuration := int(time.Until(sessionData.ExpiresAt).Seconds())
 	if sessionDuration <= 0 {
 		sessionDuration = h.config.CookieMaxAge // Fallback to default
 	}
@@ -363,63 +363,6 @@ func (h *AuthHandler) authenticateUser(email, password, ipAddress string) (*mode
 	return &user, nil
 }
 
-// incrementFailedAttempts increments failed login attempts and locks account if threshold reached
-func (h *AuthHandler) incrementFailedAttempts(userID uuid.UUID, ipAddress string) {
-	const maxFailedAttempts = 5
-	const lockoutDuration = 30 * time.Minute
-
-	query := `
-		UPDATE auth.users
-		SET failed_login_attempts = failed_login_attempts + 1,
-		    is_locked = CASE
-		        WHEN failed_login_attempts + 1 >= $2 THEN true
-		        ELSE is_locked
-		    END,
-		    locked_until = CASE
-		        WHEN failed_login_attempts + 1 >= $2 THEN NOW() + INTERVAL '%d minutes'
-		        ELSE locked_until
-		    END,
-		    updated_at = NOW()
-		WHERE id = $1`
-
-	_, err := h.db.Exec(fmt.Sprintf(query, int(lockoutDuration.Minutes())), userID, maxFailedAttempts)
-	if err != nil {
-		// Log error but don't fail the authentication flow
-		fmt.Printf("Failed to increment failed attempts for user %s: %v\n", userID, err)
-	}
-
-	h.recordFailedLogin(userID.String(), ipAddress, "invalid password")
-}
-
-// resetFailedAttempts resets failed login attempts on successful authentication
-func (h *AuthHandler) resetFailedAttempts(userID uuid.UUID) {
-	query := `
-		UPDATE auth.users
-		SET failed_login_attempts = 0,
-		    updated_at = NOW()
-		WHERE id = $1`
-
-	_, err := h.db.Exec(query, userID)
-	if err != nil {
-		fmt.Printf("Failed to reset failed attempts for user %s: %v\n", userID, err)
-	}
-}
-
-// unlockAccount unlocks a temporarily locked account
-func (h *AuthHandler) unlockAccount(userID uuid.UUID) {
-	query := `
-		UPDATE auth.users
-		SET is_locked = false,
-		    locked_until = NULL,
-		    failed_login_attempts = 0,
-		    updated_at = NOW()
-		WHERE id = $1`
-
-	_, err := h.db.Exec(query, userID)
-	if err != nil {
-		fmt.Printf("Failed to unlock account for user %s: %v\n", userID, err)
-	}
-}
 
 // updateLastLogin updates the user's last login information
 func (h *AuthHandler) updateLastLogin(userID uuid.UUID, ipAddress string) {
@@ -439,26 +382,6 @@ func (h *AuthHandler) updateLastLogin(userID uuid.UUID, ipAddress string) {
 	h.recordSuccessfulLogin(userID.String(), ipAddress)
 }
 
-// recordFailedLogin records a failed login attempt in the audit log
-func (h *AuthHandler) recordFailedLogin(userID, ipAddress, reason string) {
-	var userUUID *uuid.UUID
-	if userID != "" {
-		if parsed, err := uuid.Parse(userID); err == nil {
-			userUUID = &parsed
-		}
-	}
-
-	query := `
-		INSERT INTO auth.auth_audit_log
-		(user_id, event_type, event_status, ip_address, details, risk_score, created_at)
-		VALUES ($1, 'login', 'failure', $2, $3, 3, NOW())`
-
-	details := fmt.Sprintf(`{"reason": "%s", "timestamp": "%s"}`, reason, time.Now().Format(time.RFC3339))
-	_, err := h.db.Exec(query, userUUID, ipAddress, details)
-	if err != nil {
-		fmt.Printf("Failed to record failed login: %v\n", err)
-	}
-}
 
 // recordSuccessfulLogin records a successful login in the audit log
 func (h *AuthHandler) recordSuccessfulLogin(userID, ipAddress string) {

@@ -65,7 +65,7 @@ func (ha *HandlerAnalyzer) AnalyzeHandler(route *DiscoveredRoute) (*HandlerInfo,
 }
 
 // findHandlerFunction finds a handler function declaration in the parsed packages
-func (ha *HandlerAnalyzer) findHandlerFunction(funcName, handlerName string) (*ast.FuncDecl, error) {
+func (ha *HandlerAnalyzer) findHandlerFunction(funcName, _ string) (*ast.FuncDecl, error) {
 	// First, make sure we have parsed the relevant packages
 	if len(ha.packages) == 0 {
 		err := ha.parsePackages()
