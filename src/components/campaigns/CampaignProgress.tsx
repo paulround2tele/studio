@@ -230,10 +230,10 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
                (campaign.phaseStatus as any) === 'completed' ? 'Phase Completed' : 'Current Phase Progress'}
               {campaign.status !== "completed" && `(${campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})`}
             </span>
-            <span>{campaign.status === "completed" ? '100' : campaign.progress}%</span>
+            <span>{campaign.status === "completed" ? '100' : (campaign.progressPercentage || campaign.progress || 0)}%</span>
           </div>
           <Progress
-            value={(campaign.currentPhase as any) === "completed" ? 100 : campaign.progress || 0}
+            value={(campaign.currentPhase as any) === "completed" ? 100 : (campaign.progressPercentage || campaign.progress || 0)}
             className="w-full h-3"
             indicatorVariant={
               ((campaign.phaseStatus as any) === 'completed' && (campaign.progress === 100 || (campaign.currentPhase as any) === "completed"))

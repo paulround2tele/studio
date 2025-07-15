@@ -672,8 +672,8 @@ async function runCampaignCreationTest() {
       });
 
       // Monitor for domain generation progress
-      logger.info('Monitoring domain generation for 10 seconds');
-      await page.waitForTimeout(10000);
+      logger.info('Monitoring domain generation for 5 seconds');
+      await page.waitForTimeout(5000);
 
       // Check if domains were generated
       const domainRows = await page.$$eval(

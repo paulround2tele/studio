@@ -3,13 +3,20 @@
 
 import { getApiBaseUrlSync } from '../config/environment';
 
-// Legacy message format
+// Legacy message format - Updated to match backend WebSocketMessage struct
 export interface WebSocketMessage {
   type: string;
   data?: unknown;
   campaignId?: string;
   timestamp?: string;
   sequenceNumber?: number;
+  // CRITICAL: Added missing fields from backend WebSocketMessage struct
+  phase?: string;
+  status?: string;
+  progress?: number;
+  id?: string;
+  message?: string;
+  errorMessage?: string;
 }
 
 // Handler types
@@ -70,7 +77,7 @@ class WebSocketServiceImpl {
       try {
         // Use the same auto-detection logic as the API client
         const apiUrl = getApiBaseUrlSync();
-        const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws';
+        const wsUrl = apiUrl.replace(/^http/, 'ws') + '/api/v2/ws';
         console.log(`🔗 [WebSocketService] Auto-detected WebSocket URL from API: ${wsUrl}`);
         return wsUrl;
       } catch (error) {
