@@ -12,6 +12,38 @@ import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/li
 
 type OpenAPICampaign = components['schemas']['Campaign'];
 
+/**
+ * Helper function to find campaign ID in nested API response structures
+ */
+function findCampaignIdInData(data: any): string | null {
+  if (!data || typeof data !== 'object') return null;
+  
+  // Check common patterns for campaign ID
+  const possibleIdFields = [
+    'campaignId', 'campaign_id', 'CampaignID', 'id', 'ID',
+    'uuid', 'guid', 'entityId', 'entity_id'
+  ];
+  
+  for (const field of possibleIdFields) {
+    const value = data[field];
+    if (typeof value === 'string' && value.length > 0 &&
+        value !== '00000000-0000-0000-0000-000000000000') {
+      return value;
+    }
+  }
+  
+  // Check nested objects
+  const nestedKeys = ['campaign', 'data', 'result', 'entity'];
+  for (const key of nestedKeys) {
+    if (data[key] && typeof data[key] === 'object') {
+      const nestedId = findCampaignIdInData(data[key]);
+      if (nestedId) return nestedId;
+    }
+  }
+  
+  return null;
+}
+
 // Map OpenAPI Campaign status to frontend CampaignStatus
 function mapOpenAPICampaignStatus(status?: string): CampaignStatus {
   switch (status) {
@@ -55,6 +87,28 @@ function mapOpenAPICampaignType(type?: string): CampaignType {
  * Adds UI-specific computed properties and backwards compatibility fields
  */
 export function transformCampaignToViewModel(campaign: OpenAPICampaign): CampaignViewModel {
+  // Enhanced campaign ID handling with debugging but not breaking on missing ID
+  let campaignId = campaign.id;
+  
+  if (!campaignId || campaignId === '00000000-0000-0000-0000-000000000000') {
+    console.warn('⚠️ [Campaign Transform] Missing or invalid campaign ID:', {
+      campaignData: campaign,
+      hasId: !!campaign.id,
+      idValue: campaign.id,
+      keys: Object.keys(campaign || {})
+    });
+    
+    // Try to find ID in nested structures
+    const possibleId = findCampaignIdInData(campaign);
+    if (possibleId) {
+      console.log('✅ [Campaign Transform] Found campaign ID in nested structure:', possibleId);
+      campaignId = possibleId;
+    } else {
+      console.warn('⚠️ [Campaign Transform] Using fallback ID, API response structure needs investigation');
+      campaignId = '00000000-0000-0000-0000-000000000000'; // Fallback instead of throwing
+    }
+  }
+  
   // Map OpenAPI types to frontend types
   const campaignStatus = mapOpenAPICampaignStatus(campaign.status);
   const campaignType = mapOpenAPICampaignType(campaign.campaignType);
@@ -65,7 +119,7 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
   
   return {
     // Core fields - using OpenAPI types directly
-    id: campaign.id || '00000000-0000-0000-0000-000000000000',
+    id: campaignId,
     name: campaign.name || '',
     campaignType: campaignType,
     status: campaignStatus,

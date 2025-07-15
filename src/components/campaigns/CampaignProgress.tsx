@@ -137,51 +137,68 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
     };
   }, [campaign.currentPhase, displayPhases]);
 
-  // Memoize node status calculation for each phase to avoid recalculation
+  // Simplified and fixed node status calculation
   const getNodeStatus = useCallback((phase: CampaignPhase): CampaignPhaseStatus => {
     const isActivePhaseNode = phase === campaign.currentPhase;
     const isCampaignIdle = (campaign.currentPhase as any) === "setup";
     const operationalPhaseIndexInType = operationalPhasesForType.indexOf(phase);
     const currentPhaseIndex = campaign.currentPhase ? operationalPhasesForType.indexOf(campaign.currentPhase) : -1;
 
+    // Handle idle campaigns (setup phase)
     if (isCampaignIdle) {
       return phase === "setup" ? "not_started" : "not_started";
-    } else if (campaign.status === "completed" || (campaign.currentPhase as any) === "completed") {
-       // CRITICAL FIX: Case-sensitive phase matching with backend constants
-       // Backend uses "generation" phase name
-       const isDomainGenerationCampaign = campaign.campaignType === 'domain_generation';
-       const isDomainGenerationPhase = phase === 'generation';
-       
-       if (isDomainGenerationCampaign && isDomainGenerationPhase) {
-         return 'completed'; // Domain generation phase completed
-       } else if (isActivePhaseNode && (campaign.phaseStatus as any) === 'completed') {
-         return 'completed' as any;
-       } else if (operationalPhaseIndexInType !== -1 && currentPhaseIndex !== -1 && operationalPhaseIndexInType <= currentPhaseIndex) {
-         return 'completed'; // Phase has been completed (is current or before current)
-       }
-       return 'not_started'; // Future phases remain not_started
-    } else if ((campaign.phaseStatus as any) === "failed" && isActivePhaseNode) {
-       return 'failed';
-    } else if (operationalPhaseIndexInType !== -1 && campaign.currentPhase && operationalPhaseIndexInType < operationalPhasesForType.indexOf(campaign.currentPhase)) {
-       return 'completed'; // Phase is before the current active/failed one
-    } else if (isActivePhaseNode) {
-       // Map phase status to campaign status
-       const phaseStatus = campaign.phaseStatus;
-       if (phaseStatus === 'not_started') return 'not_started';
-       if (phaseStatus === 'in_progress') return 'in_progress';
-       return phaseStatus || 'not_started'; // Current phase takes its own status
-    } else if ((campaign.phaseStatus as any) === 'completed' && operationalPhaseIndexInType !== -1 && campaign.currentPhase && operationalPhaseIndexInType === operationalPhasesForType.indexOf(campaign.currentPhase)) {
-       return 'completed'; // Current phase has succeeded
     }
-    return 'not_started';
-  }, [campaign.currentPhase, campaign.phaseStatus, campaign.status, campaign.campaignType, operationalPhasesForType]);
 
-  // Memoize progress calculation
+    // Handle completed campaigns
+    if (campaign.status === "completed" || (campaign.currentPhase as any) === "completed") {
+      // All operational phases should be completed for completed campaigns
+      if (operationalPhaseIndexInType !== -1) {
+        return 'completed';
+      }
+      return 'not_started'; // Setup phase for completed campaigns
+    }
+
+    // Handle current active phase
+    if (isActivePhaseNode) {
+      // Use the actual phase status from campaign data
+      const phaseStatus = campaign.phaseStatus;
+      if (phaseStatus === 'failed') return 'failed';
+      if (phaseStatus === 'in_progress') return 'in_progress';
+      if (phaseStatus === 'completed') return 'completed';
+      if (phaseStatus === 'paused') return 'not_started'; // Treat paused as not_started visually
+      return 'in_progress'; // Default for active phase
+    }
+
+    // Handle phases before the current phase (should be completed)
+    if (operationalPhaseIndexInType !== -1 && currentPhaseIndex !== -1 && operationalPhaseIndexInType < currentPhaseIndex) {
+      return 'completed';
+    }
+
+    // Handle phases after the current phase (not started yet)
+    return 'not_started';
+  }, [campaign.currentPhase, campaign.phaseStatus, campaign.status, operationalPhasesForType]);
+
+  // Memoize progress calculation - FIXED: Use actual campaign progress values like CampaignListItem
   const progressWidth = useMemo(() => {
+    // Use progressPercentage first, then progress, then calculate based on items
+    let progressValue = campaign.progressPercentage ?? campaign.progress ?? 0;
+    
+    // If no direct progress, try to calculate from processed vs total items
+    if (progressValue === 0 && campaign.totalItems && campaign.processedItems) {
+      progressValue = Math.floor((campaign.processedItems / campaign.totalItems) * 100);
+    }
+
+    if ((campaign.currentPhase as any) === "completed" || campaign.status === "completed") return 100;
     if ((campaign.currentPhase as any) === "setup") return 0;
-    if ((campaign.currentPhase as any) === "completed") return 100;
-    return Math.max(0, operationalPhasesForType.length > 1 ? (currentOperationalPhaseIndex / (operationalPhasesForType.length - 1)) * 100 : 0);
-  }, [campaign.currentPhase, currentOperationalPhaseIndex, operationalPhasesForType.length]);
+    
+    // For paused or failed campaigns, return the actual progress where it stopped
+    if ((campaign.phaseStatus as any) === "paused" || (campaign.phaseStatus as any) === "failed") {
+      return Math.max(0, progressValue);
+    }
+
+    // For active campaigns, use actual progress value
+    return Math.max(0, Math.min(100, progressValue));
+  }, [campaign.currentPhase, campaign.status, campaign.phaseStatus, campaign.progressPercentage, campaign.progress, campaign.totalItems, campaign.processedItems]);
   
   return (
     <div className="space-y-6">

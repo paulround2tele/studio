@@ -243,11 +243,20 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
     useCampaignDetailsStore.getState().setError(null);
 
     try {
+      console.log(`🔍 [Campaign Loading] Starting load for campaign ID: ${campaignId}`);
+      
       const rawResponse = await campaignsApi.getCampaignDetails(campaignId);
       let campaignData: Campaign | null = null;
 
       // Extract data from AxiosResponse
       const responseData = rawResponse.data;
+      
+      console.log(`📡 [Campaign Loading] Raw API response:`, {
+        status: rawResponse.status,
+        dataType: typeof responseData,
+        dataKeys: responseData ? Object.keys(responseData) : [],
+        hasId: responseData && typeof responseData === 'object' && 'id' in responseData
+      });
 
       // Handle new Swagger-generated API response format: { success: true, data: Campaign }
       if (responseData && typeof responseData === 'object') {
@@ -282,13 +291,37 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
       }
 
       if (campaignData) {
+        console.log(`🎯 [Campaign Loading] Campaign data extracted:`, {
+          id: campaignData.id,
+          name: campaignData.name,
+          type: campaignData.campaignType,
+          status: campaignData.status,
+          hasValidId: !!campaignData.id && campaignData.id !== '00000000-0000-0000-0000-000000000000'
+        });
+        
+        // Debug: Log the campaign data structure we extracted
+        console.log(`🔍 [Campaign Loading] Extracted campaign data structure:`, {
+          hasId: !!campaignData.id,
+          id: campaignData.id,
+          dataKeys: Object.keys(campaignData),
+          firstFewChars: JSON.stringify(campaignData).substring(0, 200)
+        });
+        
         const viewModel = transformCampaignToViewModel(campaignData);
+        console.log(`✅ [Campaign Loading] Successfully transformed to view model:`, {
+          id: viewModel.id,
+          progress: viewModel.progressPercentage,
+          totalItems: viewModel.totalItems,
+          processedItems: viewModel.processedItems
+        });
+        
         useCampaignDetailsStore.getState().setCampaign(viewModel);
         
         // Load domain data based on campaign type
         await loadDomainData(viewModel);
       } else {
-        throw new Error('Campaign not found in response');
+        console.error(`❌ [Campaign Loading] No valid campaign data found in response`);
+        throw new Error(`Campaign not found in response. Response structure: ${JSON.stringify(responseData, null, 2)}`);
       }
 
     } catch (error) {
