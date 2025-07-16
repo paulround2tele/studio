@@ -12,6 +12,13 @@ import {
 import { getApiBaseUrlSync } from '@/lib/config/environment';
 import type { FrontendProxy } from '@/lib/types/frontend-safe-types';
 import { transformSqlNullString, transformSqlNullInt32 } from '@/lib/utils/sqlNullTransformers';
+import { 
+  extractResponseData, 
+  toServiceResponse, 
+  handleApiError,
+  type APIResponse,
+  type ServiceResponse 
+} from '@/lib/utils/apiResponseHelpers';
 
 // Create configured ProxiesApi instance with authentication
 const config = new Configuration({
@@ -91,25 +98,16 @@ class ProxyModelService {
     try {
       const response = await proxiesApi.listProxies();
       
-      // Handle new Swagger-generated API response format: { success: true, data: Proxy[] }
-      const responseData = 'data' in response ? response.data : response;
-      let proxiesData: any[] = [];
+      // Backend returns APIResponse wrapper: { success: true, data: Proxy[], requestId: string }
+      const apiResponse = response.data as any; // Axios response wrapper - backend returns APIResponse format
       
-      if (responseData && typeof responseData === 'object') {
-        if ('success' in responseData && responseData.success === true && 'data' in responseData) {
-          // New format: { success: true, data: Proxy[], requestId: string }
-          const nestedData = responseData.data;
-          if (Array.isArray(nestedData)) {
-            proxiesData = nestedData;
-          }
-        } else if (Array.isArray(responseData)) {
-          // Legacy direct array format
-          proxiesData = responseData;
-        }
+      if (!apiResponse || apiResponse.success !== true || !Array.isArray(apiResponse.data)) {
+        const errorMessage = apiResponse?.error?.message || 'Invalid response format from server';
+        throw new Error(errorMessage);
       }
       
-      // Transform SQL null types to simple values for React
-      const cleanedProxies: FrontendProxy[] = proxiesData.map((proxy: any) => ({
+      // Transform backend Proxy[] to frontend-safe format
+      const cleanedProxies: FrontendProxy[] = apiResponse.data.map((proxy: any) => ({
         id: proxy.id,
         name: proxy.name || "",
         description: (proxy.description?.String !== undefined ? proxy.description.String : proxy.description) || "",
@@ -143,6 +141,7 @@ class ProxyModelService {
         message: 'Proxies retrieved successfully'
       };
     } catch (error) {
+      console.error('[ProxyService] getProxies error:', error);
       return {
         status: 'error',
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -185,26 +184,16 @@ class ProxyModelService {
       };
       const response = await proxiesApi.addProxy(convertedPayload);
       
-      // Handle new Swagger-generated API response format: { success: true, data: Proxy }
-      const responseData = 'data' in response ? response.data : response;
-      let proxyData: any = null;
+      // Backend returns APIResponse wrapper: { success: true, data: Proxy, requestId: string }
+      const apiResponse = response.data as any;
       
-      if (responseData && typeof responseData === 'object') {
-        if ('success' in responseData && responseData.success === true && 'data' in responseData) {
-          // New format: { success: true, data: Proxy, requestId: string }
-          proxyData = responseData.data;
-        } else {
-          // Legacy direct proxy format
-          proxyData = responseData;
-        }
-      }
-      
-      if (!proxyData) {
-        throw new Error('Proxy not found in response');
+      if (!apiResponse || apiResponse.success !== true || !apiResponse.data) {
+        const errorMessage = apiResponse?.error?.message || 'Failed to create proxy';
+        throw new Error(errorMessage);
       }
       
       // Transform the response data to frontend-safe format
-      const proxy = proxyData;
+      const proxy = apiResponse.data;
       const transformedProxy: FrontendProxy = {
         id: proxy.id,
         name: proxy.name || "",
