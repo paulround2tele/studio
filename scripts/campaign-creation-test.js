@@ -141,16 +141,41 @@ class FrontendLogCollector {
   }
 
   attachToPage(page, logger) {
-    // Collect console logs with B2B performance analysis
+    // ENHANCED: Collect ALL console logs with detailed axios failure tracking
     page.on('console', msg => {
       const logEntry = {
         timestamp: new Date().toISOString(),
         type: msg.type(),
         text: msg.text(),
-        location: msg.location()
+        location: msg.location(),
+        args: msg.args ? msg.args().map(arg => arg.toString()) : []
       };
       
       this.logs.push(logEntry);
+      
+      // ENHANCED: Detailed axios failure detection
+      if (msg.text().toLowerCase().includes('axios') ||
+          msg.text().toLowerCase().includes('network error') ||
+          msg.text().toLowerCase().includes('request failed') ||
+          msg.text().toLowerCase().includes('xhr') ||
+          msg.text().toLowerCase().includes('fetch') ||
+          msg.text().toLowerCase().includes('error') && msg.text().toLowerCase().includes('api')) {
+        logger.error('AXIOS/API Request Issue Detected', {
+          type: msg.type(),
+          message: msg.text(),
+          location: msg.location(),
+          args: logEntry.args,
+          severity: msg.type() === 'error' ? 'CRITICAL' : 'WARNING'
+        });
+      }
+      
+      // Log ALL console output for comprehensive monitoring
+      logger.debug('Console Output', {
+        type: msg.type(),
+        text: msg.text(),
+        location: msg.location()
+      });
+      
       this.analyzeConsoleMessage(msg, logger);
     });
 
@@ -503,10 +528,32 @@ async function runCampaignCreationTest() {
     await page.waitForURL(/\/(dashboard|campaigns)/, { timeout: config.timeout });
     logger.info('Login successful, redirected to dashboard');
 
+    // ENHANCED: Wait at dashboard and monitor all console logs and network activity
+    logger.info('ENHANCED MONITORING: Waiting at dashboard to capture all logs and network activity');
+    await page.waitForLoadState('networkidle');
+    
+    // Wait at dashboard for 10 seconds to capture initial load behavior
+    logger.info('Monitoring dashboard for 10 seconds to capture initial behavior...');
+    await page.waitForTimeout(10000);
+    
+    // Check for any immediate errors or warnings
+    const initialErrors = frontendLogs.performanceMetrics.errors.length;
+    const initialWarnings = frontendLogs.performanceMetrics.warnings.length;
+    logger.info('Dashboard monitoring complete', {
+      errorsDetected: initialErrors,
+      warningsDetected: initialWarnings,
+      apiCallsSoFar: frontendLogs.performanceMetrics.apiCalls.length,
+      healthChecksSoFar: frontendLogs.performanceMetrics.healthChecks.length
+    });
+
     // Navigate to campaigns page
     logger.info('Navigating to campaigns page');
     await page.goto(`${config.baseUrl}/campaigns`);
     await page.waitForLoadState('networkidle');
+    
+    // ENHANCED: Additional wait to capture campaigns page loading behavior
+    logger.info('Monitoring campaigns page loading for 5 seconds...');
+    await page.waitForTimeout(5000);
 
     // Wait for campaigns page to fully load
     await page.waitForSelector('main', { timeout: config.timeout });

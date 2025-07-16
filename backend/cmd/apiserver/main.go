@@ -329,7 +329,8 @@ func main() {
 	}
 
 	router.Use(nonWSMiddleware())
-	router.Use(rateLimitMiddleware.IPRateLimit(100, time.Minute)) // 100 requests per minute per IP
+	// No general API rate limiting - maximizing performance for sonic speed!
+	// Only login endpoints have rate limiting for security (brute force protection)
 
 	// WebSocket route (registered early to avoid middleware conflicts)
 	router.GET("/api/v2/ws", webSocketAPIHandler.HandleConnections)
