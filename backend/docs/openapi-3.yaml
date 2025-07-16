@@ -5141,7 +5141,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/StandardSuccessResponse'
+                                $ref: '#/components/schemas/StandardAPIResponse'
                     description: Operation successful
                 "400":
                     content:
@@ -6340,7 +6340,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/StandardSuccessResponse'
+                                $ref: '#/components/schemas/StandardAPIResponse'
                     description: Operation successful
                 "400":
                     content:
