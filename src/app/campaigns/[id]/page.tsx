@@ -135,28 +135,39 @@ shouldConnect: false,
       };
     }
 
-    // Active statuses that definitely need WebSocket connection
-    const isActiveStatus = ['Pending', 'queued', 'InProgress'].includes(campaign.status || '');
+    // ENHANCED: More inclusive status checking for better real-time connectivity
+    const statusLower = (campaign.status || '').toLowerCase();
+    const isActiveStatus = [
+      'pending', 'queued', 'inprogress', 'in_progress', 'running',
+      'pausing', 'paused', 'resuming'
+    ].includes(statusLower);
     
-    // For domain generation campaigns, also connect for "completed" status to receive DNS validation updates
-    const isCompletedDomainGeneration = campaign.status === 'completed';
+    // Connect for completed campaigns to receive validation updates
+    const isCompletedCampaign = statusLower === 'completed';
     
-    // CRITICAL: Also connect when DNS validation is active (currentPhase = dns_validation)
-    const isDNSValidationActive = campaign.currentPhase === 'dns_validation';
+    // Connect for any validation phases
+    const currentPhaseLower = (campaign.currentPhase || '').toLowerCase();
+    const isValidationPhase = [
+      'dns_validation', 'http_validation', 'http_keyword_validation',
+      'generation', 'analysis'
+    ].includes(currentPhaseLower);
     
-    // FIXED: Check if HTTP validation phase is active
-    const isHTTPValidationActive = campaign.currentPhase === 'http_validation';
-    
-    // Connect if active OR if it's a completed domain generation campaign (for DNS validation)
-    // OR if DNS validation phase is active OR if HTTP validation phase is active
-    const shouldConnect = !!(campaign && (isActiveStatus || isCompletedDomainGeneration || isDNSValidationActive || isHTTPValidationActive));
+    // ENHANCED: Connect more aggressively to ensure real-time updates
+    const shouldConnect = !!(campaign && (
+      isActiveStatus ||
+      isCompletedCampaign ||
+      isValidationPhase ||
+      // Always connect if we have domains being processed
+      (campaign.totalItems && campaign.totalItems > 0) ||
+      // Connect if progress is not 100% (campaign still active)
+      (campaign.progressPercentage !== undefined && campaign.progressPercentage < 100)
+    ));
       
     console.log(`🔌 [DEBUG] WebSocket connection decision:`, {
       isActiveStatus,
-      isCompletedDomainGeneration,
-      isDNSValidationActive,
-      isHTTPValidationActive,
-      currentPhase: campaign.currentPhase  as any,
+      isCompletedCampaign,
+      isValidationPhase,
+      currentPhase: campaign.currentPhase as any,
       shouldConnect
     });
       

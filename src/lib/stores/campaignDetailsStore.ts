@@ -262,59 +262,71 @@ status: payload.status === 'completed' ? 'completed' : state.campaign.status
         }
       }
 
-      // Handle phase progress updates
+      // Handle phase progress updates - ENHANCED for better real-time UX
       if (message.type === 'campaign_progress' && message.data) {
         const payload = message.data as {
-campaignId: string;
+          campaignId: string;
           progress?: number;
           progressPercentage?: number;
+          totalItems?: number;
+          processedItems?: number;
+          successfulItems?: number;
+          failedItems?: number;
         };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
-          const progress = payload.progress || payload.progressPercentage || 0;
+          // ENHANCED: Use all available progress data from WebSocket
+          const progress = payload.progressPercentage || payload.progress || 0;
+          const processedItems = payload.processedItems || Math.floor((progress / 100) * (state.campaign.totalItems || 0));
           
           // CRITICAL FIX: Phase and status are at message level, not data level
           const messagePhase = (message as any).phase;
           const messageStatus = (message as any).status;
           
           console.log(`🔧 [STORE_UPDATE] Processing campaign_progress message:`, {
+            progress,
+            processedItems,
+            totalItems: payload.totalItems || state.campaign.totalItems,
             messagePhase,
             messageStatus,
             currentCampaignPhase: state.campaign.currentPhase,
-            currentCampaignStatus: state.campaign.status,
-            willUpdatePhase: !!messagePhase,
-            willUpdateStatus: !!messageStatus
+            currentCampaignStatus: state.campaign.status
           });
           
           const updatedCampaign = {
             ...state.campaign,
+            // ENHANCED: Update all progress-related fields for comprehensive real-time updates
             progress: progress,
-            progressPercentage: progress, // CRITICAL: Keep both progress fields in sync,
-processedItems: Math.floor((progress / 100) * (state.campaign.totalItems || 0)), // Calculate from progress,
-currentPhase: messagePhase ? messagePhase as any : state.campaign.currentPhase  as any,
-phaseStatus: messageStatus ? messageStatus as any : state.campaign.phaseStatus as any,
+            progressPercentage: progress,
+            processedItems: processedItems,
+            successfulItems: payload.successfulItems || state.campaign.successfulItems || 0,
+            failedItems: payload.failedItems || state.campaign.failedItems || 0,
+            totalItems: payload.totalItems || state.campaign.totalItems,
+            // Update phase and status
+            currentPhase: messagePhase ? messagePhase as any : state.campaign.currentPhase as any,
+            phaseStatus: messageStatus ? messageStatus as any : state.campaign.phaseStatus as any,
             // CRITICAL: Update status during phase transitions
             status: messageStatus === 'running' ? 'running' :
                    messageStatus === 'completed' ? 'completed' :
-                   messageStatus || state.campaign.status
+                   messageStatus === 'failed' ? 'failed' :
+                   messageStatus || state.campaign.status,
+            // Update timestamp for freshness tracking
+            updatedAt: new Date().toISOString()
           };
           
-          console.log(`🔧 [STORE_UPDATE] Updated campaign state:`, {
-oldPhase: state.campaign.currentPhase,
-            newPhase: updatedCampaign.currentPhase,
-            oldStatus: state.campaign.status,
-            newStatus: updatedCampaign.status,
-            preservingDomains: {
-generatedDomains: state.generatedDomains.length,
-              dnsCampaignItems: state.dnsCampaignItems.length,
-              httpCampaignItems: state.httpCampaignItems.length
-            }
+          console.log(`✅ [STORE_UPDATE] Real-time campaign state updated:`, {
+            oldProgress: state.campaign.progressPercentage,
+            newProgress: updatedCampaign.progressPercentage,
+            oldProcessed: state.campaign.processedItems,
+            newProcessed: updatedCampaign.processedItems,
+            domainsCount: state.generatedDomains.length
           });
           
-          // 🔥 CRITICAL: Preserve domain data during campaign progress updates
+          // 🔥 CRITICAL: Atomic update preserving domain data
           set({
-campaign: updatedCampaign
-            // IMPORTANT: Domain data is NOT cleared during progress updates
+            campaign: updatedCampaign,
+            // ENHANCED: Also update totalDomainCount if we have new processed items
+            totalDomainCount: Math.max(state.totalDomainCount, processedItems)
           });
         }
       }
@@ -504,7 +516,12 @@ actionLoading: { ...state.actionLoading, [action]: loading }
     },
 
     updateStreamingStats: (stats) => set((state) => ({
-streamingStats: { ...state.streamingStats, ...stats }
+      streamingStats: {
+        ...state.streamingStats,
+        ...stats,
+        // Always update the last message time when stats are updated
+        lastMessageTime: stats.lastMessageTime || state.streamingStats.lastMessageTime || Date.now()
+      }
     })),
 
     selectDomain: (domainId, selected) => set((state) => {

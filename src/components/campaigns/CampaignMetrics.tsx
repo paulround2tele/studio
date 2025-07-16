@@ -60,19 +60,38 @@ export const CampaignMetrics: React.FC<CampaignMetricsProps> = ({
   streamingStats,
   className
 }) => {
-  // CRITICAL FIX: Use consistent data sources - prefer WebSocket data over stale campaign data
-  const progressPercentage = campaign.progressPercentage || campaign.progress || 0;
-  const processedItems = totalDomains > 0 ? totalDomains : (campaign.processedItems || 0);
+  // ENHANCED: More intelligent data source prioritization for real-time updates
+  const progressPercentage = Math.max(
+    campaign.progressPercentage || 0,
+    campaign.progress || 0
+  );
+  
+  // ENHANCED: Better processed items calculation for real-time accuracy
+  const processedItems = Math.max(
+    totalDomains,
+    campaign.processedItems || 0,
+    // Calculate from progress if available
+    campaign.totalItems ? Math.floor((progressPercentage / 100) * campaign.totalItems) : 0
+  );
+  
   const successfulItems = campaign.successfulItems || 0;
   const failedItems = campaign.failedItems || 0;
-  const targetItems = campaign.totalItems || campaign.domainGenerationParams?.numDomainsToGenerate || 0;
+  const targetItems = Math.max(
+    campaign.totalItems || 0,
+    campaign.domainGenerationParams?.numDomainsToGenerate || 0,
+    processedItems // Use processed as minimum target
+  );
   
-  // Calculate rates based on actual processed items (from WebSocket data)
+  // ENHANCED: More accurate rate calculations with WebSocket data
   const successRate = processedItems > 0 ? (successfulItems / processedItems) * 100 : 0;
   const failureRate = processedItems > 0 ? (failedItems / processedItems) * 100 : 0;
   
   const duration = formatDuration(campaign.startedAt, campaign.completedAt);
   const avgProcessingRate = campaign.avgProcessingRate || 0;
+  
+  // ENHANCED: Real-time connection status display
+  const connectionStatus = streamingStats?.connectionStatus || 'disconnected';
+  const isConnected = connectionStatus === 'connected';
 
   return (
     <Card className={cn("shadow-xl border-2 bg-gradient-to-br from-card to-muted/10", className)}>
@@ -80,9 +99,19 @@ export const CampaignMetrics: React.FC<CampaignMetricsProps> = ({
         <CardTitle className="flex items-center gap-3 text-xl font-bold">
           <BarChart3 className="h-6 w-6 text-primary" />
           Campaign Metrics
+          {/* ENHANCED: Real-time connection indicator */}
+          <div className={`ml-auto flex items-center gap-2 text-xs ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+            {isConnected ? 'Live' : 'Disconnected'}
+          </div>
         </CardTitle>
         <CardDescription className="text-base mt-1">
           Real-time progress and performance statistics
+          {streamingStats && isConnected && (
+            <span className="ml-2 text-xs text-green-600">
+              • {streamingStats.messagesReceived || 0} updates received
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       
