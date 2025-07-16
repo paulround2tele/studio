@@ -220,7 +220,7 @@ func (h *APIHandler) DeleteProxyPoolGin(c *gin.Context) {
 		respondWithErrorGin(c, status, "Failed to delete pool")
 		return
 	}
-	respondWithJSONGin(c, http.StatusOK, gin.H{"deleted": true})
+	respondWithJSONGin(c, http.StatusOK, ProxyPoolDeleteResponse{Deleted: true, PoolID: poolID.String(), Message: "Proxy pool deleted successfully"})
 }
 
 // AddProxyToPoolGin assigns a proxy to pool.
@@ -296,7 +296,12 @@ func (h *APIHandler) RemoveProxyFromPoolGin(c *gin.Context) {
 		respondWithErrorGin(c, status, "Failed to remove proxy")
 		return
 	}
-	respondWithJSONGin(c, http.StatusOK, gin.H{"removed": true})
+	respondWithJSONGin(c, http.StatusOK, ProxyPoolMembershipResponse{
+		PoolID:  poolID.String(),
+		ProxyID: proxyID.String(),
+		Removed: true,
+		Message: "Proxy removed from pool successfully",
+	})
 }
 
 func getString(s *string) string {

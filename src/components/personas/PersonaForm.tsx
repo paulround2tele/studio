@@ -237,7 +237,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
         response = await createPersona(payload as any);
       }
 
-      if (response.status === 'success') {
+      if (response.success === true) {
         toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${response.data?.name}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
@@ -492,7 +492,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
         response = await createPersona(payload);
       }
 
-      if (response.status === 'success') {
+      if (response.success === true) {
         toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${response.data?.name}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();

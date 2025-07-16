@@ -96,19 +96,19 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	// Set session cookie using proper formatting and persistence
 	fmt.Printf("DEBUG: Setting session cookie with name: %s, value: %s\n", h.config.CookieName, sessionData.ID)
-	
+
 	// For localhost development, set domain to empty string to avoid domain issues
 	domain := ""
 	if h.config.CookieDomain != "localhost" && h.config.CookieDomain != "" {
 		domain = h.config.CookieDomain
 	}
-	
+
 	// Calculate cookie max age to match session expiry exactly
 	sessionDuration := int(time.Until(sessionData.ExpiresAt).Seconds())
 	if sessionDuration <= 0 {
 		sessionDuration = h.config.CookieMaxAge // Fallback to default
 	}
-	
+
 	// Use Gin's SetSameSite and SetCookie for proper SameSite support
 	c.SetSameSite(http.SameSiteLaxMode) // Use constant instead of string for reliability
 	c.SetCookie(
@@ -120,7 +120,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		h.config.CookieSecure,
 		h.config.CookieHttpOnly,
 	)
-	
+
 	fmt.Printf("DEBUG: Cookie set successfully - Name: %s, MaxAge: %d, Path: %s, Domain: '%s', Secure: %v, HttpOnly: %v, SameSite: Lax\n",
 		h.config.CookieName, sessionDuration, h.config.CookiePath, domain, h.config.CookieSecure, h.config.CookieHttpOnly)
 
@@ -141,8 +141,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		ExpiresAt:    sessionData.ExpiresAt.Format(time.RFC3339),
 	}
 
-	// Return successful login response directly (unwrapped) to match OpenAPI spec
-	c.JSON(http.StatusOK, sessionResponse)
+	// Use unified APIResponse format
+	respondWithJSONGin(c, http.StatusOK, sessionResponse)
 }
 
 // Logout handles user logout requests.
@@ -162,9 +162,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		if err != nil {
 			// No active session - just clear cookies and return success
 			h.clearSessionCookies(c)
-			respondWithJSONGin(c, http.StatusOK, StandardSuccessResponse{
-				Message: "Logged out successfully",
-			})
+			respondWithJSONGin(c, http.StatusOK, SuccessMessageResponse{Message: "Logged out successfully"})
 			return
 		}
 	}
@@ -173,9 +171,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	if err := h.sessionService.InvalidateSession(sessionID); err != nil {
 		// Still clear cookies even if logout fails
 		h.clearSessionCookies(c)
-		respondWithJSONGin(c, http.StatusOK, StandardSuccessResponse{
-			Message: "Logged out successfully",
-		})
+		respondWithJSONGin(c, http.StatusOK, SuccessMessageResponse{Message: "Logged out successfully"})
 		return
 	}
 
@@ -191,9 +187,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	// Clear all session cookies
 	h.clearSessionCookies(c)
 
-	respondWithJSONGin(c, http.StatusOK, StandardSuccessResponse{
-		Message: "Logged out successfully",
-	})
+	respondWithJSONGin(c, http.StatusOK, SuccessMessageResponse{Message: "Logged out successfully"})
 }
 
 // Me returns current user information.
@@ -314,7 +308,7 @@ func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	if h.config.CookieDomain != "localhost" && h.config.CookieDomain != "" {
 		domain = h.config.CookieDomain
 	}
-	
+
 	sessionDuration := int(time.Until(newExpiry).Seconds())
 	c.SetSameSite(http.SameSiteLaxMode) // Consistent SameSite handling
 	c.SetCookie(
@@ -327,9 +321,7 @@ func (h *AuthHandler) RefreshSession(c *gin.Context) {
 		h.config.CookieHttpOnly,
 	)
 
-	respondWithJSONGin(c, http.StatusOK, map[string]string{
-		"expiresAt": newExpiry.Format(time.RFC3339),
-	})
+	respondWithJSONGin(c, http.StatusOK, SessionRefreshResponse{ExpiresAt: newExpiry.Format(time.RFC3339)})
 }
 
 // Authentication helper methods
@@ -363,7 +355,6 @@ func (h *AuthHandler) authenticateUser(email, password, ipAddress string) (*mode
 	return &user, nil
 }
 
-
 // updateLastLogin updates the user's last login information
 func (h *AuthHandler) updateLastLogin(userID uuid.UUID, ipAddress string) {
 	query := `
@@ -381,7 +372,6 @@ func (h *AuthHandler) updateLastLogin(userID uuid.UUID, ipAddress string) {
 	// Record successful login in audit log
 	h.recordSuccessfulLogin(userID.String(), ipAddress)
 }
-
 
 // recordSuccessfulLogin records a successful login in the audit log
 func (h *AuthHandler) recordSuccessfulLogin(userID, ipAddress string) {

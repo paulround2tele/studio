@@ -265,14 +265,7 @@ func (m *RateLimitMiddleware) RateLimit(config RateLimitConfig) gin.HandlerFunc 
 				},
 			)
 			c.Header("Retry-After", strconv.Itoa(int(time.Until(resetTime).Seconds())))
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error":      "Rate limit exceeded",
-				"errorCode":  "RATE_LIMIT_EXCEEDED",
-				"retryAfter": int(time.Until(resetTime).Seconds()),
-				"limit":      limit,
-				"remaining":  remaining,
-				"resetTime":  resetTime.UTC().Format(time.RFC3339),
-			})
+			respondWithRateLimitError(c, int(time.Until(resetTime).Seconds()), limit, remaining, resetTime)
 			return
 		}
 

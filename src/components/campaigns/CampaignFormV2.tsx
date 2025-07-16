@@ -474,7 +474,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           const response = await campaignService.createCampaign(unifiedPayload);
           console.log('✅ [API_RESPONSE] Received response:', JSON.stringify(response, null, 2));
         
-        if (response.status === 'success' && response.data) {
+        if (response.success === true && response.data) {
           // Handle nested response structure from the API
           const _apiResponse = response.data as { data?: unknown } | unknown;
           const campaign = response.data;

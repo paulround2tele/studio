@@ -1,0 +1,72 @@
+{
+  "summary": {
+    "totalApiCalls": 3,
+    "totalHealthChecks": 0,
+    "totalRerenders": 0,
+    "totalErrors": 1,
+    "totalWarnings": 0,
+    "avgApiResponseTime": 51
+  },
+  "b2bPerformanceIssues": {
+    "slowApiCalls": [],
+    "excessiveHealthChecks": false,
+    "performanceWarnings": [],
+    "criticalErrors": [
+      {
+        "timestamp": "2025-07-16T14:39:27.877Z",
+        "type": "pageerror",
+        "message": "Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.",
+        "stack": "TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.\n    at <anonymous>:66:16\n    at <anonymous>:71:7\n    at <anonymous>:72:7"
+      }
+    ],
+    "healthCheckFrequency": "0 checks detected"
+  },
+  "recommendations": [
+    "Address critical errors that impact user experience"
+  ],
+  "detailedMetrics": {
+    "healthChecks": [],
+    "apiCalls": [
+      {
+        "timestamp": "2025-07-16T14:39:05.481Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/auth/login",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 87,
+        "size": "314"
+      },
+      {
+        "timestamp": "2025-07-16T14:39:13.743Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/auth/login",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 29,
+        "size": "314"
+      },
+      {
+        "timestamp": "2025-07-16T14:39:35.590Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/auth/login",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 38,
+        "size": "314"
+      }
+    ],
+    "rerenders": [],
+    "pageLoads": [],
+    "networkRequests": [],
+    "errors": [
+      {
+        "timestamp": "2025-07-16T14:39:27.877Z",
+        "type": "pageerror",
+        "message": "Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.",
+        "stack": "TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'.\n    at <anonymous>:66:16\n    at <anonymous>:71:7\n    at <anonymous>:72:7"
+      }
+    ],
+    "warnings": [],
+    "memoryUsage": []
+  }
+}

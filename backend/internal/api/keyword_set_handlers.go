@@ -231,7 +231,8 @@ func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 	websocket.BroadcastKeywordSetCreated(keywordSet.ID.String(), toKeywordSetResponse(keywordSet, createdRulesModels))
 	log.Printf("Successfully created keyword set %s (%s) and broadcasted", keywordSet.ID, keywordSet.Name)
 
-	respondWithJSONGin(c, http.StatusCreated, toKeywordSetResponse(keywordSet, createdRulesModels))
+	keywordSetResponse := toKeywordSetResponse(keywordSet, createdRulesModels)
+	respondWithJSONGin(c, http.StatusCreated, keywordSetResponse)
 }
 
 // ListKeywordSetsGin lists keyword sets.
@@ -328,7 +329,8 @@ func (h *APIHandler) GetKeywordSetGin(c *gin.Context) {
 		// Continue, partial data might be acceptable
 	}
 
-	respondWithJSONGin(c, http.StatusOK, toKeywordSetResponse(kset, rules))
+	keywordSetResponse := toKeywordSetResponse(kset, rules)
+	respondWithJSONGin(c, http.StatusOK, keywordSetResponse)
 }
 
 // UpdateKeywordSetGin updates a keyword set.
@@ -510,7 +512,8 @@ func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 	websocket.BroadcastKeywordSetUpdated(existingSet.ID.String(), toKeywordSetResponse(existingSet, updatedRulesModels))
 	log.Printf("Successfully updated keyword set %s (%s) and broadcasted", existingSet.ID, existingSet.Name)
 
-	respondWithJSONGin(c, http.StatusOK, toKeywordSetResponse(existingSet, updatedRulesModels))
+	keywordSetResponse := toKeywordSetResponse(existingSet, updatedRulesModels)
+	respondWithJSONGin(c, http.StatusOK, keywordSetResponse)
 }
 
 // DeleteKeywordSetGin deletes a keyword set.
@@ -613,5 +616,9 @@ func (h *APIHandler) DeleteKeywordSetGin(c *gin.Context) {
 	websocket.BroadcastKeywordSetDeleted(setID.String())
 	log.Printf("Successfully deleted keyword set %s and broadcasted", setID)
 
-	c.Status(http.StatusNoContent)
+	respondWithJSONGin(c, http.StatusOK, KeywordSetDeleteResponse{
+		KeywordSetID: setID.String(),
+		Deleted:      true,
+		Message:      "Keyword set deleted successfully",
+	})
 }

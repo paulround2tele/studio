@@ -177,8 +177,24 @@ class EnhancedApiService {
 
       let data;
       try {
-        data = await response.json();
-      } catch (_parseError) {
+        const responseData = await response.json();
+        
+        // Handle unified APIResponse format
+        if (responseData.success !== undefined) {
+          if (!responseData.success) {
+            const error: NetworkError = new Error(`API Error: ${responseData.error || 'Unknown error'}`);
+            error.status = response.status;
+            throw error;
+          }
+          data = responseData.data;
+        } else {
+          // Fallback for direct response format
+          data = responseData;
+        }
+      } catch (parseError) {
+        if (parseError instanceof Error && parseError.message.includes('API Error:')) {
+          throw parseError; // Re-throw API errors
+        }
         // Handle non-JSON responses
         data = await response.text();
       }

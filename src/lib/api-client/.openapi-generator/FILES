@@ -74,7 +74,6 @@ docs/DNSValidationRequest.md
 docs/DNSValidationResult.md
 docs/DNSValidationResultsResponse.md
 docs/DNSValidationStartResponse.md
-docs/DataResponse.md
 docs/DatabaseOptimizationRecommendation.md
 docs/DeletionConfirmationResponse.md
 docs/DeletionResponse.md
@@ -180,8 +179,6 @@ docs/SessionMetrics.md
 docs/SessionRefreshResponse.md
 docs/SessionResponse.md
 docs/StandardAPIResponse.md
-docs/StandardErrorResponse.md
-docs/StandardSuccessResponse.md
 docs/Status.md
 docs/StealthConfig.md
 docs/StealthMetrics.md
@@ -258,7 +255,6 @@ models/create-keyword-set-request.ts
 models/create-persona-request.ts
 models/create-proxy-request.ts
 models/create-user-request.ts
-models/data-response.ts
 models/database-optimization-recommendation.ts
 models/deletion-confirmation-response.ts
 models/deletion-response.ts
@@ -364,8 +360,6 @@ models/session-refresh-response.ts
 models/session-response.ts
 models/session.ts
 models/standard-apiresponse.ts
-models/standard-error-response.ts
-models/standard-success-response.ts
 models/status.ts
 models/stealth-config.ts
 models/stealth-metrics.ts

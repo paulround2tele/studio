@@ -1,8 +1,9 @@
 // src/lib/services/authService.ts
-// Clean authentication service using auto-generated API clients
+// Clean authentication service using auto-generated API clients with unified response handling
 
 import { authApi } from '@/lib/api-client/client';
 import type { components } from '@/lib/api-client/types';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 type User = components['schemas']['User'];
 type LoginRequest = components['schemas']['LoginRequest'];
@@ -46,8 +47,16 @@ class AuthService {
   async getCurrentUser(): Promise<User | null> {
     try {
       const response = await authApi.getCurrentUser();
-      const userData = response.data;
       
+      // Backend now returns unified APIResponse format
+      const apiResponse = response.data as any;
+      
+      if (!apiResponse.success) {
+        logger.warn('AUTH_SERVICE', 'Get current user failed', { error: apiResponse.error });
+        return null;
+      }
+      
+      const userData = apiResponse.data;
       if (!userData?.id || !userData?.email) {
         logger.warn('AUTH_SERVICE', 'Invalid user data received', { userData });
         return null;
@@ -91,19 +100,45 @@ class AuthService {
         rememberMe: credentials.rememberMe
       });
       
-      const userData = response.data?.user;
-      if (!userData?.id || !userData?.email) {
-        logger.warn('AUTH_SERVICE', 'Invalid user data in login response');
+      // Backend returns unified APIResponse format - extractResponseData unwraps to SessionResponse
+      const sessionData = extractResponseData<{
+        user: {
+          id: string;
+          username: string;
+          email: string;
+          isActive: boolean;
+        };
+        token: string;
+        refreshToken: string;
+        expiresAt: string;
+      }>(response);
+      
+      if (!sessionData?.user?.id || !sessionData?.user?.email) {
+        logger.warn('AUTH_SERVICE', 'Invalid session data in login response', { sessionData });
         return {
           success: false,
           error: 'Invalid login response'
         };
       }
       
-      logger.info('AUTH_SERVICE', 'Login successful', { userId: userData.id });
+      // Convert backend response to frontend User format
+      const user: User = {
+        id: sessionData.user.id,
+        email: sessionData.user.email,
+        // Backend uses 'username' field which contains the computed name
+        name: sessionData.user.username || '',
+        isActive: sessionData.user.isActive,
+        createdAt: new Date().toISOString(), // Will be filled from /auth/me if needed
+        updatedAt: new Date().toISOString()
+      };
+      
+      logger.info('AUTH_SERVICE', 'Login successful', {
+        userId: user.id,
+        email: user.email
+      });
       return {
         success: true,
-        user: userData as User
+        user: user
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
@@ -122,7 +157,18 @@ class AuthService {
     logger.info('AUTH_SERVICE', 'Logout started');
 
     try {
-      await authApi.logout();
+      const response = await authApi.logout();
+      
+      // Backend now returns unified APIResponse format
+      const apiResponse = response.data as any;
+      
+      if (!apiResponse.success) {
+        return {
+          success: false,
+          error: apiResponse.error || 'Logout failed'
+        };
+      }
+
       logger.info('AUTH_SERVICE', 'Logout successful');
       return { success: true };
     } catch (error) {
@@ -142,7 +188,18 @@ class AuthService {
     logger.debug('AUTH_SERVICE', 'Session refresh started');
 
     try {
-      await authApi.refreshSession();
+      const response = await authApi.refreshSession();
+      
+      // Backend now returns unified APIResponse format
+      const apiResponse = response.data as any;
+      
+      if (!apiResponse.success) {
+        return {
+          success: false,
+          error: apiResponse.error || 'Session refresh failed'
+        };
+      }
+
       logger.info('AUTH_SERVICE', 'Session refresh successful');
       return { success: true };
     } catch (error) {
@@ -167,7 +224,18 @@ class AuthService {
         newPassword
       };
       
-      await authApi.changePassword(request);
+      const response = await authApi.changePassword(request);
+      
+      // Backend now returns unified APIResponse format
+      const apiResponse = response.data as any;
+      
+      if (!apiResponse.success) {
+        return {
+          success: false,
+          error: apiResponse.error || 'Password change failed'
+        };
+      }
+
       logger.info('AUTH_SERVICE', 'Password change successful');
       return { success: true };
     } catch (error) {

@@ -31,11 +31,7 @@ func ValidateRequestMiddleware() gin.HandlerFunc {
 		// Read the request body
 		bodyBytes, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Failed to read request body",
-				"code":  "INVALID_REQUEST_BODY",
-			})
-			c.Abort()
+			respondWithErrorMiddleware(c, http.StatusBadRequest, ErrorCodeBadRequest, "Failed to read request body")
 			return
 		}
 
@@ -46,21 +42,13 @@ func ValidateRequestMiddleware() gin.HandlerFunc {
 		var requestData interface{}
 		if len(bodyBytes) > 0 {
 			if err := json.Unmarshal(bodyBytes, &requestData); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": "Invalid JSON format",
-					"code":  "INVALID_JSON",
-				})
-				c.Abort()
+				respondWithErrorMiddleware(c, http.StatusBadRequest, ErrorCodeBadRequest, "Invalid JSON format")
 				return
 			}
 
 			// Validate common fields if present
 			if err := validateCommonFields(requestData); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": fmt.Sprintf("Validation failed: %s", err.Error()),
-					"code":  "VALIDATION_FAILED",
-				})
-				c.Abort()
+				respondWithErrorMiddleware(c, http.StatusBadRequest, ErrorCodeBadRequest, fmt.Sprintf("Validation failed: %s", err.Error()))
 				return
 			}
 		}

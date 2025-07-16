@@ -131,7 +131,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     try {
       const response: ProxiesListResponse = await getProxies();
       
-      if (response.status === 'success' && response.data) {
+      if (response.success === true && response.data) {
         // Ensure data is always an array
         const proxiesArray = Array.isArray(response.data) ? response.data : [];
         setProxies(proxiesArray as ExtendedProxy[]);
@@ -169,7 +169,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     try {
       const response = await testAllProxies();
       
-      if (response.status === 'success') {
+      if (response.success === true) {
         toast({
           title: "Health Check Complete",
           description: "All proxies have been tested",
@@ -204,7 +204,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     try {
       const response = await testProxy(proxyId);
       
-      if (response.status === 'success' && response.data) {
+      if (response.success === true && response.data) {
         // Update the specific proxy in our state
         setProxies(prev => prev.map(p =>
           p.id === proxyId ? response.data as ExtendedProxy : p

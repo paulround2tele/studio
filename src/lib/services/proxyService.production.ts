@@ -11,13 +11,9 @@ import {
 } from '@/lib/api-client/models';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
 import type { FrontendProxy } from '@/lib/types/frontend-safe-types';
-import { transformSqlNullString, transformSqlNullInt32 } from '@/lib/utils/sqlNullTransformers';
-import { 
-  extractResponseData, 
-  toServiceResponse, 
-  handleApiError,
-  type APIResponse,
-  type ServiceResponse 
+import { transformProxyData } from '@/lib/utils/sqlNullTransformers';
+import {
+  safeApiCall
 } from '@/lib/utils/apiResponseHelpers';
 
 // Create configured ProxiesApi instance with authentication
@@ -47,28 +43,36 @@ const validateUpdateProtocol = (protocol: string): UpdateProxyRequestProtocolEnu
   return validatedProtocol as UpdateProxyRequestProtocolEnum;
 };
 
-// Service layer response wrappers using frontend-safe types
+// Service layer response wrappers aligned with unified backend envelope format
 export interface ProxiesListResponse {
-  status: 'success' | 'error';
+  success: boolean;
   data: FrontendProxy[];
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
 export interface ProxyModelCreationResponse {
-  status: 'success' | 'error';
+  success: boolean;
   data?: FrontendProxy;
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
 export interface ProxyModelUpdateResponse {
-  status: 'success' | 'error';
+  success: boolean;
   data?: ProxyModel;
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
 export interface ProxyModelDeleteResponse {
-  status: 'success' | 'error';
+  success: boolean;
   data?: null;
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
@@ -95,209 +99,164 @@ class ProxyModelService {
   }
 
   async getProxies(): Promise<ProxiesListResponse> {
-    try {
-      const response = await proxiesApi.listProxies();
-      
-      // Backend returns APIResponse wrapper: { success: true, data: Proxy[], requestId: string }
-      const apiResponse = response.data as any; // Axios response wrapper - backend returns APIResponse format
-      
-      if (!apiResponse || apiResponse.success !== true || !Array.isArray(apiResponse.data)) {
-        const errorMessage = apiResponse?.error?.message || 'Invalid response format from server';
-        throw new Error(errorMessage);
-      }
-      
-      // Transform backend Proxy[] to frontend-safe format
-      const cleanedProxies: FrontendProxy[] = apiResponse.data.map((proxy: any) => ({
-        id: proxy.id,
-        name: proxy.name || "",
-        description: (proxy.description?.String !== undefined ? proxy.description.String : proxy.description) || "",
-        address: proxy.address || "",
-        protocol: proxy.protocol || "http",
-        username: (proxy.username?.String !== undefined ? proxy.username.String : proxy.username) || "",
-        host: (proxy.host?.String !== undefined ? proxy.host.String : proxy.host) || "",
-        port: (proxy.port?.Int32 !== undefined ? proxy.port.Int32 : proxy.port) || null,
-        isEnabled: proxy.isEnabled || false,
-        isHealthy: proxy.isHealthy || false,
-        lastStatus: (proxy.lastStatus?.String !== undefined ? proxy.lastStatus.String : proxy.lastStatus) || "",
-        lastCheckedAt: (proxy.lastCheckedAt?.Time !== undefined ? proxy.lastCheckedAt.Time : proxy.lastCheckedAt) || null,
-        latencyMs: (proxy.latencyMs?.Int32 !== undefined ? proxy.latencyMs.Int32 : proxy.latencyMs) || null,
-        city: (proxy.city?.String !== undefined ? proxy.city.String : proxy.city) || "",
-        countryCode: (proxy.countryCode?.String !== undefined ? proxy.countryCode.String : proxy.countryCode) || "",
-        provider: (proxy.provider?.String !== undefined ? proxy.provider.String : proxy.provider) || "",
-        createdAt: proxy.createdAt,
-        updatedAt: proxy.updatedAt,
-        // Frontend expects these fields - status should reflect both enabled state AND health
-        status: !proxy.isEnabled ? 'Disabled' : (proxy.isHealthy ? 'Active' : 'Failed'),
-        lastTested: (proxy.lastCheckedAt?.Time !== undefined ? proxy.lastCheckedAt.Time : proxy.lastCheckedAt) || null,
+    const result = await safeApiCall<any[]>(
+      () => proxiesApi.listProxies(),
+      'Getting proxies'
+    );
+    
+    if (!result.success) {
+      return result as ProxiesListResponse;
+    }
+    
+    // Transform backend Proxy[] to frontend-safe format using comprehensive transformer
+    const cleanedProxies: FrontendProxy[] = (result.data || []).map((proxy: any) => {
+      const transformed = transformProxyData(proxy);
+      return {
+        id: transformed.id,
+        name: transformed.name || "",
+        description: transformed.description || "",
+        address: transformed.address || "",
+        protocol: transformed.protocol || "http",
+        username: transformed.username || "",
+        host: transformed.host || "",
+        port: transformed.port,
+        isEnabled: transformed.isEnabled || false,
+        isHealthy: transformed.isHealthy || false,
+        lastStatus: transformed.lastStatus || "",
+        lastCheckedAt: transformed.lastCheckedAt,
+        latencyMs: transformed.latencyMs,
+        city: transformed.city || "",
+        countryCode: transformed.countryCode || "",
+        provider: transformed.provider || "",
+        createdAt: transformed.createdAt,
+        updatedAt: transformed.updatedAt,
+        status: !transformed.isEnabled ? 'Disabled' : (transformed.isHealthy ? 'Active' : 'Failed'),
+        lastTested: transformed.lastCheckedAt,
         successCount: 0,
         failureCount: 0,
-        lastError: (proxy.lastStatus?.String !== undefined ? proxy.lastStatus.String : proxy.lastStatus) || "",
-        notes: ""
-      }));
-      
-      return {
-        status: 'success',
-        data: cleanedProxies,
-        message: 'Proxies retrieved successfully'
+        lastError: transformed.lastStatus || "",
+        notes: transformed.notes || ""
       };
-    } catch (error) {
-      console.error('[ProxyService] getProxies error:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        data: []
-      };
-    }
+    });
+    
+    return {
+      ...result,
+      data: cleanedProxies
+    };
   }
 
   async getProxyModelById(proxyId: string): Promise<ProxyModelCreationResponse> {
     // Backend doesn't have individual GET endpoint, fetch from list
-    try {
-      const response = await this.getProxies();
-      const proxy = response.data?.find(p => p.id === proxyId);
-      
-      if (!proxy) {
-        return {
-          status: 'error',
-          message: `Proxy with ID ${proxyId} not found`
-        };
-      }
-      
+    const response = await this.getProxies();
+    const proxy = response.data?.find(p => p.id === proxyId);
+    
+    if (!proxy) {
       return {
-        status: 'success',
-        data: proxy,
-        message: 'Proxy retrieved successfully'
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: `Proxy with ID ${proxyId} not found`,
+        requestId: response.requestId || (globalThis.crypto?.randomUUID?.() || Math.random().toString(36))
       };
     }
+    
+    return {
+      ...response,
+      data: proxy
+    };
   }
 
   async createProxy(payload: ProxyModelCreationPayload): Promise<ProxyModelCreationResponse> {
-    try {
-      const convertedPayload = {
-        ...payload,
-        protocol: validateProtocol(payload.protocol || 'http')
-      };
-      const response = await proxiesApi.addProxy(convertedPayload);
-      
-      // Backend returns APIResponse wrapper: { success: true, data: Proxy, requestId: string }
-      const apiResponse = response.data as any;
-      
-      if (!apiResponse || apiResponse.success !== true || !apiResponse.data) {
-        const errorMessage = apiResponse?.error?.message || 'Failed to create proxy';
-        throw new Error(errorMessage);
-      }
-      
-      // Transform the response data to frontend-safe format
-      const proxy = apiResponse.data;
-      const transformedProxy: FrontendProxy = {
-        id: proxy.id,
-        name: proxy.name || "",
-        description: transformSqlNullString(proxy.description) || "",
-        address: proxy.address || "",
-        protocol: proxy.protocol || "http",
-        username: transformSqlNullString(proxy.username) || "",
-        host: transformSqlNullString(proxy.host) || "",
-        port: transformSqlNullInt32(proxy.port),
-        isEnabled: proxy.isEnabled || false,
-        isHealthy: proxy.isHealthy || false,
-        lastStatus: transformSqlNullString(proxy.lastStatus) || "",
-        lastCheckedAt: transformSqlNullString(proxy.lastCheckedAt),
-        latencyMs: transformSqlNullInt32(proxy.latencyMs),
-        city: transformSqlNullString(proxy.city) || "",
-        countryCode: transformSqlNullString(proxy.countryCode) || "",
-        provider: transformSqlNullString(proxy.provider) || "",
-        createdAt: proxy.createdAt,
-        updatedAt: proxy.updatedAt,
-        status: !proxy.isEnabled ? 'Disabled' : (proxy.isHealthy ? 'Active' : 'Failed'),
-        lastTested: transformSqlNullString(proxy.lastCheckedAt),
-        successCount: 0,
-        failureCount: 0,
-        lastError: transformSqlNullString(proxy.lastStatus) || "",
-        notes: transformSqlNullString(proxy.notes) || ""
-      };
-      return {
-        status: 'success',
-        data: transformedProxy,
-        message: 'Proxy created successfully'
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
+    const convertedPayload = {
+      ...payload,
+      protocol: validateProtocol(payload.protocol || 'http')
+    };
+    
+    const result = await safeApiCall<any>(
+      () => proxiesApi.addProxy(convertedPayload),
+      'Creating proxy'
+    );
+    
+    if (!result.success) {
+      return result as ProxyModelCreationResponse;
     }
+    
+    // Transform the response data to frontend-safe format using comprehensive transformer
+    const proxy = result.data;
+    const transformed = transformProxyData(proxy);
+    const transformedProxy: FrontendProxy = {
+      id: transformed.id,
+      name: transformed.name || "",
+      description: transformed.description || "",
+      address: transformed.address || "",
+      protocol: transformed.protocol || "http",
+      username: transformed.username || "",
+      host: transformed.host || "",
+      port: transformed.port,
+      isEnabled: transformed.isEnabled || false,
+      isHealthy: transformed.isHealthy || false,
+      lastStatus: transformed.lastStatus || "",
+      lastCheckedAt: transformed.lastCheckedAt,
+      latencyMs: transformed.latencyMs,
+      city: transformed.city || "",
+      countryCode: transformed.countryCode || "",
+      provider: transformed.provider || "",
+      createdAt: transformed.createdAt,
+      updatedAt: transformed.updatedAt,
+      status: !transformed.isEnabled ? 'Disabled' : (transformed.isHealthy ? 'Active' : 'Failed'),
+      lastTested: transformed.lastCheckedAt,
+      successCount: 0,
+      failureCount: 0,
+      lastError: transformed.lastStatus || "",
+      notes: transformed.notes || ""
+    };
+    
+    return {
+      ...result,
+      data: transformedProxy
+    };
   }
 
   async updateProxy(proxyId: string, payload: ProxyModelUpdatePayload): Promise<ProxyModelUpdateResponse> {
-    try {
-      const { protocol, ...restPayload } = payload;
-      const convertedPayload = {
-        ...restPayload,
-        ...(protocol && { protocol: validateUpdateProtocol(protocol) })
-      };
-      const response = await proxiesApi.updateProxy(proxyId, convertedPayload);
-      return {
-        status: 'success',
-        data: response.data as ProxyModel,
-        message: 'Proxy updated successfully'
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    const { protocol, ...restPayload } = payload;
+    const convertedPayload = {
+      ...restPayload,
+      ...(protocol && { protocol: validateUpdateProtocol(protocol) })
+    };
+    
+    return await safeApiCall<ProxyModel>(
+      () => proxiesApi.updateProxy(proxyId, convertedPayload),
+      'Updating proxy'
+    );
   }
 
   async deleteProxy(proxyId: string): Promise<ProxyModelDeleteResponse> {
-    try {
-      await proxiesApi.deleteProxy(proxyId);
-      return {
-        status: 'success',
-        data: null,
-        message: 'Proxy deleted successfully'
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    return await safeApiCall<null>(
+      () => proxiesApi.deleteProxy(proxyId),
+      'Deleting proxy'
+    );
   }
 
   async testProxy(proxyId: string): Promise<ApiResponse<unknown>> {
-    try {
-      const response = await proxiesApi.testProxy(proxyId);
-      return {
-        status: 'success',
-        data: response.data,
-        message: 'Proxy test completed successfully'
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    return await safeApiCall<unknown>(
+      () => proxiesApi.testProxy(proxyId),
+      'Testing proxy'
+    );
   }
 
   async forceProxyModelHealthCheck(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await proxiesApi.forceCheckSingleProxy(proxyId);
       return {
-        status: 'success',
+        success: true,
         data: response.data,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36),
         message: 'Proxy health check completed'
       };
     } catch (error) {
       return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
       };
     }
   }
@@ -306,14 +265,17 @@ class ProxyModelService {
     try {
       const response = await proxiesApi.forceCheckAllProxies({});
       return {
-        status: 'success',
+        success: true,
         data: response.data,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36),
         message: 'All proxies health check completed'
       };
     } catch (error) {
       return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
       };
     }
   }
@@ -322,14 +284,17 @@ class ProxyModelService {
     try {
       const response = await proxiesApi.getProxyStatuses();
       return {
-        status: 'success',
+        success: true,
         data: response.data,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36),
         message: 'Proxy statuses retrieved successfully'
       };
     } catch (error) {
       return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
       };
     }
   }
@@ -338,10 +303,11 @@ class ProxyModelService {
   async enableProxy(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
       const proxy = await this.getProxyModelById(proxyId);
-      if (proxy.status !== 'success' || !proxy.data) {
+      if (!proxy.success || !proxy.data) {
         return {
-          status: 'error',
-          message: 'Proxy not found'
+          success: false,
+          error: 'Proxy not found',
+          requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
         };
       }
 
@@ -352,14 +318,17 @@ class ProxyModelService {
       const result = await this.updateProxy(proxyId, updatePayload);
 
       return {
-        status: result.status,
+        success: result.success,
         data: result.data,
-        message: result.status === 'success' ? 'Proxy enabled successfully' : result.message
+        error: result.error,
+        requestId: result.requestId,
+        message: result.success ? 'Proxy enabled successfully' : (result.error || 'Unknown error')
       };
     } catch (error) {
       return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
       };
     }
   }
@@ -367,10 +336,11 @@ class ProxyModelService {
   async disableProxy(proxyId: string): Promise<ApiResponse<unknown>> {
     try {
       const proxy = await this.getProxyModelById(proxyId);
-      if (proxy.status !== 'success' || !proxy.data) {
+      if (!proxy.success || !proxy.data) {
         return {
-          status: 'error',
-          message: 'Proxy not found'
+          success: false,
+          error: 'Proxy not found',
+          requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
         };
       }
 
@@ -381,14 +351,17 @@ class ProxyModelService {
       const result = await this.updateProxy(proxyId, updatePayload);
 
       return {
-        status: result.status,
+        success: result.success,
         data: result.data,
-        message: result.status === 'success' ? 'Proxy disabled successfully' : result.message
+        error: result.error,
+        requestId: result.requestId,
+        message: result.success ? 'Proxy disabled successfully' : (result.error || 'Unknown error')
       };
     } catch (error) {
       return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
       };
     }
   }
@@ -416,7 +389,7 @@ export const cleanProxies = async (): Promise<{ status: 'success' | 'error'; mes
     // Get all proxies and filter for unhealthy ones
     const response = await proxyService.getProxies();
     
-    if (response.status !== 'success' || !response.data) {
+    if (!response.success || !response.data) {
       return { status: 'error', message: 'Failed to fetch proxies for cleaning' };
     }
 

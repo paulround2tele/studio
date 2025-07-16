@@ -2160,11 +2160,6 @@ export interface components {
         };
         DNSValidationStatusEnum: string;
         DNSValidatorConfigJSON: string;
-        DataResponse: {
-            data?: string;
-            message?: string;
-            success?: boolean;
-        };
         DatabaseOptimizationRecommendation: {
             /** Format: date-time */
             createdAt?: string;
@@ -3680,14 +3675,6 @@ export interface components {
             message?: string;
             status?: string;
         };
-        StandardErrorResponse: {
-            error?: string;
-            message?: string;
-        };
-        StandardSuccessResponse: {
-            message?: string;
-            success?: boolean;
-        };
         Status: {
             message?: string;
             status?: string;
@@ -4846,7 +4833,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StandardSuccessResponse"];
+                    "application/json": components["schemas"]["StandardAPIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -6277,7 +6264,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StandardSuccessResponse"];
+                    "application/json": components["schemas"]["StandardAPIResponse"];
                 };
             };
             /** @description Bad Request */

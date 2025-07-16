@@ -35,7 +35,18 @@ export async function query(sql: string): Promise<QueryResult> {
       throw new Error(`Database query failed: ${response.statusText}`);
     }
 
-    return response.json();
+    const responseData = await response.json();
+    
+    // Handle unified APIResponse format if backend uses it
+    if (responseData.success !== undefined) {
+      if (!responseData.success) {
+        throw new Error(`Database query failed: ${responseData.error || 'Unknown error'}`);
+      }
+      return responseData.data;
+    }
+    
+    // Fallback for direct response format
+    return responseData;
   } catch (error) {
     throw new Error(`Database query failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -57,7 +68,18 @@ export async function getStats(): Promise<DatabaseStats> {
       throw new Error(`Database stats failed: ${response.statusText}`);
     }
 
-    return response.json();
+    const responseData = await response.json();
+    
+    // Handle unified APIResponse format if backend uses it
+    if (responseData.success !== undefined) {
+      if (!responseData.success) {
+        throw new Error(`Database stats failed: ${responseData.error || 'Unknown error'}`);
+      }
+      return responseData.data;
+    }
+    
+    // Fallback for direct response format
+    return responseData;
   } catch (error) {
     throw new Error(`Database stats failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }

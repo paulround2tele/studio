@@ -41,6 +41,7 @@ import type { components } from '@/lib/api-client/types';
 type Proxy = components['schemas']['Proxy'];
 import type { ProxyModelUpdateResponse, ProxyModelDeleteResponse } from '@/lib/services/proxyService.production';
 import type { ApiResponse } from '@/lib/types';
+import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
@@ -184,11 +185,11 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
             throw new Error(`Unknown action: ${action}`);
         }
 
-        if (response.status === 'success') {
+        if (isResponseSuccess(response)) {
           successCount++;
         } else {
           errorCount++;
-          errors.push(`${proxy.address}: ${response.message || 'Unknown error'}`);
+          errors.push(`${proxy.address}: ${response.message || (response as any).error || 'Unknown error'}`);
         }
       } catch (error) {
         errorCount++;

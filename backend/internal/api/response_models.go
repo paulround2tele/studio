@@ -53,24 +53,8 @@ type PatternOffsetResponse struct {
 	TotalPossibleCombinations int64  `json:"totalPossibleCombinations"`
 }
 
-// StandardSuccessResponse represents a standard success response with string data
-type StandardSuccessResponse struct {
-	Message string `json:"message"`
-	Success bool   `json:"success"`
-}
-
-// DataResponse represents a generic data response (use specific types instead)
-type DataResponse struct {
-	Message string `json:"message"`
-	Success bool   `json:"success"`
-	Data    string `json:"data,omitempty"` // Use specific types in actual implementations
-}
-
-// StandardErrorResponse represents a standard error response
-type StandardErrorResponse struct {
-	Error   string `json:"error"`
-	Message string `json:"message,omitempty"`
-}
+// LEGACY RESPONSE TYPES REMOVED - ALL ENDPOINTS NOW USE UNIFIED APIResponse FORMAT
+// See response_types.go for the unified APIResponse structure
 
 // SuccessMessageResponse represents a simple success message
 type SuccessMessageResponse struct {

@@ -5,46 +5,61 @@ import { campaignsApi } from '@/lib/api-client/client';
 import type { components } from '@/lib/api-client/types';
 import type { UpdateCampaignRequest } from '@/lib/api-client';
 import type { FrontendCampaign } from '@/lib/types/frontend-safe-types';
+import {
+  extractResponseData,
+  safeApiCall
+} from '@/lib/utils/apiResponseHelpers';
 
 // Use OpenAPI types directly
 export type Campaign = components['schemas']['Campaign'];
 export type CampaignCreationPayload = components['schemas']['CreateCampaignRequest'];
 
-// Service layer response wrappers using frontend-safe types
+// Service layer response wrappers aligned with unified backend envelope format
 export interface CampaignsListResponse {
-  status: 'success' | 'error';
+  success: boolean;
   data: FrontendCampaign[];
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
 export interface CampaignDetailResponse {
-  status: 'success' | 'error';
-  data?: FrontendCampaign;
+  success: boolean;
+  data?: Campaign;
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
 export interface CampaignCreationResponse {
-  status: 'success' | 'error';
+  success: boolean;
   data?: Campaign;
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
 export interface CampaignServiceResponse {
-  status: 'success' | 'error';
+  success: boolean;
   data?: Campaign;
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
 export interface CampaignDeleteResponse {
-  status: 'success' | 'error';
+  success: boolean;
   data?: null;
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
 export interface CampaignResultsResponse<T = unknown> {
-  status: 'success' | 'error';
+  success: boolean;
   data: T;
-  error?: string;
+  error: string | null;
+  requestId: string;
   message?: string;
 }
 
@@ -70,351 +85,210 @@ class CampaignService {
 
   // Campaign Management
   async getCampaigns(_options?: { limit?: number; sortBy?: string; sortOrder?: string }): Promise<CampaignsListResponse> {
-    try {
-      console.log('[CampaignService] Getting campaigns');
-      // Request all campaigns with high limit to avoid pagination truncation
-      const response = await campaignsApi.listCampaigns(100);
-      
-      // Handle new Swagger-generated API response format: { success: true, data: Campaign[] }
-      const responseData = 'data' in response ? response.data : response;
-      let campaignsArray: Campaign[] = [];
-      
-      if (responseData && typeof responseData === 'object') {
-        if ('success' in responseData && responseData.success === true && 'data' in responseData) {
-          // New format: { success: true, data: Campaign[], requestId: string }
-          const nestedData = responseData.data;
-          if (Array.isArray(nestedData)) {
-            campaignsArray = nestedData as Campaign[];
-          }
-        } else if (Array.isArray(responseData)) {
-          // Legacy direct array format
-          campaignsArray = responseData as Campaign[];
-        }
-      }
-      
-      return {
-        status: 'success',
-        data: campaignsArray,
-        message: 'Campaigns retrieved successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Failed to get campaigns:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        data: []
-      };
-    }
+    const result = await safeApiCall<FrontendCampaign[]>(
+      () => campaignsApi.listCampaigns(100),
+      'Getting campaigns'
+    );
+    
+    return {
+      success: result.success,
+      data: result.data || [],
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Campaigns retrieved successfully' : result.error || 'Failed to get campaigns'
+    };
   }
 
   async getCampaignById(campaignId: string): Promise<CampaignDetailResponse> {
-    try {
-      console.log('[CampaignService] Getting campaign by ID:', campaignId);
-      const response = await campaignsApi.getCampaignDetails(campaignId);
-      
-      // Enhanced diagnostic logging to debug response structure
-      console.log('[CampaignService] RAW API RESPONSE for', campaignId, ':', JSON.stringify(response, null, 2));
-      console.log('[CampaignService] Response type:', typeof response);
-      console.log('[CampaignService] Response constructor:', response?.constructor?.name);
-      console.log('[CampaignService] Response keys:', response && typeof response === 'object' ? Object.keys(response) : 'N/A');
-      
-      // The API should return CampaignDetailsResponse: { campaign: CampaignData, params: CampaignParamsData }
-      let campaign: Campaign;
-      let responseData: any = response;
-      
-      // Handle Axios wrapper if present
-      if ('data' in response && response.data) {
-        responseData = response.data;
-        console.log('[CampaignService] Unwrapped Axios response.data:', JSON.stringify(responseData, null, 2));
-      }
-      
-      // Check if we have the expected CampaignDetailsResponse structure
-      if (responseData && typeof responseData === 'object' && 'campaign' in responseData) {
-        console.log('[CampaignService] Found campaign in response.campaign');
-        campaign = responseData.campaign as Campaign;
-      } else if (responseData && typeof responseData === 'object' && 'data' in responseData) {
-        console.log('[CampaignService] Found data in response.data, checking if it contains campaign');
-        const nestedData = responseData.data;
-        if (nestedData && typeof nestedData === 'object' && 'campaign' in nestedData) {
-          campaign = nestedData.campaign as Campaign;
-        } else {
-          // Assume the nested data is the campaign itself
-          campaign = nestedData as Campaign;
-        }
-      } else {
-        // Assume the response itself is the campaign (fallback)
-        console.log('[CampaignService] Treating entire response as campaign data');
-        campaign = responseData as Campaign;
-      }
-      
-      // Enhanced validation and debugging
-      console.log('[CampaignService] EXTRACTED CAMPAIGN:', JSON.stringify(campaign, null, 2));
-      console.log('[CampaignService] Campaign type:', typeof campaign);
-      console.log('[CampaignService] Campaign keys:', campaign && typeof campaign === 'object' ? Object.keys(campaign) : 'N/A');
-      
-      if (!campaign || typeof campaign !== 'object') {
-        console.error('[CampaignService] VALIDATION FAILED: Invalid campaign data structure');
-        console.error('[CampaignService] Expected: object with campaign data');
-        console.error('[CampaignService] Received:', campaign);
-        throw new Error('Campaign not found in response');
-      }
-      
-      // Handle potential field name inconsistencies
-      if (!campaign.campaignType && (campaign as any).campaign_type) {
-        console.log('[CampaignService] Converting campaign_type to campaignType');
-        (campaign as any).campaignType = (campaign as any).campaign_type;
-      }
-      
-      // Validate required fields
-      if (!campaign.id) {
-        console.error('[CampaignService] VALIDATION FAILED: Campaign missing required id field');
-        throw new Error('Campaign data missing required fields');
-      }
-      
-      console.log('[CampaignService] ✅ Campaign validation successful');
+    const result = await safeApiCall<{ campaign?: Campaign }>(
+      () => campaignsApi.getCampaignDetails(campaignId),
+      'Getting campaign by ID'
+    );
+    
+    if (!result.success) {
       return {
-        status: 'success',
-        data: campaign,
-        message: 'Campaign retrieved successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Failed to get campaign:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: result.error,
+        requestId: result.requestId
       };
     }
+    
+    if (!result.data?.campaign?.id) {
+      return {
+        success: false,
+        error: 'Campaign not found or missing required fields',
+        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
+      };
+    }
+    
+    return {
+      success: true,
+      data: result.data.campaign as Campaign,
+      error: null,
+      requestId: result.requestId,
+      message: 'Campaign retrieved successfully'
+    };
   }
 
   // Unified Campaign Creation Method
   async createCampaign(payload: CampaignCreationPayload): Promise<CampaignCreationResponse> {
-    try {
-      console.log('[CampaignService] Creating campaign with payload:', payload);
-      
-      const response = await campaignsApi.createCampaign(payload);
-      const result = 'data' in response ? response.data : response;
-      
-      console.log('[CampaignService] Raw API response:', JSON.stringify(response, null, 2));
-      console.log('[CampaignService] Extracted result:', JSON.stringify(result, null, 2));
-      console.log('[CampaignService] Result type:', typeof result);
-      console.log('[CampaignService] Result has campaignId:', result && typeof result === 'object' && 'campaignId' in result);
-      
-      // Handle the actual response structure: { success: true, data: Campaign, requestId: "..." }
-      if (result && typeof result === 'object' && 'success' in result && result.success === true) {
-        console.log('[CampaignService] Found success response, checking for data field');
+    const result = await safeApiCall<Campaign>(
+      () => campaignsApi.createCampaign(payload),
+      'Creating campaign'
+    );
+    
+    // Handle legacy response format with campaignId
+    if (!result.success && result.error?.includes('campaignId')) {
+      try {
+        const response = await campaignsApi.createCampaign(payload);
+        const legacyResult = extractResponseData<{ campaignId?: string; message?: string }>(response);
         
-        if ('data' in result && result.data && typeof result.data === 'object') {
-          const campaignData = result.data as Campaign;
-          console.log('[CampaignService] Extracted campaign data from success response:', campaignData);
-          
-          if (campaignData.id) {
-            console.log('[CampaignService] ✅ Campaign created successfully with ID:', campaignData.id);
-            
-            return {
-              status: 'success' as const,
-              data: campaignData,
-              message: 'Campaign created successfully'
-            };
-          } else {
-            console.error('[CampaignService] Campaign data missing ID field:', campaignData);
-          }
-        } else {
-          console.error('[CampaignService] Success response missing data field:', result);
-        }
-      }
-      
-      // Legacy handling for CampaignOperationResponse (if backend still sends this format)
-      if (result && typeof result === 'object' && 'campaignId' in result) {
-        const operationResponse = result as { success?: boolean; message?: string; campaignId?: string; status?: string };
-        
-        console.log('[CampaignService] Found legacy campaignId format:', operationResponse.campaignId);
-        
-        if (operationResponse.campaignId) {
-          // Create a minimal Campaign object with the ID from the operation response
+        if (legacyResult?.campaignId) {
           const campaignData = {
-            id: operationResponse.campaignId,
+            id: legacyResult.campaignId,
             name: 'Created Campaign',
             campaignType: 'domain_generation',
             status: 'pending'
           } as Campaign;
           
           return {
-            status: 'success' as const,
+            success: true,
             data: campaignData,
-            message: operationResponse.message || 'Campaign created successfully'
+            error: null,
+            requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36),
+            message: legacyResult.message || 'Campaign created successfully'
           };
         }
+      } catch {
+        // Fall through to standard error handling
       }
-      
-      // Enhanced debugging for unexpected response structure
-      console.error('[CampaignService] Response structure analysis:');
-      console.error('- Response keys:', result && typeof result === 'object' ? Object.keys(result) : 'N/A');
-      console.error('- Full response:', JSON.stringify(response, null, 2));
-      console.error('- Extracted result:', JSON.stringify(result, null, 2));
-      
-      throw new Error('Invalid response structure from campaign creation API');
-    } catch (error) {
-      console.error('[CampaignService] Campaign creation failed:', error);
-      return {
-        status: 'error' as const,
-        message: error instanceof Error ? error.message : 'Failed to create campaign'
-      };
     }
+    
+    return {
+      success: result.success,
+      data: result.data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Campaign created successfully' : result.error || 'Failed to create campaign'
+    };
   }
 
   // Campaign Update Operation using auto-generated OpenAPI client
   async updateCampaign(campaignId: string, updatePayload: UpdateCampaignRequest): Promise<CampaignServiceResponse> {
-    try {
-      console.log('[CampaignService] Updating campaign:', campaignId, updatePayload);
-      
-      const response = await campaignsApi.updateCampaign(campaignId, updatePayload);
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: result as Campaign,
-        message: 'Campaign updated successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Campaign update failed:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Failed to update campaign'
-      };
-    }
+    const result = await safeApiCall<Campaign>(
+      () => campaignsApi.updateCampaign(campaignId, updatePayload),
+      'Updating campaign'
+    );
+    
+    return {
+      success: result.success,
+      data: result.data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Campaign updated successfully' : result.error || 'Failed to update campaign'
+    };
   }
 
   // Campaign Control Operations
   async startCampaign(campaignId: string): Promise<CampaignServiceResponse> {
-    try {
-      console.log('[CampaignService] Starting campaign:', campaignId);
-      const response = await campaignsApi.startCampaign(campaignId);
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: result as unknown as Campaign,
-        message: 'Campaign started successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Start campaign error:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    const result = await safeApiCall<Campaign>(
+      () => campaignsApi.startCampaign(campaignId),
+      'Starting campaign'
+    );
+    
+    return {
+      success: result.success,
+      data: result.data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Campaign started successfully' : result.error || 'Failed to start campaign'
+    };
   }
 
   async pauseCampaign(campaignId: string): Promise<CampaignServiceResponse> {
-    try {
-      console.log('[CampaignService] Pausing campaign:', campaignId);
-      const response = await campaignsApi.pauseCampaign(campaignId);
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: result as unknown as Campaign,
-        message: 'Campaign paused successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Pause campaign error:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    const result = await safeApiCall<Campaign>(
+      () => campaignsApi.pauseCampaign(campaignId),
+      'Pausing campaign'
+    );
+    
+    return {
+      success: result.success,
+      data: result.data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Campaign paused successfully' : result.error || 'Failed to pause campaign'
+    };
   }
 
   async resumeCampaign(campaignId: string): Promise<CampaignServiceResponse> {
-    try {
-      console.log('[CampaignService] Resuming campaign:', campaignId);
-      const response = await campaignsApi.resumeCampaign(campaignId);
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: result as unknown as Campaign,
-        message: 'Campaign resumed successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Resume campaign error:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    const result = await safeApiCall<Campaign>(
+      () => campaignsApi.resumeCampaign(campaignId),
+      'Resuming campaign'
+    );
+    
+    return {
+      success: result.success,
+      data: result.data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Campaign resumed successfully' : result.error || 'Failed to resume campaign'
+    };
   }
 
   async cancelCampaign(campaignId: string): Promise<CampaignServiceResponse> {
-    try {
-      console.log('[CampaignService] Cancelling campaign:', campaignId);
-      const response = await campaignsApi.cancelCampaign(campaignId);
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: result as unknown as Campaign,
-        message: 'Campaign cancelled successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Cancel campaign error:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    const result = await safeApiCall<Campaign>(
+      () => campaignsApi.cancelCampaign(campaignId),
+      'Cancelling campaign'
+    );
+    
+    return {
+      success: result.success,
+      data: result.data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Campaign cancelled successfully' : result.error || 'Failed to cancel campaign'
+    };
   }
 
   async deleteCampaign(campaignId: string): Promise<CampaignDeleteResponse> {
+    // First try to cancel the campaign if it's running
     try {
-      console.log('[CampaignService] Deleting campaign:', campaignId);
-      
-      // First try to cancel the campaign if it's running
-      try {
-        await this.cancelCampaign(campaignId);
-      } catch (error) {
-        console.warn('[CampaignService] Campaign may already be cancelled:', error);
-      }
-      
-      // Then delete it
-      await campaignsApi.deleteCampaign(campaignId);
-      
-      return {
-        status: 'success',
-        data: null,
-        message: 'Campaign deleted successfully'
-      };
+      await this.cancelCampaign(campaignId);
     } catch (error) {
-      console.error('[CampaignService] Delete campaign error:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      };
+      console.warn('[CampaignService] Campaign may already be cancelled:', error);
     }
+    
+    const result = await safeApiCall<null>(
+      () => campaignsApi.deleteCampaign(campaignId),
+      'Deleting campaign'
+    );
+    
+    return {
+      success: result.success,
+      data: null,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Campaign deleted successfully' : result.error || 'Failed to delete campaign'
+    };
   }
 
   // DNS Validation method for phase transitions
   async validateDNSForCampaign(campaignId: string): Promise<CampaignServiceResponse> {
-    try {
-      console.log('[CampaignService] Triggering DNS validation for campaign:', campaignId);
-      const response = await campaignsApi.validateDNSForCampaign(campaignId, {
+    const result = await safeApiCall<Campaign>(
+      () => campaignsApi.validateDNSForCampaign(campaignId, {
         campaignId: campaignId,
         onlyInvalidDomains: false
-      });
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: result as unknown as Campaign,
-        message: 'DNS validation started successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] DNS validation error:', error);
-      return {
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Failed to start DNS validation'
-      };
-    }
+      }),
+      'DNS validation for campaign'
+    );
+    
+    return {
+      success: result.success,
+      data: result.data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'DNS validation started successfully' : result.error || 'Failed to start DNS validation'
+    };
   }
 
 
@@ -423,82 +297,63 @@ class CampaignService {
     campaignId: string,
     options: { limit?: number; cursor?: number } = {}
   ): Promise<CampaignResultsResponse<unknown[]>> {
-    try {
-      console.log('[CampaignService] Getting generated domains for campaign:', campaignId, options);
-      const response = await campaignsApi.getGeneratedDomains(campaignId, options?.limit, options?.cursor);
-      
-      // Extract data from AxiosResponse
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: Array.isArray(result) ? result : (result as any)?.domains || [],
-        message: 'Generated domains retrieved successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Failed to get generated domains:', error);
-      return {
-        status: 'error',
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    const result = await safeApiCall<unknown[] | { domains?: unknown[] }>(
+      () => campaignsApi.getGeneratedDomains(campaignId, options?.limit, options?.cursor),
+      'Getting generated domains'
+    );
+    
+    const data = Array.isArray(result.data) ? result.data : (result.data as any)?.domains || [];
+    
+    return {
+      success: result.success,
+      data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'Generated domains retrieved successfully' : result.error || 'Failed to get generated domains'
+    };
   }
 
   async getDNSValidationResults(
     campaignId: string,
     options: { limit?: number; cursor?: string } = {}
   ): Promise<CampaignResultsResponse<unknown[]>> {
-    try {
-      console.log('[CampaignService] Getting DNS validation results for campaign:', campaignId, options);
-      const response = await campaignsApi.getDNSValidationResults(campaignId,
+    const result = await safeApiCall<unknown[] | { results?: unknown[] }>(
+      () => campaignsApi.getDNSValidationResults(campaignId,
         options?.cursor ? parseInt(options.cursor, 10) : undefined,
         options?.limit ? options.limit.toString() : undefined
-      );
-      
-      // Extract data from AxiosResponse
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: Array.isArray(result) ? result : (result as any)?.results || [],
-        message: 'DNS validation results retrieved successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Failed to get DNS validation results:', error);
-      return {
-        status: 'error',
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+      ),
+      'Getting DNS validation results'
+    );
+    
+    const data = Array.isArray(result.data) ? result.data : (result.data as any)?.results || [];
+    
+    return {
+      success: result.success,
+      data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'DNS validation results retrieved successfully' : result.error || 'Failed to get DNS validation results'
+    };
   }
 
   async getHTTPKeywordResults(
     campaignId: string,
     options: { limit?: number; cursor?: string } = {}
   ): Promise<CampaignResultsResponse<unknown[]>> {
-    try {
-      console.log('[CampaignService] Getting HTTP keyword results for campaign:', campaignId, options);
-      // TODO: These results methods need to be implemented with correct API client
-      const response = await campaignsApi.getHTTPKeywordResults(campaignId, options?.limit, options?.cursor);
-      
-      // Extract data from AxiosResponse
-      const result = 'data' in response ? response.data : response;
-      
-      return {
-        status: 'success',
-        data: Array.isArray(result) ? result : (result as any)?.results || [],
-        message: 'HTTP keyword results retrieved successfully'
-      };
-    } catch (error) {
-      console.error('[CampaignService] Failed to get HTTP keyword results:', error);
-      return {
-        status: 'error',
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
+    const result = await safeApiCall<unknown[] | { results?: unknown[] }>(
+      () => campaignsApi.getHTTPKeywordResults(campaignId, options?.limit, options?.cursor),
+      'Getting HTTP keyword results'
+    );
+    
+    const data = Array.isArray(result.data) ? result.data : (result.data as any)?.results || [];
+    
+    return {
+      success: result.success,
+      data,
+      error: result.error,
+      requestId: result.requestId,
+      message: result.success ? 'HTTP keyword results retrieved successfully' : result.error || 'Failed to get HTTP keyword results'
+    };
   }
 
   /**

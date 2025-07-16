@@ -155,7 +155,8 @@ func (h *APIHandler) UpdateDNSConfigGin(c *gin.Context) {
 	}
 	log.Printf("API: Updated server default DNS configuration.")
 	// Respond with the DTO that was accepted and converted
-	respondWithJSONGin(c, http.StatusOK, config.ConvertDNSConfigToJSON(updatedDNSConfig))
+	dnsResponse := config.ConvertDNSConfigToJSON(updatedDNSConfig)
+	respondWithJSONGin(c, http.StatusOK, dnsResponse)
 }
 
 // GetHTTPConfigGin retrieves the default HTTP validator configuration.
@@ -206,7 +207,8 @@ func (h *APIHandler) UpdateHTTPConfigGin(c *gin.Context) {
 		return
 	}
 	log.Printf("API: Updated server default HTTP configuration.")
-	respondWithJSONGin(c, http.StatusOK, config.ConvertHTTPConfigToJSON(updatedHTTPConfig))
+	httpResponse := config.ConvertHTTPConfigToJSON(updatedHTTPConfig)
+	respondWithJSONGin(c, http.StatusOK, httpResponse)
 }
 
 // GetLoggingConfigGin retrieves the current logging configuration.
@@ -437,5 +439,6 @@ func (h *APIHandler) UpdateProxyManagerConfigGin(c *gin.Context) {
                respondWithErrorGin(c, http.StatusInternalServerError, "Failed to save proxy manager configuration")
                return
        }
-       respondWithJSONGin(c, http.StatusOK, config.ConvertProxyManagerConfigToJSON(updated))
+       proxyResponse := config.ConvertProxyManagerConfigToJSON(updated)
+       respondWithJSONGin(c, http.StatusOK, proxyResponse)
 }

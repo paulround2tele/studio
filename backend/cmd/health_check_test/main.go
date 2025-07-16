@@ -99,24 +99,32 @@ func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 	dbStatus := h.checkDatabaseStatus()
 
 	if dbStatus.Status != "ok" {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"status":  "not_ready",
-			"reason":  "database_unavailable",
-			"message": dbStatus.Message,
+		c.JSON(http.StatusServiceUnavailable, struct {
+			Status  string `json:"status"`
+			Reason  string `json:"reason"`
+			Message string `json:"message"`
+		}{
+			Status:  "not_ready",
+			Reason:  "database_unavailable",
+			Message: dbStatus.Message,
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status": "ready",
+	c.JSON(http.StatusOK, struct {
+		Status string `json:"status"`
+	}{
+		Status: "ready",
 	})
 }
 
 // HandleLivenessCheck handles GET /health/live requests
 func (h *HealthCheckHandler) HandleLivenessCheck(c *gin.Context) {
 	// For liveness, we just check if the service is running
-	c.JSON(http.StatusOK, gin.H{
-		"status": "alive",
+	c.JSON(http.StatusOK, struct {
+		Status string `json:"status"`
+	}{
+		Status: "alive",
 	})
 }
 

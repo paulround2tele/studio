@@ -1617,15 +1617,6 @@ components:
             type: string
         DNSValidatorConfigJSON:
             type: string
-        DataResponse:
-            properties:
-                data:
-                    type: string
-                message:
-                    type: string
-                success:
-                    type: boolean
-            type: object
         DatabaseOptimizationRecommendation:
             properties:
                 createdAt:
@@ -3969,20 +3960,6 @@ components:
                     type: string
                 status:
                     type: string
-            type: object
-        StandardErrorResponse:
-            properties:
-                error:
-                    type: string
-                message:
-                    type: string
-            type: object
-        StandardSuccessResponse:
-            properties:
-                message:
-                    type: string
-                success:
-                    type: boolean
             type: object
         Status:
             properties:

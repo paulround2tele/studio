@@ -52,7 +52,7 @@ import type { HTTPValidationRequest } from '../models';
 // @ts-ignore
 import type { PatternOffsetRequest } from '../models';
 // @ts-ignore
-import type { StandardSuccessResponse } from '../models';
+import type { StandardAPIResponse } from '../models';
 // @ts-ignore
 import type { UpdateCampaignRequest } from '../models';
 // @ts-ignore
@@ -799,7 +799,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StandardSuccessResponse>> {
+        async getPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StandardAPIResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getPatternOffset(patternOffsetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getPatternOffset']?.[localVarOperationServerIndex]?.url;
@@ -1004,7 +1004,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): AxiosPromise<StandardSuccessResponse> {
+        getPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse> {
             return localVarFp.getPatternOffset(patternOffsetRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1185,7 +1185,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    getPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): AxiosPromise<StandardSuccessResponse>;
+    getPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse>;
 
     /**
      * Retrieve a list of all campaigns with optional filtering and pagination

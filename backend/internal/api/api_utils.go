@@ -2,15 +2,7 @@
 package api
 
 import (
-	//"context"
-	"encoding/json"
-	//"fmt"
-	"log"
-	"net/http"
-	// No longer needed directly by this file after removing validatePersonaIDs
-	// "github.com/fntelecomllc/studio/backend/internal/models"
-	// "github.com/fntelecomllc/studio/backend/internal/store"
-	// "github.com/google/uuid"
+	// All legacy response functions removed - using unified APIResponse format only
 )
 
 // DNScampaignAPIType is the canonical type string for DNS validation campaigns.
@@ -29,29 +21,8 @@ const (
 	SourceTypeFileUpload        = "fileUpload"
 )
 
-// RespondWithError sends a JSON error response (for net/http handlers).
-// DEPRECATED: Use respondWithErrorGin for Gin handlers.
-func RespondWithError(w http.ResponseWriter, code int, message string) {
-	log.Printf("API Error (net/http): status=%d, message=%s", code, message)
-	RespondWithJSON(w, code, map[string]string{"error": message})
-}
-
-// RespondWithJSON sends a JSON response (for net/http handlers).
-// DEPRECATED: Use respondWithJSONGin for Gin handlers.
-func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, err := json.Marshal(payload)
-	if err != nil {
-		log.Printf("Error marshalling JSON response (net/http): %v", err)
-		http.Error(w, "Internal Server Error: Could not marshal JSON response", http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	_, err = w.Write(response)
-	if err != nil {
-		log.Printf("Error writing JSON response body (net/http): %v", err)
-	}
-}
+// Legacy response functions removed - all handlers now use unified APIResponse format
+// via respondWithJSONGin() and respondWithErrorGin()
 
 // Helper to get a Querier (either *sqlx.DB or *sqlx.Tx) from a store instance.
 // This is useful if a utility function needs to perform read-only operations and the store itself is passed.

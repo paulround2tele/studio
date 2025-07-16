@@ -128,7 +128,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
   }, [selectedType]);
 
   // Memoize current operational phase calculations
-  const { currentOperationalPhase: _currentOperationalPhase, currentOperationalPhaseIndex } = useMemo(() => {
+  const { currentOperationalPhase: _currentOperationalPhase, currentOperationalPhaseIndex: _currentOperationalPhaseIndex } = useMemo(() => {
     const currentPhase = (campaign.currentPhase as any) === "setup" ? null : campaign.currentPhase;
     const phaseIndex = currentPhase ? displayPhases.indexOf(currentPhase) : -1;
     return {

@@ -36,7 +36,6 @@ interface CreatePersonaRequest {
 
 type CreateHttpPersonaPayload = CreatePersonaRequest & { personaType: 'http' };
 type CreateDnsPersonaPayload = CreatePersonaRequest & { personaType: 'dns' };
-type PersonaDeleteResponse = { status: 'success' | 'error'; message?: string };
 type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
 import { PlusCircle, Users, Globe, Wifi, Search as SearchIcon, UploadCloud } from 'lucide-react';
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -123,9 +122,11 @@ function PersonasPageContent() {
   const fetchPersonasData = useCallback(async (type: 'http' | 'dns', showLoading = true) => {
     const operation = type === 'http' ? 'personas.fetch_http' : 'personas.fetch_dns';
     if (showLoading) startLoading(operation, `Loading ${type.toUpperCase()} personas`);
+    
     try {
       const response = await getPersonas(type);
-      if (response.status === 'success' && response.data) {
+      
+      if (response.success && response.data) {
         // Handle PersonaListResponse - data is array directly from OpenAPI
         const personasData = Array.isArray(response.data) ? response.data : [];
         // Add missing status property for compatibility
@@ -140,11 +141,19 @@ function PersonasPageContent() {
         if (type === 'http') setHttpPersonas(personasWithStatus as HttpPersona[]);
         else setDnsPersonas(personasWithStatus as DnsPersona[]);
       } else {
-        toast({ title: `Error Loading ${type.toUpperCase()} Personas`, description: response.message || `Failed to load ${type.toUpperCase()} personas.`, variant: "destructive"});
+        toast({
+          title: `Error Loading ${type.toUpperCase()} Personas`,
+          description: response.error || `Failed to load ${type.toUpperCase()} personas.`,
+          variant: "destructive"
+        });
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : `Failed to load ${type.toUpperCase()} personas.`;
-      toast({ title: `Error Loading ${type.toUpperCase()} Personas`, description: errorMessage, variant: "destructive"});
+      toast({
+        title: `Error Loading ${type.toUpperCase()} Personas`,
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       if (showLoading) stopLoading(operation);
     }
@@ -204,12 +213,12 @@ function PersonasPageContent() {
   const handleDeletePersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'delete' }));
     try {
-      const response: PersonaDeleteResponse = await deletePersona(personaId, personaType);
-      if (response.status === 'success') {
-        toast({ title: "Persona Deleted", description: response.message || `Persona successfully deleted.` });
-        fetchPersonasData(personaType, false); 
+      const response = await deletePersona(personaId, personaType);
+      if (response.success) {
+        toast({ title: "Persona Deleted", description: "Persona successfully deleted." });
+        fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Error Deleting Persona", description: response.message || "Failed to delete persona.", variant: "destructive"});
+        toast({ title: "Error Deleting Persona", description: response.error || "Failed to delete persona.", variant: "destructive"});
       }
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred while deleting persona.";
@@ -223,14 +232,14 @@ function PersonasPageContent() {
     setActionLoading(prev => ({ ...prev, [personaId]: 'test' }));
     try {
       const response = await testPersona(personaId, personaType);
-      if (response.status === 'success') {
+      if (response.success) {
         // PersonaTestResult response data is directly available
         const testData = response.data;
         const personaName = testData?.personaId || 'Persona';
         toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Persona Test Failed", description: response.message || "Could not complete persona test.", variant: "destructive"});
+        toast({ title: "Persona Test Failed", description: response.error || "Could not complete persona test.", variant: "destructive"});
         fetchPersonasData(personaType, false); // Re-fetch even on failure to update potential status changes
       }
     } catch (error: unknown) {
@@ -250,11 +259,11 @@ function PersonasPageContent() {
       // Map status to isEnabled field which is what the backend accepts
       const isEnabled = newStatus === 'Active';
       const response = await updatePersona(personaId, { isEnabled } as any, personaType);
-      if (response.status === 'success' && response.data) {
+      if (response.success && response.data) {
         toast({ title: `Persona Status Updated`, description: `${response.data.name} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Error Updating Status", description: response.message || "Could not update persona status.", variant: "destructive"});
+        toast({ title: "Error Updating Status", description: response.error || "Could not update persona status.", variant: "destructive"});
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update persona status";
@@ -348,11 +357,11 @@ function PersonasPageContent() {
                 };
             }
             const response = await createPersona(createPayload as any);
-            if (response.status === 'success') {
+            if (response.success) {
               importedCount++;
             } else {
               errorCount++;
-              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: response.message || "Failed to import.", variant: "destructive" });
+              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: response.error || "Failed to import.", variant: "destructive" });
             }
         }
         if (importedCount > 0) {

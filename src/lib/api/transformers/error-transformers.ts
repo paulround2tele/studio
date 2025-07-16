@@ -61,13 +61,37 @@ export function transformErrorResponse(
     if (error && typeof error === 'object') {
         const err = error as Record<string, unknown>;
         
-        // Handle axios error response
+        // Handle unified backend envelope format: { success: false, error: string, requestId: string }
+        if ('success' in err && err.success === false && 'error' in err && typeof err.error === 'string') {
+            return {
+                code: extractErrorCode(err.error) || 'ERROR',
+                message: err.error,
+                timestamp,
+                statusCode,
+                path
+            };
+        }
+        
+        // Handle axios error response (check for unified envelope inside axios response)
         if (err.response && typeof err.response === 'object') {
             const response = err.response as Record<string, unknown>;
+            // Check if axios response contains unified envelope error format
+            if (response.data && typeof response.data === 'object') {
+                const responseData = response.data as Record<string, unknown>;
+                if ('success' in responseData && responseData.success === false && 'error' in responseData && typeof responseData.error === 'string') {
+                    return {
+                        code: extractErrorCode(responseData.error) || 'ERROR',
+                        message: responseData.error,
+                        timestamp,
+                        statusCode: response.status as number || statusCode,
+                        path
+                    };
+                }
+            }
             return transformErrorResponse(response.data, response.status as number, path);
         }
         
-        // Handle backend error format
+        // Handle legacy backend error format (for backwards compatibility)
         if ('message' in err && typeof err.message === 'string') {
             const fieldErrors: Record<string, string> = {};
             

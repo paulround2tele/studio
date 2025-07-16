@@ -22,6 +22,7 @@ import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
 import { useAuth } from '@/contexts/AuthContext';
 import type { components as _components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
+import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 import { cn } from '@/lib/utils';
 
 // Types
@@ -280,9 +281,9 @@ export const PhaseConfigurationPanel: React.FC<PhaseConfigurationPanelProps> = (
       const updateResult = await campaignService.updateCampaign(sourceCampaign.id, updatePayload as any);
       console.log('[DEBUG] campaignService.updateCampaign returned:', updateResult);
       
-      if (updateResult.status === 'error') {
-        console.log('[DEBUG] Update result indicates error:', updateResult.message);
-        throw new Error(updateResult.message || 'Failed to update campaign for phase transition');
+      if (!isResponseSuccess(updateResult)) {
+        console.log('[DEBUG] Update result indicates error:', updateResult.error);
+        throw new Error(updateResult.error || 'Failed to update campaign for phase transition');
       }
       
       // Fix: Extract the actual campaign data from the nested response

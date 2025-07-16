@@ -134,7 +134,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
         response = await createProxy(payload);
       }
 
-      if (response.status === 'success' && response.data) {
+      if (response.success === true && response.data) {
         onSaveSuccess();
       } else {
         toast({ title: `Error ${isEditing ? "Updating" : "Creating"} Proxy`, description: response.message, variant: "destructive" });

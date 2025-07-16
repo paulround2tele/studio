@@ -32,7 +32,7 @@ import type { ProxyPoolMembershipResponse } from '../models';
 // @ts-ignore
 import type { ProxyPoolRequest } from '../models';
 // @ts-ignore
-import type { StandardSuccessResponse } from '../models';
+import type { StandardAPIResponse } from '../models';
 // @ts-ignore
 import type { StreamExtractKeywords200Response } from '../models';
 /**
@@ -303,7 +303,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StandardSuccessResponse>> {
+        async deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StandardAPIResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteProxyPool(poolId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.deleteProxyPool']?.[localVarOperationServerIndex]?.url;
@@ -387,7 +387,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<StandardSuccessResponse> {
+        deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse> {
             return localVarFp.deleteProxyPool(poolId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -459,7 +459,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<StandardSuccessResponse>;
+    deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse>;
 
     /**
      * Retrieve all proxy pools with their associated proxies

@@ -17,7 +17,6 @@ import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCl
 import type { components } from '@/lib/api-client/types';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message: string };
-type ProxyModelDeleteResponse = { status: 'success' | 'error'; message?: string };
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
 import type { ProxyModelCreationPayload } from '@/lib/services/proxyService.production';
@@ -77,12 +76,12 @@ function ProxiesPageContent() {
     if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading proxies");
     try {
       const response = await getProxies();
-      if (response.status === 'success' && response.data) {
+      if (response.success && response.data) {
         // Ensure data is always an array
         const proxiesArray = Array.isArray(response.data) ? response.data : [];
         setProxies(proxiesArray.map(convertToComponentProxy));
       } else {
-        toast({ title: "Error Loading Proxies", description: response.message || "Failed to load proxies.", variant: "destructive" });
+        toast({ title: "Error Loading Proxies", description: response.error || "Failed to load proxies.", variant: "destructive" });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -194,12 +193,12 @@ function ProxiesPageContent() {
         toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
         return;
       }
-      const response: ProxyModelDeleteResponse = await deleteProxy(proxyToDelete.id);
-      if (response.status === 'success') {
-        toast({ title: "Proxy Deleted", description: response.message || "Proxy deleted successfully" });
+      const response = await deleteProxy(proxyToDelete.id);
+      if (response.success) {
+        toast({ title: "Proxy Deleted", description: "Proxy deleted successfully" });
         setProxies(prev => prev.filter(p => p.id !== proxyToDelete!.id));
       } else {
-        toast({ title: "Error Deleting Proxy", description: response.message, variant: "destructive" });
+        toast({ title: "Error Deleting Proxy", description: response.error, variant: "destructive" });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -215,12 +214,12 @@ function ProxiesPageContent() {
     setActionLoading(prev => ({ ...prev, [`test-${proxyId}`]: true }));
     try {
       const response = await testProxy(proxyId);
-      if (response.status === 'success' && response.data) {
+      if (response.success && response.data) {
         const proxyData = response.data as Proxy;
         toast({ title: "Proxy Test Completed", description: `Status: ${proxyData.lastStatus || 'Unknown'}` });
         setProxies(prev => prev.map(p => p.id === proxyId ? proxyData : p));
       } else {
-        toast({ title: "Proxy Test Failed", description: response.message, variant: "destructive" });
+        toast({ title: "Proxy Test Failed", description: response.error, variant: "destructive" });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -239,11 +238,11 @@ function ProxiesPageContent() {
         return;
       }
       const response = await updateProxy(proxy.id, payload);
-      if (response.status === 'success' && response.data) {
+      if (response.success && response.data) {
         toast({ title: `Proxy ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`, description: `Proxy ${proxy.address} is now ${newStatus.toLowerCase()}.`});
         setProxies(prev => prev.map(p => p.id === proxy.id ? response.data! : p));
       } else {
-        toast({ title: "Error Updating Proxy Status", description: response.message, variant: "destructive" });
+        toast({ title: "Error Updating Proxy Status", description: response.error, variant: "destructive" });
       }
     } catch (err: unknown) {
        const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -312,15 +311,15 @@ function ProxiesPageContent() {
 
           try {
             const response = await createProxy(payload);
-            if (response.status === 'success') {
+            if (response.success) {
               importedCount++;
             } else {
               errorCount++;
-              if (response.message?.includes('already exists')) {
+              if (response.error?.includes('already exists')) {
                 // Skip duplicate error message for cleaner UI
                 continue;
               }
-              console.warn(`Failed to import proxy ${ip}:${port}:`, response.message);
+              console.warn(`Failed to import proxy ${ip}:${port}:`, response.error);
             }
           } catch (error) {
             errorCount++;

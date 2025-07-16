@@ -50,7 +50,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       ]);
 
       // Process HTTP personas result
-      if (httpResult.status === 'fulfilled' && httpResult.value.status === 'success' && httpResult.value.data) {
+      if (httpResult.status === 'fulfilled' && httpResult.value.success === true && httpResult.value.data) {
         setHttpPersonas(httpResult.value.data as HttpPersona[]);
       } else {
         console.warn('[useCampaignFormData] Failed to load HTTP personas:', 
@@ -58,7 +58,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       }
 
       // Process DNS personas result
-      if (dnsResult.status === 'fulfilled' && dnsResult.value.status === 'success' && dnsResult.value.data) {
+      if (dnsResult.status === 'fulfilled' && dnsResult.value.success === true && dnsResult.value.data) {
         setDnsPersonas(dnsResult.value.data as DnsPersona[]);
       } else {
         console.warn('[useCampaignFormData] Failed to load DNS personas:',
@@ -66,7 +66,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       }
 
       // Process proxies result
-      if (proxiesResult.status === 'fulfilled' && proxiesResult.value.status === 'success' && proxiesResult.value.data) {
+      if (proxiesResult.status === 'fulfilled' && proxiesResult.value.success === true && proxiesResult.value.data) {
         setProxies(proxiesResult.value.data as Proxy[]);
       } else {
         console.warn('[useCampaignFormData] Failed to load proxies:',

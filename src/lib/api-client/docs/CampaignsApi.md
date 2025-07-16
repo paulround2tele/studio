@@ -466,7 +466,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getPatternOffset**
-> StandardSuccessResponse getPatternOffset(patternOffsetRequest)
+> StandardAPIResponse getPatternOffset(patternOffsetRequest)
 
 Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
 
@@ -498,7 +498,7 @@ const { status, data } = await apiInstance.getPatternOffset(
 
 ### Return type
 
-**StandardSuccessResponse**
+**StandardAPIResponse**
 
 ### Authorization
 

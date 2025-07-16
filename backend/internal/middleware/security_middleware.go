@@ -75,9 +75,7 @@ func (m *SecurityMiddleware) SessionProtection() gin.HandlerFunc {
 		// Get security context (must be authenticated)
 		_, exists = c.Get("security_context")
 		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authentication required",
-			})
+			respondWithErrorMiddleware(c, http.StatusUnauthorized, ErrorCodeUnauthorized, "Authentication required")
 			return
 		}
 
@@ -85,9 +83,7 @@ func (m *SecurityMiddleware) SessionProtection() gin.HandlerFunc {
 		// This provides session-based CSRF protection by validating proper AJAX requests
 		requestedWith := c.GetHeader("X-Requested-With")
 		if requestedWith == "" {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "X-Requested-With header required for session-based protection",
-			})
+			respondWithErrorMiddleware(c, http.StatusForbidden, ErrorCodeForbidden, "X-Requested-With header required for session-based protection")
 			return
 		}
 
@@ -195,9 +191,7 @@ func (m *SecurityMiddleware) AuditLogging() gin.HandlerFunc {
 func (m *SecurityMiddleware) RequestSizeLimit(maxSize int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.ContentLength > maxSize {
-			c.AbortWithStatusJSON(http.StatusRequestEntityTooLarge, gin.H{
-				"error": "Request too large",
-			})
+			respondWithErrorMiddleware(c, http.StatusRequestEntityTooLarge, ErrorCodeRequestTooLarge, "Request too large")
 			return
 		}
 
@@ -221,9 +215,7 @@ func (m *SecurityMiddleware) IPWhitelist(allowedIPs []string) gin.HandlerFunc {
 		}
 
 		if !allowed {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Access denied",
-			})
+			respondWithErrorMiddleware(c, http.StatusForbidden, ErrorCodeForbidden, "Access denied")
 			return
 		}
 

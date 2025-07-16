@@ -6,6 +6,7 @@ import type { components } from '@/lib/api-client/types';
 
 // Create configured FeatureFlagsApi instance
 import { getApiConfig } from '../config/environment';
+import { randomUUID } from 'crypto';
 
 const config = new Configuration({
   basePath: getApiConfig().baseUrl
@@ -37,15 +38,29 @@ class ConfigService {
   async getFeatureFlags(): Promise<ConfigResponse<FeatureFlags>> {
     try {
       const response = await configApi.getFeatureFlags();
+      // OpenAPI client returns the unified APIResponse in response.data
+      const apiResponse = response.data as any;
+      
+      if (apiResponse.success === false) {
+        return {
+          success: false,
+          error: apiResponse.error || 'Unknown error',
+          requestId: apiResponse.requestId || randomUUID()
+        };
+      }
+      
       return {
-        status: 'success',
-        data: response.data as FeatureFlags,
-        message: 'Feature flags retrieved successfully'
+        success: true,
+        data: apiResponse.data as FeatureFlags,
+        error: null,
+        requestId: apiResponse.requestId || randomUUID(),
+        message: apiResponse.message
       };
     } catch (error) {
       return {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId: randomUUID()
       };
     }
   }
@@ -53,15 +68,29 @@ class ConfigService {
   async updateFeatureFlags(flags: FeatureFlags): Promise<ConfigResponse<FeatureFlags>> {
     try {
       const response = await configApi.updateFeatureFlags(flags);
+      // OpenAPI client returns the unified APIResponse in response.data
+      const apiResponse = response.data as any;
+      
+      if (apiResponse.success === false) {
+        return {
+          success: false,
+          error: apiResponse.error || 'Unknown error',
+          requestId: apiResponse.requestId || randomUUID()
+        };
+      }
+      
       return {
-        status: 'success',
-        data: response.data as FeatureFlags,
-        message: 'Feature flags updated successfully'
+        success: true,
+        data: apiResponse.data as FeatureFlags,
+        error: null,
+        requestId: apiResponse.requestId || randomUUID(),
+        message: apiResponse.message
       };
     } catch (error) {
       return {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        requestId: randomUUID()
       };
     }
   }
@@ -69,7 +98,7 @@ class ConfigService {
   async isFeatureEnabled(feature: keyof FeatureFlags): Promise<boolean> {
     try {
       const response = await this.getFeatureFlags();
-      if (response.status === 'success' && response.data) {
+      if (response.success === true && response.data) {
         return Boolean(response.data[feature]);
       }
       return false;

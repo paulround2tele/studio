@@ -506,7 +506,11 @@ func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 	websocket.BroadcastProxyDeleted(proxyID.String())
 	log.Printf("Proxy deleted and broadcasted: %s", proxyID)
 
-	c.Status(http.StatusNoContent)
+	respondWithJSONGin(c, http.StatusOK, DeletionResponse{
+		Success: true,
+		Message: "Proxy deleted successfully",
+		ID:      proxyID.String(),
+	})
 }
 
 // GetProxyStatusesGin gets proxy statuses.
@@ -592,7 +596,9 @@ func (h *APIHandler) ForceCheckAllProxiesGin(c *gin.Context) {
 		h.ProxyMgr.ForceCheckProxiesAsync(nil)
 		message = "Health check process initiated for all managed proxies. Check status endpoint."
 	}
-	respondWithJSONGin(c, http.StatusAccepted, map[string]string{"message": message})
+	respondWithJSONGin(c, http.StatusAccepted, SuccessMessageResponse{
+		Message: message,
+	})
 }
 
 // TestProxyGin tests a proxy.

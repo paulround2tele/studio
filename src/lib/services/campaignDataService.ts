@@ -122,7 +122,7 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
   try {
     // Get campaign summary via service layer
     const campaignResponse = await campaignService.getCampaignById(campaignId);
-    if (campaignResponse.status !== 'success' || !campaignResponse.data) {
+    if (campaignResponse.success !== true || !campaignResponse.data) {
       throw new Error(`Failed to fetch campaign: ${campaignResponse.message}`);
     }
     const campaign = campaignResponse.data as CampaignViewModel;
@@ -145,7 +145,7 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
         
         try {
           const retryResponse = await campaignService.getCampaignById(campaignId);
-          if (retryResponse.status === 'success' && retryResponse.data?.campaignType) {
+          if (retryResponse.success === true && retryResponse.data?.campaignType) {
             console.log(`[campaignDataService] Retry ${attempt} successful, campaign type: ${retryResponse.data.campaignType}`);
             // Update campaign with retry result and continue processing
             Object.assign(campaign, retryResponse.data);
@@ -324,7 +324,7 @@ export const getRichCampaignData = async (campaignId: string): Promise<RichCampa
     // Fallback to campaign summary with empty arrays
     try {
       const campaignResponse = await campaignService.getCampaignById(campaignId);
-      if (campaignResponse.status === 'success' && campaignResponse.data) {
+      if (campaignResponse.success === true && campaignResponse.data) {
         return {
           ...campaignResponse.data,
           domains: [],

@@ -1,0 +1,47 @@
+{
+  "summary": {
+    "totalApiCalls": 2,
+    "totalHealthChecks": 0,
+    "totalRerenders": 0,
+    "totalErrors": 0,
+    "totalWarnings": 0,
+    "avgApiResponseTime": 152
+  },
+  "b2bPerformanceIssues": {
+    "slowApiCalls": [],
+    "excessiveHealthChecks": false,
+    "performanceWarnings": [],
+    "criticalErrors": [],
+    "healthCheckFrequency": "0 checks detected"
+  },
+  "recommendations": [],
+  "detailedMetrics": {
+    "healthChecks": [],
+    "apiCalls": [
+      {
+        "timestamp": "2025-07-16T14:37:33.240Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/auth/login",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 145,
+        "size": "314"
+      },
+      {
+        "timestamp": "2025-07-16T14:37:53.311Z",
+        "type": "api_response",
+        "url": "http://localhost:8080/api/v2/auth/login",
+        "status": 200,
+        "statusText": "OK",
+        "duration": 158,
+        "size": "314"
+      }
+    ],
+    "rerenders": [],
+    "pageLoads": [],
+    "networkRequests": [],
+    "errors": [],
+    "warnings": [],
+    "memoryUsage": []
+  }
+}

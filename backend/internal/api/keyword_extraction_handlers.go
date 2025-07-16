@@ -186,7 +186,8 @@ func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 
 sendResponseGin:
 	log.Printf("BatchExtractKeywordsGin: Completed processing for %d items.", len(req.Items))
-	respondWithJSONGin(c, http.StatusOK, BatchKeywordExtractionResponse{Results: results})
+	batchResponse := BatchKeywordExtractionResponse{Results: results}
+	respondWithJSONGin(c, http.StatusOK, batchResponse)
 }
 
 // StreamExtractKeywordsGin performs streaming keyword extraction on a single URL.
@@ -341,20 +342,8 @@ func streamDoneEventGin(c *gin.Context, flusher http.Flusher, message string) {
 		return
 	default:
 	}
-	c.SSEvent("done", gin.H{"message": message})
+	c.SSEvent("done", SuccessMessageResponse{Message: message})
 	flusher.Flush()
 }
 
-/*
-// streamErrorEventGin sends an error event for SSE using Gin. // This is now in handler_utils_gin.go
-func streamErrorEventGin(c *gin.Context, flusher http.Flusher, errorMessage string) {
-	select {
-	case <-c.Writer.CloseNotify():
-		log.Printf("streamErrorEventGin: Client disconnected before sending error: %s", errorMessage)
-		return
-	default:
-	}
-	c.SSEvent("error", gin.H{"error": errorMessage})
-	flusher.Flush()
-}
-*/
+// streamErrorEventGin is now implemented in handler_utils_gin.go with proper structured responses

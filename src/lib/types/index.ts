@@ -35,12 +35,14 @@ export type {
   DomainSourceSelectionMode
 } from './openapi-extensions';
 
-// Unified API Response wrapper for all services
+// Unified API Response wrapper for all services - aligned with backend envelope format
 export interface ApiResponse<T = unknown> {
-  status: 'success' | 'error';
-  data?: T;
-  error?: string;
-  message?: string;
+  success: boolean;           // Always boolean, not string
+  data?: T;                   // Actual response data
+  error: string | null;       // Error message if success=false
+  metadata?: object;          // Optional metadata
+  requestId: string;          // UUID for request tracking
+  message?: string;           // Keep for backwards compatibility during transition
 }
 
 // Legacy type aliases for backwards compatibility - with proper null handling

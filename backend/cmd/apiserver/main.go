@@ -348,6 +348,10 @@ func main() {
 		authRoutesV2.POST("/login", rateLimitMiddleware.LoginRateLimit(), authHandler.Login)
 		authRoutesV2.POST("/logout", authHandler.Logout)
 		authRoutesV2.POST("/refresh", authHandler.RefreshSession)
+		
+		// Protected auth routes - require session authentication
+		authRoutesV2.GET("/me", authMiddleware.SessionAuth(), authHandler.Me)
+		authRoutesV2.POST("/change-password", authMiddleware.SessionAuth(), authHandler.ChangePassword)
 	}
 	log.Println("Registered authentication routes under /api/v2/auth")
 	
@@ -377,11 +381,6 @@ func main() {
 	apiV2.Use(authMiddleware.SessionAuth())
 	apiV2.Use(securityMiddleware.SessionProtection())
 	{
-		// User routes (authenticated) - aligned with OpenAPI spec
-		apiV2.GET("/me", authHandler.Me)
-		apiV2.POST("/change-password", authHandler.ChangePassword)
-		log.Println("Registered authenticated user routes: /api/v2/me, /api/v2/change-password")
-
 		// Persona routes (session auth only)
 		personaGroup := apiV2.Group("/personas")
 		{
@@ -466,11 +465,40 @@ func main() {
 		// Temporary test endpoint for WebSocket broadcast
 		apiV2.GET("/broadcast-test", func(c *gin.Context) {
 			testMessage := "WebSocket test broadcast message from server! Time: " + time.Now().String()
+			requestID := uuid.New().String()
 			if b := websocket.GetBroadcaster(); b != nil {
 				b.BroadcastMessage([]byte(testMessage))
-				c.JSON(http.StatusOK, gin.H{"message": "Test message broadcasted", "content": testMessage})
+				response := struct {
+					Success   bool        `json:"success"`
+					Data      interface{} `json:"data"`
+					Error     interface{} `json:"error"`
+					RequestID string      `json:"requestId"`
+				}{
+					Success: true,
+					Data: struct {
+						Message string `json:"message"`
+						Content string `json:"content"`
+					}{
+						Message: "Test message broadcasted",
+						Content: testMessage,
+					},
+					Error:     nil,
+					RequestID: requestID,
+				}
+				c.JSON(http.StatusOK, response)
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Broadcaster not available"})
+				response := struct {
+					Success   bool        `json:"success"`
+					Data      interface{} `json:"data"`
+					Error     interface{} `json:"error"`
+					RequestID string      `json:"requestId"`
+				}{
+					Success:   false,
+					Data:      nil,
+					Error:     "Broadcaster not available",
+					RequestID: requestID,
+				}
+				c.JSON(http.StatusInternalServerError, response)
 			}
 		})
 		log.Println("Registered WebSocket test broadcast route under /api/v2/broadcast-test.")
@@ -479,6 +507,7 @@ func main() {
 		apiV2.GET("/test-campaign-ws/:campaignId", func(c *gin.Context) {
 			campaignID := c.Param("campaignId")
 			messageType := c.DefaultQuery("type", "domain_generated")
+			requestID := uuid.New().String()
 			
 			if b := websocket.GetBroadcaster(); b != nil {
 				var message websocket.WebSocketMessage
@@ -492,19 +521,57 @@ func main() {
 					dnsRecords := map[string]interface{}{"A": []string{"1.2.3.4"}}
 					message = websocket.CreateDNSValidationResultMessage(campaignID, "test-domain-id", "test.example.com", "resolved", 1, dnsRecords)
 				default:
-					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message type"})
+					response := struct {
+						Success   bool        `json:"success"`
+						Data      interface{} `json:"data"`
+						Error     interface{} `json:"error"`
+						RequestID string      `json:"requestId"`
+					}{
+						Success:   false,
+						Data:      nil,
+						Error:     "Invalid message type",
+						RequestID: requestID,
+					}
+					c.JSON(http.StatusBadRequest, response)
 					return
 				}
 				
 				b.BroadcastToCampaign(campaignID, message)
-				c.JSON(http.StatusOK, gin.H{
-					"message": "Campaign message sent",
-					"campaignId": campaignID,
-					"messageType": messageType,
-					"messageId": message.ID,
-				})
+				response := struct {
+					Success   bool        `json:"success"`
+					Data      interface{} `json:"data"`
+					Error     interface{} `json:"error"`
+					RequestID string      `json:"requestId"`
+				}{
+					Success: true,
+					Data: struct {
+						Message     string `json:"message"`
+						CampaignId  string `json:"campaignId"`
+						MessageType string `json:"messageType"`
+						MessageId   string `json:"messageId"`
+					}{
+						Message:     "Campaign message sent",
+						CampaignId:  campaignID,
+						MessageType: messageType,
+						MessageId:   message.ID,
+					},
+					Error:     nil,
+					RequestID: requestID,
+				}
+				c.JSON(http.StatusOK, response)
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Broadcaster not available"})
+				response := struct {
+					Success   bool        `json:"success"`
+					Data      interface{} `json:"data"`
+					Error     interface{} `json:"error"`
+					RequestID string      `json:"requestId"`
+				}{
+					Success:   false,
+					Data:      nil,
+					Error:     "Broadcaster not available",
+					RequestID: requestID,
+				}
+				c.JSON(http.StatusInternalServerError, response)
 			}
 		})
 		log.Println("Registered WebSocket campaign test route under /api/v2/test-campaign-ws/:campaignId.")

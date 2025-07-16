@@ -163,11 +163,21 @@ func streamErrorEventGin(c *gin.Context, flusher http.Flusher, errorMessage stri
 	}
 
 	requestID := getRequestID(c)
-	errorEvent := map[string]interface{}{
-		"error": map[string]interface{}{
-			"message":    errorMessage,
-			"timestamp":  time.Now().UTC().Format(time.RFC3339),
-			"request_id": requestID,
+	errorEvent := struct {
+		Error struct {
+			Message   string `json:"message"`
+			Timestamp string `json:"timestamp"`
+			RequestID string `json:"request_id"`
+		} `json:"error"`
+	}{
+		Error: struct {
+			Message   string `json:"message"`
+			Timestamp string `json:"timestamp"`
+			RequestID string `json:"request_id"`
+		}{
+			Message:   errorMessage,
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
+			RequestID: requestID,
 		},
 	}
 

@@ -48,7 +48,7 @@ function EditPersonaPageContent() {
       setError(null); 
       try {
         const response: PersonaDetailResponse = await getPersonaById(personaId, type);
-        if (response.status === 'success' && response.data) {
+        if (response.success === true && response.data) {
           if (response.data.personaType !== type) {
             setError(`Mismatch: Persona ID '${personaId}' found, but it is a '${response.data.personaType}' persona, not '${type}'.`);
             setPersona(null);
@@ -57,7 +57,7 @@ function EditPersonaPageContent() {
             setPersona(response.data);
           }
         } else {
-          setError(response.message || "Persona not found.");
+          setError(response.error || "Persona not found.");
           setPersona(null);
           toast({ title: "Error Loading Persona", description: response.message || "Persona not found.", variant: "destructive" });
         }

@@ -512,11 +512,12 @@ func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 		return
 	}
 
-	respondWithJSONGin(c, http.StatusOK, CampaignStartResponse{
+	startResponse := CampaignStartResponse{
 		Message:    "Campaign queued for start",
 		CampaignID: campaignID.String(),
 		QueuedAt:   time.Now().Format(time.RFC3339),
-	})
+	}
+	respondWithJSONGin(c, http.StatusOK, startResponse)
 }
 
 // pauseCampaign pauses a campaign.
@@ -693,13 +694,14 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 		deletedIDStrings[i] = id.String()
 	}
 
-	respondWithJSONGin(c, http.StatusOK, BulkDeleteResult{
+	bulkResult := BulkDeleteResult{
 		Message:             "Bulk deletion completed",
 		TotalRequested:      len(campaignUUIDs),
 		SuccessfullyDeleted: result.SuccessfullyDeleted,
 		FailedDeletions:     result.FailedDeletions,
 		DeletedCampaignIDs:  deletedIDStrings,
-	})
+	}
+	respondWithJSONGin(c, http.StatusOK, bulkResult)
 }
 
 // getGeneratedDomains gets generated domains for a campaign.
@@ -984,12 +986,13 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 
 	log.Printf("SUCCESS [DNS Validation]: In-place DNS validation started successfully for campaign %s", campaignID)
 
-	respondWithJSONGin(c, http.StatusOK, DNSValidationStartResponse{
+	dnsResponse := DNSValidationStartResponse{
 		Message:          "In-place DNS validation started successfully",
 		CampaignID:       campaignID.String(),
 		ValidationJobID:  "validation_in_progress", // Use status as job ID for now
 		DomainsToProcess: 0, // Will be populated from service layer
-	})
+	}
+	respondWithJSONGin(c, http.StatusOK, dnsResponse)
 }
 
 // validateHTTPForCampaign triggers domain-centric HTTP keyword validation for all domains in a campaign.
@@ -1118,12 +1121,13 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 
 	log.Printf("SUCCESS [HTTP Validation]: HTTP keyword validation campaign created successfully for source %s, new campaign ID: %s", campaignID, httpCampaign.ID)
 
-	respondWithJSONGin(c, http.StatusOK, HTTPValidationStartResponse{
+	httpResponse := HTTPValidationStartResponse{
 		Message:         "HTTP keyword validation started successfully",
 		CampaignID:      httpCampaign.ID.String(),
 		ValidationJobID: campaignID.String(), // Source campaign ID as job reference
 		DomainsToTest:   0, // Will be populated from service layer
-	})
+	}
+	respondWithJSONGin(c, http.StatusOK, httpResponse)
 }
 
 // Helper function to dereference int pointers with defaults
@@ -1193,12 +1197,13 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 		message = fmt.Sprintf("Campaign %s successful", operationName)
 	}
 
-	respondWithJSONGin(c, http.StatusOK, CampaignOperationResponse{
+	operationResponse := CampaignOperationResponse{
 		Success:    true,
 		Message:    message,
 		CampaignID: campaignID.String(),
 		Status:     "completed",
-	})
+	}
+	respondWithJSONGin(c, http.StatusOK, operationResponse)
 }
 
 // getPatternOffset handles POST /campaigns/domain-generation/pattern-offset
@@ -1218,7 +1223,7 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	var req PatternOffsetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid request: %v", err)})
+		respondWithErrorGin(c, http.StatusBadRequest, fmt.Sprintf("Invalid request: %v", err))
 		return
 	}
 
@@ -1239,7 +1244,7 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	hashResult, err := domainexpert.GenerateDomainGenerationConfigHash(params)
 	if err != nil {
 		log.Printf("ERROR [Pattern Offset]: Failed to generate config hash for pattern %+v: %v", req, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate pattern hash"})
+		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to generate pattern hash")
 		return
 	}
 
@@ -1252,7 +1257,7 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	if err != nil {
 		if err != store.ErrNotFound {
 			log.Printf("ERROR [Pattern Offset]: Database error getting config state for hash %s: %v", hashResult.HashString, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get pattern offset"})
+			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to get pattern offset")
 			return
 		}
 		// If no state exists yet, offset remains 0
@@ -1263,9 +1268,9 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	}
 
 	// Return only the currentOffset as expected by frontend
-	response := gin.H{
+	response := map[string]int64{
 		"currentOffset": currentOffset,
 	}
 
-	c.JSON(http.StatusOK, response)
+	respondWithJSONGin(c, http.StatusOK, response)
 }

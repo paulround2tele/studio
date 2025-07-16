@@ -2936,20 +2936,6 @@ ul.nav-tabs {
     }
   }
 };
-    defs["DataResponse"] = {
-  "type" : "object",
-  "properties" : {
-    "data" : {
-      "type" : "string"
-    },
-    "message" : {
-      "type" : "string"
-    },
-    "success" : {
-      "type" : "boolean"
-    }
-  }
-};
     defs["DatabaseOptimizationRecommendation"] = {
   "type" : "object",
   "properties" : {
@@ -6040,28 +6026,6 @@ ul.nav-tabs {
     },
     "status" : {
       "type" : "string"
-    }
-  }
-};
-    defs["StandardErrorResponse"] = {
-  "type" : "object",
-  "properties" : {
-    "error" : {
-      "type" : "string"
-    },
-    "message" : {
-      "type" : "string"
-    }
-  }
-};
-    defs["StandardSuccessResponse"] = {
-  "type" : "object",
-  "properties" : {
-    "message" : {
-      "type" : "string"
-    },
-    "success" : {
-      "type" : "boolean"
     }
   }
 };
@@ -14117,7 +14081,7 @@ public class CampaignsApiExample {
         PatternOffsetRequest patternOffsetRequest = ; // PatternOffsetRequest | 
 
         try {
-            StandardSuccessResponse result = apiInstance.getPatternOffset(patternOffsetRequest);
+            StandardAPIResponse result = apiInstance.getPatternOffset(patternOffsetRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling CampaignsApi#getPatternOffset");
@@ -14154,7 +14118,7 @@ public class CampaignsApiExample {
         PatternOffsetRequest patternOffsetRequest = ; // PatternOffsetRequest | 
 
         try {
-            StandardSuccessResponse result = apiInstance.getPatternOffset(patternOffsetRequest);
+            StandardAPIResponse result = apiInstance.getPatternOffset(patternOffsetRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling CampaignsApi#getPatternOffset");
@@ -14176,7 +14140,7 @@ PatternOffsetRequest *patternOffsetRequest = ; //
 
 // Get domain generation pattern offset
 [apiInstance getPatternOffsetWith:patternOffsetRequest
-              completionHandler: ^(StandardSuccessResponse output, NSError* error) {
+              completionHandler: ^(StandardAPIResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -14228,7 +14192,7 @@ namespace Example
 
             try {
                 // Get domain generation pattern offset
-                StandardSuccessResponse result = apiInstance.getPatternOffset(patternOffsetRequest);
+                StandardAPIResponse result = apiInstance.getPatternOffset(patternOffsetRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling CampaignsApi.getPatternOffset: " + e.Message );
@@ -14404,7 +14368,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/StandardSuccessResponse"
+        "$ref" : "#/components/schemas/StandardAPIResponse"
       }
     }
   }
@@ -35391,7 +35355,7 @@ public class ProxyPoolsApiExample {
         String poolId = poolId_example; // String | Proxy pool ID
 
         try {
-            StandardSuccessResponse result = apiInstance.deleteProxyPool(poolId);
+            StandardAPIResponse result = apiInstance.deleteProxyPool(poolId);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#deleteProxyPool");
@@ -35428,7 +35392,7 @@ public class ProxyPoolsApiExample {
         String poolId = poolId_example; // String | Proxy pool ID
 
         try {
-            StandardSuccessResponse result = apiInstance.deleteProxyPool(poolId);
+            StandardAPIResponse result = apiInstance.deleteProxyPool(poolId);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#deleteProxyPool");
@@ -35450,7 +35414,7 @@ String *poolId = poolId_example; // Proxy pool ID (default to null)
 
 // Delete proxy pool
 [apiInstance deleteProxyPoolWith:poolId
-              completionHandler: ^(StandardSuccessResponse output, NSError* error) {
+              completionHandler: ^(StandardAPIResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -35502,7 +35466,7 @@ namespace Example
 
             try {
                 // Delete proxy pool
-                StandardSuccessResponse result = apiInstance.deleteProxyPool(poolId);
+                StandardAPIResponse result = apiInstance.deleteProxyPool(poolId);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxyPoolsApi.deleteProxyPool: " + e.Message );
@@ -35660,7 +35624,7 @@ Proxy pool ID
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/StandardSuccessResponse"
+        "$ref" : "#/components/schemas/StandardAPIResponse"
       }
     }
   }

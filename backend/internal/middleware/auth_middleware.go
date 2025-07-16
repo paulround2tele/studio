@@ -123,10 +123,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 				},
 			)
 
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Invalid request origin",
-				"code":  "INVALID_ORIGIN",
-			})
+			respondWithErrorMiddleware(c, http.StatusForbidden, ErrorCodeForbidden, "Invalid request origin")
 			return
 		}
 
@@ -193,10 +190,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 				},
 			)
 
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authentication required",
-				"code":  "AUTH_REQUIRED",
-			})
+			respondWithErrorMiddleware(c, http.StatusUnauthorized, ErrorCodeUnauthorized, "Authentication required")
 			return
 		}
 
@@ -319,10 +313,16 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 				},
 			)
 
-			c.AbortWithStatusJSON(statusCode, gin.H{
-				"error": errorMsg,
-				"code":  m.getErrorCode(err),
-			})
+			errorCode := ErrorCodeInternalServer
+			switch statusCode {
+			case http.StatusUnauthorized:
+				errorCode = ErrorCodeUnauthorized
+			case http.StatusForbidden:
+				errorCode = ErrorCodeForbidden
+			default:
+				errorCode = ErrorCodeInternalServer
+			}
+			respondWithErrorMiddleware(c, statusCode, errorCode, errorMsg)
 			return
 		}
 
@@ -394,9 +394,7 @@ func (m *AuthMiddleware) DualAuth(apiKey string) gin.HandlerFunc {
 					c.Next()
 					return
 				} else {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-						"error": "Invalid API key",
-					})
+					respondWithErrorMiddleware(c, http.StatusUnauthorized, ErrorCodeUnauthorized, "Invalid API key")
 					return
 				}
 			}
@@ -408,10 +406,7 @@ func (m *AuthMiddleware) DualAuth(apiKey string) gin.HandlerFunc {
 			// Try legacy cookie name
 			sessionID, err = c.Cookie(config.LegacySessionCookieName)
 			if err != nil {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-					"error": "Authentication required",
-					"code":  "AUTH_REQUIRED",
-				})
+				respondWithErrorMiddleware(c, http.StatusUnauthorized, ErrorCodeUnauthorized, "Authentication required")
 				return
 			}
 		}
@@ -425,10 +420,7 @@ func (m *AuthMiddleware) DualAuth(apiKey string) gin.HandlerFunc {
 			// Clear invalid session cookies
 			m.clearSessionCookies(c)
 
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authentication failed",
-				"code":  m.getErrorCode(err),
-			})
+			respondWithErrorMiddleware(c, http.StatusUnauthorized, ErrorCodeUnauthorized, "Authentication failed")
 			return
 		}
 
@@ -564,10 +556,11 @@ func ContentTypeValidationMiddleware() gin.HandlerFunc {
 		if c.Request.Method != "GET" && c.Request.Method != "OPTIONS" {
 			contentType := c.GetHeader("Content-Type")
 			if !strings.Contains(contentType, "application/json") {
-				c.JSON(http.StatusUnsupportedMediaType, gin.H{
-					"error": "Invalid content type",
-					"code":  "INVALID_CONTENT_TYPE",
-				})
+				requestID := c.GetHeader("X-Request-ID")
+				if requestID == "" {
+					requestID = uuid.New().String()
+				}
+				respondWithErrorMiddleware(c, http.StatusUnsupportedMediaType, ErrorCodeBadRequest, "Invalid content type")
 				c.Abort()
 				return
 			}

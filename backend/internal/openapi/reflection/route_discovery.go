@@ -749,7 +749,7 @@ func (rd *RouteDiscoverer) parseSuccessAnnotation(text string) *openapi3.SchemaR
 
 	// Handle generic Go types by mapping to standard response models
 	if strings.Contains(responseModel, "map[string]") {
-		responseModel = "StandardSuccessResponse"
+		responseModel = "StandardAPIResponse"
 	}
 
 	// Strip package prefixes if present to match schema naming

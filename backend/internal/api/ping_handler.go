@@ -16,8 +16,9 @@ import (
 // @Success 200 {object} PingResponse "Pong response with timestamp"
 // @Router /ping [get]
 func PingHandlerGin(c *gin.Context) {
-	respondWithJSONGin(c, http.StatusOK, PingResponse{
+	pingResponse := PingResponse{
 		Message:   "pong",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-	})
+	}
+	respondWithJSONGin(c, http.StatusOK, pingResponse)
 }

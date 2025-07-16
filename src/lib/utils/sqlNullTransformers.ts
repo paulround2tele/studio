@@ -1,7 +1,7 @@
 /**
  * SQL Null Wrapper Type Transformation Utilities
- * 
- * These utilities transform swagger-generated SQL null wrapper types 
+ *
+ * These utilities transform swagger-generated SQL null wrapper types
  * (SqlNullInt32, SqlNullString, etc.) into simple frontend-safe types.
  */
 
@@ -16,14 +16,34 @@ interface SqlNullString {
   valid?: boolean;
 }
 
+interface SqlNullTime {
+  time?: string;
+  valid?: boolean;
+}
+
+interface SqlNullBool {
+  bool?: boolean;
+  valid?: boolean;
+}
+
+interface SqlNullFloat64 {
+  float64?: number;
+  valid?: boolean;
+}
+
 /**
  * Transform SqlNullInt32 to a simple number or undefined
- * @param value - SqlNullInt32 wrapper object or undefined
+ * @param value - SqlNullInt32 wrapper object, direct number, or undefined
  * @returns number if valid and present, undefined otherwise
  */
-export function transformSqlNullInt32(value: SqlNullInt32 | undefined): number | undefined {
-  if (!value) {
+export function transformSqlNullInt32(value: SqlNullInt32 | number | undefined | null): number | undefined {
+  if (!value && value !== 0) {
     return undefined;
+  }
+  
+  // If we get a direct number (API inconsistency), return it
+  if (typeof value === 'number') {
+    return value;
   }
   
   // Type guard to ensure we have a valid SqlNullInt32 object
@@ -33,15 +53,10 @@ export function transformSqlNullInt32(value: SqlNullInt32 | undefined): number |
       return undefined;
     }
     
-    // If we have an int32 value, return it
-    if (typeof value === 'number') {
-      return value;
+    // If we have an int32 value and it's valid, return it
+    if (typeof value.int32 === 'number' && (value.valid === true || value.valid === undefined)) {
+      return value.int32;
     }
-  }
-  
-  // If we somehow get a direct number (API inconsistency), return it
-  if (typeof value === 'number') {
-    return value;
   }
   
   return undefined;
@@ -49,12 +64,17 @@ export function transformSqlNullInt32(value: SqlNullInt32 | undefined): number |
 
 /**
  * Transform SqlNullString to a simple string or undefined
- * @param value - SqlNullString wrapper object or undefined
+ * @param value - SqlNullString wrapper object, direct string, or undefined
  * @returns string if valid and present, undefined otherwise
  */
-export function transformSqlNullString(value: SqlNullString | undefined): string | undefined {
+export function transformSqlNullString(value: SqlNullString | string | undefined | null): string | undefined {
   if (!value) {
     return undefined;
+  }
+  
+  // If we get a direct string (API inconsistency), return it
+  if (typeof value === 'string') {
+    return value;
   }
   
   // Type guard to ensure we have a valid SqlNullString object
@@ -64,15 +84,103 @@ export function transformSqlNullString(value: SqlNullString | undefined): string
       return undefined;
     }
     
-    // If we have a string value, return it
-    if (typeof value === 'string') {
-      return value;
+    // If we have a string value and it's valid, return it
+    if (typeof value.string === 'string' && (value.valid === true || value.valid === undefined)) {
+      return value.string;
     }
   }
   
-  // If we somehow get a direct string (API inconsistency), return it
+  return undefined;
+}
+
+/**
+ * Transform SqlNullTime to a simple string or undefined
+ * @param value - SqlNullTime wrapper object, direct string, or undefined
+ * @returns string if valid and present, undefined otherwise
+ */
+export function transformSqlNullTime(value: SqlNullTime | string | undefined | null): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  
+  // If we get a direct string (API inconsistency), return it
   if (typeof value === 'string') {
     return value;
+  }
+  
+  // Type guard to ensure we have a valid SqlNullTime object
+  if (typeof value === 'object' && value !== null) {
+    // If valid is explicitly false, return undefined
+    if (value.valid === false) {
+      return undefined;
+    }
+    
+    // If we have a time value and it's valid, return it
+    if (typeof value.time === 'string' && (value.valid === true || value.valid === undefined)) {
+      return value.time;
+    }
+  }
+  
+  return undefined;
+}
+
+/**
+ * Transform SqlNullBool to a simple boolean or undefined
+ * @param value - SqlNullBool wrapper object, direct boolean, or undefined
+ * @returns boolean if valid and present, undefined otherwise
+ */
+export function transformSqlNullBool(value: SqlNullBool | boolean | undefined | null): boolean | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  
+  // If we get a direct boolean (API inconsistency), return it
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  
+  // Type guard to ensure we have a valid SqlNullBool object
+  if (typeof value === 'object' && value !== null) {
+    // If valid is explicitly false, return undefined
+    if (value.valid === false) {
+      return undefined;
+    }
+    
+    // If we have a bool value and it's valid, return it
+    if (typeof value.bool === 'boolean' && (value.valid === true || value.valid === undefined)) {
+      return value.bool;
+    }
+  }
+  
+  return undefined;
+}
+
+/**
+ * Transform SqlNullFloat64 to a simple number or undefined
+ * @param value - SqlNullFloat64 wrapper object, direct number, or undefined
+ * @returns number if valid and present, undefined otherwise
+ */
+export function transformSqlNullFloat64(value: SqlNullFloat64 | number | undefined | null): number | undefined {
+  if (!value && value !== 0) {
+    return undefined;
+  }
+  
+  // If we get a direct number (API inconsistency), return it
+  if (typeof value === 'number') {
+    return value;
+  }
+  
+  // Type guard to ensure we have a valid SqlNullFloat64 object
+  if (typeof value === 'object' && value !== null) {
+    // If valid is explicitly false, return undefined
+    if (value.valid === false) {
+      return undefined;
+    }
+    
+    // If we have a float64 value and it's valid, return it
+    if (typeof value.float64 === 'number' && (value.valid === true || value.valid === undefined)) {
+      return value.float64;
+    }
   }
   
   return undefined;
@@ -87,6 +195,7 @@ export function isSqlNullInt32(value: any): value is SqlNullInt32 {
   return (
     value &&
     typeof value === 'object' &&
+    value !== null &&
     ('int32' in value || 'valid' in value)
   );
 }
@@ -100,7 +209,50 @@ export function isSqlNullString(value: any): value is SqlNullString {
   return (
     value &&
     typeof value === 'object' &&
+    value !== null &&
     ('string' in value || 'valid' in value)
+  );
+}
+
+/**
+ * Type guard to check if a value is a SqlNullTime wrapper
+ * @param value - Any value to check
+ * @returns true if value is SqlNullTime wrapper object
+ */
+export function isSqlNullTime(value: any): value is SqlNullTime {
+  return (
+    value &&
+    typeof value === 'object' &&
+    value !== null &&
+    ('time' in value || 'valid' in value)
+  );
+}
+
+/**
+ * Type guard to check if a value is a SqlNullBool wrapper
+ * @param value - Any value to check
+ * @returns true if value is SqlNullBool wrapper object
+ */
+export function isSqlNullBool(value: any): value is SqlNullBool {
+  return (
+    value &&
+    typeof value === 'object' &&
+    value !== null &&
+    ('bool' in value || 'valid' in value)
+  );
+}
+
+/**
+ * Type guard to check if a value is a SqlNullFloat64 wrapper
+ * @param value - Any value to check
+ * @returns true if value is SqlNullFloat64 wrapper object
+ */
+export function isSqlNullFloat64(value: any): value is SqlNullFloat64 {
+  return (
+    value &&
+    typeof value === 'object' &&
+    value !== null &&
+    ('float64' in value || 'valid' in value)
   );
 }
 
@@ -110,11 +262,17 @@ export function isSqlNullString(value: any): value is SqlNullString {
  * @param value - Any SqlNull wrapper or simple value
  * @returns Transformed simple value
  */
-export function transformSqlNullValue<T>(value: T): T extends SqlNullInt32 
-  ? number | undefined 
-  : T extends SqlNullString 
-    ? string | undefined 
-    : T {
+export function transformSqlNullValue<T>(value: T): T extends SqlNullInt32
+  ? number | undefined
+  : T extends SqlNullString
+    ? string | undefined
+    : T extends SqlNullTime
+      ? string | undefined
+      : T extends SqlNullBool
+        ? boolean | undefined
+        : T extends SqlNullFloat64
+          ? number | undefined
+          : T {
   if (isSqlNullInt32(value)) {
     return transformSqlNullInt32(value) as any;
   }
@@ -123,8 +281,58 @@ export function transformSqlNullValue<T>(value: T): T extends SqlNullInt32
     return transformSqlNullString(value) as any;
   }
   
+  if (isSqlNullTime(value)) {
+    return transformSqlNullTime(value) as any;
+  }
+  
+  if (isSqlNullBool(value)) {
+    return transformSqlNullBool(value) as any;
+  }
+  
+  if (isSqlNullFloat64(value)) {
+    return transformSqlNullFloat64(value) as any;
+  }
+  
   // Return value as-is if it's not a SqlNull wrapper
   return value as any;
+}
+
+/**
+ * Transform an entire object by applying SQL null transformations to all properties
+ * @param obj - Object to transform
+ * @returns Object with all SQL null wrappers transformed to simple types
+ */
+export function transformSqlNullObject<T extends Record<string, any>>(obj: T): T {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+  
+  const transformed: any = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    if (Array.isArray(value)) {
+      // Transform arrays recursively
+      transformed[key] = value.map(item =>
+        typeof item === 'object' && item !== null
+          ? transformSqlNullObject(item)
+          : transformSqlNullValue(item)
+      );
+    } else if (value && typeof value === 'object') {
+      // Check if it's a SQL null wrapper first
+      if (isSqlNullInt32(value) || isSqlNullString(value) || isSqlNullTime(value) ||
+          isSqlNullBool(value) || isSqlNullFloat64(value)) {
+        transformed[key] = transformSqlNullValue(value);
+      } else {
+        // Recursively transform nested objects
+        transformed[key] = transformSqlNullObject(value);
+      }
+    } else {
+      // Keep primitive values as-is
+      transformed[key] = value;
+    }
+  }
+  
+  return transformed;
 }
 
 /**
@@ -155,4 +363,30 @@ export function safeTransform<T, R>(
       value
     );
   }
+}
+
+/**
+ * Utility to safely transform proxy data with comprehensive SQL null handling
+ * This function specifically handles the proxy response transformation issues
+ * @param proxy - Raw proxy data from backend
+ * @returns Proxy data with all SQL null types transformed
+ */
+export function transformProxyData(proxy: any): any {
+  if (!proxy) return proxy;
+  
+  return {
+    ...proxy,
+    description: transformSqlNullString(proxy.description),
+    username: transformSqlNullString(proxy.username),
+    passwordHash: transformSqlNullString(proxy.passwordHash),
+    host: transformSqlNullString(proxy.host),
+    port: transformSqlNullInt32(proxy.port),
+    lastStatus: transformSqlNullString(proxy.lastStatus),
+    lastCheckedAt: transformSqlNullTime(proxy.lastCheckedAt),
+    latencyMs: transformSqlNullInt32(proxy.latencyMs),
+    city: transformSqlNullString(proxy.city),
+    countryCode: transformSqlNullString(proxy.countryCode),
+    provider: transformSqlNullString(proxy.provider),
+    notes: transformSqlNullString(proxy.notes),
+  };
 }
