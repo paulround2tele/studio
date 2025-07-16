@@ -57,14 +57,25 @@ firebase-debug.log
 *.bak
 *.tmp
 
+# Build artifacts and binaries
+/bin/
+*.jar
+*.test
+*.exe
+
 # Backend build artifacts
 backend/bin/
 backend/build/
 backend/apiserver
 backend/studio
+backend/main
 backend/debug_auth_service
 backend/debug-auth-service
 backend/domainflow-apiserver
+backend/*.test
+
+# Google Cloud SDK
+google-cloud-sdk/
 
 # MCP Studio Backend Context Server
 mcp-studio-backend/mcp-server
@@ -77,3 +88,23 @@ mcp/mcp-server.exe
 *.gz
 go1.22.3.linux-amd64.tar.gz
 .db_connection.test
+
+# Generated documentation and build artifacts
+src/lib/api-client/docs/
+docs/api/index.html
+openapi-3.yaml
+*.tsbuildinfo
+accessibility-audit-report.json
+
+# Test logs and screenshots
+test-logs/
+debug-logs/
+scripts/test-logs/
+
+# Downloaded JAR files and binaries
+*.jar
+openapi-generator-cli*.jar
+
+# Generated backend artifacts
+backend/generate-openapi
+backend/*.log
