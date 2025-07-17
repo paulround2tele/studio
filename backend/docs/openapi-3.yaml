@@ -259,6 +259,62 @@ components:
                     format: int32
                     type: integer
             type: object
+        BulkDomainsRequest:
+            properties:
+                campaignIds:
+                    items:
+                        type: string
+                    type: array
+                limit:
+                    format: int32
+                    type: integer
+                offset:
+                    format: int32
+                    type: integer
+            required:
+                - campaignIds
+            type: object
+        BulkDomainsResponse:
+            properties:
+                domains:
+                    additionalProperties:
+                        items:
+                            type: string
+                        type: array
+                    type: object
+                metadata:
+                    $ref: '#/components/schemas/BulkMetadata'
+                totalCount:
+                    format: int32
+                    type: integer
+            type: object
+        BulkEnrichedDataRequest:
+            properties:
+                campaignIds:
+                    items:
+                        type: string
+                    type: array
+                limit:
+                    format: int32
+                    type: integer
+                offset:
+                    format: int32
+                    type: integer
+            required:
+                - campaignIds
+            type: object
+        BulkEnrichedDataResponse:
+            properties:
+                campaigns:
+                    additionalProperties:
+                        $ref: '#/components/schemas/EnrichedCampaignData'
+                    type: object
+                metadata:
+                    $ref: '#/components/schemas/BulkMetadata'
+                totalCount:
+                    format: int32
+                    type: integer
+            type: object
         BulkHealthCheckResponse:
             properties:
                 failedProxies:
@@ -272,6 +328,80 @@ components:
                         $ref: '#/components/schemas/ProxyHealthCheckResponse'
                     type: array
                 totalProxies:
+                    format: int32
+                    type: integer
+            type: object
+        BulkLeadsRequest:
+            properties:
+                campaignIds:
+                    items:
+                        type: string
+                    type: array
+                limit:
+                    format: int32
+                    type: integer
+                offset:
+                    format: int32
+                    type: integer
+            required:
+                - campaignIds
+            type: object
+        BulkLeadsResponse:
+            properties:
+                leads:
+                    additionalProperties:
+                        items:
+                            type: string
+                        type: array
+                    type: object
+                metadata:
+                    $ref: '#/components/schemas/BulkMetadata'
+                totalCount:
+                    format: int32
+                    type: integer
+            type: object
+        BulkLogsRequest:
+            properties:
+                campaignIds:
+                    items:
+                        type: string
+                    type: array
+                limit:
+                    format: int32
+                    type: integer
+                offset:
+                    format: int32
+                    type: integer
+            required:
+                - campaignIds
+            type: object
+        BulkLogsResponse:
+            properties:
+                logs:
+                    additionalProperties:
+                        items:
+                            type: object
+                        type: array
+                    type: object
+                metadata:
+                    $ref: '#/components/schemas/BulkMetadata'
+                totalCount:
+                    format: int32
+                    type: integer
+            type: object
+        BulkMetadata:
+            properties:
+                failedCampaigns:
+                    items:
+                        type: string
+                    type: array
+                processedCampaigns:
+                    format: int32
+                    type: integer
+                processingTimeMs:
+                    format: int64
+                    type: integer
+                skippedCampaigns:
                     format: int32
                     type: integer
             type: object
@@ -1862,6 +1992,27 @@ components:
             type: string
         DomainPatternType:
             type: string
+        EnrichedCampaignData:
+            properties:
+                campaign:
+                    $ref: '#/components/schemas/CampaignData'
+                dnsValidatedDomains:
+                    items:
+                        type: string
+                    type: array
+                domains:
+                    items:
+                        type: string
+                    type: array
+                httpKeywordResults:
+                    items:
+                        type: object
+                    type: array
+                leads:
+                    items:
+                        type: string
+                    type: array
+            type: object
         ErrorCode:
             type: string
         ErrorContext:
@@ -5130,6 +5281,126 @@ paths:
             security:
                 - sessionAuth: []
             summary: Validate HTTP for campaign
+            tags:
+                - campaigns
+    /campaigns/bulk/domains:
+        post:
+            description: Efficiently retrieve domain data for multiple campaigns
+            operationId: getBulkDomains
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get bulk domain data
+            tags:
+                - campaigns
+    /campaigns/bulk/enriched-data:
+        post:
+            description: Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+            operationId: getBulkEnrichedCampaignData
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get bulk enriched campaign data
+            tags:
+                - campaigns
+    /campaigns/bulk/leads:
+        post:
+            description: Efficiently retrieve lead data for multiple campaigns
+            operationId: getBulkLeads
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get bulk lead data
+            tags:
+                - campaigns
+    /campaigns/bulk/logs:
+        post:
+            description: Efficiently retrieve log data for multiple campaigns
+            operationId: getBulkLogs
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get bulk log data
             tags:
                 - campaigns
     /campaigns/domain-generation/pattern-offset:

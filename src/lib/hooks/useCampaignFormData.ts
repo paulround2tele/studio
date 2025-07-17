@@ -45,8 +45,8 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
         getPersonas('http'),
         getPersonas('dns'),
         getProxies(),
-        // Fix: Add limit=100 to prevent pagination truncation (same fix as other campaign calls)
-        campaignsApi.listCampaigns(100)
+        // Use standardized pagination defaults for form data loading
+        campaignsApi.listCampaigns(100, 0)
       ]);
 
       // Process HTTP personas result

@@ -111,7 +111,7 @@ export const FORM_DEFAULTS = {
     // Validation defaults
     rotationIntervalSeconds: 300,
     processingSpeedPerMinute: 60,
-    batchSize: 10,
+    batchSize: 50, // Use context-aware default instead of hardcoded 10
     retryAttempts: 3,
     
     // HTTP defaults

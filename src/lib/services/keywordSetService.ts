@@ -80,7 +80,7 @@ class KeywordSetService {
   }): Promise<KeywordSetListResponse> {
     const result = await safeApiCall<KeywordSet[]>(
       () => keywordSetsApi.listKeywordSets(
-        options?.limit || 100,
+        options?.limit,
         options?.offset,
         options?.isEnabled
       ),

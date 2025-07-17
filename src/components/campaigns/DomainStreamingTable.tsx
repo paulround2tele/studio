@@ -11,12 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Download, 
-  ExternalLink, 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  Download,
+  ExternalLink,
+  Search,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Filter,
   CheckCircle,
@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
+import { useDomainPagination } from '@/lib/hooks/usePagination';
+import { PAGE_SIZE_OPTIONS } from '@/lib/types/pagination';
 
 type GeneratedDomain = components['schemas']['GeneratedDomain'];
 import { cn } from '@/lib/utils';
@@ -42,12 +44,6 @@ export interface TableFilters {
   sortOrder: 'asc' | 'desc';
 }
 
-// Table pagination interface
-export interface TablePagination {
-  currentPage: number;
-  pageSize: number;
-}
-
 export interface DomainStreamingTableProps {
   campaign: CampaignViewModel;
   generatedDomains: GeneratedDomain[];
@@ -56,9 +52,7 @@ export interface DomainStreamingTableProps {
   totalDomains: number;
   loading?: boolean;
   filters: TableFilters;
-  pagination: TablePagination;
   onFiltersChange: (filters: Partial<TableFilters>) => void;
-  onPaginationChange: (pagination: Partial<TablePagination>) => void;
   onDownloadDomains: (domains: string[], fileNamePrefix: string) => void;
   className?: string;
 }
@@ -156,9 +150,7 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
   httpCampaignItems,
   loading = false,
   filters,
-  pagination,
   onFiltersChange,
-  onPaginationChange,
   onDownloadDomains,
   className
 }) => {
@@ -243,7 +235,7 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
     // Apply search filter
     if (filters.searchTerm) {
       const searchTerm = filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(domain => 
+      filtered = filtered.filter(domain =>
         domain.domainName.toLowerCase().includes(searchTerm)
       );
     }
@@ -285,6 +277,10 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
     return filtered;
   }, [domainDetails, filters]);
 
+  // Use standardized domain pagination with context-aware batch sizing
+  const paginationHook = useDomainPagination(filteredAndSortedDomains.length, 'detail');
+  const { state: pagination, actions: paginationActions } = paginationHook;
+
   // Virtual pagination for memory efficiency
   const paginatedDomains = useMemo(() => {
     const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
@@ -292,29 +288,21 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
     return filteredAndSortedDomains.slice(startIndex, endIndex);
   }, [filteredAndSortedDomains, pagination.currentPage, pagination.pageSize]);
 
-  const totalPages = Math.ceil(filteredAndSortedDomains.length / pagination.pageSize);
   const startItem = (pagination.currentPage - 1) * pagination.pageSize + 1;
   const endItem = Math.min(pagination.currentPage * pagination.pageSize, filteredAndSortedDomains.length);
 
-  // Pagination handlers
+  // Pagination handlers using new standardized actions
   const handlePageSizeChange = useCallback((value: string) => {
-    onPaginationChange({
-      pageSize: Number(value),
-      currentPage: 1
-    });
-  }, [onPaginationChange]);
+    paginationActions.setPageSize(Number(value));
+  }, [paginationActions]);
 
   const goToNextPage = useCallback(() => {
-    onPaginationChange({
-      currentPage: Math.min(pagination.currentPage + 1, totalPages)
-    });
-  }, [pagination.currentPage, totalPages, onPaginationChange]);
+    paginationActions.nextPage();
+  }, [paginationActions]);
 
   const goToPreviousPage = useCallback(() => {
-    onPaginationChange({
-      currentPage: Math.max(pagination.currentPage - 1, 1)
-    });
-  }, [pagination.currentPage, onPaginationChange]);
+    paginationActions.previousPage();
+  }, [paginationActions]);
 
   // Download handlers
   const handleDownloadFiltered = useCallback(() => {
@@ -499,13 +487,13 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
                     <span className="hidden sm:inline">Previous</span>
                   </Button>
                   <span className="text-sm text-muted-foreground font-medium px-3 py-1 bg-background rounded border">
-                    Page {pagination.currentPage} of {totalPages > 0 ? totalPages : 1}
+                    Page {pagination.currentPage} of {pagination.totalPages > 0 ? pagination.totalPages : 1}
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={goToNextPage}
-                    disabled={pagination.currentPage === totalPages || totalPages === 0}
+                    disabled={pagination.currentPage === pagination.totalPages || pagination.totalPages === 0}
                     className="h-9 shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <span className="hidden sm:inline">Next</span>

@@ -370,6 +370,15 @@ type CampaignParamsData struct {
 	Configuration  string `json:"configuration,omitempty"`
 }
 
+// EnrichedCampaignData represents enriched data for a single campaign
+type EnrichedCampaignData struct {
+	Campaign            CampaignData `json:"campaign"`
+	Domains            []string     `json:"domains"`
+	DNSValidatedDomains []string     `json:"dnsValidatedDomains"`
+	Leads              []models.LeadItem `json:"leads"`
+	HTTPKeywordResults []interface{} `json:"httpKeywordResults"` // TODO: Replace with proper type when available
+}
+
 // ErrorContext represents error context information with all possible fields
 type ErrorContext struct {
 	CampaignType     string `json:"campaign_type,omitempty"`
@@ -435,4 +444,79 @@ type ProxyHealthCheckRequest struct {
 type AddProxyToPoolRequest struct {
 	ProxyID string `json:"proxyId" binding:"required"`
 	Weight  *int   `json:"weight,omitempty"`
+}
+
+// Bulk API request/response types for B2B scale operations
+
+// BulkEnrichedDataRequest represents a request for bulk enriched campaign data
+// @Description Request payload for retrieving enriched data for multiple campaigns
+type BulkEnrichedDataRequest struct {
+	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-50 campaigns)"`
+	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of items per campaign (1-1000)"`
+	Offset      int      `json:"offset,omitempty" validate:"omitempty,min=0" example:"0" description:"Number of items to skip per campaign"`
+}
+
+// BulkEnrichedDataResponse represents enriched campaign data for multiple campaigns
+// @Description Response containing enriched data for multiple campaigns with metadata
+type BulkEnrichedDataResponse struct {
+	Campaigns  map[string]EnrichedCampaignData `json:"campaigns" description:"Map of campaign ID to enriched campaign data"`
+	TotalCount int                             `json:"totalCount" example:"25" description:"Total number of successfully processed campaigns"`
+	Metadata   *BulkMetadata                   `json:"metadata,omitempty" description:"Processing metadata and statistics"`
+}
+
+// BulkDomainsRequest represents a request for bulk domain data
+// @Description Request payload for retrieving domain data for multiple campaigns
+type BulkDomainsRequest struct {
+	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-50 campaigns)"`
+	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of domains per campaign (1-1000)"`
+	Offset      int      `json:"offset,omitempty" validate:"omitempty,min=0" example:"0" description:"Number of domains to skip per campaign"`
+}
+
+// BulkDomainsResponse represents domain data for multiple campaigns
+// @Description Response containing domain data for multiple campaigns with metadata
+type BulkDomainsResponse struct {
+	Domains    map[string][]string `json:"domains" description:"Map of campaign ID to list of domains"`
+	TotalCount int                 `json:"totalCount" example:"150" description:"Total number of domains across all campaigns"`
+	Metadata   *BulkMetadata       `json:"metadata,omitempty" description:"Processing metadata and statistics"`
+}
+
+// BulkLogsRequest represents a request for bulk log data
+// @Description Request payload for retrieving log data for multiple campaigns
+type BulkLogsRequest struct {
+	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-50 campaigns)"`
+	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of log entries per campaign (1-1000)"`
+	Offset      int      `json:"offset,omitempty" validate:"omitempty,min=0" example:"0" description:"Number of log entries to skip per campaign"`
+}
+
+// BulkLogsResponse represents log data for multiple campaigns
+// @Description Response containing log data for multiple campaigns with metadata
+type BulkLogsResponse struct {
+	Logs       map[string][]interface{} `json:"logs" description:"Map of campaign ID to list of log entries"`
+	TotalCount int                      `json:"totalCount" example:"500" description:"Total number of log entries across all campaigns"`
+	Metadata   *BulkMetadata            `json:"metadata,omitempty" description:"Processing metadata and statistics"`
+}
+
+// BulkLeadsRequest represents a request for bulk lead data
+// @Description Request payload for retrieving lead data for multiple campaigns
+type BulkLeadsRequest struct {
+	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-50 campaigns)"`
+	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of leads per campaign (1-1000)"`
+	Offset      int      `json:"offset,omitempty" validate:"omitempty,min=0" example:"0" description:"Number of leads to skip per campaign"`
+}
+
+// BulkLeadsResponse represents lead data for multiple campaigns
+// @Description Response containing lead data for multiple campaigns with metadata
+type BulkLeadsResponse struct {
+	Leads      map[string][]models.LeadItem `json:"leads" description:"Map of campaign ID to list of leads"`
+	TotalCount int                          `json:"totalCount" example:"75" description:"Total number of leads across all campaigns"`
+	Metadata   *BulkMetadata                `json:"metadata,omitempty" description:"Processing metadata and statistics"`
+}
+
+// BulkMetadata represents processing metadata for bulk operations
+// @Description Metadata containing processing statistics and performance metrics for bulk operations
+type BulkMetadata struct {
+	ProcessedCampaigns int      `json:"processedCampaigns" example:"23" description:"Number of campaigns successfully processed"`
+	SkippedCampaigns   int      `json:"skippedCampaigns" example:"2" description:"Number of campaigns skipped due to errors"`
+	FailedCampaigns    []string `json:"failedCampaigns,omitempty" example:"['invalid-uuid','550e8400-e29b-41d4-a716-446655440001']" description:"List of campaign IDs that failed processing"`
+	ProcessingTimeMs   int64    `json:"processingTimeMs" example:"1234" description:"Total processing time in milliseconds"`
 }

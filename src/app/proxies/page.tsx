@@ -20,7 +20,7 @@ type ProxyActionResponse = { status: 'success' | 'error'; message: string };
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
 import type { ProxyModelCreationPayload } from '@/lib/services/proxyService.production';
-import type { FrontendProxy } from '@/lib/types/frontend-safe-types';
+type FrontendProxy = components['schemas']['Proxy'];
 
 // Keep using OpenAPI Proxy type for components, convert from FrontendProxy as needed
 type Proxy = components['schemas']['Proxy'];

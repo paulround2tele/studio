@@ -2,12 +2,13 @@
 
 import PersonaForm from '@/components/personas/PersonaForm';
 import PageHeader from '@/components/shared/PageHeader';
-import type { FrontendPersona } from '@/lib/types/frontend-safe-types';
+import type { components } from '@/lib/api-client/types';
+type FrontendPersona = components['schemas']['Persona'];
 import type { ApiResponse } from '@/lib/types';
 
 // Use frontend-safe types for consistency with service layer
 type Persona = FrontendPersona;
-type PersonaDetailResponse = ApiResponse<Persona>;
+type PersonaDetailResponse = ApiResponse<FrontendPersona>;
 import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';

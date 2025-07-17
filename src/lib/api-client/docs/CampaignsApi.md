@@ -8,6 +8,10 @@ All URIs are relative to *http://localhost*
 |[**cancelCampaign**](#cancelcampaign) | **POST** /campaigns/{campaignId}/cancel | Cancel campaign|
 |[**createCampaign**](#createcampaign) | **POST** /campaigns | Create new campaign|
 |[**deleteCampaign**](#deletecampaign) | **DELETE** /campaigns/{campaignId} | Delete campaign|
+|[**getBulkDomains**](#getbulkdomains) | **POST** /campaigns/bulk/domains | Get bulk domain data|
+|[**getBulkEnrichedCampaignData**](#getbulkenrichedcampaigndata) | **POST** /campaigns/bulk/enriched-data | Get bulk enriched campaign data|
+|[**getBulkLeads**](#getbulkleads) | **POST** /campaigns/bulk/leads | Get bulk lead data|
+|[**getBulkLogs**](#getbulklogs) | **POST** /campaigns/bulk/logs | Get bulk log data|
 |[**getCampaignDetails**](#getcampaigndetails) | **GET** /campaigns/{campaignId} | Get campaign details|
 |[**getDNSValidationResults**](#getdnsvalidationresults) | **GET** /campaigns/{campaignId}/results/dns-validation | Get DNS validation results|
 |[**getGeneratedDomains**](#getgenerateddomains) | **GET** /campaigns/{campaignId}/results/generated-domains | Get generated domains|
@@ -223,6 +227,222 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getBulkDomains**
+> APIResponse getBulkDomains(bulkDomainsRequest)
+
+Efficiently retrieve domain data for multiple campaigns
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    BulkDomainsRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let bulkDomainsRequest: BulkDomainsRequest; //
+
+const { status, data } = await apiInstance.getBulkDomains(
+    bulkDomainsRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkDomainsRequest** | **BulkDomainsRequest**|  | |
+
+
+### Return type
+
+**APIResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getBulkEnrichedCampaignData**
+> APIResponse getBulkEnrichedCampaignData(bulkEnrichedDataRequest)
+
+Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    BulkEnrichedDataRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let bulkEnrichedDataRequest: BulkEnrichedDataRequest; //
+
+const { status, data } = await apiInstance.getBulkEnrichedCampaignData(
+    bulkEnrichedDataRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkEnrichedDataRequest** | **BulkEnrichedDataRequest**|  | |
+
+
+### Return type
+
+**APIResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getBulkLeads**
+> APIResponse getBulkLeads(bulkLeadsRequest)
+
+Efficiently retrieve lead data for multiple campaigns
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    BulkLeadsRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let bulkLeadsRequest: BulkLeadsRequest; //
+
+const { status, data } = await apiInstance.getBulkLeads(
+    bulkLeadsRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkLeadsRequest** | **BulkLeadsRequest**|  | |
+
+
+### Return type
+
+**APIResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getBulkLogs**
+> APIResponse getBulkLogs(bulkLogsRequest)
+
+Efficiently retrieve log data for multiple campaigns
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    BulkLogsRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let bulkLogsRequest: BulkLogsRequest; //
+
+const { status, data } = await apiInstance.getBulkLogs(
+    bulkLogsRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkLogsRequest** | **BulkLogsRequest**|  | |
+
+
+### Return type
+
+**APIResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

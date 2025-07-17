@@ -2,13 +2,15 @@
  * Frontend API Response Helpers
  * Centralized utilities for handling the unified backend envelope format
  * { success: boolean, data: T, error: string | null, requestId: string }
+ *
+ * BULK-ONLY STRATEGY: All responses must use unified envelope format
  */
 
 import type { ApiResponse } from '@/lib/types';
 
 /**
  * Extract data from unified backend envelope format
- * Handles both direct responses and Axios-wrapped responses
+ * BULK-ONLY STRATEGY: Handles only unified envelope format with optional Axios wrapper
  */
 export function extractResponseData<T>(response: unknown): T | null {
   if (!response || typeof response !== 'object') {
@@ -27,7 +29,7 @@ export function extractResponseData<T>(response: unknown): T | null {
     }
   }
   
-  // Handle unified envelope format
+  // BULK-ONLY STRATEGY: Only handle unified envelope format
   if (apiResponse && typeof apiResponse === 'object' && 'success' in apiResponse && 'data' in apiResponse) {
     if (apiResponse.success === true) {
       return apiResponse.data as T;
@@ -36,16 +38,13 @@ export function extractResponseData<T>(response: unknown): T | null {
     }
   }
   
-  // Legacy fallback for direct response (temporary during transition)
-  if (Array.isArray(apiResponse) || (apiResponse && typeof apiResponse === 'object')) {
-    return apiResponse as T;
-  }
-  
-  return null;
+  // BULK-ONLY STRATEGY: No legacy fallbacks - all responses must use unified envelope format
+  throw new Error('Invalid response format: missing unified envelope structure');
 }
 
 /**
  * Check if response indicates success
+ * BULK-ONLY STRATEGY: Only handles unified envelope format
  */
 export function isResponseSuccess(response: unknown): boolean {
   if (!response || typeof response !== 'object') {
@@ -63,21 +62,22 @@ export function isResponseSuccess(response: unknown): boolean {
     apiResponse = (response as any).data;
   }
   
-  // Check unified envelope format
+  // BULK-ONLY STRATEGY: Only check unified envelope format
   if (apiResponse && typeof apiResponse === 'object' && 'success' in apiResponse) {
     return apiResponse.success === true;
   }
   
-  // Legacy fallback - assume success if no error indicators
-  return true;
+  // BULK-ONLY STRATEGY: No legacy fallbacks - all responses must use unified envelope format
+  return false;
 }
 
 /**
  * Extract error message from response
+ * BULK-ONLY STRATEGY: Only handles unified envelope format
  */
 export function getResponseError(response: unknown): string | null {
   if (!response || typeof response !== 'object') {
-    return 'Invalid response format';
+    return 'Invalid response format - missing unified envelope structure';
   }
 
   let apiResponse = response as any;
@@ -91,14 +91,16 @@ export function getResponseError(response: unknown): string | null {
     apiResponse = (response as any).data;
   }
   
-  // Check unified envelope format
+  // BULK-ONLY STRATEGY: Only check unified envelope format
   if (apiResponse && typeof apiResponse === 'object' && 'success' in apiResponse) {
     if (apiResponse.success === false) {
       return apiResponse.error || 'Unknown API error';
     }
+    return null; // Success case
   }
   
-  return null;
+  // BULK-ONLY STRATEGY: Missing envelope structure is an error
+  return 'Invalid response format - missing unified envelope structure';
 }
 
 /**

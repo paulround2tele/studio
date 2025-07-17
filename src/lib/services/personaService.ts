@@ -6,16 +6,16 @@ import { CookieHandling } from '@/lib/api-client/models/cookie-handling';
 // Use proper OpenAPI types from models (not the broken schemas)
 import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
 import type { UpdatePersonaRequest } from '@/lib/api-client/models/update-persona-request';
+import type { components } from '@/lib/api-client/types';
 
-type Persona = FrontendPersona;
-type PersonaTestResult = FrontendPersonaTestResult;
+type Persona = components['schemas']['PersonaResponse'];
+type PersonaTestResult = components['schemas']['PersonaTestResponse'];
 
 // Export the types for use in other files
 export type { CreatePersonaRequest, UpdatePersonaRequest };
 
 // Import unified API response wrapper and utilities
 import type { ApiResponse } from '@/lib/types';
-import type { FrontendPersona, FrontendPersonaTestResult } from '@/lib/types/frontend-safe-types';
 import {
   safeApiCall
 } from '@/lib/utils/apiResponseHelpers';
@@ -51,7 +51,7 @@ const convertPersonaPayload = (payload: any): any => {
 };
 
 // Import additional OpenAPI persona types
-export type PersonaListResponse = FrontendPersona;
+export type PersonaListResponse = components['schemas']['PersonaResponse'];
 
 export async function createPersona(payload: CreatePersonaRequest): Promise<ApiResponse<Persona>> {
   const convertedPayload = convertPersonaPayload(payload);
@@ -69,7 +69,7 @@ export async function listPersonas(options?: {
 }): Promise<ApiResponse<Persona[]>> {
   return await safeApiCall<Persona[]>(
     () => personasApi.listAllPersonas(
-      options?.limit || 100,
+      options?.limit,
       options?.offset,
       options?.isEnabled,
       options?.personaType

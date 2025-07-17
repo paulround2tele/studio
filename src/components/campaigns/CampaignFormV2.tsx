@@ -21,7 +21,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { CAMPAIGN_SELECTED_TYPES } from "@/lib/constants";
 import type { components } from '@/lib/api-client/types';
-import { campaignService } from '@/lib/services/campaignService.production';
+import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
 
 // Import shared types to prevent conflicts
 import type {
@@ -471,7 +471,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
         console.log('📦 [API_PAYLOAD] Sending payload:', JSON.stringify(unifiedPayload, null, 2));
         
         try {
-          const response = await campaignService.createCampaign(unifiedPayload);
+          const response = await unifiedCampaignService.createCampaign(unifiedPayload);
           console.log('✅ [API_RESPONSE] Received response:', JSON.stringify(response, null, 2));
         
         if (response.success === true && response.data) {
@@ -496,7 +496,7 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           // Auto-start domain generation campaigns if launch sequence is enabled
           if (data.launchSequence && data.selectedType === 'domain_generation') {
             try {
-              await campaignService.startCampaign(campaignId);
+              await unifiedCampaignService.startCampaign(campaignId);
             } catch (startError) {
               // Don't fail the creation flow if start fails (campaign may auto-complete)
               console.warn('[CampaignForm] Campaign start failed (may be auto-completed):', startError);

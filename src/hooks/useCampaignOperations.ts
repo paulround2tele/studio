@@ -5,10 +5,18 @@
 
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
-import type { CampaignViewModel, CampaignValidationItem } from '@/lib/types';
+import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
+import {
+  unifiedCampaignService,
+  getRichCampaignData,
+  startCampaign as startCampaignService,
+  pauseCampaign as pauseCampaignService,
+  resumeCampaign as resumeCampaignService,
+  cancelCampaign as cancelCampaignService,
+  deleteCampaign as deleteCampaignService
+} from '@/lib/services/unifiedCampaignService';
 
 type Campaign = components['schemas']['Campaign'];
 type CampaignType = NonNullable<Campaign['campaignType']>;
@@ -85,6 +93,10 @@ id: campaignId,
     });
 
     try {
+      // BULK-ONLY STRATEGY: Load all data via enhanced bulk service once
+      console.log('📡 [Domain Loading] BULK-ONLY: Loading all campaign data via enhanced bulk service');
+      const richData = await getRichCampaignData(campaignId);
+      
       const updates: {
         generatedDomains?: GeneratedDomainBackend[];
         dnsCampaignItems?: CampaignValidationItem[];
@@ -107,113 +119,84 @@ id: campaignId,
         campaignData.domainGenerationParams !== undefined;
       
       if (hasDomainGenerationHistory) {
-        console.log('📡 [Domain Loading] Loading generated domains (phase-aware)...', {
-campaignType: campaignData.campaignType,
-          currentPhase: (campaignData as { currentPhase?: string }).currentPhase  as any,
-hasDomainGenParams: !!campaignData.domainGenerationParams,
-          reason: campaignData.campaignType === 'domain_generation' ? 'direct_domain_generation' :
-                  campaignData.campaignType === 'dns_validation' ? 'dns_validation_campaign' :
-                  campaignData.campaignType === 'http_keyword_validation' ? 'http_validation_campaign' :
-                  campaignData.domainGenerationParams ? 'has_domain_gen_params' : 'unknown'
-        });
+        console.log('📡 [Domain Loading] BULK-ONLY: Processing generated domains from bulk data');
         
-        const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId, 1000, 0);
-        console.log('📡 [Domain Loading] Raw API response:', domainsResponse);
-        
-        // Handle new Swagger-generated API response format: { success: true, data: Domain[] }
-        const responseData = 'data' in domainsResponse ? domainsResponse.data : domainsResponse;
-        let domainsData: any = null;
-        
-        if (responseData && typeof responseData === 'object') {
-          if ('success' in responseData && responseData.success === true && 'data' in responseData) {
-            // New format: { success: true, data: Domain[], requestId: string }
-            domainsData = responseData.data;
-          } else {
-            // Legacy direct data format
-            domainsData = responseData;
-          }
+        if (richData?.domains) {
+          updates.generatedDomains = richData.domains.map((domainName: string, index: number) => ({
+            id: `domain-${index}`,
+            domainName,
+            generationCampaignId: campaignId,
+            createdAt: new Date().toISOString()
+          } as GeneratedDomainBackend));
+        } else {
+          updates.generatedDomains = [];
         }
         
-        const domains = extractDomainsFromResponse(domainsData);
-        updates.generatedDomains = domains as GeneratedDomainBackend[];
-        
-        console.log('✅ [Domain Loading] Generated domains loaded (phase-aware):', {
-count: domains.length,
-          sampleDomains: domains.slice(0, 3).map(d => d.domainName),
-          currentPhase: isDNSValidationPhase ? 'DNS_VALIDATION' : isHTTPValidationPhase ? 'HTTP_VALIDATION' : 'DOMAIN_GENERATION'  as any,
-campaignType: campaignData.campaignType
+        console.log('✅ [Domain Loading] BULK-ONLY: Generated domains loaded:', {
+          count: updates.generatedDomains.length,
+          sampleDomains: updates.generatedDomains.slice(0, 3).map(d => d.domainName),
+          currentPhase: isDNSValidationPhase ? 'DNS_VALIDATION' : isHTTPValidationPhase ? 'HTTP_VALIDATION' : 'DOMAIN_GENERATION' as any,
+          campaignType: campaignData.campaignType
         });
       }
 
       if (campaignData.campaignType === 'dns_validation' || isDNSValidationPhase) {
-        console.log('📡 [Domain Loading] Fetching DNS validation items...');
-        const dnsResponse = await campaignsApi.getDNSValidationResults(campaignId, 1000);
+        console.log('📡 [Domain Loading] BULK-ONLY: Using enhanced bulk service for DNS validation');
         
-        // Handle new Swagger-generated API response format: { success: true, data: ValidationResults[] }
-        const dnsResponseData = 'data' in dnsResponse ? dnsResponse.data : dnsResponse;
-        let dnsData: any = null;
-        
-        if (dnsResponseData && typeof dnsResponseData === 'object') {
-          if ('success' in dnsResponseData && dnsResponseData.success === true && 'data' in dnsResponseData) {
-            // New format: { success: true, data: ValidationResults[], requestId: string }
-            dnsData = dnsResponseData.data;
-          } else {
-            // Legacy direct data format
-            dnsData = dnsResponseData;
-          }
+        // Use bulk service data instead of individual API call
+        if (richData?.dnsValidatedDomains) {
+          updates.dnsCampaignItems = richData.dnsValidatedDomains.map((domainName: string, index: number) => ({
+            id: `dns-${index}`,
+            domainName: domainName,
+            generationCampaignId: campaignId,
+            type: 'dns' as const,
+            status: 'passed' as DomainActivityStatus,
+            validationDate: new Date().toISOString(),
+            campaignId
+          }));
+        } else {
+          updates.dnsCampaignItems = [];
         }
         
-        const dnsItems = Array.isArray(dnsData) ? dnsData : [];
-        updates.dnsCampaignItems = dnsItems as CampaignValidationItem[];
-        console.log('✅ [Domain Loading] DNS items loaded:', dnsItems.length);
+        console.log('✅ [Domain Loading] BULK-ONLY: DNS items loaded:', updates.dnsCampaignItems?.length || 0);
       }
 
-      // CRITICAL FIX: For HTTP validation phase, ensure we load both generated domains AND HTTP results
+      // CRITICAL FIX: For HTTP validation phase, use bulk service data
       if (campaignData.campaignType === 'http_keyword_validation' || isHTTPValidationPhase) {
-        console.log('📡 [Domain Loading] Fetching HTTP validation items...');
-        const httpResponse = await campaignsApi.getHTTPKeywordResults(campaignId, 1000);
+        console.log('📡 [Domain Loading] BULK-ONLY: Processing HTTP validation items from bulk data');
         
-        // Handle new Swagger-generated API response format: { success: true, data: ValidationResults[] }
-        const httpResponseData = 'data' in httpResponse ? httpResponse.data : httpResponse;
-        let httpData: any = null;
-        
-        if (httpResponseData && typeof httpResponseData === 'object') {
-          if ('success' in httpResponseData && httpResponseData.success === true && 'data' in httpResponseData) {
-            // New format: { success: true, data: ValidationResults[], requestId: string }
-            httpData = httpResponseData.data;
-          } else {
-            // Legacy direct data format
-            httpData = httpResponseData;
-          }
+        if (richData?.httpKeywordResults) {
+          updates.httpCampaignItems = richData.httpKeywordResults.map((result: any, index: number) => ({
+            id: result.id || `http-${index}`,
+            domainName: result.domain || 'unknown',
+            generationCampaignId: campaignId,
+            type: 'http' as const,
+            status: 'passed' as DomainActivityStatus,
+            validationDate: new Date().toISOString(),
+            campaignId
+          }));
+        } else {
+          updates.httpCampaignItems = [];
         }
         
-        const httpItems = Array.isArray(httpData) ? httpData : [];
-        updates.httpCampaignItems = httpItems as CampaignValidationItem[];
-        console.log('✅ [Domain Loading] HTTP items loaded:', httpItems.length);
+        console.log('✅ [Domain Loading] BULK-ONLY: HTTP items loaded:', updates.httpCampaignItems?.length || 0);
 
-        // CRITICAL FIX: If this is an HTTP validation phase for a domain_generation campaign,
-        // we need to also load the generated domains if we haven't already
+        // If we need generated domains for HTTP validation and haven't loaded them yet
         if (isHTTPValidationPhase && campaignData.campaignType === 'domain_generation' && !updates.generatedDomains) {
-          console.log('📡 [Domain Loading] Loading generated domains for HTTP validation phase...');
-          const domainsResponse = await campaignsApi.getGeneratedDomains(campaignId);
+          console.log('📡 [Domain Loading] BULK-ONLY: Loading generated domains for HTTP validation from bulk data');
           
-          // Handle new Swagger-generated API response format for this call too
-          const domainResponseData = 'data' in domainsResponse ? domainsResponse.data : domainsResponse;
-          let domainData: any = null;
-          
-          if (domainResponseData && typeof domainResponseData === 'object') {
-            if ('success' in domainResponseData && domainResponseData.success === true && 'data' in domainResponseData) {
-              // New format: { success: true, data: Domain[], requestId: string }
-              domainData = domainResponseData.data;
-            } else {
-              // Legacy direct data format
-              domainData = domainResponseData;
-            }
+          if (richData?.domains) {
+            updates.generatedDomains = richData.domains.map((domainName: string, index: number) => ({
+              id: `domain-${index}`,
+              domainName,
+              generationCampaignId: campaignId,
+              createdAt: new Date().toISOString()
+            } as GeneratedDomainBackend));
+          } else {
+            updates.generatedDomains = [];
           }
           
-          const domains = extractDomainsFromResponse(domainData);
-          updates.generatedDomains = domains as GeneratedDomainBackend[];
-          console.log('✅ [Domain Loading] Generated domains loaded for HTTP validation:', domains.length);
+          console.log('✅ [Domain Loading] BULK-ONLY: Generated domains loaded for HTTP validation:', updates.generatedDomains.length);
         }
       }
 
@@ -243,51 +226,33 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
     useCampaignDetailsStore.getState().setError(null);
 
     try {
-      console.log(`🔍 [Campaign Loading] Starting load for campaign ID: ${campaignId}`);
+      console.log(`🔍 [Campaign Loading] BULK-ONLY: Starting load for campaign ID: ${campaignId}`);
       
-      const rawResponse = await campaignsApi.getCampaignDetails(campaignId);
+      // BULK-ONLY STRATEGY: Use getRichCampaignData instead of individual getCampaignDetails
+      const richData = await getRichCampaignData(campaignId);
       let campaignData: Campaign | null = null;
 
-      // Extract data from AxiosResponse
-      const responseData = rawResponse.data;
-      
-      console.log(`📡 [Campaign Loading] Raw API response:`, {
-        status: rawResponse.status,
-        dataType: typeof responseData,
-        dataKeys: responseData ? Object.keys(responseData) : [],
-        hasId: responseData && typeof responseData === 'object' && 'id' in responseData
-      });
-
-      // Handle new Swagger-generated API response format: { success: true, data: Campaign }
-      if (responseData && typeof responseData === 'object') {
-        if ('success' in responseData && responseData.success === true && 'data' in responseData) {
-          // New format: { success: true, data: Campaign, requestId: string }
-          const nestedData = responseData.data;
-          if (nestedData && typeof nestedData === 'object') {
-            campaignData = nestedData as Campaign;
-          }
-        } else if (Array.isArray(responseData)) {
-          // Legacy array format
-          campaignData = responseData.find(item =>
-            item && typeof item === 'object' && 'id' in item && item.id === campaignId
-          ) || responseData[0] || null;
-        } else if ('campaign' in responseData) {
-          // Legacy campaign wrapper format
-          campaignData = responseData.campaign as Campaign;
-        } else if ('id' in responseData) {
-          // Direct campaign object format
-          campaignData = responseData as Campaign;
-        } else {
-          // Check for other nested structures (fallback)
-          const possibleKeys = ['data', 'campaign', 'result', 'payload'];
-          for (const key of possibleKeys) {
-            const nested = (responseData as Record<string, unknown>)[key];
-            if (nested && typeof nested === 'object' && 'id' in nested) {
-              campaignData = nested as Campaign;
-              break;
-            }
-          }
-        }
+      if (richData) {
+        // Convert RichCampaignData back to Campaign format for compatibility
+        campaignData = {
+          ...richData,
+          // Convert arrays back to counts if needed for legacy compatibility
+          domains: richData.domains?.length || 0,
+          dnsValidatedDomains: richData.dnsValidatedDomains?.length || 0,
+          leads: richData.leads?.length || 0
+        } as any;
+        
+        console.log(`📡 [Campaign Loading] BULK-ONLY: Campaign data loaded:`, {
+          id: campaignData?.id,
+          name: campaignData?.name,
+          campaignType: campaignData?.campaignType,
+          status: campaignData?.status,
+          domainsCount: richData.domains?.length || 0,
+          dnsValidatedCount: richData.dnsValidatedDomains?.length || 0,
+          leadsCount: richData.leads?.length || 0
+        });
+      } else {
+        console.warn(`⚠️ [Campaign Loading] BULK-ONLY: No campaign data available for ${campaignId}`);
       }
 
       if (campaignData) {
@@ -320,8 +285,8 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
         // Load domain data based on campaign type
         await loadDomainData(viewModel);
       } else {
-        console.error(`❌ [Campaign Loading] No valid campaign data found in response`);
-        throw new Error(`Campaign not found in response. Response structure: ${JSON.stringify(responseData, null, 2)}`);
+        console.error(`❌ [Campaign Loading] BULK-ONLY: No valid campaign data found via bulk service`);
+        throw new Error(`Campaign not found via bulk service for ID: ${campaignId}`);
       }
 
     } catch (error) {
@@ -354,24 +319,20 @@ campaignStatus: campaign.status,
       
       let response;
       
-      // Use enhanced API client for campaign operations
+      // Use unified campaign service for operations
       console.log(`📡 [Campaign Operations] Starting campaign phase ${phaseToStart} for campaign ${campaignId}`);
-      response = await campaignsApi.startCampaign(campaignId);
+      const result = await startCampaignService(campaignId);
       
-      // Handle response from enhanced client (AxiosResponse)
-      const responseData = response && typeof response === 'object' && 'data' in response ? response.data : response;
-      
-      if (responseData && typeof responseData === 'object' &&
-          ('campaign_id' in responseData || 'message' in responseData)) {
+      if (result.success) {
         toast({
-title: `${phaseToStart.replace('_', ' ').toUpperCase()} Started`,
-          description: (responseData as any)?.message || 'Campaign phase started successfully'
-});
+          title: `${phaseToStart.replace('_', ' ').toUpperCase()} Started`,
+          description: result.message || 'Campaign phase started successfully'
+        });
         
         // Refresh campaign data
         await loadCampaignData(false);
       } else {
-        throw new Error('Invalid response from campaign API');
+        throw new Error(result.error || 'Failed to start campaign phase');
       }
 
     } catch (error) {
@@ -395,16 +356,16 @@ title: "Error Starting Phase",
     useCampaignDetailsStore.getState().setActionLoading('control-pause', true);
 
     try {
-      const response = await campaignsApi.pauseCampaign(campaignId);
+      const result = await pauseCampaignService(campaignId);
       
-      if (response && typeof response === 'object' && 'campaign_id' in response) {
+      if (result.success) {
         toast({
 title: "Campaign Paused",
-          description: (response as { message?: string }).message || 'Campaign paused successfully'
+          description: result.message || 'Campaign paused successfully'
         });
         await loadCampaignData(false);
       } else {
-        throw new Error('Failed to pause campaign');
+        throw new Error(result.error || 'Failed to pause campaign');
       }
 
     } catch (error) {
@@ -426,16 +387,16 @@ title: "Error Pausing Campaign",
     useCampaignDetailsStore.getState().setActionLoading('control-resume', true);
 
     try {
-      const response = await campaignsApi.resumeCampaign(campaignId);
+      const result = await resumeCampaignService(campaignId);
       
-      if (response && typeof response === 'object' && 'campaign_id' in response) {
+      if (result.success) {
         toast({
 title: "Campaign Resumed",
-          description: (response as { message?: string }).message || 'Campaign resumed successfully'
+          description: result.message || 'Campaign resumed successfully'
         });
         await loadCampaignData(false);
       } else {
-        throw new Error('Failed to resume campaign');
+        throw new Error(result.error || 'Failed to resume campaign');
       }
 
     } catch (error) {
@@ -457,16 +418,16 @@ title: "Error Resuming Campaign",
     useCampaignDetailsStore.getState().setActionLoading('control-stop', true);
 
     try {
-      const response = await campaignsApi.cancelCampaign(campaignId);
+      const result = await cancelCampaignService(campaignId);
       
-      if (response && typeof response === 'object' && 'campaign_id' in response) {
+      if (result.success) {
         toast({
 title: "Campaign Cancelled",
-          description: (response as { message?: string }).message || 'Campaign cancelled successfully'
+          description: result.message || 'Campaign cancelled successfully'
         });
         await loadCampaignData(false);
       } else {
-        throw new Error('Failed to cancel campaign');
+        throw new Error(result.error || 'Failed to cancel campaign');
       }
 
     } catch (error) {
@@ -516,17 +477,17 @@ title: "Export Started",
     useCampaignDetailsStore.getState().setActionLoading('control-delete', true);
 
     try {
-      const response = await campaignsApi.deleteCampaign(campaignId);
+      const result = await deleteCampaignService(campaignId);
       
-      if (response && typeof response === 'object' && 'success' in response && response.success) {
+      if (result.success) {
         toast({
 title: "Campaign Deleted",
-          description: (response as { message?: string }).message || 'Campaign deleted successfully'
+          description: result.message || 'Campaign deleted successfully'
         });
         // Note: Don't reload campaign data since campaign is deleted
         return true;
       } else {
-        throw new Error('Failed to delete campaign');
+        throw new Error(result.error || 'Failed to delete campaign');
       }
 
     } catch (error) {

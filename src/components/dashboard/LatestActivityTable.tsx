@@ -5,19 +5,22 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CampaignViewModel, LatestDomainActivity, CampaignPhase, DomainActivityStatus, CampaignSelectedType } from '@/lib/types';
 import { CAMPAIGN_PHASES_ORDERED } from '@/lib/constants';
 import { ScrollArea } from '../ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, ChevronLeft, ChevronRight, Percent } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, ChevronLeft, ChevronRight, Percent, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
-import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/campaignDataService';
+import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/unifiedCampaignService';
 import { type BaseWebSocketMessage } from '@/lib/websocket/message-handlers';
 import { type DashboardActivityPayload } from '@/lib/services/websocketService.simple';
+import { useInfiniteScrollActivity } from '@/lib/hooks/useInfiniteScroll';
+import { PaginationLoadingStates, InfiniteScrollLoader } from '@/components/ui/pagination-loading-states';
+import { PaginationErrorBoundary } from '@/components/ui/pagination-error-boundary';
 
 // Type definition for campaign leads
 interface CampaignLead {
@@ -249,19 +252,43 @@ const StatusBadge: React.FC<{ status: DomainActivityStatus; score?: number }> = 
 
 export default function LatestActivityTable() {
   const [allActivityData, setAllActivityData] = useState<LatestDomainActivity[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE_GLOBAL);
 
   // Use centralized loading state
   const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
   const loading = isOperationLoading(LOADING_OPERATIONS.DATA_FETCH);
 
+  // Infinite scroll load function
+  const loadMoreActivity = useCallback(async (page: number, pageSize: number) => {
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageData = allActivityData.slice(startIndex, endIndex);
+    
+    return {
+      data: pageData,
+      hasMore: endIndex < allActivityData.length,
+      totalCount: allActivityData.length,
+    };
+  }, [allActivityData]);
+
+  // Use infinite scroll hook for activity feed
+  const {
+    items: displayedActivities,
+    isLoading: infiniteLoading,
+    isLoadingMore,
+    hasMore,
+    error: infiniteError,
+    observerRef,
+    reset: resetInfiniteScroll,
+    retry: retryInfiniteScroll,
+    isEmpty,
+  } = useInfiniteScrollActivity(loadMoreActivity, [allActivityData]);
+
 
   const fetchAndProcessData = useCallback(async (showLoadingSpinner = true) => {
     if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading dashboard activity");
     try {
-      // Fix: Add limit=100 to prevent pagination truncation (same fix as main campaigns page)
-      const response = await campaignsApi.listCampaigns(100);
+      // Use context-aware pagination parameters for activity loading
+      const response = await campaignsApi.listCampaigns(50, 0); // Dashboard context uses 50 items
       const processedActivities: LatestDomainActivity[] = [];
 
       // Handle the Axios response structure: response.data.data.data contains the campaigns array
@@ -280,9 +307,10 @@ export default function LatestActivityTable() {
         const campaignIds = campaignsArray
           .filter(campaign => campaign.id && campaign.name && campaign.createdAt)
           .map(campaign => campaign.id!)
-          .slice(0, 10); // Limit to first 10 campaigns for performance
+          .slice(0, 50); // BULK-ONLY STRATEGY: Use enhanced bulk batch sizing for dashboard context
 
-        // Fetch rich data for all campaigns
+        // Fetch rich data for all campaigns using enhanced BulkCampaignService
+        console.log(`[LatestActivityTable] BULK-ONLY: Loading ${campaignIds.length} campaigns via enhanced bulk operations`);
         const richCampaignDataMap = await getRichCampaignDataBatch(campaignIds);
 
         // Process campaigns with rich data - enhanced for completed campaigns
@@ -510,164 +538,116 @@ export default function LatestActivityTable() {
     };
   }, [fetchAndProcessData, handleDashboardActivity]);
 
-  // Pagination logic
-  const totalActivities = allActivityData.length; // This is now the length of the capped & sorted list
-  const totalPages = Math.ceil(totalActivities / pageSize);
-  const paginatedActivities = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return allActivityData.slice(startIndex, startIndex + pageSize);
-  }, [allActivityData, currentPage, pageSize]);
-
-  const handlePageSizeChange = (value: string) => {
-    setPageSize(Number(value));
-    setCurrentPage(1); // Reset to first page when page size changes
-  };
-
-  const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  const goToPreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
-
-  if (loading) {
-    return (
-      <Card className="shadow-lg col-span-1 md:col-span-2 lg:col-span-3">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center"><Activity className="mr-2 h-6 w-6 text-primary" /> Latest Domain Activity</CardTitle>
-          <CardDescription>Loading recent domain intelligence updates...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* You can use a Skeleton loader here for better UX */}
-          <div className="h-48 flex items-center justify-center text-muted-foreground">
-            <Clock className="mr-2 h-5 w-5 animate-spin" /> Loading data...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (allActivityData.length === 0) {
-     return (
-      <Card className="shadow-lg col-span-1 md:col-span-2 lg:col-span-3">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center"><Activity className="mr-2 h-6 w-6 text-primary" /> Latest Domain Activity</CardTitle>
-          <CardDescription>Overview of the most recently processed domains across your campaigns.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-center py-8">No domain activity to display yet. Start a campaign!</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const startItem = (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(currentPage * pageSize, totalActivities);
+  // Reset infinite scroll when data changes
+  useEffect(() => {
+    resetInfiniteScroll();
+  }, [allActivityData, resetInfiniteScroll]);
 
   return (
-    <Card className="shadow-xl col-span-1 md:col-span-2 lg:col-span-3">
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center"><Activity className="mr-2 h-6 w-6 text-primary" /> Latest Domain Activity</CardTitle>
-        <CardDescription>
-          Overview of the most recently processed domains across your campaigns (showing up to {MAX_ITEMS_DISPLAY_INITIAL_LOAD} most recent).
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[350px] w-full"> {/* Adjust height as needed */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Domain</TableHead>
-                <TableHead>Generated</TableHead>
-                <TableHead className="text-center">DNS</TableHead>
-                <TableHead className="text-center">HTTP</TableHead>
-                <TableHead className="text-center">Leads Status</TableHead>
-                <TableHead className="text-center">Lead Score</TableHead>
-                <TableHead>Campaign</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedActivities.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <a
-                      href={item.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium hover:underline text-primary flex items-center"
-                      title={`Visit ${item.domainName}`}
-                    >
-                      {item.domainName}
-                      <ExternalLink className="ml-1.5 h-3.5 w-3.5 opacity-70" />
-                    </a>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {formatDate(item.generatedDate)}
-                  </TableCell>
-                  <TableCell className="text-center"><StatusBadge status={item.dnsStatus} /></TableCell>
-                  <TableCell className="text-center"><StatusBadge status={item.httpStatus} /></TableCell>
-                  <TableCell className="text-center"><StatusBadge status={item.leadScanStatus} /></TableCell>
-                  <TableCell className="text-center">
-                    {item.leadScore !== undefined ? (
-                      <Badge variant={getSimilarityBadgeVariant(item.leadScore)} className="text-xs">
-                        <Percent className="mr-1 h-3 w-3" /> 
-                        {item.leadScore}%
-                      </Badge>
-                    ) : (
-                      // Show a dash if lead scan was attempted but no score (e.g., No Leads, Failed, or N/A from lead scan)
-                      // but not if it's still Pending for lead scan
-                      item.leadScanStatus !== 'n_a' && item.leadScanStatus !== 'Pending' ? <span className="text-xs text-muted-foreground">-</span> : null
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/campaigns/${item.campaignId}?type=${getCampaignTypeFromActivity(item, [])}`} className="text-xs hover:underline text-muted-foreground">
-                      {item.campaignName}
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-               {paginatedActivities.length === 0 && totalActivities > 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No domains on this page.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </ScrollArea>
-        {/* Pagination Controls */}
-        <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Rows per page:</span>
-                <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                    <SelectTrigger className="w-[70px] h-8 text-xs">
-                        <SelectValue placeholder={pageSize} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {GLOBAL_PAGE_SIZES.map(size => (
-                            <SelectItem key={size} value={String(size)} className="text-xs">{size}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                 <span>Showing {totalActivities > 0 ? startItem : 0}-{endItem} of {totalActivities}</span>
+    <PaginationErrorBoundary>
+      <Card className="shadow-xl col-span-1 md:col-span-2 lg:col-span-3">
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center"><Activity className="mr-2 h-6 w-6 text-primary" /> Latest Domain Activity</CardTitle>
+          <CardDescription>
+            Overview of the most recently processed domains across your campaigns with infinite scrolling.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PaginationLoadingStates
+            isLoading={loading}
+            error={infiniteError}
+            isEmpty={isEmpty && !loading}
+            itemName="domain activities"
+            onRetry={retryInfiniteScroll}
+          >
+            <ScrollArea className="h-[400px] w-full">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Generated</TableHead>
+                    <TableHead className="text-center">DNS</TableHead>
+                    <TableHead className="text-center">HTTP</TableHead>
+                    <TableHead className="text-center">Leads Status</TableHead>
+                    <TableHead className="text-center">Lead Score</TableHead>
+                    <TableHead>Campaign</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {displayedActivities.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <a
+                          href={item.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium hover:underline text-primary flex items-center"
+                          title={`Visit ${item.domainName}`}
+                        >
+                          {item.domainName}
+                          <ExternalLink className="ml-1.5 h-3.5 w-3.5 opacity-70" />
+                        </a>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {formatDate(item.generatedDate)}
+                      </TableCell>
+                      <TableCell className="text-center"><StatusBadge status={item.dnsStatus} /></TableCell>
+                      <TableCell className="text-center"><StatusBadge status={item.httpStatus} /></TableCell>
+                      <TableCell className="text-center"><StatusBadge status={item.leadScanStatus} /></TableCell>
+                      <TableCell className="text-center">
+                        {item.leadScore !== undefined ? (
+                          <Badge variant={getSimilarityBadgeVariant(item.leadScore)} className="text-xs">
+                            <Percent className="mr-1 h-3 w-3" />
+                            {item.leadScore}%
+                          </Badge>
+                        ) : (
+                          item.leadScanStatus !== 'n_a' && item.leadScanStatus !== 'Pending' ? <span className="text-xs text-muted-foreground">-</span> : null
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Link href={`/campaigns/${item.campaignId}?type=${getCampaignTypeFromActivity(item, [])}`} className="text-xs hover:underline text-muted-foreground">
+                          {item.campaignName}
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  
+                  {/* Infinite scroll sentinel */}
+                  {hasMore && (
+                    <TableRow ref={observerRef}>
+                      <TableCell colSpan={7} className="text-center py-4">
+                        <InfiniteScrollLoader
+                          isLoading={isLoadingMore}
+                          hasMore={hasMore}
+                          error={infiniteError}
+                          onRetry={retryInfiniteScroll}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  
+                  {!hasMore && displayedActivities.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-4">
+                        <InfiniteScrollLoader
+                          isLoading={false}
+                          hasMore={false}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+            
+            {/* Activity count */}
+            <div className="mt-4 text-sm text-muted-foreground text-center">
+              Showing {displayedActivities.length} of {allActivityData.length} activities
             </div>
-            <div className="flex items-center gap-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToPreviousPage}
-                    disabled={currentPage === 1}
-                    className="h-8"
-                >
-                    <ChevronLeft className="h-4 w-4 mr-1 sm:mr-2" /> <span className="hidden sm:inline">Previous</span>
-                </Button>
-                <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages > 0 ? totalPages : 1}</span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToNextPage}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className="h-8"
-                >
-                   <span className="hidden sm:inline">Next</span> <ChevronRight className="h-4 w-4 ml-1 sm:ml-2" />
-                </Button>
-            </div>
-        </div>
-      </CardContent>
-    </Card>
+          </PaginationLoadingStates>
+        </CardContent>
+      </Card>
+    </PaginationErrorBoundary>
   );
 }
 

@@ -340,6 +340,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/bulk/domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get bulk domain data
+         * @description Efficiently retrieve domain data for multiple campaigns
+         */
+        post: operations["getBulkDomains"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/enriched-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get bulk enriched campaign data
+         * @description Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+         */
+        post: operations["getBulkEnrichedCampaignData"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get bulk lead data
+         * @description Efficiently retrieve lead data for multiple campaigns
+         */
+        post: operations["getBulkLeads"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get bulk log data
+         * @description Efficiently retrieve log data for multiple campaigns
+         */
+        post: operations["getBulkLogs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/domain-generation/pattern-offset": {
         parameters: {
             query?: never;
@@ -1276,6 +1356,36 @@ export interface components {
             /** Format: int32 */
             total_requested?: number;
         };
+        BulkDomainsRequest: {
+            campaignIds: string[];
+            /** Format: int32 */
+            limit?: number;
+            /** Format: int32 */
+            offset?: number;
+        };
+        BulkDomainsResponse: {
+            domains?: {
+                [key: string]: string[];
+            };
+            metadata?: components["schemas"]["BulkMetadata"];
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        BulkEnrichedDataRequest: {
+            campaignIds: string[];
+            /** Format: int32 */
+            limit?: number;
+            /** Format: int32 */
+            offset?: number;
+        };
+        BulkEnrichedDataResponse: {
+            campaigns?: {
+                [key: string]: components["schemas"]["EnrichedCampaignData"];
+            };
+            metadata?: components["schemas"]["BulkMetadata"];
+            /** Format: int32 */
+            totalCount?: number;
+        };
         BulkHealthCheckResponse: {
             /** Format: int32 */
             failedProxies?: number;
@@ -1284,6 +1394,45 @@ export interface components {
             results?: components["schemas"]["ProxyHealthCheckResponse"][];
             /** Format: int32 */
             totalProxies?: number;
+        };
+        BulkLeadsRequest: {
+            campaignIds: string[];
+            /** Format: int32 */
+            limit?: number;
+            /** Format: int32 */
+            offset?: number;
+        };
+        BulkLeadsResponse: {
+            leads?: {
+                [key: string]: string[];
+            };
+            metadata?: components["schemas"]["BulkMetadata"];
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        BulkLogsRequest: {
+            campaignIds: string[];
+            /** Format: int32 */
+            limit?: number;
+            /** Format: int32 */
+            offset?: number;
+        };
+        BulkLogsResponse: {
+            logs?: {
+                [key: string]: Record<string, never>[];
+            };
+            metadata?: components["schemas"]["BulkMetadata"];
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        BulkMetadata: {
+            failedCampaigns?: string[];
+            /** Format: int32 */
+            processedCampaigns?: number;
+            /** Format: int64 */
+            processingTimeMs?: number;
+            /** Format: int32 */
+            skippedCampaigns?: number;
         };
         CacheConfiguration: {
             cacheName?: string;
@@ -2298,6 +2447,13 @@ export interface components {
         };
         DomainHTTPStatusEnum: string;
         DomainPatternType: string;
+        EnrichedCampaignData: {
+            campaign?: components["schemas"]["CampaignData"];
+            dnsValidatedDomains?: string[];
+            domains?: string[];
+            httpKeywordResults?: Record<string, never>[];
+            leads?: string[];
+        };
         ErrorCode: string;
         ErrorContext: {
             /** Format: int32 */
@@ -4792,6 +4948,174 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ValidationOperationResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getBulkDomains: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDomainsRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getBulkEnrichedCampaignData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkEnrichedDataRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getBulkLeads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkLeadsRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getBulkLogs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkLogsRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
                 };
             };
             /** @description Bad Request */

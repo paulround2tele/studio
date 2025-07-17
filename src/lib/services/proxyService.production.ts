@@ -9,9 +9,12 @@ import {
   CreateProxyRequestProtocolEnum,
   UpdateProxyRequestProtocolEnum,
 } from '@/lib/api-client/models';
+import type { components } from '@/lib/api-client/types';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
-import type { FrontendProxy } from '@/lib/types/frontend-safe-types';
 import { transformProxyData } from '@/lib/utils/sqlNullTransformers';
+
+// Use direct OpenAPI types
+type FrontendProxy = components['schemas']['Proxy'];
 import {
   safeApiCall
 } from '@/lib/utils/apiResponseHelpers';
@@ -132,8 +135,8 @@ class ProxyModelService {
         updatedAt: transformed.updatedAt,
         status: !transformed.isEnabled ? 'Disabled' : (transformed.isHealthy ? 'Active' : 'Failed'),
         lastTested: transformed.lastCheckedAt,
-        successCount: 0,
-        failureCount: 0,
+        successCount: "0",
+        failureCount: "0",
         lastError: transformed.lastStatus || "",
         notes: transformed.notes || ""
       };
@@ -203,8 +206,8 @@ class ProxyModelService {
       updatedAt: transformed.updatedAt,
       status: !transformed.isEnabled ? 'Disabled' : (transformed.isHealthy ? 'Active' : 'Failed'),
       lastTested: transformed.lastCheckedAt,
-      successCount: 0,
-      failureCount: 0,
+      successCount: "0",
+      failureCount: "0",
       lastError: transformed.lastStatus || "",
       notes: transformed.notes || ""
     };

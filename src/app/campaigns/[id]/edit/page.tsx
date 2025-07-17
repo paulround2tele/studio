@@ -8,57 +8,28 @@ import type { components } from '@/lib/api-client/types';
 type Campaign = components['schemas']['Campaign'];
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { apiClient } from '@/lib/api-client/client';
-import { useToast } from '@/hooks/use-toast';
-import { useLoadingStore } from '@/lib/stores/loadingStore';
+import { useCampaignOperations } from '@/hooks/useCampaignOperations';
 
 function EditCampaignPageContent() {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
 
   const campaignId = params.id as string;
   
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  // Use centralized loading state
-  const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
-  const loadingOperationId = `edit_campaign_${campaignId}`;
-  const loading = isOperationLoading(loadingOperationId);
+  // 🚀 MODERNIZED: Use centralized campaign operations hook
+  const { campaign, loading, error, loadCampaignData } = useCampaignOperations(campaignId);
 
   useEffect(() => {
     if (!campaignId) {
-      setError("Campaign ID is missing from URL.");
       return;
     }
     
-    async function fetchCampaign() {
-      startLoading(loadingOperationId, "Loading campaign for editing");
-      setError(null);
-      try {
-        const response = await apiClient.getCampaignDetails(campaignId);
-        if (response.data) {
-          setCampaign(response.data as Campaign);
-        } else {
-          setError("Campaign not found.");
-          setCampaign(null);
-          toast({ title: "Error Loading Campaign", description: "Campaign not found.", variant: "destructive" });
-        }
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load campaign data.";
-        setError(errorMessage);
-        setCampaign(null);
-        toast({ title: "Error Loading Campaign Data", description: errorMessage, variant: "destructive" });
-      } finally {
-        stopLoading(loadingOperationId);
-      }
-    }
-    fetchCampaign();
-  }, [campaignId, toast, startLoading, stopLoading, loadingOperationId]);
+    // Load campaign data for editing
+    loadCampaignData?.(true);
+  }, [campaignId, loadCampaignData]);
 
   if (loading) {
     return (

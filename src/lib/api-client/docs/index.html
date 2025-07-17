@@ -1202,6 +1202,85 @@ ul.nav-tabs {
     }
   }
 };
+    defs["BulkDomainsRequest"] = {
+  "required" : [ "campaignIds" ],
+  "type" : "object",
+  "properties" : {
+    "campaignIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "limit" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "offset" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkDomainsResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "domains" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "array",
+        "items" : {
+          "type" : "string"
+        }
+      }
+    },
+    "metadata" : {
+      "$ref" : "#/components/schemas/BulkMetadata"
+    },
+    "totalCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkEnrichedDataRequest"] = {
+  "required" : [ "campaignIds" ],
+  "type" : "object",
+  "properties" : {
+    "campaignIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "limit" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "offset" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkEnrichedDataResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "campaigns" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "$ref" : "#/components/schemas/EnrichedCampaignData"
+      }
+    },
+    "metadata" : {
+      "$ref" : "#/components/schemas/BulkMetadata"
+    },
+    "totalCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
     defs["BulkHealthCheckResponse"] = {
   "type" : "object",
   "properties" : {
@@ -1220,6 +1299,111 @@ ul.nav-tabs {
       }
     },
     "totalProxies" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkLeadsRequest"] = {
+  "required" : [ "campaignIds" ],
+  "type" : "object",
+  "properties" : {
+    "campaignIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "limit" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "offset" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkLeadsResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "leads" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "array",
+        "items" : {
+          "type" : "string"
+        }
+      }
+    },
+    "metadata" : {
+      "$ref" : "#/components/schemas/BulkMetadata"
+    },
+    "totalCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkLogsRequest"] = {
+  "required" : [ "campaignIds" ],
+  "type" : "object",
+  "properties" : {
+    "campaignIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "limit" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "offset" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkLogsResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "logs" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "array",
+        "items" : {
+          "type" : "object"
+        }
+      }
+    },
+    "metadata" : {
+      "$ref" : "#/components/schemas/BulkMetadata"
+    },
+    "totalCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkMetadata"] = {
+  "type" : "object",
+  "properties" : {
+    "failedCampaigns" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "processedCampaigns" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "processingTimeMs" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "skippedCampaigns" : {
       "type" : "integer",
       "format" : "int32"
     }
@@ -3235,6 +3419,38 @@ ul.nav-tabs {
     "variableLength" : {
       "type" : "integer",
       "format" : "int32"
+    }
+  }
+};
+    defs["EnrichedCampaignData"] = {
+  "type" : "object",
+  "properties" : {
+    "campaign" : {
+      "$ref" : "#/components/schemas/CampaignData"
+    },
+    "dnsValidatedDomains" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "domains" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "httpKeywordResults" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object"
+      }
+    },
+    "leads" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
     }
   }
 };
@@ -6800,6 +7016,18 @@ ul.nav-tabs {
                     </li>
                     <li data-group="Campaigns" data-name="deleteCampaign" class="">
                       <a href="#api-Campaigns-deleteCampaign">deleteCampaign</a>
+                    </li>
+                    <li data-group="Campaigns" data-name="getBulkDomains" class="">
+                      <a href="#api-Campaigns-getBulkDomains">getBulkDomains</a>
+                    </li>
+                    <li data-group="Campaigns" data-name="getBulkEnrichedCampaignData" class="">
+                      <a href="#api-Campaigns-getBulkEnrichedCampaignData">getBulkEnrichedCampaignData</a>
+                    </li>
+                    <li data-group="Campaigns" data-name="getBulkLeads" class="">
+                      <a href="#api-Campaigns-getBulkLeads">getBulkLeads</a>
+                    </li>
+                    <li data-group="Campaigns" data-name="getBulkLogs" class="">
+                      <a href="#api-Campaigns-getBulkLogs">getBulkLogs</a>
                     </li>
                     <li data-group="Campaigns" data-name="getCampaignDetails" class="">
                       <a href="#api-Campaigns-getCampaignDetails">getCampaignDetails</a>
@@ -11715,6 +11943,2186 @@ Campaign ID (UUID)
                                   </script>
                                 </div>
                                 <input id='responses-Campaigns-deleteCampaign-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Campaigns-getBulkDomains">
+                      <article id="api-Campaigns-getBulkDomains-0" data-group="User" data-name="getBulkDomains" data-version="0">
+                        <div class="pull-left">
+                          <h1>getBulkDomains</h1>
+                          <p>Get bulk domain data</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Efficiently retrieve domain data for multiple campaigns</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/campaigns/bulk/domains</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Campaigns-getBulkDomains-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getBulkDomains-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getBulkDomains-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkDomains-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Campaigns-getBulkDomains-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json" \
+ "http://localhost/campaigns/bulk/domains" \
+ -d '{
+  &quot;offset&quot; : 6,
+  &quot;limit&quot; : 0,
+  &quot;campaignIds&quot; : [ &quot;campaignIds&quot;, &quot;campaignIds&quot; ]
+}'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.CampaignsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        CampaignsApi apiInstance = new CampaignsApi();
+        BulkDomainsRequest bulkDomainsRequest = ; // BulkDomainsRequest | 
+
+        try {
+            APIResponse result = apiInstance.getBulkDomains(bulkDomainsRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getBulkDomains");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final BulkDomainsRequest bulkDomainsRequest = new BulkDomainsRequest(); // BulkDomainsRequest | 
+
+try {
+    final result = await api_instance.getBulkDomains(bulkDomainsRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getBulkDomains: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.CampaignsApi;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+        CampaignsApi apiInstance = new CampaignsApi();
+        BulkDomainsRequest bulkDomainsRequest = ; // BulkDomainsRequest | 
+
+        try {
+            APIResponse result = apiInstance.getBulkDomains(bulkDomainsRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getBulkDomains");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+CampaignsApi *apiInstance = [[CampaignsApi alloc] init];
+BulkDomainsRequest *bulkDomainsRequest = ; // 
+
+// Get bulk domain data
+[apiInstance getBulkDomainsWith:bulkDomainsRequest
+              completionHandler: ^(APIResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.CampaignsApi()
+var bulkDomainsRequest = ; // {BulkDomainsRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.getBulkDomains(bulkDomainsRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class getBulkDomainsExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new CampaignsApi();
+            var bulkDomainsRequest = new BulkDomainsRequest(); // BulkDomainsRequest | 
+
+            try {
+                // Get bulk domain data
+                APIResponse result = apiInstance.getBulkDomains(bulkDomainsRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling CampaignsApi.getBulkDomains: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\CampaignsApi();
+$bulkDomainsRequest = ; // BulkDomainsRequest | 
+
+try {
+    $result = $api_instance->getBulkDomains($bulkDomainsRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling CampaignsApi->getBulkDomains: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::CampaignsApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::CampaignsApi->new();
+my $bulkDomainsRequest = WWW::OPenAPIClient::Object::BulkDomainsRequest->new(); # BulkDomainsRequest | 
+
+eval {
+    my $result = $api_instance->getBulkDomains(bulkDomainsRequest => $bulkDomainsRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling CampaignsApi->getBulkDomains: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.CampaignsApi()
+bulkDomainsRequest =  # BulkDomainsRequest | 
+
+try:
+    # Get bulk domain data
+    api_response = api_instance.get_bulk_domains(bulkDomainsRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling CampaignsApi->getBulkDomains: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkDomains-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate CampaignsApi;
+
+pub fn main() {
+    let bulkDomainsRequest = ; // BulkDomainsRequest
+
+    let mut context = CampaignsApi::Context::default();
+    let result = client.getBulkDomains(bulkDomainsRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">bulkDomainsRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/BulkDomainsRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_getBulkDomains_bulkDomainsRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_getBulkDomains_bulkDomainsRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Campaigns-getBulkDomains-title-200"></h3>
+                            <p id="examples-Campaigns-getBulkDomains-description-200" class="marked"></p>
+                            <script>
+                              var responseCampaigns200_description = `Operation successful`;
+                              var responseCampaigns200_description_break = responseCampaigns200_description.indexOf('\n');
+                              if (responseCampaigns200_description_break == -1) {
+                                $("#examples-Campaigns-getBulkDomains-title-200").text("Status: 200 - " + responseCampaigns200_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkDomains-title-200").text("Status: 200 - " + responseCampaigns200_description.substring(0, responseCampaigns200_description_break));
+                                $("#examples-Campaigns-getBulkDomains-description-200").html(responseCampaigns200_description.substring(responseCampaigns200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkDomains-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkDomains-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkDomains-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkDomains-200-schema">
+                                <div id="responses-Campaigns-getBulkDomains-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkDomains-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkDomains-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkDomains-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getBulkDomains-title-400"></h3>
+                            <p id="examples-Campaigns-getBulkDomains-description-400" class="marked"></p>
+                            <script>
+                              var responseCampaigns400_description = `Bad Request`;
+                              var responseCampaigns400_description_break = responseCampaigns400_description.indexOf('\n');
+                              if (responseCampaigns400_description_break == -1) {
+                                $("#examples-Campaigns-getBulkDomains-title-400").text("Status: 400 - " + responseCampaigns400_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkDomains-title-400").text("Status: 400 - " + responseCampaigns400_description.substring(0, responseCampaigns400_description_break));
+                                $("#examples-Campaigns-getBulkDomains-description-400").html(responseCampaigns400_description.substring(responseCampaigns400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkDomains-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkDomains-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkDomains-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkDomains-400-schema">
+                                <div id="responses-Campaigns-getBulkDomains-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkDomains-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkDomains-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkDomains-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getBulkDomains-title-500"></h3>
+                            <p id="examples-Campaigns-getBulkDomains-description-500" class="marked"></p>
+                            <script>
+                              var responseCampaigns500_description = `Internal Server Error`;
+                              var responseCampaigns500_description_break = responseCampaigns500_description.indexOf('\n');
+                              if (responseCampaigns500_description_break == -1) {
+                                $("#examples-Campaigns-getBulkDomains-title-500").text("Status: 500 - " + responseCampaigns500_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkDomains-title-500").text("Status: 500 - " + responseCampaigns500_description.substring(0, responseCampaigns500_description_break));
+                                $("#examples-Campaigns-getBulkDomains-description-500").html(responseCampaigns500_description.substring(responseCampaigns500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkDomains-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkDomains-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkDomains-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkDomains-500-schema">
+                                <div id="responses-Campaigns-getBulkDomains-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkDomains-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkDomains-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkDomains-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Campaigns-getBulkEnrichedCampaignData">
+                      <article id="api-Campaigns-getBulkEnrichedCampaignData-0" data-group="User" data-name="getBulkEnrichedCampaignData" data-version="0">
+                        <div class="pull-left">
+                          <h1>getBulkEnrichedCampaignData</h1>
+                          <p>Get bulk enriched campaign data</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/campaigns/bulk/enriched-data</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkEnrichedCampaignData-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Campaigns-getBulkEnrichedCampaignData-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json" \
+ "http://localhost/campaigns/bulk/enriched-data" \
+ -d '{
+  &quot;offset&quot; : 6,
+  &quot;limit&quot; : 0,
+  &quot;campaignIds&quot; : [ &quot;campaignIds&quot;, &quot;campaignIds&quot; ]
+}'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.CampaignsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        CampaignsApi apiInstance = new CampaignsApi();
+        BulkEnrichedDataRequest bulkEnrichedDataRequest = ; // BulkEnrichedDataRequest | 
+
+        try {
+            APIResponse result = apiInstance.getBulkEnrichedCampaignData(bulkEnrichedDataRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getBulkEnrichedCampaignData");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final BulkEnrichedDataRequest bulkEnrichedDataRequest = new BulkEnrichedDataRequest(); // BulkEnrichedDataRequest | 
+
+try {
+    final result = await api_instance.getBulkEnrichedCampaignData(bulkEnrichedDataRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getBulkEnrichedCampaignData: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.CampaignsApi;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+        CampaignsApi apiInstance = new CampaignsApi();
+        BulkEnrichedDataRequest bulkEnrichedDataRequest = ; // BulkEnrichedDataRequest | 
+
+        try {
+            APIResponse result = apiInstance.getBulkEnrichedCampaignData(bulkEnrichedDataRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getBulkEnrichedCampaignData");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+CampaignsApi *apiInstance = [[CampaignsApi alloc] init];
+BulkEnrichedDataRequest *bulkEnrichedDataRequest = ; // 
+
+// Get bulk enriched campaign data
+[apiInstance getBulkEnrichedCampaignDataWith:bulkEnrichedDataRequest
+              completionHandler: ^(APIResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.CampaignsApi()
+var bulkEnrichedDataRequest = ; // {BulkEnrichedDataRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.getBulkEnrichedCampaignData(bulkEnrichedDataRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class getBulkEnrichedCampaignDataExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new CampaignsApi();
+            var bulkEnrichedDataRequest = new BulkEnrichedDataRequest(); // BulkEnrichedDataRequest | 
+
+            try {
+                // Get bulk enriched campaign data
+                APIResponse result = apiInstance.getBulkEnrichedCampaignData(bulkEnrichedDataRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling CampaignsApi.getBulkEnrichedCampaignData: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\CampaignsApi();
+$bulkEnrichedDataRequest = ; // BulkEnrichedDataRequest | 
+
+try {
+    $result = $api_instance->getBulkEnrichedCampaignData($bulkEnrichedDataRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling CampaignsApi->getBulkEnrichedCampaignData: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::CampaignsApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::CampaignsApi->new();
+my $bulkEnrichedDataRequest = WWW::OPenAPIClient::Object::BulkEnrichedDataRequest->new(); # BulkEnrichedDataRequest | 
+
+eval {
+    my $result = $api_instance->getBulkEnrichedCampaignData(bulkEnrichedDataRequest => $bulkEnrichedDataRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling CampaignsApi->getBulkEnrichedCampaignData: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.CampaignsApi()
+bulkEnrichedDataRequest =  # BulkEnrichedDataRequest | 
+
+try:
+    # Get bulk enriched campaign data
+    api_response = api_instance.get_bulk_enriched_campaign_data(bulkEnrichedDataRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling CampaignsApi->getBulkEnrichedCampaignData: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkEnrichedCampaignData-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate CampaignsApi;
+
+pub fn main() {
+    let bulkEnrichedDataRequest = ; // BulkEnrichedDataRequest
+
+    let mut context = CampaignsApi::Context::default();
+    let result = client.getBulkEnrichedCampaignData(bulkEnrichedDataRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">bulkEnrichedDataRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/BulkEnrichedDataRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_getBulkEnrichedCampaignData_bulkEnrichedDataRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_getBulkEnrichedCampaignData_bulkEnrichedDataRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Campaigns-getBulkEnrichedCampaignData-title-200"></h3>
+                            <p id="examples-Campaigns-getBulkEnrichedCampaignData-description-200" class="marked"></p>
+                            <script>
+                              var responseCampaigns200_description = `Operation successful`;
+                              var responseCampaigns200_description_break = responseCampaigns200_description.indexOf('\n');
+                              if (responseCampaigns200_description_break == -1) {
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-title-200").text("Status: 200 - " + responseCampaigns200_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-title-200").text("Status: 200 - " + responseCampaigns200_description.substring(0, responseCampaigns200_description_break));
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-description-200").html(responseCampaigns200_description.substring(responseCampaigns200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkEnrichedCampaignData-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkEnrichedCampaignData-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkEnrichedCampaignData-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkEnrichedCampaignData-200-schema">
+                                <div id="responses-Campaigns-getBulkEnrichedCampaignData-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkEnrichedCampaignData-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkEnrichedCampaignData-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkEnrichedCampaignData-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getBulkEnrichedCampaignData-title-400"></h3>
+                            <p id="examples-Campaigns-getBulkEnrichedCampaignData-description-400" class="marked"></p>
+                            <script>
+                              var responseCampaigns400_description = `Bad Request`;
+                              var responseCampaigns400_description_break = responseCampaigns400_description.indexOf('\n');
+                              if (responseCampaigns400_description_break == -1) {
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-title-400").text("Status: 400 - " + responseCampaigns400_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-title-400").text("Status: 400 - " + responseCampaigns400_description.substring(0, responseCampaigns400_description_break));
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-description-400").html(responseCampaigns400_description.substring(responseCampaigns400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkEnrichedCampaignData-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkEnrichedCampaignData-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkEnrichedCampaignData-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkEnrichedCampaignData-400-schema">
+                                <div id="responses-Campaigns-getBulkEnrichedCampaignData-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkEnrichedCampaignData-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkEnrichedCampaignData-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkEnrichedCampaignData-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getBulkEnrichedCampaignData-title-500"></h3>
+                            <p id="examples-Campaigns-getBulkEnrichedCampaignData-description-500" class="marked"></p>
+                            <script>
+                              var responseCampaigns500_description = `Internal Server Error`;
+                              var responseCampaigns500_description_break = responseCampaigns500_description.indexOf('\n');
+                              if (responseCampaigns500_description_break == -1) {
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-title-500").text("Status: 500 - " + responseCampaigns500_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-title-500").text("Status: 500 - " + responseCampaigns500_description.substring(0, responseCampaigns500_description_break));
+                                $("#examples-Campaigns-getBulkEnrichedCampaignData-description-500").html(responseCampaigns500_description.substring(responseCampaigns500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkEnrichedCampaignData-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkEnrichedCampaignData-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkEnrichedCampaignData-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkEnrichedCampaignData-500-schema">
+                                <div id="responses-Campaigns-getBulkEnrichedCampaignData-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkEnrichedCampaignData-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkEnrichedCampaignData-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkEnrichedCampaignData-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Campaigns-getBulkLeads">
+                      <article id="api-Campaigns-getBulkLeads-0" data-group="User" data-name="getBulkLeads" data-version="0">
+                        <div class="pull-left">
+                          <h1>getBulkLeads</h1>
+                          <p>Get bulk lead data</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Efficiently retrieve lead data for multiple campaigns</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/campaigns/bulk/leads</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Campaigns-getBulkLeads-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getBulkLeads-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getBulkLeads-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLeads-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Campaigns-getBulkLeads-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json" \
+ "http://localhost/campaigns/bulk/leads" \
+ -d '{
+  &quot;offset&quot; : 6,
+  &quot;limit&quot; : 0,
+  &quot;campaignIds&quot; : [ &quot;campaignIds&quot;, &quot;campaignIds&quot; ]
+}'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.CampaignsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        CampaignsApi apiInstance = new CampaignsApi();
+        BulkLeadsRequest bulkLeadsRequest = ; // BulkLeadsRequest | 
+
+        try {
+            APIResponse result = apiInstance.getBulkLeads(bulkLeadsRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getBulkLeads");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final BulkLeadsRequest bulkLeadsRequest = new BulkLeadsRequest(); // BulkLeadsRequest | 
+
+try {
+    final result = await api_instance.getBulkLeads(bulkLeadsRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getBulkLeads: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.CampaignsApi;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+        CampaignsApi apiInstance = new CampaignsApi();
+        BulkLeadsRequest bulkLeadsRequest = ; // BulkLeadsRequest | 
+
+        try {
+            APIResponse result = apiInstance.getBulkLeads(bulkLeadsRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getBulkLeads");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+CampaignsApi *apiInstance = [[CampaignsApi alloc] init];
+BulkLeadsRequest *bulkLeadsRequest = ; // 
+
+// Get bulk lead data
+[apiInstance getBulkLeadsWith:bulkLeadsRequest
+              completionHandler: ^(APIResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.CampaignsApi()
+var bulkLeadsRequest = ; // {BulkLeadsRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.getBulkLeads(bulkLeadsRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class getBulkLeadsExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new CampaignsApi();
+            var bulkLeadsRequest = new BulkLeadsRequest(); // BulkLeadsRequest | 
+
+            try {
+                // Get bulk lead data
+                APIResponse result = apiInstance.getBulkLeads(bulkLeadsRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling CampaignsApi.getBulkLeads: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\CampaignsApi();
+$bulkLeadsRequest = ; // BulkLeadsRequest | 
+
+try {
+    $result = $api_instance->getBulkLeads($bulkLeadsRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling CampaignsApi->getBulkLeads: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::CampaignsApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::CampaignsApi->new();
+my $bulkLeadsRequest = WWW::OPenAPIClient::Object::BulkLeadsRequest->new(); # BulkLeadsRequest | 
+
+eval {
+    my $result = $api_instance->getBulkLeads(bulkLeadsRequest => $bulkLeadsRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling CampaignsApi->getBulkLeads: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.CampaignsApi()
+bulkLeadsRequest =  # BulkLeadsRequest | 
+
+try:
+    # Get bulk lead data
+    api_response = api_instance.get_bulk_leads(bulkLeadsRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling CampaignsApi->getBulkLeads: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLeads-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate CampaignsApi;
+
+pub fn main() {
+    let bulkLeadsRequest = ; // BulkLeadsRequest
+
+    let mut context = CampaignsApi::Context::default();
+    let result = client.getBulkLeads(bulkLeadsRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">bulkLeadsRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/BulkLeadsRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_getBulkLeads_bulkLeadsRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_getBulkLeads_bulkLeadsRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Campaigns-getBulkLeads-title-200"></h3>
+                            <p id="examples-Campaigns-getBulkLeads-description-200" class="marked"></p>
+                            <script>
+                              var responseCampaigns200_description = `Operation successful`;
+                              var responseCampaigns200_description_break = responseCampaigns200_description.indexOf('\n');
+                              if (responseCampaigns200_description_break == -1) {
+                                $("#examples-Campaigns-getBulkLeads-title-200").text("Status: 200 - " + responseCampaigns200_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkLeads-title-200").text("Status: 200 - " + responseCampaigns200_description.substring(0, responseCampaigns200_description_break));
+                                $("#examples-Campaigns-getBulkLeads-description-200").html(responseCampaigns200_description.substring(responseCampaigns200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkLeads-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkLeads-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkLeads-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkLeads-200-schema">
+                                <div id="responses-Campaigns-getBulkLeads-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkLeads-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkLeads-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkLeads-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getBulkLeads-title-400"></h3>
+                            <p id="examples-Campaigns-getBulkLeads-description-400" class="marked"></p>
+                            <script>
+                              var responseCampaigns400_description = `Bad Request`;
+                              var responseCampaigns400_description_break = responseCampaigns400_description.indexOf('\n');
+                              if (responseCampaigns400_description_break == -1) {
+                                $("#examples-Campaigns-getBulkLeads-title-400").text("Status: 400 - " + responseCampaigns400_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkLeads-title-400").text("Status: 400 - " + responseCampaigns400_description.substring(0, responseCampaigns400_description_break));
+                                $("#examples-Campaigns-getBulkLeads-description-400").html(responseCampaigns400_description.substring(responseCampaigns400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkLeads-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkLeads-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkLeads-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkLeads-400-schema">
+                                <div id="responses-Campaigns-getBulkLeads-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkLeads-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkLeads-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkLeads-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getBulkLeads-title-500"></h3>
+                            <p id="examples-Campaigns-getBulkLeads-description-500" class="marked"></p>
+                            <script>
+                              var responseCampaigns500_description = `Internal Server Error`;
+                              var responseCampaigns500_description_break = responseCampaigns500_description.indexOf('\n');
+                              if (responseCampaigns500_description_break == -1) {
+                                $("#examples-Campaigns-getBulkLeads-title-500").text("Status: 500 - " + responseCampaigns500_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkLeads-title-500").text("Status: 500 - " + responseCampaigns500_description.substring(0, responseCampaigns500_description_break));
+                                $("#examples-Campaigns-getBulkLeads-description-500").html(responseCampaigns500_description.substring(responseCampaigns500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkLeads-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkLeads-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkLeads-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkLeads-500-schema">
+                                <div id="responses-Campaigns-getBulkLeads-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkLeads-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkLeads-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkLeads-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Campaigns-getBulkLogs">
+                      <article id="api-Campaigns-getBulkLogs-0" data-group="User" data-name="getBulkLogs" data-version="0">
+                        <div class="pull-left">
+                          <h1>getBulkLogs</h1>
+                          <p>Get bulk log data</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Efficiently retrieve log data for multiple campaigns</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/campaigns/bulk/logs</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Campaigns-getBulkLogs-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getBulkLogs-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getBulkLogs-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Campaigns-getBulkLogs-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Campaigns-getBulkLogs-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json" \
+ "http://localhost/campaigns/bulk/logs" \
+ -d '{
+  &quot;offset&quot; : 6,
+  &quot;limit&quot; : 0,
+  &quot;campaignIds&quot; : [ &quot;campaignIds&quot;, &quot;campaignIds&quot; ]
+}'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.CampaignsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        CampaignsApi apiInstance = new CampaignsApi();
+        BulkLogsRequest bulkLogsRequest = ; // BulkLogsRequest | 
+
+        try {
+            APIResponse result = apiInstance.getBulkLogs(bulkLogsRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getBulkLogs");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final BulkLogsRequest bulkLogsRequest = new BulkLogsRequest(); // BulkLogsRequest | 
+
+try {
+    final result = await api_instance.getBulkLogs(bulkLogsRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getBulkLogs: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.CampaignsApi;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+        CampaignsApi apiInstance = new CampaignsApi();
+        BulkLogsRequest bulkLogsRequest = ; // BulkLogsRequest | 
+
+        try {
+            APIResponse result = apiInstance.getBulkLogs(bulkLogsRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getBulkLogs");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+CampaignsApi *apiInstance = [[CampaignsApi alloc] init];
+BulkLogsRequest *bulkLogsRequest = ; // 
+
+// Get bulk log data
+[apiInstance getBulkLogsWith:bulkLogsRequest
+              completionHandler: ^(APIResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.CampaignsApi()
+var bulkLogsRequest = ; // {BulkLogsRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.getBulkLogs(bulkLogsRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class getBulkLogsExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new CampaignsApi();
+            var bulkLogsRequest = new BulkLogsRequest(); // BulkLogsRequest | 
+
+            try {
+                // Get bulk log data
+                APIResponse result = apiInstance.getBulkLogs(bulkLogsRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling CampaignsApi.getBulkLogs: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\CampaignsApi();
+$bulkLogsRequest = ; // BulkLogsRequest | 
+
+try {
+    $result = $api_instance->getBulkLogs($bulkLogsRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling CampaignsApi->getBulkLogs: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::CampaignsApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::CampaignsApi->new();
+my $bulkLogsRequest = WWW::OPenAPIClient::Object::BulkLogsRequest->new(); # BulkLogsRequest | 
+
+eval {
+    my $result = $api_instance->getBulkLogs(bulkLogsRequest => $bulkLogsRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling CampaignsApi->getBulkLogs: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.CampaignsApi()
+bulkLogsRequest =  # BulkLogsRequest | 
+
+try:
+    # Get bulk log data
+    api_response = api_instance.get_bulk_logs(bulkLogsRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling CampaignsApi->getBulkLogs: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getBulkLogs-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate CampaignsApi;
+
+pub fn main() {
+    let bulkLogsRequest = ; // BulkLogsRequest
+
+    let mut context = CampaignsApi::Context::default();
+    let result = client.getBulkLogs(bulkLogsRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">bulkLogsRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/BulkLogsRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_getBulkLogs_bulkLogsRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_getBulkLogs_bulkLogsRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Campaigns-getBulkLogs-title-200"></h3>
+                            <p id="examples-Campaigns-getBulkLogs-description-200" class="marked"></p>
+                            <script>
+                              var responseCampaigns200_description = `Operation successful`;
+                              var responseCampaigns200_description_break = responseCampaigns200_description.indexOf('\n');
+                              if (responseCampaigns200_description_break == -1) {
+                                $("#examples-Campaigns-getBulkLogs-title-200").text("Status: 200 - " + responseCampaigns200_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkLogs-title-200").text("Status: 200 - " + responseCampaigns200_description.substring(0, responseCampaigns200_description_break));
+                                $("#examples-Campaigns-getBulkLogs-description-200").html(responseCampaigns200_description.substring(responseCampaigns200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkLogs-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkLogs-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkLogs-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkLogs-200-schema">
+                                <div id="responses-Campaigns-getBulkLogs-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkLogs-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkLogs-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkLogs-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getBulkLogs-title-400"></h3>
+                            <p id="examples-Campaigns-getBulkLogs-description-400" class="marked"></p>
+                            <script>
+                              var responseCampaigns400_description = `Bad Request`;
+                              var responseCampaigns400_description_break = responseCampaigns400_description.indexOf('\n');
+                              if (responseCampaigns400_description_break == -1) {
+                                $("#examples-Campaigns-getBulkLogs-title-400").text("Status: 400 - " + responseCampaigns400_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkLogs-title-400").text("Status: 400 - " + responseCampaigns400_description.substring(0, responseCampaigns400_description_break));
+                                $("#examples-Campaigns-getBulkLogs-description-400").html(responseCampaigns400_description.substring(responseCampaigns400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkLogs-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkLogs-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkLogs-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkLogs-400-schema">
+                                <div id="responses-Campaigns-getBulkLogs-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkLogs-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkLogs-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkLogs-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getBulkLogs-title-500"></h3>
+                            <p id="examples-Campaigns-getBulkLogs-description-500" class="marked"></p>
+                            <script>
+                              var responseCampaigns500_description = `Internal Server Error`;
+                              var responseCampaigns500_description_break = responseCampaigns500_description.indexOf('\n');
+                              if (responseCampaigns500_description_break == -1) {
+                                $("#examples-Campaigns-getBulkLogs-title-500").text("Status: 500 - " + responseCampaigns500_description);
+                              } else {
+                                $("#examples-Campaigns-getBulkLogs-title-500").text("Status: 500 - " + responseCampaigns500_description.substring(0, responseCampaigns500_description_break));
+                                $("#examples-Campaigns-getBulkLogs-description-500").html(responseCampaigns500_description.substring(responseCampaigns500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getBulkLogs-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getBulkLogs-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getBulkLogs-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getBulkLogs-500-schema">
+                                <div id="responses-Campaigns-getBulkLogs-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getBulkLogs-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getBulkLogs-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getBulkLogs-500-schema-data' type='hidden' value=''></input>
                               </div>
                             </div>
                         </article>

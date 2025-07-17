@@ -28,6 +28,14 @@ import type { BulkDeleteRequest } from '../models';
 // @ts-ignore
 import type { BulkDeleteResult } from '../models';
 // @ts-ignore
+import type { BulkDomainsRequest } from '../models';
+// @ts-ignore
+import type { BulkEnrichedDataRequest } from '../models';
+// @ts-ignore
+import type { BulkLeadsRequest } from '../models';
+// @ts-ignore
+import type { BulkLogsRequest } from '../models';
+// @ts-ignore
 import type { Campaign } from '../models';
 // @ts-ignore
 import type { CampaignDetailsResponse } from '../models';
@@ -197,6 +205,150 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Efficiently retrieve domain data for multiple campaigns
+         * @summary Get bulk domain data
+         * @param {BulkDomainsRequest} bulkDomainsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getBulkDomains: async (bulkDomainsRequest: BulkDomainsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkDomainsRequest' is not null or undefined
+            assertParamExists('getBulkDomains', 'bulkDomainsRequest', bulkDomainsRequest)
+            const localVarPath = `/campaigns/bulk/domains`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkDomainsRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+         * @summary Get bulk enriched campaign data
+         * @param {BulkEnrichedDataRequest} bulkEnrichedDataRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getBulkEnrichedCampaignData: async (bulkEnrichedDataRequest: BulkEnrichedDataRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkEnrichedDataRequest' is not null or undefined
+            assertParamExists('getBulkEnrichedCampaignData', 'bulkEnrichedDataRequest', bulkEnrichedDataRequest)
+            const localVarPath = `/campaigns/bulk/enriched-data`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkEnrichedDataRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Efficiently retrieve lead data for multiple campaigns
+         * @summary Get bulk lead data
+         * @param {BulkLeadsRequest} bulkLeadsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getBulkLeads: async (bulkLeadsRequest: BulkLeadsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkLeadsRequest' is not null or undefined
+            assertParamExists('getBulkLeads', 'bulkLeadsRequest', bulkLeadsRequest)
+            const localVarPath = `/campaigns/bulk/leads`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkLeadsRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Efficiently retrieve log data for multiple campaigns
+         * @summary Get bulk log data
+         * @param {BulkLogsRequest} bulkLogsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getBulkLogs: async (bulkLogsRequest: BulkLogsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkLogsRequest' is not null or undefined
+            assertParamExists('getBulkLogs', 'bulkLogsRequest', bulkLogsRequest)
+            const localVarPath = `/campaigns/bulk/logs`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkLogsRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -735,6 +887,58 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Efficiently retrieve domain data for multiple campaigns
+         * @summary Get bulk domain data
+         * @param {BulkDomainsRequest} bulkDomainsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getBulkDomains(bulkDomainsRequest: BulkDomainsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getBulkDomains(bulkDomainsRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getBulkDomains']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+         * @summary Get bulk enriched campaign data
+         * @param {BulkEnrichedDataRequest} bulkEnrichedDataRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getBulkEnrichedCampaignData(bulkEnrichedDataRequest: BulkEnrichedDataRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getBulkEnrichedCampaignData(bulkEnrichedDataRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getBulkEnrichedCampaignData']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Efficiently retrieve lead data for multiple campaigns
+         * @summary Get bulk lead data
+         * @param {BulkLeadsRequest} bulkLeadsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getBulkLeads(bulkLeadsRequest: BulkLeadsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getBulkLeads(bulkLeadsRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getBulkLeads']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Efficiently retrieve log data for multiple campaigns
+         * @summary Get bulk log data
+         * @param {BulkLogsRequest} bulkLogsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getBulkLogs(bulkLogsRequest: BulkLogsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getBulkLogs(bulkLogsRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getBulkLogs']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Retrieve detailed information about a specific campaign including its configuration parameters
          * @summary Get campaign details
          * @param {string} campaignId Campaign ID (UUID)
@@ -952,6 +1156,46 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.deleteCampaign(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
+         * Efficiently retrieve domain data for multiple campaigns
+         * @summary Get bulk domain data
+         * @param {BulkDomainsRequest} bulkDomainsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getBulkDomains(bulkDomainsRequest: BulkDomainsRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.getBulkDomains(bulkDomainsRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+         * @summary Get bulk enriched campaign data
+         * @param {BulkEnrichedDataRequest} bulkEnrichedDataRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getBulkEnrichedCampaignData(bulkEnrichedDataRequest: BulkEnrichedDataRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.getBulkEnrichedCampaignData(bulkEnrichedDataRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Efficiently retrieve lead data for multiple campaigns
+         * @summary Get bulk lead data
+         * @param {BulkLeadsRequest} bulkLeadsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getBulkLeads(bulkLeadsRequest: BulkLeadsRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.getBulkLeads(bulkLeadsRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Efficiently retrieve log data for multiple campaigns
+         * @summary Get bulk log data
+         * @param {BulkLogsRequest} bulkLogsRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getBulkLogs(bulkLogsRequest: BulkLogsRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.getBulkLogs(bulkLogsRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Retrieve detailed information about a specific campaign including its configuration parameters
          * @summary Get campaign details
          * @param {string} campaignId Campaign ID (UUID)
@@ -1130,6 +1374,46 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     deleteCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<DeletionResponse>;
+
+    /**
+     * Efficiently retrieve domain data for multiple campaigns
+     * @summary Get bulk domain data
+     * @param {BulkDomainsRequest} bulkDomainsRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getBulkDomains(bulkDomainsRequest: BulkDomainsRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
+
+    /**
+     * Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+     * @summary Get bulk enriched campaign data
+     * @param {BulkEnrichedDataRequest} bulkEnrichedDataRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getBulkEnrichedCampaignData(bulkEnrichedDataRequest: BulkEnrichedDataRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
+
+    /**
+     * Efficiently retrieve lead data for multiple campaigns
+     * @summary Get bulk lead data
+     * @param {BulkLeadsRequest} bulkLeadsRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getBulkLeads(bulkLeadsRequest: BulkLeadsRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
+
+    /**
+     * Efficiently retrieve log data for multiple campaigns
+     * @summary Get bulk log data
+     * @param {BulkLogsRequest} bulkLogsRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getBulkLogs(bulkLogsRequest: BulkLogsRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
 
     /**
      * Retrieve detailed information about a specific campaign including its configuration parameters
@@ -1317,6 +1601,54 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public deleteCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).deleteCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Efficiently retrieve domain data for multiple campaigns
+     * @summary Get bulk domain data
+     * @param {BulkDomainsRequest} bulkDomainsRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public getBulkDomains(bulkDomainsRequest: BulkDomainsRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getBulkDomains(bulkDomainsRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+     * @summary Get bulk enriched campaign data
+     * @param {BulkEnrichedDataRequest} bulkEnrichedDataRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public getBulkEnrichedCampaignData(bulkEnrichedDataRequest: BulkEnrichedDataRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getBulkEnrichedCampaignData(bulkEnrichedDataRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Efficiently retrieve lead data for multiple campaigns
+     * @summary Get bulk lead data
+     * @param {BulkLeadsRequest} bulkLeadsRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public getBulkLeads(bulkLeadsRequest: BulkLeadsRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getBulkLeads(bulkLeadsRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Efficiently retrieve log data for multiple campaigns
+     * @summary Get bulk log data
+     * @param {BulkLogsRequest} bulkLogsRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public getBulkLogs(bulkLogsRequest: BulkLogsRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getBulkLogs(bulkLogsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

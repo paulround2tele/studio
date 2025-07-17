@@ -84,6 +84,12 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	group.GET("/:campaignId/results/dns-validation", h.getDNSValidationResults)
 	group.GET("/:campaignId/results/http-keyword", h.getHTTPKeywordResults)
 
+	// B2B BULK APIS: Efficient batch endpoints for large-scale operations
+	group.POST("/bulk/enriched-data", h.getBulkEnrichedCampaignData)
+	group.POST("/bulk/domains", h.getBulkDomains)
+	group.POST("/bulk/logs", h.getBulkLogs)
+	group.POST("/bulk/leads", h.getBulkLeads)
+
 	// Domain generation utilities - session-based auth
 	group.POST("/domain-generation/pattern-offset", h.getPatternOffset)
 }
@@ -1273,4 +1279,268 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	}
 
 	respondWithJSONGin(c, http.StatusOK, response)
+}
+
+
+// --- B2B BULK APIS FOR LARGE-SCALE OPERATIONS ---
+
+
+// getBulkEnrichedCampaignData gets enriched data for multiple campaigns in one call.
+// @Summary Get bulk enriched campaign data
+// @Description Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+// @Tags campaigns
+// @ID getBulkEnrichedCampaignData
+// @Accept json
+// @Produce json
+// @Param request body BulkEnrichedDataRequest true "Bulk enriched data request"
+// @Success 200 {object} APIResponse "Bulk enriched campaign data"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /campaigns/bulk/enriched-data [post]
+func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Context) {
+	startTime := time.Now()
+	var req BulkEnrichedDataRequest
+
+	// Parse and validate request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		var validationErrors []ErrorDetail
+		validationErrors = append(validationErrors, ErrorDetail{
+			Field:   "body",
+			Code:    ErrorCodeValidation,
+			Message: "Invalid request payload: " + err.Error(),
+		})
+		respondWithValidationErrorGin(c, validationErrors)
+		return
+	}
+
+	// Validate struct if validator is available
+	if validate != nil {
+		if err := validate.Struct(req); err != nil {
+			var validationErrors []ErrorDetail
+			validationErrors = append(validationErrors, ErrorDetail{
+				Code:    ErrorCodeValidation,
+				Message: "Validation failed: " + err.Error(),
+			})
+			respondWithValidationErrorGin(c, validationErrors)
+			return
+		}
+	}
+
+	// Validate campaign IDs
+	if len(req.CampaignIDs) == 0 {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Campaign IDs list cannot be empty", []ErrorDetail{
+				{
+					Field:   "campaignIds",
+					Code:    ErrorCodeValidation,
+					Message: "At least one campaign ID must be provided",
+				},
+			})
+		return
+	}
+
+	const maxBatchSize = 50
+	if len(req.CampaignIDs) > maxBatchSize {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			fmt.Sprintf("Maximum %d campaigns allowed per request", maxBatchSize), []ErrorDetail{
+				{
+					Field:   "campaignIds",
+					Code:    ErrorCodeValidation,
+					Message: fmt.Sprintf("Batch size %d exceeds maximum of %d", len(req.CampaignIDs), maxBatchSize),
+					Context: ErrorContext{
+						CampaignCount: len(req.CampaignIDs),
+					},
+				},
+			})
+		return
+	}
+
+	response := BulkEnrichedDataResponse{
+		Campaigns:  make(map[string]EnrichedCampaignData),
+		TotalCount: 0,
+	}
+
+	metadata := &BulkMetadata{
+		ProcessedCampaigns: 0,
+		SkippedCampaigns:   0,
+		FailedCampaigns:    []string{},
+	}
+
+	// Process each campaign ID with proper error tracking
+	for _, campaignIDStr := range req.CampaignIDs {
+		campaignID, err := uuid.Parse(campaignIDStr)
+		if err != nil {
+			log.Printf("Invalid campaign ID format: %s", campaignIDStr)
+			metadata.SkippedCampaigns++
+			metadata.FailedCampaigns = append(metadata.FailedCampaigns, campaignIDStr)
+			continue
+		}
+
+		// Get campaign details with proper error handling
+		campaign, _, err := h.orchestratorService.GetCampaignDetails(c.Request.Context(), campaignID)
+		if err != nil {
+			log.Printf("Error getting campaign %s: %v", campaignIDStr, err)
+			metadata.SkippedCampaigns++
+			metadata.FailedCampaigns = append(metadata.FailedCampaigns, campaignIDStr)
+			continue
+		}
+
+		// Get enriched data efficiently with error handling
+		domains, _ := h.orchestratorService.GetGeneratedDomainsForCampaign(c.Request.Context(), campaignID, 100, 0)
+		dnsResults, _ := h.orchestratorService.GetDNSValidationResultsForCampaign(c.Request.Context(), campaignID, 100, "", store.ListValidationResultsFilter{})
+		httpResults, _ := h.orchestratorService.GetHTTPKeywordResultsForCampaign(c.Request.Context(), campaignID, 100, "", store.ListValidationResultsFilter{})
+
+		// Extract domain lists with null checks
+		var domainList, dnsValidatedList []string
+		var leads []models.LeadItem
+		var httpKeywordResults []interface{}
+
+		if domains != nil && domains.Data != nil {
+			for _, d := range domains.Data {
+				domainList = append(domainList, d.DomainName)
+			}
+		}
+
+		if dnsResults != nil && dnsResults.Data != nil {
+			for _, r := range dnsResults.Data {
+				dnsValidatedList = append(dnsValidatedList, r.DomainName)
+			}
+		}
+
+		if httpResults != nil && httpResults.Data != nil {
+			for _, r := range httpResults.Data {
+				httpKeywordResults = append(httpKeywordResults, r)
+				// Extract lead data from keyword results
+				if r.FoundAdHocKeywords != nil && len(*r.FoundAdHocKeywords) > 0 {
+					sourceURL := r.DomainName
+					leads = append(leads, models.LeadItem{
+						ID:        r.DomainName,
+						SourceURL: &sourceURL,
+					})
+				}
+			}
+		}
+
+		// Convert campaign to CampaignData
+		campaignData := CampaignData{
+			ID:          campaign.ID.String(),
+			Name:        campaign.Name,
+			Type:        string(campaign.CampaignType),
+			Status:      string(campaign.Status),
+			CreatedAt:   campaign.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:   campaign.UpdatedAt.Format(time.RFC3339),
+			Description: "", // Add description if available
+		}
+
+		response.Campaigns[campaignIDStr] = EnrichedCampaignData{
+			Campaign:            campaignData,
+			Domains:            domainList,
+			DNSValidatedDomains: dnsValidatedList,
+			Leads:              leads,
+			HTTPKeywordResults: httpKeywordResults,
+		}
+
+		metadata.ProcessedCampaigns++
+		response.TotalCount++
+	}
+
+	// Set processing time
+	metadata.ProcessingTimeMs = time.Since(startTime).Milliseconds()
+	response.Metadata = metadata
+
+	apiResponse := NewSuccessResponse(response, getRequestID(c))
+	respondWithJSONGin(c, http.StatusOK, apiResponse)
+}
+
+
+// getBulkDomains gets domain data for multiple campaigns.
+// @Summary Get bulk domain data
+// @Description Efficiently retrieve domain data for multiple campaigns
+// @Tags campaigns
+// @ID getBulkDomains
+// @Accept json
+// @Produce json
+// @Param request body BulkDomainsRequest true "Bulk domains request"
+// @Success 200 {object} APIResponse "Bulk domain data"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /campaigns/bulk/domains [post]
+func (h *CampaignOrchestratorAPIHandler) getBulkDomains(c *gin.Context) {
+	var req BulkDomainsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid request format", nil)
+		return
+	}
+
+	// Implementation placeholder - will be enhanced based on specific domain data needs
+	result := map[string]interface{}{
+		"message": "Bulk domains endpoint - implementation in progress",
+		"campaignIds": req.CampaignIDs,
+	}
+
+	apiResponse := NewSuccessResponse(result, getRequestID(c))
+	c.JSON(http.StatusOK, apiResponse)
+}
+
+
+// getBulkLogs gets log data for multiple campaigns.
+// @Summary Get bulk log data  
+// @Description Efficiently retrieve log data for multiple campaigns
+// @Tags campaigns
+// @ID getBulkLogs
+// @Accept json
+// @Produce json
+// @Param request body BulkLogsRequest true "Bulk logs request"
+// @Success 200 {object} APIResponse "Bulk log data"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /campaigns/bulk/logs [post]
+func (h *CampaignOrchestratorAPIHandler) getBulkLogs(c *gin.Context) {
+	var req BulkLogsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid request format", nil)
+		return
+	}
+
+	// Implementation placeholder - will be enhanced based on specific logging system
+	result := map[string]interface{}{
+		"message": "Bulk logs endpoint - implementation in progress",
+		"campaignIds": req.CampaignIDs,
+	}
+
+	apiResponse := NewSuccessResponse(result, getRequestID(c))
+	c.JSON(http.StatusOK, apiResponse)
+}
+
+
+// getBulkLeads gets lead data for multiple campaigns.
+// @Summary Get bulk lead data
+// @Description Efficiently retrieve lead data for multiple campaigns  
+// @Tags campaigns
+// @ID getBulkLeads
+// @Accept json
+// @Produce json
+// @Param request body BulkLeadsRequest true "Bulk leads request"
+// @Success 200 {object} APIResponse "Bulk lead data"
+// @Failure 400 {object} ErrorResponse "Bad Request"  
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /campaigns/bulk/leads [post]
+func (h *CampaignOrchestratorAPIHandler) getBulkLeads(c *gin.Context) {
+	var req BulkLeadsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid request format", nil)
+		return
+	}
+
+	// Implementation placeholder - will be enhanced based on specific lead data structure
+	result := map[string]interface{}{
+		"message": "Bulk leads endpoint - implementation in progress",
+		"campaignIds": req.CampaignIDs,
+	}
+
+	apiResponse := NewSuccessResponse(result, getRequestID(c))
+	c.JSON(http.StatusOK, apiResponse)
 }

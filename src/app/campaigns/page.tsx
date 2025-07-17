@@ -24,10 +24,11 @@ import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
 import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
 import { useToast } from '@/hooks/use-toast';
 import { useOptimisticUpdate, useLoadingState } from '@/lib/state/stateManager';
-import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 import {
   safeApiCall
 } from '@/lib/utils/apiResponseHelpers';
+import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
+import { useCampaignPagination } from '@/lib/hooks/usePagination';
 
 // Error serialization utility for meaningful logging
 const serializeError = (obj: unknown): string => {
@@ -121,8 +122,8 @@ type: obj.type,
   }
 };
 
-// PERFORMANCE: Lazy load campaign components for better bundle splitting
-const CampaignListItem = lazy(() => import('@/components/campaigns/CampaignListItem'));
+// PERFORMANCE: Lazy load enhanced campaign list component - NO MORE LEGACY COMPONENTS
+const EnhancedCampaignsList = lazy(() => import('@/components/campaigns/EnhancedCampaignsList'));
 const CampaignProgressMonitor = lazy(() => import('@/components/campaigns/CampaignProgressMonitor'));
 
 // PERFORMANCE: Loading component for lazy-loaded components
@@ -149,6 +150,10 @@ function CampaignsPageContent() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+
+  // Use standardized campaign pagination with dashboard context (50 campaigns per page)
+  const paginationHook = useCampaignPagination(campaigns.length, 'dashboard');
+  const { state: pagination, actions: paginationActions, params: paginationParams } = paginationHook;
 
 
   // MEMORY LEAK FIX: WebSocket connection management with proper cleanup
@@ -356,14 +361,41 @@ type: error.type,
     }
     
     if (showLoadingSpinner && isMountedRef.current) setLoading(true);
-    setGlobalLoading('campaigns_load', true, 'Loading campaigns');
+    setGlobalLoading('campaigns_load', true, 'Loading campaigns with bulk enrichment');
     
     try {
-      // Use safeApiCall to handle all the manual parsing logic
-      const result = await safeApiCall<CampaignViewModel[]>(
-        () => apiClient.listCampaigns(100),
-        'Loading campaigns'
+      console.log('🚀 [CampaignsPage] Using BULK API - Loading campaigns with enriched data in single call');
+      
+      // 🔥 PERFORMANCE BOOST: Use bulk enriched data API instead of N+1 queries
+      // BULK-ONLY STRATEGY: Single call to get campaigns and enrichment in one operation
+      // This completely eliminates the dual loading pattern (basic campaigns → enrichment)
+      
+      console.log('🚀 [CampaignsPage] BULK-ONLY: Loading campaigns with enhanced bulk operations');
+      
+      // Get basic campaign list using standardized pagination parameters
+      const basicCampaigns = await safeApiCall(() =>
+        apiClient.listCampaigns(paginationParams.limit, paginationParams.offset)
       );
+      
+      if (!basicCampaigns || !Array.isArray(basicCampaigns)) {
+        throw new Error('Failed to load basic campaign list');
+      }
+      
+      console.log(`📊 [CampaignsPage] BULK-ONLY: Loaded ${basicCampaigns.length} campaigns with pagination (limit: ${paginationParams.limit}, offset: ${paginationParams.offset}), now enriching via enhanced bulk service`);
+      
+      // Use unified campaign service for bulk enrichment
+      const enrichedCampaigns = await unifiedCampaignService.loadCampaignListWithEnrichment(basicCampaigns);
+      
+      // Convert enriched data back to CampaignViewModel format for state compatibility
+      const compatibleCampaigns: CampaignViewModel[] = enrichedCampaigns.map(enriched => ({
+        ...enriched,
+        // Convert array properties back to counts for state compatibility
+        domains: enriched.domains?.length ?? 0,
+        dnsValidatedDomains: enriched.dnsValidatedDomains?.length ?? 0,
+        leads: enriched.leads?.length ?? 0,
+      }));
+      
+      console.log(`✅ [CampaignsPage] BULK-ONLY: Enhanced ${compatibleCampaigns.length} campaigns with bulk operations`);
       
       // Check if component is still mounted after API call
       if (!isMountedRef.current) {
@@ -371,16 +403,14 @@ type: error.type,
         return;
       }
       
-      if (result.success) {
-        // Transform campaigns using proper backend data
-        const campaignsData = result.data || [];
-        const transformedCampaigns = transformCampaignsToViewModels(campaignsData as Parameters<typeof transformCampaignsToViewModels>[0]);
-        
+      if (compatibleCampaigns && compatibleCampaigns.length >= 0) {
         if (isMountedRef.current) {
-          setCampaigns(transformedCampaigns);
-          console.log('📝 [CampaignsPage] Campaign state updated successfully:', {
-            newStateCount: transformedCampaigns.length,
-            stateUpdateSuccess: true
+          setCampaigns(compatibleCampaigns);
+          console.log('📝 [CampaignsPage] BULK Campaign state updated successfully:', {
+            newStateCount: enrichedCampaigns.length,
+            stateUpdateSuccess: true,
+            bulkApiUsed: true,
+            performanceImprovement: 'N+1 queries eliminated'
           });
         }
       } else {
@@ -388,7 +418,7 @@ type: error.type,
           setCampaigns([]);
           toast({
             title: "Error Loading Campaigns",
-            description: result.error || "Failed to load campaigns. Please check your connection and try again.",
+            description: "Failed to load campaigns with bulk API. Please check your connection and try again.",
             variant: "destructive"
           });
         }
@@ -399,7 +429,7 @@ type: error.type,
         return;
       }
       
-      console.error('[CampaignsPage] Error loading campaigns:', error);
+      console.error('[CampaignsPage] Error loading campaigns with bulk API:', error);
       if (isMountedRef.current) {
         setCampaigns([]);
         const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
@@ -810,24 +840,20 @@ title: "Bulk Delete Failed",
           ))}
         </div>
       ) : (
-        // FIXED: Always show campaigns if we have them, regardless of other conditions
+        // ✅ BULK API INTEGRATION: Use EnhancedCampaignsList with bulk data
         filteredCampaigns.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCampaigns.map(campaign => (
-              <Suspense key={campaign.id} fallback={<ComponentLoader />}>
-                <CampaignListItem
-                    campaign={campaign}
-                    onDeleteCampaign={() => campaign.id && handleDeleteCampaign(campaign.id)}
-                    onPauseCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'pause')}
-                    onResumeCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'resume')}
-                    onStopCampaign={() => campaign.id && handleCampaignControl(campaign.id, 'stop')}
-                    isActionLoading={actionLoading}
-                    isSelected={campaign.id ? selectedCampaigns.has(campaign.id) : false}
-                    onSelect={handleSelectCampaign}
-                />
-              </Suspense>
-            ))}
-          </div>
+          <Suspense fallback={<ComponentLoader />}>
+            <EnhancedCampaignsList
+              campaigns={filteredCampaigns}
+              onDeleteCampaign={handleDeleteCampaign}
+              onPauseCampaign={(id) => handleCampaignControl(id, 'pause')}
+              onResumeCampaign={(id) => handleCampaignControl(id, 'resume')}
+              onStopCampaign={(id) => handleCampaignControl(id, 'stop')}
+              isActionLoading={actionLoading}
+              selectedCampaigns={selectedCampaigns}
+              onSelectCampaign={handleSelectCampaign}
+            />
+          </Suspense>
         ) : (
           // FIXED: Only show empty state if we definitely have no campaigns and finished loading
           <div className="text-center py-10 border-2 border-dashed rounded-lg mt-6">

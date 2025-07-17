@@ -10,6 +10,7 @@ import type {
   DomainActivityStatus
 } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
+import { getDefaultPageSize } from '@/lib/types/pagination';
 
 type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
 type _Campaign = components['schemas']['Campaign']; // Unused
@@ -126,7 +127,7 @@ searchTerm: '',
 
 const defaultPagination: PaginationState = {
 currentPage: 1,
-  pageSize: 50,
+  pageSize: getDefaultPageSize('detail'), // Use context-aware default for detail views
   totalCount: 0
 };
 

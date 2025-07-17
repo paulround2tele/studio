@@ -14,7 +14,7 @@ import ContentSimilarityView from '@/components/campaigns/ContentSimilarityView'
 // New modular components
 import CampaignHeader from '@/components/campaigns/CampaignHeader';
 import CampaignControls from '@/components/campaigns/CampaignControls';
-import CampaignMetrics from '@/components/campaigns/CampaignMetrics';
+import { CampaignMetrics } from '@/components/campaigns/CampaignStatistics';
 import DomainStreamingTable from '@/components/campaigns/DomainStreamingTable';
 
 // Centralized state management and operations
@@ -29,7 +29,7 @@ import {
 } from '@/lib/stores/campaignDetailsStore';
 import { websocketService } from '@/lib/services/websocketService.simple';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
-import { handlePhaseTransition } from '@/lib/services/campaignDataService';
+import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
 
 // Types
 import type { Campaign } from '@/lib/api-client/models';

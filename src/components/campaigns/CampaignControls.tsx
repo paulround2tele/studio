@@ -15,7 +15,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import PhaseGateButton from '@/components/campaigns/PhaseGateButton';
-import PhaseConfigurationPanel from '@/components/campaigns/PhaseConfigurationPanel';
+import PhaseConfiguration from '@/components/campaigns/PhaseConfiguration';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -382,7 +382,8 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
 
       {/* Phase Configuration Panel */}
       {selectedPhaseType && (
-        <PhaseConfigurationPanel
+        <PhaseConfiguration
+          mode="panel"
           isOpen={configDialogOpen}
           onClose={() => setConfigDialogOpen(false)}
           sourceCampaign={campaign}
