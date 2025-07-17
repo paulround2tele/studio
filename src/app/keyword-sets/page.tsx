@@ -7,7 +7,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Edit } from 'lucide-react';
-import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import { keywordSetsApi, type components } from '@/lib/api-client/client';
 
 type KeywordSet = components['schemas']['KeywordSetResponse'];
@@ -82,8 +81,7 @@ export default function KeywordSetsPage() {
   }, [loadSets]);
 
   return (
-    <StrictProtectedRoute>
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Keyword Sets</h1>
           <Link href="/keyword-sets/new">
@@ -124,7 +122,6 @@ export default function KeywordSetsPage() {
             )}
           </CardContent>
         </Card>
-      </div>
-    </StrictProtectedRoute>
+    </div>
   );
 }

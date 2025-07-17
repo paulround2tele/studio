@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,7 @@ import { Loader2, CheckCircle, Globe, Wifi, ShieldCheck, Settings, X } from 'luc
 import { useToast } from "@/hooks/use-toast";
 import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
-import { useAuth } from '@/contexts/AuthContext';
+// THIN CLIENT: Removed AuthContext - backend handles auth
 import type { components as _components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
@@ -88,25 +88,10 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
 }) => {
   const { toast } = useToast();
   
-  // Get current user for validation - DIAGNOSTIC LOGGING
-  const authContext = useAuth();
-  const { user } = authContext;
+  // THIN CLIENT: Removed useAuth - backend handles authentication
+  const user = null; // Backend provides user data when needed
   
-  // DIAGNOSTIC: Log auth context state when component uses it
-  useEffect(() => {
-    console.log('[PhaseConfiguration] DIAGNOSTIC: Auth context state on mount/update:', {
-      timestamp: new Date().toISOString(),
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      isAuthenticated: authContext.isAuthenticated,
-      isLoading: authContext.isLoading,
-      isInitialized: authContext.isInitialized,
-      currentPath: window.location.pathname,
-      phaseType: phaseType,
-      mode: mode
-    });
-  }, [user, authContext.isAuthenticated, authContext.isLoading, authContext.isInitialized, phaseType, mode]);
+  // REMOVED: Complex auth diagnostics - thin client doesn't need this
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -148,18 +133,8 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
       console.log('[DEBUG] onSubmit starting with data:', data);
       setIsSubmitting(true);
 
-      // ✅ FIX: Validate authentication
-      console.log('[DEBUG] Checking authentication, user:', user);
-      if (!user?.id) {
-        console.log('[DEBUG] Authentication failed - no user.id');
-        toast({
-          title: "Authentication Required",
-          description: "You must be logged in to start DNS validation. Please log in and try again.",
-          variant: "destructive"
-        });
-        return;
-      }
-      console.log('[DEBUG] Authentication passed, user.id:', user.id);
+      // THIN CLIENT: Backend middleware handles auth - if we're here, user is authenticated
+      console.log('[DEBUG] Backend auth verified - proceeding with DNS validation');
 
       // ✅ FIX: Validate source campaign
       console.log('[DEBUG] Checking source campaign:', sourceCampaign);

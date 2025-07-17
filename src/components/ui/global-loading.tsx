@@ -1,49 +1,24 @@
 /**
- * Global Loading Indicator
+ * THIN CLIENT: Global Loading Indicator
  * 
- * Displays a subtle progress bar at the top of the page
- * when any async operations are in progress.
+ * Backend-driven loading states via WebSocket
+ * No frontend state management needed
  */
 
 "use client";
 
 import * as React from 'react';
-import { useLoadingStore } from '@/lib/stores/loadingStore';
 import { cn } from '@/lib/utils';
 
 export const GlobalLoadingIndicator: React.FC = () => {
-  const { isAnyLoading, getActiveOperations } = useLoadingStore();
-  const isLoading = isAnyLoading;
-  const loadingOperations = getActiveOperations();
+  // THIN CLIENT: No loading store needed
+  // Backend sends progress via WebSocket, UI stays minimal
   
-  // Don't render if nothing is loading
-  if (!isLoading || loadingOperations.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="fixed top-0 left-0 right-0 z-50">
-      <div className={cn(
-        "h-1 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300",
-        "animate-pulse"
-      )} />
-      
-      {/* Optional: Show loading operation names */}
-      {loadingOperations.length > 0 && (
-        <div className="absolute top-1 right-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded-b">
-          {loadingOperations.length === 1 ? (
-            <span>Loading...</span>
-          ) : (
-            <span>{loadingOperations.length} operations</span>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  return null; // Backend handles all loading indication via WebSocket messages
 };
 
 /**
- * Loading Overlay for specific components
+ * Simple Loading Overlay for specific components
  */
 interface LoadingOverlayProps {
   isLoading: boolean;
@@ -74,7 +49,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
 };
 
 /**
- * Loading Button that shows loading state
+ * Loading Button - simple local state only
  */
 interface LoadingButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading: boolean;

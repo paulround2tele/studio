@@ -1,17 +1,15 @@
 // src/app/logout/page.tsx
-// Logout page with confirmation and redirect
+// Simplified logout page for thin client architecture
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, LogOut, Home } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LogoutPage() {
-  const { logout, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutComplete, setLogoutComplete] = useState(false);
@@ -19,7 +17,8 @@ export default function LogoutPage() {
   const handleLogout = useCallback(async () => {
     setIsLoggingOut(true);
     try {
-      await logout();
+      // THIN CLIENT: Call backend logout API directly
+      await fetch('/api/v2/auth/logout', { method: 'POST' });
       setLogoutComplete(true);
       
       // Redirect to login after a short delay
@@ -29,31 +28,23 @@ export default function LogoutPage() {
     } catch (error) {
       console.error('Logout error:', error);
       setLogoutComplete(true);
+      // Still redirect even on error
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     }
-  }, [logout, router]);
+  }, [router]);
 
-  // Auto-logout if user is authenticated
+  // Auto-logout when page loads (user clicked logout)
   useEffect(() => {
-    if (isAuthenticated && !isLoading && !isLoggingOut) {
+    if (!isLoggingOut && !logoutComplete) {
       handleLogout();
     }
-  }, [isAuthenticated, isLoading, isLoggingOut, handleLogout]);
+  }, [handleLogout, isLoggingOut, logoutComplete]);
 
   const handleManualLogout = async () => {
     await handleLogout();
   };
-
-  // Show loading while checking auth state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Show logout in progress
   if (isLoggingOut && !logoutComplete) {
@@ -104,7 +95,7 @@ export default function LogoutPage() {
     );
   }
 
-  // Show logout confirmation for unauthenticated users
+  // Show logout confirmation (fallback)
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Card className="w-full max-w-md">

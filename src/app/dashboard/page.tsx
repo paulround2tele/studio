@@ -1,7 +1,5 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,8 +9,7 @@ import LatestActivityTable from '@/components/dashboard/LatestActivityTable';
 import ProductionReadinessCheck from '@/components/system/ProductionReadinessCheck';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-
+  // THIN CLIENT: No auth state needed - backend handles everything
   // REMOVED: Client-side authentication redirects - middleware handles all auth
   // This prevents race conditions between middleware and client-side auth logic
 
@@ -25,7 +22,7 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto">
       <PageHeader
-        title={`Welcome back${user?.name ? `, ${user.name}` : user?.email ? `, ${user.email}` : ''}`}
+        title="Welcome back"
         description="Orchestrate your domain intelligence and lead generation campaigns."
         icon={PlayCircle}
       />

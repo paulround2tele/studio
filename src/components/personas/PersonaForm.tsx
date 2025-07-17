@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+// THIN CLIENT: Removed AuthContext - backend handles auth
 import { createPersona, updatePersona, type CreatePersonaRequest, type UpdatePersonaRequest } from "@/lib/services/personaService";
 import type { components } from '@/lib/api-client/types';
 
@@ -119,7 +119,8 @@ interface PersonaFormProps {
 function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; isEditing?: boolean }) {
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
+  // THIN CLIENT: Removed useAuth - backend handles authentication
+  const user = null; // Backend provides user data when needed
 
   const stringifyJsonForForm = (obj: Record<string, unknown> | null | undefined) => obj ? JSON.stringify(obj, null, 2) : "{}";
 
@@ -404,7 +405,8 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
 function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isEditing?: boolean }) {
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
+  // THIN CLIENT: Removed useAuth - backend handles authentication
+  const user = null; // Backend provides user data when needed
 
   const stringifyJsonObjectForForm = (obj: Record<string, number> | null | undefined) => obj ? JSON.stringify(obj, null, 2) : "{}";
 

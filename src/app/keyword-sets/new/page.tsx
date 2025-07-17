@@ -14,7 +14,6 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { keywordSetsApi, type CreateKeywordSetRequest } from '@/lib/api-client/client';
 
 type CreateKeywordSetPayload = CreateKeywordSetRequest;
-import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 
 export default function NewKeywordSetPage() {
   const router = useRouter();
@@ -44,8 +43,7 @@ export default function NewKeywordSetPage() {
   }, [router]);
 
   return (
-    <StrictProtectedRoute>
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/keyword-sets"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button></Link>
           <h1 className="text-3xl font-bold">New Keyword Set</h1>
@@ -74,7 +72,6 @@ export default function NewKeywordSetPage() {
             </form>
           </CardContent>
         </Card>
-      </div>
-    </StrictProtectedRoute>
+    </div>
   );
 }

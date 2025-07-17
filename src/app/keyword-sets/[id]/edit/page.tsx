@@ -19,7 +19,6 @@ interface UpdateKeywordSetPayload {
   description?: string;
   isEnabled: boolean;
 }
-import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 
 export default function EditKeywordSetPage() {
   const params = useParams();
@@ -72,8 +71,7 @@ export default function EditKeywordSetPage() {
   }
 
   return (
-    <StrictProtectedRoute>
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/keyword-sets"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button></Link>
           <h1 className="text-3xl font-bold">Edit Keyword Set</h1>
@@ -102,7 +100,6 @@ export default function EditKeywordSetPage() {
             </form>
           </CardContent>
         </Card>
-      </div>
-    </StrictProtectedRoute>
+    </div>
   );
 }

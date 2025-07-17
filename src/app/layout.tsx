@@ -2,7 +2,6 @@
 import type {Metadata} from 'next';
 // Font imports removed for offline build
 import './globals.css';
-import { AuthProvider } from '@/contexts/AuthContext';
 import ConditionalLayout from '@/components/layout/ConditionalLayout';
 import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
@@ -28,11 +27,9 @@ export default function RootLayout({
         }>
           <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
             <GlobalLoadingIndicator />
-            <AuthProvider>
-              <ConditionalLayout>
-                {children}
-              </ConditionalLayout>
-            </AuthProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
           </ThemeProvider>
         </NoSSR>
       </body>

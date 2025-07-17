@@ -85,7 +85,7 @@ export function LoginForm({
 
       logger.debug('LOGIN_FORM', 'Login result received', {
         success: result.success,
-        hasError: !!result.error
+        hasError: !result.success
       });
 
       if (!result.success) {

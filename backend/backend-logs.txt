@@ -8471,3 +8471,190 @@ DEBUG: Cookie set successfully - Name: domainflow_session, MaxAge: 86399, Path: 
 {"timestamp":"2025-07-17T20:20:56.122329518Z","level":"INFO","category":"SESSION","operation":"session_validation_success","userId":"54cab217-75e9-4cdc-b834-31a019232505","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","success":true,"details":{"requires_password_change":false,"risk_score":0,"session_expiry":"2025-07-18T19:20:17.268097Z","validation_duration_ms":7},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":330,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
 {"timestamp":"2025-07-17T20:20:56.122424862Z","level":"INFO","category":"MIDDLEWARE","operation":"middleware_execution","userId":"54cab217-75e9-4cdc-b834-31a019232505","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","requestId":"be9df849-8c2f-489e-85d2-01dd6b32dfc6","durationMs":13262286,"success":true,"details":{"cookie_check_duration_ms":0,"method":"GET","middleware_name":"session_auth","path":"/api/v2/campaigns","requires_password_change":false,"stage":"success","status_code":200,"validation_duration_ms":7},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":353,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
 [GIN] 2025/07/17 - 20:20:56 | 200 |   19.534168ms |             ::1 | GET      "/api/v2/campaigns?limit=50&offset=0"
+{"timestamp":"2025-07-17T20:21:26.042640232Z","level":"INFO","category":"MIDDLEWARE","operation":"middleware_execution","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","requestId":"b4a135a7-c244-40b8-959b-995e0c1a59e5","durationMs":0,"success":true,"details":{"method":"GET","middleware_name":"session_auth","path":"/api/v2/campaigns","stage":"start","status_code":0},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":42,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+[DIAGNOSTIC] Auth middleware cookie check: path=/api/v2/campaigns, allCookies=domainflow_session=2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e, timestamp=2025-07-17T20:21:26Z
+[DIAGNOSTIC] Cookie extraction: cookieName=domainflow_session, found=true, sessionIDLength=64, error=<nil>
+{"timestamp":"2025-07-17T20:21:26.042713995Z","level":"INFO","category":"SESSION","operation":"session_cookie_found","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","success":true,"details":{"cookie_check_duration_ms":0,"session_id_length":64},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":198,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+{"timestamp":"2025-07-17T20:21:26.042828729Z","level":"INFO","category":"SESSION","operation":"session_validation_success","userId":"54cab217-75e9-4cdc-b834-31a019232505","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","success":true,"details":{"requires_password_change":false,"risk_score":0,"session_expiry":"2025-07-18T19:20:17.268097Z","validation_duration_ms":0},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":330,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+{"timestamp":"2025-07-17T20:21:26.042951012Z","level":"INFO","category":"MIDDLEWARE","operation":"middleware_execution","userId":"54cab217-75e9-4cdc-b834-31a019232505","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","requestId":"b4a135a7-c244-40b8-959b-995e0c1a59e5","durationMs":327552,"success":true,"details":{"cookie_check_duration_ms":0,"method":"GET","middleware_name":"session_auth","path":"/api/v2/campaigns","requires_password_change":false,"stage":"success","status_code":200,"validation_duration_ms":0},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":353,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+[GIN] 2025/07/17 - 20:21:26 | 200 |    2.741228ms |             ::1 | GET      "/api/v2/campaigns?limit=50&offset=0"
+{"timestamp":"2025-07-17T20:21:26.052849035Z","level":"INFO","category":"MIDDLEWARE","operation":"middleware_execution","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","requestId":"66845100-8dd7-4a8a-a30c-d3bd17637705","durationMs":0,"success":true,"details":{"method":"POST","middleware_name":"session_auth","path":"/api/v2/campaigns/bulk/enriched-data","stage":"start","status_code":0},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":42,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+[DIAGNOSTIC] Auth middleware cookie check: path=/api/v2/campaigns/bulk/enriched-data, allCookies=domainflow_session=2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e, timestamp=2025-07-17T20:21:26Z
+[DIAGNOSTIC] Cookie extraction: cookieName=domainflow_session, found=true, sessionIDLength=64, error=<nil>
+{"timestamp":"2025-07-17T20:21:26.052959553Z","level":"INFO","category":"SESSION","operation":"session_cookie_found","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","success":true,"details":{"cookie_check_duration_ms":0,"session_id_length":64},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":198,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+{"timestamp":"2025-07-17T20:21:26.052976478Z","level":"INFO","category":"SESSION","operation":"session_validation_success","userId":"54cab217-75e9-4cdc-b834-31a019232505","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","success":true,"details":{"requires_password_change":false,"risk_score":0,"session_expiry":"2025-07-18T19:20:17.268097Z","validation_duration_ms":0},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":330,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+{"timestamp":"2025-07-17T20:21:26.052988282Z","level":"INFO","category":"MIDDLEWARE","operation":"middleware_execution","userId":"54cab217-75e9-4cdc-b834-31a019232505","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","requestId":"66845100-8dd7-4a8a-a30c-d3bd17637705","durationMs":154095,"success":true,"details":{"cookie_check_duration_ms":0,"method":"POST","middleware_name":"session_auth","path":"/api/v2/campaigns/bulk/enriched-data","requires_password_change":false,"stage":"success","status_code":200,"validation_duration_ms":0},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":353,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 4597c4a2-485c-4cb1-b7fb-4d9e77a8b44f
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: c56dd5f4-0922-4141-aebf-24ddc274446c
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 65e8bc1c-b957-46d4-9697-406cc2386245
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 62b244ad-e08c-40dc-aeeb-99f7cd73704e
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 2250719a-65ee-400b-95ef-3701908cf472
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: c3d2ff4b-e311-4c11-b19e-1805176c833d
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: e8bd487b-23f4-4be9-87b3-1ddcee3cccc5
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 98f6a587-f103-4c48-a094-17c2a1e79eb2
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: e65ecf5c-8430-4b79-b679-1c7bed16623f
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 4bf343c4-3614-4a66-a6c1-1785350d13c6
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 050e0af3-7f65-4914-86ae-4358a43f2bf8
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 8389af90-9776-4653-b780-f48a9477e1c6
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 6f02d78c-5ebf-4c19-a21d-bb7570fab3ea
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: be9d99f5-219b-4f9b-b1ff-2054d1233a11
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 155001d4-e9bb-40f9-9676-ce6f81806cb6
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 187c9aae-5a00-428a-bb58-d5e72e014100
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 9d6676c4-b4aa-43dd-982c-7e392bde6bd8
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: bc212081-9d65-4783-af61-294344a7cd11
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: adbe1695-ef4e-49de-ac6d-de8cfb272d87
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 69b8a68a-bfa8-40dd-bb35-7f85b1cd1524
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 4d379582-8b73-43a0-bb22-dfdbc507f507
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 4ac2fd6a-74bd-4c68-baf5-4f004f1f1e86
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 3d9f7b07-3e84-412d-a880-62d74d85da5d
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 1d44e51d-902f-4780-869e-a8742f68f2fb
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 393fc5c3-a867-4672-aa11-665cbbdccefd
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: d08000a3-8e11-4100-bf78-01fe4a448ede
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 921b866d-722f-4292-8dc2-30cf50f2ba48
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 501131a5-fd91-4381-9a1c-47b72eaae9f8
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 52604869-da34-4a63-a301-9c18eb937d59
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 45e1a259-be13-49e9-9471-b56161ac556e
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: dd37686a-7e37-4494-b9d9-53ed991183a0
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 17166a30-6bd6-4d82-97d0-297fdf44d992
+[DEBUG orchestrator] Campaign type: dns_validation
+[DEBUG orchestrator] Entering switch for campaign type: dns_validation
+[DEBUG orchestrator] Handling DNSValidation case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DNSValidationCampaignParams
+[DEBUG orchestrator] GetCampaignDetails called for campaign ID: 798e64f0-cecd-4069-b9d8-253929446543
+[DEBUG orchestrator] Campaign type: domain_generation
+[DEBUG orchestrator] Entering switch for campaign type: domain_generation
+[DEBUG orchestrator] Handling DomainGeneration case
+[DEBUG orchestrator] FINAL CHECK - specificParams type: *models.DomainGenerationCampaignParams
+[GIN] 2025/07/17 - 20:21:26 | 200 |  260.010962ms |             ::1 | POST     "/api/v2/campaigns/bulk/enriched-data"
+{"timestamp":"2025-07-17T20:21:56.059255585Z","level":"INFO","category":"MIDDLEWARE","operation":"middleware_execution","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","requestId":"3f8e873e-bcd6-4c64-836f-24399b5d087c","durationMs":0,"success":true,"details":{"method":"GET","middleware_name":"session_auth","path":"/api/v2/campaigns","stage":"start","status_code":0},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":42,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+[DIAGNOSTIC] Auth middleware cookie check: path=/api/v2/campaigns, allCookies=domainflow_session=2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e, timestamp=2025-07-17T20:21:56Z
+[DIAGNOSTIC] Cookie extraction: cookieName=domainflow_session, found=true, sessionIDLength=64, error=<nil>
+{"timestamp":"2025-07-17T20:21:56.059895356Z","level":"INFO","category":"SESSION","operation":"session_cookie_found","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","success":true,"details":{"cookie_check_duration_ms":0,"session_id_length":64},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":198,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+{"timestamp":"2025-07-17T20:21:56.06425137Z","level":"INFO","category":"SESSION","operation":"session_validation_success","userId":"54cab217-75e9-4cdc-b834-31a019232505","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","success":true,"details":{"requires_password_change":false,"risk_score":0,"session_expiry":"2025-07-18T19:20:17.268097Z","validation_duration_ms":4},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":330,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+{"timestamp":"2025-07-17T20:21:56.064372161Z","level":"INFO","category":"MIDDLEWARE","operation":"middleware_execution","userId":"54cab217-75e9-4cdc-b834-31a019232505","sessionId":"2aaae4c3458caf698dfe80cb73f4dbbff7d64300f7a9936aa4dd9cc79ca6a31e","ipAddress":"::1","userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36","requestId":"3f8e873e-bcd6-4c64-836f-24399b5d087c","durationMs":5133974,"success":true,"details":{"cookie_check_duration_ms":0,"method":"GET","middleware_name":"session_auth","path":"/api/v2/campaigns","requires_password_change":false,"stage":"success","status_code":200,"validation_duration_ms":4},"file":"/home/vboxuser/studio/backend/internal/middleware/auth_middleware.go","line":353,"function":"main.main.(*AuthMiddleware).SessionAuth.func57"}
+[GIN] 2025/07/17 - 20:21:56 | 200 |    11.67018ms |             ::1 | GET      "/api/v2/campaigns?limit=50&offset=0"
+make: *** [Makefile:24: run] Hangup

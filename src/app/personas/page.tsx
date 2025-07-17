@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
-import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types directly
@@ -46,7 +45,7 @@ import { Input } from '@/components/ui/input';
 import { getPersonas, deletePersona, createPersona, testPersona, updatePersona } from '@/lib/services/personaService'; // Updated import
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import { useLoadingStore } from '@/lib/stores/loadingStore';
+// THIN CLIENT: Removed LoadingStore - backend handles loading state via WebSocket
 
 // Zod schemas for validating imported persona structures (remains the same)
 const HttpPersonaImportSchema = z.object({
@@ -114,14 +113,17 @@ function PersonasPageContent() {
   const [actionLoading, setActionLoading] = useState<Record<string, 'test' | 'toggle' | 'delete' | null>>({});
 
   // Use centralized loading state
-  const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
-  const loadingHttp = isOperationLoading('personas.fetch_http');
-  const loadingDns = isOperationLoading('personas.fetch_dns');
+  // THIN CLIENT: Removed LoadingStore - simple loading states only
+  const [loadingHttp, setLoadingHttp] = useState(false);
+  const [loadingDns, setLoadingDns] = useState(false);
 
 
   const fetchPersonasData = useCallback(async (type: 'http' | 'dns', showLoading = true) => {
-    const operation = type === 'http' ? 'personas.fetch_http' : 'personas.fetch_dns';
-    if (showLoading) startLoading(operation, `Loading ${type.toUpperCase()} personas`);
+    const _operation = type === 'http' ? 'personas.fetch_http' : 'personas.fetch_dns';
+    if (showLoading) {
+      if (type === 'http') setLoadingHttp(true);
+      else setLoadingDns(true);
+    }
     
     try {
       const response = await getPersonas(type);
@@ -155,9 +157,12 @@ function PersonasPageContent() {
         variant: "destructive"
       });
     } finally {
-      if (showLoading) stopLoading(operation);
+      if (showLoading) {
+        if (type === 'http') setLoadingHttp(false);
+        else setLoadingDns(false);
+      }
     }
-  }, [toast, startLoading, stopLoading]);
+  }, [toast]);
 
   useEffect(() => {
     fetchPersonasData(activeTab);
@@ -492,11 +497,5 @@ function PersonasPageContent() {
   );
 }
 export default function PersonasPage() {
-  return (
-    <StrictProtectedRoute
-      redirectTo="/login"
-    >
-      <PersonasPageContent />
-    </StrictProtectedRoute>
-  );
+  return <PersonasPageContent />;
 }

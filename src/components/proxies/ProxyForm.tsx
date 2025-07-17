@@ -25,7 +25,7 @@ type _ProxyProtocol = components['schemas']['Proxy']['protocol']; // Unused
 type _ProxyStatus = components['schemas']['ProxyStatusEnum']; // Unused
 import { createProxy, updateProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+// THIN CLIENT: Removed AuthContext - backend handles auth
 import { Loader2 } from "lucide-react";
 const PROXY_PROTOCOLS = ['http', 'https', 'socks4', 'socks5'] as const;
 const INITIAL_PROXY_STATUSES = ['Active', 'Disabled'] as const; // For creating new proxy
@@ -58,7 +58,8 @@ interface ProxyFormProps {
 
 export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: ProxyFormProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  // THIN CLIENT: Removed useAuth - backend handles authentication
+  const user = null; // Backend provides user data when needed
   const isEditing = !!proxyToEdit;
 
   const form = useForm<ProxyFormValues>({

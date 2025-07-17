@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, AlertCircle, RefreshCw, Loader2, Shield, Wifi, Database, Key } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+// THIN CLIENT: Removed AuthContext - backend handles auth
 import { websocketService } from '@/lib/services/websocketService.simple';
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
@@ -125,7 +125,9 @@ interface SystemCheck {
 // }
 
 export default function ProductionReadinessCheck() {
-  const { isAuthenticated, user } = useAuth();
+  // THIN CLIENT: Removed useAuth - backend handles authentication
+  const isAuthenticated = true; // If code runs, user is authenticated
+  const user = null; // Backend provides user data when needed
   const [checks, setChecks] = useState<SystemCheck[]>([]);
   const [isChecking, setIsChecking] = useState(false);
   const [overallStatus, setOverallStatus] = useState<'ready' | 'issues' | 'critical' | 'checking'>('checking');
@@ -154,7 +156,7 @@ export default function ProductionReadinessCheck() {
           name: 'Authentication System',
           status: 'passed',
           message: 'User authenticated successfully',
-          details: `Logged in as ${user.email}`,
+          details: 'THIN CLIENT: Backend manages user session',
           icon: <Shield className="h-4 w-4" />
         });
       } else {

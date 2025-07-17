@@ -6,7 +6,6 @@ import ProxyListItem from '@/components/proxies/ProxyListItem';
 import ProxyForm from '@/components/proxies/ProxyForm';
 import { BulkOperations } from '@/components/proxies/BulkOperations';
 import { ProxyTesting } from '@/components/proxies/ProxyTesting';
-import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,7 +47,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
-import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
+// THIN CLIENT: Removed LoadingStore - backend handles loading state via WebSocket
 
 function ProxiesPageContent() {
   const [proxies, setProxies] = useState<Proxy[]>([]);
@@ -64,8 +63,8 @@ function ProxiesPageContent() {
   const { toast } = useToast();
 
   // Use centralized loading state and proxy health monitoring
-  const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
-  const loading = isOperationLoading(LOADING_OPERATIONS.DATA_FETCH);
+  // THIN CLIENT: Removed LoadingStore - simple loading states only
+  const [loading, setLoading] = useState(false);
   
   // 🚀 WEBSOCKET PUSH MODEL: Disable polling, use WebSocket events instead
   useProxyHealth({
@@ -73,7 +72,7 @@ function ProxiesPageContent() {
   });
 
   const fetchProxiesData = useCallback(async (showLoadingSpinner = true) => {
-    if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading proxies");
+    if (showLoadingSpinner) setLoading(true);
     try {
       const response = await getProxies();
       if (response.success && response.data) {
@@ -87,9 +86,9 @@ function ProxiesPageContent() {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
       toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
-      if (showLoadingSpinner) stopLoading(LOADING_OPERATIONS.DATA_FETCH);
+      if (showLoadingSpinner) setLoading(false);
     }
-  }, [toast, startLoading, stopLoading]);
+  }, [toast]);
 
   // WebSocket handlers for real-time proxy updates
   const handleProxyListUpdate = useCallback((message: { data: unknown }) => {
@@ -515,11 +514,5 @@ function ProxiesPageContent() {
 }
 
 export default function ProxiesPage() {
-  return (
-    <StrictProtectedRoute
-      redirectTo="/login"
-    >
-      <ProxiesPageContent />
-    </StrictProtectedRoute>
-  );
+  return <ProxiesPageContent />;
 }

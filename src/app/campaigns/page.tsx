@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
-import StrictProtectedRoute from '@/components/auth/StrictProtectedRoute';
 import type { components } from '@/lib/api-client/types';
 
 // Frontend-specific view model based on auto-generated Campaign type
@@ -120,7 +119,6 @@ type: obj.type,
 
 // PERFORMANCE: Lazy load enhanced campaign list component - NO MORE LEGACY COMPONENTS
 const EnhancedCampaignsList = lazy(() => import('@/components/campaigns/EnhancedCampaignsList'));
-const CampaignProgressMonitor = lazy(() => import('@/components/campaigns/CampaignProgressMonitor'));
 
 // PERFORMANCE: Loading component for lazy-loaded components
 const ComponentLoader = () => (
@@ -951,11 +949,5 @@ export default function CampaignsPage() {
  // 🔥 DIAGNOSTIC: Check if main page component is called
  console.log('🔥 [CRITICAL] CampaignsPage main function called');
  
- return (
-   <StrictProtectedRoute
-     redirectTo="/login"
-   >
-     <CampaignsPageContent />
-   </StrictProtectedRoute>
- );
+ return <CampaignsPageContent />;
 }

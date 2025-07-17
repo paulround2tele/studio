@@ -2,11 +2,9 @@
 
 import React, { useEffect, memo, useMemo, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import { WebSocketStatusProvider } from '@/contexts/WebSocketStatusContext';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from '@/components/ui/sidebar';
 import { Home, Target, Users, Settings, Zap, Database, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
 import { websocketService } from '@/lib/services/websocketService.simple';
 
 interface AppLayoutProps {
@@ -47,20 +45,17 @@ const navigationItems = [
   }
 ];
 
-// Memoized sidebar component to prevent unnecessary re-renders
+// THIN CLIENT: Pure UI component, no auth state management
 const AppSidebar = memo(() => {
-  const { user, logout, isLoading } = useAuth();
-
-  // Always show all navigation items - middleware ensures user is authenticated
+  // Backend handles all auth - just render navigation
   const filteredItems = useMemo(() => {
-    // Middleware guarantees authentication, so always show full navigation
     return navigationItems;
   }, []);
 
-  // Memoize logout handler to prevent re-creation on every render
+  // Simple logout - backend handles everything
   const handleLogout = useCallback(() => {
-    logout();
-  }, [logout]);
+    window.location.href = '/api/v2/auth/logout';
+  }, []);
 
   return (
     <Sidebar>
@@ -93,9 +88,9 @@ const AppSidebar = memo(() => {
       <SidebarFooter className="p-4 border-t">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-sm font-medium">{user?.email}</span>
+            <span className="text-sm font-medium">Backend User</span>
             <span className="text-xs text-muted-foreground">
-              {isLoading ? 'Loading...' : (user?.isActive !== false ? 'Active User' : 'Inactive User')}
+              Authenticated
             </span>
           </div>
           <button
@@ -142,23 +137,21 @@ const AppLayout = memo(({ children }: AppLayoutProps) => {
   }
 
   return (
-    <WebSocketStatusProvider>
-      <SidebarProvider>
-        <div className="min-h-screen bg-background flex" suppressHydrationWarning>
-          <AppSidebar />
-          
-          {/* Main content area with optimized structure */}
-          <main className="flex-1 flex flex-col">
-            <div className="p-4 border-b">
-              <SidebarTrigger className="lg:hidden" />
-            </div>
-            <div className="flex-1 p-6">
-              {children}
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
-    </WebSocketStatusProvider>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background flex" suppressHydrationWarning>
+        <AppSidebar />
+        
+        {/* Main content area with optimized structure */}
+        <main className="flex-1 flex flex-col">
+          <div className="p-4 border-b">
+            <SidebarTrigger className="lg:hidden" />
+          </div>
+          <div className="flex-1 p-6">
+            {children}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 });
 

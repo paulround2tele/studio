@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause, Wifi, WifiOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+// THIN CLIENT: Removed AuthContext - backend handles auth
 import { websocketService } from '@/lib/services/websocketService.simple';
 import type { CampaignViewModel, CampaignPhase, CampaignStatus } from '@/lib/types';
 import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
@@ -63,7 +63,8 @@ const CampaignProgressMonitor = memo(({
   onCampaignUpdate,
   onDomainReceived
 }: CampaignProgressMonitorProps) => {
-  const { user } = useAuth();
+  // THIN CLIENT: Removed useAuth - backend handles authentication
+  const user = null; // Backend provides user data when needed
   const { toast } = useToast();
   const cleanupRef = useRef<(() => void) | null>(null);
   

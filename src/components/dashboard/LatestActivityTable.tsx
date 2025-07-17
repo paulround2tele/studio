@@ -12,7 +12,7 @@ import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, Extern
 import Link from 'next/link';
 import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
-import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
+// THIN CLIENT: Removed LoadingStore - backend handles loading state via WebSocket
 import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/unifiedCampaignService';
 import { type BaseWebSocketMessage } from '@/lib/websocket/message-handlers';
 import { type DashboardActivityPayload } from '@/lib/services/websocketService.simple';
@@ -247,15 +247,15 @@ export default function LatestActivityTable() {
   const [allActivityData, setAllActivityData] = useState<LatestDomainActivity[]>([]);
 
   // Use centralized loading state
-  const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
-  const loading = isOperationLoading(LOADING_OPERATIONS.DATA_FETCH);
+  // THIN CLIENT: Removed LoadingStore - simple loading states only
+  const [loading, setLoading] = useState(false);
 
   // Simple pagination - show all activities
   const displayedActivities = allActivityData;
 
 
   const fetchAndProcessData = useCallback(async (showLoadingSpinner = true) => {
-    if (showLoadingSpinner) startLoading(LOADING_OPERATIONS.DATA_FETCH, "Loading dashboard activity");
+    if (showLoadingSpinner) setLoading(true);
     try {
       // Use context-aware pagination parameters for activity loading
       const response = await campaignsApi.listCampaigns(50, 0); // Dashboard context uses 50 items
@@ -391,9 +391,9 @@ export default function LatestActivityTable() {
       console.error("Failed to load or process activity data:", error);
        setAllActivityData([]); // Clear on major error
     } finally {
-      if (showLoadingSpinner) stopLoading(LOADING_OPERATIONS.DATA_FETCH);
+      if (showLoadingSpinner) setLoading(false);
     }
-  }, [startLoading, stopLoading]);
+  }, []);
 
   // Handle real-time dashboard activity updates via WebSocket
   const handleDashboardActivity = useCallback((message: BaseWebSocketMessage) => {
