@@ -6,6 +6,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
 import { Home, Target, Users, Settings, Zap, Database, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { websocketService } from '@/lib/services/websocketService.simple';
+import { useAuthUI } from '@/lib/hooks/useAuthUI';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -45,17 +46,19 @@ const navigationItems = [
   }
 ];
 
-// THIN CLIENT: Pure UI component, no auth state management
+// THIN CLIENT: Pure UI component with real user authentication state
 const AppSidebar = memo(() => {
+  const { user, logout } = useAuthUI();
+  
   // Backend handles all auth - just render navigation
   const filteredItems = useMemo(() => {
     return navigationItems;
   }, []);
 
-  // Simple logout - backend handles everything
+  // Use the hook's logout function for proper session cleanup
   const handleLogout = useCallback(() => {
-    window.location.href = '/api/v2/auth/logout';
-  }, []);
+    logout();
+  }, [logout]);
 
   return (
     <Sidebar>
@@ -88,7 +91,9 @@ const AppSidebar = memo(() => {
       <SidebarFooter className="p-4 border-t">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-sm font-medium">Backend User</span>
+            <span className="text-sm font-medium">
+              {user?.email || user?.firstName || 'User'}
+            </span>
             <span className="text-xs text-muted-foreground">
               Authenticated
             </span>

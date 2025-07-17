@@ -431,14 +431,27 @@ export class UnifiedCampaignService {
 
   async getCampaignById(campaignId: string): Promise<UnifiedCampaignResponse> {
     try {
-      const axiosResponse = await campaignsApi.getCampaignDetails(campaignId);
-      const response = extractResponseData<{ campaign?: Campaign }>(axiosResponse);
+      console.log(`[UnifiedCampaignService] 🚀 PERFORMANCE: Using bulk API for single campaign ${campaignId}`);
+      const startTime = performance.now();
       
-      // Extract campaign from response envelope
-      const campaign = response?.campaign;
+      // 🔥 PERFORMANCE OPTIMIZATION: Use bulk enriched data API instead of individual getCampaignDetails
+      const axiosResponse = await campaignsApi.getBulkEnrichedCampaignData({
+        campaignIds: [campaignId],
+        limit: 1,
+        offset: 0
+      });
+      const response = extractResponseData<{ campaigns?: Record<string, any> }>(axiosResponse);
+      
+      const endTime = performance.now();
+      console.log(`[UnifiedCampaignService] ⚡ BULK API call completed in ${(endTime - startTime).toFixed(2)}ms`);
+      
+      // Extract campaign from bulk response envelope
+      const campaignData = response?.campaigns?.[campaignId];
+      const campaign = campaignData?.campaign;
       const requestId = globalThis.crypto?.randomUUID?.() || `campaign-${Date.now()}`;
       
       if (!campaign?.id) {
+        console.log(`[UnifiedCampaignService] ❌ Campaign ${campaignId} not found in bulk response`);
         return {
           success: false,
           error: 'Campaign not found or missing required fields',
@@ -447,15 +460,16 @@ export class UnifiedCampaignService {
         };
       }
       
+      console.log(`[UnifiedCampaignService] ✅ Successfully retrieved campaign ${campaignId} via bulk API`);
       return {
         success: true,
         data: campaign,
         error: null,
         requestId,
-        message: 'Campaign retrieved successfully'
+        message: 'Campaign retrieved successfully via bulk API'
       };
     } catch (error: any) {
-      console.error('[UnifiedCampaignService] Error fetching campaign by ID:', error);
+      console.error('[UnifiedCampaignService] Error fetching campaign by ID via bulk API:', error);
       return {
         success: false,
         error: error.message || 'Failed to get campaign details',
@@ -776,27 +790,44 @@ export class UnifiedCampaignService {
     options: { limit?: number; cursor?: number } = {}
   ): Promise<UnifiedResultsResponse<string[]>> {
     try {
-      const axiosResponse = await campaignsApi.getGeneratedDomains(campaignId, options?.limit, options?.cursor);
-      const response = extractResponseData<unknown[] | { domains?: unknown[] }>(axiosResponse);
+      console.log(`[UnifiedCampaignService] 🚀 PERFORMANCE: Using bulk domains API for campaign ${campaignId}`);
+      const startTime = performance.now();
+      
+      // 🔥 PERFORMANCE OPTIMIZATION: Use bulk domains API instead of individual getGeneratedDomains
+      const axiosResponse = await campaignsApi.getBulkDomains({
+        campaignIds: [campaignId],
+        limit: options?.limit || 100,
+        offset: options?.cursor || 0
+      });
+      const response = extractResponseData<{ campaigns?: Record<string, { domains?: unknown[] }> }>(axiosResponse);
+      
+      const endTime = performance.now();
+      console.log(`[UnifiedCampaignService] ⚡ BULK domains API call completed in ${(endTime - startTime).toFixed(2)}ms`);
+      
       const requestId = globalThis.crypto?.randomUUID?.() || `domains-${Date.now()}`;
       
-      const data = Array.isArray(response) ? response : (response as any)?.domains || [];
+      // Extract domains from bulk response envelope
+      const campaignData = response?.campaigns?.[campaignId];
+      const rawDomains = campaignData?.domains || [];
+      const data = rawDomains as string[]; // Type assertion for domain strings
+      
+      console.log(`[UnifiedCampaignService] ✅ Retrieved ${data.length} domains for campaign ${campaignId} via bulk API`);
       
       return {
         success: true,
         data,
         error: null,
         requestId,
-        message: 'Generated domains retrieved successfully'
+        message: `Generated domains retrieved successfully via bulk API (${data.length} domains)`
       };
     } catch (error: any) {
-      console.error('[UnifiedCampaignService] Error getting generated domains:', error);
+      console.error('[UnifiedCampaignService] Error getting generated domains via bulk API:', error);
       return {
         success: false,
         data: [],
-        error: error.message || 'Failed to get generated domains',
+        error: error.message || 'Failed to get generated domains via bulk API',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to get generated domains'
+        message: error.message || 'Failed to get generated domains via bulk API'
       };
     }
   }
@@ -806,30 +837,43 @@ export class UnifiedCampaignService {
     options: { limit?: number; cursor?: string } = {}
   ): Promise<UnifiedResultsResponse<unknown[]>> {
     try {
-      const axiosResponse = await campaignsApi.getDNSValidationResults(campaignId,
-        options?.cursor ? parseInt(options.cursor, 10) : undefined,
-        options?.limit ? options.limit.toString() : undefined
-      );
-      const response = extractResponseData<unknown[] | { results?: unknown[] }>(axiosResponse);
+      console.log(`[UnifiedCampaignService] 🚀 PERFORMANCE: Using bulk logs API for DNS validation results ${campaignId}`);
+      const startTime = performance.now();
+      
+      // 🔥 PERFORMANCE OPTIMIZATION: Use bulk logs API for DNS validation results
+      const axiosResponse = await campaignsApi.getBulkLogs({
+        campaignIds: [campaignId],
+        limit: options?.limit || 100,
+        offset: options?.cursor ? parseInt(options.cursor, 10) : 0
+      });
+      const response = extractResponseData<{ campaigns?: Record<string, { logs?: unknown[] }> }>(axiosResponse);
+      
+      const endTime = performance.now();
+      console.log(`[UnifiedCampaignService] ⚡ BULK logs API call completed in ${(endTime - startTime).toFixed(2)}ms`);
+      
       const requestId = globalThis.crypto?.randomUUID?.() || `dns-results-${Date.now()}`;
       
-      const data = Array.isArray(response) ? response : (response as any)?.results || [];
+      // Extract DNS validation logs from bulk response envelope
+      const campaignData = response?.campaigns?.[campaignId];
+      const data = campaignData?.logs || [];
+      
+      console.log(`[UnifiedCampaignService] ✅ Retrieved ${data.length} DNS validation results for campaign ${campaignId} via bulk logs API`);
       
       return {
         success: true,
         data,
         error: null,
         requestId,
-        message: 'DNS validation results retrieved successfully'
+        message: `DNS validation results retrieved successfully via bulk logs API (${data.length} results)`
       };
     } catch (error: any) {
-      console.error('[UnifiedCampaignService] Error getting DNS validation results:', error);
+      console.error('[UnifiedCampaignService] Error getting DNS validation results via bulk logs API:', error);
       return {
         success: false,
         data: [],
-        error: error.message || 'Failed to get DNS validation results',
+        error: error.message || 'Failed to get DNS validation results via bulk logs API',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to get DNS validation results'
+        message: error.message || 'Failed to get DNS validation results via bulk logs API'
       };
     }
   }
@@ -839,18 +883,34 @@ export class UnifiedCampaignService {
     options: { limit?: number; cursor?: string } = {}
   ): Promise<UnifiedResultsResponse<unknown[]>> {
     try {
-      const axiosResponse = await campaignsApi.getHTTPKeywordResults(campaignId, options?.limit, options?.cursor);
-      const response = extractResponseData<unknown[] | { results?: unknown[] }>(axiosResponse);
+      console.log(`[UnifiedCampaignService] 🚀 PERFORMANCE: Using bulk leads API for HTTP keyword results ${campaignId}`);
+      const startTime = performance.now();
+      
+      // 🔥 PERFORMANCE OPTIMIZATION: Use bulk leads API for HTTP keyword results
+      const axiosResponse = await campaignsApi.getBulkLeads({
+        campaignIds: [campaignId],
+        limit: options?.limit || 100,
+        offset: options?.cursor ? parseInt(options.cursor, 10) : 0
+      });
+      const response = extractResponseData<{ campaigns?: Record<string, { leads?: unknown[] }> }>(axiosResponse);
+      
+      const endTime = performance.now();
+      console.log(`[UnifiedCampaignService] ⚡ BULK leads API call completed in ${(endTime - startTime).toFixed(2)}ms`);
+      
       const requestId = globalThis.crypto?.randomUUID?.() || `http-results-${Date.now()}`;
       
-      const data = Array.isArray(response) ? response : (response as any)?.results || [];
+      // Extract HTTP keyword results (leads) from bulk response envelope
+      const campaignData = response?.campaigns?.[campaignId];
+      const data = campaignData?.leads || [];
+      
+      console.log(`[UnifiedCampaignService] ✅ Retrieved ${data.length} HTTP keyword results for campaign ${campaignId} via bulk leads API`);
       
       return {
         success: true,
         data,
         error: null,
         requestId,
-        message: 'HTTP keyword results retrieved successfully'
+        message: `HTTP keyword results retrieved successfully via bulk leads API (${data.length} results)`
       };
     } catch (error: any) {
       console.error('[UnifiedCampaignService] Error getting HTTP keyword results:', error);
