@@ -1,16 +1,14 @@
 
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CampaignViewModel, LatestDomainActivity, CampaignPhase, DomainActivityStatus, CampaignSelectedType } from '@/lib/types';
 import { CAMPAIGN_PHASES_ORDERED } from '@/lib/constants';
 import { ScrollArea } from '../ui/scroll-area';
-import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, ChevronLeft, ChevronRight, Percent, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, Percent } from 'lucide-react';
 import Link from 'next/link';
 import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
@@ -18,9 +16,6 @@ import { useLoadingStore, LOADING_OPERATIONS } from '@/lib/stores/loadingStore';
 import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/unifiedCampaignService';
 import { type BaseWebSocketMessage } from '@/lib/websocket/message-handlers';
 import { type DashboardActivityPayload } from '@/lib/services/websocketService.simple';
-import { useInfiniteScrollActivity } from '@/lib/hooks/useInfiniteScroll';
-import { PaginationLoadingStates, InfiniteScrollLoader } from '@/components/ui/pagination-loading-states';
-import { PaginationErrorBoundary } from '@/components/ui/pagination-error-boundary';
 
 // Type definition for campaign leads
 interface CampaignLead {
@@ -30,8 +25,6 @@ interface CampaignLead {
 }
 
 const MAX_ITEMS_DISPLAY_INITIAL_LOAD = 200; // Max items to process for the global table initially
-const DEFAULT_PAGE_SIZE_GLOBAL = 50;
-const GLOBAL_PAGE_SIZES = [25, 50, 100, 200];
 
 
 const formatDate = (dateString: string): string => {
@@ -257,31 +250,8 @@ export default function LatestActivityTable() {
   const { startLoading, stopLoading, isOperationLoading } = useLoadingStore();
   const loading = isOperationLoading(LOADING_OPERATIONS.DATA_FETCH);
 
-  // Infinite scroll load function
-  const loadMoreActivity = useCallback(async (page: number, pageSize: number) => {
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const pageData = allActivityData.slice(startIndex, endIndex);
-    
-    return {
-      data: pageData,
-      hasMore: endIndex < allActivityData.length,
-      totalCount: allActivityData.length,
-    };
-  }, [allActivityData]);
-
-  // Use infinite scroll hook for activity feed
-  const {
-    items: displayedActivities,
-    isLoading: infiniteLoading,
-    isLoadingMore,
-    hasMore,
-    error: infiniteError,
-    observerRef,
-    reset: resetInfiniteScroll,
-    retry: retryInfiniteScroll,
-    isEmpty,
-  } = useInfiniteScrollActivity(loadMoreActivity, [allActivityData]);
+  // Simple pagination - show all activities
+  const displayedActivities = allActivityData;
 
 
   const fetchAndProcessData = useCallback(async (showLoadingSpinner = true) => {
@@ -538,28 +508,25 @@ export default function LatestActivityTable() {
     };
   }, [fetchAndProcessData, handleDashboardActivity]);
 
-  // Reset infinite scroll when data changes
-  useEffect(() => {
-    resetInfiniteScroll();
-  }, [allActivityData, resetInfiniteScroll]);
-
   return (
-    <PaginationErrorBoundary>
-      <Card className="shadow-xl col-span-1 md:col-span-2 lg:col-span-3">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center"><Activity className="mr-2 h-6 w-6 text-primary" /> Latest Domain Activity</CardTitle>
-          <CardDescription>
-            Overview of the most recently processed domains across your campaigns with infinite scrolling.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PaginationLoadingStates
-            isLoading={loading}
-            error={infiniteError}
-            isEmpty={isEmpty && !loading}
-            itemName="domain activities"
-            onRetry={retryInfiniteScroll}
-          >
+    <Card className="shadow-xl col-span-1 md:col-span-2 lg:col-span-3">
+      <CardHeader>
+        <CardTitle className="text-xl flex items-center"><Activity className="mr-2 h-6 w-6 text-primary" /> Latest Domain Activity</CardTitle>
+        <CardDescription>
+          Overview of the most recently processed domains across your campaigns.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="text-sm text-muted-foreground">Loading domain activities...</div>
+          </div>
+        ) : displayedActivities.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-sm text-muted-foreground">No domain activities found</div>
+          </div>
+        ) : (
+          <>
             <ScrollArea className="h-[400px] w-full">
               <Table>
                 <TableHeader>
@@ -574,7 +541,7 @@ export default function LatestActivityTable() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {displayedActivities.map((item) => (
+                  {displayedActivities.map((item: LatestDomainActivity) => (
                     <TableRow key={item.id}>
                       <TableCell>
                         <a
@@ -611,43 +578,18 @@ export default function LatestActivityTable() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  
-                  {/* Infinite scroll sentinel */}
-                  {hasMore && (
-                    <TableRow ref={observerRef}>
-                      <TableCell colSpan={7} className="text-center py-4">
-                        <InfiniteScrollLoader
-                          isLoading={isLoadingMore}
-                          hasMore={hasMore}
-                          error={infiniteError}
-                          onRetry={retryInfiniteScroll}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  
-                  {!hasMore && displayedActivities.length > 0 && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-4">
-                        <InfiniteScrollLoader
-                          isLoading={false}
-                          hasMore={false}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  )}
                 </TableBody>
               </Table>
             </ScrollArea>
             
             {/* Activity count */}
             <div className="mt-4 text-sm text-muted-foreground text-center">
-              Showing {displayedActivities.length} of {allActivityData.length} activities
+              Showing {displayedActivities.length} activities
             </div>
-          </PaginationLoadingStates>
-        </CardContent>
-      </Card>
-    </PaginationErrorBoundary>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

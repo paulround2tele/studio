@@ -559,6 +559,36 @@ async function runCampaignCreationTest() {
     await page.waitForSelector('main', { timeout: config.timeout });
     logger.info('Campaigns page loaded');
 
+    // CRITICAL: Take screenshot of campaigns page to see what user sees
+    logger.info('Taking screenshot of campaigns page for debugging');
+    await page.screenshot({
+      path: path.join(config.outputDir, `campaigns-page-loaded-${timestamp}.png`),
+      fullPage: true
+    });
+
+    // Wait a bit more for any async data loading
+    logger.info('Waiting additional 3 seconds for data to load...');
+    await page.waitForTimeout(3000);
+
+    // Take another screenshot after waiting for data
+    await page.screenshot({
+      path: path.join(config.outputDir, `campaigns-page-after-wait-${timestamp}.png`),
+      fullPage: true
+    });
+
+    // Check for campaign list elements
+    logger.info('Checking for campaign list elements');
+    const campaignElements = await page.$$('[data-testid*="campaign"], .campaign-item, [class*="campaign"]');
+    logger.info(`Found ${campaignElements.length} campaign elements`);
+
+    // Check for loading indicators
+    const loadingElements = await page.$$('[data-testid*="loading"], .loading, [class*="loading"], [class*="spinner"]');
+    logger.info(`Found ${loadingElements.length} loading indicators`);
+
+    // Check for empty state
+    const emptyElements = await page.$$('[data-testid*="empty"], .empty-state, [class*="empty"]');
+    logger.info(`Found ${emptyElements.length} empty state indicators`);
+
     // Look for "Create New Campaign" button
     logger.info('Looking for Create New Campaign button');
     

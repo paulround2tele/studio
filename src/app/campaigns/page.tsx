@@ -18,15 +18,11 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { apiClient } from '@/lib/api-client/client';
 import { normalizeStatus, isActiveStatus } from '@/lib/utils/statusMapping';
 import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
 import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
 import { useToast } from '@/hooks/use-toast';
 import { useOptimisticUpdate, useLoadingState } from '@/lib/state/stateManager';
-import {
-  safeApiCall
-} from '@/lib/utils/apiResponseHelpers';
 import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
 import { useCampaignPagination } from '@/lib/hooks/usePagination';
 
@@ -134,6 +130,9 @@ const ComponentLoader = () => (
 );
 
 function CampaignsPageContent() {
+  // 🔥 DIAGNOSTIC: Check if component function even starts
+  console.log('🔥 [CRITICAL] CampaignsPageContent function started executing');
+  
   const [campaigns, setCampaigns] = useState<CampaignViewModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "active" | "completed" | "failed" | "paused">("all");
@@ -153,7 +152,7 @@ function CampaignsPageContent() {
 
   // Use standardized campaign pagination with dashboard context (50 campaigns per page)
   const paginationHook = useCampaignPagination(campaigns.length, 'dashboard');
-  const { state: pagination, actions: paginationActions, params: paginationParams } = paginationHook;
+  const { params: paginationParams } = paginationHook;
 
 
   // MEMORY LEAK FIX: WebSocket connection management with proper cleanup
@@ -348,15 +347,20 @@ type: error.type,
   // WebSocket and API calls handle all state updates directly
 
   const loadCampaignsData = useCallback(async (showLoadingSpinner = true, _signal?: AbortSignal) => {
+    // 🔥 DIAGNOSTIC: Add logging to debug early returns
+    console.log('🔥 [DIAGNOSTIC] loadCampaignsData called, checking conditions...');
+    console.log('🔥 [DIAGNOSTIC] isMountedRef.current:', isMountedRef.current);
+    console.log('🔥 [DIAGNOSTIC] isGlobalLoading("campaigns_load"):', isGlobalLoading('campaigns_load'));
+    
     // MEMORY LEAK FIX: Check if component is still mounted
     if (!isMountedRef.current) {
-      console.log('[CampaignsPage] Component unmounted, skipping load');
+      console.log('🚨 [DIAGNOSTIC] Component unmounted, skipping load');
       return;
     }
     
     // INFINITE LOOP PREVENTION: Check if already loading to prevent concurrent calls
     if (isGlobalLoading('campaigns_load')) {
-      console.log('[CampaignsPage] Already loading campaigns, skipping duplicate call');
+      console.log('🚨 [DIAGNOSTIC] Already loading campaigns, skipping duplicate call');
       return;
     }
     
@@ -364,6 +368,7 @@ type: error.type,
     setGlobalLoading('campaigns_load', true, 'Loading campaigns with bulk enrichment');
     
     try {
+      console.log('🚀 [DEBUG] CampaignsPage loadCampaignsData called - this should only happen ONCE per page load');
       console.log('🚀 [CampaignsPage] Using BULK API - Loading campaigns with enriched data in single call');
       
       // 🔥 PERFORMANCE BOOST: Use bulk enriched data API instead of N+1 queries
@@ -372,30 +377,27 @@ type: error.type,
       
       console.log('🚀 [CampaignsPage] BULK-ONLY: Loading campaigns with enhanced bulk operations');
       
-      // Get basic campaign list using standardized pagination parameters
-      const basicCampaigns = await safeApiCall(() =>
-        apiClient.listCampaigns(paginationParams.limit, paginationParams.offset)
-      );
+      // Get campaigns using unified service with proper pagination
+      const limit = paginationParams.pageSize || 50;
+      const offset = ((paginationParams.current || 1) - 1) * limit;
       
-      if (!basicCampaigns || !Array.isArray(basicCampaigns)) {
-        throw new Error('Failed to load basic campaign list');
+      console.log(`🚀 [CampaignsPage] Using unified campaign service with pagination (limit: ${limit}, offset: ${offset})`);
+      
+      const campaignsResponse = await unifiedCampaignService.getCampaigns({
+        limit,
+        offset
+      });
+      
+      if (!campaignsResponse.success || !campaignsResponse.data) {
+        throw new Error(campaignsResponse.error || 'Failed to load campaigns');
       }
       
-      console.log(`📊 [CampaignsPage] BULK-ONLY: Loaded ${basicCampaigns.length} campaigns with pagination (limit: ${paginationParams.limit}, offset: ${paginationParams.offset}), now enriching via enhanced bulk service`);
+      console.log(`📊 [CampaignsPage] Loaded ${campaignsResponse.data.length} campaigns via unified service`);
       
-      // Use unified campaign service for bulk enrichment
-      const enrichedCampaigns = await unifiedCampaignService.loadCampaignListWithEnrichment(basicCampaigns);
+      // Use campaigns from unified service response
+      const compatibleCampaigns: CampaignViewModel[] = campaignsResponse.data;
       
-      // Convert enriched data back to CampaignViewModel format for state compatibility
-      const compatibleCampaigns: CampaignViewModel[] = enrichedCampaigns.map(enriched => ({
-        ...enriched,
-        // Convert array properties back to counts for state compatibility
-        domains: enriched.domains?.length ?? 0,
-        dnsValidatedDomains: enriched.dnsValidatedDomains?.length ?? 0,
-        leads: enriched.leads?.length ?? 0,
-      }));
-      
-      console.log(`✅ [CampaignsPage] BULK-ONLY: Enhanced ${compatibleCampaigns.length} campaigns with bulk operations`);
+      console.log(`✅ [CampaignsPage] Successfully loaded ${compatibleCampaigns.length} campaigns with unified service`);
       
       // Check if component is still mounted after API call
       if (!isMountedRef.current) {
@@ -407,7 +409,7 @@ type: error.type,
         if (isMountedRef.current) {
           setCampaigns(compatibleCampaigns);
           console.log('📝 [CampaignsPage] BULK Campaign state updated successfully:', {
-            newStateCount: enrichedCampaigns.length,
+            newStateCount: compatibleCampaigns.length,
             stateUpdateSuccess: true,
             bulkApiUsed: true,
             performanceImprovement: 'N+1 queries eliminated'
@@ -445,8 +447,7 @@ type: error.type,
         setGlobalLoading('campaigns_load', false);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // CRITICAL RATE LIMIT FIX: Remove all dependencies to prevent infinite loop
+  }, [paginationParams, unifiedCampaignService, isMountedRef, setLoading, setGlobalLoading, isGlobalLoading, setCampaigns, toast]); // FIXED: Added necessary dependencies
 
 
   useEffect(() => {
@@ -518,18 +519,22 @@ type: 'DELETE',
     setCampaigns(prev => prev.filter(c => c.id !== campaignId));
 
     try {
-      // Call deleteCampaign with just campaignId
-      await apiClient.deleteCampaign(campaignId);
-      await confirmUpdate(updateId);
-      toast({
-title: "Campaign Deleted",
-        description: "Campaign successfully deleted."
-      });
+      // Use unified campaign service for delete
+      const result = await unifiedCampaignService.deleteCampaign(campaignId);
+      if (result.success) {
+        await confirmUpdate(updateId);
+        toast({
+          title: "Campaign Deleted",
+          description: result.message || "Campaign successfully deleted."
+        });
+      } else {
+        throw new Error(result.error || "Could not delete campaign.");
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Could not delete campaign.";
       await rollbackUpdate(updateId, errorMessage);
       toast({
-title: "Error",
+        title: "Error",
         description: errorMessage,
         variant: "destructive"
       });
@@ -569,17 +574,22 @@ type: 'UPDATE',
     }
 
     try {
-      // Call the appropriate API method directly
+      // Use unified campaign service for control operations
+      let result;
       if (action === 'pause') {
-        await apiClient.pauseCampaign(campaignId);
+        result = await unifiedCampaignService.pauseCampaign(campaignId);
       } else if (action === 'resume') {
-        await apiClient.resumeCampaign(campaignId);
+        result = await unifiedCampaignService.resumeCampaign(campaignId);
       } else {
-        await apiClient.cancelCampaign(campaignId);
+        result = await unifiedCampaignService.cancelCampaign(campaignId);
       }
       
-      await confirmUpdate(updateId);
-      toast({ title: `Campaign ${action}ed`, description: `Campaign ${action}ed successfully` });
+      if (result.success) {
+        await confirmUpdate(updateId);
+        toast({ title: `Campaign ${action}ed`, description: result.message || `Campaign ${action}ed successfully` });
+      } else {
+        throw new Error(result.error || `Failed to ${action} campaign`);
+      }
       // REMOVED: Redundant refresh - WebSocket updates handle state changes
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : `Failed to ${action} campaign`;
@@ -686,18 +696,51 @@ id: c.id,
       // Optimistic UI update - remove campaigns immediately
       setCampaigns(prev => prev.filter(c => !c.id || !selectedCampaigns.has(c.id)));
       
-      // Use proper bulk delete API - let backend handle the business logic
-      await apiClient.bulkDeleteCampaigns({
-        campaignIds: campaignsToDelete
-      });
+      // Use unified campaign service bulk delete for optimal performance
+      const bulkDeleteResult = await unifiedCampaignService.deleteCampaignsBulk(campaignsToDelete);
+      
+      if (!bulkDeleteResult.success) {
+        throw new Error(bulkDeleteResult.error || 'Failed to delete campaigns');
+      }
+
+      // Handle partial failures if any
+      if (bulkDeleteResult.data) {
+        const { successfully_deleted = 0, failed_deletions = 0, total_requested = campaignsToDelete.length } = bulkDeleteResult.data;
+        
+        if (failed_deletions > 0 && successfully_deleted === 0) {
+          // Complete failure
+          throw new Error(`Failed to delete all ${total_requested} campaigns`);
+        }
+        
+        if (failed_deletions > 0) {
+          // Partial failure - show warning but continue
+          console.warn(`Partial success: ${successfully_deleted}/${total_requested} campaigns deleted, ${failed_deletions} failed`);
+        }
+      }
 
       // Clear selection
       setSelectedCampaigns(new Set());
 
+      // Update success message based on bulk operation results
+      const successCount = bulkDeleteResult.data?.successfully_deleted || campaignsToDelete.length;
+      const failedCount = bulkDeleteResult.data?.failed_deletions || 0;
+      
+      let successTitle = "Campaigns Deleted Successfully";
+      let successDescription = `${successCount} campaigns deleted successfully`;
+      
+      if (failedCount > 0) {
+        successTitle = "Partial Success";
+        successDescription = `${successCount} campaigns deleted, ${failedCount} failed`;
+      }
+      
+      if (campaignNames) {
+        successDescription += `: ${campaignNames}${campaignsToDelete.length > 3 ? '...' : ''}`;
+      }
+
       toast({
-title: "Campaigns Deleted Successfully",
-        description: `${campaignsToDelete.length} campaigns deleted: ${campaignNames}${campaignsToDelete.length > 3 ? '...' : ''}`
-});
+        title: successTitle,
+        description: successDescription
+      });
 
       // REMOVED: Redundant refresh - optimistic update already handled this
     } catch (error: unknown) {
@@ -870,15 +913,18 @@ title: "Bulk Delete Failed",
            </div>
         )
       )}
-     {/* FIXED: Memoized Campaign Progress Monitors to prevent infinite re-renders */}
+     {/* TEMPORARILY DISABLED: Campaign Progress Monitors causing N+1 queries - blocking bulk delete testing */}
      {useMemo(() => {
        const activeCampaigns = campaigns.filter(c => isActiveStatus(normalizeStatus(c.status)));
-       console.log(`[CampaignsPage] Rendering ${activeCampaigns.length} progress monitors`);
+       console.log(`🚨 [DEBUG] DISABLED ${activeCampaigns.length} progress monitors to fix loading issue`);
        
+       // Return empty array to disable monitors temporarily
+       return [];
+       
+       /* ORIGINAL CODE - RE-ENABLE AFTER FIXING N+1 ISSUE:
        return activeCampaigns.map(campaign => {
          const handleCampaignUpdate = (updates: Partial<CampaignViewModel>) => {
            console.log(`[CampaignsPage] Progress monitor update for ${campaign.id}:`, updates);
-           // FIXED: Debounced state update to prevent rapid re-renders
            setCampaigns(prev => prev.map(c =>
              c.id === campaign.id ? { ...c, ...updates } : c
            ));
@@ -895,12 +941,16 @@ title: "Bulk Delete Failed",
            </div>
          );
        });
+       */
      }, [campaigns])}
    </>
  );
 }
 
 export default function CampaignsPage() {
+ // 🔥 DIAGNOSTIC: Check if main page component is called
+ console.log('🔥 [CRITICAL] CampaignsPage main function called');
+ 
  return (
    <StrictProtectedRoute
      redirectTo="/login"

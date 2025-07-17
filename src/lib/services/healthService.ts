@@ -1,10 +1,10 @@
 /**
  * Professional Health Service Implementation
- * Uses centralized backend detection with circuit breaker pattern and intelligent caching
+ * Uses auto-generated OpenAPI clients with circuit breaker pattern and intelligent caching
  * Eliminates 429 rate limiting through request consolidation and proper rate limiting
  */
 
-import { getApiBaseUrl } from '@/lib/config/environment';
+import { healthApi } from '@/lib/api-client/client';
 
 /**
  * Normalize various health status formats to standardized values
@@ -155,35 +155,20 @@ export async function getHealth(forceRefresh: boolean = false): Promise<HealthRe
 
   try {
     const result = await circuitBreaker.execute(async () => {
-      // Use centralized environment configuration
-      const backendUrl = await getApiBaseUrl();
-      const healthUrl = `${backendUrl}/health`;
+      console.log(`🔗 [HealthService] Checking health using OpenAPI client`);
 
-      console.log(`🔗 [HealthService] Checking health at: ${healthUrl}`);
-
-      const response = await fetch(healthUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
-        },
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      });
-
-      if (!response.ok) {
-        throw new Error(`Health check failed with status ${response.status}`);
-      }
-
-      const response_data = await response.json();
+      const response = await healthApi.handleHealthCheck();
+      const response_data = response.data;
       
       console.log(`🔍 [HealthService] Raw backend response:`, response_data);
       
       // Handle unified APIResponse format: { success: true, data: { status: "ok", ... }, error: null, requestId: "..." }
-      if (response_data.success === false) {
-        throw new Error(`Health check failed: ${response_data.error || 'Unknown error'}`);
+      const apiResponse = response_data as any;
+      if (apiResponse.success === false) {
+        throw new Error(`Health check failed: ${apiResponse.error || 'Unknown error'}`);
       }
       
-      const healthData = response_data.data || response_data;
+      const healthData = apiResponse.data || response_data;
       
       if (!healthData || typeof healthData !== 'object') {
         throw new Error('Invalid health data received from backend');
@@ -198,10 +183,10 @@ export async function getHealth(forceRefresh: boolean = false): Promise<HealthRe
       
       return {
         status: normalizedStatus,
-        timestamp: healthData.timestamp || new Date().toISOString(),
-        version: healthData.version,
-        message: healthData.message,
-        checks: healthData.components || healthData.checks,
+        timestamp: new Date().toISOString(),
+        version: undefined,
+        message: (healthData as any).message,
+        checks: undefined,
         isCached: false,
         cacheAge: 0
       } as HealthResponse;

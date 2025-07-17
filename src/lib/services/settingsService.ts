@@ -1,12 +1,7 @@
-import { configurationApi, configApi } from '@/lib/api-client/client';
+import { serverSettingsApi } from '@/lib/api-client/client';
 import {
-  safeApiCall
+  extractResponseData
 } from '@/lib/utils/apiResponseHelpers';
-
-// Using appropriate API clients for different config operations
-// ConfigurationApi for system configs, ConfigApi for feature flags
-const configClient = configurationApi;
-const featureFlagsClient = configApi;
 
 export interface DNSConfig {
   resolvers: string[];
@@ -110,201 +105,177 @@ class SettingsService {
   }
 
   async getDNSConfig(): Promise<DNSConfig> {
-    const result = await safeApiCall<DNSConfig>(
-      () => configClient.getDNSConfigGin(),
-      'Getting DNS configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to get DNS configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.getDNSConfigGin();
+      const config = extractResponseData<DNSConfig>(axiosResponse);
+      return config || {} as DNSConfig;
+    } catch (error: any) {
+      console.error('[SettingsService] Error getting DNS configuration:', error);
+      throw new Error(error.message || 'Failed to get DNS configuration');
     }
-    
-    return result.data || {} as DNSConfig;
   }
 
   async updateDNSConfig(cfg: DNSConfig): Promise<void> {
-    const result = await safeApiCall<DNSConfig>(
-      () => configClient.updateDNSConfigGin(cfg as any),
-      'Updating DNS configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update DNS configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.updateDNSConfigGin(cfg as any);
+      extractResponseData<DNSConfig>(axiosResponse);
+    } catch (error: any) {
+      console.error('[SettingsService] Error updating DNS configuration:', error);
+      throw new Error(error.message || 'Failed to update DNS configuration');
     }
   }
 
   async getHTTPConfig(): Promise<HTTPConfig> {
-    const result = await safeApiCall<HTTPConfig>(
-      () => configClient.getHTTPConfigGin(),
-      'Getting HTTP configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to get HTTP configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.getHTTPConfigGin();
+      const config = extractResponseData<HTTPConfig>(axiosResponse);
+      return config || {} as HTTPConfig;
+    } catch (error: any) {
+      console.error('[SettingsService] Error getting HTTP configuration:', error);
+      throw new Error(error.message || 'Failed to get HTTP configuration');
     }
-    
-    return result.data || {} as HTTPConfig;
   }
 
   async updateHTTPConfig(cfg: HTTPConfig): Promise<void> {
-    const result = await safeApiCall<HTTPConfig>(
-      () => configClient.updateHTTPConfigGin(cfg as any),
-      'Updating HTTP configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update HTTP configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.updateHTTPConfigGin(cfg as any);
+      extractResponseData<HTTPConfig>(axiosResponse);
+    } catch (error: any) {
+      console.error('[SettingsService] Error updating HTTP configuration:', error);
+      throw new Error(error.message || 'Failed to update HTTP configuration');
     }
   }
 
   async getLoggingConfig(): Promise<LoggingConfig> {
-    const result = await safeApiCall<LoggingConfig>(
-      () => configClient.getLoggingConfigGin(),
-      'Getting logging configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to get logging configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.getLoggingConfigGin();
+      const config = extractResponseData<LoggingConfig>(axiosResponse);
+      return config || {} as LoggingConfig;
+    } catch (error: any) {
+      console.error('[SettingsService] Error getting logging configuration:', error);
+      throw new Error(error.message || 'Failed to get logging configuration');
     }
-    
-    return result.data || {} as LoggingConfig;
   }
 
   async updateLoggingConfig(cfg: LoggingConfig): Promise<void> {
-    const result = await safeApiCall<LoggingConfig>(
-      () => configClient.updateLoggingConfigGin(cfg as any),
-      'Updating logging configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update logging configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.updateLoggingConfigGin(cfg as any);
+      extractResponseData<LoggingConfig>(axiosResponse);
+    } catch (error: any) {
+      console.error('[SettingsService] Error updating logging configuration:', error);
+      throw new Error(error.message || 'Failed to update logging configuration');
     }
   }
 
   async getWorkerConfig(): Promise<WorkerConfig> {
-    const result = await safeApiCall<WorkerConfig>(
-      () => configClient.getWorkerConfigGin(),
-      'Getting worker configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to get worker configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.getWorkerConfigGin();
+      const config = extractResponseData<WorkerConfig>(axiosResponse);
+      return config || {} as WorkerConfig;
+    } catch (error: any) {
+      console.error('[SettingsService] Error getting worker configuration:', error);
+      throw new Error(error.message || 'Failed to get worker configuration');
     }
-    
-    return result.data || {} as WorkerConfig;
   }
 
   async updateWorkerConfig(cfg: WorkerConfig): Promise<void> {
-    const result = await safeApiCall<WorkerConfig>(
-      () => configClient.updateWorkerConfigGin(cfg as any),
-      'Updating worker configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update worker configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.updateWorkerConfigGin(cfg as any);
+      extractResponseData<WorkerConfig>(axiosResponse);
+    } catch (error: any) {
+      console.error('[SettingsService] Error updating worker configuration:', error);
+      throw new Error(error.message || 'Failed to update worker configuration');
     }
   }
 
   async getRateLimiterConfig(): Promise<RateLimiterConfig> {
-    const result = await safeApiCall<RateLimiterConfig>(
-      () => configClient.getRateLimiterConfigGin(),
-      'Getting rate limiter configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to get rate limiter configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.getRateLimiterConfigGin();
+      const config = extractResponseData<RateLimiterConfig>(axiosResponse);
+      return config || {} as RateLimiterConfig;
+    } catch (error: any) {
+      console.error('[SettingsService] Error getting rate limiter configuration:', error);
+      throw new Error(error.message || 'Failed to get rate limiter configuration');
     }
-    
-    return result.data || {} as RateLimiterConfig;
   }
 
   async updateRateLimiterConfig(cfg: RateLimiterConfig): Promise<void> {
-    const result = await safeApiCall<RateLimiterConfig>(
-      () => configClient.updateRateLimiterConfigGin(cfg as any),
-      'Updating rate limiter configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update rate limiter configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.updateRateLimiterConfigGin(cfg as any);
+      extractResponseData<RateLimiterConfig>(axiosResponse);
+    } catch (error: any) {
+      console.error('[SettingsService] Error updating rate limiter configuration:', error);
+      throw new Error(error.message || 'Failed to update rate limiter configuration');
     }
   }
 
   async getProxyManagerConfig(): Promise<ProxyManagerConfig> {
-    const result = await safeApiCall<ProxyManagerConfig>(
-      () => configClient.getProxyManagerConfigGin(),
-      'Getting proxy manager configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to get proxy manager configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.getProxyManagerConfigGin();
+      const config = extractResponseData<ProxyManagerConfig>(axiosResponse);
+      return config || {} as ProxyManagerConfig;
+    } catch (error: any) {
+      console.error('[SettingsService] Error getting proxy manager configuration:', error);
+      throw new Error(error.message || 'Failed to get proxy manager configuration');
     }
-    
-    return result.data || {} as ProxyManagerConfig;
   }
 
   async updateProxyManagerConfig(cfg: ProxyManagerConfig): Promise<void> {
-    const result = await safeApiCall<ProxyManagerConfig>(
-      () => configClient.updateProxyManagerConfigGin(cfg as any),
-      'Updating proxy manager configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update proxy manager configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.updateProxyManagerConfigGin(cfg as any);
+      extractResponseData<ProxyManagerConfig>(axiosResponse);
+    } catch (error: any) {
+      console.error('[SettingsService] Error updating proxy manager configuration:', error);
+      throw new Error(error.message || 'Failed to update proxy manager configuration');
     }
   }
 
   async getServerConfig(): Promise<ServerConfig> {
-    const result = await safeApiCall<ServerConfig>(
-      () => configClient.getServerConfigGin(),
-      'Getting server configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to get server configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.getServerConfigGin();
+      const config = extractResponseData<ServerConfig>(axiosResponse);
+      return config || {} as ServerConfig;
+    } catch (error: any) {
+      console.error('[SettingsService] Error getting server configuration:', error);
+      throw new Error(error.message || 'Failed to get server configuration');
     }
-    
-    return result.data || {} as ServerConfig;
   }
 
   async updateServerConfig(cfg: Partial<ServerConfig>): Promise<void> {
-    const result = await safeApiCall<ServerConfig>(
-      () => configClient.updateServerConfigGin(cfg as any),
-      'Updating server configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update server configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.updateServerConfigGin(cfg as any);
+      extractResponseData<ServerConfig>(axiosResponse);
+    } catch (error: any) {
+      console.error('[SettingsService] Error updating server configuration:', error);
+      throw new Error(error.message || 'Failed to update server configuration');
     }
   }
 
   async getAuthConfig(): Promise<AuthConfig> {
-    const result = await safeApiCall<AuthConfig>(
-      () => configClient.getAuthConfigGin(),
-      'Getting auth configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to get auth configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.getAuthConfigGin();
+      const config = extractResponseData<AuthConfig>(axiosResponse);
+      return config || {} as AuthConfig;
+    } catch (error: any) {
+      console.error('[SettingsService] Error getting auth configuration:', error);
+      throw new Error(error.message || 'Failed to get auth configuration');
     }
-    
-    return result.data || {} as AuthConfig;
   }
 
   async updateAuthConfig(cfg: AuthConfig): Promise<void> {
-    const result = await safeApiCall<AuthConfig>(
-      () => configClient.updateAuthConfigGin(cfg as any),
-      'Updating auth configuration'
-    );
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to update auth configuration');
+    try {
+      const axiosResponse = await serverSettingsApi.updateAuthConfigGin(cfg as any);
+      extractResponseData<AuthConfig>(axiosResponse);
+    } catch (error: any) {
+      console.error('[SettingsService] Error updating auth configuration:', error);
+      throw new Error(error.message || 'Failed to update auth configuration');
     }
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsConfig> {
     // TODO: Fix once proper feature flags API endpoint is available
     try {
-      const response = await featureFlagsClient.getServerConfigGin();
+      const response = await serverSettingsApi.getServerConfigGin();
       return (response as any)?.featureFlags || {} as FeatureFlagsConfig;
     } catch (error) {
       console.warn('Feature flags API not available, using defaults:', error);
@@ -315,7 +286,7 @@ class SettingsService {
   async updateFeatureFlags(_flags: FeatureFlagsConfig): Promise<void> {
     // TODO: Fix once proper feature flags API endpoint is available
     console.warn('updateFeatureFlags not implemented - feature flags API endpoint missing');
-    // await featureFlagsClient.updateServerConfig({ featureFlags: flags } as any);
+    // await serverSettingsApi.updateServerConfig({ featureFlags: flags } as any);
   }
 }
 

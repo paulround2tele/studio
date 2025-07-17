@@ -232,6 +232,64 @@ components:
                 success:
                     type: boolean
             type: object
+        BulkDatabaseQueryRequest:
+            properties:
+                limit:
+                    format: int32
+                    type: integer
+                queries:
+                    items:
+                        $ref: '#/components/schemas/DatabaseQuery'
+                    type: array
+                timeout:
+                    format: int32
+                    type: integer
+            required:
+                - queries
+            type: object
+        BulkDatabaseQueryResponse:
+            properties:
+                metadata:
+                    $ref: '#/components/schemas/BulkQueryMetadata'
+                results:
+                    additionalProperties:
+                        $ref: '#/components/schemas/DatabaseQueryResult'
+                    type: object
+                totalCount:
+                    format: int32
+                    type: integer
+            type: object
+        BulkDatabaseStatsRequest:
+            properties:
+                detailed:
+                    type: boolean
+                schemas:
+                    items:
+                        type: string
+                    type: array
+                tables:
+                    items:
+                        type: string
+                    type: array
+            type: object
+        BulkDatabaseStatsResponse:
+            properties:
+                databaseStats:
+                    $ref: '#/components/schemas/DatabaseStats'
+                metadata:
+                    $ref: '#/components/schemas/BulkStatsMetadata'
+                schemaStats:
+                    additionalProperties:
+                        $ref: '#/components/schemas/SchemaStats'
+                    type: object
+                tableStats:
+                    additionalProperties:
+                        $ref: '#/components/schemas/TableStats'
+                    type: object
+                totalCount:
+                    format: int32
+                    type: integer
+            type: object
         BulkDeleteRequest:
             properties:
                 campaignIds:
@@ -402,6 +460,44 @@ components:
                     format: int64
                     type: integer
                 skippedCampaigns:
+                    format: int32
+                    type: integer
+            type: object
+        BulkQueryMetadata:
+            properties:
+                failedQueries:
+                    items:
+                        type: string
+                    type: array
+                processedQueries:
+                    format: int32
+                    type: integer
+                processingTimeMs:
+                    format: int64
+                    type: integer
+                skippedQueries:
+                    format: int32
+                    type: integer
+                totalRowsReturned:
+                    format: int64
+                    type: integer
+            type: object
+        BulkStatsMetadata:
+            properties:
+                failedItems:
+                    items:
+                        type: string
+                    type: array
+                processedSchemas:
+                    format: int32
+                    type: integer
+                processedTables:
+                    format: int32
+                    type: integer
+                processingTimeMs:
+                    format: int64
+                    type: integer
+                skippedItems:
                     format: int32
                     type: integer
             type: object
@@ -1747,6 +1843,8 @@ components:
             type: string
         DNSValidatorConfigJSON:
             type: string
+        DatabaseHandler:
+            type: object
         DatabaseOptimizationRecommendation:
             properties:
                 createdAt:
@@ -1765,6 +1863,64 @@ components:
                 title:
                     type: string
                 type:
+                    type: string
+            type: object
+        DatabaseQuery:
+            properties:
+                id:
+                    description: Unique identifier
+                    format: uuid
+                    type: string
+                sql:
+                    type: string
+            required:
+                - id
+                - sql
+            type: object
+        DatabaseQueryResult:
+            properties:
+                columns:
+                    items:
+                        type: string
+                    type: array
+                error:
+                    type: string
+                executionTime:
+                    format: int64
+                    type: integer
+                rowCount:
+                    format: int32
+                    type: integer
+                rows:
+                    items:
+                        items:
+                            type: object
+                        type: array
+                    type: array
+                success:
+                    type: boolean
+            type: object
+        DatabaseStats:
+            properties:
+                databaseSize:
+                    type: string
+                isHealthy:
+                    type: boolean
+                schemaVersion:
+                    type: string
+                totalSessions:
+                    format: int32
+                    type: integer
+                totalTables:
+                    format: int32
+                    type: integer
+                totalUsers:
+                    format: int32
+                    type: integer
+                uptime:
+                    format: date-time
+                    type: string
+                version:
                     type: string
             type: object
         DeletionConfirmationResponse:
@@ -3841,6 +3997,19 @@ components:
                     format: double
                     type: number
             type: object
+        SchemaStats:
+            properties:
+                name:
+                    type: string
+                tableCount:
+                    format: int32
+                    type: integer
+                totalRows:
+                    format: int64
+                    type: integer
+                totalSize:
+                    type: string
+            type: object
         SecurityContext:
             properties:
                 lastActivity:
@@ -4235,6 +4404,21 @@ components:
                     format: uuid
                     type: string
             type: object
+        TableStats:
+            properties:
+                indexCount:
+                    format: int32
+                    type: integer
+                name:
+                    type: string
+                rowCount:
+                    format: int64
+                    type: integer
+                schema:
+                    type: string
+                size:
+                    type: string
+            type: object
         TestResultResponse:
             properties:
                 message:
@@ -4567,6 +4751,80 @@ info:
     version: 1.0.0
 openapi: 3.0.3
 paths:
+    /api/v2/database/query:
+        post:
+            description: Execute multiple SQL queries against the database with security restrictions for enterprise operations
+            operationId: handleBulkDatabaseQuery
+            parameters:
+                - description: Must be XMLHttpRequest
+                  in: header
+                  name: X-Requested-With
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BulkDatabaseQueryResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Execute bulk database queries
+            tags:
+                - database
+    /api/v2/database/stats:
+        post:
+            description: Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
+            operationId: handleBulkDatabaseStats
+            parameters:
+                - description: Must be XMLHttpRequest
+                  in: header
+                  name: X-Requested-With
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BulkDatabaseStatsResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get bulk database statistics
+            tags:
+                - database
     /auth/change-password:
         post:
             description: Change password for the currently authenticated user

@@ -14,12 +14,13 @@ import { Label } from '@/components/ui/label';
 import { Database, Server } from 'lucide-react';
 import { useAuthUI } from '@/lib/hooks/useAuthUI';
 import databaseService from '@/lib/services/databaseService';
-import type { QueryResult, DatabaseStats } from '@/lib/api/databaseApi';
+import type { DatabaseQueryResult } from '@/lib/api-client/models/database-query-result';
+import type { DatabaseStats } from '@/lib/api-client/models/database-stats';
 
 
 export default function DatabaseGUI() {
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM auth.users LIMIT 10;');
-  const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
+  const [queryResult, setQueryResult] = useState<DatabaseQueryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
@@ -461,7 +462,7 @@ export default function DatabaseGUI() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              {queryResult.columns.map((column, index) => (
+                              {queryResult.columns?.map((column, index) => (
                                 <TableHead key={index} className="font-semibold">
                                   {column}
                                 </TableHead>
@@ -469,7 +470,7 @@ export default function DatabaseGUI() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {queryResult.rows.map((row, rowIndex) => (
+                            {queryResult.rows?.map((row, rowIndex) => (
                               <TableRow key={rowIndex}>
                                 {row.map((cell, cellIndex) => (
                                   <TableCell key={cellIndex} className="font-mono text-sm">

@@ -3,12 +3,8 @@
 import PersonaForm from '@/components/personas/PersonaForm';
 import PageHeader from '@/components/shared/PageHeader';
 import type { components } from '@/lib/api-client/types';
-type FrontendPersona = components['schemas']['Persona'];
-import type { ApiResponse } from '@/lib/types';
 
-// Use frontend-safe types for consistency with service layer
-type Persona = FrontendPersona;
-type PersonaDetailResponse = ApiResponse<FrontendPersona>;
+// Use backend-generated types directly - no custom types needed
 import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
@@ -26,7 +22,7 @@ function EditPersonaPageContent() {
   const personaId = params.id as string;
   const personaTypeParam = searchParams.get('type') as 'http' | 'dns' | null; 
   
-  const [persona, setPersona] = useState<Persona | null>(null);
+  const [persona, setPersona] = useState<components['schemas']['Persona'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,14 +44,14 @@ function EditPersonaPageContent() {
       setLoading(true);
       setError(null); 
       try {
-        const response: PersonaDetailResponse = await getPersonaById(personaId, type);
+        const response = await getPersonaById(personaId, type);
         if (response.success === true && response.data) {
           if (response.data.personaType !== type) {
             setError(`Mismatch: Persona ID '${personaId}' found, but it is a '${response.data.personaType}' persona, not '${type}'.`);
             setPersona(null);
             toast({ title: "Type Mismatch", description: `Persona found, but it's not of type '${type}'.`, variant: "destructive" });
           } else {
-            setPersona(response.data);
+            setPersona(response.data as components['schemas']['Persona']);
           }
         } else {
           setError(response.error || "Persona not found.");

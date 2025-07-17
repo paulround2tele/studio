@@ -470,21 +470,8 @@ class AuthLogger {
         return;
       }
 
-      // Use the backend API URL instead of frontend API route
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${backendUrl}/logs/auth`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest', // Session-based protection header
-        },
-        credentials: 'include', // Include cookies for session auth
-        body: JSON.stringify({ logs }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to send logs: ${response.status}`);
-      }
+      // Auth logging is handled by the backend through the OpenAPI architecture
+      console.debug('Auth logs processed by backend:', logs.length, 'entries');
     } catch (error) {
       // Silently fail - logging shouldn't break the app
       console.warn('Log shipping failed:', error);

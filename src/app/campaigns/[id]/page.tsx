@@ -29,7 +29,6 @@ import {
 } from '@/lib/stores/campaignDetailsStore';
 import { websocketService } from '@/lib/services/websocketService.simple';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
-import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
 
 // Types
 import type { Campaign } from '@/lib/api-client/models';
@@ -51,7 +50,7 @@ export default function RefactoredCampaignDetailsPage() {
   const { campaign, loading, error } = useCampaignData();
   const { generatedDomains, dnsCampaignItems, httpCampaignItems, totalDomainCount } = useDomainData();
   const streamingStats = useStreamingStats();
-  const { filters, pagination } = useTableState();
+  const { filters } = useTableState();
   const actionLoading = useActionLoading();
 
   // 🔧 CRITICAL FIX: Access store functions directly without subscriptions
@@ -61,7 +60,6 @@ export default function RefactoredCampaignDetailsPage() {
   // Keep other actions from the hook for compatibility
   const {
     updateFilters,
-    updatePagination,
     reset
   } = useCampaignDetailsActions();
 
@@ -300,19 +298,13 @@ type: 'http_validation_result',
                 
               case 'phase_transition':
                 console.log(`🔄 [PHASE_TRANSITION] Phase transition detected:`, message.data);
-                // Handle phase transition with real-time cache invalidation
-                handlePhaseTransition({
-type: 'phase_transition',
-                  timestamp: message.timestamp || new Date().toISOString(),
-                  data: message.data
-                });
-                // Update local campaign state immediately
+                // Update local campaign state immediately - phase transition handling is now in the store
                 updateFromWebSocket({
-type: 'phase_transition',
+                  type: 'phase_transition',
                   data: message.data,
                   timestamp: message.timestamp || new Date().toISOString(),
                   campaignId: message.campaignId || campaignId
-});
+                });
                 break;
 default:
                 console.log(`📝 [WebSocket] Unhandled message type: ${message.type}`);
@@ -465,9 +457,7 @@ default:
           totalDomains={totalDomainCount}
           loading={loading}
           filters={filters}
-          pagination={pagination}
           onFiltersChange={updateFilters}
-          onPaginationChange={updatePagination}
           onDownloadDomains={downloadDomains}
           className="w-full"
         />

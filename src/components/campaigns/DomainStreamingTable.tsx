@@ -31,7 +31,6 @@ import {
 import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 import { useDomainPagination } from '@/lib/hooks/usePagination';
-import { PAGE_SIZE_OPTIONS } from '@/lib/types/pagination';
 
 type GeneratedDomain = components['schemas']['GeneratedDomain'];
 import { cn } from '@/lib/utils';
@@ -280,6 +279,9 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
   // Use standardized domain pagination with context-aware batch sizing
   const paginationHook = useDomainPagination(filteredAndSortedDomains.length, 'detail');
   const { state: pagination, actions: paginationActions } = paginationHook;
+  
+  // Calculate total pages for UI
+  const totalPages = Math.ceil(filteredAndSortedDomains.length / pagination.pageSize);
 
   // Virtual pagination for memory efficiency
   const paginatedDomains = useMemo(() => {
@@ -293,16 +295,20 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
 
   // Pagination handlers using new standardized actions
   const handlePageSizeChange = useCallback((value: string) => {
-    paginationActions.setPageSize(Number(value));
+    paginationActions.changePageSize(Number(value));
   }, [paginationActions]);
 
   const goToNextPage = useCallback(() => {
-    paginationActions.nextPage();
-  }, [paginationActions]);
+    if (pagination.currentPage < totalPages) {
+      paginationActions.goToPage(pagination.currentPage + 1);
+    }
+  }, [paginationActions, pagination.currentPage, totalPages]);
 
   const goToPreviousPage = useCallback(() => {
-    paginationActions.previousPage();
-  }, [paginationActions]);
+    if (pagination.currentPage > 1) {
+      paginationActions.goToPage(pagination.currentPage - 1);
+    }
+  }, [paginationActions, pagination.currentPage]);
 
   // Download handlers
   const handleDownloadFiltered = useCallback(() => {
@@ -487,13 +493,13 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
                     <span className="hidden sm:inline">Previous</span>
                   </Button>
                   <span className="text-sm text-muted-foreground font-medium px-3 py-1 bg-background rounded border">
-                    Page {pagination.currentPage} of {pagination.totalPages > 0 ? pagination.totalPages : 1}
+                    Page {pagination.currentPage} of {totalPages > 0 ? totalPages : 1}
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={goToNextPage}
-                    disabled={pagination.currentPage === pagination.totalPages || pagination.totalPages === 0}
+                    disabled={pagination.currentPage === totalPages || totalPages === 0}
                     className="h-9 shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <span className="hidden sm:inline">Next</span>

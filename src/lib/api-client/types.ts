@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/api/v2/database/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute bulk database queries
+         * @description Execute multiple SQL queries against the database with security restrictions for enterprise operations
+         */
+        post: operations["handleBulkDatabaseQuery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/database/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get bulk database statistics
+         * @description Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
+         */
+        post: operations["handleBulkDatabaseStats"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/change-password": {
         parameters: {
             query?: never;
@@ -1343,6 +1383,38 @@ export interface components {
             message?: string;
             success?: boolean;
         };
+        BulkDatabaseQueryRequest: {
+            /** Format: int32 */
+            limit?: number;
+            queries: components["schemas"]["DatabaseQuery"][];
+            /** Format: int32 */
+            timeout?: number;
+        };
+        BulkDatabaseQueryResponse: {
+            metadata?: components["schemas"]["BulkQueryMetadata"];
+            results?: {
+                [key: string]: components["schemas"]["DatabaseQueryResult"];
+            };
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        BulkDatabaseStatsRequest: {
+            detailed?: boolean;
+            schemas?: string[];
+            tables?: string[];
+        };
+        BulkDatabaseStatsResponse: {
+            databaseStats?: components["schemas"]["DatabaseStats"];
+            metadata?: components["schemas"]["BulkStatsMetadata"];
+            schemaStats?: {
+                [key: string]: components["schemas"]["SchemaStats"];
+            };
+            tableStats?: {
+                [key: string]: components["schemas"]["TableStats"];
+            };
+            /** Format: int32 */
+            totalCount?: number;
+        };
         BulkDeleteRequest: {
             campaignIds: string[];
         };
@@ -1433,6 +1505,28 @@ export interface components {
             processingTimeMs?: number;
             /** Format: int32 */
             skippedCampaigns?: number;
+        };
+        BulkQueryMetadata: {
+            failedQueries?: string[];
+            /** Format: int32 */
+            processedQueries?: number;
+            /** Format: int64 */
+            processingTimeMs?: number;
+            /** Format: int32 */
+            skippedQueries?: number;
+            /** Format: int64 */
+            totalRowsReturned?: number;
+        };
+        BulkStatsMetadata: {
+            failedItems?: string[];
+            /** Format: int32 */
+            processedSchemas?: number;
+            /** Format: int32 */
+            processedTables?: number;
+            /** Format: int64 */
+            processingTimeMs?: number;
+            /** Format: int32 */
+            skippedItems?: number;
         };
         CacheConfiguration: {
             cacheName?: string;
@@ -2309,6 +2403,7 @@ export interface components {
         };
         DNSValidationStatusEnum: string;
         DNSValidatorConfigJSON: string;
+        DatabaseHandler: Record<string, never>;
         DatabaseOptimizationRecommendation: {
             /** Format: date-time */
             createdAt?: string;
@@ -2319,6 +2414,38 @@ export interface components {
             sql?: string;
             title?: string;
             type?: string;
+        };
+        DatabaseQuery: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id: string;
+            sql: string;
+        };
+        DatabaseQueryResult: {
+            columns?: string[];
+            error?: string;
+            /** Format: int64 */
+            executionTime?: number;
+            /** Format: int32 */
+            rowCount?: number;
+            rows?: Record<string, never>[][];
+            success?: boolean;
+        };
+        DatabaseStats: {
+            databaseSize?: string;
+            isHealthy?: boolean;
+            schemaVersion?: string;
+            /** Format: int32 */
+            totalSessions?: number;
+            /** Format: int32 */
+            totalTables?: number;
+            /** Format: int32 */
+            totalUsers?: number;
+            /** Format: date-time */
+            uptime?: string;
+            version?: string;
         };
         DeletionConfirmationResponse: {
             deleted?: boolean;
@@ -3637,6 +3764,14 @@ export interface components {
             /** Format: double */
             utilizationPct?: number;
         };
+        SchemaStats: {
+            name?: string;
+            /** Format: int32 */
+            tableCount?: number;
+            /** Format: int64 */
+            totalRows?: number;
+            totalSize?: string;
+        };
         SecurityContext: {
             /** Format: date-time */
             lastActivity?: string;
@@ -3909,6 +4044,15 @@ export interface components {
              */
             userId?: string;
         };
+        TableStats: {
+            /** Format: int32 */
+            indexCount?: number;
+            name?: string;
+            /** Format: int64 */
+            rowCount?: number;
+            schema?: string;
+            size?: string;
+        };
         TestResultResponse: {
             message?: string;
             status?: string;
@@ -4124,6 +4268,96 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    handleBulkDatabaseQuery: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be XMLHttpRequest */
+                "X-Requested-With": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDatabaseQueryRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkDatabaseQueryResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    handleBulkDatabaseStats: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be XMLHttpRequest */
+                "X-Requested-With": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDatabaseStatsRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkDatabaseStatsResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     changePassword: {
         parameters: {
             query?: never;

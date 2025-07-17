@@ -16,6 +16,7 @@
 
 export * from './apis/authentication-api';
 export * from './apis/campaigns-api';
+export * from './apis/database-api';
 export * from './apis/feature-flags-api';
 export * from './apis/health-api';
 export * from './apis/keyword-extraction-api';

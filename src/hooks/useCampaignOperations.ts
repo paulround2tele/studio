@@ -9,7 +9,6 @@ import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
 import {
-  unifiedCampaignService,
   getRichCampaignData,
   startCampaign as startCampaignService,
   pauseCampaign as pauseCampaignService,
@@ -133,8 +132,8 @@ id: campaignId,
         }
         
         console.log('✅ [Domain Loading] BULK-ONLY: Generated domains loaded:', {
-          count: updates.generatedDomains.length,
-          sampleDomains: updates.generatedDomains.slice(0, 3).map(d => d.domainName),
+          count: updates.generatedDomains?.length || 0,
+          sampleDomains: updates.generatedDomains?.slice(0, 3).map(d => d.domainName) || [],
           currentPhase: isDNSValidationPhase ? 'DNS_VALIDATION' : isHTTPValidationPhase ? 'HTTP_VALIDATION' : 'DOMAIN_GENERATION' as any,
           campaignType: campaignData.campaignType
         });
@@ -196,7 +195,7 @@ id: campaignId,
             updates.generatedDomains = [];
           }
           
-          console.log('✅ [Domain Loading] BULK-ONLY: Generated domains loaded for HTTP validation:', updates.generatedDomains.length);
+          console.log('✅ [Domain Loading] BULK-ONLY: Generated domains loaded for HTTP validation:', updates.generatedDomains?.length || 0);
         }
       }
 
@@ -316,8 +315,6 @@ campaignStatus: campaign.status,
         campaignType: campaign.campaignType,
         phaseToStart
       });
-      
-      let response;
       
       // Use unified campaign service for operations
       console.log(`📡 [Campaign Operations] Starting campaign phase ${phaseToStart} for campaign ${campaignId}`);

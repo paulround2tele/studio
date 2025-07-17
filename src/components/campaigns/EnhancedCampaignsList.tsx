@@ -15,8 +15,8 @@ import {
   PaginationPrevious 
 } from '@/components/ui/pagination';
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
-import type { CampaignViewModel } from '@/lib/types';
-import { getDefaultPageSize, type PaginationContext } from '@/lib/types/pagination';
+import type { CampaignViewModel, PaginationContext } from '@/lib/types';
+import { getDefaultPageSize } from '@/lib/types';
 import CampaignListItem from './CampaignListItem';
 
 interface EnhancedCampaignsListProps {

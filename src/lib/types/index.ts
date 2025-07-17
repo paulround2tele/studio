@@ -148,3 +148,50 @@ export interface Permission {
   description?: string;
   createdAt: string;
 }
+
+// Pagination types using backend-generated PageInfo and Metadata
+export type { PageInfo } from '@/lib/api-client/models/page-info';
+export type { Metadata } from '@/lib/api-client/models/metadata';
+
+// Frontend pagination helpers (compatible with backend PageInfo)
+export interface PaginationParams {
+  current?: number;  // matches backend PageInfo.current
+  pageSize?: number; // matches backend PageInfo.pageSize
+  count?: number;    // matches backend PageInfo.count
+  total?: number;    // matches backend PageInfo.total
+}
+
+// Pagination context for different UI areas
+export type PaginationContext = 'dashboard' | 'detail' | 'list';
+
+// Default page sizes for different contexts
+export const getDefaultPageSize = (context?: PaginationContext): number => {
+  switch (context) {
+    case 'dashboard': return 50;
+    case 'detail': return 100;
+    case 'list': return 25;
+    default: return 20;
+  }
+};
+
+// Common pagination options
+export const PAGE_SIZE_OPTIONS = [10, 20, 25, 50, 100] as const;
+
+// Simple pagination state management
+export interface PaginationState {
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+export interface PaginationActions {
+  goToPage: (page: number) => void;
+  changePageSize: (size: number) => void;
+  reset: () => void;
+}
+
+export interface PaginationHook {
+  state: PaginationState;
+  actions: PaginationActions;
+  params: PaginationParams;
+}

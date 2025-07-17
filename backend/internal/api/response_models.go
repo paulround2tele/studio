@@ -520,3 +520,109 @@ type BulkMetadata struct {
 	FailedCampaigns    []string `json:"failedCampaigns,omitempty" example:"['invalid-uuid','550e8400-e29b-41d4-a716-446655440001']" description:"List of campaign IDs that failed processing"`
 	ProcessingTimeMs   int64    `json:"processingTimeMs" example:"1234" description:"Total processing time in milliseconds"`
 }
+
+// Database API Models for Enterprise Bulk Operations
+
+// BulkDatabaseQueryRequest represents a bulk database query request
+// @Description Request payload for executing multiple database queries in a single operation
+type BulkDatabaseQueryRequest struct {
+	Queries []DatabaseQuery `json:"queries" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive" description:"List of SQL queries to execute (1-50 queries)"`
+	Limit   int             `json:"limit,omitempty" validate:"omitempty,min=1,max=10000" example:"1000" description:"Maximum number of rows per query (1-10000)"`
+	Timeout int             `json:"timeout,omitempty" validate:"omitempty,min=1,max=300" example:"30" description:"Query timeout in seconds (1-300)"`
+}
+
+// DatabaseQuery represents a single query in a bulk operation
+// @Description Individual query with identifier for bulk operations
+type DatabaseQuery struct {
+	ID  string `json:"id" binding:"required" validate:"required" example:"query_1" description:"Unique identifier for this query"`
+	SQL string `json:"sql" binding:"required" validate:"required" example:"SELECT * FROM campaigns LIMIT 10" description:"SQL query to execute"`
+}
+
+// BulkDatabaseQueryResponse represents the response from bulk database queries
+// @Description Response containing results from multiple database queries with metadata
+type BulkDatabaseQueryResponse struct {
+	Results    map[string]DatabaseQueryResult `json:"results" description:"Map of query ID to query results"`
+	TotalCount int                            `json:"totalCount" example:"5" description:"Total number of queries processed"`
+	Metadata   *BulkQueryMetadata             `json:"metadata,omitempty" description:"Processing metadata and statistics"`
+}
+
+// DatabaseQueryResult represents the result of a database query
+// @Description Response containing query results with metadata
+type DatabaseQueryResult struct {
+	Columns       []string        `json:"columns" example:"['id','name','status']" description:"Column names from the query result"`
+	Rows          [][]interface{} `json:"rows" description:"Query result rows, each row is an array of values"`
+	RowCount      int             `json:"rowCount" example:"25" description:"Number of rows returned"`
+	ExecutionTime int64           `json:"executionTime" example:"125" description:"Query execution time in milliseconds"`
+	Success       bool            `json:"success" example:"true" description:"Whether the query executed successfully"`
+	Error         string          `json:"error,omitempty" example:"" description:"Error message if query failed"`
+}
+
+// BulkQueryMetadata represents processing metadata for bulk database operations
+// @Description Metadata containing processing statistics and performance metrics for bulk database operations
+type BulkQueryMetadata struct {
+	ProcessedQueries int      `json:"processedQueries" example:"8" description:"Number of queries successfully processed"`
+	SkippedQueries   int      `json:"skippedQueries" example:"1" description:"Number of queries skipped due to errors"`
+	FailedQueries    []string `json:"failedQueries,omitempty" example:"['query_9']" description:"List of query IDs that failed processing"`
+	ProcessingTimeMs int64    `json:"processingTimeMs" example:"2340" description:"Total processing time in milliseconds"`
+	TotalRowsReturned int64   `json:"totalRowsReturned" example:"15420" description:"Total number of rows returned across all queries"`
+}
+
+// BulkDatabaseStatsRequest represents a bulk database statistics request
+// @Description Request payload for retrieving database statistics for multiple schemas/databases
+type BulkDatabaseStatsRequest struct {
+	Schemas []string `json:"schemas,omitempty" validate:"omitempty,max=20,dive,min=1" example:"['public','analytics']" description:"List of database schemas to analyze (max 20)"`
+	Tables  []string `json:"tables,omitempty" validate:"omitempty,max=100,dive,min=1" example:"['campaigns','users']" description:"List of specific tables to analyze (max 100)"`
+	Detailed bool    `json:"detailed,omitempty" example:"false" description:"Whether to include detailed table-level statistics"`
+}
+
+// BulkDatabaseStatsResponse represents the response from bulk database statistics
+// @Description Response containing database statistics with metadata
+type BulkDatabaseStatsResponse struct {
+	DatabaseStats  DatabaseStats                  `json:"databaseStats" description:"Overall database statistics"`
+	SchemaStats    map[string]SchemaStats         `json:"schemaStats,omitempty" description:"Statistics by schema (if requested)"`
+	TableStats     map[string]TableStats          `json:"tableStats,omitempty" description:"Statistics by table (if requested)"`
+	TotalCount     int                            `json:"totalCount" example:"3" description:"Total number of analyzed schemas/tables"`
+	Metadata       *BulkStatsMetadata             `json:"metadata,omitempty" description:"Processing metadata and statistics"`
+}
+
+// DatabaseStats represents database statistics
+// @Description Database statistics and health information
+type DatabaseStats struct {
+	TotalTables    int    `json:"totalTables" example:"23" description:"Total number of tables in the database"`
+	TotalUsers     int    `json:"totalUsers" example:"5" description:"Total number of users in the system"`
+	TotalSessions  int    `json:"totalSessions" example:"3" description:"Total number of active sessions"`
+	DatabaseSize   string `json:"databaseSize" example:"156 MB" description:"Current database size"`
+	SchemaVersion  string `json:"schemaVersion" example:"v2.1" description:"Current database schema version"`
+	Uptime         string `json:"uptime" example:"2d 14h 30m" description:"Database uptime"`
+	Version        string `json:"version" example:"PostgreSQL 15.4" description:"Database version"`
+	IsHealthy      bool   `json:"isHealthy" example:"true" description:"Whether the database is healthy"`
+}
+
+// SchemaStats represents statistics for a database schema
+// @Description Statistics for a specific database schema
+type SchemaStats struct {
+	Name        string `json:"name" example:"public" description:"Schema name"`
+	TableCount  int    `json:"tableCount" example:"15" description:"Number of tables in the schema"`
+	TotalRows   int64  `json:"totalRows" example:"1250000" description:"Total number of rows across all tables"`
+	TotalSize   string `json:"totalSize" example:"45 MB" description:"Total size of the schema"`
+}
+
+// TableStats represents statistics for a database table
+// @Description Statistics for a specific database table
+type TableStats struct {
+	Name       string `json:"name" example:"campaigns" description:"Table name"`
+	Schema     string `json:"schema" example:"public" description:"Schema name"`
+	RowCount   int64  `json:"rowCount" example:"125000" description:"Number of rows in the table"`
+	Size       string `json:"size" example:"12 MB" description:"Table size"`
+	IndexCount int    `json:"indexCount" example:"5" description:"Number of indexes on the table"`
+}
+
+// BulkStatsMetadata represents processing metadata for bulk database statistics operations
+// @Description Metadata containing processing statistics for bulk database statistics operations
+type BulkStatsMetadata struct {
+	ProcessedSchemas int      `json:"processedSchemas" example:"2" description:"Number of schemas successfully processed"`
+	ProcessedTables  int      `json:"processedTables" example:"8" description:"Number of tables successfully processed"`
+	SkippedItems     int      `json:"skippedItems" example:"1" description:"Number of items skipped due to errors"`
+	FailedItems      []string `json:"failedItems,omitempty" example:"['invalid_schema']" description:"List of items that failed processing"`
+	ProcessingTimeMs int64    `json:"processingTimeMs" example:"1850" description:"Total processing time in milliseconds"`
+}

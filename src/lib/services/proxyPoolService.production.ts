@@ -8,7 +8,7 @@ import type { components } from '@/lib/api-client/types';
 import type { ProxyPoolRequest } from '@/lib/api-client/models/proxy-pool-request';
 import type { AddProxyToPoolRequest } from '@/lib/api-client/models/add-proxy-to-pool-request';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
-import { safeApiCall } from '@/lib/utils/apiResponseHelpers';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Create configured ProxyPoolsApi instance with authentication
 const config = new Configuration({
@@ -89,15 +89,25 @@ class ProxyPoolService {
   }
 
   async listPools(): Promise<ProxyPoolListResponse> {
-    const result = await safeApiCall<ProxyPool[]>(
-      () => proxyPoolsApi.listProxyPools(),
-      'Getting proxy pools'
-    );
-    
-    return {
-      ...result,
-      data: result.data || []
-    };
+    try {
+      const axiosResponse = await proxyPoolsApi.listProxyPools();
+      const data = extractResponseData<ProxyPool[]>(axiosResponse);
+      return {
+        success: true,
+        data: data || [],
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `listPools-${Date.now()}`,
+        message: 'Successfully retrieved proxy pools'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: [],
+        error: error.message,
+        requestId: globalThis.crypto?.randomUUID?.() || `listPools-error-${Date.now()}`,
+        message: error.message
+      };
+    }
   }
 
   async getPoolById(poolId: string): Promise<ProxyPoolDetailResponse> {
@@ -120,38 +130,113 @@ class ProxyPoolService {
   }
 
   async createPool(payload: ProxyPoolCreationPayload): Promise<ProxyPoolCreationResponse> {
-    return await safeApiCall<ProxyPool>(
-      () => proxyPoolsApi.createProxyPool(payload),
-      'Creating proxy pool'
-    );
+    try {
+      const axiosResponse = await proxyPoolsApi.createProxyPool(payload);
+      const data = extractResponseData<ProxyPool>(axiosResponse);
+      return {
+        success: true,
+        data: data || undefined,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `createPool-${Date.now()}`,
+        message: 'Successfully created proxy pool'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: undefined,
+        error: error.message,
+        requestId: globalThis.crypto?.randomUUID?.() || `createPool-error-${Date.now()}`,
+        message: error.message
+      };
+    }
   }
 
   async updatePool(poolId: string, payload: ProxyPoolCreationPayload): Promise<ProxyPoolUpdateResponse> {
-    return await safeApiCall<ProxyPool>(
-      () => proxyPoolsApi.updateProxyPool(poolId, payload),
-      'Updating proxy pool'
-    );
+    try {
+      const axiosResponse = await proxyPoolsApi.updateProxyPool(poolId, payload);
+      const data = extractResponseData<ProxyPool>(axiosResponse);
+      return {
+        success: true,
+        data: data || undefined,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `updatePool-${Date.now()}`,
+        message: 'Successfully updated proxy pool'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: undefined,
+        error: error.message,
+        requestId: globalThis.crypto?.randomUUID?.() || `updatePool-error-${Date.now()}`,
+        message: error.message
+      };
+    }
   }
 
   async deletePool(poolId: string): Promise<ProxyPoolDeleteResponse> {
-    return await safeApiCall<{ deleted: boolean; id: string }>(
-      () => proxyPoolsApi.deleteProxyPool(poolId),
-      'Deleting proxy pool'
-    );
+    try {
+      const axiosResponse = await proxyPoolsApi.deleteProxyPool(poolId);
+      const data = extractResponseData<{ deleted: boolean; id: string }>(axiosResponse);
+      return {
+        success: true,
+        data: data || undefined,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `deletePool-${Date.now()}`,
+        message: 'Successfully deleted proxy pool'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: undefined,
+        error: error.message,
+        requestId: globalThis.crypto?.randomUUID?.() || `deletePool-error-${Date.now()}`,
+        message: error.message
+      };
+    }
   }
 
   async addProxy(poolId: string, proxyId: string, weight?: number): Promise<ProxyPoolMembershipResponse> {
-    return await safeApiCall<ProxyPoolMembership>(
-      () => proxyPoolsApi.addProxyToPool(poolId, { proxyId, weight }),
-      'Adding proxy to pool'
-    );
+    try {
+      const axiosResponse = await proxyPoolsApi.addProxyToPool(poolId, { proxyId, weight });
+      const data = extractResponseData<ProxyPoolMembership>(axiosResponse);
+      return {
+        success: true,
+        data: data || undefined,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `addProxy-${Date.now()}`,
+        message: 'Successfully added proxy to pool'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: undefined,
+        error: error.message,
+        requestId: globalThis.crypto?.randomUUID?.() || `addProxy-error-${Date.now()}`,
+        message: error.message
+      };
+    }
   }
 
   async removeProxy(poolId: string, proxyId: string): Promise<ProxyPoolDeleteResponse> {
-    return await safeApiCall<{ removed: boolean }>(
-      () => proxyPoolsApi.removeProxyFromPool(poolId, proxyId),
-      'Removing proxy from pool'
-    );
+    try {
+      const axiosResponse = await proxyPoolsApi.removeProxyFromPool(poolId, proxyId);
+      const data = extractResponseData<{ removed: boolean }>(axiosResponse);
+      return {
+        success: true,
+        data: data || undefined,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `removeProxy-${Date.now()}`,
+        message: 'Successfully removed proxy from pool'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: undefined,
+        error: error.message,
+        requestId: globalThis.crypto?.randomUUID?.() || `removeProxy-error-${Date.now()}`,
+        message: error.message
+      };
+    }
   }
 }
 

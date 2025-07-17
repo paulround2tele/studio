@@ -10,7 +10,7 @@ import type {
   DomainActivityStatus
 } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
-import { getDefaultPageSize } from '@/lib/types/pagination';
+import { getDefaultPageSize } from '@/lib/types';
 
 type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
 type _Campaign = components['schemas']['Campaign']; // Unused

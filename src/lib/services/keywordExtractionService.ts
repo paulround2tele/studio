@@ -1,17 +1,20 @@
 // src/lib/services/keywordExtractionService.ts
-// Keyword Extraction Service - Direct OpenAPI integration for keyword extraction operations
+// Keyword Extraction Service - Using auto-generated OpenAPI clients
 
 import { KeywordExtractionApi, Configuration } from '@/lib/api-client';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
 import {
-  safeApiCall
+  extractResponseData
 } from '@/lib/utils/apiResponseHelpers';
 
 // Create configured KeywordExtractionApi instance with authentication
 const config = new Configuration({
   basePath: getApiBaseUrlSync(),
   baseOptions: {
-    withCredentials: true
+    withCredentials: true,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest', // Required for session protection
+    }
   }
 });
 const keywordExtractionApi = new KeywordExtractionApi(config);
@@ -72,10 +75,25 @@ class KeywordExtractionService {
   }
 
   async extractKeywordsBatch(request: BatchKeywordExtractionRequest): Promise<BatchKeywordExtractionServiceResponse> {
-    return await safeApiCall<KeywordExtractionResponse>(
-      () => keywordExtractionApi.batchExtractKeywords(request),
-      'Extracting keywords in batch'
-    );
+    try {
+      const axiosResponse = await keywordExtractionApi.batchExtractKeywords(request);
+      const data = extractResponseData<KeywordExtractionResponse>(axiosResponse);
+      return {
+        success: true,
+        data: data || undefined,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `extractKeywordsBatch-${Date.now()}`,
+        message: 'Successfully extracted keywords in batch'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: undefined,
+        error: error.message,
+        requestId: globalThis.crypto?.randomUUID?.() || `extractKeywordsBatch-error-${Date.now()}`,
+        message: error.message
+      };
+    }
   }
 
   async streamKeywordExtraction(params: {
@@ -84,31 +102,30 @@ class KeywordExtractionService {
     httpPersonaId?: string;
     dnsPersonaId?: string;
   }): Promise<KeywordExtractionServiceResponse> {
-    // Note: This is a streaming endpoint that returns Server-Sent Events
-    // The actual implementation would need to handle SSE streams
-    return await safeApiCall<KeywordExtractionResponse>(
-      async () => {
-        const baseUrl = getApiBaseUrlSync();
-        const response = await fetch(`${baseUrl}/keyword-extraction/stream?` +
-          new URLSearchParams({
-            url: params.url,
-            keywordSetId: params.keywordSetId,
-            ...(params.httpPersonaId && { httpPersonaId: params.httpPersonaId }),
-            ...(params.dnsPersonaId && { dnsPersonaId: params.dnsPersonaId })
-          }), {
-          method: 'GET',
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        // For now, return success - actual streaming would need special handling
-        return { data: { results: [] } };
-      },
-      'Stream keyword extraction'
-    );
+    try {
+      const axiosResponse = await keywordExtractionApi.streamExtractKeywords(
+        params.url,
+        params.keywordSetId,
+        params.httpPersonaId,
+        params.dnsPersonaId
+      );
+      const data = extractResponseData<KeywordExtractionResponse>(axiosResponse);
+      return {
+        success: true,
+        data: data || undefined,
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `streamKeywordExtraction-${Date.now()}`,
+        message: 'Successfully completed stream keyword extraction'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        data: undefined,
+        error: error.message,
+        requestId: globalThis.crypto?.randomUUID?.() || `streamKeywordExtraction-error-${Date.now()}`,
+        message: error.message
+      };
+    }
   }
 
   // Single keyword extraction using batch with one item

@@ -295,6 +295,10 @@ func main() {
 	healthCheckHandler := api.NewHealthCheckHandler(db.DB)
 	log.Println("HealthCheckHandler initialized.")
 
+	// Initialize database handler
+	databaseHandler := api.NewDatabaseHandler(apiHandler)
+	log.Println("DatabaseHandler initialized.")
+
 	appCtx, appCancel := context.WithCancel(context.Background())
 	defer appCancel()
 
@@ -461,6 +465,13 @@ func main() {
 		{
 			extractGroup.POST("", apiHandler.BatchExtractKeywordsGin)
 			extractGroup.GET("/stream", apiHandler.StreamExtractKeywordsGin)
+		}
+
+		// Database routes (session auth only) - Enterprise bulk operations
+		databaseGroup := apiV2.Group("/database")
+		{
+			databaseGroup.POST("/query", databaseHandler.HandleBulkDatabaseQuery)
+			databaseGroup.POST("/stats", databaseHandler.HandleBulkDatabaseStats)
 		}
 
 		// Temporary test endpoint for WebSocket broadcast

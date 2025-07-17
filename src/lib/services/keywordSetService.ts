@@ -5,7 +5,7 @@ import { KeywordSetsApi, Configuration } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
 import { getApiBaseUrlSync } from '@/lib/config/environment';
 import {
-  safeApiCall
+  extractResponseData
 } from '@/lib/utils/apiResponseHelpers';
 
 // Create configured KeywordSetsApi instance with authentication
@@ -78,82 +78,132 @@ class KeywordSetService {
     offset?: number;
     isEnabled?: boolean;
   }): Promise<KeywordSetListResponse> {
-    const result = await safeApiCall<KeywordSet[]>(
-      () => keywordSetsApi.listKeywordSets(
+    try {
+      const axiosResponse = await keywordSetsApi.listKeywordSets(
         options?.limit,
         options?.offset,
         options?.isEnabled
-      ),
-      'Getting keyword sets'
-    );
-    
-    return {
-      success: result.success,
-      data: result.data || [],
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Keyword sets retrieved successfully' : result.error || 'Failed to get keyword sets'
-    };
+      );
+      const keywordSets = extractResponseData<KeywordSet[]>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `keyword-sets-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: keywordSets || [],
+        error: null,
+        requestId,
+        message: 'Keyword sets retrieved successfully'
+      };
+    } catch (error: any) {
+      console.error('[KeywordSetService] Error fetching keyword sets:', error);
+      return {
+        success: false,
+        data: [],
+        error: error.message || 'Failed to get keyword sets',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to get keyword sets'
+      };
+    }
   }
 
   async getKeywordSetById(keywordSetId: string): Promise<KeywordSetDetailResponse> {
-    const result = await safeApiCall<KeywordSet>(
-      () => keywordSetsApi.getKeywordSet(keywordSetId),
-      'Getting keyword set by ID'
-    );
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Keyword set retrieved successfully' : result.error || 'Failed to get keyword set'
-    };
+    try {
+      const axiosResponse = await keywordSetsApi.getKeywordSet(keywordSetId);
+      const keywordSet = extractResponseData<KeywordSet>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `keyword-set-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: keywordSet || undefined,
+        error: null,
+        requestId,
+        message: 'Keyword set retrieved successfully'
+      };
+    } catch (error: any) {
+      console.error('[KeywordSetService] Error fetching keyword set by ID:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to get keyword set',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to get keyword set'
+      };
+    }
   }
 
   async createKeywordSet(payload: CreateKeywordSetRequest): Promise<KeywordSetCreationResponse> {
-    const result = await safeApiCall<KeywordSet>(
-      () => keywordSetsApi.createKeywordSet(payload),
-      'Creating keyword set'
-    );
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Keyword set created successfully' : result.error || 'Failed to create keyword set'
-    };
+    try {
+      const axiosResponse = await keywordSetsApi.createKeywordSet(payload);
+      const keywordSet = extractResponseData<KeywordSet>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `create-keyword-set-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: keywordSet || undefined,
+        error: null,
+        requestId,
+        message: 'Keyword set created successfully'
+      };
+    } catch (error: any) {
+      console.error('[KeywordSetService] Error creating keyword set:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to create keyword set',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to create keyword set'
+      };
+    }
   }
 
   async updateKeywordSet(keywordSetId: string, payload: UpdateKeywordSetRequest): Promise<KeywordSetUpdateResponse> {
-    const result = await safeApiCall<KeywordSet>(
-      () => keywordSetsApi.updateKeywordSet(keywordSetId, payload),
-      'Updating keyword set'
-    );
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Keyword set updated successfully' : result.error || 'Failed to update keyword set'
-    };
+    try {
+      const axiosResponse = await keywordSetsApi.updateKeywordSet(keywordSetId, payload);
+      const keywordSet = extractResponseData<KeywordSet>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `update-keyword-set-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: keywordSet || undefined,
+        error: null,
+        requestId,
+        message: 'Keyword set updated successfully'
+      };
+    } catch (error: any) {
+      console.error('[KeywordSetService] Error updating keyword set:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to update keyword set',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to update keyword set'
+      };
+    }
   }
 
   async deleteKeywordSet(keywordSetId: string): Promise<KeywordSetDeleteResponse> {
-    const result = await safeApiCall<null>(
-      () => keywordSetsApi.deleteKeywordSet(keywordSetId),
-      'Deleting keyword set'
-    );
-    
-    return {
-      success: result.success,
-      data: null,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Keyword set deleted successfully' : result.error || 'Failed to delete keyword set'
-    };
+    try {
+      const axiosResponse = await keywordSetsApi.deleteKeywordSet(keywordSetId);
+      extractResponseData<null>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `delete-keyword-set-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: null,
+        error: null,
+        requestId,
+        message: 'Keyword set deleted successfully'
+      };
+    } catch (error: any) {
+      console.error('[KeywordSetService] Error deleting keyword set:', error);
+      return {
+        success: false,
+        data: null,
+        error: error.message || 'Failed to delete keyword set',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to delete keyword set'
+      };
+    }
   }
 
   // Note: Keyword management methods would be added when the backend API is implemented

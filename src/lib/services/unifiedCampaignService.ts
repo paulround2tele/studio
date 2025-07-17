@@ -18,8 +18,7 @@ import type { components } from '@/lib/api-client/types';
 import type { UpdateCampaignRequest } from '@/lib/api-client';
 import type { CampaignViewModel } from '@/lib/types';
 import {
-  extractResponseData,
-  safeApiCall
+  extractResponseData
 } from '@/lib/utils/apiResponseHelpers';
 
 // ===================================================================
@@ -28,6 +27,8 @@ import {
 
 export type Campaign = components['schemas']['Campaign'];
 export type CampaignCreationPayload = components['schemas']['CreateCampaignRequest'];
+export type BulkDeleteRequest = components['schemas']['BulkDeleteRequest'];
+export type BulkDeleteResult = components['schemas']['BulkDeleteResult'];
 export type BulkEnrichedDataRequest = components['schemas']['BulkEnrichedDataRequest'];
 export type BulkEnrichedDataResponse = components['schemas']['BulkEnrichedDataResponse'];
 export type BulkDomainsRequest = components['schemas']['BulkDomainsRequest'];
@@ -323,8 +324,6 @@ class UnifiedCacheManager {
    * Get cache statistics
    */
   getStats() {
-    const now = Date.now();
-    
     return {
       l1: { size: this.l1Cache.size, hitRate: this.calculateHitRate(this.l1Cache) },
       l2: { size: this.l2Cache.size, hitRate: this.calculateHitRate(this.l2Cache) },
@@ -396,89 +395,127 @@ export class UnifiedCampaignService {
   // CAMPAIGN CRUD OPERATIONS (from campaignService.production.ts)
   // ===================================================================
 
-  async getCampaigns(options?: { 
-    limit?: number; 
-    offset?: number; 
-    sortBy?: string; 
+  async getCampaigns(options?: {
+    limit?: number;
+    offset?: number;
+    sortBy?: string;
     sortOrder?: string;
     status?: string;
   }): Promise<UnifiedCampaignsListResponse> {
-    const result = await safeApiCall<Campaign[]>(
-      () => campaignsApi.listCampaigns(options?.limit, options?.offset, options?.status),
-      'Getting campaigns'
-    );
-    
-    return {
-      success: result.success,
-      data: result.data || [],
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Campaigns retrieved successfully' : result.error || 'Failed to get campaigns'
-    };
+    try {
+      const axiosResponse = await campaignsApi.listCampaigns(options?.limit, options?.offset, options?.status);
+      const response = extractResponseData<any>(axiosResponse);
+      
+      // Extract campaigns from unified API response structure
+      const campaigns = response?.data || [];
+      const requestId = response?.requestId || `campaigns-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: campaigns,
+        error: null,
+        requestId,
+        message: 'Campaigns retrieved successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error fetching campaigns:', error);
+      return {
+        success: false,
+        data: [],
+        error: error.message || 'Failed to get campaigns',
+        requestId: `error-${Date.now()}`,
+        message: error.message || 'Failed to get campaigns'
+      };
+    }
   }
 
   async getCampaignById(campaignId: string): Promise<UnifiedCampaignResponse> {
-    const result = await safeApiCall<{ campaign?: Campaign }>(
-      () => campaignsApi.getCampaignDetails(campaignId),
-      'Getting campaign by ID'
-    );
-    
-    if (!result.success) {
+    try {
+      const axiosResponse = await campaignsApi.getCampaignDetails(campaignId);
+      const response = extractResponseData<{ campaign?: Campaign }>(axiosResponse);
+      
+      // Extract campaign from response envelope
+      const campaign = response?.campaign;
+      const requestId = globalThis.crypto?.randomUUID?.() || `campaign-${Date.now()}`;
+      
+      if (!campaign?.id) {
+        return {
+          success: false,
+          error: 'Campaign not found or missing required fields',
+          requestId,
+          message: 'Campaign not found'
+        };
+      }
+      
+      return {
+        success: true,
+        data: campaign,
+        error: null,
+        requestId,
+        message: 'Campaign retrieved successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error fetching campaign by ID:', error);
       return {
         success: false,
-        error: result.error,
-        requestId: result.requestId
+        error: error.message || 'Failed to get campaign details',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to get campaign details'
       };
     }
-    
-    if (!result.data?.campaign?.id) {
-      return {
-        success: false,
-        error: 'Campaign not found or missing required fields',
-        requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
-      };
-    }
-    
-    return {
-      success: true,
-      data: result.data.campaign,
-      error: null,
-      requestId: result.requestId,
-      message: 'Campaign retrieved successfully'
-    };
   }
 
   async createCampaign(payload: CampaignCreationPayload): Promise<UnifiedCampaignResponse> {
-    const result = await safeApiCall<Campaign>(
-      () => campaignsApi.createCampaign(payload),
-      'Creating campaign'
-    );
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Campaign created successfully' : result.error || 'Failed to create campaign'
-    };
+    try {
+      const axiosResponse = await campaignsApi.createCampaign(payload);
+      const campaign = extractResponseData<Campaign>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `campaign-create-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: campaign || undefined,
+        error: null,
+        requestId,
+        message: 'Campaign created successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error creating campaign:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to create campaign',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to create campaign'
+      };
+    }
   }
 
   async updateCampaign(campaignId: string, updatePayload: UpdateCampaignRequest): Promise<UnifiedCampaignResponse> {
-    const result = await safeApiCall<Campaign>(
-      () => campaignsApi.updateCampaign(campaignId, updatePayload),
-      'Updating campaign'
-    );
-    
-    // Invalidate cache for updated campaign
-    this.cacheManager.invalidateCampaigns([campaignId]);
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Campaign updated successfully' : result.error || 'Failed to update campaign'
-    };
+    try {
+      const axiosResponse = await campaignsApi.updateCampaign(campaignId, updatePayload);
+      const campaign = extractResponseData<Campaign>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `campaign-update-${Date.now()}`;
+      
+      // Invalidate cache for updated campaign
+      this.cacheManager.invalidateCampaigns([campaignId]);
+      
+      return {
+        success: true,
+        data: campaign || undefined,
+        error: null,
+        requestId,
+        message: 'Campaign updated successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error updating campaign:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to update campaign',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to update campaign'
+      };
+    }
   }
 
   async deleteCampaign(campaignId: string): Promise<UnifiedCampaignResponse<null>> {
@@ -489,21 +526,132 @@ export class UnifiedCampaignService {
       console.warn('[UnifiedCampaignService] Campaign may already be cancelled:', error);
     }
     
-    const result = await safeApiCall<null>(
-      () => campaignsApi.deleteCampaign(campaignId),
-      'Deleting campaign'
-    );
+    try {
+      const axiosResponse = await campaignsApi.deleteCampaign(campaignId);
+      extractResponseData<null>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `campaign-delete-${Date.now()}`;
+      
+      // Invalidate cache for deleted campaign
+      this.cacheManager.invalidateCampaigns([campaignId]);
+      
+      return {
+        success: true,
+        data: null,
+        error: null,
+        requestId,
+        message: 'Campaign deleted successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error deleting campaign:', error);
+      return {
+        success: false,
+        data: null,
+        error: error.message || 'Failed to delete campaign',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to delete campaign'
+      };
+    }
+  }
+
+  async deleteCampaignsBulk(campaignIds: string[]): Promise<UnifiedCampaignResponse<BulkDeleteResult>> {
+    if (!campaignIds || campaignIds.length === 0) {
+      return {
+        success: false,
+        data: undefined,
+        error: 'No campaign IDs provided for bulk deletion',
+        requestId: `bulk-delete-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        message: 'Campaign IDs list cannot be empty'
+      };
+    }
+
+    // For single campaign, use individual delete method for consistency
+    if (campaignIds.length === 1) {
+      const campaignId = campaignIds[0];
+      if (!campaignId) {
+        return {
+          success: false,
+          data: undefined,
+          error: 'Invalid campaign ID provided',
+          requestId: `bulk-delete-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          message: 'Campaign ID cannot be undefined'
+        };
+      }
+      
+      const singleResult = await this.deleteCampaign(campaignId);
+      return {
+        success: singleResult.success,
+        data: singleResult.success ? {
+          deleted_campaign_ids: [campaignId],
+          successfully_deleted: 1,
+          failed_deletions: 0,
+          total_requested: 1,
+          message: 'Campaign deleted successfully'
+        } : undefined,
+        error: singleResult.error,
+        requestId: singleResult.requestId,
+        message: singleResult.message
+      };
+    }
+
+    // Cancel all campaigns first (parallel execution for better performance)
+    const cancelPromises = campaignIds.map(async (campaignId) => {
+      try {
+        await this.cancelCampaign(campaignId);
+      } catch (error) {
+        console.warn(`[UnifiedCampaignService] Campaign ${campaignId} may already be cancelled:`, error);
+      }
+    });
     
-    // Invalidate cache for deleted campaign
-    this.cacheManager.invalidateCampaigns([campaignId]);
-    
-    return {
-      success: result.success,
-      data: null,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Campaign deleted successfully' : result.error || 'Failed to delete campaign'
-    };
+    await Promise.allSettled(cancelPromises);
+
+    // Execute bulk delete
+    try {
+      const axiosResponse = await campaignsApi.bulkDeleteCampaigns({ campaignIds });
+      const bulkResult = extractResponseData<BulkDeleteResult>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `bulk-delete-${Date.now()}`;
+
+      if (bulkResult) {
+        // Invalidate cache for successfully deleted campaigns
+        const deletedIds = bulkResult.deleted_campaign_ids || [];
+        if (deletedIds.length > 0) {
+          this.cacheManager.invalidateCampaigns(deletedIds);
+        }
+
+        const successCount = bulkResult.successfully_deleted || 0;
+        const failureCount = bulkResult.failed_deletions || 0;
+        const total = bulkResult.total_requested || campaignIds.length;
+
+        let message = `Bulk delete completed: ${successCount}/${total} campaigns deleted successfully`;
+        if (failureCount > 0) {
+          message += `, ${failureCount} failed`;
+        }
+
+        return {
+          success: true,
+          data: bulkResult,
+          error: null,
+          requestId,
+          message
+        };
+      } else {
+        return {
+          success: false,
+          data: undefined,
+          error: 'No result data returned from bulk delete operation',
+          requestId,
+          message: 'Bulk delete operation returned empty result'
+        };
+      }
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error in bulk delete:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Bulk delete operation failed',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to execute bulk delete operation'
+      };
+    }
   }
 
   // ===================================================================
@@ -511,72 +659,112 @@ export class UnifiedCampaignService {
   // ===================================================================
 
   async startCampaign(campaignId: string): Promise<UnifiedCampaignResponse> {
-    const result = await safeApiCall<Campaign>(
-      () => campaignsApi.startCampaign(campaignId),
-      'Starting campaign'
-    );
-    
-    // Invalidate cache due to status change
-    this.cacheManager.invalidateCampaigns([campaignId]);
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Campaign started successfully' : result.error || 'Failed to start campaign'
-    };
+    try {
+      const axiosResponse = await campaignsApi.startCampaign(campaignId);
+      const campaign = extractResponseData<Campaign>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `start-campaign-${Date.now()}`;
+      
+      // Invalidate cache due to status change
+      this.cacheManager.invalidateCampaigns([campaignId]);
+      
+      return {
+        success: true,
+        data: campaign || undefined,
+        error: null,
+        requestId,
+        message: 'Campaign started successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error starting campaign:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to start campaign',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to start campaign'
+      };
+    }
   }
 
   async pauseCampaign(campaignId: string): Promise<UnifiedCampaignResponse> {
-    const result = await safeApiCall<Campaign>(
-      () => campaignsApi.pauseCampaign(campaignId),
-      'Pausing campaign'
-    );
-    
-    this.cacheManager.invalidateCampaigns([campaignId]);
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Campaign paused successfully' : result.error || 'Failed to pause campaign'
-    };
+    try {
+      const axiosResponse = await campaignsApi.pauseCampaign(campaignId);
+      const campaign = extractResponseData<Campaign>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `pause-campaign-${Date.now()}`;
+      
+      this.cacheManager.invalidateCampaigns([campaignId]);
+      
+      return {
+        success: true,
+        data: campaign || undefined,
+        error: null,
+        requestId,
+        message: 'Campaign paused successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error pausing campaign:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to pause campaign',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to pause campaign'
+      };
+    }
   }
 
   async resumeCampaign(campaignId: string): Promise<UnifiedCampaignResponse> {
-    const result = await safeApiCall<Campaign>(
-      () => campaignsApi.resumeCampaign(campaignId),
-      'Resuming campaign'
-    );
-    
-    this.cacheManager.invalidateCampaigns([campaignId]);
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Campaign resumed successfully' : result.error || 'Failed to resume campaign'
-    };
+    try {
+      const axiosResponse = await campaignsApi.resumeCampaign(campaignId);
+      const campaign = extractResponseData<Campaign>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `resume-campaign-${Date.now()}`;
+      
+      this.cacheManager.invalidateCampaigns([campaignId]);
+      
+      return {
+        success: true,
+        data: campaign || undefined,
+        error: null,
+        requestId,
+        message: 'Campaign resumed successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error resuming campaign:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to resume campaign',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to resume campaign'
+      };
+    }
   }
 
   async cancelCampaign(campaignId: string): Promise<UnifiedCampaignResponse> {
-    const result = await safeApiCall<Campaign>(
-      () => campaignsApi.cancelCampaign(campaignId),
-      'Cancelling campaign'
-    );
-    
-    this.cacheManager.invalidateCampaigns([campaignId]);
-    
-    return {
-      success: result.success,
-      data: result.data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Campaign cancelled successfully' : result.error || 'Failed to cancel campaign'
-    };
+    try {
+      const axiosResponse = await campaignsApi.cancelCampaign(campaignId);
+      const campaign = extractResponseData<Campaign>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `cancel-campaign-${Date.now()}`;
+      
+      this.cacheManager.invalidateCampaigns([campaignId]);
+      
+      return {
+        success: true,
+        data: campaign || undefined,
+        error: null,
+        requestId,
+        message: 'Campaign cancelled successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error cancelling campaign:', error);
+      return {
+        success: false,
+        data: undefined,
+        error: error.message || 'Failed to cancel campaign',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to cancel campaign'
+      };
+    }
   }
 
   // ===================================================================
@@ -587,63 +775,93 @@ export class UnifiedCampaignService {
     campaignId: string,
     options: { limit?: number; cursor?: number } = {}
   ): Promise<UnifiedResultsResponse<string[]>> {
-    const result = await safeApiCall<unknown[] | { domains?: unknown[] }>(
-      () => campaignsApi.getGeneratedDomains(campaignId, options?.limit, options?.cursor),
-      'Getting generated domains'
-    );
-    
-    const data = Array.isArray(result.data) ? result.data : (result.data as any)?.domains || [];
-    
-    return {
-      success: result.success,
-      data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'Generated domains retrieved successfully' : result.error || 'Failed to get generated domains'
-    };
+    try {
+      const axiosResponse = await campaignsApi.getGeneratedDomains(campaignId, options?.limit, options?.cursor);
+      const response = extractResponseData<unknown[] | { domains?: unknown[] }>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `domains-${Date.now()}`;
+      
+      const data = Array.isArray(response) ? response : (response as any)?.domains || [];
+      
+      return {
+        success: true,
+        data,
+        error: null,
+        requestId,
+        message: 'Generated domains retrieved successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error getting generated domains:', error);
+      return {
+        success: false,
+        data: [],
+        error: error.message || 'Failed to get generated domains',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to get generated domains'
+      };
+    }
   }
 
   async getDNSValidationResults(
     campaignId: string,
     options: { limit?: number; cursor?: string } = {}
   ): Promise<UnifiedResultsResponse<unknown[]>> {
-    const result = await safeApiCall<unknown[] | { results?: unknown[] }>(
-      () => campaignsApi.getDNSValidationResults(campaignId,
+    try {
+      const axiosResponse = await campaignsApi.getDNSValidationResults(campaignId,
         options?.cursor ? parseInt(options.cursor, 10) : undefined,
         options?.limit ? options.limit.toString() : undefined
-      ),
-      'Getting DNS validation results'
-    );
-    
-    const data = Array.isArray(result.data) ? result.data : (result.data as any)?.results || [];
-    
-    return {
-      success: result.success,
-      data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'DNS validation results retrieved successfully' : result.error || 'Failed to get DNS validation results'
-    };
+      );
+      const response = extractResponseData<unknown[] | { results?: unknown[] }>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `dns-results-${Date.now()}`;
+      
+      const data = Array.isArray(response) ? response : (response as any)?.results || [];
+      
+      return {
+        success: true,
+        data,
+        error: null,
+        requestId,
+        message: 'DNS validation results retrieved successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error getting DNS validation results:', error);
+      return {
+        success: false,
+        data: [],
+        error: error.message || 'Failed to get DNS validation results',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to get DNS validation results'
+      };
+    }
   }
 
   async getHTTPKeywordResults(
     campaignId: string,
     options: { limit?: number; cursor?: string } = {}
   ): Promise<UnifiedResultsResponse<unknown[]>> {
-    const result = await safeApiCall<unknown[] | { results?: unknown[] }>(
-      () => campaignsApi.getHTTPKeywordResults(campaignId, options?.limit, options?.cursor),
-      'Getting HTTP keyword results'
-    );
-    
-    const data = Array.isArray(result.data) ? result.data : (result.data as any)?.results || [];
-    
-    return {
-      success: result.success,
-      data,
-      error: result.error,
-      requestId: result.requestId,
-      message: result.success ? 'HTTP keyword results retrieved successfully' : result.error || 'Failed to get HTTP keyword results'
-    };
+    try {
+      const axiosResponse = await campaignsApi.getHTTPKeywordResults(campaignId, options?.limit, options?.cursor);
+      const response = extractResponseData<unknown[] | { results?: unknown[] }>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `http-results-${Date.now()}`;
+      
+      const data = Array.isArray(response) ? response : (response as any)?.results || [];
+      
+      return {
+        success: true,
+        data,
+        error: null,
+        requestId,
+        message: 'HTTP keyword results retrieved successfully'
+      };
+    } catch (error: any) {
+      console.error('[UnifiedCampaignService] Error getting HTTP keyword results:', error);
+      return {
+        success: false,
+        data: [],
+        error: error.message || 'Failed to get HTTP keyword results',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
+        message: error.message || 'Failed to get HTTP keyword results'
+      };
+    }
   }
 
   // ===================================================================

@@ -1,52 +1,54 @@
-// Database service for direct API calls
+// Database service using auto-generated API clients
+import { databaseApi } from '@/lib/api-client/client';
+import type {
+  BulkDatabaseQueryRequest,
+  BulkDatabaseQueryResponse,
+  BulkDatabaseStatsRequest,
+  BulkDatabaseStatsResponse,
+  DatabaseQuery,
+  DatabaseQueryResult,
+  DatabaseStats
+} from '@/lib/api-client/models';
 
-export interface QueryResult {
-  columns: string[];
-  rows: (string | number | boolean | null)[][];
-  rowCount: number;
-  executionTime: number;
-}
-
-export interface DatabaseStats {
-  totalTables: number;
-  totalUsers: number;
-  totalSessions: number;
-  databaseSize: string;
-  schemaVersion: string;
-  uptime: string;
-  version: string;
-  isHealthy: boolean;
-}
+// Use auto-generated types for consistency with backend
+export type QueryResult = DatabaseQueryResult;
+export { DatabaseStats };
 
 export async function query(sql: string): Promise<QueryResult> {
   try {
-    // Use a direct fetch until database endpoints are added to OpenAPI spec
-    const response = await fetch('/api/database/query', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      body: JSON.stringify({ sql }),
-    });
+    // Convert single query to bulk format
+    const queryId = `query_${Date.now()}`;
+    const bulkRequest: BulkDatabaseQueryRequest = {
+      queries: [{
+        id: queryId,
+        sql: sql
+      }],
+      timeout: 30000, // 30 second timeout
+      limit: 1000 // Max 1000 rows for single queries
+    };
 
-    if (!response.ok) {
-      throw new Error(`Database query failed: ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
+    const response = await databaseApi.handleBulkDatabaseQuery('XMLHttpRequest', bulkRequest);
+    const bulkResponse = response.data as BulkDatabaseQueryResponse;
     
-    // Handle unified APIResponse format if backend uses it
-    if (responseData.success !== undefined) {
-      if (!responseData.success) {
-        throw new Error(`Database query failed: ${responseData.error || 'Unknown error'}`);
-      }
-      return responseData.data;
+    // Extract single result from bulk response
+    const queryResult = bulkResponse.results?.[queryId];
+    if (!queryResult) {
+      throw new Error('No query result found in response');
     }
     
-    // Fallback for direct response format
-    return responseData;
+    if (!queryResult.success) {
+      throw new Error(`Database query failed: ${queryResult.error || 'Unknown error'}`);
+    }
+    
+    // Return the auto-generated type directly, but ensure proper type handling
+    return {
+      columns: queryResult.columns || [],
+      rows: queryResult.rows || [],
+      rowCount: queryResult.rowCount || 0,
+      executionTime: queryResult.executionTime || 0,
+      success: queryResult.success || false,
+      error: queryResult.error || undefined
+    };
   } catch (error) {
     throw new Error(`Database query failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -54,45 +56,74 @@ export async function query(sql: string): Promise<QueryResult> {
 
 export async function getStats(): Promise<DatabaseStats> {
   try {
-    // Use a direct fetch until database endpoints are added to OpenAPI spec
-    const response = await fetch('/api/database/stats', {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-    });
+    // Use bulk stats API for single stats request
+    const bulkRequest: BulkDatabaseStatsRequest = {
+      detailed: false // Basic stats only for single request
+    };
 
-    if (!response.ok) {
-      throw new Error(`Database stats failed: ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
+    const response = await databaseApi.handleBulkDatabaseStats('XMLHttpRequest', bulkRequest);
+    const bulkResponse = response.data as BulkDatabaseStatsResponse;
     
-    // Handle unified APIResponse format if backend uses it
-    if (responseData.success !== undefined) {
-      if (!responseData.success) {
-        throw new Error(`Database stats failed: ${responseData.error || 'Unknown error'}`);
-      }
-      return responseData.data;
+    // Extract database stats from bulk response
+    const dbStats = bulkResponse.databaseStats;
+    if (!dbStats) {
+      throw new Error('No database stats found in response');
     }
     
-    // Fallback for direct response format
-    return responseData;
+    // Return the auto-generated type directly
+    return dbStats;
   } catch (error) {
     throw new Error(`Database stats failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
-// Server-side utilities - these throw errors until database domain is migrated
-export async function queryBackend(_sql: string, _cookies?: string): Promise<QueryResult> {
-  throw new Error('Database backend API not yet implemented in OpenAPI migration');
+// Server-side utilities - now implemented with OpenAPI clients
+export async function queryBackend(sql: string, _cookies?: string): Promise<QueryResult> {
+  // Server-side can use the same auto-generated client
+  return await query(sql);
 }
 
 export async function getStatsBackend(_cookies?: string): Promise<DatabaseStats> {
-  throw new Error('Database stats backend API not yet implemented in OpenAPI migration');
+  // Server-side can use the same auto-generated client
+  return await getStats();
 }
 
-const databaseService = { query, getStats, queryBackend, getStatsBackend };
+// Enterprise bulk operations - expose the underlying bulk APIs
+export async function bulkQuery(queries: DatabaseQuery[], options?: {
+  timeout?: number;
+  limit?: number;
+}): Promise<BulkDatabaseQueryResponse> {
+  const bulkRequest: BulkDatabaseQueryRequest = {
+    queries,
+    timeout: options?.timeout || 30000,
+    limit: options?.limit || 1000
+  };
+  
+  const response = await databaseApi.handleBulkDatabaseQuery('XMLHttpRequest', bulkRequest);
+  return response.data as BulkDatabaseQueryResponse;
+}
+
+export async function bulkStats(options?: {
+  detailed?: boolean;
+  schemas?: string[];
+  tables?: string[];
+}): Promise<BulkDatabaseStatsResponse> {
+  const bulkRequest: BulkDatabaseStatsRequest = {
+    detailed: options?.detailed || false,
+    schemas: options?.schemas,
+    tables: options?.tables
+  };
+  
+  const response = await databaseApi.handleBulkDatabaseStats('XMLHttpRequest', bulkRequest);
+  return response.data as BulkDatabaseStatsResponse;
+}
+
+const databaseService = { 
+  query, 
+  getStats, 
+  queryBackend, 
+  getStatsBackend,
+  bulkQuery,
+  bulkStats
+};
 export default databaseService;

@@ -3,6 +3,7 @@
 api.ts
 apis/authentication-api.ts
 apis/campaigns-api.ts
+apis/database-api.ts
 apis/feature-flags-api.ts
 apis/health-api.ts
 apis/keyword-extraction-api.ts
@@ -27,6 +28,10 @@ docs/AuthorizationDecision.md
 docs/BatchKeywordExtractionRequest.md
 docs/BatchKeywordExtractionResponse.md
 docs/BulkCampaignDeleteResponse.md
+docs/BulkDatabaseQueryRequest.md
+docs/BulkDatabaseQueryResponse.md
+docs/BulkDatabaseStatsRequest.md
+docs/BulkDatabaseStatsResponse.md
 docs/BulkDeleteRequest.md
 docs/BulkDeleteResult.md
 docs/BulkDomainsRequest.md
@@ -39,6 +44,8 @@ docs/BulkLeadsResponse.md
 docs/BulkLogsRequest.md
 docs/BulkLogsResponse.md
 docs/BulkMetadata.md
+docs/BulkQueryMetadata.md
+docs/BulkStatsMetadata.md
 docs/CacheConfiguration.md
 docs/CacheEntry.md
 docs/CacheInvalidation.md
@@ -83,7 +90,11 @@ docs/DNSValidationRequest.md
 docs/DNSValidationResult.md
 docs/DNSValidationResultsResponse.md
 docs/DNSValidationStartResponse.md
+docs/DatabaseApi.md
 docs/DatabaseOptimizationRecommendation.md
+docs/DatabaseQuery.md
+docs/DatabaseQueryResult.md
+docs/DatabaseStats.md
 docs/DeletionConfirmationResponse.md
 docs/DeletionResponse.md
 docs/DetailedTestResultResponse.md
@@ -175,6 +186,7 @@ docs/RandomizedDomain.md
 docs/RateLimit.md
 docs/RateLimitInfo.md
 docs/ResourceUtilizationMetric.md
+docs/SchemaStats.md
 docs/SecurityContext.md
 docs/SecurityEvent.md
 docs/ServerConfigResponse.md
@@ -198,6 +210,7 @@ docs/SuccessResponse.md
 docs/SystemInfo.md
 docs/TLSClientHello.md
 docs/TOTPSecret.md
+docs/TableStats.md
 docs/TestResultResponse.md
 docs/UpdateCampaignRequest.md
 docs/UpdateKeywordSetRequest.md
@@ -226,6 +239,10 @@ models/authorization-decision.ts
 models/batch-keyword-extraction-request.ts
 models/batch-keyword-extraction-response.ts
 models/bulk-campaign-delete-response.ts
+models/bulk-database-query-request.ts
+models/bulk-database-query-response.ts
+models/bulk-database-stats-request.ts
+models/bulk-database-stats-response.ts
 models/bulk-delete-request.ts
 models/bulk-delete-result.ts
 models/bulk-domains-request.ts
@@ -238,6 +255,8 @@ models/bulk-leads-response.ts
 models/bulk-logs-request.ts
 models/bulk-logs-response.ts
 models/bulk-metadata.ts
+models/bulk-query-metadata.ts
+models/bulk-stats-metadata.ts
 models/cache-configuration.ts
 models/cache-entry.ts
 models/cache-invalidation-log.ts
@@ -275,6 +294,9 @@ models/create-persona-request.ts
 models/create-proxy-request.ts
 models/create-user-request.ts
 models/database-optimization-recommendation.ts
+models/database-query-result.ts
+models/database-query.ts
+models/database-stats.ts
 models/deletion-confirmation-response.ts
 models/deletion-response.ts
 models/detailed-test-result-response.ts
@@ -367,6 +389,7 @@ models/randomized-domain.ts
 models/rate-limit-info.ts
 models/rate-limit.ts
 models/resource-utilization-metric.ts
+models/schema-stats.ts
 models/security-context.ts
 models/security-event.ts
 models/server-config-response.ts
@@ -387,6 +410,7 @@ models/stream-extract-keywords200-response.ts
 models/success-message-response.ts
 models/success-response.ts
 models/system-info.ts
+models/table-stats.ts
 models/test-result-response.ts
 models/tlsclient-hello.ts
 models/totpsecret.ts

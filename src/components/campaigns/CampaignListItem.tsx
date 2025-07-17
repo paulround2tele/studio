@@ -29,11 +29,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CAMPAIGN_PHASES_ORDERED, getNextPhase } from '@/lib/constants';
-import { useCampaignOperations } from '@/hooks/useCampaignOperations';
-import { useCampaignDetailsStore } from '@/lib/stores/campaignDetailsStore';
 
 interface CampaignListItemProps {
   campaign: CampaignViewModel;
+  // Action handlers
+  onDeleteCampaign: (campaignId: string) => void;
+  onPauseCampaign?: (campaignId: string) => void;
+  onResumeCampaign?: (campaignId: string) => void;
+  onStopCampaign?: (campaignId: string) => void;
+  // Loading states
+  isActionLoading?: Record<string, boolean>;
   // Bulk selection props
   isSelected?: boolean;
   onSelect?: (campaignId: string, selected: boolean) => void;

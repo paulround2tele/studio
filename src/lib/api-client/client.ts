@@ -5,6 +5,7 @@
 import {
   AuthenticationApi,
   CampaignsApi,
+  DatabaseApi,
   ServerSettingsApi,
   KeywordSetsApi,
   PersonasApi,
@@ -39,6 +40,7 @@ const apiConfiguration = new Configuration({
 export const authenticationApi = new AuthenticationApi(apiConfiguration);
 export const authApi = authenticationApi; // Alias for backwards compatibility
 export const campaignsApi = new CampaignsApi(apiConfiguration);
+export const databaseApi = new DatabaseApi(apiConfiguration);
 export const serverSettingsApi = new ServerSettingsApi(apiConfiguration);
 export const configApi = serverSettingsApi; // Alias - config endpoints are under server-settings
 export const configurationApi = serverSettingsApi; // Alias - config endpoints are under server-settings
