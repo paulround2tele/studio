@@ -1164,6 +1164,91 @@ ul.nav-tabs {
     }
   }
 };
+    defs["BulkDatabaseQueryRequest"] = {
+  "required" : [ "queries" ],
+  "type" : "object",
+  "properties" : {
+    "limit" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "queries" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/DatabaseQuery"
+      }
+    },
+    "timeout" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkDatabaseQueryResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "metadata" : {
+      "$ref" : "#/components/schemas/BulkQueryMetadata"
+    },
+    "results" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "$ref" : "#/components/schemas/DatabaseQueryResult"
+      }
+    },
+    "totalCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkDatabaseStatsRequest"] = {
+  "type" : "object",
+  "properties" : {
+    "detailed" : {
+      "type" : "boolean"
+    },
+    "schemas" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "tables" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    }
+  }
+};
+    defs["BulkDatabaseStatsResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "databaseStats" : {
+      "$ref" : "#/components/schemas/DatabaseStats"
+    },
+    "metadata" : {
+      "$ref" : "#/components/schemas/BulkStatsMetadata"
+    },
+    "schemaStats" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "$ref" : "#/components/schemas/SchemaStats"
+      }
+    },
+    "tableStats" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "$ref" : "#/components/schemas/TableStats"
+      }
+    },
+    "totalCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
     defs["BulkDeleteRequest"] = {
   "required" : [ "campaignIds" ],
   "type" : "object",
@@ -1404,6 +1489,60 @@ ul.nav-tabs {
       "format" : "int64"
     },
     "skippedCampaigns" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["BulkQueryMetadata"] = {
+  "type" : "object",
+  "properties" : {
+    "failedQueries" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "processedQueries" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "processingTimeMs" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "skippedQueries" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "totalRowsReturned" : {
+      "type" : "integer",
+      "format" : "int64"
+    }
+  }
+};
+    defs["BulkStatsMetadata"] = {
+  "type" : "object",
+  "properties" : {
+    "failedItems" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "processedSchemas" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "processedTables" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "processingTimeMs" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "skippedItems" : {
       "type" : "integer",
       "format" : "int32"
     }
@@ -3146,6 +3285,87 @@ ul.nav-tabs {
       "type" : "string"
     },
     "type" : {
+      "type" : "string"
+    }
+  }
+};
+    defs["DatabaseQuery"] = {
+  "required" : [ "id", "sql" ],
+  "type" : "object",
+  "properties" : {
+    "id" : {
+      "type" : "string",
+      "description" : "Unique identifier",
+      "format" : "uuid"
+    },
+    "sql" : {
+      "type" : "string"
+    }
+  }
+};
+    defs["DatabaseQueryResult"] = {
+  "type" : "object",
+  "properties" : {
+    "columns" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "error" : {
+      "type" : "string"
+    },
+    "executionTime" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "rowCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "rows" : {
+      "type" : "array",
+      "items" : {
+        "type" : "array",
+        "items" : {
+          "type" : "object"
+        }
+      }
+    },
+    "success" : {
+      "type" : "boolean"
+    }
+  }
+};
+    defs["DatabaseStats"] = {
+  "type" : "object",
+  "properties" : {
+    "databaseSize" : {
+      "type" : "string"
+    },
+    "isHealthy" : {
+      "type" : "boolean"
+    },
+    "schemaVersion" : {
+      "type" : "string"
+    },
+    "totalSessions" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "totalTables" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "totalUsers" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "uptime" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "version" : {
       "type" : "string"
     }
   }
@@ -5862,6 +6082,25 @@ ul.nav-tabs {
     }
   }
 };
+    defs["SchemaStats"] = {
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "tableCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "totalRows" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "totalSize" : {
+      "type" : "string"
+    }
+  }
+};
     defs["SecurityContext"] = {
   "type" : "object",
   "properties" : {
@@ -6431,6 +6670,28 @@ ul.nav-tabs {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
+    }
+  }
+};
+    defs["TableStats"] = {
+  "type" : "object",
+  "properties" : {
+    "indexCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "rowCount" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "schema" : {
+      "type" : "string"
+    },
+    "size" : {
+      "type" : "string"
     }
   }
 };
@@ -7064,6 +7325,13 @@ ul.nav-tabs {
                     </li>
                     <li data-group="Campaigns" data-name="validateHTTPForCampaign" class="">
                       <a href="#api-Campaigns-validateHTTPForCampaign">validateHTTPForCampaign</a>
+                    </li>
+                  <li class="nav-header" data-group="Database"><a href="#api-Database">API Methods - Database</a></li>
+                    <li data-group="Database" data-name="handleBulkDatabaseQuery" class="">
+                      <a href="#api-Database-handleBulkDatabaseQuery">handleBulkDatabaseQuery</a>
+                    </li>
+                    <li data-group="Database" data-name="handleBulkDatabaseStats" class="">
+                      <a href="#api-Database-handleBulkDatabaseStats">handleBulkDatabaseStats</a>
                     </li>
                   <li class="nav-header" data-group="FeatureFlags"><a href="#api-FeatureFlags">API Methods - FeatureFlags</a></li>
                     <li data-group="FeatureFlags" data-name="getFeatureFlags" class="">
@@ -20896,6 +21164,1187 @@ $(document).ready(function() {
                                   </script>
                                 </div>
                                 <input id='responses-Campaigns-validateHTTPForCampaign-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-Database">
+                  <h1>Database</h1>
+                    <div id="api-Database-handleBulkDatabaseQuery">
+                      <article id="api-Database-handleBulkDatabaseQuery-0" data-group="User" data-name="handleBulkDatabaseQuery" data-version="0">
+                        <div class="pull-left">
+                          <h1>handleBulkDatabaseQuery</h1>
+                          <p>Execute bulk database queries</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Execute multiple SQL queries against the database with security restrictions for enterprise operations</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/database/query</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Database-handleBulkDatabaseQuery-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseQuery-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Database-handleBulkDatabaseQuery-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json" \
+ "http://localhost/api/v2/database/query" \
+ -d '{
+  &quot;limit&quot; : 0,
+  &quot;queries&quot; : [ {
+    &quot;id&quot; : &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;,
+    &quot;sql&quot; : &quot;sql&quot;
+  }, {
+    &quot;id&quot; : &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;,
+    &quot;sql&quot; : &quot;sql&quot;
+  } ],
+  &quot;timeout&quot; : 6
+}'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.DatabaseApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DatabaseApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        DatabaseApi apiInstance = new DatabaseApi();
+        String xRequestedWith = xRequestedWith_example; // String | Must be XMLHttpRequest
+        BulkDatabaseQueryRequest bulkDatabaseQueryRequest = ; // BulkDatabaseQueryRequest | 
+
+        try {
+            BulkDatabaseQueryResponse result = apiInstance.handleBulkDatabaseQuery(xRequestedWith, bulkDatabaseQueryRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DatabaseApi#handleBulkDatabaseQuery");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final String xRequestedWith = new String(); // String | Must be XMLHttpRequest
+final BulkDatabaseQueryRequest bulkDatabaseQueryRequest = new BulkDatabaseQueryRequest(); // BulkDatabaseQueryRequest | 
+
+try {
+    final result = await api_instance.handleBulkDatabaseQuery(xRequestedWith, bulkDatabaseQueryRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->handleBulkDatabaseQuery: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.DatabaseApi;
+
+public class DatabaseApiExample {
+    public static void main(String[] args) {
+        DatabaseApi apiInstance = new DatabaseApi();
+        String xRequestedWith = xRequestedWith_example; // String | Must be XMLHttpRequest
+        BulkDatabaseQueryRequest bulkDatabaseQueryRequest = ; // BulkDatabaseQueryRequest | 
+
+        try {
+            BulkDatabaseQueryResponse result = apiInstance.handleBulkDatabaseQuery(xRequestedWith, bulkDatabaseQueryRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DatabaseApi#handleBulkDatabaseQuery");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+DatabaseApi *apiInstance = [[DatabaseApi alloc] init];
+String *xRequestedWith = xRequestedWith_example; // Must be XMLHttpRequest (default to null)
+BulkDatabaseQueryRequest *bulkDatabaseQueryRequest = ; // 
+
+// Execute bulk database queries
+[apiInstance handleBulkDatabaseQueryWith:xRequestedWith
+    bulkDatabaseQueryRequest:bulkDatabaseQueryRequest
+              completionHandler: ^(BulkDatabaseQueryResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.DatabaseApi()
+var xRequestedWith = xRequestedWith_example; // {String} Must be XMLHttpRequest
+var bulkDatabaseQueryRequest = ; // {BulkDatabaseQueryRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.handleBulkDatabaseQuery(xRequestedWith, bulkDatabaseQueryRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class handleBulkDatabaseQueryExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new DatabaseApi();
+            var xRequestedWith = xRequestedWith_example;  // String | Must be XMLHttpRequest (default to null)
+            var bulkDatabaseQueryRequest = new BulkDatabaseQueryRequest(); // BulkDatabaseQueryRequest | 
+
+            try {
+                // Execute bulk database queries
+                BulkDatabaseQueryResponse result = apiInstance.handleBulkDatabaseQuery(xRequestedWith, bulkDatabaseQueryRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling DatabaseApi.handleBulkDatabaseQuery: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\DatabaseApi();
+$xRequestedWith = xRequestedWith_example; // String | Must be XMLHttpRequest
+$bulkDatabaseQueryRequest = ; // BulkDatabaseQueryRequest | 
+
+try {
+    $result = $api_instance->handleBulkDatabaseQuery($xRequestedWith, $bulkDatabaseQueryRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling DatabaseApi->handleBulkDatabaseQuery: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::DatabaseApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::DatabaseApi->new();
+my $xRequestedWith = xRequestedWith_example; # String | Must be XMLHttpRequest
+my $bulkDatabaseQueryRequest = WWW::OPenAPIClient::Object::BulkDatabaseQueryRequest->new(); # BulkDatabaseQueryRequest | 
+
+eval {
+    my $result = $api_instance->handleBulkDatabaseQuery(xRequestedWith => $xRequestedWith, bulkDatabaseQueryRequest => $bulkDatabaseQueryRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling DatabaseApi->handleBulkDatabaseQuery: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.DatabaseApi()
+xRequestedWith = xRequestedWith_example # String | Must be XMLHttpRequest (default to null)
+bulkDatabaseQueryRequest =  # BulkDatabaseQueryRequest | 
+
+try:
+    # Execute bulk database queries
+    api_response = api_instance.handle_bulk_database_query(xRequestedWith, bulkDatabaseQueryRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling DatabaseApi->handleBulkDatabaseQuery: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseQuery-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate DatabaseApi;
+
+pub fn main() {
+    let xRequestedWith = xRequestedWith_example; // String
+    let bulkDatabaseQueryRequest = ; // BulkDatabaseQueryRequest
+
+    let mut context = DatabaseApi::Context::default();
+    let result = client.handleBulkDatabaseQuery(xRequestedWith, bulkDatabaseQueryRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+                            <div class="methodsubtabletitle">Header parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                  <tr><td style="width:150px;">X-Requested-With*</td>
+<td>
+
+
+    <div id="d2e199_handleBulkDatabaseQuery_xRequestedWith">
+        <div class="json-schema-view">
+            <div class="primitive">
+                <span class="type">
+                    String
+                </span>
+
+                    <div class="inner description marked">
+Must be XMLHttpRequest
+                    </div>
+            </div>
+                <div class="inner required">
+                    Required
+                </div>
+        </div>
+    </div>
+</td>
+</tr>
+
+                            </table>
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">bulkDatabaseQueryRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/BulkDatabaseQueryRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_handleBulkDatabaseQuery_bulkDatabaseQueryRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_handleBulkDatabaseQuery_bulkDatabaseQueryRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Database-handleBulkDatabaseQuery-title-200"></h3>
+                            <p id="examples-Database-handleBulkDatabaseQuery-description-200" class="marked"></p>
+                            <script>
+                              var responseDatabase200_description = `Operation successful`;
+                              var responseDatabase200_description_break = responseDatabase200_description.indexOf('\n');
+                              if (responseDatabase200_description_break == -1) {
+                                $("#examples-Database-handleBulkDatabaseQuery-title-200").text("Status: 200 - " + responseDatabase200_description);
+                              } else {
+                                $("#examples-Database-handleBulkDatabaseQuery-title-200").text("Status: 200 - " + responseDatabase200_description.substring(0, responseDatabase200_description_break));
+                                $("#examples-Database-handleBulkDatabaseQuery-description-200").html(responseDatabase200_description.substring(responseDatabase200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Database-handleBulkDatabaseQuery-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Database-handleBulkDatabaseQuery-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Database-handleBulkDatabaseQuery-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Database-handleBulkDatabaseQuery-200-schema">
+                                <div id="responses-Database-handleBulkDatabaseQuery-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/BulkDatabaseQueryResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Database-handleBulkDatabaseQuery-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Database-handleBulkDatabaseQuery-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Database-handleBulkDatabaseQuery-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Database-handleBulkDatabaseQuery-title-400"></h3>
+                            <p id="examples-Database-handleBulkDatabaseQuery-description-400" class="marked"></p>
+                            <script>
+                              var responseDatabase400_description = `Bad Request`;
+                              var responseDatabase400_description_break = responseDatabase400_description.indexOf('\n');
+                              if (responseDatabase400_description_break == -1) {
+                                $("#examples-Database-handleBulkDatabaseQuery-title-400").text("Status: 400 - " + responseDatabase400_description);
+                              } else {
+                                $("#examples-Database-handleBulkDatabaseQuery-title-400").text("Status: 400 - " + responseDatabase400_description.substring(0, responseDatabase400_description_break));
+                                $("#examples-Database-handleBulkDatabaseQuery-description-400").html(responseDatabase400_description.substring(responseDatabase400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Database-handleBulkDatabaseQuery-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Database-handleBulkDatabaseQuery-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Database-handleBulkDatabaseQuery-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Database-handleBulkDatabaseQuery-400-schema">
+                                <div id="responses-Database-handleBulkDatabaseQuery-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Database-handleBulkDatabaseQuery-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Database-handleBulkDatabaseQuery-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Database-handleBulkDatabaseQuery-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Database-handleBulkDatabaseQuery-title-500"></h3>
+                            <p id="examples-Database-handleBulkDatabaseQuery-description-500" class="marked"></p>
+                            <script>
+                              var responseDatabase500_description = `Internal Server Error`;
+                              var responseDatabase500_description_break = responseDatabase500_description.indexOf('\n');
+                              if (responseDatabase500_description_break == -1) {
+                                $("#examples-Database-handleBulkDatabaseQuery-title-500").text("Status: 500 - " + responseDatabase500_description);
+                              } else {
+                                $("#examples-Database-handleBulkDatabaseQuery-title-500").text("Status: 500 - " + responseDatabase500_description.substring(0, responseDatabase500_description_break));
+                                $("#examples-Database-handleBulkDatabaseQuery-description-500").html(responseDatabase500_description.substring(responseDatabase500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Database-handleBulkDatabaseQuery-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Database-handleBulkDatabaseQuery-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Database-handleBulkDatabaseQuery-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Database-handleBulkDatabaseQuery-500-schema">
+                                <div id="responses-Database-handleBulkDatabaseQuery-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Database-handleBulkDatabaseQuery-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Database-handleBulkDatabaseQuery-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Database-handleBulkDatabaseQuery-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Database-handleBulkDatabaseStats">
+                      <article id="api-Database-handleBulkDatabaseStats-0" data-group="User" data-name="handleBulkDatabaseStats" data-version="0">
+                        <div class="pull-left">
+                          <h1>handleBulkDatabaseStats</h1>
+                          <p>Get bulk database statistics</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/v2/database/stats</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Database-handleBulkDatabaseStats-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Database-handleBulkDatabaseStats-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Database-handleBulkDatabaseStats-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json" \
+ "http://localhost/api/v2/database/stats" \
+ -d '{
+  &quot;tables&quot; : [ &quot;tables&quot;, &quot;tables&quot; ],
+  &quot;detailed&quot; : true,
+  &quot;schemas&quot; : [ &quot;schemas&quot;, &quot;schemas&quot; ]
+}'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.DatabaseApi;
+
+import java.io.File;
+import java.util.*;
+
+public class DatabaseApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        DatabaseApi apiInstance = new DatabaseApi();
+        String xRequestedWith = xRequestedWith_example; // String | Must be XMLHttpRequest
+        BulkDatabaseStatsRequest bulkDatabaseStatsRequest = ; // BulkDatabaseStatsRequest | 
+
+        try {
+            BulkDatabaseStatsResponse result = apiInstance.handleBulkDatabaseStats(xRequestedWith, bulkDatabaseStatsRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DatabaseApi#handleBulkDatabaseStats");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final String xRequestedWith = new String(); // String | Must be XMLHttpRequest
+final BulkDatabaseStatsRequest bulkDatabaseStatsRequest = new BulkDatabaseStatsRequest(); // BulkDatabaseStatsRequest | 
+
+try {
+    final result = await api_instance.handleBulkDatabaseStats(xRequestedWith, bulkDatabaseStatsRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->handleBulkDatabaseStats: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.DatabaseApi;
+
+public class DatabaseApiExample {
+    public static void main(String[] args) {
+        DatabaseApi apiInstance = new DatabaseApi();
+        String xRequestedWith = xRequestedWith_example; // String | Must be XMLHttpRequest
+        BulkDatabaseStatsRequest bulkDatabaseStatsRequest = ; // BulkDatabaseStatsRequest | 
+
+        try {
+            BulkDatabaseStatsResponse result = apiInstance.handleBulkDatabaseStats(xRequestedWith, bulkDatabaseStatsRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DatabaseApi#handleBulkDatabaseStats");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+DatabaseApi *apiInstance = [[DatabaseApi alloc] init];
+String *xRequestedWith = xRequestedWith_example; // Must be XMLHttpRequest (default to null)
+BulkDatabaseStatsRequest *bulkDatabaseStatsRequest = ; // 
+
+// Get bulk database statistics
+[apiInstance handleBulkDatabaseStatsWith:xRequestedWith
+    bulkDatabaseStatsRequest:bulkDatabaseStatsRequest
+              completionHandler: ^(BulkDatabaseStatsResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.DatabaseApi()
+var xRequestedWith = xRequestedWith_example; // {String} Must be XMLHttpRequest
+var bulkDatabaseStatsRequest = ; // {BulkDatabaseStatsRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.handleBulkDatabaseStats(xRequestedWith, bulkDatabaseStatsRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class handleBulkDatabaseStatsExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new DatabaseApi();
+            var xRequestedWith = xRequestedWith_example;  // String | Must be XMLHttpRequest (default to null)
+            var bulkDatabaseStatsRequest = new BulkDatabaseStatsRequest(); // BulkDatabaseStatsRequest | 
+
+            try {
+                // Get bulk database statistics
+                BulkDatabaseStatsResponse result = apiInstance.handleBulkDatabaseStats(xRequestedWith, bulkDatabaseStatsRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling DatabaseApi.handleBulkDatabaseStats: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\DatabaseApi();
+$xRequestedWith = xRequestedWith_example; // String | Must be XMLHttpRequest
+$bulkDatabaseStatsRequest = ; // BulkDatabaseStatsRequest | 
+
+try {
+    $result = $api_instance->handleBulkDatabaseStats($xRequestedWith, $bulkDatabaseStatsRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling DatabaseApi->handleBulkDatabaseStats: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::DatabaseApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::DatabaseApi->new();
+my $xRequestedWith = xRequestedWith_example; # String | Must be XMLHttpRequest
+my $bulkDatabaseStatsRequest = WWW::OPenAPIClient::Object::BulkDatabaseStatsRequest->new(); # BulkDatabaseStatsRequest | 
+
+eval {
+    my $result = $api_instance->handleBulkDatabaseStats(xRequestedWith => $xRequestedWith, bulkDatabaseStatsRequest => $bulkDatabaseStatsRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling DatabaseApi->handleBulkDatabaseStats: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.DatabaseApi()
+xRequestedWith = xRequestedWith_example # String | Must be XMLHttpRequest (default to null)
+bulkDatabaseStatsRequest =  # BulkDatabaseStatsRequest | 
+
+try:
+    # Get bulk database statistics
+    api_response = api_instance.handle_bulk_database_stats(xRequestedWith, bulkDatabaseStatsRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling DatabaseApi->handleBulkDatabaseStats: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Database-handleBulkDatabaseStats-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate DatabaseApi;
+
+pub fn main() {
+    let xRequestedWith = xRequestedWith_example; // String
+    let bulkDatabaseStatsRequest = ; // BulkDatabaseStatsRequest
+
+    let mut context = DatabaseApi::Context::default();
+    let result = client.handleBulkDatabaseStats(xRequestedWith, bulkDatabaseStatsRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+                            <div class="methodsubtabletitle">Header parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                  <tr><td style="width:150px;">X-Requested-With*</td>
+<td>
+
+
+    <div id="d2e199_handleBulkDatabaseStats_xRequestedWith">
+        <div class="json-schema-view">
+            <div class="primitive">
+                <span class="type">
+                    String
+                </span>
+
+                    <div class="inner description marked">
+Must be XMLHttpRequest
+                    </div>
+            </div>
+                <div class="inner required">
+                    Required
+                </div>
+        </div>
+    </div>
+</td>
+</tr>
+
+                            </table>
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">bulkDatabaseStatsRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/BulkDatabaseStatsRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_handleBulkDatabaseStats_bulkDatabaseStatsRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_handleBulkDatabaseStats_bulkDatabaseStatsRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Database-handleBulkDatabaseStats-title-200"></h3>
+                            <p id="examples-Database-handleBulkDatabaseStats-description-200" class="marked"></p>
+                            <script>
+                              var responseDatabase200_description = `Operation successful`;
+                              var responseDatabase200_description_break = responseDatabase200_description.indexOf('\n');
+                              if (responseDatabase200_description_break == -1) {
+                                $("#examples-Database-handleBulkDatabaseStats-title-200").text("Status: 200 - " + responseDatabase200_description);
+                              } else {
+                                $("#examples-Database-handleBulkDatabaseStats-title-200").text("Status: 200 - " + responseDatabase200_description.substring(0, responseDatabase200_description_break));
+                                $("#examples-Database-handleBulkDatabaseStats-description-200").html(responseDatabase200_description.substring(responseDatabase200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Database-handleBulkDatabaseStats-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Database-handleBulkDatabaseStats-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Database-handleBulkDatabaseStats-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Database-handleBulkDatabaseStats-200-schema">
+                                <div id="responses-Database-handleBulkDatabaseStats-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/BulkDatabaseStatsResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Database-handleBulkDatabaseStats-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Database-handleBulkDatabaseStats-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Database-handleBulkDatabaseStats-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Database-handleBulkDatabaseStats-title-400"></h3>
+                            <p id="examples-Database-handleBulkDatabaseStats-description-400" class="marked"></p>
+                            <script>
+                              var responseDatabase400_description = `Bad Request`;
+                              var responseDatabase400_description_break = responseDatabase400_description.indexOf('\n');
+                              if (responseDatabase400_description_break == -1) {
+                                $("#examples-Database-handleBulkDatabaseStats-title-400").text("Status: 400 - " + responseDatabase400_description);
+                              } else {
+                                $("#examples-Database-handleBulkDatabaseStats-title-400").text("Status: 400 - " + responseDatabase400_description.substring(0, responseDatabase400_description_break));
+                                $("#examples-Database-handleBulkDatabaseStats-description-400").html(responseDatabase400_description.substring(responseDatabase400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Database-handleBulkDatabaseStats-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Database-handleBulkDatabaseStats-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Database-handleBulkDatabaseStats-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Database-handleBulkDatabaseStats-400-schema">
+                                <div id="responses-Database-handleBulkDatabaseStats-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Database-handleBulkDatabaseStats-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Database-handleBulkDatabaseStats-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Database-handleBulkDatabaseStats-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Database-handleBulkDatabaseStats-title-500"></h3>
+                            <p id="examples-Database-handleBulkDatabaseStats-description-500" class="marked"></p>
+                            <script>
+                              var responseDatabase500_description = `Internal Server Error`;
+                              var responseDatabase500_description_break = responseDatabase500_description.indexOf('\n');
+                              if (responseDatabase500_description_break == -1) {
+                                $("#examples-Database-handleBulkDatabaseStats-title-500").text("Status: 500 - " + responseDatabase500_description);
+                              } else {
+                                $("#examples-Database-handleBulkDatabaseStats-title-500").text("Status: 500 - " + responseDatabase500_description.substring(0, responseDatabase500_description_break));
+                                $("#examples-Database-handleBulkDatabaseStats-description-500").html(responseDatabase500_description.substring(responseDatabase500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Database-handleBulkDatabaseStats-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Database-handleBulkDatabaseStats-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Database-handleBulkDatabaseStats-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Database-handleBulkDatabaseStats-500-schema">
+                                <div id="responses-Database-handleBulkDatabaseStats-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Database-handleBulkDatabaseStats-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Database-handleBulkDatabaseStats-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Database-handleBulkDatabaseStats-500-schema-data' type='hidden' value=''></input>
                               </div>
                             </div>
                         </article>

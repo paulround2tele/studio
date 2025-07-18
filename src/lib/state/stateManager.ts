@@ -2,7 +2,13 @@
 // Enhanced state management with optimistic updates, rollback, and cross-tab synchronization
 'use client';
 
-import { getFeatureFlags } from '@/lib/config/environment';
+// BACKEND-DRIVEN: Simple environment variable feature flags
+const getFeatureFlags = () => ({
+  enableDebugMode: process.env.NODE_ENV === 'development',
+  enableRealTimeUpdates: true, // Always enabled - backend controlled
+  enableOfflineMode: false,    // Not used in current implementation
+  enableAnalytics: false       // Not used in current implementation
+});
 
 // State change types
 export type StateChangeType = 'CREATE' | 'UPDATE' | 'DELETE' | 'BATCH';

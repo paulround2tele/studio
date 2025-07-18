@@ -1,11 +1,14 @@
 /**
- * SQL Null Wrapper Type Transformation Utilities
+ * DEPRECATED: SQL Null Wrapper Transformation Utilities
  *
- * These utilities transform swagger-generated SQL null wrapper types
- * (SqlNullInt32, SqlNullString, etc.) into simple frontend-safe types.
+ * The backend should handle SQL serialization properly.
+ * Frontend should not need to know about SQL null wrappers.
+ * These utilities are kept for backwards compatibility only.
+ *
+ * @deprecated Use proper backend serialization instead
  */
 
-// Define inline types for SqlNull structures
+// DEPRECATED: Backend should handle SQL null serialization
 interface SqlNullInt32 {
   int32?: number;
   valid?: boolean;

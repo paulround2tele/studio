@@ -173,7 +173,7 @@ export function handleApiError(error: unknown, context: string = 'API call'): ne
 
 /**
  * Utility for safer API calls with unified response handling
- * Auth errors (401/UNAUTHORIZED) are re-thrown to trigger redirect logic
+ * SIMPLIFIED: Backend handles all authentication redirects
  */
 export async function safeApiCall<T>(
   apiCall: () => Promise<unknown>,
@@ -185,40 +185,8 @@ export async function safeApiCall<T>(
   } catch (error) {
     console.error(`[ApiResponseHelpers] ${context} failed:`, error);
     
-    // Check if this is an authentication error that should trigger redirect
-    const isAuthenticationError = (err: unknown): boolean => {
-      if (!err || typeof err !== 'object') return false;
-      
-      const errorObj = err as any;
-      
-      // Check for direct 401 status
-      if (errorObj.status === 401 || errorObj.statusCode === 401) return true;
-      
-      // Check for axios response wrapper
-      if (errorObj.response?.status === 401) return true;
-      
-      // Check for unified envelope format with UNAUTHORIZED code
-      if (errorObj.response?.data?.error?.code === 'UNAUTHORIZED') return true;
-      
-      // Check for error message patterns
-      const message = errorObj.message || errorObj.error || '';
-      if (typeof message === 'string') {
-        return message.includes('401') ||
-               message.toLowerCase().includes('unauthorized') ||
-               message.toLowerCase().includes('authentication') ||
-               message.toLowerCase().includes('session expired');
-      }
-      
-      return false;
-    };
-    
-    // Re-throw authentication errors to trigger redirect logic
-    if (isAuthenticationError(error)) {
-      console.warn(`[ApiResponseHelpers] Re-throwing auth error to trigger redirect:`, error);
-      throw error;
-    }
-    
-    // For all other errors, return safe response
+    // SIMPLIFIED: All errors are handled the same way
+    // Backend middleware handles authentication redirects
     return {
       success: false,
       data: undefined as any,

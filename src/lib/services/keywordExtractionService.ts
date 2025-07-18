@@ -1,23 +1,8 @@
 // src/lib/services/keywordExtractionService.ts
 // Keyword Extraction Service - Using auto-generated OpenAPI clients
 
-import { KeywordExtractionApi, Configuration } from '@/lib/api-client';
-import { getApiBaseUrlSync } from '@/lib/config/environment';
-import {
-  extractResponseData
-} from '@/lib/utils/apiResponseHelpers';
-
-// Create configured KeywordExtractionApi instance with authentication
-const config = new Configuration({
-  basePath: getApiBaseUrlSync(),
-  baseOptions: {
-    withCredentials: true,
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest', // Required for session protection
-    }
-  }
-});
-const keywordExtractionApi = new KeywordExtractionApi(config);
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { keywordExtractionApi } from '@/lib/api-client/client';
 
 // Define types based on actual backend implementation
 export interface KeywordExtractionRequestItem {
@@ -47,22 +32,8 @@ export interface KeywordExtractionResponse {
   results: KeywordExtractionAPIResult[];
 }
 
-// Service layer response wrappers aligned with unified backend envelope format
-export interface KeywordExtractionServiceResponse {
-  success: boolean;
-  data?: KeywordExtractionResponse;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface BatchKeywordExtractionServiceResponse {
-  success: boolean;
-  data?: KeywordExtractionResponse;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
+// Import unified API response wrapper
+import type { ApiResponse } from '@/lib/types';
 
 class KeywordExtractionService {
   private static instance: KeywordExtractionService;
@@ -74,7 +45,7 @@ class KeywordExtractionService {
     return KeywordExtractionService.instance;
   }
 
-  async extractKeywordsBatch(request: BatchKeywordExtractionRequest): Promise<BatchKeywordExtractionServiceResponse> {
+  async extractKeywordsBatch(request: BatchKeywordExtractionRequest): Promise<ApiResponse<KeywordExtractionResponse>> {
     try {
       const axiosResponse = await keywordExtractionApi.batchExtractKeywords(request);
       const data = extractResponseData<KeywordExtractionResponse>(axiosResponse);
@@ -101,7 +72,7 @@ class KeywordExtractionService {
     keywordSetId: string;
     httpPersonaId?: string;
     dnsPersonaId?: string;
-  }): Promise<KeywordExtractionServiceResponse> {
+  }): Promise<ApiResponse<KeywordExtractionResponse>> {
     try {
       const axiosResponse = await keywordExtractionApi.streamExtractKeywords(
         params.url,
@@ -129,7 +100,7 @@ class KeywordExtractionService {
   }
 
   // Single keyword extraction using batch with one item
-  async extractKeywords(item: KeywordExtractionRequestItem): Promise<KeywordExtractionServiceResponse> {
+  async extractKeywords(item: KeywordExtractionRequestItem): Promise<ApiResponse<KeywordExtractionResponse>> {
     const batchRequest: BatchKeywordExtractionRequest = {
       items: [item]
     };

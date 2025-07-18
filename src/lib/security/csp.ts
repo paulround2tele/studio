@@ -97,7 +97,7 @@ class ContentSecurityPolicy {
         apiUrl,
         wsUrl,
         isDevelopment ? 'ws://*:*' : '', // WebSocket for HMR in dev (any host)
-        'https://vitals.vercel-insights.com', // Vercel analytics
+        ...(process.env.NEXT_PUBLIC_ANALYTICS_DOMAINS?.split(',') || []), // ✅ UNIFIED: Configurable analytics
       ].filter(Boolean),
       'media-src': ["'self'"],
       'object-src': ["'none'"],

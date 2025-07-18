@@ -156,10 +156,14 @@ export const webSocketSessionConfig = {
       origins.push(process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN);
     }
     
-    // In development, allow common development origins if none configured
+    // In development, auto-detect frontend origin if none configured
     if (process.env.NODE_ENV === 'development' && origins.length === 0) {
-      origins.push('http://localhost:3000', 'http://127.0.0.1:3000');
-      console.warn('⚠️ [WebSocket] Using default development origins. Consider setting NEXT_PUBLIC_APP_URL for better security.');
+      if (typeof window !== 'undefined') {
+        // ✅ UNIFIED: Auto-detect from current frontend location (works on any hostname)
+        const frontendOrigin = `${window.location.protocol}//${window.location.host}`;
+        origins.push(frontendOrigin);
+        console.warn(`⚠️ [WebSocket] Auto-detected development origin: ${frontendOrigin}. Consider setting NEXT_PUBLIC_APP_URL for consistency.`);
+      }
     }
     
     // Only throw error in production if no origins configured

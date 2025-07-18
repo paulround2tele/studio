@@ -1,7 +1,6 @@
 // src/lib/services/proxyService.ts
 // Production Proxy Service - Direct OpenAPI integration without adapters
 
-import { ProxiesApi, Configuration } from '@/lib/api-client';
 import {
   CreateProxyRequest,
   UpdateProxyRequest,
@@ -10,23 +9,12 @@ import {
   UpdateProxyRequestProtocolEnum,
 } from '@/lib/api-client/models';
 import type { components } from '@/lib/api-client/types';
-import { getApiBaseUrlSync } from '@/lib/config/environment';
 import { transformProxyData } from '@/lib/utils/sqlNullTransformers';
+import { proxiesApi } from '@/lib/api-client/client';
 
 // Use direct OpenAPI types
 type FrontendProxy = components['schemas']['Proxy'];
-import {
-  extractResponseData
-} from '@/lib/utils/apiResponseHelpers';
-
-// Create configured ProxiesApi instance with authentication
-const config = new Configuration({
-  basePath: getApiBaseUrlSync(),
-  baseOptions: {
-    withCredentials: true
-  }
-});
-const proxiesApi = new ProxiesApi(config);
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Use OpenAPI types directly
 // Removed circular type reference
@@ -45,39 +33,6 @@ const validateUpdateProtocol = (protocol: string): UpdateProxyRequestProtocolEnu
   const validatedProtocol = validProtocols.includes(protocol) ? protocol : 'http';
   return validatedProtocol as UpdateProxyRequestProtocolEnum;
 };
-
-// Service layer response wrappers aligned with unified backend envelope format
-export interface ProxiesListResponse {
-  success: boolean;
-  data: FrontendProxy[];
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface ProxyModelCreationResponse {
-  success: boolean;
-  data?: FrontendProxy;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface ProxyModelUpdateResponse {
-  success: boolean;
-  data?: ProxyModel;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface ProxyModelDeleteResponse {
-  success: boolean;
-  data?: null;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
 
 // Import unified API response wrapper
 import type { ApiResponse } from '@/lib/types';
@@ -101,7 +56,7 @@ class ProxyModelService {
     return ProxyModelService.instance;
   }
 
-  async getProxies(): Promise<ProxiesListResponse> {
+  async getProxies(): Promise<ApiResponse<FrontendProxy[]>> {
     try {
       const axiosResponse = await proxiesApi.listProxies();
       const proxiesData = extractResponseData<any[]>(axiosResponse);
@@ -157,7 +112,7 @@ class ProxyModelService {
     }
   }
 
-  async getProxyModelById(proxyId: string): Promise<ProxyModelCreationResponse> {
+  async getProxyModelById(proxyId: string): Promise<ApiResponse<FrontendProxy>> {
     // Backend doesn't have individual GET endpoint, fetch from list
     const response = await this.getProxies();
     const proxy = response.data?.find(p => p.id === proxyId);
@@ -176,7 +131,7 @@ class ProxyModelService {
     };
   }
 
-  async createProxy(payload: ProxyModelCreationPayload): Promise<ProxyModelCreationResponse> {
+  async createProxy(payload: ProxyModelCreationPayload): Promise<ApiResponse<FrontendProxy>> {
     try {
       const convertedPayload = {
         ...payload,
@@ -235,7 +190,7 @@ class ProxyModelService {
     }
   }
 
-  async updateProxy(proxyId: string, payload: ProxyModelUpdatePayload): Promise<ProxyModelUpdateResponse> {
+  async updateProxy(proxyId: string, payload: ProxyModelUpdatePayload): Promise<ApiResponse<ProxyModel>> {
     try {
       const { protocol, ...restPayload } = payload;
       const convertedPayload = {
@@ -264,7 +219,7 @@ class ProxyModelService {
     }
   }
 
-  async deleteProxy(proxyId: string): Promise<ProxyModelDeleteResponse> {
+  async deleteProxy(proxyId: string): Promise<ApiResponse<null>> {
     try {
       const axiosResponse = await proxiesApi.deleteProxy(proxyId);
       extractResponseData<null>(axiosResponse);
@@ -452,20 +407,31 @@ export const getProxyModelStatuses = () => proxyService.getProxyModelStatuses();
 
 // Bulk operations for backward compatibility
 export const testAllProxies = forceAllProxiesHealthCheck;
-export const cleanProxies = async (): Promise<{ status: 'success' | 'error'; message: string }> => {
+export const cleanProxies = async (): Promise<ApiResponse<{ deletedCount: number; errorCount: number }>> => {
   try {
     // Get all proxies and filter for unhealthy ones
     const response = await proxyService.getProxies();
     
     if (!response.success || !response.data) {
-      return { status: 'error', message: 'Failed to fetch proxies for cleaning' };
+      return {
+        success: false,
+        data: undefined as any,
+        error: 'Failed to fetch proxies for cleaning',
+        requestId: globalThis.crypto?.randomUUID?.() || `clean-proxies-error-${Date.now()}`
+      };
     }
 
     // Filter for unhealthy proxies (not isHealthy)
     const unhealthyProxies = response.data.filter(proxy => !proxy.isHealthy);
 
     if (unhealthyProxies.length === 0) {
-      return { status: 'success', message: 'No unhealthy proxies found to clean' };
+      return {
+        success: true,
+        data: { deletedCount: 0, errorCount: 0 },
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `clean-proxies-${Date.now()}`,
+        message: 'No unhealthy proxies found to clean'
+      };
     }
 
     let deletedCount = 0;
@@ -491,15 +457,28 @@ export const cleanProxies = async (): Promise<{ status: 'success' | 'error'; mes
       const message = errorCount > 0
         ? `Cleaned ${deletedCount} failed proxies (${errorCount} errors)`
         : `Successfully cleaned ${deletedCount} failed proxies`;
-      return { status: 'success', message };
+      return {
+        success: true,
+        data: { deletedCount, errorCount },
+        error: null,
+        requestId: globalThis.crypto?.randomUUID?.() || `clean-proxies-${Date.now()}`,
+        message
+      };
     } else {
-      return { status: 'error', message: `Failed to clean proxies (${errorCount} errors)` };
+      return {
+        success: false,
+        data: { deletedCount: 0, errorCount },
+        error: `Failed to clean proxies (${errorCount} errors)`,
+        requestId: globalThis.crypto?.randomUUID?.() || `clean-proxies-error-${Date.now()}`
+      };
     }
   } catch (error) {
     console.error('Error cleaning failed proxies:', error);
     return {
-      status: 'error',
-      message: error instanceof Error ? error.message : 'Unknown error occurred while cleaning proxies'
+      success: false,
+      data: undefined as any,
+      error: error instanceof Error ? error.message : 'Unknown error occurred while cleaning proxies',
+      requestId: globalThis.crypto?.randomUUID?.() || `clean-proxies-error-${Date.now()}`
     };
   }
 };

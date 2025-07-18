@@ -1,23 +1,13 @@
 // src/lib/services/proxyPoolService.ts
 // Production Proxy Pool Service - Clean backend integration with generated types
 
-import { ProxyPoolsApi, Configuration } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
 
 // Import types directly from models
 import type { ProxyPoolRequest } from '@/lib/api-client/models/proxy-pool-request';
 import type { AddProxyToPoolRequest } from '@/lib/api-client/models/add-proxy-to-pool-request';
-import { getApiBaseUrlSync } from '@/lib/config/environment';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
-
-// Create configured ProxyPoolsApi instance with authentication
-const config = new Configuration({
-  basePath: getApiBaseUrlSync(),
-  baseOptions: {
-    withCredentials: true
-  }
-});
-const proxyPoolsApi = new ProxyPoolsApi(config);
+import { proxyPoolsApi } from '@/lib/api-client/client';
 
 // Use generated types with correct package-prefixed names
 export type ProxyPool = components['schemas']['ProxyPool'];
@@ -28,54 +18,8 @@ export type ProxyPoolMembership = components['schemas']['ProxyPoolMembership'];
 // Export the imported types for use in other files
 export type { ProxyPoolRequest, AddProxyToPoolRequest };
 
-// Service layer response wrappers aligned with unified backend envelope format
-export interface ProxyPoolListResponse {
-  success: boolean;
-  data: ProxyPool[];
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface ProxyPoolDetailResponse {
-  success: boolean;
-  data?: ProxyPool;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface ProxyPoolCreationResponse {
-  success: boolean;
-  data?: ProxyPool;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface ProxyPoolUpdateResponse {
-  success: boolean;
-  data?: ProxyPool;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface ProxyPoolDeleteResponse {
-  success: boolean;
-  data?: unknown;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface ProxyPoolMembershipResponse {
-  success: boolean;
-  data?: ProxyPoolMembership;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
+// Import unified API response wrapper
+import type { ApiResponse } from '@/lib/types';
 
 
 class ProxyPoolService {
@@ -88,7 +32,7 @@ class ProxyPoolService {
     return ProxyPoolService.instance;
   }
 
-  async listPools(): Promise<ProxyPoolListResponse> {
+  async listPools(): Promise<ApiResponse<ProxyPool[]>> {
     try {
       const axiosResponse = await proxyPoolsApi.listProxyPools();
       const data = extractResponseData<ProxyPool[]>(axiosResponse);
@@ -110,7 +54,7 @@ class ProxyPoolService {
     }
   }
 
-  async getPoolById(poolId: string): Promise<ProxyPoolDetailResponse> {
+  async getPoolById(poolId: string): Promise<ApiResponse<ProxyPool>> {
     // Backend doesn't have individual GET endpoint, fetch from list
     const response = await this.listPools();
     const pool = response.data?.find(p => p.id === poolId);
@@ -129,7 +73,7 @@ class ProxyPoolService {
     };
   }
 
-  async createPool(payload: ProxyPoolCreationPayload): Promise<ProxyPoolCreationResponse> {
+  async createPool(payload: ProxyPoolCreationPayload): Promise<ApiResponse<ProxyPool>> {
     try {
       const axiosResponse = await proxyPoolsApi.createProxyPool(payload);
       const data = extractResponseData<ProxyPool>(axiosResponse);
@@ -151,7 +95,7 @@ class ProxyPoolService {
     }
   }
 
-  async updatePool(poolId: string, payload: ProxyPoolCreationPayload): Promise<ProxyPoolUpdateResponse> {
+  async updatePool(poolId: string, payload: ProxyPoolCreationPayload): Promise<ApiResponse<ProxyPool>> {
     try {
       const axiosResponse = await proxyPoolsApi.updateProxyPool(poolId, payload);
       const data = extractResponseData<ProxyPool>(axiosResponse);
@@ -173,7 +117,7 @@ class ProxyPoolService {
     }
   }
 
-  async deletePool(poolId: string): Promise<ProxyPoolDeleteResponse> {
+  async deletePool(poolId: string): Promise<ApiResponse<{ deleted: boolean; id: string }>> {
     try {
       const axiosResponse = await proxyPoolsApi.deleteProxyPool(poolId);
       const data = extractResponseData<{ deleted: boolean; id: string }>(axiosResponse);
@@ -195,7 +139,7 @@ class ProxyPoolService {
     }
   }
 
-  async addProxy(poolId: string, proxyId: string, weight?: number): Promise<ProxyPoolMembershipResponse> {
+  async addProxy(poolId: string, proxyId: string, weight?: number): Promise<ApiResponse<ProxyPoolMembership>> {
     try {
       const axiosResponse = await proxyPoolsApi.addProxyToPool(poolId, { proxyId, weight });
       const data = extractResponseData<ProxyPoolMembership>(axiosResponse);
@@ -217,7 +161,7 @@ class ProxyPoolService {
     }
   }
 
-  async removeProxy(poolId: string, proxyId: string): Promise<ProxyPoolDeleteResponse> {
+  async removeProxy(poolId: string, proxyId: string): Promise<ApiResponse<{ removed: boolean }>> {
     try {
       const axiosResponse = await proxyPoolsApi.removeProxyFromPool(poolId, proxyId);
       const data = extractResponseData<{ removed: boolean }>(axiosResponse);

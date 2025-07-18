@@ -1,67 +1,17 @@
 // src/lib/services/keywordSetService.ts
 // Keyword Set Service - Direct OpenAPI integration for keyword set management
 
-import { KeywordSetsApi, Configuration } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
-import { getApiBaseUrlSync } from '@/lib/config/environment';
-import {
-  extractResponseData
-} from '@/lib/utils/apiResponseHelpers';
-
-// Create configured KeywordSetsApi instance with authentication
-const config = new Configuration({
-  basePath: getApiBaseUrlSync(),
-  baseOptions: {
-    withCredentials: true
-  }
-});
-const keywordSetsApi = new KeywordSetsApi(config);
+import { keywordSetsApi } from '@/lib/api-client/client';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Use OpenAPI types directly
 export type KeywordSet = components['schemas']['KeywordSet'];
 export type CreateKeywordSetRequest = components['schemas']['CreateKeywordSetRequest'];
 export type UpdateKeywordSetRequest = components['schemas']['UpdateKeywordSetRequest'];
 
-// Service layer response wrappers aligned with unified backend envelope format
-export interface KeywordSetListResponse {
-  success: boolean;
-  data: KeywordSet[];
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface KeywordSetDetailResponse {
-  success: boolean;
-  data?: KeywordSet;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface KeywordSetCreationResponse {
-  success: boolean;
-  data?: KeywordSet;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface KeywordSetUpdateResponse {
-  success: boolean;
-  data?: KeywordSet;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
-
-export interface KeywordSetDeleteResponse {
-  success: boolean;
-  data?: null;
-  error: string | null;
-  requestId: string;
-  message?: string;
-}
+// Import unified API response wrapper
+import type { ApiResponse } from '@/lib/types';
 
 class KeywordSetService {
   private static instance: KeywordSetService;
@@ -77,7 +27,7 @@ class KeywordSetService {
     limit?: number;
     offset?: number;
     isEnabled?: boolean;
-  }): Promise<KeywordSetListResponse> {
+  }): Promise<ApiResponse<KeywordSet[]>> {
     try {
       const axiosResponse = await keywordSetsApi.listKeywordSets(
         options?.limit,
@@ -106,7 +56,7 @@ class KeywordSetService {
     }
   }
 
-  async getKeywordSetById(keywordSetId: string): Promise<KeywordSetDetailResponse> {
+  async getKeywordSetById(keywordSetId: string): Promise<ApiResponse<KeywordSet>> {
     try {
       const axiosResponse = await keywordSetsApi.getKeywordSet(keywordSetId);
       const keywordSet = extractResponseData<KeywordSet>(axiosResponse);
@@ -131,7 +81,7 @@ class KeywordSetService {
     }
   }
 
-  async createKeywordSet(payload: CreateKeywordSetRequest): Promise<KeywordSetCreationResponse> {
+  async createKeywordSet(payload: CreateKeywordSetRequest): Promise<ApiResponse<KeywordSet>> {
     try {
       const axiosResponse = await keywordSetsApi.createKeywordSet(payload);
       const keywordSet = extractResponseData<KeywordSet>(axiosResponse);
@@ -156,7 +106,7 @@ class KeywordSetService {
     }
   }
 
-  async updateKeywordSet(keywordSetId: string, payload: UpdateKeywordSetRequest): Promise<KeywordSetUpdateResponse> {
+  async updateKeywordSet(keywordSetId: string, payload: UpdateKeywordSetRequest): Promise<ApiResponse<KeywordSet>> {
     try {
       const axiosResponse = await keywordSetsApi.updateKeywordSet(keywordSetId, payload);
       const keywordSet = extractResponseData<KeywordSet>(axiosResponse);
@@ -181,7 +131,7 @@ class KeywordSetService {
     }
   }
 
-  async deleteKeywordSet(keywordSetId: string): Promise<KeywordSetDeleteResponse> {
+  async deleteKeywordSet(keywordSetId: string): Promise<ApiResponse<null>> {
     try {
       const axiosResponse = await keywordSetsApi.deleteKeywordSet(keywordSetId);
       extractResponseData<null>(axiosResponse);

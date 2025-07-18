@@ -1,37 +1,32 @@
 // src/lib/utils/domainCalculation.ts
 // Production domain calculation utilities
-// Replaces mock logic with real calculation
+// Uses backend OpenAPI types exclusively
 
 import type { components } from '@/lib/api-client/types';
 
-type _DomainGenerationParams = components['schemas']['DomainGenerationParams']; // Unused
-type DomainGenerationConfig = {
-  generationPattern?: string;
-  constantPart?: string;
-  allowedCharSet?: string;
-  tlds?: string[];
-  prefixVariableLength?: number;
-  suffixVariableLength?: number;
-  maxDomainsToGenerate?: number;
-};
+// Use backend OpenAPI type - no frontend duplication
+type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
 
 /**
  * Calculate maximum theoretical domains for a given configuration
+ * Uses backend-defined types exclusively
  */
-export function calculateMaxTheoreticalDomains(config: DomainGenerationConfig): number {
+export function calculateMaxTheoreticalDomains(config: DomainGenerationParams): number {
   if (!config) return 0;
 
-  const { generationPattern, allowedCharSet, prefixVariableLength, suffixVariableLength } = config;
-  const charSetLength = allowedCharSet?.length || 26;
+  const { patternType, characterSet, variableLength } = config;
+  const charSetLength = characterSet?.length || 26;
 
-  switch (generationPattern) {
-    case 'prefix_variable':
-      return prefixVariableLength ? Math.pow(charSetLength, prefixVariableLength) : 0;
-    case 'suffix_variable':
-      return suffixVariableLength ? Math.pow(charSetLength, suffixVariableLength) : 0;
-    case 'both_variable':
-      const prefixCombos = prefixVariableLength ? Math.pow(charSetLength, prefixVariableLength) : 1;
-      const suffixCombos = suffixVariableLength ? Math.pow(charSetLength, suffixVariableLength) : 1;
+  switch (patternType) {
+    case 'prefix':
+      return variableLength ? Math.pow(charSetLength, variableLength) : 0;
+    case 'suffix':
+      return variableLength ? Math.pow(charSetLength, variableLength) : 0;
+    case 'both':
+      // For 'both' pattern, assume half length for prefix and half for suffix
+      const halfLength = Math.floor(variableLength / 2);
+      const prefixCombos = halfLength > 0 ? Math.pow(charSetLength, halfLength) : 1;
+      const suffixCombos = halfLength > 0 ? Math.pow(charSetLength, halfLength) : 1;
       return prefixCombos * suffixCombos;
     default:
       return 0;
@@ -43,7 +38,7 @@ export function calculateMaxTheoreticalDomains(config: DomainGenerationConfig): 
  * This would typically check against backend state, but for now provides estimate
  */
 export function calculateRemainingDomains(
-  config: DomainGenerationConfig,
+  config: DomainGenerationParams,
   currentOffset: number = 0
 ): number {
   const maxTheoretical = calculateMaxTheoreticalDomains(config);
@@ -51,41 +46,32 @@ export function calculateRemainingDomains(
 }
 
 /**
- * Validate domain generation configuration
+ * Validate domain generation configuration using backend schema
  */
-export function validateDomainConfig(config: DomainGenerationConfig): {
+export function validateDomainConfig(config: DomainGenerationParams): {
   isValid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
 
-  if (!config.constantPart?.trim()) {
-    errors.push('Constant part is required');
+  if (!config.constantString?.trim()) {
+    errors.push('Constant string is required');
   }
 
-  if (!config.allowedCharSet?.trim()) {
+  if (!config.characterSet?.trim()) {
     errors.push('Character set is required');
   }
 
-  if (config.generationPattern === 'prefix_variable' && (!config.prefixVariableLength || config.prefixVariableLength < 1)) {
-    errors.push('Prefix variable length must be at least 1');
+  if (!config.variableLength || config.variableLength < 1) {
+    errors.push('Variable length must be at least 1');
   }
 
-  if (config.generationPattern === 'suffix_variable' && (!config.suffixVariableLength || config.suffixVariableLength < 1)) {
-    errors.push('Suffix variable length must be at least 1');
+  if (!config.tld?.trim()) {
+    errors.push('TLD is required');
   }
 
-  if (config.generationPattern === 'both_variable') {
-    if (!config.prefixVariableLength || config.prefixVariableLength < 1) {
-      errors.push('Prefix variable length must be at least 1 for both variable pattern');
-    }
-    if (!config.suffixVariableLength || config.suffixVariableLength < 1) {
-      errors.push('Suffix variable length must be at least 1 for both variable pattern');
-    }
-  }
-
-  if (!config.tlds?.length) {
-    errors.push('At least one TLD is required');
+  if (!['prefix', 'suffix', 'both'].includes(config.patternType)) {
+    errors.push('Pattern type must be prefix, suffix, or both');
   }
 
   return {

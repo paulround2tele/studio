@@ -8,6 +8,7 @@ import {
   DatabaseApi,
   ServerSettingsApi,
   KeywordSetsApi,
+  KeywordExtractionApi,
   PersonasApi,
   ProxiesApi,
   ProxyPoolsApi,
@@ -16,13 +17,16 @@ import {
   Configuration
 } from './index';
 
-// Import proper environment configuration - NO HARDCODED URLS
-import { getApiConfig } from '@/lib/config/environment';
-
-// Get API base URL from environment configuration system
+// BACKEND-DRIVEN: Pure environment variable approach (no hardcoded fallbacks)
 const getApiBaseUrl = (): string => {
-  const apiConfig = getApiConfig();
-  return apiConfig.baseUrl;
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (!configured || !configured.trim()) {
+    throw new Error(
+      'CONFIGURATION ERROR: NEXT_PUBLIC_API_URL environment variable is required. ' +
+      'Please set it to your backend API URL (e.g., http://localhost:8080/api/v2)'
+    );
+  }
+  return configured.trim();
 };
 
 // Create configuration instance with proper base URL
@@ -45,6 +49,7 @@ export const serverSettingsApi = new ServerSettingsApi(apiConfiguration);
 export const configApi = serverSettingsApi; // Alias - config endpoints are under server-settings
 export const configurationApi = serverSettingsApi; // Alias - config endpoints are under server-settings
 export const keywordSetsApi = new KeywordSetsApi(apiConfiguration);
+export const keywordExtractionApi = new KeywordExtractionApi(apiConfiguration);
 export const personasApi = new PersonasApi(apiConfiguration);
 export const proxiesApi = new ProxiesApi(apiConfiguration);
 export const proxyPoolsApi = new ProxyPoolsApi(apiConfiguration);

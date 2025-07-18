@@ -1,17 +1,12 @@
 // src/lib/services/configService.ts
 // Production Config Service - Feature flags and configuration management
 
-import { FeatureFlagsApi, Configuration } from '@/lib/api-client';
 import type { components } from '@/lib/api-client/types';
-
-// Create configured FeatureFlagsApi instance
-import { getApiConfig } from '../config/environment';
+import { featureFlagsApi } from '@/lib/api-client/client';
 import { randomUUID } from 'crypto';
 
-const config = new Configuration({
-  basePath: getApiConfig().baseUrl
-});
-const configApi = new FeatureFlagsApi(config);
+// Use pre-configured FeatureFlagsApi instance
+const configApi = featureFlagsApi;
 
 // Use generated types
 export type FeatureFlags = components['schemas']['FeatureFlags'];

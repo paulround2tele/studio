@@ -1,5 +1,6 @@
 // Database service using auto-generated API clients
 import { databaseApi } from '@/lib/api-client/client';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type {
   BulkDatabaseQueryRequest,
   BulkDatabaseQueryResponse,
@@ -28,7 +29,11 @@ export async function query(sql: string): Promise<QueryResult> {
     };
 
     const response = await databaseApi.handleBulkDatabaseQuery('XMLHttpRequest', bulkRequest);
-    const bulkResponse = response.data as BulkDatabaseQueryResponse;
+    const bulkResponse = extractResponseData<BulkDatabaseQueryResponse>(response);
+    
+    if (!bulkResponse) {
+      throw new Error('No response data received from database API');
+    }
     
     // Extract single result from bulk response
     const queryResult = bulkResponse.results?.[queryId];
@@ -62,7 +67,11 @@ export async function getStats(): Promise<DatabaseStats> {
     };
 
     const response = await databaseApi.handleBulkDatabaseStats('XMLHttpRequest', bulkRequest);
-    const bulkResponse = response.data as BulkDatabaseStatsResponse;
+    const bulkResponse = extractResponseData<BulkDatabaseStatsResponse>(response);
+    
+    if (!bulkResponse) {
+      throw new Error('No response data received from database stats API');
+    }
     
     // Extract database stats from bulk response
     const dbStats = bulkResponse.databaseStats;
@@ -100,7 +109,7 @@ export async function bulkQuery(queries: DatabaseQuery[], options?: {
   };
   
   const response = await databaseApi.handleBulkDatabaseQuery('XMLHttpRequest', bulkRequest);
-  return response.data as BulkDatabaseQueryResponse;
+  return extractResponseData<BulkDatabaseQueryResponse>(response)!;
 }
 
 export async function bulkStats(options?: {
@@ -115,7 +124,7 @@ export async function bulkStats(options?: {
   };
   
   const response = await databaseApi.handleBulkDatabaseStats('XMLHttpRequest', bulkRequest);
-  return response.data as BulkDatabaseStatsResponse;
+  return extractResponseData<BulkDatabaseStatsResponse>(response)!;
 }
 
 const databaseService = { 

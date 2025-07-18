@@ -1,22 +1,51 @@
 // src/lib/utils/type-validation.ts
-// Type validation utilities for backend-frontend alignment
-import type {
-  CampaignType,
-  CampaignStatus,
-  PersonaType,
-  ProxyProtocol,
-  Session,
-  Role,
-  Permission,
-} from '@/lib/types';
+// Runtime validation utilities using OpenAPI types exclusively
+// SIMPLIFIED: Use only backend-generated OpenAPI types, no manual overlaps
+
 import type { components } from '@/lib/api-client/types';
 
+// Use OpenAPI types exclusively - no manual duplications
 type Campaign = components['schemas']['Campaign'];
 type User = components['schemas']['User'];
 type GeneratedDomain = components['schemas']['GeneratedDomain'];
 type DNSValidationResult = components['schemas']['DNSValidationResult'];
 type HTTPKeywordResult = components['schemas']['HTTPKeywordResult'];
-interface CampaignJob {
+
+// Extract union types from OpenAPI for validation
+type CampaignType = NonNullable<Campaign['campaignType']>;
+type CampaignStatus = NonNullable<Campaign['status']>;
+type PersonaType = 'dns' | 'http'; // From OpenAPI PersonaResponse
+type ProxyProtocol = 'http' | 'https' | 'socks5' | 'socks4'; // From OpenAPI Proxy
+
+// Use OpenAPI types if available, otherwise minimal types for validation only
+type Session = components['schemas']['Session'] | components['schemas']['SessionData'] | {
+  id: string;
+  userId: string;
+  isActive: boolean;
+  expiresAt: string;
+  lastActivityAt: string;
+  createdAt: string;
+};
+
+type Permission = {
+  id: string;
+  name: string;
+  displayName: string;
+  resource: string;
+  action: string;
+  createdAt: string;
+};
+
+type Role = {
+  id: string;
+  name: string;
+  displayName: string;
+  isSystemRole: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type CampaignJob = {
   id: string;
   campaignId: string;
   jobType: string;
@@ -26,7 +55,7 @@ interface CampaignJob {
   maxAttempts: number;
   createdAt: string;
   updatedAt: string;
-}
+};
 
 // Runtime type validation functions
 export function validateCampaignType(value: unknown): value is CampaignType {

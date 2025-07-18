@@ -15,7 +15,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
 import type { components } from '@/lib/api-client/types';
 
-type ProxyActionResponse = { status: 'success' | 'error'; message: string };
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
 import type { ProxyModelCreationPayload } from '@/lib/services/proxyService.production';
@@ -269,9 +268,13 @@ function ProxiesPageContent() {
   const handleCleanProxies = async () => {
     setPageActionLoading("clean");
     try {
-      const response: ProxyActionResponse = await cleanProxies();
-      toast({ title: "Clean Proxies", description: response.message || "Cleaning process completed." });
-      fetchProxiesData(false); // Refresh list
+      const response = await cleanProxies();
+      if (response.success) {
+        toast({ title: "Clean Proxies", description: "Cleaning process completed." });
+        fetchProxiesData(false); // Refresh list
+      } else {
+        toast({ title: "Error Cleaning Proxies", description: response.error || "Failed to clean proxies.", variant: "destructive" });
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
       toast({ title: "Error Cleaning Proxies", description: message, variant: "destructive" });

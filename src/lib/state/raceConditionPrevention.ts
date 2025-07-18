@@ -2,7 +2,10 @@
 // Race condition prevention between REST API and WebSocket updates
 'use client';
 
-import { getFeatureFlags } from '@/lib/config/environment';
+// BACKEND-DRIVEN: Simple environment variable feature flags
+const getFeatureFlags = () => ({
+  enableDebugMode: process.env.NODE_ENV === 'development'
+});
 
 // Request tracking interface
 export interface RequestTracker {

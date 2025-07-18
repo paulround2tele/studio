@@ -1,12 +1,20 @@
 // src/lib/websocket/client.ts
 // Session-based WebSocket Client - removes token authentication, uses cookies only
-import { getApiBaseUrl } from '@/lib/config';
-import { 
-  getWebSocketSessionConfig, 
+import {
+  getWebSocketSessionConfig,
   webSocketAuthUtils,
   getWebSocketPerformanceConfig,
-  webSocketReconnectionConfig 
+  webSocketReconnectionConfig
 } from '@/lib/config/websocket';
+
+// BACKEND-DRIVEN: Direct environment variable approach
+const getApiBaseUrl = async (): Promise<string> => {
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (!configured || !configured.trim()) {
+    throw new Error('NEXT_PUBLIC_API_URL environment variable is required');
+  }
+  return configured.trim();
+};
 
 export interface WebSocketMessage {
   type: string;

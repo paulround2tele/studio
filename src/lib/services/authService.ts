@@ -47,16 +47,8 @@ class AuthService {
   async getCurrentUser(): Promise<User | null> {
     try {
       const response = await authApi.getCurrentUser();
+      const userData = extractResponseData<User>(response);
       
-      // Backend now returns unified APIResponse format
-      const apiResponse = response.data as any;
-      
-      if (!apiResponse.success) {
-        logger.warn('AUTH_SERVICE', 'Get current user failed', { error: apiResponse.error });
-        return null;
-      }
-      
-      const userData = apiResponse.data;
       if (!userData?.id || !userData?.email) {
         logger.warn('AUTH_SERVICE', 'Invalid user data received', { userData });
         return null;
@@ -67,7 +59,7 @@ class AuthService {
         email: userData.email
       });
       
-      return userData as User;
+      return userData;
     } catch (error) {
       const isAuthError = error instanceof Error && (
         error.message.includes('401') ||
@@ -158,16 +150,7 @@ class AuthService {
 
     try {
       const response = await authApi.logout();
-      
-      // Backend now returns unified APIResponse format
-      const apiResponse = response.data as any;
-      
-      if (!apiResponse.success) {
-        return {
-          success: false,
-          error: apiResponse.error || 'Logout failed'
-        };
-      }
+      extractResponseData(response); // Just validate the response structure
 
       logger.info('AUTH_SERVICE', 'Logout successful');
       return { success: true };
@@ -189,16 +172,7 @@ class AuthService {
 
     try {
       const response = await authApi.refreshSession();
-      
-      // Backend now returns unified APIResponse format
-      const apiResponse = response.data as any;
-      
-      if (!apiResponse.success) {
-        return {
-          success: false,
-          error: apiResponse.error || 'Session refresh failed'
-        };
-      }
+      extractResponseData(response); // Just validate the response structure
 
       logger.info('AUTH_SERVICE', 'Session refresh successful');
       return { success: true };
@@ -225,16 +199,7 @@ class AuthService {
       };
       
       const response = await authApi.changePassword(request);
-      
-      // Backend now returns unified APIResponse format
-      const apiResponse = response.data as any;
-      
-      if (!apiResponse.success) {
-        return {
-          success: false,
-          error: apiResponse.error || 'Password change failed'
-        };
-      }
+      extractResponseData(response); // Just validate the response structure
 
       logger.info('AUTH_SERVICE', 'Password change successful');
       return { success: true };

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getProxies, testProxy, testAllProxies } from '@/lib/services/proxyService.production';
-import type { ProxiesListResponse } from '@/lib/services/proxyService.production';
+import type { ApiResponse } from '@/lib/types';
 import type { Proxy } from '@/lib/api-client/models';
 import { useToast } from '@/hooks/use-toast';
 
@@ -129,7 +129,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     }
 
     try {
-      const response: ProxiesListResponse = await getProxies();
+      const response: ApiResponse<Proxy[]> = await getProxies();
       
       if (response.success === true && response.data) {
         // Ensure data is always an array

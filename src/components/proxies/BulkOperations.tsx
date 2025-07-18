@@ -39,7 +39,6 @@ import {
 import type { components } from '@/lib/api-client/types';
 
 type Proxy = components['schemas']['Proxy'];
-import type { ProxyModelUpdateResponse, ProxyModelDeleteResponse } from '@/lib/services/proxyService.production';
 import type { ApiResponse } from '@/lib/types';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 
@@ -151,7 +150,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
       if (!proxy) continue;
       
       try {
-        let response: ProxyModelUpdateResponse | ProxyModelDeleteResponse | ApiResponse<unknown> | ProxyActionResponse;
+        let response: ApiResponse<unknown> | ProxyActionResponse;
         
         switch (action) {
           case 'enable':

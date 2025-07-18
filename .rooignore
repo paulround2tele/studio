@@ -1,0 +1,107 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js build output
+/.next/
+/out/
+
+# Distribution / Build artifacts
+/dist
+/build
+
+# Local Environment Variables
+# Allow .env for shared development configuration
+.env*.local
+!.env.example
+!.env
+
+# IDE / Editor specific
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Test results
+/coverage
+/reports
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Firebase
+.firebase/
+firebase-debug.log
+*.firebase.*.log
+
+# Other
+.cache
+*.bak
+*.tmp
+
+# Build artifacts and binaries
+/bin/
+*.jar
+*.test
+*.exe
+
+# Backend build artifacts
+backend/bin/
+backend/build/
+backend/apiserver
+backend/studio
+backend/main
+backend/debug_auth_service
+backend/debug-auth-service
+backend/domainflow-apiserver
+backend/*.test
+
+# Google Cloud SDK
+google-cloud-sdk/
+
+# MCP Studio Backend Context Server
+mcp-studio-backend/mcp-server
+mcp-studio-backend/mcp-server.exe
+mcp/mcp-server
+mcp/mcp-server.exe
+
+# IDX specific (if any, good to have as a general rule for cloud IDEs)
+.idx/
+*.gz
+go1.22.3.linux-amd64.tar.gz
+
+# Generated documentation and build artifacts
+src/lib/api-client/docs/
+docs/api/index.html
+*.tsbuildinfo
+accessibility-audit-report.json
+
+# Test logs and screenshots
+test-logs/
+debug-logs/
+scripts/test-logs/
+
+# Downloaded JAR files and binaries
+*.jar
+openapi-generator-cli*.jar
+
+# Generated backend artifacts
+backend/*.log

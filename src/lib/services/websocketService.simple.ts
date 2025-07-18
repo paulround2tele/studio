@@ -1,7 +1,14 @@
 // WebSocket Service - Single, unified WebSocket solution
 // Supports multiple simultaneous connections with proper error handling and reconnection
 
-import { getApiBaseUrlSync } from '../config/environment';
+// BACKEND-DRIVEN: Direct environment variable approach
+const getApiBaseUrlSync = (): string => {
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (!configured || !configured.trim()) {
+    throw new Error('NEXT_PUBLIC_API_URL environment variable is required');
+  }
+  return configured.trim();
+};
 
 // Legacy message format - Updated to match backend WebSocketMessage struct
 export interface WebSocketMessage {
