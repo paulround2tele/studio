@@ -1,34 +1,69 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { authApi } from '@/lib/api-client/client';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type { components } from '@/lib/api-client/types';
 
 // Type definitions using proper OpenAPI schema types
 type LoginRequest = components['schemas']['LoginRequest'];
+type User = components['schemas']['User'];
 
 type LoginResult =
   | { success: true }
   | { success: false; error: string };
 
 /**
- * ZERO-AUTH-LOGIC Frontend Hook - 100% Backend-Driven
+ * Backend-Driven Authentication Hook with Real Session Validation
  *
- * Backend middleware handles ALL authentication:
- * ✅ Session validation via cookies
- * ✅ Automatic redirects via 401/403 status codes
- * ✅ CSRF protection via origin validation
- * ✅ Security logging and metrics
+ * SECURITY FIX: Actually validates session with backend instead of always returning true
  *
- * Frontend provides ONLY login/logout UI interactions
- * NO AUTH CHECKS, NO API CALLS, NO STATE MANAGEMENT
+ * ✅ Validates session cookies with backend /auth/me endpoint
+ * ✅ Handles session expiration properly
+ * ✅ Uses unified ApiResponse<T> from backend
+ * ✅ Maintains backend-driven philosophy with real validation
  */
 export function useAuthUI() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
-  // Login form interaction only - backend handles everything else
+  // SECURITY FIX: Actually validate session with backend
+  const validateSession = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await authApi.getCurrentUser();
+      const userData = extractResponseData<User>(response);
+      
+      if (userData?.id && userData?.email) {
+        setIsAuthenticated(true);
+        setUser(userData);
+        console.log('[useAuthUI] Session validated successfully');
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+        console.log('[useAuthUI] Invalid user data - session invalid');
+      }
+    } catch (error) {
+      // Session invalid or expired
+      setIsAuthenticated(false);
+      setUser(null);
+      console.log('[useAuthUI] Session validation failed:', error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsLoading(false);
+      setIsInitialized(true);
+    }
+  }, []);
+
+  // Validate session on mount
+  useEffect(() => {
+    validateSession();
+  }, [validateSession]);
+
+  // Login with backend validation
   const login = useCallback(async (credentials: { email: string; password: string }): Promise<LoginResult> => {
     setIsLoginLoading(true);
     try {
@@ -41,8 +76,8 @@ export function useAuthUI() {
       const loginData = extractResponseData(response);
       
       if (loginData) {
-        // Backend sets session cookie - redirect to dashboard
-        window.location.href = '/dashboard';
+        // Re-validate session to get user data
+        await validateSession();
         return { success: true };
       } else {
         return { success: false, error: 'Login failed' };
@@ -52,42 +87,46 @@ export function useAuthUI() {
     } finally {
       setIsLoginLoading(false);
     }
-  }, []);
+  }, [validateSession]);
 
-  // Logout form interaction only - backend handles everything else
+  // Logout with proper session cleanup
   const logout = useCallback(async () => {
     setIsLogoutLoading(true);
     try {
       await authApi.logout();
+      // Clear local state
+      setIsAuthenticated(false);
+      setUser(null);
       // Backend clears session cookie - redirect to login
       window.location.href = '/login';
     } catch (error) {
       console.error('[useAuthUI] Logout failed:', error);
-      // Still redirect even if logout fails
+      // Clear local state anyway and redirect
+      setIsAuthenticated(false);
+      setUser(null);
       window.location.href = '/login';
     } finally {
       setIsLogoutLoading(false);
     }
   }, []);
 
-  // ZERO AUTH LOGIC: Static responses since backend handles everything
   return {
-    // Static values - if component renders, user is authenticated
-    isAuthenticated: true,
-    isLoading: false,
-    isInitialized: true,
-    user: null, // Components fetch user data directly when needed
+    // Real authentication state validated with backend
+    isAuthenticated,
+    isLoading,
+    isInitialized,
+    user,
     
-    // Only login/logout interactions
+    // Login/logout interactions
     login,
     logout,
     
-    // UI loading states for form interactions only
+    // UI loading states
     isLoginLoading,
     isLogoutLoading,
     
-    // Static convenience properties
-    isReady: true,
+    // Convenience properties
+    isReady: isInitialized && !isLoading,
   };
 }
 

@@ -7,13 +7,37 @@ import {
   webSocketReconnectionConfig
 } from '@/lib/config/websocket';
 
-// BACKEND-DRIVEN: Direct environment variable approach
+// BACKEND-DRIVEN: Runtime auto-detection (matches backend's empty servers design)
 const getApiBaseUrl = async (): Promise<string> => {
+  // First try configured URL from environment
   const configured = process.env.NEXT_PUBLIC_API_URL;
-  if (!configured || !configured.trim()) {
-    throw new Error('NEXT_PUBLIC_API_URL environment variable is required');
+  if (configured && configured.trim()) {
+    return configured.trim();
   }
-  return configured.trim();
+
+  // BACKEND-DRIVEN AUTO-DETECTION: Never throw errors, always detect at runtime
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+      // Development: Use current hostname with backend port :8080
+      const apiUrl = `${protocol}//${hostname}:8080/api/v2`;
+      console.log(`🔗 [WebSocket Client] Auto-detected development API URL: ${apiUrl}`);
+      return apiUrl;
+    } else {
+      // Production: Use same origin as frontend (same hostname, same protocol)
+      const apiUrl = `${protocol}//${hostname}/api/v2`;
+      console.log(`🔗 [WebSocket Client] Auto-detected production API URL: ${apiUrl}`);
+      return apiUrl;
+    }
+  }
+
+  // SSR fallback: Use relative URL (backend serves frontend)
+  const fallbackUrl = '/api/v2';
+  console.log(`🔗 [WebSocket Client] Using SSR fallback URL: ${fallbackUrl}`);
+  return fallbackUrl;
 };
 
 export interface WebSocketMessage {
