@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import AppLayout from './AppLayout';
 import { useAuthUI } from '@/lib/hooks/useAuthUI';
 
@@ -29,34 +30,44 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
   const publicPaths = ['/login', '/signup'];
   const isPublicPath = publicPaths.includes(pathname);
   
+  // Handle navigation side effects in useEffect to avoid render-time navigation
+  useEffect(() => {
+    // Only proceed if authentication state is fully initialized
+    if (!isInitialized || isLoading) {
+      return;
+    }
+
+    if (!isAuthenticated && !isPublicPath) {
+      // Redirect unauthenticated user to login for protected pages
+      console.log('[ConditionalLayout] Redirecting unauthenticated user to login from:', pathname);
+      router.push('/login');
+    } else if (isAuthenticated && isPublicPath) {
+      // Redirect authenticated user away from login page to dashboard
+      console.log('[ConditionalLayout] Redirecting authenticated user to dashboard from:', pathname);
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, isLoading, isInitialized, isPublicPath, pathname, router]);
+  
   // Show loading while authentication is being checked
   if (!isInitialized || isLoading) {
     return <AuthLoadingFallback />;
   }
   
-  // Authentication logic
+  // Authentication logic for rendering
   if (!isAuthenticated) {
     // User is not authenticated
     if (isPublicPath) {
       // Allow access to public pages (login, signup)
       return <>{children}</>;
     } else {
-      // Redirect to login for protected pages
-      if (typeof window !== 'undefined') {
-        console.log('[ConditionalLayout] Redirecting unauthenticated user to login from:', pathname);
-        router.push('/login');
-      }
+      // Show loading while redirecting to login
       return <AuthLoadingFallback />;
     }
   }
   
   // User is authenticated
   if (isPublicPath) {
-    // Authenticated user trying to access login page - redirect to dashboard
-    if (typeof window !== 'undefined') {
-      console.log('[ConditionalLayout] Redirecting authenticated user to dashboard from:', pathname);
-      router.push('/dashboard');
-    }
+    // Show loading while redirecting to dashboard
     return <AuthLoadingFallback />;
   }
   
