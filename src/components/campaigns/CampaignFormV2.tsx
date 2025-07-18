@@ -506,15 +506,13 @@ export default function CampaignFormV2({ campaignToEdit, isEditing = false }: Ca
           // Navigate to campaign metrics page for real-time monitoring
           const redirectUrl = `/campaigns/${campaignId}?type=${data.selectedType}`;
           
-          // Use setTimeout to ensure proper navigation after form submission
-          setTimeout(async () => {
-            try {
-              await router.push(redirectUrl);
-            } catch (_routerError) {
-              // Fallback to direct navigation if router fails
-              window.location.href = redirectUrl;
-            }
-          }, 100);
+          // PERFORMANCE FIX: Immediate navigation without artificial delay
+          try {
+            await router.push(redirectUrl);
+          } catch (_routerError) {
+            // Fallback to direct navigation if router fails
+            window.location.href = redirectUrl;
+          }
           } else {
             console.log('❌ [API_ERROR] Campaign creation failed');
             console.log('📄 [RESPONSE_DETAILS] Full response:', JSON.stringify(response, null, 2));

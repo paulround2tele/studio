@@ -21,17 +21,13 @@ export default function LogoutPage() {
       await fetch('/api/v2/auth/logout', { method: 'POST' });
       setLogoutComplete(true);
       
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      // PERFORMANCE FIX: Immediate redirect instead of 2-second delay
+      router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
       setLogoutComplete(true);
-      // Still redirect even on error
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      // PERFORMANCE FIX: Immediate redirect even on error
+      router.push('/login');
     }
   }, [router]);
 

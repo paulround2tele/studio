@@ -316,19 +316,16 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
         console.log('[DEBUG] Closing component and notifying parent');
         onClose();
         
-        // 🔧 PHASE TRANSITION FIX: Sync cache invalidation with notification timing
-        // This prevents race conditions during phase transitions
-        setTimeout(() => {
-          // Force cache invalidation synchronized with navigation
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
-              detail: { campaignId }
-            }));
-          }
-          
-          // Notify parent after cache invalidation
-          onPhaseStarted(campaignId);
-        }, 500);
+        // PERFORMANCE FIX: Immediate cache invalidation and notification
+        // Force cache invalidation synchronized with navigation
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
+            detail: { campaignId }
+          }));
+        }
+        
+        // Notify parent immediately after cache invalidation
+        onPhaseStarted(campaignId);
       } else {
         console.log('[DEBUG] No valid campaign ID found in result');
         throw new Error("Failed to update campaign for phase transition");

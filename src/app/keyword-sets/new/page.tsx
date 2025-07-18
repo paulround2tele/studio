@@ -33,7 +33,8 @@ export default function NewKeywordSetPage() {
       const { rules: _rules, ...cleanData } = data;
       await keywordSetsApi.createKeywordSet(cleanData);
       setSuccessMessage('Keyword set created');
-      setTimeout(() => router.push('/keyword-sets'), 500);
+      // PERFORMANCE FIX: Immediate navigation instead of 500ms delay
+      router.push('/keyword-sets');
     } catch (e) {
       console.error(e);
       setErrorMessage(e instanceof Error ? e.message : 'Failed to create keyword set');
