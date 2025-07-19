@@ -581,7 +581,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	if dnsParams.BatchSize != nil && *dnsParams.BatchSize > 0 {
 		batchSizeVal = *dnsParams.BatchSize
 	} else {
-		batchSizeVal = 500 // Enterprise-scale: 10x increase for parallel processing
+		batchSizeVal = 1000 // Phase 3: 20x increase for enterprise infrastructure
 	}
 	// Ensure SourceGenerationCampaignID is not nil before dereferencing
 	if dnsParams.SourceGenerationCampaignID == nil {
@@ -646,7 +646,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	var wg sync.WaitGroup
 	concurrencyLimit := s.appConfig.Worker.DNSSubtaskConcurrency
 	if concurrencyLimit <= 0 {
-		concurrencyLimit = 50 // Enterprise-scale: 5x increase for 500-domain batches
+		concurrencyLimit = 75 // Phase 3: 7.5x increase for 1000-domain batches
 	}
 	semaphore := make(chan struct{}, concurrencyLimit)
 	muResults := sync.Mutex{}

@@ -4008,6 +4008,7 @@ export interface components {
             /** Format: double */
             validationCoverage?: number;
         };
+        StreamingResponseHandler: Record<string, never>;
         SuccessMessageResponse: {
             message?: string;
         };

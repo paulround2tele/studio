@@ -4344,6 +4344,8 @@ components:
                     format: double
                     type: number
             type: object
+        StreamingResponseHandler:
+            type: object
         SuccessMessageResponse:
             properties:
                 message:

@@ -518,7 +518,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	if hkParams.BatchSize != nil && *hkParams.BatchSize > 0 {
 		batchSizeVal = *hkParams.BatchSize
 	} else {
-		batchSizeVal = 100 // Enterprise-scale: 5x increase for parallel HTTP processing
+		batchSizeVal = 500 // Phase 3: 25x increase for enterprise infrastructure
 	}
 
 	lastProcessedDomainNameVal := ""
@@ -617,7 +617,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	var wg sync.WaitGroup
 	concurrencyLimit := s.appConfig.Worker.HTTPKeywordSubtaskConcurrency
 	if concurrencyLimit <= 0 {
-		concurrencyLimit = 25 // Enterprise-scale: 5x increase for 100-domain batches
+		concurrencyLimit = 50 // Phase 3: 10x increase for 500-domain batches
 	}
 	semaphore := make(chan struct{}, concurrencyLimit)
 	muResults := sync.Mutex{}

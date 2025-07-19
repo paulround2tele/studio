@@ -14,8 +14,8 @@ const (
 	DefaultSystemAPIKeyPlaceholder  = "SET_A_REAL_KEY_IN_CONFIG_OR_ENV_d9f8s7d9f8s7d9f8"
 	DefaultStreamChunkSize          = 200
 	DefaultGinMode                  = "debug"
-	DefaultDBMaxOpenConns           = 200 // Enterprise-scale: 2x increase for 75 concurrent workers (50 DNS + 25 HTTP)
-	DefaultDBMaxIdleConns           = 100 // Enterprise-scale: 2x increase for high-throughput processing
+	DefaultDBMaxOpenConns           = 300 // Phase 3: 3x increase for 125 concurrent workers (75 DNS + 50 HTTP)
+	DefaultDBMaxIdleConns           = 150 // Phase 3: 3x increase for optimized connection reuse
 	DefaultDBConnMaxLifetimeMinutes = 30  // Increased for stability
 
 	// Enterprise database optimization defaults
