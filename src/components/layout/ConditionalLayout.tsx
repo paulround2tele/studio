@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AppLayout from './AppLayout';
-import { useAuthUI } from '@/lib/hooks/useAuthUI';
+import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -24,7 +24,7 @@ function AuthLoadingFallback() {
 export default function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, isLoading, isInitialized } = useAuthUI();
+  const { isAuthenticated, isLoading, isInitialized } = useCachedAuth();
   
   // Pages that should NOT use AppLayout (public pages)
   const publicPaths = ['/login', '/signup'];

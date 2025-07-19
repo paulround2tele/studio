@@ -10,7 +10,7 @@ import { CheckCircle, XCircle, AlertCircle, RefreshCw, Loader2, Shield, Wifi, Da
 import { websocketService } from '@/lib/services/websocketService.simple';
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
-import { useAuthUI } from '@/lib/hooks/useAuthUI';
+import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 
 // Enhanced error serialization utility for robust logging
 const serializeError = (obj: unknown): unknown => {
@@ -127,7 +127,7 @@ interface SystemCheck {
 
 export default function ProductionReadinessCheck() {
   // THIN CLIENT: Use useAuthUI hook for proper authentication state
-  const { isAuthenticated, user, isLoading: _isLoading, isInitialized: _isInitialized } = useAuthUI();
+  const { isAuthenticated, user, isLoading: _isLoading, isInitialized: _isInitialized } = useCachedAuth();
   const [checks, setChecks] = useState<SystemCheck[]>([]);
   const [isChecking, setIsChecking] = useState(false);
   const [overallStatus, setOverallStatus] = useState<'ready' | 'issues' | 'critical' | 'checking'>('checking');

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuthUI } from '@/lib/hooks/useAuthUI';
+import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
@@ -30,7 +30,7 @@ export function LoginForm({
   title = 'Welcome back to DomainFlow',
   description = 'Sign in to your account to continue'
 }: LoginFormProps) {
-  const { login, isLoading: authLoading, isLoginLoading } = useAuthUI();
+  const { login, isLoading: authLoading, isLoginLoading } = useCachedAuth();
   
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',

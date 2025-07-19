@@ -1818,6 +1818,39 @@ ul.nav-tabs {
     }
   }
 };
+    defs["CachedSessionConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "CacheTTL" : {
+      "type" : "string",
+      "description" : "How long to cache valid sessions in Redis (default: 5 minutes)"
+    },
+    "Enabled" : {
+      "type" : "boolean",
+      "description" : "Enable/disable distributed caching"
+    },
+    "KeyPrefix" : {
+      "type" : "string",
+      "description" : "Cache key prefix"
+    },
+    "NegativeCacheTTL" : {
+      "type" : "string",
+      "description" : "How long to cache \"session not found\" results to prevent DB spam (default: 30 seconds)"
+    }
+  }
+};
+    defs["CachedSessionData"] = {
+  "type" : "object",
+  "properties" : {
+    "cached_at" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "is_valid" : {
+      "type" : "boolean"
+    }
+  }
+};
     defs["Campaign"] = {
   "required" : [ "campaignType", "name", "status" ],
   "type" : "object",

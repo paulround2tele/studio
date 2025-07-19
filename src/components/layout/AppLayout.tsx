@@ -6,7 +6,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
 import { Home, Target, Users, Settings, Zap, Database, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { websocketService } from '@/lib/services/websocketService.simple';
-import { useAuthUI } from '@/lib/hooks/useAuthUI';
+import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -48,7 +48,7 @@ const navigationItems = [
 
 // THIN CLIENT: Pure UI component with real user authentication state
 const AppSidebar = memo(() => {
-  const { logout } = useAuthUI();
+  const { logout } = useCachedAuth();
   
   // Backend handles all auth - just render navigation
   const filteredItems = useMemo(() => {

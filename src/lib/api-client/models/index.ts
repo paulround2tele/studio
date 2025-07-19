@@ -32,6 +32,8 @@ export * from './cache-entry';
 export * from './cache-invalidation';
 export * from './cache-invalidation-log';
 export * from './cache-metric';
+export * from './cached-session-config';
+export * from './cached-session-data';
 export * from './campaign';
 export * from './campaign-api';
 export * from './campaign-access-grant';

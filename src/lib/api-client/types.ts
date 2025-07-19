@@ -1675,6 +1675,21 @@ export interface components {
             /** Format: int32 */
             ttlUsedSeconds?: number;
         };
+        CachedSessionConfig: {
+            /** @description How long to cache valid sessions in Redis (default: 5 minutes) */
+            CacheTTL?: string;
+            /** @description Enable/disable distributed caching */
+            Enabled?: boolean;
+            /** @description Cache key prefix */
+            KeyPrefix?: string;
+            /** @description How long to cache "session not found" results to prevent DB spam (default: 30 seconds) */
+            NegativeCacheTTL?: string;
+        };
+        CachedSessionData: {
+            /** Format: date-time */
+            cached_at?: string;
+            is_valid?: boolean;
+        };
         Campaign: {
             /** Format: double */
             avgProcessingRate?: number;

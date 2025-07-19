@@ -33,6 +33,7 @@ import (
 
 	api_pkg "github.com/fntelecomllc/studio/backend/api"
 	"github.com/fntelecomllc/studio/backend/internal/api"
+	"github.com/fntelecomllc/studio/backend/internal/cache"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
@@ -285,11 +286,45 @@ func main() {
 	authHandler := api.NewAuthHandler(sessionService, sessionConfig, db)
 	log.Println("AuthHandler initialized.")
 
-	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(sessionService, sessionConfig)
+	// Initialize high-performance distributed cache manager
+	cacheConfig := cache.CacheConfig{
+		MaxMemoryMB:            100,
+		DefaultTTL:             5 * time.Minute,
+		CampaignDataTTL:        10 * time.Minute,
+		BulkOperationTTL:       15 * time.Minute,
+		ValidationDataTTL:      5 * time.Minute,
+		EnableHotDataPreload:   true,
+		HotDataRefreshInterval: 2 * time.Minute,
+		MaxHotCampaigns:        50,
+		CleanupInterval:        30 * time.Second,
+	}
+	cacheManager, err := cache.NewDistributedCacheManager(cacheConfig)
+	if err != nil {
+		log.Fatalf("Failed to initialize DistributedCacheManager: %v", err)
+	}
+	log.Println("DistributedCacheManager initialized with in-memory distributed caching.")
+
+	// Convert SessionSettings to SessionConfig for service compatibility
+	sessionServiceConfig := sessionConfig.ToServiceConfig()
+
+	// Initialize high-performance cached session service
+	cachedSessionService, err := services.NewCachedSessionService(
+		db,
+		sessionServiceConfig,
+		auditLogStore,
+		cacheManager,
+		services.DefaultCachedSessionConfig(),
+	)
+	if err != nil {
+		log.Fatalf("Failed to initialize CachedSessionService: %v", err)
+	}
+	log.Println("CachedSessionService initialized with distributed caching.")
+
+	// Initialize optimized middleware with caching
+	authMiddleware := middleware.NewCachedAuthMiddleware(cachedSessionService, sessionConfig)
 	securityMiddleware := middleware.NewSecurityMiddleware()
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(db, appConfig.RateLimiter)
-	log.Println("Security middleware initialized.")
+	log.Println("High-performance cached auth middleware initialized.")
 
 	// Initialize health check handler
 	healthCheckHandler := api.NewHealthCheckHandler(db.DB)
@@ -358,8 +393,8 @@ func main() {
 		authRoutesV2.POST("/refresh", authHandler.RefreshSession)
 
 		// Protected auth routes - require session authentication
-		authRoutesV2.GET("/me", authMiddleware.SessionAuth(), authHandler.Me)
-		authRoutesV2.POST("/change-password", authMiddleware.SessionAuth(), authHandler.ChangePassword)
+		authRoutesV2.GET("/me", authMiddleware.FastSessionAuth(), authHandler.Me)
+		authRoutesV2.POST("/change-password", authMiddleware.FastSessionAuth(), authHandler.ChangePassword)
 	}
 	log.Println("Registered authentication routes under /api/v2/auth")
 
@@ -373,7 +408,7 @@ func main() {
 
 	// Protected routes with session authentication only for /api/v2/* endpoints
 	apiV2 := router.Group("/api/v2")
-	apiV2.Use(authMiddleware.SessionAuth())
+	apiV2.Use(authMiddleware.FastSessionAuth())
 	apiV2.Use(securityMiddleware.SessionProtection())
 	{
 		// Persona routes (session auth only)
@@ -581,7 +616,7 @@ func main() {
 
 	// V2 Campaign routes (session auth only)
 	campaignApiV2 := router.Group("/api/v2")
-	campaignApiV2.Use(authMiddleware.SessionAuth())
+	campaignApiV2.Use(authMiddleware.FastSessionAuth())
 	campaignApiV2.Use(securityMiddleware.SessionProtection())
 	newCampaignRoutesGroup := campaignApiV2.Group("/campaigns")
 	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware)

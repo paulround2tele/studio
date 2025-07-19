@@ -51,6 +51,8 @@ docs/CacheEntry.md
 docs/CacheInvalidation.md
 docs/CacheInvalidationLog.md
 docs/CacheMetric.md
+docs/CachedSessionConfig.md
+docs/CachedSessionData.md
 docs/Campaign.md
 docs/CampaignAPI.md
 docs/CampaignAccessGrant.md
@@ -262,6 +264,8 @@ models/cache-entry.ts
 models/cache-invalidation-log.ts
 models/cache-invalidation.ts
 models/cache-metric.ts
+models/cached-session-config.ts
+models/cached-session-data.ts
 models/campaign-access-grant.ts
 models/campaign-action-response.ts
 models/campaign-api.ts

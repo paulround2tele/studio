@@ -218,6 +218,72 @@ func (dcm *DistributedCacheManager) GetCacheStats(ctx context.Context) (map[stri
 	return stats, nil
 }
 
+// Generic cache methods for flexible usage
+
+// Get retrieves a value from cache by key
+func (dcm *DistributedCacheManager) Get(ctx context.Context, key string) (string, error) {
+	dcm.mutex.RLock()
+	entry, exists := dcm.cache[key]
+	dcm.mutex.RUnlock()
+
+	if !exists {
+		return "", fmt.Errorf("key not found")
+	}
+
+	// Check expiration
+	if time.Now().After(entry.ExpiresAt) {
+		dcm.mutex.Lock()
+		delete(dcm.cache, key)
+		dcm.mutex.Unlock()
+		return "", fmt.Errorf("key expired")
+	}
+
+	return string(entry.Data), nil
+}
+
+// Set stores a value in cache with default TTL
+func (dcm *DistributedCacheManager) Set(ctx context.Context, key, value string) error {
+	return dcm.SetWithTTL(ctx, key, value, dcm.config.DefaultTTL)
+}
+
+// SetWithTTL stores a value in cache with custom TTL
+func (dcm *DistributedCacheManager) SetWithTTL(ctx context.Context, key, value string, ttl time.Duration) error {
+	entry := CacheEntry{
+		Data:      []byte(value),
+		ExpiresAt: time.Now().Add(ttl),
+		CreatedAt: time.Now(),
+	}
+
+	dcm.mutex.Lock()
+	dcm.cache[key] = entry
+	dcm.mutex.Unlock()
+
+	return nil
+}
+
+// Delete removes a key from cache
+func (dcm *DistributedCacheManager) Delete(ctx context.Context, key string) error {
+	dcm.mutex.Lock()
+	delete(dcm.cache, key)
+	dcm.mutex.Unlock()
+	return nil
+}
+
+// GetMetrics returns cache metrics for monitoring
+func (dcm *DistributedCacheManager) GetMetrics() map[string]interface{} {
+	dcm.mutex.RLock()
+	defer dcm.mutex.RUnlock()
+
+	return map[string]interface{}{
+		"total_operations": 0, // Would need proper tracking
+		"cache_hits":       0, // Would need proper tracking
+		"cache_misses":     0, // Would need proper tracking
+		"errors":           0, // Would need proper tracking
+		"total_entries":    len(dcm.cache),
+		"max_memory_mb":    dcm.config.MaxMemoryMB,
+	}
+}
+
 // Close closes the cache manager and cleanup routines
 func (dcm *DistributedCacheManager) Close() error {
 	dcm.mutex.Lock()

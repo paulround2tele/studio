@@ -51,7 +51,7 @@ func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestrator
 // - Uses discriminated union based on "campaignType" field
 // - Provides comprehensive validation and error handling
 // - All legacy type-specific endpoints have been removed in favor of this unified approach
-func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
+func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.CachedAuthMiddleware) {
 	// === CAMPAIGN CREATION ENDPOINTS ===
 
 	// Campaign creation endpoint - session-based auth

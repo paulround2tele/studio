@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 // Only import icons that are actually used in the component
 import { Database, Server } from 'lucide-react';
-import { useAuthUI } from '@/lib/hooks/useAuthUI';
+import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 import databaseService from '@/lib/services/databaseService';
 import type { DatabaseQueryResult } from '@/lib/api-client/models/database-query-result';
 import type { DatabaseStats } from '@/lib/api-client/models/database-stats';
@@ -26,7 +26,7 @@ export default function DatabaseGUI() {
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
   const [authSuccess, setAuthSuccess] = useState(false);
-  const { login } = useAuthUI();
+  const { login } = useCachedAuth();
 
   // Database credentials
   const [credentials, setCredentials] = useState({

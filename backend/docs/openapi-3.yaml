@@ -696,6 +696,29 @@ components:
                     format: int32
                     type: integer
             type: object
+        CachedSessionConfig:
+            properties:
+                CacheTTL:
+                    description: 'How long to cache valid sessions in Redis (default: 5 minutes)'
+                    type: string
+                Enabled:
+                    description: Enable/disable distributed caching
+                    type: boolean
+                KeyPrefix:
+                    description: Cache key prefix
+                    type: string
+                NegativeCacheTTL:
+                    description: 'How long to cache "session not found" results to prevent DB spam (default: 30 seconds)'
+                    type: string
+            type: object
+        CachedSessionData:
+            properties:
+                cached_at:
+                    format: date-time
+                    type: string
+                is_valid:
+                    type: boolean
+            type: object
         Campaign:
             properties:
                 avgProcessingRate:
