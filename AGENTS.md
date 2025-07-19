@@ -1,89 +1,149 @@
 # DomainFlow AI Agents
 
-DomainFlow uses several specialized AI agents to maintain different parts of the project.
-Each agent has a limited scope and explicit responsibilities. Changes outside the allowed
-scope or in violation of constraints are rejected.
+DomainFlow uses specialized AI agents to maintain different parts of the project architecture. Each agent has clearly defined responsibilities and scope boundaries to ensure maintainable, consistent development practices.
+
+## Current Architecture Overview
+
+DomainFlow is a sophisticated domain intelligence platform with:
+- **Backend**: Go-based API server with PostgreSQL persistence
+- **Frontend**: Next.js React application with TypeScript
+- **Services**: Microservice-oriented backend with campaign orchestration, validation, and worker management
+- **Real-time**: WebSocket integration for live updates
+- **Security**: Session-based authentication with MFA support
+- **AI Integration**: Integrated AI flows and intelligent processing
 
 ## Agents
 
-### DomainValidator
-- **Scope**: `backend/internal/dnsvalidator`, `backend/internal/httpvalidator`, `backend/internal/domainexpert`, `backend/internal/services/*campaign*`, and related tests.
+### CampaignOrchestrator
+- **Scope**: `backend/internal/services/campaign_*`, `backend/internal/services/domain_*`, `backend/internal/api/campaign_orchestrator_handlers.go`, campaign state management, and worker coordination.
 - **Responsibilities**:
-  - Implement and refine domain generation logic, DNS validation, and HTTP keyword checks.
-  - Maintain validation middleware and service functions.
-  - Ensure Go code conforms to existing style and passes tests.
+  - Maintain campaign lifecycle management and state transitions
+  - Oversee domain generation, DNS validation, and HTTP keyword validation workflows
+  - Manage campaign worker services and job orchestration
+  - Handle campaign CRUD operations and bulk operations
+  - Ensure proper state machine transitions and dependency management
 - **Editing Constraints**:
-  - Only modify Go files related to validation and campaign services.
-  - Do **not** edit database schema or frontend files.
-- **Task Handoff**:
-  - If a missing field or type mismatch is found in database models, create a notice for **SchemaAligner**.
-- **Tools/Models**: Prefer Codex‑1 for Go changes; fallback to Claude Sonnet 4 for reasoning or refactoring guidance.
+  - Focus on campaign-related services and orchestration logic
+  - Do **not** modify authentication, database schema, or frontend components
+  - Coordinate with **SchemaAligner** for any new campaign data requirements
+- **Tools/Models**: Claude Sonnet 4 for complex orchestration logic; Codex-1 for routine service implementations
 
-### UIAgent
-- **Scope**: All files under `src/` and `public/` excluding `src/lib/schemas`.
+### ValidationEngine  
+- **Scope**: `backend/internal/dnsvalidator/`, `backend/internal/httpvalidator/`, `backend/internal/domainexpert/`, `backend/internal/keywordextractor/`, `backend/internal/keywordscanner/`, and validation-related services.
 - **Responsibilities**:
-  - Build and update React components, hooks, and utilities.
-  - Keep TypeScript code type‑safe and aligned with API contracts.
-  - Handle styling with Tailwind and manage frontend state logic.
+  - Implement and optimize domain validation algorithms
+  - Maintain DNS resolution and HTTP content analysis logic
+  - Handle keyword extraction and pattern matching
+  - Ensure validation performance and accuracy
+  - Manage proxy integration for validation requests
 - **Editing Constraints**:
-  - Only safe diffs—do not rewrite backend contracts.
-  - Do **not** touch Go backend or SQL migrations.
+  - Only modify validation and analysis components
+  - Do **not** touch campaign orchestration or database schema
+  - Coordinate with **CampaignOrchestrator** for integration points
+- **Tools/Models**: Codex-1 for algorithmic implementations; Claude Sonnet 4 for complex validation logic
+
+### UIArchitect
+- **Scope**: All files under `src/` including `src/app/`, `src/components/`, `src/lib/`, `src/hooks/`, and frontend configuration.
+- **Responsibilities**:
+  - Build and maintain React components and Next.js application structure
+  - Manage TypeScript types and API client integration
+  - Handle responsive design with Tailwind CSS
+  - Implement real-time WebSocket connectivity
+  - Maintain frontend state management and routing
+  - Integrate AI flows and user experience features
+- **Editing Constraints**:
+  - Only modify frontend code and configuration
+  - Do **not** edit backend services or database migrations
+  - Use generated API clients from OpenAPI specs
 - **Task Handoff**:
-  - When API responses diverge from frontend types, notify **SchemaAligner**.
-- **Tools/Models**: Use Claude Sonnet 4 for TypeScript and UI design; Codex‑1 for automated transformations or lint fixes.
+  - When API contracts change, work with **SchemaAligner** for type generation
+- **Tools/Models**: Claude Sonnet 4 for UI/UX design and complex interactions; Codex-1 for component implementations
 
 ### SchemaAligner
-- **Scope**: `backend/database/`, `backend/internal/models`, `migrations/`, `src/lib/schemas`, and OpenAPI specs in `docs/`.
+- **Scope**: `backend/database/`, `backend/internal/models/`, `backend/internal/store/`, `src/lib/api-client/`, OpenAPI specifications, and database migrations.
 - **Responsibilities**:
-  - Keep database schema, Go models, and TypeScript validation schemas in sync.
-  - Manage SQL migrations and update schema documentation.
-  - Regenerate API client models when schemas change.
+  - Maintain database schema consistency and migrations
+  - Keep Go models synchronized with database structure
+  - Generate and update TypeScript API clients from OpenAPI specs
+  - Manage data access layer and store interfaces
+  - Ensure backward-compatible schema evolution
 - **Editing Constraints**:
-  - Only append migrations—never rewrite existing ones.
-  - Maintain backward‑compatible schema updates whenever possible.
-  - Do **not** modify UI components or campaign orchestration code.
+  - Only append migrations—never modify existing ones
+  - Maintain strict backward compatibility
+  - Do **not** modify business logic or UI components
 - **Task Handoff**:
-  - If UI or backend code relies on fields not present in `schema.sql`, alert relevant agent (DomainValidator or UIAgent).
-- **Tools/Models**: Codex‑1 for SQL and Go models; Claude Sonnet 4 for cross‑file reasoning and documentation.
+  - Alert other agents when schema changes affect their domains
+- **Tools/Models**: Codex-1 for SQL and model generation; Claude Sonnet 4 for complex migration planning
 
-### OrchestratorAgent
-- **Scope**: `backend/internal/services/campaign_*`, `backend/internal/api/campaign_orchestrator_handlers.go`, `mcp/` server code, and orchestration scripts under `scripts/`.
+### SecurityGuard
+- **Scope**: `backend/internal/middleware/`, `backend/internal/services/session_service.go`, `backend/internal/services/mfa_service.go`, `backend/internal/services/encryption_service.go`, authentication handlers, and security-related configuration.
 - **Responsibilities**:
-  - Maintain the campaign workflow engine and worker coordination logic.
-  - Ensure state transitions and orchestration APIs match documented behavior.
-  - Integrate monitoring hooks and performance metrics.
+  - Maintain authentication and authorization systems
+  - Manage session handling and security middleware
+  - Implement MFA and encryption services
+  - Handle security compliance and audit logging
+  - Ensure secure API access patterns
 - **Editing Constraints**:
-  - Avoid changing database schema—delegate to **SchemaAligner** if needed.
-  - Do not modify frontend code.
-- **Task Handoff**:
-  - When new workflow data must be stored, request a migration via **SchemaAligner**.
-- **Tools/Models**: Codex‑1 for Go orchestration code; Claude Sonnet 4 for complex coordination logic.
+  - Focus only on security-related components
+  - Do **not** modify business logic or frontend components
+  - Coordinate with **SchemaAligner** for auth-related schema changes
+- **Tools/Models**: Claude Sonnet 4 for security architecture; Codex-1 for security implementations
 
-## General Guidelines
-- Agents must stay within their defined scopes.
-- All edits must compile and pass existing tests relevant to the modified code.
-- Cross‑agent coordination occurs through the handoff rules above.
+### SystemIntegrator
+- **Scope**: `backend/internal/config/`, `backend/internal/observability/`, `backend/internal/websocket/`, `backend/internal/utils/`, `backend/internal/openapi/`, and system-level configuration.
+- **Responsibilities**:
+  - Maintain system configuration and environment management
+  - Handle WebSocket broadcasting and real-time communication
+  - Manage observability, logging, and monitoring
+  - Oversee OpenAPI specification generation
+  - Maintain system utilities and common functionality
+- **Editing Constraints**:
+  - Focus on infrastructure and system-level concerns
+  - Do **not** modify business logic or domain-specific services
+- **Tools/Models**: Codex-1 for configuration and utility code; Claude Sonnet 4 for system architecture
 
-## Codex Commands
+## Agent Coordination Rules
 
-The `.codex` directory contains helper scripts for validating the local environment.
+### Cross-Agent Dependencies
+- **Schema Changes**: All agents must coordinate with **SchemaAligner** for database or API contract modifications
+- **Security Updates**: Changes affecting authentication/authorization require **SecurityGuard** approval
+- **System Configuration**: Infrastructure changes go through **SystemIntegrator**
+- **API Integration**: Frontend-backend integration coordinated between **UIArchitect** and relevant backend agents
 
-For a full setup guide see `.codex/README.md` which explains how to install dependencies and start PostgreSQL.
+### Handoff Protocols
+1. **Database Schema**: Any agent needing new fields/tables creates a request for **SchemaAligner**
+2. **API Changes**: Backend agents coordinate with **UIArchitect** via **SchemaAligner** for API contract updates
+3. **Security Requirements**: All agents notify **SecurityGuard** for authentication/authorization needs
+4. **Performance Issues**: System-level performance concerns escalated to **SystemIntegrator**
 
-- **check db**: `./.codex/check-db.sh` verifies PostgreSQL connectivity, ensures the `schema_migrations` table exists and can apply pending migrations when run with `--migrate`.
-- **check backend**: `./.codex/check-backend.sh` runs `go fmt`, `go vet`, and `go test ./...` while loading database settings from environment variables or `backend/config.json`.
-- **check status**: `./.codex/status.sh` executes database and backend checks, runs frontend tests, lists available npm scripts, and prints recent backend log lines.
+## Development Environment
 
-### Execution Capabilities (Non-Docker Setup)
+### Local Setup Commands
+- **Database Check**: `./scripts/ops/check-db.sh` - Verify PostgreSQL connectivity and run migrations
+- **Backend Validation**: `./scripts/ops/check-backend.sh` - Run Go formatting, linting, and tests  
+- **Full Status**: `./scripts/ops/status.sh` - Complete environment health check
+- **Frontend Development**: `npm run dev` - Start Next.js development server
+- **Backend Development**: `cd backend && go run cmd/apiserver/main.go` - Start API server
 
-Codex interacts directly with the host system without Docker:
+### Architecture Principles
+- **Microservice-Oriented**: Services are loosely coupled with clear interfaces
+- **Event-Driven**: WebSocket broadcasting for real-time updates
+- **Type-Safe**: End-to-end TypeScript integration with OpenAPI generation
+- **Security-First**: Authentication and authorization built into all layers
+- **Performance-Optimized**: Bulk operations and efficient data access patterns
 
-- **PostgreSQL**: Connection details are read from environment variables or `backend/config.json`. `pg_isready` and `psql` are used to validate connectivity. Migrations run with `go run ./backend/cmd/migrate`.
-- **NPM**: Commands such as `npm install`, `npm run dev`, and `npm test` work locally. When the backend is unavailable, the frontend falls back to mock API handlers found under `src/mocks`.
-- **Go**: All Go tooling runs on the host. `.codex/check-backend.sh` formats, vets, and tests the backend.
+### Code Quality Standards
+- All changes must pass existing tests and linting
+- API changes require OpenAPI specification updates
+- Database changes require backward-compatible migrations
+- Frontend changes must maintain responsive design and accessibility
+- Security changes require thorough review and testing
 
-### Troubleshooting
+## Troubleshooting
 
-- Ensure PostgreSQL is running and credentials are correct if database checks fail.
-- If npm commands fail, confirm Node.js and npm are installed and try reinstalling dependencies.
-- For Go build issues run `go mod download` and verify your `GOPATH`.
+### Common Issues
+- **Database Connectivity**: Ensure PostgreSQL is running and credentials in `backend/config.json` are correct
+- **Frontend Build**: Run `npm install` and check Node.js version compatibility
+- **Backend Compilation**: Verify Go modules with `go mod download` and check GOPATH
+- **WebSocket Connection**: Check that both frontend and backend are running for real-time features
+- **API Client Sync**: Regenerate API clients if backend OpenAPI specs have changed

@@ -29,9 +29,9 @@ type campaignOrchestratorServiceImpl struct {
 	campaignJobStore store.CampaignJobStore
 
 	// Specialized services
-	domainGenService       DomainGenerationService
-	dnsService             DNSCampaignService
-	httpKeywordService     HTTPKeywordCampaignService
+	domainGenService   DomainGenerationService
+	dnsService         DNSCampaignService
+	httpKeywordService HTTPKeywordCampaignService
 
 	// State machine for campaign status transitions
 	stateMachine *CampaignStateMachine
@@ -46,18 +46,18 @@ func NewCampaignOrchestratorService(
 	apm *communication.AsyncPatternManager,
 ) CampaignOrchestratorService {
 	return &campaignOrchestratorServiceImpl{
-		db:                      db,
-		campaignStore:           cs,
-		personaStore:            ps,
-		keywordStore:            ks,
-		auditLogStore:           as,
-		auditLogger:             utils.NewAuditLogger(as),
-		campaignJobStore:        cjs,
-		domainGenService:        dgs,
-		dnsService:              dNSService,
-		httpKeywordService:      hkService,
-		stateMachine:            NewCampaignStateMachine(),
-		asyncManager:            apm,
+		db:                 db,
+		campaignStore:      cs,
+		personaStore:       ps,
+		keywordStore:       ks,
+		auditLogStore:      as,
+		auditLogger:        utils.NewAuditLogger(as),
+		campaignJobStore:   cjs,
+		domainGenService:   dgs,
+		dnsService:         dNSService,
+		httpKeywordService: hkService,
+		stateMachine:       NewCampaignStateMachine(),
+		asyncManager:       apm,
 	}
 }
 
@@ -497,17 +497,17 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 		opErr = errGet
 		return opErr // opErr will be handled by defer if in SQL transaction
 	}
-	
+
 	// DIAGNOSTIC: Log campaign details to debug status issue
 	log.Printf("[DIAGNOSTIC] StartCampaign called for campaign %s: {type: %s, status: %s, name: %s}",
 		campaignID, campaign.CampaignType, campaign.Status, campaign.Name)
-	
+
 	// Allow starting campaigns in specific scenarios:
 	// 1. Standard flow: campaign status is pending
 	// 2. DNS validation flow: completed domain_generation campaign with DNS params added
 	isValidForStart := false
 	startReason := ""
-	
+
 	if campaign.Status == models.CampaignStatusPending {
 		isValidForStart = true
 		startReason = "standard_pending_campaign"
@@ -520,14 +520,14 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 			log.Printf("[DIAGNOSTIC] StartCampaign allowing DNS validation phase on completed domain generation campaign %s", campaignID)
 		}
 	}
-	
+
 	if !isValidForStart {
 		log.Printf("[DIAGNOSTIC] StartCampaign FAILED - Invalid status for campaign %s: expected '%s' or DNS validation transition, but got type '%s' status '%s'",
 			campaignID, models.CampaignStatusPending, campaign.CampaignType, campaign.Status)
 		opErr = fmt.Errorf("campaign %s not startable: type=%s status=%s", campaignID, campaign.CampaignType, campaign.Status)
 		return opErr // opErr will be handled by defer if in SQL transaction
 	}
-	
+
 	log.Printf("[DIAGNOSTIC] StartCampaign proceeding - campaign %s valid for start: reason=%s", campaignID, startReason)
 
 	initialJob := &models.CampaignJob{
@@ -637,12 +637,12 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 	isDNSValidationAfterTransition := (campaign.Status == models.CampaignStatusPending &&
 		campaign.CampaignType == models.CampaignTypeDNSValidation &&
 		startReason == "standard_pending_campaign")
-	
+
 	// DIAGNOSTIC: Legacy check for DNS validation on completed campaign (before transition)
 	isDNSValidationOnCompleted := (campaign.Status == models.CampaignStatusCompleted &&
 		campaign.CampaignType == models.CampaignTypeDomainGeneration &&
 		startReason == "dns_validation_phase_on_domain_generation")
-	
+
 	log.Printf("[DIAGNOSTIC] StartCampaign transition check - campaignID=%s, currentStatus=%s, targetStatus=%s, isDNSValidationAfterTransition=%t, isDNSValidationOnCompleted=%t, startReason=%s",
 		campaignID, campaign.Status, models.CampaignStatusQueued, isDNSValidationAfterTransition, isDNSValidationOnCompleted, startReason)
 
@@ -1060,26 +1060,26 @@ func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, ca
 	// Handle phase transitions first (before general updates)
 	if req.CampaignType != nil && *req.CampaignType != campaign.CampaignType {
 		log.Printf("Campaign type transition requested: %s -> %s", campaign.CampaignType, *req.CampaignType)
-		
+
 		// Handle domain_generation -> dns_validation transition
 		if campaign.CampaignType == models.CampaignTypeDomainGeneration && *req.CampaignType == models.CampaignTypeDNSValidation {
 			if campaign.Status != models.CampaignStatusCompleted {
 				opErr = fmt.Errorf("UpdateCampaign: cannot transition to DNS validation - domain generation campaign %s must be completed (current status: %s)", campaignID, campaign.Status)
 				return nil, opErr
 			}
-			
+
 			// Validate required DNS parameters
 			if req.PersonaIDs == nil || len(*req.PersonaIDs) == 0 {
 				opErr = fmt.Errorf("UpdateCampaign: personaIds required for DNS validation phase transition")
 				return nil, opErr
 			}
-			
+
 			// Transition the campaign to DNS validation phase
 			if err := s.transitionToDNSValidation(ctx, querier, campaign, &req); err != nil {
 				opErr = fmt.Errorf("UpdateCampaign: failed to transition to DNS validation: %w", err)
 				return nil, opErr
 			}
-			
+
 			log.Printf("Successfully transitioned campaign %s from domain_generation to dns_validation", campaignID)
 		} else {
 			// Other transitions not supported yet
@@ -1094,9 +1094,9 @@ func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, ca
 		if req.Status != nil {
 			campaign.Status = *req.Status
 		}
-		
+
 		campaign.UpdatedAt = time.Now().UTC()
-		
+
 		if err := s.campaignStore.UpdateCampaign(ctx, querier, campaign); err != nil {
 			opErr = fmt.Errorf("UpdateCampaign: update campaign %s failed: %w", campaignID, err)
 			return nil, opErr
@@ -1120,36 +1120,36 @@ func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, ca
 // transitionToDNSValidation handles the transition from domain_generation to dns_validation
 func (s *campaignOrchestratorServiceImpl) transitionToDNSValidation(ctx context.Context, querier store.Querier, campaign *models.Campaign, req *UpdateCampaignRequest) error {
 	log.Printf("Transitioning campaign %s from domain_generation phase to dns_validation phase", campaign.ID)
-	
+
 	// CRITICAL FIX: Do NOT change campaign type - it remains a domain_generation campaign
 	// Only change the current phase to DNS validation
 	campaign.Status = models.CampaignStatusPending
 	campaign.UpdatedAt = time.Now().UTC()
-	
+
 	// CORRECT: Set currentPhase to dns_validation while keeping campaignType as domain_generation
 	dnsPhase := models.CampaignPhaseDNSValidation
 	campaign.CurrentPhase = &dnsPhase
-	
+
 	// Reset phase status for the new phase
 	phaseStatusPending := models.CampaignPhaseStatusPending
 	campaign.PhaseStatus = &phaseStatusPending
-	
+
 	// Update name if provided
 	if req.Name != nil {
 		campaign.Name = *req.Name
 	}
-	
+
 	// Reset processing counters for DNS validation phase
 	campaign.ProcessedItems = models.Int64Ptr(0)
 	campaign.ProgressPercentage = models.Float64Ptr(0.0)
 	campaign.CompletedAt = nil
 	campaign.StartedAt = nil
-	
+
 	// Update the campaign record
 	if err := s.campaignStore.UpdateCampaign(ctx, querier, campaign); err != nil {
 		return fmt.Errorf("failed to update campaign for DNS validation transition: %w", err)
 	}
-	
+
 	// Create DNS validation parameters
 	dnsParams := &models.DNSValidationCampaignParams{
 		CampaignID:                 campaign.ID,
@@ -1160,7 +1160,7 @@ func (s *campaignOrchestratorServiceImpl) transitionToDNSValidation(ctx context.
 		BatchSize:                  req.BatchSize,
 		RetryAttempts:              req.RetryAttempts,
 	}
-	
+
 	// Set defaults for missing parameters
 	if dnsParams.BatchSize == nil || *dnsParams.BatchSize == 0 {
 		dnsParams.BatchSize = models.IntPtr(50)
@@ -1168,15 +1168,15 @@ func (s *campaignOrchestratorServiceImpl) transitionToDNSValidation(ctx context.
 	if dnsParams.RetryAttempts == nil || *dnsParams.RetryAttempts == 0 {
 		dnsParams.RetryAttempts = models.IntPtr(1)
 	}
-	
+
 	// Create DNS validation params in the database
 	if err := s.campaignStore.CreateDNSValidationParams(ctx, querier, dnsParams); err != nil {
 		return fmt.Errorf("failed to create DNS validation params: %w", err)
 	}
-	
+
 	// Update the campaign object with DNS params for consistency
 	campaign.DNSValidationParams = dnsParams
-	
+
 	log.Printf("Successfully transitioned campaign %s to DNS validation phase", campaign.ID)
 	return nil
 }
@@ -1184,13 +1184,13 @@ func (s *campaignOrchestratorServiceImpl) transitionToDNSValidation(ctx context.
 // updateDNSValidationParams handles updating DNS validation parameters for existing DNS campaigns
 func (s *campaignOrchestratorServiceImpl) updateDNSValidationParams(ctx context.Context, querier store.Querier, campaignID uuid.UUID, req *UpdateCampaignRequest) error {
 	log.Printf("Updating DNS validation params for campaign %s", campaignID)
-	
+
 	// Get existing DNS params
 	existingParams, err := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
 	if err != nil {
 		return fmt.Errorf("failed to get existing DNS validation params: %w", err)
 	}
-	
+
 	if existingParams == nil {
 		// Create new DNS params if they don't exist
 		dnsParams := &models.DNSValidationCampaignParams{
@@ -1202,10 +1202,10 @@ func (s *campaignOrchestratorServiceImpl) updateDNSValidationParams(ctx context.
 			BatchSize:                  req.BatchSize,
 			RetryAttempts:              req.RetryAttempts,
 		}
-		
+
 		return s.campaignStore.CreateDNSValidationParams(ctx, querier, dnsParams)
 	}
-	
+
 	// Update existing params with new values
 	if req.PersonaIDs != nil {
 		existingParams.PersonaIDs = *req.PersonaIDs
@@ -1222,11 +1222,11 @@ func (s *campaignOrchestratorServiceImpl) updateDNSValidationParams(ctx context.
 	if req.RetryAttempts != nil {
 		existingParams.RetryAttempts = req.RetryAttempts
 	}
-	
+
 	// Note: UpdateDNSValidationParams method would need to be implemented in the store
 	// For now, we'll just log that the params couldn't be updated
 	log.Printf("Warning: UpdateDNSValidationParams not implemented in store, existing params not updated")
-	
+
 	// Return success since the campaign itself was updated successfully
 	return nil
 }
@@ -1279,10 +1279,24 @@ func (s *campaignOrchestratorServiceImpl) deleteCampaignWithDependencies(ctx con
 		return opErr
 	}
 
-	// Check if campaign can be deleted (only prevent deletion of actively running campaigns)
+	// Auto-cancel running campaigns before deletion to enable force delete functionality
 	if campaign.Status == models.CampaignStatusRunning {
-		opErr = fmt.Errorf("cannot delete campaign %s: campaign is actively running", campaignID)
-		return opErr
+		log.Printf("Auto-cancelling running campaign %s before deletion", campaignID)
+
+		// Use existing CancelCampaign method to maintain consistency and proper status transitions
+		if err := s.CancelCampaign(ctx, campaignID); err != nil {
+			opErr = fmt.Errorf("failed to cancel running campaign %s before deletion: %w", campaignID, err)
+			return opErr
+		}
+
+		// Re-fetch campaign to get updated cancelled status after auto-cancellation
+		campaign, errGet = s.campaignStore.GetCampaignByID(ctx, querier, campaignID)
+		if errGet != nil {
+			opErr = fmt.Errorf("failed to re-fetch campaign %s after auto-cancellation: %w", campaignID, errGet)
+			return opErr
+		}
+
+		log.Printf("Successfully auto-cancelled campaign %s (status: %s), proceeding with deletion", campaignID, campaign.Status)
 	}
 
 	// Find and delete dependent campaigns first (following the orchestration chain)
@@ -1326,7 +1340,7 @@ func (s *campaignOrchestratorServiceImpl) deleteCampaignWithDependencies(ctx con
 // findDependentCampaigns finds campaigns that depend on the given campaign
 func (s *campaignOrchestratorServiceImpl) findDependentCampaigns(ctx context.Context, querier store.Querier, campaignID uuid.UUID, campaignType models.CampaignTypeEnum) ([]uuid.UUID, error) {
 	var dependentIDs []uuid.UUID
-	
+
 	switch campaignType {
 	case models.CampaignTypeDomainGeneration:
 		// Find DNS campaigns that use this domain generation campaign as source
@@ -1335,14 +1349,14 @@ func (s *campaignOrchestratorServiceImpl) findDependentCampaigns(ctx context.Con
 		if err != nil {
 			return nil, err
 		}
-		
+
 		for _, dnsCampaign := range dnsCampaigns {
 			if dnsCampaign != nil {
 				// Check if this DNS campaign references our domain generation campaign
 				dnsParams, err := s.campaignStore.GetDNSValidationParams(ctx, querier, dnsCampaign.ID)
 				if err == nil && dnsParams.SourceGenerationCampaignID != nil && *dnsParams.SourceGenerationCampaignID == campaignID {
 					dependentIDs = append(dependentIDs, dnsCampaign.ID)
-					
+
 					// Also find HTTP campaigns that depend on this DNS campaign
 					httpDependents, err := s.findDependentCampaigns(ctx, querier, dnsCampaign.ID, models.CampaignTypeDNSValidation)
 					if err == nil {
@@ -1351,7 +1365,7 @@ func (s *campaignOrchestratorServiceImpl) findDependentCampaigns(ctx context.Con
 				}
 			}
 		}
-		
+
 	case models.CampaignTypeDNSValidation:
 		// Find HTTP campaigns that use this DNS campaign as source
 		httpFilter := store.ListCampaignsFilter{Type: models.CampaignTypeHTTPKeywordValidation}
@@ -1359,7 +1373,7 @@ func (s *campaignOrchestratorServiceImpl) findDependentCampaigns(ctx context.Con
 		if err != nil {
 			return nil, err
 		}
-		
+
 		for _, httpCampaign := range httpCampaigns {
 			if httpCampaign != nil {
 				// Check if this HTTP campaign references our DNS campaign
@@ -1369,12 +1383,12 @@ func (s *campaignOrchestratorServiceImpl) findDependentCampaigns(ctx context.Con
 				}
 			}
 		}
-		
+
 	case models.CampaignTypeHTTPKeywordValidation:
 		// HTTP campaigns are leaf nodes in the dependency chain
 		// No other campaigns depend on HTTP campaigns
 	}
-	
+
 	return dependentIDs, nil
 }
 
@@ -1464,7 +1478,7 @@ func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Cont
 			return nil, fmt.Errorf("phase transitions from domain_generation to dns_validation should use UpdateCampaign with campaignType change, not CreateCampaign")
 		} else if req.DnsValidationParams.SourceCampaignID != nil {
 			// Path 2: Standalone DNS Validation (from past campaign)
-			
+
 			// First, validate that the source campaign exists and get its domains
 			querier := s.db
 			sourceCampaign, validateErr := s.campaignStore.GetCampaignByID(ctx, querier, *req.DnsValidationParams.SourceCampaignID)
@@ -1545,12 +1559,12 @@ func (s *campaignOrchestratorServiceImpl) CreateCampaignUnified(ctx context.Cont
 		log.Printf("Orchestrator: Setting launch_sequence to %v for campaign %s", req.LaunchSequence, campaign.ID)
 		campaign.LaunchSequence = req.LaunchSequence
 		campaign.UpdatedAt = time.Now().UTC()
-		
+
 		var querier store.Querier
 		if s.db != nil {
 			querier = s.db
 		}
-		
+
 		if updateErr := s.campaignStore.UpdateCampaign(ctx, querier, campaign); updateErr != nil {
 			log.Printf("Warning: Failed to update launch_sequence for campaign %s: %v", campaign.ID, updateErr)
 			// Don't fail the entire operation, just log the warning
@@ -1568,17 +1582,17 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDependencies(ctx context.Co
 	if s.db != nil {
 		querier = s.db
 	}
-	
+
 	campaign, err := s.campaignStore.GetCampaignByID(ctx, querier, campaignID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get campaign %s: %w", campaignID, err)
 	}
-	
+
 	dependentIDs, err := s.findDependentCampaigns(ctx, querier, campaignID, campaign.CampaignType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find dependent campaigns: %w", err)
 	}
-	
+
 	var dependentCampaigns []models.Campaign
 	for _, depID := range dependentIDs {
 		depCampaign, err := s.campaignStore.GetCampaignByID(ctx, querier, depID)
@@ -1586,7 +1600,7 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDependencies(ctx context.Co
 			dependentCampaigns = append(dependentCampaigns, *depCampaign)
 		}
 	}
-	
+
 	return &CampaignDependencyInfo{
 		Campaign:           *campaign,
 		DependentCampaigns: dependentCampaigns,
@@ -1600,21 +1614,21 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDependencies(ctx context.Co
 // Only creates the next campaign if the original campaign has launch_sequence=true.
 func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error {
 	log.Printf("[DEBUG] HandleCampaignCompletion called for campaign %s", campaignID)
-	
+
 	campaign, err := s.campaignStore.GetCampaignByID(ctx, s.db, campaignID)
 	if err != nil {
 		log.Printf("[DEBUG] Failed to get campaign %s: %v", campaignID, err)
 		return err
 	}
-	
+
 	log.Printf("[DEBUG] Campaign %s type: %s, launch_sequence: %v", campaignID, campaign.CampaignType, campaign.LaunchSequence)
-	
+
 	// Check if campaign has launch_sequence flag enabled before auto-chaining
 	if !campaign.LaunchSequence {
 		log.Printf("[INFO] Campaign %s has launch_sequence=false, skipping auto-chaining to next campaign type", campaignID)
 		return nil
 	}
-	
+
 	log.Printf("[INFO] Campaign %s has launch_sequence=true, proceeding with auto-chaining to next campaign type", campaignID)
 
 	switch campaign.CampaignType {
@@ -1623,7 +1637,7 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 		// Users manually add DNS validation params and call StartCampaign on the same campaign
 		log.Printf("[INFO] Domain generation campaign %s completed. DNS validation will be handled in-place when configured manually.", campaignID)
 		return nil
-		
+
 	case models.CampaignTypeDNSValidation:
 		enabled := true
 		personas, err := s.personaStore.ListPersonas(ctx, s.db, store.ListPersonasFilter{Type: models.PersonaTypeHTTP, IsEnabled: &enabled, Limit: 1})
@@ -1651,7 +1665,7 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 		}
 		log.Printf("[INFO] Successfully created HTTP keyword validation campaign %s, starting it", nextCamp.ID)
 		return s.StartCampaign(ctx, nextCamp.ID)
-		
+
 	default:
 		log.Printf("[DEBUG] Campaign %s type %s is not configured for auto-chaining", campaignID, campaign.CampaignType)
 	}
@@ -1663,14 +1677,14 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 // The offset tracks the highest point ever reached for that pattern, regardless of campaign deletions.
 func (s *campaignOrchestratorServiceImpl) handleDomainGenerationOffsetOnDeletion(ctx context.Context, querier store.Querier, campaignID uuid.UUID, _ *models.Campaign) error {
 	log.Printf("[INFO] HandleDomainGenerationOffsetOnDeletion: Processing offset logic for campaign %s deletion", campaignID)
-	
+
 	// Get the domain generation parameters for this campaign
 	domainGenParams, err := s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
 	if err != nil {
 		log.Printf("[ERROR] Failed to get domain generation params for campaign %s: %v", campaignID, err)
 		return fmt.Errorf("failed to get domain generation params: %w", err)
 	}
-	
+
 	// Generate the config hash for this pattern
 	hashResult, hashErr := domainexpert.GenerateDomainGenerationConfigHash(*domainGenParams)
 	if hashErr != nil {
@@ -1678,21 +1692,21 @@ func (s *campaignOrchestratorServiceImpl) handleDomainGenerationOffsetOnDeletion
 		return fmt.Errorf("failed to generate config hash: %w", hashErr)
 	}
 	configHashString := hashResult.HashString
-	
+
 	log.Printf("[INFO] Campaign %s uses pattern config hash: %s", campaignID, configHashString)
-	
+
 	// Find all other campaigns that use the same pattern (excluding the one being deleted)
 	filter := store.ListCampaignsFilter{
 		Type: models.CampaignTypeDomainGeneration,
 		// We don't exclude the current campaign here because we want to count it
 	}
-	
+
 	allDomainGenCampaigns, err := s.campaignStore.ListCampaigns(ctx, querier, filter)
 	if err != nil {
 		log.Printf("[ERROR] Failed to list domain generation campaigns: %v", err)
 		return fmt.Errorf("failed to list domain generation campaigns: %w", err)
 	}
-	
+
 	// Count campaigns with the same pattern (excluding the one being deleted)
 	campaignsWithSamePattern := 0
 	for _, existingCampaign := range allDomainGenCampaigns {
@@ -1703,33 +1717,33 @@ func (s *campaignOrchestratorServiceImpl) handleDomainGenerationOffsetOnDeletion
 				log.Printf("[WARN] Failed to get params for campaign %s, skipping: %v", existingCampaign.ID, err)
 				continue
 			}
-			
+
 			existingHashResult, hashErr := domainexpert.GenerateDomainGenerationConfigHash(*existingParams)
 			if hashErr != nil {
 				log.Printf("[WARN] Failed to generate hash for campaign %s, skipping: %v", existingCampaign.ID, hashErr)
 				continue
 			}
-			
+
 			if existingHashResult.HashString == configHashString {
 				campaignsWithSamePattern++
 				log.Printf("[INFO] Found campaign %s with same pattern (hash: %s)", existingCampaign.ID, configHashString)
 			}
 		}
 	}
-	
+
 	log.Printf("[INFO] Found %d other campaigns using the same pattern as campaign %s", campaignsWithSamePattern, campaignID)
-	
+
 	// Only reset the offset if this is the LAST campaign with this pattern
 	if campaignsWithSamePattern == 0 {
 		log.Printf("[INFO] Campaign %s is the LAST campaign using pattern %s - RESETTING offset to 0", campaignID, configHashString)
-		
+
 		// Convert the normalized params to JSON for storage
 		configDetailsBytes, err := json.Marshal(hashResult.NormalizedParams)
 		if err != nil {
 			log.Printf("[ERROR] Failed to marshal config details for pattern %s: %v", configHashString, err)
 			return fmt.Errorf("failed to marshal config details: %w", err)
 		}
-		
+
 		// Reset the global offset for this pattern to 0
 		resetConfigState := &models.DomainGenerationConfigState{
 			ConfigHash:    configHashString,
@@ -1737,7 +1751,7 @@ func (s *campaignOrchestratorServiceImpl) handleDomainGenerationOffsetOnDeletion
 			ConfigDetails: configDetailsBytes,
 			UpdatedAt:     time.Now().UTC(),
 		}
-		
+
 		// Use the config manager if available, otherwise fall back to direct store access
 		if s.domainGenService != nil {
 			// Get the domain generation service to access its config manager
@@ -1752,12 +1766,12 @@ func (s *campaignOrchestratorServiceImpl) handleDomainGenerationOffsetOnDeletion
 				return fmt.Errorf("failed to reset offset for pattern %s: %w", configHashString, err)
 			}
 		}
-		
+
 		log.Printf("[SUCCESS] Successfully reset offset to 0 for pattern %s after deleting last campaign %s", configHashString, campaignID)
 	} else {
 		log.Printf("[INFO] Campaign %s is NOT the last campaign using pattern %s - PRESERVING offset (keeping highest value reached)", campaignID, configHashString)
 		log.Printf("[INFO] Remaining %d campaigns will continue using the current offset for pattern %s", campaignsWithSamePattern, configHashString)
 	}
-	
+
 	return nil
 }

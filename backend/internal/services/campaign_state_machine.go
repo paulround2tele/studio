@@ -19,7 +19,7 @@ func NewCampaignStateMachine() *CampaignStateMachine {
 		transitions: map[models.CampaignStatusEnum][]models.CampaignStatusEnum{
 			models.CampaignStatusPending:   {models.CampaignStatusQueued, models.CampaignStatusCancelled},
 			models.CampaignStatusQueued:    {models.CampaignStatusRunning, models.CampaignStatusPaused, models.CampaignStatusCancelled},
-			models.CampaignStatusRunning:   {models.CampaignStatusPaused, models.CampaignStatusCompleted, models.CampaignStatusFailed},
+			models.CampaignStatusRunning:   {models.CampaignStatusPaused, models.CampaignStatusCompleted, models.CampaignStatusFailed, models.CampaignStatusCancelled},
 			models.CampaignStatusPaused:    {models.CampaignStatusRunning, models.CampaignStatusCancelled},
 			models.CampaignStatusCompleted: {models.CampaignStatusArchived},
 			models.CampaignStatusFailed:    {models.CampaignStatusQueued, models.CampaignStatusArchived},
