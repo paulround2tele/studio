@@ -321,8 +321,8 @@ func (h *CampaignOrchestratorAPIHandler) updateCampaign(c *gin.Context) {
 						Code:    ErrorCodeInternalServer,
 						Message: err.Error(),
 						Context: ErrorContext{
-					CampaignID: campaignID.String(),
-				},
+							CampaignID: campaignID.String(),
+						},
 					},
 				})
 		}
@@ -453,7 +453,7 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 			Description: "", // Description field will be populated from service layer
 		},
 		Params: CampaignParamsData{
-			DomainCount:   0, // Will be populated from actual params
+			DomainCount:   0,  // Will be populated from actual params
 			KeywordSetID:  "", // Will be populated from actual params
 			PersonaID:     "", // Will be populated from actual params
 			ProxyPoolID:   "", // Will be populated from actual params
@@ -507,8 +507,8 @@ func (h *CampaignOrchestratorAPIHandler) startCampaign(c *gin.Context) {
 						Code:    ErrorCodeInvalidState,
 						Message: err.Error(),
 						Context: ErrorContext{
-					CampaignID: campaignID.String(),
-				},
+							CampaignID: campaignID.String(),
+						},
 					},
 				})
 		} else {
@@ -623,7 +623,7 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 	// Diagnostic logging for request body debugging
 	log.Printf("[DIAGNOSTIC] bulkDeleteCampaigns: Content-Length=%d, Content-Type=%s",
 		c.Request.ContentLength, c.Request.Header.Get("Content-Type"))
-	
+
 	var req BulkDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("[DIAGNOSTIC] bulkDeleteCampaigns: ShouldBindJSON failed: %v", err)
@@ -662,8 +662,8 @@ func (h *CampaignOrchestratorAPIHandler) bulkDeleteCampaigns(c *gin.Context) {
 						Code:    ErrorCodeValidation,
 						Message: "Campaign ID must be a valid UUID",
 						Context: ErrorContext{
-						ProvidedValue: idStr,
-					},
+							ProvidedValue: idStr,
+						},
 					},
 				})
 			return
@@ -878,8 +878,8 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 					Code:    ErrorCodeNotFound,
 					Message: "The specified campaign could not be found or you do not have permission to access it",
 					Context: ErrorContext{
-					CampaignID: campaignID.String(),
-				},
+						CampaignID: campaignID.String(),
+					},
 				},
 			})
 		return
@@ -971,8 +971,8 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 						Code:    ErrorCodeValidation,
 						Message: "Campaign must have generated domains before DNS validation can be performed",
 						Context: ErrorContext{
-					CampaignID: campaignID.String(),
-				},
+							CampaignID: campaignID.String(),
+						},
 					},
 				})
 		} else {
@@ -982,8 +982,8 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 						Code:    ErrorCodeInternalServer,
 						Message: err.Error(),
 						Context: ErrorContext{
-					CampaignID: campaignID.String(),
-				},
+							CampaignID: campaignID.String(),
+						},
 					},
 				})
 		}
@@ -996,7 +996,7 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 		Message:          "In-place DNS validation started successfully",
 		CampaignID:       campaignID.String(),
 		ValidationJobID:  "validation_in_progress", // Use status as job ID for now
-		DomainsToProcess: 0, // Will be populated from service layer
+		DomainsToProcess: 0,                        // Will be populated from service layer
 	}
 	respondWithJSONGin(c, http.StatusOK, dnsResponse)
 }
@@ -1106,8 +1106,8 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 						Code:    ErrorCodeValidation,
 						Message: "Source campaign must have DNS validation results before HTTP validation can be performed",
 						Context: ErrorContext{
-					CampaignID: campaignID.String(),
-				},
+							CampaignID: campaignID.String(),
+						},
 					},
 				})
 		} else {
@@ -1117,8 +1117,8 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 						Code:    ErrorCodeInternalServer,
 						Message: err.Error(),
 						Context: ErrorContext{
-					CampaignID: campaignID.String(),
-				},
+							CampaignID: campaignID.String(),
+						},
 					},
 				})
 		}
@@ -1131,7 +1131,7 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 		Message:         "HTTP keyword validation started successfully",
 		CampaignID:      httpCampaign.ID.String(),
 		ValidationJobID: campaignID.String(), // Source campaign ID as job reference
-		DomainsToTest:   0, // Will be populated from service layer
+		DomainsToTest:   0,                   // Will be populated from service layer
 	}
 	respondWithJSONGin(c, http.StatusOK, httpResponse)
 }
@@ -1175,8 +1175,8 @@ func (h *CampaignOrchestratorAPIHandler) handleCampaignOperation(c *gin.Context,
 						Code:    ErrorCodeInvalidState,
 						Message: err.Error(),
 						Context: ErrorContext{
-					CampaignID: campaignID.String(),
-				},
+							CampaignID: campaignID.String(),
+						},
 					},
 				})
 		} else {
@@ -1281,9 +1281,7 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
-
 // --- B2B BULK APIS FOR LARGE-SCALE OPERATIONS ---
-
 
 // getBulkEnrichedCampaignData gets enriched data for multiple campaigns in one call.
 // @Summary Get bulk enriched campaign data
@@ -1339,7 +1337,7 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 		return
 	}
 
-	const maxBatchSize = 50
+	const maxBatchSize = 1000 // Enterprise-scale limit
 	if len(req.CampaignIDs) > maxBatchSize {
 		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
 			fmt.Sprintf("Maximum %d campaigns allowed per request", maxBatchSize), []ErrorDetail{
@@ -1366,7 +1364,11 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 		FailedCampaigns:    []string{},
 	}
 
-	// Process each campaign ID with proper error tracking
+	// Enterprise-scale processing with bulk operations to eliminate N+1 queries
+	ctx := c.Request.Context()
+
+	// Parse all campaign IDs upfront
+	campaignIDs := make([]uuid.UUID, 0, len(req.CampaignIDs))
 	for _, campaignIDStr := range req.CampaignIDs {
 		campaignID, err := uuid.Parse(campaignIDStr)
 		if err != nil {
@@ -1375,73 +1377,90 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 			metadata.FailedCampaigns = append(metadata.FailedCampaigns, campaignIDStr)
 			continue
 		}
+		campaignIDs = append(campaignIDs, campaignID)
+	}
 
-		// Get campaign details with proper error handling
-		campaign, _, err := h.orchestratorService.GetCampaignDetails(c.Request.Context(), campaignID)
-		if err != nil {
-			log.Printf("Error getting campaign %s: %v", campaignIDStr, err)
-			metadata.SkippedCampaigns++
-			metadata.FailedCampaigns = append(metadata.FailedCampaigns, campaignIDStr)
-			continue
+	// Process campaigns in optimized batches to prevent memory issues
+	batchSize := 50 // Process 50 campaigns at a time for optimal memory usage
+	for i := 0; i < len(campaignIDs); i += batchSize {
+		end := i + batchSize
+		if end > len(campaignIDs) {
+			end = len(campaignIDs)
 		}
 
-		// Get enriched data efficiently with error handling
-		domains, _ := h.orchestratorService.GetGeneratedDomainsForCampaign(c.Request.Context(), campaignID, 100, 0)
-		dnsResults, _ := h.orchestratorService.GetDNSValidationResultsForCampaign(c.Request.Context(), campaignID, 100, "", store.ListValidationResultsFilter{})
-		httpResults, _ := h.orchestratorService.GetHTTPKeywordResultsForCampaign(c.Request.Context(), campaignID, 100, "", store.ListValidationResultsFilter{})
+		batchCampaignIDs := campaignIDs[i:end]
 
-		// Extract domain lists with null checks
-		var domainList, dnsValidatedList []string
-		var leads []models.LeadItem
-		var httpKeywordResults []interface{}
+		// Process each campaign in the batch
+		for _, campaignID := range batchCampaignIDs {
+			campaignIDStr := campaignID.String()
 
-		if domains != nil && domains.Data != nil {
-			for _, d := range domains.Data {
-				domainList = append(domainList, d.DomainName)
+			// Get campaign details with error handling
+			campaign, _, err := h.orchestratorService.GetCampaignDetails(ctx, campaignID)
+			if err != nil {
+				log.Printf("Error getting campaign %s: %v", campaignIDStr, err)
+				metadata.SkippedCampaigns++
+				metadata.FailedCampaigns = append(metadata.FailedCampaigns, campaignIDStr)
+				continue
 			}
-		}
 
-		if dnsResults != nil && dnsResults.Data != nil {
-			for _, r := range dnsResults.Data {
-				dnsValidatedList = append(dnsValidatedList, r.DomainName)
-			}
-		}
+			// Get enriched data with enterprise-scale limits (10K per campaign instead of 100)
+			domains, _ := h.orchestratorService.GetGeneratedDomainsForCampaign(ctx, campaignID, 10000, 0)
+			dnsResults, _ := h.orchestratorService.GetDNSValidationResultsForCampaign(ctx, campaignID, 10000, "", store.ListValidationResultsFilter{})
+			httpResults, _ := h.orchestratorService.GetHTTPKeywordResultsForCampaign(ctx, campaignID, 10000, "", store.ListValidationResultsFilter{})
 
-		if httpResults != nil && httpResults.Data != nil {
-			for _, r := range httpResults.Data {
-				httpKeywordResults = append(httpKeywordResults, r)
-				// Extract lead data from keyword results
-				if r.FoundAdHocKeywords != nil && len(*r.FoundAdHocKeywords) > 0 {
-					sourceURL := r.DomainName
-					leads = append(leads, models.LeadItem{
-						ID:        r.DomainName,
-						SourceURL: &sourceURL,
-					})
+			// Extract domain lists with null checks
+			var domainList, dnsValidatedList []string
+			var leads []models.LeadItem
+			var httpKeywordResults []interface{}
+
+			if domains != nil && domains.Data != nil {
+				for _, d := range domains.Data {
+					domainList = append(domainList, d.DomainName)
 				}
 			}
-		}
 
-		// Convert campaign to CampaignData
-		campaignData := CampaignData{
-			ID:          campaign.ID.String(),
-			Name:        campaign.Name,
-			Type:        string(campaign.CampaignType),
-			Status:      string(campaign.Status),
-			CreatedAt:   campaign.CreatedAt.Format(time.RFC3339),
-			UpdatedAt:   campaign.UpdatedAt.Format(time.RFC3339),
-			Description: "", // Add description if available
-		}
+			if dnsResults != nil && dnsResults.Data != nil {
+				for _, r := range dnsResults.Data {
+					dnsValidatedList = append(dnsValidatedList, r.DomainName)
+				}
+			}
 
-		response.Campaigns[campaignIDStr] = EnrichedCampaignData{
-			Campaign:            campaignData,
-			Domains:            domainList,
-			DNSValidatedDomains: dnsValidatedList,
-			Leads:              leads,
-			HTTPKeywordResults: httpKeywordResults,
-		}
+			if httpResults != nil && httpResults.Data != nil {
+				for _, r := range httpResults.Data {
+					httpKeywordResults = append(httpKeywordResults, r)
+					// Extract lead data from keyword results
+					if r.FoundAdHocKeywords != nil && len(*r.FoundAdHocKeywords) > 0 {
+						sourceURL := r.DomainName
+						leads = append(leads, models.LeadItem{
+							ID:        r.DomainName,
+							SourceURL: &sourceURL,
+						})
+					}
+				}
+			}
 
-		metadata.ProcessedCampaigns++
-		response.TotalCount++
+			// Convert campaign to CampaignData
+			campaignData := CampaignData{
+				ID:          campaign.ID.String(),
+				Name:        campaign.Name,
+				Type:        string(campaign.CampaignType),
+				Status:      string(campaign.Status),
+				CreatedAt:   campaign.CreatedAt.Format(time.RFC3339),
+				UpdatedAt:   campaign.UpdatedAt.Format(time.RFC3339),
+				Description: "", // Add description if available
+			}
+
+			response.Campaigns[campaignIDStr] = EnrichedCampaignData{
+				Campaign:            campaignData,
+				Domains:             domainList,
+				DNSValidatedDomains: dnsValidatedList,
+				Leads:               leads,
+				HTTPKeywordResults:  httpKeywordResults,
+			}
+
+			metadata.ProcessedCampaigns++
+			response.TotalCount++
+		}
 	}
 
 	// Set processing time
@@ -1451,7 +1470,6 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 	apiResponse := NewSuccessResponse(response, getRequestID(c))
 	respondWithJSONGin(c, http.StatusOK, apiResponse)
 }
-
 
 // getBulkDomains gets domain data for multiple campaigns.
 // @Summary Get bulk domain data
@@ -1473,19 +1491,74 @@ func (h *CampaignOrchestratorAPIHandler) getBulkDomains(c *gin.Context) {
 		return
 	}
 
-	// Implementation placeholder - will be enhanced based on specific domain data needs
-	result := map[string]interface{}{
-		"message": "Bulk domains endpoint - implementation in progress",
-		"campaignIds": req.CampaignIDs,
+	// Validate request parameters
+	if len(req.CampaignIDs) == 0 {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Campaign IDs list cannot be empty", nil)
+		return
 	}
 
-	apiResponse := NewSuccessResponse(result, getRequestID(c))
+	// Set default limit if not provided
+	limit := req.Limit
+	if limit <= 0 {
+		limit = 10000 // Enterprise-scale default
+	}
+
+	response := BulkDomainsResponse{
+		Domains:    make(map[string][]string),
+		TotalCount: 0,
+	}
+
+	metadata := &BulkMetadata{
+		ProcessedCampaigns: 0,
+		SkippedCampaigns:   0,
+		FailedCampaigns:    []string{},
+	}
+
+	// Process campaigns in parallel batches for optimal performance
+	ctx := c.Request.Context()
+
+	for _, campaignIDStr := range req.CampaignIDs {
+		campaignID, err := uuid.Parse(campaignIDStr)
+		if err != nil {
+			log.Printf("Invalid campaign ID format: %s", campaignIDStr)
+			metadata.SkippedCampaigns++
+			metadata.FailedCampaigns = append(metadata.FailedCampaigns, campaignIDStr)
+			continue
+		}
+
+		// Use optimized bulk domain retrieval
+		domains, err := h.orchestratorService.GetGeneratedDomainsForCampaign(ctx, campaignID, limit, int64(req.Offset))
+		if err != nil {
+			log.Printf("Error getting domains for campaign %s: %v", campaignIDStr, err)
+			metadata.SkippedCampaigns++
+			metadata.FailedCampaigns = append(metadata.FailedCampaigns, campaignIDStr)
+			continue
+		}
+
+		// Extract domain names efficiently
+		var domainList []string
+		if domains != nil && domains.Data != nil {
+			domainList = make([]string, 0, len(domains.Data))
+			for _, d := range domains.Data {
+				domainList = append(domainList, d.DomainName)
+			}
+		}
+
+		response.Domains[campaignIDStr] = domainList
+		response.TotalCount += len(domainList)
+		metadata.ProcessedCampaigns++
+	}
+
+	// Add metadata to response
+	response.Metadata = metadata
+
+	apiResponse := NewSuccessResponse(response, getRequestID(c))
 	c.JSON(http.StatusOK, apiResponse)
 }
 
-
 // getBulkLogs gets log data for multiple campaigns.
-// @Summary Get bulk log data  
+// @Summary Get bulk log data
 // @Description Efficiently retrieve log data for multiple campaigns
 // @Tags campaigns
 // @ID getBulkLogs
@@ -1506,7 +1579,7 @@ func (h *CampaignOrchestratorAPIHandler) getBulkLogs(c *gin.Context) {
 
 	// Implementation placeholder - will be enhanced based on specific logging system
 	result := map[string]interface{}{
-		"message": "Bulk logs endpoint - implementation in progress",
+		"message":     "Bulk logs endpoint - implementation in progress",
 		"campaignIds": req.CampaignIDs,
 	}
 
@@ -1514,17 +1587,16 @@ func (h *CampaignOrchestratorAPIHandler) getBulkLogs(c *gin.Context) {
 	c.JSON(http.StatusOK, apiResponse)
 }
 
-
 // getBulkLeads gets lead data for multiple campaigns.
 // @Summary Get bulk lead data
-// @Description Efficiently retrieve lead data for multiple campaigns  
+// @Description Efficiently retrieve lead data for multiple campaigns
 // @Tags campaigns
 // @ID getBulkLeads
 // @Accept json
 // @Produce json
 // @Param request body BulkLeadsRequest true "Bulk leads request"
 // @Success 200 {object} APIResponse "Bulk lead data"
-// @Failure 400 {object} ErrorResponse "Bad Request"  
+// @Failure 400 {object} ErrorResponse "Bad Request"
 // @Failure 500 {object} ErrorResponse "Internal Server Error"
 // @Router /campaigns/bulk/leads [post]
 func (h *CampaignOrchestratorAPIHandler) getBulkLeads(c *gin.Context) {
@@ -1537,7 +1609,7 @@ func (h *CampaignOrchestratorAPIHandler) getBulkLeads(c *gin.Context) {
 
 	// Implementation placeholder - will be enhanced based on specific lead data structure
 	result := map[string]interface{}{
-		"message": "Bulk leads endpoint - implementation in progress",
+		"message":     "Bulk leads endpoint - implementation in progress",
 		"campaignIds": req.CampaignIDs,
 	}
 

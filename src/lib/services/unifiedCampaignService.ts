@@ -373,10 +373,10 @@ export class UnifiedCampaignService {
   };
 
   private readonly batchConfig: BatchConfig = {
-    dashboard: 50,
-    detail: 100,
-    background: 500,
-    maxBatchSize: 500
+    dashboard: 500,      // Enterprise-scale: 10x increase for dashboard operations
+    detail: 1000,        // Enterprise-scale: 10x increase for detail operations
+    background: 1000,    // Enterprise-scale: 2x increase for background operations
+    maxBatchSize: 1000   // Enterprise-scale: matches backend 1000-campaign limit
   };
 
   private constructor() {

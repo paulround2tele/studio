@@ -1,10 +1,10 @@
 package api
 
 import (
-	"github.com/google/uuid"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
+	"github.com/google/uuid"
 )
 
 // Common response models to prevent auto-generated inline schemas
@@ -163,15 +163,15 @@ type ValidationOperationResponse struct {
 
 // PersonaTestResponse represents persona test results
 type PersonaTestResponse struct {
-	PersonaID    string                  `json:"personaId"`
-	PersonaType  string                  `json:"personaType"`
-	PersonaName  string                  `json:"personaName"`
-	Success      bool                    `json:"success"`
-	TestPassed   bool                    `json:"testPassed"`
-	Message      string                  `json:"message"`
-	TestResults  PersonaTestResultData   `json:"testResults"`
-	Results      PersonaTestResultData   `json:"results,omitempty"`
-	Timestamp    string                  `json:"timestamp"`
+	PersonaID   string                `json:"personaId"`
+	PersonaType string                `json:"personaType"`
+	PersonaName string                `json:"personaName"`
+	Success     bool                  `json:"success"`
+	TestPassed  bool                  `json:"testPassed"`
+	Message     string                `json:"message"`
+	TestResults PersonaTestResultData `json:"testResults"`
+	Results     PersonaTestResultData `json:"results,omitempty"`
+	Timestamp   string                `json:"timestamp"`
 }
 
 // PersonaTestResultData represents structured test result data
@@ -363,20 +363,20 @@ type CampaignData struct {
 
 // CampaignParamsData represents campaign parameters
 type CampaignParamsData struct {
-	DomainCount    int    `json:"domainCount,omitempty"`
-	KeywordSetID   string `json:"keywordSetId,omitempty"`
-	PersonaID      string `json:"personaId,omitempty"`
-	ProxyPoolID    string `json:"proxyPoolId,omitempty"`
-	Configuration  string `json:"configuration,omitempty"`
+	DomainCount   int    `json:"domainCount,omitempty"`
+	KeywordSetID  string `json:"keywordSetId,omitempty"`
+	PersonaID     string `json:"personaId,omitempty"`
+	ProxyPoolID   string `json:"proxyPoolId,omitempty"`
+	Configuration string `json:"configuration,omitempty"`
 }
 
 // EnrichedCampaignData represents enriched data for a single campaign
 type EnrichedCampaignData struct {
-	Campaign            CampaignData `json:"campaign"`
-	Domains            []string     `json:"domains"`
-	DNSValidatedDomains []string     `json:"dnsValidatedDomains"`
-	Leads              []models.LeadItem `json:"leads"`
-	HTTPKeywordResults []interface{} `json:"httpKeywordResults"` // TODO: Replace with proper type when available
+	Campaign            CampaignData      `json:"campaign"`
+	Domains             []string          `json:"domains"`
+	DNSValidatedDomains []string          `json:"dnsValidatedDomains"`
+	Leads               []models.LeadItem `json:"leads"`
+	HTTPKeywordResults  []interface{}     `json:"httpKeywordResults"` // TODO: Replace with proper type when available
 }
 
 // ErrorContext represents error context information with all possible fields
@@ -427,13 +427,13 @@ type UpdateCampaignRequest = services.UpdateCampaignRequest
 type CreateProxyRequest = models.CreateProxyRequest
 type UpdateProxyRequest = models.UpdateProxyRequest
 type DNSValidationAPIRequest struct {
-	CampaignID              uuid.UUID   `json:"campaignId" validate:"required"`
-	PersonaIDs              []uuid.UUID `json:"personaIds" validate:"omitempty,min=1,dive,uuid"`
-	RotationIntervalSeconds int         `json:"rotationIntervalSeconds,omitempty" validate:"gte=0"`
-	ProcessingSpeedPerMinute int        `json:"processingSpeedPerMinute,omitempty" validate:"gte=0"`
-	BatchSize               int         `json:"batchSize,omitempty" validate:"gt=0"`
-	RetryAttempts           int         `json:"retryAttempts,omitempty" validate:"gte=0"`
-	OnlyInvalidDomains      bool        `json:"onlyInvalidDomains" validate:"omitempty"`
+	CampaignID               uuid.UUID   `json:"campaignId" validate:"required"`
+	PersonaIDs               []uuid.UUID `json:"personaIds" validate:"omitempty,min=1,dive,uuid"`
+	RotationIntervalSeconds  int         `json:"rotationIntervalSeconds,omitempty" validate:"gte=0"`
+	ProcessingSpeedPerMinute int         `json:"processingSpeedPerMinute,omitempty" validate:"gte=0"`
+	BatchSize                int         `json:"batchSize,omitempty" validate:"gt=0"`
+	RetryAttempts            int         `json:"retryAttempts,omitempty" validate:"gte=0"`
+	OnlyInvalidDomains       bool        `json:"onlyInvalidDomains" validate:"omitempty"`
 }
 
 // Request types for handlers with anonymous structs
@@ -467,8 +467,8 @@ type BulkEnrichedDataResponse struct {
 // BulkDomainsRequest represents a request for bulk domain data
 // @Description Request payload for retrieving domain data for multiple campaigns
 type BulkDomainsRequest struct {
-	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-50 campaigns)"`
-	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of domains per campaign (1-1000)"`
+	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=1000" validate:"required,min=1,max=1000,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-1000 campaigns)"`
+	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=100000" example:"10000" description:"Maximum number of domains per campaign (1-100,000)"`
 	Offset      int      `json:"offset,omitempty" validate:"omitempty,min=0" example:"0" description:"Number of domains to skip per campaign"`
 }
 
@@ -560,51 +560,51 @@ type DatabaseQueryResult struct {
 // BulkQueryMetadata represents processing metadata for bulk database operations
 // @Description Metadata containing processing statistics and performance metrics for bulk database operations
 type BulkQueryMetadata struct {
-	ProcessedQueries int      `json:"processedQueries" example:"8" description:"Number of queries successfully processed"`
-	SkippedQueries   int      `json:"skippedQueries" example:"1" description:"Number of queries skipped due to errors"`
-	FailedQueries    []string `json:"failedQueries,omitempty" example:"['query_9']" description:"List of query IDs that failed processing"`
-	ProcessingTimeMs int64    `json:"processingTimeMs" example:"2340" description:"Total processing time in milliseconds"`
-	TotalRowsReturned int64   `json:"totalRowsReturned" example:"15420" description:"Total number of rows returned across all queries"`
+	ProcessedQueries  int      `json:"processedQueries" example:"8" description:"Number of queries successfully processed"`
+	SkippedQueries    int      `json:"skippedQueries" example:"1" description:"Number of queries skipped due to errors"`
+	FailedQueries     []string `json:"failedQueries,omitempty" example:"['query_9']" description:"List of query IDs that failed processing"`
+	ProcessingTimeMs  int64    `json:"processingTimeMs" example:"2340" description:"Total processing time in milliseconds"`
+	TotalRowsReturned int64    `json:"totalRowsReturned" example:"15420" description:"Total number of rows returned across all queries"`
 }
 
 // BulkDatabaseStatsRequest represents a bulk database statistics request
 // @Description Request payload for retrieving database statistics for multiple schemas/databases
 type BulkDatabaseStatsRequest struct {
-	Schemas []string `json:"schemas,omitempty" validate:"omitempty,max=20,dive,min=1" example:"['public','analytics']" description:"List of database schemas to analyze (max 20)"`
-	Tables  []string `json:"tables,omitempty" validate:"omitempty,max=100,dive,min=1" example:"['campaigns','users']" description:"List of specific tables to analyze (max 100)"`
-	Detailed bool    `json:"detailed,omitempty" example:"false" description:"Whether to include detailed table-level statistics"`
+	Schemas  []string `json:"schemas,omitempty" validate:"omitempty,max=20,dive,min=1" example:"['public','analytics']" description:"List of database schemas to analyze (max 20)"`
+	Tables   []string `json:"tables,omitempty" validate:"omitempty,max=100,dive,min=1" example:"['campaigns','users']" description:"List of specific tables to analyze (max 100)"`
+	Detailed bool     `json:"detailed,omitempty" example:"false" description:"Whether to include detailed table-level statistics"`
 }
 
 // BulkDatabaseStatsResponse represents the response from bulk database statistics
 // @Description Response containing database statistics with metadata
 type BulkDatabaseStatsResponse struct {
-	DatabaseStats  DatabaseStats                  `json:"databaseStats" description:"Overall database statistics"`
-	SchemaStats    map[string]SchemaStats         `json:"schemaStats,omitempty" description:"Statistics by schema (if requested)"`
-	TableStats     map[string]TableStats          `json:"tableStats,omitempty" description:"Statistics by table (if requested)"`
-	TotalCount     int                            `json:"totalCount" example:"3" description:"Total number of analyzed schemas/tables"`
-	Metadata       *BulkStatsMetadata             `json:"metadata,omitempty" description:"Processing metadata and statistics"`
+	DatabaseStats DatabaseStats          `json:"databaseStats" description:"Overall database statistics"`
+	SchemaStats   map[string]SchemaStats `json:"schemaStats,omitempty" description:"Statistics by schema (if requested)"`
+	TableStats    map[string]TableStats  `json:"tableStats,omitempty" description:"Statistics by table (if requested)"`
+	TotalCount    int                    `json:"totalCount" example:"3" description:"Total number of analyzed schemas/tables"`
+	Metadata      *BulkStatsMetadata     `json:"metadata,omitempty" description:"Processing metadata and statistics"`
 }
 
 // DatabaseStats represents database statistics
 // @Description Database statistics and health information
 type DatabaseStats struct {
-	TotalTables    int    `json:"totalTables" example:"23" description:"Total number of tables in the database"`
-	TotalUsers     int    `json:"totalUsers" example:"5" description:"Total number of users in the system"`
-	TotalSessions  int    `json:"totalSessions" example:"3" description:"Total number of active sessions"`
-	DatabaseSize   string `json:"databaseSize" example:"156 MB" description:"Current database size"`
-	SchemaVersion  string `json:"schemaVersion" example:"v2.1" description:"Current database schema version"`
-	Uptime         string `json:"uptime" example:"2d 14h 30m" description:"Database uptime"`
-	Version        string `json:"version" example:"PostgreSQL 15.4" description:"Database version"`
-	IsHealthy      bool   `json:"isHealthy" example:"true" description:"Whether the database is healthy"`
+	TotalTables   int    `json:"totalTables" example:"23" description:"Total number of tables in the database"`
+	TotalUsers    int    `json:"totalUsers" example:"5" description:"Total number of users in the system"`
+	TotalSessions int    `json:"totalSessions" example:"3" description:"Total number of active sessions"`
+	DatabaseSize  string `json:"databaseSize" example:"156 MB" description:"Current database size"`
+	SchemaVersion string `json:"schemaVersion" example:"v2.1" description:"Current database schema version"`
+	Uptime        string `json:"uptime" example:"2d 14h 30m" description:"Database uptime"`
+	Version       string `json:"version" example:"PostgreSQL 15.4" description:"Database version"`
+	IsHealthy     bool   `json:"isHealthy" example:"true" description:"Whether the database is healthy"`
 }
 
 // SchemaStats represents statistics for a database schema
 // @Description Statistics for a specific database schema
 type SchemaStats struct {
-	Name        string `json:"name" example:"public" description:"Schema name"`
-	TableCount  int    `json:"tableCount" example:"15" description:"Number of tables in the schema"`
-	TotalRows   int64  `json:"totalRows" example:"1250000" description:"Total number of rows across all tables"`
-	TotalSize   string `json:"totalSize" example:"45 MB" description:"Total size of the schema"`
+	Name       string `json:"name" example:"public" description:"Schema name"`
+	TableCount int    `json:"tableCount" example:"15" description:"Number of tables in the schema"`
+	TotalRows  int64  `json:"totalRows" example:"1250000" description:"Total number of rows across all tables"`
+	TotalSize  string `json:"totalSize" example:"45 MB" description:"Total size of the schema"`
 }
 
 // TableStats represents statistics for a database table
