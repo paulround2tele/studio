@@ -2,12 +2,12 @@
   "ci": {
     "collect": {
       "url": [
-        "http://localhost:3000",
-        "http://localhost:3000/dashboard",
-        "http://localhost:3000/campaigns",
-        "http://localhost:3000/campaigns/new",
-        "http://localhost:3000/personas",
-        "http://localhost:3000/proxies"
+        "http://localhost:8080",
+        "http://localhost:8080/dashboard",
+        "http://localhost:8080/campaigns",
+        "http://localhost:8080/campaigns/new",
+        "http://localhost:8080/personas",
+        "http://localhost:8080/proxies"
       ],
       "startServerCommand": "npm run start",
       "numberOfRuns": 3,

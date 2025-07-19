@@ -76,8 +76,34 @@ export function useAuthUI() {
       const loginData = extractResponseData(response);
       
       if (loginData) {
-        // Re-validate session to get user data
-        await validateSession();
+        // Directly set authentication state - no need to re-validate!
+        console.log('[useAuthUI] Login successful, setting auth state directly');
+        setIsAuthenticated(true);
+        
+        // Extract user data from SessionResponse.User (capital U from Go struct)
+        const sessionUser = (loginData as any).User;
+        if (sessionUser) {
+          setUser({
+            id: sessionUser.ID,
+            email: sessionUser.Email,
+            name: sessionUser.Username,
+            isActive: sessionUser.IsActive,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          } as User);
+        } else {
+          // Fallback user data
+          setUser({
+            id: 'authenticated',
+            email: credentials.email,
+            name: credentials.email,
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          } as User);
+        }
+        
+        console.log('[useAuthUI] Authentication state updated immediately');
         return { success: true };
       } else {
         return { success: false, error: 'Login failed' };

@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState } from 'react';
 import { useAuthUI } from '@/lib/hooks/useAuthUI';
 import { getLogger } from '@/lib/utils/logger';
 
@@ -21,21 +20,17 @@ interface LoginFormData {
 }
 
 interface LoginFormProps {
-  redirectTo?: string;
   showSignUpLink?: boolean;
   title?: string;
   description?: string;
 }
 
 export function LoginForm({
-  redirectTo,
   showSignUpLink = true,
   title = 'Welcome back to DomainFlow',
   description = 'Sign in to your account to continue'
 }: LoginFormProps) {
-  const { login, isAuthenticated, isLoading: authLoading, isLoginLoading } = useAuthUI();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { login, isLoading: authLoading, isLoginLoading } = useAuthUI();
   
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
@@ -46,14 +41,9 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated && !authLoading) {
-      const redirectParam = searchParams.get('redirect');
-      const redirectUrl = redirectParam || redirectTo || '/dashboard';
-      router.push(redirectUrl);
-    }
-  }, [isAuthenticated, authLoading, router, searchParams, redirectTo]);
+  // RACE CONDITION FIX: Remove redirect logic from LoginForm
+  // Let ConditionalLayout handle ALL authentication redirects to prevent conflicts
+  // This eliminates the infinite redirect loop between LoginForm and ConditionalLayout
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,18 +107,8 @@ export function LoginForm({
     );
   }
 
-  // Redirect if already authenticated
-  if (isAuthenticated) {
-    logger.debug('LOGIN_FORM', 'User already authenticated - showing redirect screen');
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Redirecting to dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  // RACE CONDITION FIX: Let ConditionalLayout handle authenticated user redirects
+  // LoginForm will be unmounted by ConditionalLayout when user is authenticated
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">

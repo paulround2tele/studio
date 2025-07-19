@@ -131,7 +131,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 		allCookies := c.Request.Header.Get("Cookie")
 		fmt.Printf("[DIAGNOSTIC] Auth middleware cookie check: path=%s, allCookies=%s, timestamp=%s\n",
 			c.Request.URL.Path, allCookies, time.Now().Format(time.RFC3339))
-	
+
 		// Get session ID from cookie (try new names first, then fallback to legacy)
 		cookieStart := time.Now()
 		sessionID, err := c.Cookie(m.config.CookieName)
@@ -142,7 +142,7 @@ func (m *AuthMiddleware) SessionAuth() gin.HandlerFunc {
 			cookieSource = config.LegacySessionCookieName
 		}
 		cookieDuration := time.Since(cookieStart)
-	
+
 		// DIAGNOSTIC: Log cookie extraction result
 		fmt.Printf("[DIAGNOSTIC] Cookie extraction: cookieName=%s, found=%v, sessionIDLength=%d, error=%v\n",
 			cookieSource, err == nil, len(sessionID), err)
@@ -498,8 +498,17 @@ func (m *AuthMiddleware) clearSessionCookies(c *gin.Context) {
 		domain = m.config.CookieDomain
 	}
 
-	// Clear new session cookie with consistent SameSite handling
-	c.SetSameSite(http.SameSiteLaxMode)
+	// Use configured SameSite setting for consistency
+	var sameSiteMode http.SameSite
+	switch m.config.CookieSameSite {
+	case "Strict":
+		sameSiteMode = http.SameSiteStrictMode
+	case "None":
+		sameSiteMode = http.SameSiteNoneMode
+	default: // "Lax" or any other value
+		sameSiteMode = http.SameSiteLaxMode
+	}
+	c.SetSameSite(sameSiteMode)
 	c.SetCookie(
 		m.config.CookieName,
 		"",

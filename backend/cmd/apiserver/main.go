@@ -31,6 +31,7 @@ import (
 	"syscall"
 	"time"
 
+	api_pkg "github.com/fntelecomllc/studio/backend/api"
 	"github.com/fntelecomllc/studio/backend/internal/api"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
@@ -38,8 +39,6 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/fntelecomllc/studio/backend/internal/services"
-	api_pkg "github.com/fntelecomllc/studio/backend/api"
-	"gopkg.in/yaml.v3"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
@@ -50,6 +49,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -194,12 +194,12 @@ func main() {
 	if environment == "" {
 		environment = "development" // Default to development for localhost
 	}
-	
+
 	sessionConfigManager := config.NewSessionConfigManager(environment)
 	sessionConfig := sessionConfigManager.GetSettings()
 	log.Printf("Using session configuration for environment: %s (CookieSecure: %v, CookieDomain: '%s', CookieName: '%s')",
 		environment, sessionConfig.CookieSecure, sessionConfig.CookieDomain, sessionConfig.CookieName)
-	
+
 	sessionService, err := services.NewSessionService(db, sessionConfig.ToServiceConfig(), auditLogStore)
 	if err != nil {
 		log.Fatalf("FATAL: Failed to initialize session service: %v", err)
@@ -315,6 +315,9 @@ func main() {
 	router.Use(securityMiddleware.SecurityHeaders())
 	router.Use(securityMiddleware.EnhancedCORS())
 
+	// Basic CORS configuration for development
+	log.Println("Backend configured for development with CORS support")
+
 	// Add validation middleware for request/response validation
 	router.Use(middleware.ValidateRequestMiddleware())
 	router.Use(middleware.ValidateResponseMiddleware())
@@ -353,25 +356,12 @@ func main() {
 		authRoutesV2.POST("/login", rateLimitMiddleware.LoginRateLimit(), authHandler.Login)
 		authRoutesV2.POST("/logout", authHandler.Logout)
 		authRoutesV2.POST("/refresh", authHandler.RefreshSession)
-		
+
 		// Protected auth routes - require session authentication
 		authRoutesV2.GET("/me", authMiddleware.SessionAuth(), authHandler.Me)
 		authRoutesV2.POST("/change-password", authMiddleware.SessionAuth(), authHandler.ChangePassword)
 	}
 	log.Println("Registered authentication routes under /api/v2/auth")
-	
-	// Legacy auth routes for backward compatibility
-	legacyAuthRoutes := router.Group("/auth")
-	{
-		legacyAuthRoutes.POST("/login", rateLimitMiddleware.LoginRateLimit(), authHandler.Login)
-		legacyAuthRoutes.POST("/logout", authHandler.Logout)
-		legacyAuthRoutes.POST("/refresh", authHandler.RefreshSession)
-	}
-	log.Println("Registered legacy authentication routes under /auth for backward compatibility")
-
-	// Register health check routes (legacy paths for backward compatibility)
-	api.RegisterHealthCheckRoutes(router, healthCheckHandler)
-	log.Println("Registered health check routes: /health, /health/ready, /health/live")
 
 	// Register health check routes under /api/v2/ to match frontend expectations
 	router.GET("/api/v2/health", healthCheckHandler.HandleHealthCheck)
@@ -520,10 +510,10 @@ func main() {
 			campaignID := c.Param("campaignId")
 			messageType := c.DefaultQuery("type", "domain_generated")
 			requestID := uuid.New().String()
-			
+
 			if b := websocket.GetBroadcaster(); b != nil {
 				var message websocket.WebSocketMessage
-				
+
 				switch messageType {
 				case "domain_generated":
 					message = websocket.CreateDomainGeneratedMessage(campaignID, "test-domain-id", "test.example.com", 1, 1)
@@ -547,7 +537,7 @@ func main() {
 					c.JSON(http.StatusBadRequest, response)
 					return
 				}
-				
+
 				b.BroadcastToCampaign(campaignID, message)
 				response := struct {
 					Success   bool        `json:"success"`
@@ -597,17 +587,10 @@ func main() {
 	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware)
 	log.Println("Registered new campaign orchestration routes under /api/v2/campaigns.")
 
-	// Legacy campaign routes for backward compatibility (session auth only)
-	legacyCampaignGroup := router.Group("/campaigns")
-	legacyCampaignGroup.Use(authMiddleware.SessionAuth())
-	legacyCampaignGroup.Use(securityMiddleware.SessionProtection())
-	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(legacyCampaignGroup, authMiddleware)
-	log.Println("Registered legacy campaign orchestration routes under /campaigns for backward compatibility.")
-
 	// Generate OpenAPI specification using TRUE automatic reflection from real server routes
 	log.Println("Generating OpenAPI specification using automatic reflection...")
 	spec := api_pkg.GenerateOpenAPISpecWithEngine(router)
-	
+
 	// Save to file
 	specData, err := yaml.Marshal(spec)
 	if err != nil {

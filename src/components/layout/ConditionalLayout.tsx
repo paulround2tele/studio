@@ -32,21 +32,41 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
   
   // Handle navigation side effects in useEffect to avoid render-time navigation
   useEffect(() => {
+    console.log('[ConditionalLayout] AUTH STATE DEBUG:', {
+      isAuthenticated,
+      isLoading,
+      isInitialized,
+      isPublicPath,
+      pathname,
+      shouldRedirect: !isInitialized || isLoading
+    });
+
     // Only proceed if authentication state is fully initialized
     if (!isInitialized || isLoading) {
+      console.log('[ConditionalLayout] SKIPPING: Auth not ready - isInitialized:', isInitialized, 'isLoading:', isLoading);
       return;
     }
 
     if (!isAuthenticated && !isPublicPath) {
       // Redirect unauthenticated user to login for protected pages
-      console.log('[ConditionalLayout] Redirecting unauthenticated user to login from:', pathname);
+      console.log('[ConditionalLayout] REDIRECTING: Unauthenticated user to login from:', pathname);
       router.push('/login');
     } else if (isAuthenticated && isPublicPath) {
       // Redirect authenticated user away from login page to dashboard
-      console.log('[ConditionalLayout] Redirecting authenticated user to dashboard from:', pathname);
+      console.log('[ConditionalLayout] REDIRECTING: Authenticated user to dashboard from:', pathname);
       router.push('/dashboard');
+    } else {
+      console.log('[ConditionalLayout] NO REDIRECT NEEDED - staying on:', pathname);
     }
   }, [isAuthenticated, isLoading, isInitialized, isPublicPath, pathname, router]);
+
+  // ADDITIONAL: Force redirect check when authentication state changes
+  useEffect(() => {
+    if (isInitialized && !isLoading && isAuthenticated && isPublicPath) {
+      console.log('[ConditionalLayout] FORCE REDIRECT: Authentication detected on public path:', pathname);
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, isInitialized, isLoading]); // Simplified dependency array
   
   // Show loading while authentication is being checked
   if (!isInitialized || isLoading) {

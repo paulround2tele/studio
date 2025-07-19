@@ -72,13 +72,13 @@ func GetDefaultSessionSettings() *SessionSettings {
 		RequireUAMatch:       false, // Disabled
 		EnableFingerprinting: false, // Disabled for simplicity
 
-		// Cookie settings - VERY PERMISSIVE
+		// Cookie settings - CROSS-ORIGIN DEVELOPMENT FRIENDLY
 		CookieName:     SessionCookieName,
 		CookiePath:     CookiePath,
 		CookieDomain:   "", // Empty domain for maximum compatibility
-		CookieSecure:   false, // Always disabled
-		CookieHttpOnly: false, // Allow JavaScript access
-		CookieSameSite: "None", // Most permissive
+		CookieSecure:   false, // Must be false for localhost HTTP
+		CookieHttpOnly: false, // Allow JavaScript access for debugging
+		CookieSameSite: "Lax", // Lax works better for localhost cross-origin
 		CookieMaxAge:   CookieMaxAge,
 
 		// CSRF Protection - ALL DISABLED

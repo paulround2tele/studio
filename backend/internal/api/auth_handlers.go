@@ -109,8 +109,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		sessionDuration = h.config.CookieMaxAge // Fallback to default
 	}
 
-	// Use Gin's SetSameSite and SetCookie for proper SameSite support
-	c.SetSameSite(http.SameSiteLaxMode) // Use constant instead of string for reliability
+	// Use configured SameSite setting for consistency
+	var sameSiteMode http.SameSite
+	switch h.config.CookieSameSite {
+	case "Strict":
+		sameSiteMode = http.SameSiteStrictMode
+	case "None":
+		sameSiteMode = http.SameSiteNoneMode
+	default: // "Lax" or any other value
+		sameSiteMode = http.SameSiteLaxMode
+	}
+	c.SetSameSite(sameSiteMode)
 	c.SetCookie(
 		h.config.CookieName,
 		sessionData.ID,
@@ -310,7 +319,17 @@ func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	}
 
 	sessionDuration := int(time.Until(newExpiry).Seconds())
-	c.SetSameSite(http.SameSiteLaxMode) // Consistent SameSite handling
+	// Use configured SameSite setting for consistency
+	var sameSiteMode http.SameSite
+	switch h.config.CookieSameSite {
+	case "Strict":
+		sameSiteMode = http.SameSiteStrictMode
+	case "None":
+		sameSiteMode = http.SameSiteNoneMode
+	default: // "Lax" or any other value
+		sameSiteMode = http.SameSiteLaxMode
+	}
+	c.SetSameSite(sameSiteMode)
 	c.SetCookie(
 		h.config.CookieName,
 		sessionID,
@@ -402,8 +421,17 @@ func (h *AuthHandler) clearSessionCookies(c *gin.Context) {
 		domain = h.config.CookieDomain
 	}
 
-	// Clear new session cookie with consistent SameSite handling
-	c.SetSameSite(http.SameSiteLaxMode)
+	// Use configured SameSite setting for consistency
+	var sameSiteMode http.SameSite
+	switch h.config.CookieSameSite {
+	case "Strict":
+		sameSiteMode = http.SameSiteStrictMode
+	case "None":
+		sameSiteMode = http.SameSiteNoneMode
+	default: // "Lax" or any other value
+		sameSiteMode = http.SameSiteLaxMode
+	}
+	c.SetSameSite(sameSiteMode)
 	c.SetCookie(
 		h.config.CookieName,
 		"",
