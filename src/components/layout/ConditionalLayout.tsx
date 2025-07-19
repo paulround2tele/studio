@@ -66,7 +66,7 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
       console.log('[ConditionalLayout] FORCE REDIRECT: Authentication detected on public path:', pathname);
       router.push('/dashboard');
     }
-  }, [isAuthenticated, isInitialized, isLoading]); // Simplified dependency array
+  }, [isAuthenticated, isInitialized, isLoading, isPublicPath, pathname, router]); // Complete dependency array
   
   // Show loading while authentication is being checked
   if (!isInitialized || isLoading) {

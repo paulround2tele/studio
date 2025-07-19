@@ -224,9 +224,11 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
           } as User;
         }
         
-        // Update state immediately
+        // Update state immediately - INCLUDING initialization flags for immediate redirect
         setIsAuthenticated(true);
         setUser(userData);
+        setIsLoading(false);
+        setIsInitialized(true);
         
         // Cache the login result
         setCachedAuthState({
@@ -234,6 +236,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
           user: userData,
         });
         
+        console.log('[useCachedAuth] Login state updated - ready for redirect');
         return { success: true };
       } else {
         return { success: false, error: 'Login failed' };
