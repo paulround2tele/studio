@@ -59,7 +59,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
 
   // Refs to prevent memory leaks and stale closures
   const backgroundValidationTimer = useRef<NodeJS.Timeout | null>(null);
-  const storageCheckTimer = useRef<NodeJS.Timeout | null>(null);
+  const _storageCheckTimer = useRef<NodeJS.Timeout | null>(null);
   const lastValidationTime = useRef<number>(0);
 
   // Get cached auth state from localStorage

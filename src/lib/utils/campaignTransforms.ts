@@ -15,8 +15,10 @@ type OpenAPICampaign = components['schemas']['Campaign'];
 /**
  * Helper function to find campaign ID in nested API response structures
  */
-function findCampaignIdInData(data: any): string | null {
+function findCampaignIdInData(data: unknown): string | null {
   if (!data || typeof data !== 'object') return null;
+  
+  const dataObj = data as Record<string, unknown>;
   
   // Check common patterns for campaign ID
   const possibleIdFields = [
@@ -25,7 +27,7 @@ function findCampaignIdInData(data: any): string | null {
   ];
   
   for (const field of possibleIdFields) {
-    const value = data[field];
+    const value = dataObj[field];
     if (typeof value === 'string' && value.length > 0 &&
         value !== '00000000-0000-0000-0000-000000000000') {
       return value;
@@ -35,8 +37,8 @@ function findCampaignIdInData(data: any): string | null {
   // Check nested objects
   const nestedKeys = ['campaign', 'data', 'result', 'entity'];
   for (const key of nestedKeys) {
-    if (data[key] && typeof data[key] === 'object') {
-      const nestedId = findCampaignIdInData(data[key]);
+    if (dataObj[key] && typeof dataObj[key] === 'object') {
+      const nestedId = findCampaignIdInData(dataObj[key]);
       if (nestedId) return nestedId;
     }
   }
@@ -48,23 +50,23 @@ function findCampaignIdInData(data: any): string | null {
 function mapOpenAPICampaignStatus(status?: string): CampaignStatus {
   switch (status) {
     case 'pending':
-      return 'pending' as any;
+      return 'pending';
     case 'queued':
-      return 'queued' as any;
+      return 'queued';
     case 'running':
-      return 'running' as any;
+      return 'running';
     case 'pausing':
-      return 'pausing' as any;
+      return 'pausing';
     case 'paused':
-      return 'paused' as any;
+      return 'paused';
     case 'completed':
-      return 'completed' as any;
+      return 'completed';
     case 'failed':
-      return 'failed' as any;
+      return 'failed';
     case 'cancelled':
-      return 'cancelled' as any;
+      return 'cancelled';
     default:
-      return 'pending' as any;
+      return 'pending';
   }
 }
 
@@ -72,13 +74,13 @@ function mapOpenAPICampaignStatus(status?: string): CampaignStatus {
 function mapOpenAPICampaignType(type?: string): CampaignType {
   switch (type) {
     case 'domain_generation':
-      return 'domain_generation' as any;
+      return 'domain_generation';
     case 'dns_validation':
-      return 'dns_validation' as any;
+      return 'dns_validation';
     case 'http_keyword_validation':
-      return 'http_keyword_validation' as any;
+      return 'http_keyword_validation';
     default:
-      return 'domain_generation' as any;
+      return 'domain_generation';
   }
 }
 
@@ -173,35 +175,35 @@ export function transformCampaignsToViewModels(campaigns: OpenAPICampaign[]): Ca
 function mapStatusToPhase(status: CampaignStatus, campaignType: CampaignType): CampaignPhase {
   switch (status) {
     case 'pending':
-      return "setup" as any;
+      return "setup";
     case 'queued':
-      return "setup" as any;
+      return "setup";
     case 'running':
       // Map to appropriate phase based on campaign type
       switch (campaignType) {
         case 'domain_generation':
-          return 'generation' as any;
+          return 'generation';
         case 'dns_validation':
-          return 'dns_validation' as any;
+          return 'dns_validation';
         case 'http_keyword_validation':
-          return 'http_validation' as any;
+          return 'http_validation';
         default:
-          return 'generation' as any;
+          return 'generation';
       }
     case 'pausing':
       return mapStatusToPhase('running', campaignType); // Same phase as running
     case 'paused':
       return mapStatusToPhase('running', campaignType); // Same phase as running
     case 'completed':
-      return "cleanup" as any;
+      return "cleanup";
     case 'failed':
       return mapStatusToPhase('running', campaignType); // Show which phase failed
     case 'archived':
-      return "cleanup" as any;
+      return "cleanup";
     case 'cancelled':
-      return "cleanup" as any;
+      return "cleanup";
     default:
-      return "setup" as any;
+      return "setup";
   }
 }
 

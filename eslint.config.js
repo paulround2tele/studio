@@ -110,6 +110,7 @@ export default [
         // Events
         CustomEvent: 'readonly',
         KeyboardEvent: 'readonly',
+        StorageEvent: 'readonly',
         
         // Observers and callbacks
         ResizeObserverCallback: 'readonly',

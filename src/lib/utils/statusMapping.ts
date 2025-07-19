@@ -47,7 +47,7 @@ export function isValidCampaignStatus(status: string): status is CampaignStatus 
  */
 export function normalizeStatus(status: unknown): CampaignStatus {
   if (typeof status !== 'string') {
-    return 'pending' as any;
+    return 'pending';
   }
 
   const lowercaseStatus = status.toLowerCase();
@@ -63,39 +63,39 @@ export function normalizeStatus(status: unknown): CampaignStatus {
     case 'created':
     case 'new':
     case 'pending':
-      return 'pending' as any;
+      return 'pending';
     case 'scheduled':
     case 'ready':
-      return 'queued' as any;
+      return 'queued';
     case 'active':
     case 'inprogress':
     case 'running':
-      return 'running' as any;
+      return 'running';
     case 'stopping':
     case 'stop':
-      return 'pausing' as any;
+      return 'pausing';
     case 'stopped':
     case 'halted':
-      return 'paused' as any;
+      return 'paused';
     case 'done':
     case 'finished':
     case 'success':
     case 'succeeded':
-      return 'completed' as any;
+      return 'completed';
     case 'error':
     case 'errored':
     case 'failure':
     case 'failed':
-      return 'failed' as any;
+      return 'failed';
     case 'deleted':
     case 'removed':
-      return 'archived' as any;
+      return 'archived';
     case 'aborted':
     case 'terminated':
-      return 'cancelled' as any;
+      return 'cancelled';
     default:
       console.warn(`Unknown status value: ${status}, defaulting to pending`);
-      return 'pending' as any;
+      return 'pending';
   }
 }
 

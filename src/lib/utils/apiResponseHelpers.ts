@@ -8,25 +8,86 @@
 
 import type { ApiResponse } from '@/lib/types';
 
+// ===================================================================
+// PROPER TYPESCRIPT INTERFACES FOR API RESPONSE HANDLING
+// ===================================================================
+
+/**
+ * Backend envelope format for all API responses
+ */
+export interface BackendEnvelope<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string | null;
+  requestId?: string;
+  message?: string;
+}
+
+/**
+ * Axios response wrapper containing backend envelope
+ */
+export interface AxiosResponseWrapper<T = unknown> {
+  status: number;
+  statusText: string;
+  data: BackendEnvelope<T>;
+  headers: Record<string, any>;
+}
+
+/**
+ * Type guard to check if response has Axios structure
+ */
+function isAxiosResponse<T>(response: unknown): response is AxiosResponseWrapper<T> {
+  return !!(
+    response &&
+    typeof response === 'object' &&
+    'status' in response &&
+    'data' in response &&
+    typeof (response as any).status === 'number'
+  );
+}
+
+/**
+ * Type guard to check if response has backend envelope structure
+ */
+function isBackendEnvelope<T>(response: unknown): response is BackendEnvelope<T> {
+  return !!(
+    response &&
+    typeof response === 'object' &&
+    'success' in response &&
+    typeof (response as any).success === 'boolean'
+  );
+}
+
 /**
  * Extract data from unified backend envelope format
  * BULK-ONLY STRATEGY: Handles only unified envelope format with optional Axios wrapper
  */
 export function extractResponseData<T>(response: unknown): T | null {
+  // 🐛 DEBUG: Logging type safety validation - apiResponseHelpers.ts:15
+  console.log('[DEBUG] extractResponseData called with response type:', typeof response);
+  
   if (!response || typeof response !== 'object') {
+    console.log('[DEBUG] Invalid response format - not an object');
     return null;
   }
 
-  let apiResponse = response as any;
+  let apiResponse: BackendEnvelope<T>;
   
-  // Handle Axios wrapper if present
-  if ('status' in response && 'data' in response && typeof response.status === 'number') {
-    const httpStatus = response.status as number;
+  // ✅ FIXED: Using proper type guards instead of 'any' casting
+  if (isAxiosResponse<T>(response)) {
+    console.log('[DEBUG] Detected Axios response wrapper');
+    const httpStatus = response.status;
     if (httpStatus >= 200 && httpStatus < 300) {
-      apiResponse = (response as any).data;
+      apiResponse = response.data;
     } else {
       throw new Error(`HTTP error status: ${httpStatus}`);
     }
+  } else if (isBackendEnvelope<T>(response)) {
+    console.log('[DEBUG] Detected direct backend envelope');
+    apiResponse = response;
+  } else {
+    console.log('[DEBUG] Unknown response format');
+    throw new Error('Invalid response format: missing unified envelope structure');
   }
   
   // BULK-ONLY STRATEGY: Only handle unified envelope format
@@ -51,15 +112,19 @@ export function isResponseSuccess(response: unknown): boolean {
     return false;
   }
 
-  let apiResponse = response as any;
+  let apiResponse: BackendEnvelope;
   
-  // Handle Axios wrapper
-  if ('status' in response && 'data' in response && typeof response.status === 'number') {
-    const httpStatus = response.status as number;
+  // ✅ FIXED: Using proper type guards instead of 'any' casting
+  if (isAxiosResponse(response)) {
+    const httpStatus = response.status;
     if (httpStatus < 200 || httpStatus >= 300) {
       return false;
     }
-    apiResponse = (response as any).data;
+    apiResponse = response.data;
+  } else if (isBackendEnvelope(response)) {
+    apiResponse = response;
+  } else {
+    return false;
   }
   
   // BULK-ONLY STRATEGY: Only check unified envelope format
@@ -80,15 +145,19 @@ export function getResponseError(response: unknown): string | null {
     return 'Invalid response format - missing unified envelope structure';
   }
 
-  let apiResponse = response as any;
+  let apiResponse: BackendEnvelope;
   
-  // Handle Axios wrapper
-  if ('status' in response && 'data' in response && typeof response.status === 'number') {
-    const httpStatus = response.status as number;
+  // ✅ FIXED: Using proper type guards instead of 'any' casting
+  if (isAxiosResponse(response)) {
+    const httpStatus = response.status;
     if (httpStatus < 200 || httpStatus >= 300) {
       return `HTTP error: ${httpStatus}`;
     }
-    apiResponse = (response as any).data;
+    apiResponse = response.data;
+  } else if (isBackendEnvelope(response)) {
+    apiResponse = response;
+  } else {
+    return 'Invalid response format - missing unified envelope structure';
   }
   
   // BULK-ONLY STRATEGY: Only check unified envelope format
@@ -122,7 +191,7 @@ export function toApiResponse<T>(response: unknown, defaultErrorMessage: string 
       const error = getResponseError(response);
       return {
         success: false,
-        data: undefined as any,
+        data: undefined as T,
         error: error || defaultErrorMessage,
         requestId
       };
@@ -130,7 +199,7 @@ export function toApiResponse<T>(response: unknown, defaultErrorMessage: string 
   } catch (error) {
     return {
       success: false,
-      data: undefined as any,
+      data: undefined as T,
       error: error instanceof Error ? error.message : defaultErrorMessage,
       requestId
     };
@@ -152,19 +221,19 @@ export function handleApiError(error: unknown, context: string = 'API call'): ne
   }
   
   if (error && typeof error === 'object') {
-    const errorObj = error as any;
+    // ✅ FIXED: Using proper type guards instead of 'any' casting
     
     // Handle axios error
-    if (errorObj.response?.data) {
-      const responseError = getResponseError(errorObj.response);
+    if ('response' in error && error.response) {
+      const responseError = getResponseError(error.response);
       if (responseError) {
         throw new Error(responseError);
       }
     }
     
     // Handle unified envelope error
-    if ('error' in errorObj && typeof errorObj.error === 'string') {
-      throw new Error(errorObj.error);
+    if ('error' in error && typeof (error as { error: unknown }).error === 'string') {
+      throw new Error((error as { error: string }).error);
     }
   }
   
@@ -189,7 +258,7 @@ export async function safeApiCall<T>(
     // Backend middleware handles authentication redirects
     return {
       success: false,
-      data: undefined as any,
+      data: undefined as T,
       error: error instanceof Error ? error.message : `${context} failed`,
       requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
     };

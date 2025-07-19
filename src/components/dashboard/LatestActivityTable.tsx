@@ -335,7 +335,8 @@ export default function LatestActivityTable() {
           }
 
           domains.forEach(domainName => {
-            const leadInfo = getGlobalLeadStatusAndScore(domainName, richCampaign || campaign);
+            const safeRichCampaign = richCampaign ? (richCampaign as unknown as CampaignViewModel) : null;
+            const leadInfo = getGlobalLeadStatusAndScore(domainName, safeRichCampaign || campaign);
             processedActivities.push({
               id: `${campaign.id}-${domainName}`, // Unique ID for the activity row
               domain: domainName,
@@ -343,12 +344,12 @@ export default function LatestActivityTable() {
               campaignId: campaign.id!,
               campaignName: campaign.name!,
               phase: campaign.currentPhase || 'Pending',
-              status: getGlobalDomainStatusForPhase(domainName, 'dns_validation', richCampaign || campaign),
+              status: getGlobalDomainStatusForPhase(domainName, 'dns_validation', safeRichCampaign || campaign),
               timestamp: campaign.createdAt!,
               activity: 'Domain processing',
               generatedDate: campaign.createdAt!, // Or a more specific date if available per domain
-              dnsStatus: getGlobalDomainStatusForPhase(domainName, 'dns_validation', richCampaign || campaign),
-              httpStatus: getGlobalDomainStatusForPhase(domainName, 'http_validation', richCampaign || campaign),
+              dnsStatus: getGlobalDomainStatusForPhase(domainName, 'dns_validation', safeRichCampaign || campaign),
+              httpStatus: getGlobalDomainStatusForPhase(domainName, 'http_validation', safeRichCampaign || campaign),
               leadScanStatus: leadInfo.status,
               leadScore: leadInfo.score, // Store the score here
               sourceUrl: `http://${domainName}`, // Assuming HTTP for direct link

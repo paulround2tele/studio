@@ -33,18 +33,21 @@ const convertCookieMode = (mode: string): CookieHandling => {
 };
 
 // Convert payload to ensure enums are properly typed
-const convertPersonaPayload = (payload: any): any => {
+const convertPersonaPayload = <T extends CreatePersonaRequest | UpdatePersonaRequest>(payload: T): T => {
   if (!payload.configDetails) return payload;
   
   const converted = { ...payload };
-  if (converted.configDetails.cookieHandling?.mode) {
+  const configDetails = payload.configDetails as Record<string, unknown>;
+  const cookieHandling = configDetails.cookieHandling as Record<string, unknown> | undefined;
+  
+  if (cookieHandling?.mode) {
     converted.configDetails = {
-      ...converted.configDetails,
+      ...configDetails,
       cookieHandling: {
-        ...converted.configDetails.cookieHandling,
-        mode: convertCookieMode(converted.configDetails.cookieHandling.mode)
+        ...cookieHandling,
+        mode: convertCookieMode(String(cookieHandling.mode))
       }
-    };
+    } as T['configDetails'];
   }
   
   return converted;
@@ -66,12 +69,12 @@ export async function createPersona(payload: CreatePersonaRequest): Promise<ApiR
       error: null,
       requestId
     };
-  } catch (error: any) {
-    console.error('[PersonaService] Error creating persona:', error);
+  } catch (error: unknown) {
+    console.error('[PersonaService] Error creating persona:', error instanceof Error ? error.message : String(error));
     return {
       success: false,
       data: undefined as any,
-      error: error.message || 'Failed to create persona',
+      error: error instanceof Error ? error.message : 'Failed to create persona',
       requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
     };
   }
@@ -99,12 +102,12 @@ export async function listPersonas(options?: {
       error: null,
       requestId
     };
-  } catch (error: any) {
-    console.error('[PersonaService] Error listing personas:', error);
+  } catch (error: unknown) {
+    console.error('[PersonaService] Error listing personas:', error instanceof Error ? error.message : String(error));
     return {
       success: false,
       data: undefined as any,
-      error: error.message || 'Failed to list personas',
+      error: error instanceof Error ? error.message : 'Failed to list personas',
       requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
     };
   }
@@ -122,12 +125,12 @@ export async function getPersonaById(personaId: string, _personaType?: 'http' | 
       error: null,
       requestId
     };
-  } catch (error: any) {
-    console.error('[PersonaService] Error getting persona by ID:', error);
+  } catch (error: unknown) {
+    console.error('[PersonaService] Error getting persona by ID:', error instanceof Error ? error.message : String(error));
     return {
       success: false,
       data: undefined as any,
-      error: error.message || 'Failed to get persona',
+      error: error instanceof Error ? error.message : 'Failed to get persona',
       requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
     };
   }
@@ -146,12 +149,12 @@ export async function updatePersona(personaId: string, payload: UpdatePersonaReq
       error: null,
       requestId
     };
-  } catch (error: any) {
-    console.error('[PersonaService] Error updating persona:', error);
+  } catch (error: unknown) {
+    console.error('[PersonaService] Error updating persona:', error instanceof Error ? error.message : String(error));
     return {
       success: false,
       data: undefined as any,
-      error: error.message || 'Failed to update persona',
+      error: error instanceof Error ? error.message : 'Failed to update persona',
       requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
     };
   }
@@ -169,12 +172,12 @@ export async function deletePersona(personaId: string, _personaType?: 'http' | '
       error: null,
       requestId
     };
-  } catch (error: any) {
-    console.error('[PersonaService] Error deleting persona:', error);
+  } catch (error: unknown) {
+    console.error('[PersonaService] Error deleting persona:', error instanceof Error ? error.message : String(error));
     return {
       success: false,
       data: undefined as any,
-      error: error.message || 'Failed to delete persona',
+      error: error instanceof Error ? error.message : 'Failed to delete persona',
       requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
     };
   }
@@ -192,12 +195,12 @@ export async function testPersona(personaId: string, _personaType?: 'http' | 'dn
       error: null,
       requestId
     };
-  } catch (error: any) {
-    console.error('[PersonaService] Error testing persona:', error);
+  } catch (error: unknown) {
+    console.error('[PersonaService] Error testing persona:', error instanceof Error ? error.message : String(error));
     return {
       success: false,
       data: undefined as any,
-      error: error.message || 'Failed to test persona',
+      error: error instanceof Error ? error.message : 'Failed to test persona',
       requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
     };
   }

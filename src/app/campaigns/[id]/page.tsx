@@ -246,8 +246,8 @@ type: 'campaign_progress',
                   timestamp: message.timestamp || new Date().toISOString(),
                   campaignId: message.campaignId || campaignId,
                   // Forward phase and status from message level,
-phase: (message as any).phase,
-                  status: (message as any).status
+phase: message.phase,
+status: message.status
 });
                 break;
                 
@@ -312,16 +312,16 @@ default:
           },
           
           onOpen: () => {
-            updateStreamingStats({ connectionStatus: 'connected' as any });
+            updateStreamingStats({ connectionStatus: 'connected' as const });
           },
           
           onClose: () => {
-            updateStreamingStats({ connectionStatus: 'disconnected' as any });
+            updateStreamingStats({ connectionStatus: 'disconnected' as const });
           },
           
-          onError: (error: any) => {
+          onError: (error: unknown) => {
             console.error('❌ [WebSocket] Connection error:', error);
-            updateStreamingStats({ connectionStatus: 'disconnected' as any });
+            updateStreamingStats({ connectionStatus: 'disconnected' as const });
           }
         });
         

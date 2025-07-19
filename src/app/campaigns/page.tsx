@@ -3,13 +3,21 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
-import type { components } from '@/lib/api-client/types';
-
-// Frontend-specific view model based on auto-generated Campaign type
-type CampaignViewModel = components['schemas']['Campaign'] & {
-  // Add any frontend-specific fields if needed
-};
+import type { CampaignViewModel } from '@/lib/types';
 import { PlusCircle, Briefcase, CheckCircle, AlertTriangle, Clock, PauseCircle, Wifi, WifiOff, Trash2, Loader2 } from 'lucide-react';
+
+// WebSocket message interfaces
+interface _WebSocketCampaignMessage {
+  type: string;
+  campaignId: string;
+  data: {
+    progress?: number;
+    phase?: string;
+    status?: string;
+    error?: unknown;
+  };
+  timestamp?: string;
+}
 import { useEffect, useState, useCallback, useRef, lazy, Suspense, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -215,7 +223,7 @@ function CampaignsPageContent() {
                 // Update campaign progress
                 if (message.campaignId) {
                   const progressData = message.data as { progress?: number; phase?: string; status?: string };
-                  setCampaigns(prev => prev.map((campaign: any) =>
+                  setCampaigns(prev => prev.map((campaign: CampaignViewModel) =>
                     campaign.id === message.campaignId
                       ? {
                           ...campaign,
@@ -234,11 +242,11 @@ phaseStatus: progressData.status || campaign.phaseStatus as any
                 // Update campaign status and phase
                 if (message.campaignId && message.data.status) {
                   const phaseData = message.data as { phase?: string; status?: string; progress?: number };
-                  setCampaigns(prev => prev.map((campaign: any) =>
+                  setCampaigns(prev => prev.map((campaign: CampaignViewModel) =>
                     campaign.id === message.campaignId
                       ? {
                           ...campaign,
-                          status: phaseData.status === 'completed' ? 'completed' : normalizeStatus(phaseData.status),
+                          status: phaseData.status === 'completed' ? 'completed' as const : normalizeStatus(phaseData.status),
                           currentPhase: phaseData.phase as CampaignViewModel['currentPhase'] || campaign.currentPhase  as any,
 phaseStatus: phaseData.status || campaign.phaseStatus  as any,
 progressPercentage: phaseData.progress || 100
@@ -252,9 +260,9 @@ progressPercentage: phaseData.progress || 100
                 // Handle campaign status updates
                 if (message.campaignId) {
                   const statusData = message.data as { status?: string };
-                  setCampaigns(prev => prev.map((campaign: any) =>
+                  setCampaigns(prev => prev.map((campaign: CampaignViewModel) =>
                     campaign.id === message.campaignId
-                      ? { ...campaign, status: statusData.status || campaign.status }
+                      ? { ...campaign, status: statusData.status ? normalizeStatus(statusData.status) : campaign.status }
                       : campaign
                   ));
                 }
@@ -263,7 +271,7 @@ progressPercentage: phaseData.progress || 100
               case 'error':
                 // Handle campaign errors
                 if (message.campaignId && message.data && typeof message.data === 'object' && 'error' in message.data) {
-                  setCampaigns(prev => prev.map((campaign: any) =>
+                  setCampaigns(prev => prev.map((campaign: CampaignViewModel) =>
                     campaign.id === message.campaignId
                       ? { ...campaign, errorMessage: String((message.data as { error: unknown }).error) }
                       : campaign

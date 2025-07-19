@@ -24,8 +24,7 @@ export interface FormErrorState {
  * @param apiResponse - API response from our auto-generated API client
  * @returns Object mapping field names to error messages
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function extractFieldErrors(apiResponse: any): FormErrorState {
+export function extractFieldErrors(apiResponse: Record<string, unknown>): FormErrorState {
   const fieldErrors: FormErrorState = {};
   
   // Check if the response has detailed field errors
@@ -45,14 +44,19 @@ export function extractFieldErrors(apiResponse: any): FormErrorState {
  * @param apiResponse - API response from our auto-generated API client
  * @returns Main error message string
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function extractMainError(apiResponse: any): string {
-  if (apiResponse?.message) {
+export function extractMainError(apiResponse: Record<string, unknown>): string {
+  if (apiResponse?.message && typeof apiResponse.message === 'string') {
     return apiResponse.message;
   }
   
   if (apiResponse?.error) {
-    return typeof apiResponse.error === 'string' ? apiResponse.error : apiResponse.error.message || 'An error occurred';
+    if (typeof apiResponse.error === 'string') {
+      return apiResponse.error;
+    }
+    if (typeof apiResponse.error === 'object' && apiResponse.error !== null) {
+      const errorObj = apiResponse.error as Record<string, unknown>;
+      return typeof errorObj.message === 'string' ? errorObj.message : 'An error occurred';
+    }
   }
   
   return 'An unexpected error occurred';
@@ -63,9 +67,8 @@ export function extractMainError(apiResponse: any): string {
  * @param apiResponse - API response from our auto-generated API client
  * @returns True if the response contains field errors
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function hasFieldErrors(apiResponse: any): boolean {
-  return apiResponse?.errors && Array.isArray(apiResponse.errors) && apiResponse.errors.length > 0;
+export function hasFieldErrors(apiResponse: Record<string, unknown>): boolean {
+  return Boolean(apiResponse?.errors && Array.isArray(apiResponse.errors) && apiResponse.errors.length > 0);
 }
 
 /**
@@ -80,16 +83,19 @@ export function combineValidationErrors(zodError?: unknown, apiFieldErrors?: For
   
   // Add Zod validation errors
   if (zodError && typeof zodError === 'object' && 'errors' in zodError) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (zodError as any).errors.forEach((error: unknown) => {
-      if (error && typeof error === 'object' && 'path' in error && 'message' in error) {
-        const errorObj = error as { path: unknown[]; message: string };
-        if (errorObj.path && errorObj.path.length > 0) {
-          const fieldName = errorObj.path[0];
-          combined[fieldName as string] = errorObj.message;
+    const zodErrorObj = zodError as { errors: unknown };
+    
+    if (Array.isArray(zodErrorObj.errors)) {
+      zodErrorObj.errors.forEach((error: unknown) => {
+        if (error && typeof error === 'object' && 'path' in error && 'message' in error) {
+          const errorObj = error as { path: unknown[]; message: string };
+          if (errorObj.path && errorObj.path.length > 0) {
+            const fieldName = errorObj.path[0];
+            combined[fieldName as string] = errorObj.message;
+          }
         }
-      }
-    });
+      });
+    }
   }
   
   // Add API field errors (these take precedence)
@@ -105,8 +111,7 @@ export function combineValidationErrors(zodError?: unknown, apiFieldErrors?: For
  * @param apiResponse - API response from our auto-generated API client
  * @returns User-friendly error message
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createUserFriendlyError(apiResponse: any): string {
+export function createUserFriendlyError(apiResponse: Record<string, unknown>): string {
   const mainError = extractMainError(apiResponse);
   
   // Handle common error patterns
@@ -154,8 +159,7 @@ export class FormErrorManager {
   /**
    * Processes an API response and updates error state
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleApiResponse(apiResponse: any): void {
+  handleApiResponse(apiResponse: Record<string, unknown>): void {
     if (apiResponse.status === 'error') {
       const fieldErrors = extractFieldErrors(apiResponse);
       const mainError = hasFieldErrors(apiResponse) ? 
@@ -172,8 +176,7 @@ export class FormErrorManager {
   /**
    * Processes Zod validation errors
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleValidationError(zodError: any): void {
+  handleValidationError(zodError: unknown): void {
     const fieldErrors = combineValidationErrors(zodError);
     this.setFieldErrors(fieldErrors);
     this.setMainError('Please correct the highlighted fields.');

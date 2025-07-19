@@ -194,8 +194,8 @@ export function transformSqlNullFloat64(value: SqlNullFloat64 | number | undefin
  * @param value - Any value to check
  * @returns true if value is SqlNullInt32 wrapper object
  */
-export function isSqlNullInt32(value: any): value is SqlNullInt32 {
-  return (
+export function isSqlNullInt32(value: unknown): value is SqlNullInt32 {
+  return Boolean(
     value &&
     typeof value === 'object' &&
     value !== null &&
@@ -208,8 +208,8 @@ export function isSqlNullInt32(value: any): value is SqlNullInt32 {
  * @param value - Any value to check
  * @returns true if value is SqlNullString wrapper object
  */
-export function isSqlNullString(value: any): value is SqlNullString {
-  return (
+export function isSqlNullString(value: unknown): value is SqlNullString {
+  return Boolean(
     value &&
     typeof value === 'object' &&
     value !== null &&
@@ -222,8 +222,8 @@ export function isSqlNullString(value: any): value is SqlNullString {
  * @param value - Any value to check
  * @returns true if value is SqlNullTime wrapper object
  */
-export function isSqlNullTime(value: any): value is SqlNullTime {
-  return (
+export function isSqlNullTime(value: unknown): value is SqlNullTime {
+  return Boolean(
     value &&
     typeof value === 'object' &&
     value !== null &&
@@ -236,8 +236,8 @@ export function isSqlNullTime(value: any): value is SqlNullTime {
  * @param value - Any value to check
  * @returns true if value is SqlNullBool wrapper object
  */
-export function isSqlNullBool(value: any): value is SqlNullBool {
-  return (
+export function isSqlNullBool(value: unknown): value is SqlNullBool {
+  return Boolean(
     value &&
     typeof value === 'object' &&
     value !== null &&
@@ -250,8 +250,8 @@ export function isSqlNullBool(value: any): value is SqlNullBool {
  * @param value - Any value to check
  * @returns true if value is SqlNullFloat64 wrapper object
  */
-export function isSqlNullFloat64(value: any): value is SqlNullFloat64 {
-  return (
+export function isSqlNullFloat64(value: unknown): value is SqlNullFloat64 {
+  return Boolean(
     value &&
     typeof value === 'object' &&
     value !== null &&
@@ -305,33 +305,33 @@ export function transformSqlNullValue<T>(value: T): T extends SqlNullInt32
  * @param obj - Object to transform
  * @returns Object with all SQL null wrappers transformed to simple types
  */
-export function transformSqlNullObject<T extends Record<string, any>>(obj: T): T {
+export function transformSqlNullObject<T extends Record<string, unknown>>(obj: T): T {
   if (!obj || typeof obj !== 'object') {
     return obj;
   }
   
-  const transformed: any = {};
+  const transformed = { ...obj } as T;
   
   for (const [key, value] of Object.entries(obj)) {
     if (Array.isArray(value)) {
       // Transform arrays recursively
-      transformed[key] = value.map(item =>
+      (transformed as Record<string, unknown>)[key] = value.map(item =>
         typeof item === 'object' && item !== null
-          ? transformSqlNullObject(item)
+          ? transformSqlNullObject(item as Record<string, unknown>)
           : transformSqlNullValue(item)
       );
     } else if (value && typeof value === 'object') {
       // Check if it's a SQL null wrapper first
       if (isSqlNullInt32(value) || isSqlNullString(value) || isSqlNullTime(value) ||
           isSqlNullBool(value) || isSqlNullFloat64(value)) {
-        transformed[key] = transformSqlNullValue(value);
+        (transformed as Record<string, unknown>)[key] = transformSqlNullValue(value);
       } else {
         // Recursively transform nested objects
-        transformed[key] = transformSqlNullObject(value);
+        (transformed as Record<string, unknown>)[key] = transformSqlNullObject(value as Record<string, unknown>);
       }
     } else {
       // Keep primitive values as-is
-      transformed[key] = value;
+      (transformed as Record<string, unknown>)[key] = value;
     }
   }
   
@@ -374,22 +374,24 @@ export function safeTransform<T, R>(
  * @param proxy - Raw proxy data from backend
  * @returns Proxy data with all SQL null types transformed
  */
-export function transformProxyData(proxy: any): any {
-  if (!proxy) return proxy;
+export function transformProxyData(proxy: unknown): Record<string, unknown> {
+  if (!proxy || typeof proxy !== 'object') return proxy as Record<string, unknown>;
+  
+  const proxyObj = proxy as Record<string, unknown>;
   
   return {
-    ...proxy,
-    description: transformSqlNullString(proxy.description),
-    username: transformSqlNullString(proxy.username),
-    passwordHash: transformSqlNullString(proxy.passwordHash),
-    host: transformSqlNullString(proxy.host),
-    port: transformSqlNullInt32(proxy.port),
-    lastStatus: transformSqlNullString(proxy.lastStatus),
-    lastCheckedAt: transformSqlNullTime(proxy.lastCheckedAt),
-    latencyMs: transformSqlNullInt32(proxy.latencyMs),
-    city: transformSqlNullString(proxy.city),
-    countryCode: transformSqlNullString(proxy.countryCode),
-    provider: transformSqlNullString(proxy.provider),
-    notes: transformSqlNullString(proxy.notes),
+    ...proxyObj,
+    description: 'description' in proxyObj ? transformSqlNullString(proxyObj.description as string | SqlNullString | null | undefined) : undefined,
+    username: 'username' in proxyObj ? transformSqlNullString(proxyObj.username as string | SqlNullString | null | undefined) : undefined,
+    passwordHash: 'passwordHash' in proxyObj ? transformSqlNullString(proxyObj.passwordHash as string | SqlNullString | null | undefined) : undefined,
+    host: 'host' in proxyObj ? transformSqlNullString(proxyObj.host as string | SqlNullString | null | undefined) : undefined,
+    port: 'port' in proxyObj ? transformSqlNullInt32(proxyObj.port as number | SqlNullInt32 | null | undefined) : undefined,
+    lastStatus: 'lastStatus' in proxyObj ? transformSqlNullString(proxyObj.lastStatus as string | SqlNullString | null | undefined) : undefined,
+    lastCheckedAt: 'lastCheckedAt' in proxyObj ? transformSqlNullTime(proxyObj.lastCheckedAt as string | SqlNullTime | null | undefined) : undefined,
+    latencyMs: 'latencyMs' in proxyObj ? transformSqlNullInt32(proxyObj.latencyMs as number | SqlNullInt32 | null | undefined) : undefined,
+    city: 'city' in proxyObj ? transformSqlNullString(proxyObj.city as string | SqlNullString | null | undefined) : undefined,
+    countryCode: 'countryCode' in proxyObj ? transformSqlNullString(proxyObj.countryCode as string | SqlNullString | null | undefined) : undefined,
+    provider: 'provider' in proxyObj ? transformSqlNullString(proxyObj.provider as string | SqlNullString | null | undefined) : undefined,
+    notes: 'notes' in proxyObj ? transformSqlNullString(proxyObj.notes as string | SqlNullString | null | undefined) : undefined,
   };
 }

@@ -24,7 +24,7 @@ export interface KeywordExtractionAPIResult {
   httpPersonaIdUsed?: string;
   dnsPersonaIdUsed?: string;
   proxyIdUsed?: string;
-  matches?: any[];
+  matches?: Record<string, unknown>[];
   error?: string;
 }
 
@@ -56,13 +56,13 @@ class KeywordExtractionService {
         requestId: globalThis.crypto?.randomUUID?.() || `extractKeywordsBatch-${Date.now()}`,
         message: 'Successfully extracted keywords in batch'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         data: undefined,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         requestId: globalThis.crypto?.randomUUID?.() || `extractKeywordsBatch-error-${Date.now()}`,
-        message: error.message
+        message: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -88,13 +88,13 @@ class KeywordExtractionService {
         requestId: globalThis.crypto?.randomUUID?.() || `streamKeywordExtraction-${Date.now()}`,
         message: 'Successfully completed stream keyword extraction'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         data: undefined,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         requestId: globalThis.crypto?.randomUUID?.() || `streamKeywordExtraction-error-${Date.now()}`,
-        message: error.message
+        message: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }

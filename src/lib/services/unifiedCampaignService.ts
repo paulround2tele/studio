@@ -46,6 +46,28 @@ export type HTTPKeywordResult = components['schemas']['HTTPKeywordResult'];
 // UNIFIED RESPONSE INTERFACES
 // ===================================================================
 
+/**
+ * Custom WebSocket event interfaces for type safety
+ */
+interface PhaseTransitionEvent extends CustomEvent {
+  detail: {
+    campaignId?: string;
+    newPhase?: string;
+  };
+}
+
+interface CampaignRefreshEvent extends CustomEvent {
+  detail: {
+    campaignId?: string;
+  };
+}
+
+interface BulkCacheInvalidateEvent extends CustomEvent {
+  detail: {
+    campaignIds?: string[];
+  };
+}
+
 export interface UnifiedCampaignResponse<T = Campaign> {
   success: boolean;
   data?: T;
@@ -404,7 +426,14 @@ export class UnifiedCampaignService {
   }): Promise<UnifiedCampaignsListResponse> {
     try {
       const axiosResponse = await campaignsApi.listCampaigns(options?.limit, options?.offset, options?.status);
-      const response = extractResponseData<any>(axiosResponse);
+      
+      // 🐛 DEBUG: Logging type safety validation - unifiedCampaignService.ts:407
+      console.log('[DEBUG] getCampaigns axiosResponse type:', typeof axiosResponse);
+      console.log('[DEBUG] getCampaigns axiosResponse structure:', Object.keys(axiosResponse || {}));
+      
+      // ✅ FIXED: Using proper OpenAPI type instead of any
+      const response = extractResponseData<{ data: Campaign[]; requestId?: string }>(axiosResponse);
+      console.log('[DEBUG] Extracted response type:', typeof response);
       
       // Extract campaigns from unified API response structure
       const campaigns = response?.data || [];
@@ -417,14 +446,15 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaigns retrieved successfully'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error fetching campaigns:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get campaigns';
       return {
         success: false,
         data: [],
-        error: error.message || 'Failed to get campaigns',
+        error: errorMessage,
         requestId: `error-${Date.now()}`,
-        message: error.message || 'Failed to get campaigns'
+        message: errorMessage
       };
     }
   }
@@ -440,7 +470,7 @@ export class UnifiedCampaignService {
         limit: 1,
         offset: 0
       });
-      const response = extractResponseData<{ campaigns?: Record<string, any> }>(axiosResponse);
+      const response = extractResponseData<{ campaigns?: Record<string, { campaign: Campaign }> }>(axiosResponse);
       
       const endTime = performance.now();
       console.log(`[UnifiedCampaignService] ⚡ BULK API call completed in ${(endTime - startTime).toFixed(2)}ms`);
@@ -468,13 +498,13 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaign retrieved successfully via bulk API'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error fetching campaign by ID via bulk API:', error);
       return {
         success: false,
-        error: error.message || 'Failed to get campaign details',
+        error: error instanceof Error ? error.message : 'Failed to get campaign details',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to get campaign details'
+        message: error instanceof Error ? error.message : 'Failed to get campaign details'
       };
     }
   }
@@ -492,14 +522,14 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaign created successfully'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error creating campaign:', error);
       return {
         success: false,
         data: undefined,
-        error: error.message || 'Failed to create campaign',
+        error: error instanceof Error ? error.message : 'Failed to create campaign',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to create campaign'
+        message: error instanceof Error ? error.message : 'Failed to create campaign'
       };
     }
   }
@@ -520,14 +550,14 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaign updated successfully'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error updating campaign:', error);
       return {
         success: false,
         data: undefined,
-        error: error.message || 'Failed to update campaign',
+        error: error instanceof Error ? error.message : 'Failed to update campaign',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to update campaign'
+        message: error instanceof Error ? error.message : 'Failed to update campaign'
       };
     }
   }
@@ -555,14 +585,14 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaign deleted successfully'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error deleting campaign:', error);
       return {
         success: false,
         data: null,
-        error: error.message || 'Failed to delete campaign',
+        error: error instanceof Error ? error.message : 'Failed to delete campaign',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to delete campaign'
+        message: error instanceof Error ? error.message : 'Failed to delete campaign'
       };
     }
   }
@@ -656,14 +686,14 @@ export class UnifiedCampaignService {
           message: 'Bulk delete operation returned empty result'
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error in bulk delete:', error);
       return {
         success: false,
         data: undefined,
-        error: error.message || 'Bulk delete operation failed',
+        error: error instanceof Error ? error.message : 'Bulk delete operation failed',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to execute bulk delete operation'
+        message: error instanceof Error ? error.message : 'Failed to execute bulk delete operation'
       };
     }
   }
@@ -688,14 +718,14 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaign started successfully'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error starting campaign:', error);
       return {
         success: false,
         data: undefined,
-        error: error.message || 'Failed to start campaign',
+        error: error instanceof Error ? error.message : 'Failed to start campaign',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to start campaign'
+        message: error instanceof Error ? error.message : 'Failed to start campaign'
       };
     }
   }
@@ -715,14 +745,14 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaign paused successfully'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error pausing campaign:', error);
       return {
         success: false,
         data: undefined,
-        error: error.message || 'Failed to pause campaign',
+        error: error instanceof Error ? error.message : 'Failed to pause campaign',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to pause campaign'
+        message: error instanceof Error ? error.message : 'Failed to pause campaign'
       };
     }
   }
@@ -742,14 +772,14 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaign resumed successfully'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error resuming campaign:', error);
       return {
         success: false,
         data: undefined,
-        error: error.message || 'Failed to resume campaign',
+        error: error instanceof Error ? error.message : 'Failed to resume campaign',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to resume campaign'
+        message: error instanceof Error ? error.message : 'Failed to resume campaign'
       };
     }
   }
@@ -769,14 +799,14 @@ export class UnifiedCampaignService {
         requestId,
         message: 'Campaign cancelled successfully'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error cancelling campaign:', error);
       return {
         success: false,
         data: undefined,
-        error: error.message || 'Failed to cancel campaign',
+        error: error instanceof Error ? error.message : 'Failed to cancel campaign',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to cancel campaign'
+        message: error instanceof Error ? error.message : 'Failed to cancel campaign'
       };
     }
   }
@@ -820,14 +850,14 @@ export class UnifiedCampaignService {
         requestId,
         message: `Generated domains retrieved successfully via bulk API (${data.length} domains)`
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error getting generated domains via bulk API:', error);
       return {
         success: false,
         data: [],
-        error: error.message || 'Failed to get generated domains via bulk API',
+        error: error instanceof Error ? error.message : 'Failed to get generated domains via bulk API',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to get generated domains via bulk API'
+        message: error instanceof Error ? error.message : 'Failed to get generated domains via bulk API'
       };
     }
   }
@@ -866,14 +896,14 @@ export class UnifiedCampaignService {
         requestId,
         message: `DNS validation results retrieved successfully via bulk logs API (${data.length} results)`
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error getting DNS validation results via bulk logs API:', error);
       return {
         success: false,
         data: [],
-        error: error.message || 'Failed to get DNS validation results via bulk logs API',
+        error: error instanceof Error ? error.message : 'Failed to get DNS validation results via bulk logs API',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to get DNS validation results via bulk logs API'
+        message: error instanceof Error ? error.message : 'Failed to get DNS validation results via bulk logs API'
       };
     }
   }
@@ -912,14 +942,14 @@ export class UnifiedCampaignService {
         requestId,
         message: `HTTP keyword results retrieved successfully via bulk leads API (${data.length} results)`
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error getting HTTP keyword results:', error);
       return {
         success: false,
         data: [],
-        error: error.message || 'Failed to get HTTP keyword results',
+        error: error instanceof Error ? error.message : 'Failed to get HTTP keyword results',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to get HTTP keyword results'
+        message: error instanceof Error ? error.message : 'Failed to get HTTP keyword results'
       };
     }
   }
@@ -970,7 +1000,7 @@ export class UnifiedCampaignService {
       }
       
       return null;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error fetching bulk enriched data:', error);
       return null;
     }
@@ -1003,7 +1033,7 @@ export class UnifiedCampaignService {
       const requestPayload: BulkDomainsRequest = { campaignIds };
       const axiosResponse = await campaignsApi.getBulkDomains(requestPayload);
       return extractResponseData<BulkDomainsResponse>(axiosResponse);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error fetching bulk domains data:', error);
       return null;
     }
@@ -1017,7 +1047,7 @@ export class UnifiedCampaignService {
       const requestPayload: BulkLeadsRequest = { campaignIds };
       const axiosResponse = await campaignsApi.getBulkLeads(requestPayload);
       return extractResponseData<BulkLeadsResponse>(axiosResponse);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error fetching bulk leads data:', error);
       return null;
     }
@@ -1030,7 +1060,7 @@ export class UnifiedCampaignService {
   /**
    * Get rich campaign data for a single campaign (replaces campaignDataService.getRichCampaignData)
    */
-  async getRichCampaignData(campaignId: string): Promise<any | null> {
+  async getRichCampaignData(campaignId: string): Promise<Record<string, unknown> | null> {
     try {
       const bulkResults = await this.getBulkEnrichedCampaignData([campaignId]);
       const enrichedData = bulkResults?.campaigns?.[campaignId];
@@ -1047,8 +1077,8 @@ export class UnifiedCampaignService {
       }
       
       return null;
-    } catch (error) {
-      console.error('[UnifiedCampaignService] Error getting rich campaign data:', error);
+    } catch (error: unknown) {
+      console.error('[UnifiedCampaignService] Error getting rich campaign data:', error instanceof Error ? error.message : 'Unknown error');
       throw new Error(`Campaign ${campaignId} not available via bulk API`);
     }
   }
@@ -1056,11 +1086,11 @@ export class UnifiedCampaignService {
   /**
    * Get rich campaign data for multiple campaigns
    */
-  async getRichCampaignDataBatch(campaignIds: string[]): Promise<Map<string, any>> {
+  async getRichCampaignDataBatch(campaignIds: string[]): Promise<Map<string, Record<string, unknown>>> {
     console.log(`[UnifiedCampaignService] Bulk loading ${campaignIds.length} campaigns`);
     
     const bulkResults = await this.getBulkEnrichedCampaignData(campaignIds);
-    const richDataMap = new Map<string, any>();
+    const richDataMap = new Map<string, Record<string, unknown>>();
     
     if (bulkResults?.campaigns) {
       Object.entries(bulkResults.campaigns).forEach(([campaignId, enrichedData]) => {
@@ -1086,27 +1116,30 @@ export class UnifiedCampaignService {
    */
   private initializeWebSocketListener(): void {
     if (typeof window !== 'undefined') {
-      // Phase transition events
-      window.addEventListener('phase_transition', (event: any) => {
-        const { campaignId } = event.detail || {};
+      // Phase transition events with proper typing
+      window.addEventListener('phase_transition', (event: Event) => {
+        const phaseEvent = event as PhaseTransitionEvent;
+        const { campaignId } = phaseEvent.detail || {};
         if (campaignId) {
           console.log(`[UnifiedCampaignService] Phase transition detected, invalidating cache for campaign ${campaignId}`);
           this.cacheManager.invalidateCampaigns([campaignId]);
         }
       });
 
-      // Force refresh events
-      window.addEventListener('force_campaign_refresh', (event: any) => {
-        const { campaignId } = event.detail || {};
+      // Force refresh events with proper typing
+      window.addEventListener('force_campaign_refresh', (event: Event) => {
+        const refreshEvent = event as CampaignRefreshEvent;
+        const { campaignId } = refreshEvent.detail || {};
         if (campaignId) {
           console.log(`[UnifiedCampaignService] Force refresh requested, invalidating cache for campaign ${campaignId}`);
           this.cacheManager.invalidateCampaigns([campaignId]);
         }
       });
 
-      // Bulk invalidation events
-      window.addEventListener('bulk_cache_invalidate', (event: any) => {
-        const { campaignIds = [] } = event.detail || {};
+      // Bulk invalidation events with proper typing
+      window.addEventListener('bulk_cache_invalidate', (event: Event) => {
+        const invalidateEvent = event as BulkCacheInvalidateEvent;
+        const { campaignIds = [] } = invalidateEvent.detail || {};
         if (campaignIds.length > 0) {
           console.log(`[UnifiedCampaignService] Bulk cache invalidation for ${campaignIds.length} campaigns`);
           this.cacheManager.invalidateCampaigns(campaignIds);

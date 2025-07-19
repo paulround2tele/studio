@@ -179,12 +179,12 @@ export const analyzeBundleChunks = async () => {
 };
 
 function getChunkType(url: string): string {
-  if (url.includes('_app')) return 'main' as any;
-  if (url.includes('pages')) return 'page' as any;
-  if (url.includes('vendors') || url.includes('node_modules')) return 'vendor' as any;
-  if (url.includes('runtime')) return 'runtime' as any;
-  if (url.includes('webpack')) return 'webpack' as any;
-  return 'other' as any;
+  if (url.includes('_app')) return 'main';
+  if (url.includes('pages')) return 'page';
+  if (url.includes('vendors') || url.includes('node_modules')) return 'vendor';
+  if (url.includes('runtime')) return 'runtime';
+  if (url.includes('webpack')) return 'webpack';
+  return 'other';
 }
 
 // Performance budget checker

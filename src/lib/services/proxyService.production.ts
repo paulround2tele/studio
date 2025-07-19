@@ -64,32 +64,32 @@ class ProxyModelService {
       
       // Transform backend Proxy[] to frontend-safe format using comprehensive transformer
       const cleanedProxies: FrontendProxy[] = (proxiesData || []).map((proxy: any) => {
-        const transformed = transformProxyData(proxy);
+        const transformed = transformProxyData(proxy) as Record<string, unknown>;
         return {
-          id: transformed.id,
-          name: transformed.name || "",
-          description: transformed.description || "",
-          address: transformed.address || "",
-          protocol: transformed.protocol || "http",
-          username: transformed.username || "",
-          host: transformed.host || "",
-          port: transformed.port,
-          isEnabled: transformed.isEnabled || false,
-          isHealthy: transformed.isHealthy || false,
-          lastStatus: transformed.lastStatus || "",
-          lastCheckedAt: transformed.lastCheckedAt,
-          latencyMs: transformed.latencyMs,
-          city: transformed.city || "",
-          countryCode: transformed.countryCode || "",
-          provider: transformed.provider || "",
-          createdAt: transformed.createdAt,
-          updatedAt: transformed.updatedAt,
-          status: !transformed.isEnabled ? 'Disabled' : (transformed.isHealthy ? 'Active' : 'Failed'),
-          lastTested: transformed.lastCheckedAt,
+          id: transformed.id as string,
+          name: (transformed.name as string) || "",
+          description: (transformed.description as string) || "",
+          address: (transformed.address as string) || "",
+          protocol: ((transformed.protocol as string) || "http") as "http" | "https" | "socks5" | "socks4" | undefined,
+          username: (transformed.username as string) || "",
+          host: (transformed.host as string) || "",
+          port: String(transformed.port || 0),
+          isEnabled: (transformed.isEnabled as boolean) || false,
+          isHealthy: (transformed.isHealthy as boolean) || false,
+          lastStatus: (transformed.lastStatus as string) || "",
+          lastCheckedAt: (transformed.lastCheckedAt as string) || "",
+          latencyMs: String(transformed.latencyMs || 0),
+          city: (transformed.city as string) || "",
+          countryCode: (transformed.countryCode as string) || "",
+          provider: (transformed.provider as string) || "",
+          createdAt: (transformed.createdAt as string) || "",
+          updatedAt: (transformed.updatedAt as string) || "",
+          status: !(transformed.isEnabled as boolean) ? 'Disabled' : ((transformed.isHealthy as boolean) ? 'Active' : 'Failed'),
+          lastTested: (transformed.lastCheckedAt as string) || "",
           successCount: "0",
           failureCount: "0",
-          lastError: transformed.lastStatus || "",
-          notes: transformed.notes || ""
+          lastError: (transformed.lastStatus as string) || "",
+          notes: (transformed.notes as string) || ""
         };
       });
       
@@ -143,32 +143,32 @@ class ProxyModelService {
       const requestId = globalThis.crypto?.randomUUID?.() || `create-proxy-${Date.now()}`;
       
       // Transform the response data to frontend-safe format using comprehensive transformer
-      const transformed = transformProxyData(proxy);
+      const transformed = transformProxyData(proxy) as Record<string, unknown>;
       const transformedProxy: FrontendProxy = {
-        id: transformed.id,
-        name: transformed.name || "",
-        description: transformed.description || "",
-        address: transformed.address || "",
-        protocol: transformed.protocol || "http",
-        username: transformed.username || "",
-        host: transformed.host || "",
-        port: transformed.port,
-        isEnabled: transformed.isEnabled || false,
-        isHealthy: transformed.isHealthy || false,
-        lastStatus: transformed.lastStatus || "",
-        lastCheckedAt: transformed.lastCheckedAt,
-        latencyMs: transformed.latencyMs,
-        city: transformed.city || "",
-        countryCode: transformed.countryCode || "",
-        provider: transformed.provider || "",
-        createdAt: transformed.createdAt,
-        updatedAt: transformed.updatedAt,
-        status: !transformed.isEnabled ? 'Disabled' : (transformed.isHealthy ? 'Active' : 'Failed'),
-        lastTested: transformed.lastCheckedAt,
+        id: transformed.id as string,
+        name: (transformed.name as string) || "",
+        description: (transformed.description as string) || "",
+        address: (transformed.address as string) || "",
+        protocol: ((transformed.protocol as string) || "http") as "http" | "https" | "socks5" | "socks4",
+        username: (transformed.username as string) || "",
+        host: (transformed.host as string) || "",
+        port: String(transformed.port || 0),
+        isEnabled: (transformed.isEnabled as boolean) || false,
+        isHealthy: (transformed.isHealthy as boolean) || false,
+        lastStatus: (transformed.lastStatus as string) || "",
+        lastCheckedAt: (transformed.lastCheckedAt as string) || "",
+        latencyMs: String(transformed.latencyMs || 0),
+        city: (transformed.city as string) || "",
+        countryCode: (transformed.countryCode as string) || "",
+        provider: (transformed.provider as string) || "",
+        createdAt: (transformed.createdAt as string) || "",
+        updatedAt: (transformed.updatedAt as string) || "",
+        status: !(transformed.isEnabled as boolean) ? 'Disabled' : ((transformed.isHealthy as boolean) ? 'Active' : 'Failed'),
+        lastTested: (transformed.lastCheckedAt as string) || "",
         successCount: "0",
         failureCount: "0",
-        lastError: transformed.lastStatus || "",
-        notes: transformed.notes || ""
+        lastError: (transformed.lastStatus as string) || "",
+        notes: (transformed.notes as string) || ""
       };
       
       return {

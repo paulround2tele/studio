@@ -22,6 +22,13 @@ type CampaignType = NonNullable<Campaign['campaignType']>;
 type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
 import { useCampaignDetailsStore } from '@/lib/stores/campaignDetailsStore';
 
+// Helper function to safely access array properties from Record<string, unknown>
+const safeGetArray = (obj: Record<string, unknown> | null | undefined, key: string): unknown[] => {
+  if (!obj || !(key in obj)) return [];
+  const value = obj[key];
+  return Array.isArray(value) ? value : [];
+};
+
 export const useCampaignOperations = (campaignId: string) => {
   const { toast } = useToast();
   
@@ -120,10 +127,11 @@ id: campaignId,
       if (hasDomainGenerationHistory) {
         console.log('📡 [Domain Loading] BULK-ONLY: Processing generated domains from bulk data');
         
-        if (richData?.domains) {
-          updates.generatedDomains = richData.domains.map((domainName: string, index: number) => ({
+        const domains = safeGetArray(richData, 'domains');
+        if (domains.length > 0) {
+          updates.generatedDomains = domains.map((domainName: unknown, index: number) => ({
             id: `domain-${index}`,
-            domainName,
+            domainName: String(domainName),
             generationCampaignId: campaignId,
             createdAt: new Date().toISOString()
           } as GeneratedDomainBackend));
@@ -143,10 +151,11 @@ id: campaignId,
         console.log('📡 [Domain Loading] BULK-ONLY: Using enhanced bulk service for DNS validation');
         
         // Use bulk service data instead of individual API call
-        if (richData?.dnsValidatedDomains) {
-          updates.dnsCampaignItems = richData.dnsValidatedDomains.map((domainName: string, index: number) => ({
+        const dnsValidatedDomains = safeGetArray(richData, 'dnsValidatedDomains');
+        if (dnsValidatedDomains.length > 0) {
+          updates.dnsCampaignItems = dnsValidatedDomains.map((domainName: unknown, index: number) => ({
             id: `dns-${index}`,
-            domainName: domainName,
+            domainName: String(domainName),
             generationCampaignId: campaignId,
             type: 'dns' as const,
             status: 'passed' as DomainActivityStatus,
@@ -164,10 +173,11 @@ id: campaignId,
       if (campaignData.campaignType === 'http_keyword_validation' || isHTTPValidationPhase) {
         console.log('📡 [Domain Loading] BULK-ONLY: Processing HTTP validation items from bulk data');
         
-        if (richData?.httpKeywordResults) {
-          updates.httpCampaignItems = richData.httpKeywordResults.map((result: any, index: number) => ({
-            id: result.id || `http-${index}`,
-            domainName: result.domain || 'unknown',
+        const httpKeywordResults = safeGetArray(richData, 'httpKeywordResults');
+        if (httpKeywordResults.length > 0) {
+          updates.httpCampaignItems = httpKeywordResults.map((result: unknown, index: number) => ({
+            id: (result as any)?.id || `http-${index}`,
+            domainName: (result as any)?.domain || 'unknown',
             generationCampaignId: campaignId,
             type: 'http' as const,
             status: 'passed' as DomainActivityStatus,
@@ -184,8 +194,8 @@ id: campaignId,
         if (isHTTPValidationPhase && campaignData.campaignType === 'domain_generation' && !updates.generatedDomains) {
           console.log('📡 [Domain Loading] BULK-ONLY: Loading generated domains for HTTP validation from bulk data');
           
-          if (richData?.domains) {
-            updates.generatedDomains = richData.domains.map((domainName: string, index: number) => ({
+          if (richData?.domains && Array.isArray(richData.domains)) {
+            updates.generatedDomains = (richData.domains as string[]).map((domainName: string, index: number) => ({
               id: `domain-${index}`,
               domainName,
               generationCampaignId: campaignId,
@@ -236,9 +246,9 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
         campaignData = {
           ...richData,
           // Convert arrays back to counts if needed for legacy compatibility
-          domains: richData.domains?.length || 0,
-          dnsValidatedDomains: richData.dnsValidatedDomains?.length || 0,
-          leads: richData.leads?.length || 0
+          domains: safeGetArray(richData, 'domains').length,
+          dnsValidatedDomains: safeGetArray(richData, 'dnsValidatedDomains').length,
+          leads: safeGetArray(richData, 'leads').length
         } as any;
         
         console.log(`📡 [Campaign Loading] BULK-ONLY: Campaign data loaded:`, {
@@ -246,9 +256,9 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
           name: campaignData?.name,
           campaignType: campaignData?.campaignType,
           status: campaignData?.status,
-          domainsCount: richData.domains?.length || 0,
-          dnsValidatedCount: richData.dnsValidatedDomains?.length || 0,
-          leadsCount: richData.leads?.length || 0
+          domainsCount: safeGetArray(richData, 'domains').length,
+          dnsValidatedCount: safeGetArray(richData, 'dnsValidatedDomains').length,
+          leadsCount: safeGetArray(richData, 'leads').length
         });
       } else {
         console.warn(`⚠️ [Campaign Loading] BULK-ONLY: No campaign data available for ${campaignId}`);
