@@ -83,14 +83,69 @@ func (s *campaignOrchestratorServiceImpl) CreateDomainGenerationCampaign(ctx con
 }
 
 func (s *campaignOrchestratorServiceImpl) CreateDNSValidationCampaign(ctx context.Context, req CreateDNSValidationCampaignRequest) (*models.Campaign, error) {
-	log.Printf("Orchestrator: Delegating CreateDNSValidationCampaign for Name: %s", req.Name)
-	camp, err := s.dnsService.CreateCampaign(ctx, req)
+	log.Printf("Orchestrator: ARCHITECTURAL FIX - CreateDNSValidationCampaign should use phase transition, not separate campaign creation")
+	log.Printf("Redirecting to UpdateCampaign with phase transition for source campaign: %s", req.SourceGenerationCampaignID)
+
+	// ARCHITECTURAL FIX: DNS validation should be a phase transition, not separate campaign creation
+	// Use the correct UpdateCampaign pattern with phase transition
+	dnsValidationType := models.CampaignTypeDNSValidation
+	updateReq := UpdateCampaignRequest{
+		Name:                     &req.Name,
+		CampaignType:             &dnsValidationType,
+		PersonaIDs:               &req.PersonaIDs,
+		RotationIntervalSeconds:  &req.RotationIntervalSeconds,
+		ProcessingSpeedPerMinute: &req.ProcessingSpeedPerMinute,
+		BatchSize:                &req.BatchSize,
+		RetryAttempts:            &req.RetryAttempts,
+	}
+
+	camp, err := s.UpdateCampaign(ctx, req.SourceGenerationCampaignID, updateReq)
 	if err == nil && s.asyncManager != nil {
 		msg := &communication.AsyncMessage{
 			ID:            uuid.New().String(),
 			CorrelationID: uuid.New().String(),
 			SourceService: "orchestrator-service",
 			TargetService: "dns-service",
+			MessageType:   "campaign_created",
+			Payload:       req,
+			Pattern:       communication.PatternPubSub,
+			Timestamp:     time.Now(),
+		}
+		if perr := s.asyncManager.PublishMessage(ctx, msg); perr != nil {
+			log.Printf("async publish error: %v", perr)
+		}
+	}
+	return camp, err
+}
+func (s *campaignOrchestratorServiceImpl) CreateHTTPKeywordValidationCampaign(ctx context.Context, req CreateHTTPKeywordCampaignRequest) (*models.Campaign, error) {
+	log.Printf("Orchestrator: ARCHITECTURAL FIX - CreateHTTPKeywordValidationCampaign should use phase transition, not separate campaign creation")
+	log.Printf("Redirecting to UpdateCampaign with phase transition for source campaign: %s", req.SourceCampaignID)
+
+	// ARCHITECTURAL FIX: HTTP keyword validation should be a phase transition, not separate campaign creation
+	// Use the correct UpdateCampaign pattern with phase transition
+	httpValidationType := models.CampaignTypeHTTPKeywordValidation
+	updateReq := UpdateCampaignRequest{
+		Name:                     &req.Name,
+		CampaignType:             &httpValidationType,
+		KeywordSetIDs:            &req.KeywordSetIDs,
+		AdHocKeywords:            &req.AdHocKeywords,
+		PersonaIDs:               &req.PersonaIDs,
+		ProxyPoolID:              req.ProxyPoolID,
+		ProxySelectionStrategy:   &req.ProxySelectionStrategy,
+		RotationIntervalSeconds:  &req.RotationIntervalSeconds,
+		ProcessingSpeedPerMinute: &req.ProcessingSpeedPerMinute,
+		BatchSize:                &req.BatchSize,
+		RetryAttempts:            &req.RetryAttempts,
+		TargetHTTPPorts:          &req.TargetHTTPPorts,
+	}
+
+	camp, err := s.UpdateCampaign(ctx, req.SourceCampaignID, updateReq)
+	if err == nil && s.asyncManager != nil {
+		msg := &communication.AsyncMessage{
+			ID:            uuid.New().String(),
+			CorrelationID: uuid.New().String(),
+			SourceService: "orchestrator-service",
+			TargetService: "http-keyword-service",
 			MessageType:   "campaign_created",
 			Payload:       req,
 			Pattern:       communication.PatternPubSub,

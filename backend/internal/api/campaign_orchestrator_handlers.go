@@ -1090,8 +1090,9 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 		UserID:                   uuid.Nil, // Would be extracted from session in real implementation
 	}
 
-	// Create the HTTP keyword campaign using the service
-	httpCampaign, err := h.httpKeywordSvc.CreateCampaign(c.Request.Context(), createReq)
+	// ARCHITECTURAL FIX: Use Campaign Orchestrator's phase transition instead of separate campaign creation
+	log.Printf("ARCHITECTURAL FIX: HTTP validation should use phase transition, not separate campaign creation")
+	httpCampaign, err := h.orchestratorService.CreateHTTPKeywordValidationCampaign(c.Request.Context(), createReq)
 	if err != nil {
 		log.Printf("ERROR [HTTP Validation]: Failed to create HTTP keyword campaign for source %s: %v", campaignIDStr, err)
 

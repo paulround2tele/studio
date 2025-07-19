@@ -3,7 +3,6 @@ package services
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -64,199 +63,19 @@ func NewHTTPKeywordCampaignService(
 }
 
 func (s *httpKeywordCampaignServiceImpl) CreateCampaign(ctx context.Context, req CreateHTTPKeywordCampaignRequest) (*models.Campaign, error) {
-	log.Printf("HTTPKeywordCampaignService: CreateCampaign called with Name: %s, SourceCampaignID: %s, PersonaIDs: %v (len: %d, type: %T)",
-		req.Name, req.SourceCampaignID, req.PersonaIDs, len(req.PersonaIDs), req.PersonaIDs)
-	now := time.Now().UTC()
-	campaignID := uuid.New()
+	log.Printf("HTTPKeywordCampaignService: CreateCampaign called - This should NOT create separate campaigns!")
+	log.Printf("ARCHITECTURAL FIX: HTTP keyword phase transitions should use Campaign Orchestrator's UpdateCampaign with phase transition")
 
-	// Log the request details for debugging
-	reqJSON, _ := json.MarshalIndent(req, "", "  ")
-	log.Printf("[DEBUG] CreateHTTPKeywordCampaignRequest: %s", reqJSON)
+	// CRITICAL ARCHITECTURAL FIX:
+	// This method should NOT exist for phase transitions. Phase transitions should be handled
+	// by the Campaign Orchestrator's transitionToHTTPValidation method using UpdateCampaign.
+	//
+	// This method violates the single-campaign architecture where:
+	// - campaignType stays 'domain_generation'
+	// - currentPhase changes to 'http_keyword_validation'
+	// - Domain status updates happen in-place on generated_domains table
 
-	if len(req.KeywordSetIDs) == 0 && len(req.AdHocKeywords) == 0 {
-		return nil, fmt.Errorf("http create: keywordSetIds or adHocKeywords required")
-	}
-
-	// Validate personas and keywords using a conditional querier (read-only pattern)
-	var validationQuerier store.Querier
-	if s.db != nil {
-		validationQuerier = s.db
-	}
-
-	log.Printf("[DEBUG] Validating PersonaIDs: %v (len: %d, type: %T)", req.PersonaIDs, len(req.PersonaIDs), req.PersonaIDs)
-	if err := s.validatePersonaIDs(ctx, validationQuerier, req.PersonaIDs, models.PersonaTypeHTTP); err != nil {
-		log.Printf("[ERROR] Persona validation failed: %v", err)
-		return nil, fmt.Errorf("http create: http persona validation: %w", err)
-	}
-	log.Printf("[DEBUG] Persona validation successful for IDs: %v", req.PersonaIDs)
-	if err := s.validateKeywordSetIDs(ctx, validationQuerier, req.KeywordSetIDs); err != nil {
-		return nil, fmt.Errorf("http create: keyword set validation: %w", err)
-	}
-
-	var opErr error
-	var querier store.Querier
-	isSQL := s.db != nil
-	var sqlTx *sqlx.Tx
-
-	if isSQL {
-		var startTxErr error
-		sqlTx, startTxErr = s.db.BeginTxx(ctx, nil)
-		if startTxErr != nil {
-			log.Printf("Error beginning SQL transaction for HTTP CreateCampaign %s: %v", req.Name, startTxErr)
-			return nil, fmt.Errorf("http create: failed to begin SQL transaction: %w", startTxErr)
-		}
-		querier = sqlTx
-		log.Printf("SQL Transaction started for HTTP CreateCampaign %s.", req.Name)
-
-		defer func() {
-			if p := recover(); p != nil {
-				log.Printf("Panic recovered during SQL HTTP CreateCampaign for %s, rolling back: %v", req.Name, p)
-				_ = sqlTx.Rollback()
-				panic(p)
-			} else if opErr != nil {
-				log.Printf("Error occurred for HTTP CreateCampaign %s (SQL), rolling back: %v", req.Name, opErr)
-				_ = sqlTx.Rollback()
-			} else {
-				if commitErr := sqlTx.Commit(); commitErr != nil {
-					log.Printf("Error committing SQL transaction for HTTP CreateCampaign %s: %v", req.Name, commitErr)
-					opErr = commitErr
-				} else {
-					log.Printf("SQL Transaction committed for HTTP CreateCampaign %s.", req.Name)
-				}
-			}
-		}()
-	} else {
-		log.Printf("Operating in Firestore mode for HTTP CreateCampaign %s (no service-level transaction).", req.Name)
-		// querier remains nil
-	}
-
-	sourceDNSCampaign, errGetSource := s.campaignStore.GetCampaignByID(ctx, querier, req.SourceCampaignID)
-	if errGetSource != nil {
-		opErr = fmt.Errorf("http create: failed to fetch source DNS campaign %s: %w", req.SourceCampaignID, errGetSource)
-		return nil, opErr
-	}
-	if sourceDNSCampaign.CampaignType != models.CampaignTypeDNSValidation {
-		opErr = fmt.Errorf("http create: source campaign %s is not a DNS validation campaign (type: %s)", req.SourceCampaignID, sourceDNSCampaign.CampaignType)
-		return nil, opErr
-	}
-
-	var totalItems int64
-	count, countErr := s.campaignStore.CountDNSValidationResults(ctx, querier, req.SourceCampaignID, true)
-	if countErr == nil {
-		totalItems = count
-		log.Printf("HTTP CreateCampaign %s: Counted %d valid DNS results from source %s.", req.Name, totalItems, req.SourceCampaignID)
-	} else {
-		log.Printf("HTTP CreateCampaign %s: Warning - could not count valid DNS results for source campaign %s: %v. Using source campaign's ProcessedItems (%v) or TotalItems (%v) as estimate.",
-			req.Name, req.SourceCampaignID, countErr, sourceDNSCampaign.ProcessedItems, sourceDNSCampaign.TotalItems)
-		if sourceDNSCampaign.Status == models.CampaignStatusCompleted {
-			if sourceDNSCampaign.ProcessedItems != nil {
-				totalItems = *sourceDNSCampaign.ProcessedItems
-			} else if sourceDNSCampaign.TotalItems != nil { // Fallback if processed is nil but total isn't
-				totalItems = *sourceDNSCampaign.TotalItems
-			} else {
-				totalItems = 0 // Default if both are nil
-			}
-		} else {
-			if sourceDNSCampaign.TotalItems != nil {
-				totalItems = *sourceDNSCampaign.TotalItems
-			} else {
-				totalItems = 0 // Default if nil
-			}
-		}
-	}
-	// If opErr was set by store calls, return (defer will handle rollback)
-	if opErr != nil {
-		return nil, opErr
-	}
-
-	baseCampaign := &models.Campaign{
-		ID:                 campaignID,
-		Name:               req.Name,
-		CampaignType:       models.CampaignTypeHTTPKeywordValidation,
-		Status:             models.CampaignStatusPending,
-		UserID:             &req.UserID,
-		CreatedAt:          now,
-		UpdatedAt:          now,
-		TotalItems:         models.Int64Ptr(totalItems),
-		ProcessedItems:     models.Int64Ptr(0),
-		ProgressPercentage: models.Float64Ptr(0.0),
-	}
-
-	// Log the PersonaIDs before creating the params
-	log.Printf("[DEBUG] Creating HTTPKeywordCampaignParams with PersonaIDs: %v (len: %d, type: %T)",
-		req.PersonaIDs, len(req.PersonaIDs), req.PersonaIDs)
-
-	// Create a deep copy of the PersonaIDs slice to prevent any potential mutation
-	personaIDsCopy := make([]uuid.UUID, len(req.PersonaIDs))
-	copy(personaIDsCopy, req.PersonaIDs)
-
-	httpParams := &models.HTTPKeywordCampaignParams{
-		CampaignID:               campaignID,
-		SourceCampaignID:         req.SourceCampaignID,
-		KeywordSetIDs:            req.KeywordSetIDs,
-		AdHocKeywords:            models.StringSlicePtr(req.AdHocKeywords),
-		PersonaIDs:               personaIDsCopy, // Use the copied slice
-		ProxyPoolID:              uuid.NullUUID{UUID: derefUUIDPtr(req.ProxyPoolID), Valid: req.ProxyPoolID != nil},
-		ProxySelectionStrategy:   models.StringPtr(req.ProxySelectionStrategy),
-		RotationIntervalSeconds:  models.IntPtr(req.RotationIntervalSeconds),
-		ProcessingSpeedPerMinute: models.IntPtr(req.ProcessingSpeedPerMinute),
-		BatchSize:                models.IntPtr(req.BatchSize),
-		RetryAttempts:            models.IntPtr(req.RetryAttempts),
-		TargetHTTPPorts:          models.IntSlicePtr(req.TargetHTTPPorts),
-		SourceType:               "DNSValidation", // HTTP campaigns source from DNS validation results
-	}
-
-	// Log the created params for debugging
-	paramsJSON, _ := json.MarshalIndent(httpParams, "", "  ")
-	log.Printf("[DEBUG] Created HTTPKeywordCampaignParams: %s", paramsJSON)
-	if httpParams.BatchSize == nil || *httpParams.BatchSize == 0 {
-		httpParams.BatchSize = models.IntPtr(20)
-	}
-	if httpParams.RetryAttempts == nil || *httpParams.RetryAttempts == 0 {
-		httpParams.RetryAttempts = models.IntPtr(1)
-	}
-	baseCampaign.HTTPKeywordValidationParams = httpParams
-
-	opErr = s.campaignStore.CreateCampaign(ctx, querier, baseCampaign)
-	if opErr != nil {
-		return nil, fmt.Errorf("http create: failed to create base campaign: %w", opErr)
-	}
-
-	opErr = s.campaignStore.CreateHTTPKeywordParams(ctx, querier, httpParams)
-	if opErr != nil {
-		return nil, fmt.Errorf("http create: failed to create HTTP keyword params: %w", opErr)
-	}
-
-	// Create a job for the campaign if campaignJobStore is available
-	if s.campaignJobStore != nil {
-		jobCreationTime := time.Now().UTC()
-		job := &models.CampaignJob{
-			ID:              uuid.New(),
-			CampaignID:      baseCampaign.ID,
-			JobType:         models.CampaignTypeHTTPKeywordValidation,
-			Status:          models.JobStatusQueued,
-			ScheduledAt:     jobCreationTime,
-			NextExecutionAt: sql.NullTime{Time: jobCreationTime, Valid: true},
-			CreatedAt:       jobCreationTime,
-			UpdatedAt:       jobCreationTime,
-			MaxAttempts:     3,
-		}
-
-		if err := s.campaignJobStore.CreateJob(ctx, querier, job); err != nil {
-			log.Printf("Warning: failed to create initial job for HTTP/Keyword campaign %s: %v", baseCampaign.ID, err)
-			// Don't fail the campaign creation if job creation fails
-		} else {
-			log.Printf("Created initial job for HTTP/Keyword campaign %s", baseCampaign.ID)
-		}
-	} else {
-		log.Printf("Warning: campaignJobStore is nil for HTTP/Keyword campaign %s. Skipping job creation.", baseCampaign.ID)
-	}
-
-	if opErr == nil {
-		s.logAuditEvent(ctx, querier, baseCampaign, "HTTP/Keyword Campaign Created (Service)", fmt.Sprintf("Name: %s, SourceCampaignID: %s", req.Name, req.SourceCampaignID))
-	}
-
-	return baseCampaign, opErr
+	return nil, fmt.Errorf("ARCHITECTURAL VIOLATION: HTTP keyword phase transitions must use Campaign Orchestrator's UpdateCampaign, not CreateCampaign. Source campaign: %s", req.SourceCampaignID)
 }
 
 func (s *httpKeywordCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.HTTPKeywordCampaignParams, error) {

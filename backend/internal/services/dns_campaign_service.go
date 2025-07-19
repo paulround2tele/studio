@@ -45,162 +45,19 @@ func NewDNSCampaignService(db *sqlx.DB, cs store.CampaignStore, ps store.Persona
 }
 
 func (s *dnsCampaignServiceImpl) CreateCampaign(ctx context.Context, req CreateDNSValidationCampaignRequest) (*models.Campaign, error) {
-	log.Printf("DNSCampaignService: CreateCampaign called - Transitioning existing domain generation campaign %s to DNS validation", req.SourceGenerationCampaignID)
-	now := time.Now().UTC()
+	log.Printf("DNSCampaignService: CreateCampaign called - This should NOT create separate campaigns!")
+	log.Printf("ARCHITECTURAL FIX: DNS phase transitions should use Campaign Orchestrator's UpdateCampaign with phase transition")
 
-	// Validate personas using a conditional querier (read-only pattern)
-	var validationQuerier store.Querier
-	if s.db != nil {
-		validationQuerier = s.db
-	}
-	if err := s.validatePersonaIDs(ctx, validationQuerier, req.PersonaIDs, models.PersonaTypeDNS); err != nil {
-		return nil, fmt.Errorf("dns create: persona validation failed: %w", err)
-	}
+	// CRITICAL ARCHITECTURAL FIX:
+	// This method should NOT exist for phase transitions. Phase transitions should be handled
+	// by the Campaign Orchestrator's transitionToDNSValidation method using UpdateCampaign.
+	//
+	// This method violates the single-campaign architecture where:
+	// - campaignType stays 'domain_generation'
+	// - currentPhase changes to 'dns_validation'
+	// - Domain status updates happen in-place on generated_domains table
 
-	var opErr error
-	var querier store.Querier
-	isSQL := s.db != nil
-	var sqlTx *sqlx.Tx
-
-	if isSQL {
-		var startTxErr error
-		sqlTx, startTxErr = s.db.BeginTxx(ctx, nil)
-		if startTxErr != nil {
-			log.Printf("Error beginning SQL transaction for DNS phase transition %s: %v", req.SourceGenerationCampaignID, startTxErr)
-			return nil, fmt.Errorf("dns create: failed to begin SQL transaction: %w", startTxErr)
-		}
-		querier = sqlTx
-		log.Printf("SQL Transaction started for DNS phase transition %s.", req.SourceGenerationCampaignID)
-
-		defer func() {
-			if p := recover(); p != nil {
-				log.Printf("Panic recovered during SQL DNS phase transition for %s, rolling back: %v", req.SourceGenerationCampaignID, p)
-				_ = sqlTx.Rollback()
-				panic(p)
-			} else if opErr != nil {
-				log.Printf("Error occurred for DNS phase transition %s (SQL), rolling back: %v", req.SourceGenerationCampaignID, opErr)
-				_ = sqlTx.Rollback()
-			} else {
-				if commitErr := sqlTx.Commit(); commitErr != nil {
-					log.Printf("Error committing SQL transaction for DNS phase transition %s: %v", req.SourceGenerationCampaignID, commitErr)
-					opErr = commitErr
-				} else {
-					log.Printf("SQL Transaction committed for DNS phase transition %s.", req.SourceGenerationCampaignID)
-				}
-			}
-		}()
-	} else {
-		log.Printf("Operating in Firestore mode for DNS phase transition %s (no service-level transaction).", req.SourceGenerationCampaignID)
-		// querier remains nil
-	}
-
-	// Get the existing domain generation campaign to update it
-	existingCampaign, errGetExisting := s.campaignStore.GetCampaignByID(ctx, querier, req.SourceGenerationCampaignID)
-	if errGetExisting != nil {
-		opErr = fmt.Errorf("dns create: failed to fetch existing domain generation campaign %s: %w", req.SourceGenerationCampaignID, errGetExisting)
-		return nil, opErr
-	}
-
-	// Verify this is a completed domain generation campaign
-	if existingCampaign.CampaignType != models.CampaignTypeDomainGeneration {
-		opErr = fmt.Errorf("dns create: campaign %s is not a domain generation campaign (type: %s)", req.SourceGenerationCampaignID, existingCampaign.CampaignType)
-		return nil, opErr
-	}
-	if existingCampaign.Status != models.CampaignStatusCompleted {
-		opErr = fmt.Errorf("dns create: domain generation campaign %s must be completed before DNS validation (status: %s)", req.SourceGenerationCampaignID, existingCampaign.Status)
-		return nil, opErr
-	}
-
-	// FIXED: Simply validate that the source campaign has generated domains available for DNS validation
-	// Offset exhaustion is irrelevant - we just need domains to validate
-	domainCount, err := s.campaignStore.CountGeneratedDomainsByCampaign(ctx, querier, req.SourceGenerationCampaignID)
-	if err != nil {
-		opErr = fmt.Errorf("failed to count generated domains for source campaign %s: %w", req.SourceGenerationCampaignID, err)
-		return nil, opErr
-	}
-	if domainCount == 0 {
-		opErr = fmt.Errorf("dns validation error: source campaign %s has no generated domains available for validation", req.SourceGenerationCampaignID)
-		return nil, opErr
-	}
-	log.Printf("✅ [DNS_VALIDATION_CHECK] Source campaign %s has %d domains available for DNS validation",
-		req.SourceGenerationCampaignID, domainCount)
-
-	// Update the existing campaign to transition to DNS validation phase
-	// CRITICAL FIX: Do NOT change campaign type - keep it as domain_generation
-	// Only update status and metadata, phase will be set separately
-	existingCampaign.Status = models.CampaignStatusPending
-	existingCampaign.UpdatedAt = now
-	existingCampaign.Name = req.Name // Allow updating the name for DNS phase
-	// Reset processing counters for DNS validation phase
-	existingCampaign.ProcessedItems = models.Int64Ptr(0)
-	existingCampaign.ProgressPercentage = models.Float64Ptr(0.0)
-	// Clear completion timestamp since we're starting a new phase
-	existingCampaign.CompletedAt = nil
-
-	// Create DNS validation params for the existing campaign
-	dnsParams := &models.DNSValidationCampaignParams{
-		CampaignID:                 req.SourceGenerationCampaignID, // Use existing campaign ID
-		SourceGenerationCampaignID: &req.SourceGenerationCampaignID,
-		PersonaIDs:                 req.PersonaIDs,
-		RotationIntervalSeconds:    models.IntPtr(req.RotationIntervalSeconds),
-		ProcessingSpeedPerMinute:   models.IntPtr(req.ProcessingSpeedPerMinute),
-		BatchSize:                  models.IntPtr(req.BatchSize),
-		RetryAttempts:              models.IntPtr(req.RetryAttempts),
-	}
-	if dnsParams.BatchSize == nil || *dnsParams.BatchSize == 0 {
-		dnsParams.BatchSize = models.IntPtr(50)
-	}
-	if dnsParams.RetryAttempts == nil || *dnsParams.RetryAttempts == 0 {
-		dnsParams.RetryAttempts = models.IntPtr(1)
-	}
-	existingCampaign.DNSValidationParams = dnsParams
-
-	// Update the campaign with new type and DNS params
-	opErr = s.campaignStore.UpdateCampaign(ctx, querier, existingCampaign)
-	if opErr != nil {
-		// opErr is set, defer will handle rollback if in transaction
-		return nil, fmt.Errorf("dns create: failed to update campaign to DNS validation phase: %w", opErr)
-	}
-
-	// Create DNS validation params in the database
-	opErr = s.campaignStore.CreateDNSValidationParams(ctx, querier, dnsParams)
-	if opErr != nil {
-		// opErr is set, defer will handle rollback if in transaction
-		return nil, fmt.Errorf("dns create: failed to create DNS validation params: %w", opErr)
-	}
-
-	log.Printf("Successfully transitioned domain generation campaign %s to DNS validation phase", req.SourceGenerationCampaignID)
-
-	if opErr == nil {
-		s.logAuditEvent(ctx, querier, existingCampaign, "DNS Validation Campaign Created (Service)", fmt.Sprintf("Name: %s, SourceCampaignID: %s", req.Name, req.SourceGenerationCampaignID))
-
-		// Create a job for the campaign if campaignJobStore is available
-		if s.campaignJobStore != nil {
-			jobCreationTime := time.Now().UTC()
-			job := &models.CampaignJob{
-				ID:              uuid.New(),
-				CampaignID:      existingCampaign.ID,
-				JobType:         models.CampaignTypeDNSValidation,
-				Status:          models.JobStatusQueued,
-				ScheduledAt:     jobCreationTime,
-				NextExecutionAt: sql.NullTime{Time: jobCreationTime, Valid: true},
-				CreatedAt:       jobCreationTime,
-				UpdatedAt:       jobCreationTime,
-				MaxAttempts:     3,
-			}
-
-			if err := s.campaignJobStore.CreateJob(ctx, querier, job); err != nil {
-				log.Printf("Warning: failed to create initial job for DNS campaign %s: %v", existingCampaign.ID, err)
-				// Don't fail the campaign creation if job creation fails
-			} else {
-				log.Printf("Created initial job for DNS campaign %s", existingCampaign.ID)
-			}
-		} else {
-			log.Printf("Warning: campaignJobStore is nil for DNS campaign %s. Skipping job creation.", existingCampaign.ID)
-		}
-	}
-
-	return existingCampaign, opErr
+	return nil, fmt.Errorf("ARCHITECTURAL VIOLATION: DNS phase transitions must use Campaign Orchestrator's UpdateCampaign, not CreateCampaign. Source campaign: %s", req.SourceGenerationCampaignID)
 }
 
 func (s *dnsCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.DNSValidationCampaignParams, error) {
