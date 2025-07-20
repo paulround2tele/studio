@@ -24,7 +24,7 @@ function AuthLoadingFallback() {
 export default function AdvancedConditionalLayout({ children }: AdvancedConditionalLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, isLoading, isInitialized } = useCachedAuth();
+  const { isAuthenticated, isLoading, isInitialized, user } = useCachedAuth();
   
   // Navigation state management with refs for instant updates
   const navigationLockRef = useRef(false);
@@ -45,24 +45,36 @@ export default function AdvancedConditionalLayout({ children }: AdvancedConditio
 
     // Only proceed if auth state is stable and initialized
     if (!isInitialized || isLoading) {
-      console.log('[AdvancedConditionalLayout] AUTH NOT READY - waiting for initialization');
+      console.log('[AdvancedConditionalLayout] AUTH NOT READY - waiting for initialization', {
+        isInitialized,
+        isLoading,
+        isAuthenticated,
+        user: user?.email
+      });
       return;
     }
 
     // Check if auth state actually changed to prevent unnecessary redirects
     if (lastAuthStateRef.current === isAuthenticated) {
-      console.log('[AdvancedConditionalLayout] NO AUTH STATE CHANGE - skipping redirect');
+      console.log('[AdvancedConditionalLayout] NO AUTH STATE CHANGE - skipping redirect', {
+        current: lastAuthStateRef.current,
+        new: isAuthenticated,
+        pathname,
+        user: user?.email
+      });
       return;
     }
 
     // Update tracked auth state
     lastAuthStateRef.current = isAuthenticated;
 
-    console.log('[AdvancedConditionalLayout] NAVIGATION DECISION:', {
+    console.log('[AdvancedConditionalLayout] 🚨 NAVIGATION DECISION:', {
       isAuthenticated,
       isPublicPath,
       pathname,
-      navigationLocked: navigationLockRef.current
+      navigationLocked: navigationLockRef.current,
+      userEmail: user?.email,
+      timestamp: new Date().toISOString()
     });
 
     // Lock navigation during redirect

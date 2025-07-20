@@ -163,7 +163,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
       if (!forceRefresh) {
         const cachedState = getCachedAuthState();
         if (cachedState) {
-          console.log('[useCachedAuth] Using cached auth state');
+          console.log('[useCachedAuth] ⚡ Using cached auth state - INSTANT');
           setIsAuthenticated(cachedState.isAuthenticated);
           setUser(cachedState.user);
           setIsLoading(false);
@@ -172,12 +172,27 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
         }
       }
 
-      // Cache miss or forced refresh - validate with backend
+      // PERFORMANCE OPTIMIZATION: Only validate with backend if no cache
+      // This prevents the slow getCurrentUser API call on every page load
+      console.log('[useCachedAuth] 🔄 No cache found - validating with backend...');
       const { isAuthenticated: backendAuth, user: backendUser } = await validateSessionWithBackend();
+      
+      console.log('[useCachedAuth] 🔍 BACKEND VALIDATION RESULT:', {
+        isAuthenticated: backendAuth,
+        user: backendUser,
+        userEmail: backendUser?.email,
+        userType: typeof backendUser
+      });
       
       // Update state
       setIsAuthenticated(backendAuth);
       setUser(backendUser);
+      
+      console.log('[useCachedAuth] 🎯 AUTH STATE UPDATED:', {
+        isAuthenticated: backendAuth,
+        userEmail: backendUser?.email,
+        isInitialized: true
+      });
       
       // Cache the result
       setCachedAuthState({
@@ -185,9 +200,9 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
         user: backendUser,
       });
       
-      console.log('[useCachedAuth] Session validation complete:', { isAuthenticated: backendAuth });
+      console.log('[useCachedAuth] ✅ Session validation complete:', { isAuthenticated: backendAuth });
     } catch (error) {
-      console.error('[useCachedAuth] Session validation error:', error);
+      console.error('[useCachedAuth] ❌ Session validation error:', error);
       setIsAuthenticated(false);
       setUser(null);
       clearCachedAuthState();

@@ -48,7 +48,7 @@ const navigationItems = [
 
 // THIN CLIENT: Pure UI component with real user authentication state
 const AppSidebar = memo(() => {
-  const { logout } = useCachedAuth();
+  const { logout, user, isAuthenticated } = useCachedAuth();
   
   // Backend handles all auth - just render navigation
   const filteredItems = useMemo(() => {
@@ -59,6 +59,9 @@ const AppSidebar = memo(() => {
   const handleLogout = useCallback(() => {
     logout();
   }, [logout]);
+
+  // Debug user data
+  console.log('[AppSidebar] Current user data:', { user, isAuthenticated });
 
   return (
     <Sidebar>
@@ -92,10 +95,10 @@ const AppSidebar = memo(() => {
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-sm font-medium">
-              User
+              {user?.email || 'Unknown User'}
             </span>
             <span className="text-xs text-muted-foreground">
-              Authenticated
+              {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
             </span>
           </div>
           <button
