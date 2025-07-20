@@ -237,6 +237,12 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
         });
         
         console.log('[useCachedAuth] Login state updated - ready for redirect');
+        console.log('[useCachedAuth] Final state:', {
+          isAuthenticated: true,
+          isInitialized: true,
+          isLoading: false,
+          user: userData?.email
+        });
         return { success: true };
       } else {
         return { success: false, error: 'Login failed' };

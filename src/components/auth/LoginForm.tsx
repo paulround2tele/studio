@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 import { getLogger } from '@/lib/utils/logger';
 
@@ -30,6 +31,7 @@ export function LoginForm({
   title = 'Welcome back to DomainFlow',
   description = 'Sign in to your account to continue'
 }: LoginFormProps) {
+  const router = useRouter();
   const { login, isLoading: authLoading, isLoginLoading } = useCachedAuth();
   
   const [formData, setFormData] = useState<LoginFormData>({
@@ -41,9 +43,8 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // RACE CONDITION FIX: Remove redirect logic from LoginForm
-  // Let ConditionalLayout handle ALL authentication redirects to prevent conflicts
-  // This eliminates the infinite redirect loop between LoginForm and ConditionalLayout
+  // ARCHITECTURAL FIX: Restore direct redirect logic like all other components
+  // This fixes the broken ConditionalLayout handoff that was causing login redirect failures
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,8 +83,14 @@ export function LoginForm({
         logger.warn('LOGIN_FORM', 'Login failed', { error: result.error });
         setError(result.error || 'Login failed. Please try again.');
       } else {
-        logger.info('LOGIN_FORM', 'Login successful - redirecting');
-        // Successful login will be handled by the redirect effect
+        logger.info('LOGIN_FORM', 'Login successful - redirecting to dashboard');
+        // ARCHITECTURAL FIX: Direct redirect like all other components
+        try {
+          await router.push('/dashboard');
+        } catch (routerError) {
+          // Fallback to window.location if router fails
+          window.location.href = '/dashboard';
+        }
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
