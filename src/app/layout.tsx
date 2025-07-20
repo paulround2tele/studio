@@ -5,6 +5,7 @@ import './globals.css';
 import AdvancedConditionalLayout from '@/components/layout/AdvancedConditionalLayout';
 import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { AuthProvider } from '@/components/providers/AuthProvider';
 import { NoSSR } from '@/components/providers/NoSSR';
 
 export const metadata: Metadata = {
@@ -26,10 +27,12 @@ export default function RootLayout({
           </div>
         }>
           <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
-            <GlobalLoadingIndicator />
-            <AdvancedConditionalLayout>
-              {children}
-            </AdvancedConditionalLayout>
+            <AuthProvider>
+              <GlobalLoadingIndicator />
+              <AdvancedConditionalLayout>
+                {children}
+              </AdvancedConditionalLayout>
+            </AuthProvider>
           </ThemeProvider>
         </NoSSR>
       </body>

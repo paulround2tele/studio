@@ -12,6 +12,54 @@ import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
 
+/**
+ * Maps technical API errors to user-friendly messages
+ */
+function getUserFriendlyErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return 'An unexpected error occurred. Please try again.';
+  }
+
+  const errorMessage = error.message.toLowerCase();
+
+  // HTTP Status Code Mapping
+  if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {
+    return 'Invalid email or password. Please check your credentials and try again.';
+  }
+  
+  if (errorMessage.includes('403') || errorMessage.includes('forbidden')) {
+    return 'Account access denied. Please contact support if this continues.';
+  }
+  
+  if (errorMessage.includes('429') || errorMessage.includes('too many requests')) {
+    return 'Too many login attempts. Please wait a few minutes and try again.';
+  }
+  
+  if (errorMessage.includes('500') || errorMessage.includes('internal server error')) {
+    return 'Server error occurred. Please try again in a few moments.';
+  }
+  
+  if (errorMessage.includes('502') || errorMessage.includes('503') || errorMessage.includes('504')) {
+    return 'Service temporarily unavailable. Please try again later.';
+  }
+
+  // Network and Connection Errors
+  if (errorMessage.includes('network error') ||
+      errorMessage.includes('failed to fetch') ||
+      errorMessage.includes('connection') ||
+      errorMessage.includes('timeout')) {
+    return 'Connection problem detected. Please check your internet connection and try again.';
+  }
+
+  // Validation Errors
+  if (errorMessage.includes('validation') || errorMessage.includes('invalid')) {
+    return 'Please check your input and try again.';
+  }
+
+  // Generic fallback for any unhandled errors
+  return 'Login failed. Please try again or contact support if the issue persists.';
+}
+
 // Use OpenAPI types for authentication
 export type LoginCredentials = LoginRequest & {
   rememberMe?: boolean;
@@ -177,11 +225,15 @@ class AuthService {
       logger.info('AUTH_SERVICE', 'Session refresh successful');
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Session refresh failed';
-      logger.warn('AUTH_SERVICE', 'Session refresh failed', { error: errorMessage });
+      // Log technical error for debugging
+      const technicalError = error instanceof Error ? error.message : 'Unknown error';
+      logger.warn('AUTH_SERVICE', 'Session refresh failed', { error: technicalError });
+      
+      // Return user-friendly error message
+      const userFriendlyMessage = getUserFriendlyErrorMessage(error);
       return {
         success: false,
-        error: errorMessage
+        error: userFriendlyMessage
       };
     }
   }
@@ -204,11 +256,23 @@ class AuthService {
       logger.info('AUTH_SERVICE', 'Password change successful');
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Password change failed';
-      logger.error('AUTH_SERVICE', 'Password change failed', { error: errorMessage });
+      // Log technical error for debugging
+      const technicalError = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('AUTH_SERVICE', 'Password change failed', { error: technicalError });
+      
+      // Return user-friendly error message for password changes
+      let userFriendlyMessage = getUserFriendlyErrorMessage(error);
+      
+      // Special handling for password change errors
+      if (technicalError.includes('401') || technicalError.includes('unauthorized')) {
+        userFriendlyMessage = 'Current password is incorrect. Please try again.';
+      } else if (technicalError.includes('validation') || technicalError.includes('invalid')) {
+        userFriendlyMessage = 'New password does not meet requirements. Please choose a stronger password.';
+      }
+      
       return {
         success: false,
-        error: errorMessage
+        error: userFriendlyMessage
       };
     }
   }

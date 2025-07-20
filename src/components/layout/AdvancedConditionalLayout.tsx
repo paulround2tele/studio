@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useLayoutEffect, useRef, useCallback } from 'react';
 import AppLayout from './AppLayout';
-import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 interface AdvancedConditionalLayoutProps {
   children: React.ReactNode;
@@ -24,7 +24,7 @@ function AuthLoadingFallback() {
 export default function AdvancedConditionalLayout({ children }: AdvancedConditionalLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, isLoading, isInitialized, user } = useCachedAuth();
+  const { isAuthenticated, isLoading, isInitialized, user } = useAuth();
   
   // Navigation state management with refs for instant updates
   const navigationLockRef = useRef(false);
@@ -37,6 +37,18 @@ export default function AdvancedConditionalLayout({ children }: AdvancedConditio
   
   // Optimistic navigation handler with race condition prevention
   const handleNavigation = useCallback(() => {
+    // 🔍 DEBUG: Add timestamp and detailed state logging
+    console.log('[AdvancedConditionalLayout] 🔍 HANDLER CALLED:', {
+      timestamp: new Date().toISOString(),
+      isAuthenticated,
+      isInitialized,
+      isLoading,
+      userEmail: user?.email,
+      pathname,
+      isPublicPath,
+      navigationLocked: navigationLockRef.current
+    });
+
     // Prevent navigation during transitions
     if (navigationLockRef.current) {
       console.log('[AdvancedConditionalLayout] NAVIGATION LOCKED - skipping redirect');
@@ -116,8 +128,21 @@ export default function AdvancedConditionalLayout({ children }: AdvancedConditio
 
   // Use useLayoutEffect for synchronous execution (prevents visual flashing)
   useLayoutEffect(() => {
+    console.log('[AdvancedConditionalLayout] 🔄 useLayoutEffect TRIGGERED - calling handleNavigation');
     handleNavigation();
   }, [handleNavigation]);
+
+  // 🔍 DEBUG: Also add useEffect to monitor auth state changes separately
+  useLayoutEffect(() => {
+    console.log('[AdvancedConditionalLayout] 🔍 AUTH STATE MONITOR:', {
+      timestamp: new Date().toISOString(),
+      isAuthenticated,
+      isInitialized,
+      isLoading,
+      userEmail: user?.email,
+      pathname
+    });
+  }, [isAuthenticated, isInitialized, isLoading, user, pathname]);
 
   // Cleanup navigation timeout on unmount
   useLayoutEffect(() => {

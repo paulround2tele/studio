@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
@@ -32,7 +32,7 @@ export function LoginForm({
   description = 'Sign in to your account to continue'
 }: LoginFormProps) {
   const router = useRouter();
-  const { login, isLoading: authLoading, isLoginLoading } = useCachedAuth();
+  const { login, isLoading: authLoading, isLoginLoading } = useAuth();
   
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
@@ -83,14 +83,13 @@ export function LoginForm({
         logger.warn('LOGIN_FORM', 'Login failed', { error: result.error });
         setError(result.error || 'Login failed. Please try again.');
       } else {
-        logger.info('LOGIN_FORM', 'Login successful - redirecting to dashboard');
-        // ARCHITECTURAL FIX: Direct redirect like all other components
-        try {
-          await router.push('/dashboard');
-        } catch (routerError) {
-          // Fallback to window.location if router fails
-          window.location.href = '/dashboard';
-        }
+        logger.info('LOGIN_FORM', 'Login successful - auth state updated');
+        // ✅ ARCHITECTURAL FIX: Let AdvancedConditionalLayout handle navigation
+        // The layout will automatically redirect when auth state updates
+        // This prevents dual navigation conflicts and ensures consistent routing
+        setError(''); // Clear any previous errors
+        
+        logger.debug('LOGIN_FORM', 'Waiting for AdvancedConditionalLayout to handle redirect');
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
