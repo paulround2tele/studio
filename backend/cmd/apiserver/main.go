@@ -282,11 +282,7 @@ func main() {
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)
 	log.Println("WebSocketAPIHandler initialized.")
 
-	// Initialize authentication and security handlers
-	authHandler := api.NewAuthHandler(sessionService, sessionConfig, db)
-	log.Println("AuthHandler initialized.")
-
-	// Initialize high-performance distributed cache manager
+	// Initialize high-performance distributed cache manager first (needed by auth handlers)
 	cacheConfig := cache.CacheConfig{
 		MaxMemoryMB:            100,
 		DefaultTTL:             5 * time.Minute,
@@ -303,6 +299,10 @@ func main() {
 		log.Fatalf("Failed to initialize DistributedCacheManager: %v", err)
 	}
 	log.Println("DistributedCacheManager initialized with in-memory distributed caching.")
+
+	// Initialize authentication and security handlers with user profile caching
+	authHandler := api.NewAuthHandler(sessionService, sessionConfig, db, cacheManager)
+	log.Println("AuthHandler initialized with user profile caching.")
 
 	// Convert SessionSettings to SessionConfig for service compatibility
 	sessionServiceConfig := sessionConfig.ToServiceConfig()

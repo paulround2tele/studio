@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/fntelecomllc/studio/backend/internal/cache"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
@@ -21,14 +24,16 @@ type AuthHandler struct {
 	sessionService *services.SessionService
 	config         *config.SessionSettings
 	db             *sqlx.DB
+	userCache      *cache.DistributedCacheManager
 }
 
 // NewAuthHandler creates a new authentication handler
-func NewAuthHandler(sessionService *services.SessionService, sessionConfig *config.SessionSettings, db *sqlx.DB) *AuthHandler {
+func NewAuthHandler(sessionService *services.SessionService, sessionConfig *config.SessionSettings, db *sqlx.DB, userCache *cache.DistributedCacheManager) *AuthHandler {
 	return &AuthHandler{
 		sessionService: sessionService,
 		config:         sessionConfig,
 		db:             db,
+		userCache:      userCache,
 	}
 }
 
@@ -220,7 +225,22 @@ func (h *AuthHandler) Me(c *gin.Context) {
 
 	ctx := securityContext.(*models.SecurityContext)
 
-	// Fetch full user data from database
+	// PERFORMANCE OPTIMIZATION: Cache user profile data to avoid repeated DB hits
+	cacheKey := fmt.Sprintf("user_profile:%s", ctx.UserID.String())
+
+	// Try to get user from cache first
+	if h.userCache != nil {
+		cachedUserJSON, err := h.userCache.Get(context.Background(), cacheKey)
+		if err == nil {
+			var user models.User
+			if err := json.Unmarshal([]byte(cachedUserJSON), &user); err == nil {
+				respondWithJSONGin(c, http.StatusOK, user.PublicUser())
+				return
+			}
+		}
+	}
+
+	// FALLBACK: Hit database and cache result
 	var user models.User
 	query := `
 		SELECT id, email, created_at, updated_at
@@ -235,6 +255,13 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		}
 		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to retrieve user information")
 		return
+	}
+
+	// Cache user data for 5 minutes to avoid repeated DB hits
+	if h.userCache != nil {
+		if userJSON, err := json.Marshal(user); err == nil {
+			h.userCache.SetWithTTL(context.Background(), cacheKey, string(userJSON), 5*time.Minute)
+		}
 	}
 
 	// Return simplified user information (no roles/permissions)
