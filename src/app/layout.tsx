@@ -2,7 +2,7 @@
 import type {Metadata} from 'next';
 // Font imports removed for offline build
 import './globals.css';
-import ConditionalLayout from '@/components/layout/ConditionalLayout';
+import AdvancedConditionalLayout from '@/components/layout/AdvancedConditionalLayout';
 import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { NoSSR } from '@/components/providers/NoSSR';
@@ -27,9 +27,9 @@ export default function RootLayout({
         }>
           <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
             <GlobalLoadingIndicator />
-            <ConditionalLayout>
+            <AdvancedConditionalLayout>
               {children}
-            </ConditionalLayout>
+            </AdvancedConditionalLayout>
           </ThemeProvider>
         </NoSSR>
       </body>
