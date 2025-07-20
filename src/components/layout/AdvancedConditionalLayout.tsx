@@ -116,10 +116,14 @@ export default function AdvancedConditionalLayout({ children }: AdvancedConditio
     };
   }, []);
 
-  // Show loading while authentication is being checked
-  if (!isInitialized || isLoading) {
+  // PERFORMANCE OPTIMIZATION: Show loading only if both uninitialized AND loading
+  // This prevents unnecessary "Checking authentication..." after successful login
+  if (!isInitialized && isLoading) {
     return <AuthLoadingFallback />;
   }
+  
+  // If initialized but loading, allow rendering with current auth state
+  // This prevents flashing loading screen during cache reads
   
   // Render logic with optimistic updates
   if (!isAuthenticated) {
