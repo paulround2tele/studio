@@ -990,7 +990,28 @@ export class UnifiedCampaignService {
       };
 
       const axiosResponse = await campaignsApi.getBulkEnrichedCampaignData(requestPayload);
+      
+      // 🐛 DEBUG: Log raw API response to diagnose double-wrapping issue
+      console.log('[DEBUG] getBulkEnrichedCampaignData - Raw Axios Response:', {
+        status: axiosResponse.status,
+        hasData: !!axiosResponse.data,
+        dataType: typeof axiosResponse.data,
+        responseStructure: JSON.stringify(axiosResponse.data, null, 2)
+      });
+      
       const response = extractResponseData<BulkEnrichedDataResponse>(axiosResponse);
+      
+      // 🐛 DEBUG: Log extracted response - ENHANCED DIAGNOSIS
+      console.log('[DEBUG] getBulkEnrichedCampaignData - Extracted Response:', {
+        hasResponse: !!response,
+        hasCampaigns: !!(response as any)?.campaigns,
+        hasDataCampaigns: !!(response as any)?.data?.campaigns,
+        campaignIds: response?.campaigns ? Object.keys(response.campaigns) : 'none',
+        dataCampaignIds: (response as any)?.data?.campaigns ? Object.keys((response as any).data.campaigns) : 'none',
+        responseKeys: response ? Object.keys(response) : 'none',
+        dataKeys: (response as any)?.data ? Object.keys((response as any).data) : 'none',
+        extractedStructure: JSON.stringify(response, null, 2)
+      });
       
       if (response) {
         // Cache successful result
@@ -1063,19 +1084,57 @@ export class UnifiedCampaignService {
   async getRichCampaignData(campaignId: string): Promise<Record<string, unknown> | null> {
     try {
       const bulkResults = await this.getBulkEnrichedCampaignData([campaignId]);
-      const enrichedData = bulkResults?.campaigns?.[campaignId];
       
-      if (enrichedData) {
+      // 🐛 DEBUG: Log response structure to diagnose double-wrapping issue - ENHANCED
+      console.log('[DEBUG] getRichCampaignData - bulkResults structure:', {
+        hasResults: !!bulkResults,
+        hasData: !!(bulkResults as any)?.data,
+        hasDataData: !!(bulkResults as any)?.data?.data,
+        hasCampaigns: !!bulkResults?.campaigns,
+        hasDataCampaigns: !!(bulkResults as any)?.data?.campaigns,
+        campaignsKeys: bulkResults?.campaigns ? Object.keys(bulkResults.campaigns) : 'none',
+        dataCampaignsKeys: (bulkResults as any)?.data?.campaigns ? Object.keys((bulkResults as any).data.campaigns) : 'none',
+        lookingForId: campaignId,
+        rawStructure: JSON.stringify(bulkResults, null, 2)
+      });
+      
+      // 🐛 TRY BOTH PATHS TO VALIDATE HYPOTHESIS
+      const enrichedData = bulkResults?.campaigns?.[campaignId];
+      const enrichedDataViaNested = (bulkResults as any)?.data?.campaigns?.[campaignId];
+      
+      // 🐛 DEBUG: Log campaign lookup result - ENHANCED
+      console.log('[DEBUG] getRichCampaignData - campaign lookup:', {
+        foundDataDirectPath: !!enrichedData,
+        foundDataNestedPath: !!enrichedDataViaNested,
+        campaignId,
+        directPathCampaigns: bulkResults?.campaigns ? Object.keys(bulkResults.campaigns) : [],
+        nestedPathCampaigns: (bulkResults as any)?.data?.campaigns ? Object.keys((bulkResults as any).data.campaigns) : []
+      });
+      
+      // Use the correct path based on which one has data
+      const finalEnrichedData = enrichedData || enrichedDataViaNested;
+      
+      if (finalEnrichedData) {
+        // 🐛 DEBUG: Log the final data structure we're using
+        console.log('[DEBUG] getRichCampaignData - Using enriched data:', {
+          hasCampaign: !!finalEnrichedData.campaign,
+          campaignKeys: finalEnrichedData.campaign ? Object.keys(finalEnrichedData.campaign) : 'none',
+          domainsCount: finalEnrichedData.domains ? finalEnrichedData.domains.length : 0,
+          leadsCount: finalEnrichedData.leads ? finalEnrichedData.leads.length : 0,
+          dataSource: enrichedData ? 'direct_path' : 'nested_path'
+        });
+        
         // Convert to rich format
         return {
-          ...enrichedData.campaign,
-          domains: enrichedData.domains || [],
-          dnsValidatedDomains: enrichedData.dnsValidatedDomains || [],
-          leads: enrichedData.leads || [],
-          httpKeywordResults: enrichedData.httpKeywordResults || []
+          ...finalEnrichedData.campaign,
+          domains: finalEnrichedData.domains || [],
+          dnsValidatedDomains: finalEnrichedData.dnsValidatedDomains || [],
+          leads: finalEnrichedData.leads || [],
+          httpKeywordResults: finalEnrichedData.httpKeywordResults || []
         };
       }
       
+      console.error('[DEBUG] getRichCampaignData - NO DATA FOUND via either path for campaign:', campaignId);
       return null;
     } catch (error: unknown) {
       console.error('[UnifiedCampaignService] Error getting rich campaign data:', error instanceof Error ? error.message : 'Unknown error');
