@@ -115,19 +115,32 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
   // Validate session with backend (actual API call)
   const validateSessionWithBackend = useCallback(async (): Promise<{ isAuthenticated: boolean; user: User | null }> => {
     try {
-      console.log('[useCachedAuth] Validating session with backend...');
-      const response = await authApi.getCurrentUser();
+      console.log('[useCachedAuth] 🔍 DEBUGGING: Starting backend validation...');
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('API call timeout after 10 seconds')), 10000);
+      });
+      
+      console.log('[useCachedAuth] 🔍 DEBUGGING: About to call authApi.getCurrentUser()...');
+      const response = await Promise.race([
+        authApi.getCurrentUser(),
+        timeoutPromise
+      ]);
+      
+      console.log('[useCachedAuth] 🔍 DEBUGGING: API call completed, response:', response);
       const userData = extractResponseData<User>(response);
+      console.log('[useCachedAuth] 🔍 DEBUGGING: Extracted user data:', userData);
       
       if (userData?.id && userData?.email) {
-        console.log('[useCachedAuth] Backend validation successful');
+        console.log('[useCachedAuth] ✅ Backend validation successful');
         return { isAuthenticated: true, user: userData };
       } else {
-        console.log('[useCachedAuth] Backend validation failed - invalid user data');
+        console.log('[useCachedAuth] ❌ Backend validation failed - invalid user data');
         return { isAuthenticated: false, user: null };
       }
     } catch (error) {
-      console.log('[useCachedAuth] Backend validation failed:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('[useCachedAuth] 🚨 Backend validation failed:', error instanceof Error ? error.message : 'Unknown error');
       return { isAuthenticated: false, user: null };
     }
   }, []);
