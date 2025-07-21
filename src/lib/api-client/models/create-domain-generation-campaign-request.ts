@@ -13,6 +13,12 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { DNSValidationRequest } from './dnsvalidation-request';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { HTTPKeywordValidationRequest } from './httpkeyword-validation-request';
 
 /**
  * 
@@ -32,6 +38,24 @@ export interface CreateDomainGenerationCampaignRequest {
      * @memberof CreateDomainGenerationCampaignRequest
      */
     'constantString': string;
+    /**
+     * 
+     * @type {DNSValidationRequest}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'dnsValidationParams'?: DNSValidationRequest;
+    /**
+     * 
+     * @type {HTTPKeywordValidationRequest}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'httpKeywordParams'?: HTTPKeywordValidationRequest;
+    /**
+     * Full sequence support - optional parameters for auto-chaining phases
+     * @type {boolean}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'launchSequence'?: boolean;
     /**
      * 
      * @type {string}

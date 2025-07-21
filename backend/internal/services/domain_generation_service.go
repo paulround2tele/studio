@@ -439,6 +439,28 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 	}
 	phase := models.CampaignPhaseGeneration
 	status := models.CampaignPhaseStatusPending
+	// Prepare campaign metadata for full sequence support
+	var campaignMetadata map[string]interface{}
+	if req.LaunchSequence != nil && *req.LaunchSequence {
+		campaignMetadata = map[string]interface{}{
+			"launch_sequence": true,
+		}
+		log.Printf("Campaign %s configured for full sequence mode", req.Name)
+	}
+
+	// Convert metadata to JSON
+	var metadataJSON *json.RawMessage
+	if campaignMetadata != nil {
+		metadataBytes, err := json.Marshal(campaignMetadata)
+		if err != nil {
+			opErr = fmt.Errorf("failed to marshal campaign metadata: %w", err)
+			log.Printf("Error marshaling metadata for campaign %s: %v", req.Name, opErr)
+			return nil, opErr
+		}
+		metadataRaw := json.RawMessage(metadataBytes)
+		metadataJSON = &metadataRaw
+	}
+
 	baseCampaign := &models.Campaign{
 		ID:                 campaignID,
 		Name:               req.Name,
@@ -450,6 +472,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		TotalItems:         models.Int64Ptr(actualTotalItemsForThisRun),
 		ProcessedItems:     models.Int64Ptr(0),
 		ProgressPercentage: models.Float64Ptr(0.0),
+		Metadata:           metadataJSON,
 	}
 
 	campaignDomainGenParams := &models.DomainGenerationCampaignParams{
@@ -478,6 +501,59 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		return nil, opErr
 	}
 	log.Printf("Domain generation params created for %s. Campaign-specific start offset: %d", req.Name, startingOffset)
+
+	// Handle full sequence mode - create DNS and HTTP validation parameters if provided
+	if req.LaunchSequence != nil && *req.LaunchSequence {
+		log.Printf("Full sequence mode enabled for campaign %s - creating phase parameters", req.Name)
+
+		// Create DNS validation parameters if provided
+		if req.DNSValidationParams != nil {
+			dnsParams := &models.DNSValidationCampaignParams{
+				CampaignID:               campaignID,
+				PersonaIDs:               req.DNSValidationParams.PersonaIDs,
+				RotationIntervalSeconds:  req.DNSValidationParams.RotationIntervalSeconds,
+				ProcessingSpeedPerMinute: req.DNSValidationParams.ProcessingSpeedPerMinute,
+				BatchSize:                req.DNSValidationParams.BatchSize,
+				RetryAttempts:            req.DNSValidationParams.RetryAttempts,
+			}
+
+			if err := s.campaignStore.CreateDNSValidationParams(ctx, querier, dnsParams); err != nil {
+				opErr = fmt.Errorf("failed to create DNS validation params for full sequence: %w", err)
+				log.Printf("Error creating DNS validation params for campaign %s: %v", req.Name, opErr)
+				return nil, opErr
+			}
+			log.Printf("DNS validation params created for full sequence campaign %s", req.Name)
+		}
+
+		// Create HTTP keyword validation parameters if provided
+		if req.HTTPKeywordParams != nil {
+			// Convert Keywords slice to AdHocKeywords pointer
+			var adHocKeywords *[]string
+			if len(req.HTTPKeywordParams.Keywords) > 0 || len(req.HTTPKeywordParams.AdHocKeywords) > 0 {
+				combined := make([]string, 0, len(req.HTTPKeywordParams.Keywords)+len(req.HTTPKeywordParams.AdHocKeywords))
+				combined = append(combined, req.HTTPKeywordParams.Keywords...)
+				combined = append(combined, req.HTTPKeywordParams.AdHocKeywords...)
+				if len(combined) > 0 {
+					adHocKeywords = &combined
+				}
+			}
+
+			httpParams := &models.HTTPKeywordCampaignParams{
+				CampaignID:       campaignID,
+				SourceCampaignID: campaignID,   // Self-reference for full sequence mode
+				SourceType:       "generation", // Source is the generation phase
+				PersonaIDs:       req.HTTPKeywordParams.PersonaIDs,
+				AdHocKeywords:    adHocKeywords,
+			}
+
+			if err := s.campaignStore.CreateHTTPKeywordParams(ctx, querier, httpParams); err != nil {
+				opErr = fmt.Errorf("failed to create HTTP keyword validation params for full sequence: %w", err)
+				log.Printf("Error creating HTTP keyword validation params for campaign %s: %v", req.Name, opErr)
+				return nil, opErr
+			}
+			log.Printf("HTTP keyword validation params created for full sequence campaign %s", req.Name)
+		}
+	}
 
 	configDetailsBytes, jsonErr := json.Marshal(normalizedHashedParams)
 	if jsonErr != nil {
@@ -540,23 +616,33 @@ func (s *domainGenerationServiceImpl) GetCampaignDetails(ctx context.Context, ca
 
 	campaign, err := s.campaignStore.GetCampaignByID(ctx, querier, campaignID)
 	if err != nil {
+		log.Printf("[DEBUG DomainGen] Failed to get campaign by ID %s: %v", campaignID, err)
 		return nil, nil, fmt.Errorf("failed to get campaign by ID %s: %w", campaignID, err)
 	}
+
+	log.Printf("[DEBUG DomainGen] Campaign %s found, CurrentPhase: %v", campaignID, campaign.CurrentPhase)
+
 	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseGeneration {
 		currentPhase := "unknown"
 		if campaign.CurrentPhase != nil {
 			currentPhase = string(*campaign.CurrentPhase)
 		}
+		log.Printf("[DEBUG DomainGen] Campaign %s phase validation failed (phase: %s)", campaignID, currentPhase)
 		return nil, nil, fmt.Errorf("campaign %s is not a domain generation campaign (phase: %s)", campaignID, currentPhase)
 	}
 
+	log.Printf("[DEBUG DomainGen] Getting domain generation params for campaign %s", campaignID)
 	params, err := s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
 	if err != nil {
+		log.Printf("[DEBUG DomainGen] Failed to get domain generation params for campaign %s: %v", campaignID, err)
 		if campaign.DomainGenerationParams != nil {
+			log.Printf("[DEBUG DomainGen] Using embedded DomainGenerationParams for campaign %s", campaignID)
 			return campaign, campaign.DomainGenerationParams, nil
 		}
 		return nil, nil, fmt.Errorf("failed to get domain generation params for campaign %s: %w", campaignID, err)
 	}
+
+	log.Printf("[DEBUG DomainGen] Successfully retrieved domain generation params for campaign %s", campaignID)
 	return campaign, params, nil
 }
 
@@ -1175,8 +1261,8 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		// Broadcast campaign completion via WebSocket
 		websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "domain_generation", newProcessedItems, targetItems)
 
-		// Broadcast automatic phase transition to DNS validation
-		websocket.BroadcastPhaseTransition(campaignID.String(), "domain_generation", "dns_validation", 100.0)
+		// Domain generation complete - campaign stays in generation phase until user manually configures next phase
+		log.Printf("ProcessGenerationCampaignBatch: Campaign %s generation phase complete. Waiting for user to configure DNS validation phase.", campaignID)
 	} else {
 		// Campaign is still running - update progress using dedicated method
 		if errUpdateProgress := s.campaignStore.UpdateCampaignProgress(ctx, querier, campaignID, newProcessedItems, targetItems, progressPercentage); errUpdateProgress != nil {

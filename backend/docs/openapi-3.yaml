@@ -1454,6 +1454,13 @@ components:
                     type: string
                 constantString:
                     type: string
+                dnsValidationParams:
+                    $ref: '#/components/schemas/DNSValidationRequest'
+                httpKeywordParams:
+                    $ref: '#/components/schemas/HTTPKeywordValidationRequest'
+                launchSequence:
+                    description: Full sequence support - optional parameters for auto-chaining phases
+                    type: boolean
                 name:
                     type: string
                 numDomainsToGenerate:
@@ -2583,6 +2590,25 @@ components:
                 totalCount:
                     format: int64
                     type: integer
+            type: object
+        HTTPKeywordValidationRequest:
+            properties:
+                adHocKeywords:
+                    items:
+                        type: string
+                    type: array
+                keywords:
+                    items:
+                        type: string
+                    type: array
+                personaIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+            required:
+                - keywords
+                - adHocKeywords
             type: object
         HTTPPhaseConfigRequest:
             properties:

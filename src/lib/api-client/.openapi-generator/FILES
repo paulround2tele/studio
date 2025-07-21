@@ -125,6 +125,7 @@ docs/HTTPCookieHandling.md
 docs/HTTPKeywordCampaignParams.md
 docs/HTTPKeywordResult.md
 docs/HTTPKeywordResultsResponse.md
+docs/HTTPKeywordValidationRequest.md
 docs/HTTPPhaseConfigRequest.md
 docs/HTTPTLSClientHello.md
 docs/HTTPValidationRequest.md
@@ -338,6 +339,7 @@ models/httpcookie-handling.ts
 models/httpkeyword-campaign-params.ts
 models/httpkeyword-result.ts
 models/httpkeyword-results-response.ts
+models/httpkeyword-validation-request.ts
 models/httpphase-config-request.ts
 models/httptlsclient-hello.ts
 models/httpvalidation-request.ts

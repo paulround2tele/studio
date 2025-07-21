@@ -2246,6 +2246,10 @@ export interface components {
         CreateDomainGenerationCampaignRequest: {
             characterSet: string;
             constantString: string;
+            dnsValidationParams?: components["schemas"]["DNSValidationRequest"];
+            httpKeywordParams?: components["schemas"]["HTTPKeywordValidationRequest"];
+            /** @description Full sequence support - optional parameters for auto-chaining phases */
+            launchSequence?: boolean;
             name: string;
             /** Format: int64 */
             numDomainsToGenerate?: number;
@@ -2912,6 +2916,11 @@ export interface components {
             nextCursor?: string;
             /** Format: int64 */
             totalCount?: number;
+        };
+        HTTPKeywordValidationRequest: {
+            adHocKeywords: string[];
+            keywords: string[];
+            personaIds?: string[];
         };
         HTTPPhaseConfigRequest: {
             adHocKeywords?: string[];

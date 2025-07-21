@@ -836,8 +836,8 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 			// Campaign completed
 			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "http_keyword_validation", processedCount, totalCount)
 
-			// Broadcast automatic phase transition to analysis
-			websocket.BroadcastPhaseTransition(campaignID.String(), "http_keyword_validation", "analysis", 100.0)
+			// HTTP keyword validation complete - campaign stays in http_keyword_validation phase until user manually configures next phase
+			log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s HTTP keyword validation phase complete. Waiting for user to configure analysis phase.", campaignID)
 		} else {
 			// Progress update
 			websocket.BroadcastValidationProgress(campaignID.String(), processedCount, totalCount, "http_keyword_validation")

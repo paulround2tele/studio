@@ -89,6 +89,11 @@ type CreateDomainGenerationCampaignRequest struct {
 	TLD                  string    `json:"tld" validate:"required"`
 	NumDomainsToGenerate int64     `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0"`
 	UserID               uuid.UUID `json:"userId,omitempty"`
+
+	// Full sequence support - optional parameters for auto-chaining phases
+	LaunchSequence      *bool                         `json:"launchSequence,omitempty"`
+	DNSValidationParams *DNSValidationRequest         `json:"dnsValidationParams,omitempty"`
+	HTTPKeywordParams   *HTTPKeywordValidationRequest `json:"httpKeywordParams,omitempty"`
 }
 
 // --- Campaign Result Response DTOs ---
@@ -118,6 +123,13 @@ type DNSValidationRequest struct {
 	ProcessingSpeedPerMinute *int        `json:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=0"`
 	BatchSize                *int        `json:"batchSize,omitempty" validate:"omitempty,gt=0"`
 	RetryAttempts            *int        `json:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
+}
+
+// HTTPKeywordValidationRequest represents the request for phased HTTP keyword validation
+type HTTPKeywordValidationRequest struct {
+	PersonaIDs    []uuid.UUID `json:"personaIds" validate:"omitempty,min=1,dive,uuid"`
+	Keywords      []string    `json:"keywords,omitempty" validate:"omitempty,min=1,dive,required"`
+	AdHocKeywords []string    `json:"adHocKeywords,omitempty" validate:"omitempty,min=1,dive,required"`
 }
 
 // BulkDeleteResult represents the result of a bulk delete operation

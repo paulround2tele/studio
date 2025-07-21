@@ -103,6 +103,7 @@ export * from './httpcookie-handling';
 export * from './httpkeyword-campaign-params';
 export * from './httpkeyword-result';
 export * from './httpkeyword-results-response';
+export * from './httpkeyword-validation-request';
 export * from './httpphase-config-request';
 export * from './httptlsclient-hello';
 export * from './httpvalidation-request';

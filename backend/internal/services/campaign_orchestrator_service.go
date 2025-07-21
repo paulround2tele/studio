@@ -2039,8 +2039,7 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDependencies(ctx context.Co
 }
 
 // HandleCampaignCompletion handles phase transitions when a campaign completes.
-// ALWAYS sets currentPhase to indicate next phase for frontend UI.
-// Only auto-executes next phase if launch_sequence=true.
+// Only auto-executes next phase if launch_sequence=true AND all required parameters exist
 func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error {
 	log.Printf("[DEBUG] HandleCampaignCompletion called for campaign %s", campaignID)
 
@@ -2054,9 +2053,27 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 	if campaign.CurrentPhase != nil {
 		currentPhaseStr = string(*campaign.CurrentPhase)
 	}
-	log.Printf("[DEBUG] Campaign %s current phase: %s", campaignID, currentPhaseStr)
+	log.Printf("[DEBUG] Campaign %s current phase: %s completed", campaignID, currentPhaseStr)
 
-	// ALWAYS set currentPhase to indicate next phase for frontend UI based on current phase
+	// Check if campaign has launch_sequence enabled
+	launchSequence := false
+	if campaign.Metadata != nil {
+		var metadata map[string]interface{}
+		if err := json.Unmarshal(*campaign.Metadata, &metadata); err == nil {
+			if seq, ok := metadata["launch_sequence"].(bool); ok {
+				launchSequence = seq
+			}
+		}
+	}
+
+	if !launchSequence {
+		log.Printf("[INFO] Campaign %s does not have launch_sequence enabled - staying in current phase for manual configuration", campaignID)
+		return nil
+	}
+
+	log.Printf("[INFO] Campaign %s has launch_sequence enabled - checking for automatic phase transition", campaignID)
+
+	// Only proceed with phase transitions if launch_sequence=true
 	if campaign.CurrentPhase == nil {
 		log.Printf("[DEBUG] Campaign %s has no current phase set, skipping phase transition", campaignID)
 		return nil
@@ -2064,7 +2081,12 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 
 	switch *campaign.CurrentPhase {
 	case models.CampaignPhaseGeneration:
-		// Set currentPhase to DNS validation (next phase to configure)
+		// Check if DNS validation parameters exist before transitioning
+		if campaign.DNSValidationParams == nil {
+			log.Printf("[WARNING] Campaign %s has launch_sequence=true but no DNS validation params - cannot auto-transition", campaignID)
+			return nil
+		}
+
 		dnsPhase := models.CampaignPhaseDNSValidation
 		campaign.CurrentPhase = &dnsPhase
 		campaign.UpdatedAt = time.Now().UTC()
@@ -2075,11 +2097,16 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 			return err
 		}
 
-		log.Printf("[INFO] Set campaign %s currentPhase to dns_validation - ready for user configuration", campaignID)
+		log.Printf("[INFO] Auto-transitioned campaign %s to dns_validation phase", campaignID)
 		return nil
 
 	case models.CampaignPhaseDNSValidation:
-		// Set currentPhase to HTTP validation (next phase to configure)
+		// Check if HTTP keyword validation parameters exist before transitioning
+		if campaign.HTTPKeywordValidationParams == nil {
+			log.Printf("[WARNING] Campaign %s has launch_sequence=true but no HTTP keyword params - cannot auto-transition", campaignID)
+			return nil
+		}
+
 		httpPhase := models.CampaignPhaseHTTPValidation
 		campaign.CurrentPhase = &httpPhase
 		campaign.UpdatedAt = time.Now().UTC()
@@ -2090,11 +2117,10 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 			return err
 		}
 
-		log.Printf("[INFO] Set campaign %s currentPhase to http_keyword_validation - ready for user configuration", campaignID)
+		log.Printf("[INFO] Auto-transitioned campaign %s to http_keyword_validation phase", campaignID)
 		return nil
 
 	case models.CampaignPhaseHTTPValidation:
-		// Set currentPhase to analysis (next phase after HTTP validation)
 		analysisPhase := models.CampaignPhaseAnalysis
 		campaign.CurrentPhase = &analysisPhase
 		campaign.UpdatedAt = time.Now().UTC()
@@ -2105,11 +2131,10 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 			return err
 		}
 
-		log.Printf("[INFO] Set campaign %s currentPhase to analysis - ready for user configuration", campaignID)
+		log.Printf("[INFO] Auto-transitioned campaign %s to analysis phase", campaignID)
 		return nil
 
 	case models.CampaignPhaseAnalysis:
-		// Campaign has completed all phases
 		log.Printf("[INFO] Campaign %s has completed all phases", campaignID)
 		return nil
 

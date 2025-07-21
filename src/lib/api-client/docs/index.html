@@ -2811,6 +2811,16 @@ ul.nav-tabs {
     "constantString" : {
       "type" : "string"
     },
+    "dnsValidationParams" : {
+      "$ref" : "#/components/schemas/DNSValidationRequest"
+    },
+    "httpKeywordParams" : {
+      "$ref" : "#/components/schemas/HTTPKeywordValidationRequest"
+    },
+    "launchSequence" : {
+      "type" : "boolean",
+      "description" : "Full sequence support - optional parameters for auto-chaining phases"
+    },
     "name" : {
       "type" : "string"
     },
@@ -4233,6 +4243,31 @@ ul.nav-tabs {
     "totalCount" : {
       "type" : "integer",
       "format" : "int64"
+    }
+  }
+};
+    defs["HTTPKeywordValidationRequest"] = {
+  "required" : [ "adHocKeywords", "keywords" ],
+  "type" : "object",
+  "properties" : {
+    "adHocKeywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "keywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "personaIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string",
+        "format" : "uuid"
+      }
     }
   }
 };

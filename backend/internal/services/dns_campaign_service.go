@@ -700,8 +700,8 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 			// Campaign completed
 			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "dns_validation", processedCount, totalCount)
 
-			// Broadcast automatic phase transition to HTTP validation
-			websocket.BroadcastPhaseTransition(campaignID.String(), "dns_validation", "http_keyword_validation", 100.0)
+			// DNS validation complete - campaign stays in dns_validation phase until user manually configures next phase
+			log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s DNS validation phase complete. Waiting for user to configure HTTP validation phase.", campaignID)
 		} else {
 			// Progress update
 			websocket.BroadcastValidationProgress(campaignID.String(), processedCount, totalCount, "dns_validation")
