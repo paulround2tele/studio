@@ -33,6 +33,9 @@ type DomainGenerator struct {
 
 // NewDomainGenerator initializes a new domain generator.
 func NewDomainGenerator(patternType CampaignPatternType, variableLength int, charSet string, constantStr string, tld string) (*DomainGenerator, error) {
+	log.Printf("DEBUG [NewDomainGenerator]: Input - PatternType=%s, VariableLength=%d, CharSet='%s' (len=%d), ConstantStr='%s', TLD='%s'",
+		patternType, variableLength, charSet, len(charSet), constantStr, tld)
+
 	if variableLength <= 0 {
 		return nil, fmt.Errorf("variable length must be a positive integer")
 	}
@@ -62,6 +65,8 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 		return nil, fmt.Errorf("character set resulted in no unique characters")
 	}
 
+	log.Printf("DEBUG [NewDomainGenerator]: Processed CharSet - DistinctRunes=%d", len(distinctRunes))
+
 	dg := &DomainGenerator{
 		PatternType:    patternType,
 		VariableLength: variableLength,
@@ -75,12 +80,24 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 	case PatternPrefix, PatternSuffix:
 		dg.totalCombinations = power(int64(dg.charsetSize), int64(variableLength))
 		dg.maxVariableStringLen = variableLength
+		log.Printf("DEBUG [NewDomainGenerator]: Prefix/Suffix - CharsetSize=%d, VariableLength=%d, TotalCombinations=%d",
+			dg.charsetSize, variableLength, dg.totalCombinations)
 	case PatternBoth:
 		dg.totalCombinations = power(int64(dg.charsetSize), int64(variableLength*2))
 		dg.maxVariableStringLen = variableLength * 2
+		log.Printf("DEBUG [NewDomainGenerator]: Both - CharsetSize=%d, VariableLength*2=%d, TotalCombinations=%d",
+			dg.charsetSize, variableLength*2, dg.totalCombinations)
 	default:
 		return nil, fmt.Errorf("invalid pattern type: %s", patternType)
 	}
+
+	// CRITICAL: Validate that totalCombinations is positive
+	if dg.totalCombinations <= 0 {
+		return nil, fmt.Errorf("CRITICAL: totalCombinations calculated as %d, must be > 0. CharsetSize=%d, VariableLength=%d, PatternType=%s",
+			dg.totalCombinations, dg.charsetSize, variableLength, patternType)
+	}
+
+	log.Printf("DEBUG [NewDomainGenerator]: SUCCESS - Final TotalCombinations=%d", dg.totalCombinations)
 
 	// Check for overflow against int64 (MaxInt64 is approx 9e18)
 	// Our int64 totalCombinations can be larger. The user spec said "int64 range"
@@ -98,13 +115,33 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 
 // power calculates base^exponent for int64.
 func power(base, exponent int64) int64 {
+	log.Printf("DEBUG [power]: Calculating %d^%d", base, exponent)
+
+	if base <= 0 {
+		log.Printf("DEBUG [power]: Base is %d, returning 0", base)
+		return 0
+	}
+	if exponent < 0 {
+		log.Printf("DEBUG [power]: Exponent is %d, returning 0", exponent)
+		return 0
+	}
+	if exponent == 0 {
+		log.Printf("DEBUG [power]: Exponent is 0, returning 1")
+		return 1
+	}
+
 	result := int64(1)
 	for i := int64(0); i < exponent; i++ {
 		if math.MaxInt64/base < result { // Overflow check
+			log.Printf("DEBUG [power]: Overflow detected at iteration %d, result=%d, base=%d. Returning MaxInt64=%d",
+				i, result, base, math.MaxInt64)
 			return math.MaxInt64
 		}
 		result *= base
+		log.Printf("DEBUG [power]: Iteration %d, result=%d", i, result)
 	}
+
+	log.Printf("DEBUG [power]: Final result=%d", result)
 	return result
 }
 

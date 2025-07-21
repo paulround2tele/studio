@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **affectedKeysCount** | **number** |  | [optional] [default to undefined]
 **cacheNamespace** | **string** |  | [optional] [default to undefined]
 **campaignId** | **string** | Unique identifier | [optional] [default to undefined]
-**campaignType** | **string** |  | [optional] [default to undefined]
+**campaignPhase** | **string** |  | [optional] [default to undefined]
 **errorMessage** | **string** |  | [optional] [default to undefined]
 **executedAt** | **string** |  | [optional] [default to undefined]
 **executionTimeMs** | **number** |  | [optional] [default to undefined]
@@ -28,7 +28,7 @@ const instance: CacheInvalidationLog = {
     affectedKeysCount,
     cacheNamespace,
     campaignId,
-    campaignType,
+    campaignPhase,
     errorMessage,
     executedAt,
     executionTimeMs,

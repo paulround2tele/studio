@@ -60,10 +60,9 @@ const formatDate = (dateString: string): string => {
 
 // Memoized progress calculation function
 const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
-  const selectedType = campaign.selectedType || campaign.campaignType;
-  if (!selectedType) return 0;
-  const phasesForType = CAMPAIGN_PHASES_ORDERED[selectedType];
-  if (!phasesForType || phasesForType.length === 0) return 0;
+  // All campaigns follow the same phase progression in phases-based architecture
+  const allPhases = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
+  if (allPhases.length === 0) return 0;
 
   // Use progressPercentage first, then progress, then calculate based on items
   let progressValue = campaign.progressPercentage ?? campaign.progress ?? 0;
@@ -73,23 +72,23 @@ const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
     progressValue = Math.floor((campaign.processedItems / campaign.totalItems) * 100);
   }
 
-  if ((campaign.currentPhase as any) === "completed" || campaign.status === "completed") return 100;
+  if ((campaign.currentPhase as any) === "completed" || (campaign.phaseStatus as any) === "completed") return 100;
   
   if ((campaign.phaseStatus as any) === "paused" || (campaign.phaseStatus as any) === "failed" || (campaign.currentPhase as any) === "setup") {
     // For paused or failed, progress reflects where it stopped. For Idle, it's 0.
-    const currentPhaseIndexInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
+    const currentPhaseIndexInType = campaign.currentPhase ? allPhases.indexOf(campaign.currentPhase) : -1;
      if((campaign.currentPhase as any) === "setup" || currentPhaseIndexInType === -1) return Math.max(0, progressValue);
 
-    const completedPhasesProgress = (currentPhaseIndexInType / phasesForType.length) * 100;
-    const currentPhaseProgressContribution = (progressValue / phasesForType.length);
+    const completedPhasesProgress = (currentPhaseIndexInType / allPhases.length) * 100;
+    const currentPhaseProgressContribution = (progressValue / allPhases.length);
     return Math.min(100, Math.floor(completedPhasesProgress + currentPhaseProgressContribution));
   }
 
-  const currentPhaseIndexInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
+  const currentPhaseIndexInType = campaign.currentPhase ? allPhases.indexOf(campaign.currentPhase) : -1;
   if (currentPhaseIndexInType === -1) return Math.max(0, progressValue); // Fallback to direct progress value
 
-  const completedPhasesProgress = (currentPhaseIndexInType / phasesForType.length) * 100;
-  const currentPhaseProgressContribution = (progressValue / phasesForType.length);
+  const completedPhasesProgress = (currentPhaseIndexInType / allPhases.length) * 100;
+  const currentPhaseProgressContribution = (progressValue / allPhases.length);
 
   return Math.min(100, Math.floor(completedPhasesProgress + currentPhaseProgressContribution));
 };
@@ -102,8 +101,17 @@ const getStatusBadgeInfo = (campaign: CampaignViewModel): { text: string, varian
   if ((campaign.phaseStatus as any) === "in_progress") return { text: `Active: ${campaign.currentPhase || 'Unknown'}`, variant: "secondary", icon: <Loader2 className="h-4 w-4 text-blue-500 animate-spin" /> };
   if ((campaign.currentPhase as any) === "setup" || (campaign.phaseStatus as any) === "pending") return { text: "Pending Start", variant: "outline", icon: <Play className="h-4 w-4 text-muted-foreground" /> };
   if ((campaign.phaseStatus as any) === "completed") {
-     const selectedType = campaign.selectedType || campaign.campaignType;
-     const nextPhase = selectedType && campaign.currentPhase ? getNextPhase(selectedType, campaign.currentPhase) : null;
+     // Determine next phase in unified workflow
+     const getNextPhaseInWorkflow = (currentPhase: string): string | null => {
+       const phaseOrder = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
+       const currentIndex = phaseOrder.indexOf(currentPhase);
+       if (currentIndex !== -1 && currentIndex < phaseOrder.length - 1) {
+         const nextPhase = phaseOrder[currentIndex + 1];
+         return nextPhase || null;
+       }
+       return null;
+     };
+     const nextPhase = campaign.currentPhase ? getNextPhaseInWorkflow(campaign.currentPhase) : null;
      return { text: `Next: ${nextPhase || 'Finalizing'}`, variant: "secondary", icon: <WorkflowIcon className="h-4 w-4 text-muted-foreground" /> };
   }
   return { text: campaign.currentPhase || 'Unknown', variant: "outline", icon: <WorkflowIcon className="h-4 w-4 text-muted-foreground" /> };
@@ -191,7 +199,6 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Type: {campaign.selectedType}</p>
                     <p>Phase: {campaign.currentPhase}</p>
                     <p>Status: {campaign.phaseStatus}</p>
                   </TooltipContent>
@@ -262,7 +269,7 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
             <p className="text-xs text-muted-foreground mt-1 text-right">{overallProgress}% complete</p>
           </div>
           <div className="text-sm text-muted-foreground">
-            <strong>Type:</strong> {campaign.selectedType}
+            <strong>Phase:</strong> {campaign.currentPhase}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-2 border-t pt-4">
@@ -270,7 +277,7 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
             <CalendarDays className="mr-1.5 h-3.5 w-3.5" /> Created: {formattedDate}
           </div>
           <Button asChild size="sm" variant="outline" disabled={anyActionLoading}>
-            <Link href={`/campaigns/${campaign.id}?type=${campaign.campaignType || campaign.selectedType || 'domain_generation'}`} aria-disabled={anyActionLoading}>
+            <Link href={`/campaigns/${campaign.id}`} aria-disabled={anyActionLoading}>
               View Dashboard <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

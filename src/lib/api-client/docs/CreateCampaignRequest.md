@@ -5,11 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaignType** | **string** |  | [default to undefined]
 **description** | **string** |  | [optional] [default to undefined]
-**dnsValidationParams** | [**DnsValidationParams**](DnsValidationParams.md) |  | [optional] [default to undefined]
 **domainGenerationParams** | [**DomainGenerationParams**](DomainGenerationParams.md) |  | [optional] [default to undefined]
-**httpKeywordParams** | [**HttpKeywordParams**](HttpKeywordParams.md) |  | [optional] [default to undefined]
 **launchSequence** | **boolean** |  | [optional] [default to undefined]
 **name** | **string** |  | [default to undefined]
 **userId** | **string** | Unique identifier | [optional] [default to undefined]
@@ -20,11 +17,8 @@ Name | Type | Description | Notes
 import { CreateCampaignRequest } from './api';
 
 const instance: CreateCampaignRequest = {
-    campaignType,
     description,
-    dnsValidationParams,
     domainGenerationParams,
-    httpKeywordParams,
     launchSequence,
     name,
     userId,

@@ -97,9 +97,9 @@ func (c *Client) readPump() {
 		c.hub.UnregisterClient(c)
 		c.conn.Close()
 	}()
-	
+
 	log.Printf("[WebSocket] Client %s readPump started", c.conn.RemoteAddr().String())
-	
+
 	c.conn.SetReadLimit(maxMessageSize)
 	if err := c.conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
 		log.Printf("websocket read deadline error: %v", err)
@@ -233,7 +233,7 @@ func (c *Client) handleMessage(message []byte) {
 				c.subscriptionMutex.Lock()
 				log.Printf("🔍 [SUBSCRIPTION_DEBUG] Client %s processing subscription request for channels: %v",
 					c.conn.RemoteAddr().String(), subscribeData.Channels)
-				
+
 				for _, channel := range subscribeData.Channels {
 					switch channel {
 					case "campaigns", "campaign-updates":
@@ -257,7 +257,7 @@ func (c *Client) handleMessage(message []byte) {
 						}
 					}
 				}
-				
+
 				log.Printf("🔍 [SUBSCRIPTION_DEBUG] Client %s final subscriptions: %v",
 					c.conn.RemoteAddr().String(), c.campaignSubscriptions)
 				c.subscriptionMutex.Unlock()
@@ -366,13 +366,13 @@ func (c *Client) sendMessage(msg WebSocketMessage) {
 func (c *Client) IsSubscribedToCampaign(campaignID string) bool {
 	c.subscriptionMutex.RLock()
 	defer c.subscriptionMutex.RUnlock()
-	
+
 	// DIAGNOSTIC: Log subscription check details
 	hasSpecific := c.campaignSubscriptions[campaignID]
 	hasWildcard := c.campaignSubscriptions["*"]
 	log.Printf("[DIAGNOSTIC] IsSubscribedToCampaign check: campaignID=%s, hasSpecific=%t, hasWildcard=%t, allSubscriptions=%v",
 		campaignID, hasSpecific, hasWildcard, c.campaignSubscriptions)
-	
+
 	return c.campaignSubscriptions[campaignID] || c.campaignSubscriptions["*"]
 }
 
@@ -386,7 +386,7 @@ func (c *Client) GetLastSequenceNumber(campaignID string) int64 {
 // NewClient creates a new client, registers it with the hub, and starts its read/write pumps.
 func NewClient(hub Broadcaster, conn *websocket.Conn) *Client {
 	log.Printf("[WebSocket] Creating new client for %s", conn.RemoteAddr().String())
-	
+
 	client := &Client{
 		hub:                   hub,
 		conn:                  conn,
@@ -394,7 +394,7 @@ func NewClient(hub Broadcaster, conn *websocket.Conn) *Client {
 		campaignSubscriptions: make(map[string]bool),
 		sequenceNumbers:       make(map[string]int64),
 	}
-	
+
 	log.Printf("[WebSocket] Registering client %s with hub", conn.RemoteAddr().String())
 	client.hub.RegisterClient(client) // Register client with the hub
 
@@ -413,7 +413,7 @@ func NewClientWithSecurity(hub Broadcaster, conn *websocket.Conn, securityContex
 		userId = securityContext.UserID.String()
 	}
 	log.Printf("[WebSocket] Creating new client with security for %s (user: %s)", conn.RemoteAddr().String(), userId)
-	
+
 	client := &Client{
 		hub:                   hub,
 		conn:                  conn,
@@ -422,7 +422,7 @@ func NewClientWithSecurity(hub Broadcaster, conn *websocket.Conn, securityContex
 		sequenceNumbers:       make(map[string]int64),
 		securityContext:       securityContext,
 	}
-	
+
 	log.Printf("[WebSocket] Registering client %s with hub (user: %s)", conn.RemoteAddr().String(), userId)
 	client.hub.RegisterClient(client) // Register client with the hub
 
@@ -439,6 +439,24 @@ func (c *Client) GetSecurityContext() *models.SecurityContext {
 	return c.securityContext
 }
 
+// CreatePhaseTransitionMessage creates a standardized phase transition message
+func CreatePhaseTransitionMessage(campaignID string, previousPhase string, currentPhase string, progress float64) WebSocketMessage {
+	return WebSocketMessage{
+		ID:             uuid.New().String(),
+		Timestamp:      time.Now().UTC().Format(time.RFC3339),
+		Type:           "phase_transition",
+		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+		CampaignID:     campaignID,
+		Data: map[string]interface{}{
+			"previousPhase":      previousPhase,
+			"currentPhase":       currentPhase,
+			"progressPercentage": progress,
+			"transitionType":     "automatic",
+			"status":             "completed",
+		},
+	}
+}
+
 // CreateCampaignProgressMessage creates a standardized campaign progress message
 func CreateCampaignProgressMessage(campaignID string, progress float64, status string, phase string) WebSocketMessage {
 	return WebSocketMessage{
@@ -449,8 +467,8 @@ func CreateCampaignProgressMessage(campaignID string, progress float64, status s
 		CampaignID:     campaignID,
 		Data: map[string]interface{}{
 			"progressPercentage": progress,
-			"status":             status,
-			"phase":              phase,
+			"phaseStatus":        status,
+			"currentPhase":       phase,
 			"processedItems":     0, // Should be provided by caller
 			"totalItems":         0, // Should be provided by caller
 		},
@@ -597,7 +615,7 @@ func CreateCampaignPhaseCompleteMessage(campaignID, phase string, completedItems
 		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
 		CampaignID:     campaignID,
 		Data: map[string]interface{}{
-			"phase":          phase, // domain_generation, dns_validation, http_validation
+			"phase":          phase, // domain_generation, dns_validation, http_keyword_validation
 			"completedItems": completedItems,
 			"failedItems":    failedItems,
 			"nextPhase":      nextPhase, // or "completed"
@@ -676,17 +694,36 @@ func CreateConnectionAckMessage(connectionID, userID string, lastSequenceNumber 
 	}
 }
 
-// BroadcastCampaignProgress broadcasts campaign progress to subscribed clients
-func BroadcastCampaignProgress(campaignID string, progress float64, status string, phase string) {
+// BroadcastCampaignProgress broadcasts campaign progress using standardized format only
+func BroadcastCampaignProgress(campaignID string, progress float64, status string, phase string, processedItems int64, totalItems int64) {
 	log.Printf("🟢 [WEBSOCKET_BROADCAST_DEBUG] BroadcastCampaignProgress called: campaignID=%s, progress=%.2f, status=%s, phase=%s",
 		campaignID, progress, status, phase)
-	
+
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
-		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Broadcaster available, creating message")
-		message := CreateCampaignProgressMessage(campaignID, progress, status, phase)
-		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting campaign progress message: %+v", message)
-		broadcaster.BroadcastToCampaign(campaignID, message)
-		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Campaign progress message sent successfully")
+		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Broadcaster available, creating standardized message")
+
+		// Use ONLY standardized format - eliminates 50% of traffic
+		payload := CampaignProgressPayload{
+			CampaignID:      campaignID,
+			TotalItems:      totalItems,
+			ProcessedItems:  processedItems,
+			ProgressPercent: progress,
+			CurrentPhase:    phase,
+			PhaseStatus:     status,
+		}
+		message := CreateCampaignProgressMessageV2(payload)
+
+		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting standardized campaign.progress message")
+
+		// Convert to JSON for broadcasting
+		messageBytes, err := json.Marshal(message)
+		if err != nil {
+			log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] Failed to marshal standardized message: %v", err)
+			return
+		}
+
+		broadcaster.BroadcastMessage(messageBytes)
+		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Standardized campaign.progress message sent successfully")
 	} else {
 		log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] ERROR: No broadcaster available for campaign progress")
 	}
@@ -696,7 +733,7 @@ func BroadcastCampaignProgress(campaignID string, progress float64, status strin
 func BroadcastProxyStatus(proxyID, status string, campaignID string) {
 	log.Printf("[DIAGNOSTIC] BroadcastProxyStatus called: proxyID=%s, status=%s, campaignID=%s",
 		proxyID, status, campaignID)
-	
+
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateProxyStatusMessage(proxyID, status, campaignID)
 		log.Printf("[DIAGNOSTIC] Broadcasting proxy status message")
@@ -706,11 +743,26 @@ func BroadcastProxyStatus(proxyID, status string, campaignID string) {
 	}
 }
 
+// BroadcastPhaseTransition broadcasts automatic phase transitions with currentPhase data
+func BroadcastPhaseTransition(campaignID string, previousPhase string, currentPhase string, progress float64) {
+	log.Printf("🔄 [WEBSOCKET_PHASE_TRANSITION] BroadcastPhaseTransition called: campaignID=%s, previousPhase=%s, currentPhase=%s, progress=%.2f",
+		campaignID, previousPhase, currentPhase, progress)
+
+	if broadcaster := GetBroadcaster(); broadcaster != nil {
+		message := CreatePhaseTransitionMessage(campaignID, previousPhase, currentPhase, progress)
+		log.Printf("📤 [WEBSOCKET_PHASE_TRANSITION] Broadcasting phase transition message")
+		broadcaster.BroadcastToCampaign(campaignID, message)
+		log.Printf("✅ [WEBSOCKET_PHASE_TRANSITION] Phase transition message sent successfully")
+	} else {
+		log.Printf("❌ [WEBSOCKET_PHASE_TRANSITION] ERROR: No broadcaster available for phase transition")
+	}
+}
+
 // BroadcastDomainGeneration broadcasts domain generation progress
 func BroadcastDomainGeneration(campaignID string, domainsGenerated int64, totalDomains int64) {
 	log.Printf("🔵 [WEBSOCKET_BROADCAST_DEBUG] BroadcastDomainGeneration called: campaignID=%s, generated=%d, total=%d",
 		campaignID, domainsGenerated, totalDomains)
-	
+
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateDomainGenerationMessage(campaignID, domainsGenerated, totalDomains)
 		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting domain generation progress message")
@@ -721,12 +773,11 @@ func BroadcastDomainGeneration(campaignID string, domainsGenerated int64, totalD
 	}
 }
 
-
 // BroadcastCampaignListUpdate broadcasts campaign list changes to eliminate polling
 func BroadcastCampaignListUpdate(action string, campaignID string, campaignData interface{}) {
 	log.Printf("[DIAGNOSTIC] BroadcastCampaignListUpdate called: action=%s, campaignID=%s",
 		action, campaignID)
-	
+
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateCampaignListUpdateMessage(action, campaignID, campaignData)
 		log.Printf("[DIAGNOSTIC] Broadcasting campaign list update: action=%s", action)
@@ -737,16 +788,58 @@ func BroadcastCampaignListUpdate(action string, campaignID string, campaignData 
 	}
 }
 
-// BroadcastCampaignCreated broadcasts when a new campaign is created
+// BroadcastCampaignCreated broadcasts when a new campaign is created using standardized format
 func BroadcastCampaignCreated(campaignID string, campaignData interface{}) {
 	log.Printf("[DIAGNOSTIC] BroadcastCampaignCreated called: campaignID=%s", campaignID)
-	BroadcastCampaignListUpdate("create", campaignID, campaignData)
+
+	if broadcaster := GetBroadcaster(); broadcaster != nil {
+		// Use ONLY standardized format for campaign list updates
+		payload := CampaignListUpdatePayload{
+			Action:     "create",
+			CampaignID: campaignID,
+			Campaign:   campaignData,
+		}
+		message := CreateCampaignListUpdateMessageV2(payload)
+
+		// Convert to JSON for broadcasting
+		messageBytes, err := json.Marshal(message)
+		if err != nil {
+			log.Printf("[DIAGNOSTIC] Failed to marshal standardized campaign created message: %v", err)
+			return
+		}
+
+		broadcaster.BroadcastMessage(messageBytes)
+		log.Printf("✅ [DIAGNOSTIC] Standardized campaign.list.update message sent for create")
+	} else {
+		log.Printf("❌ [DIAGNOSTIC] No broadcaster available for campaign creation")
+	}
 }
 
-// BroadcastCampaignUpdated broadcasts when a campaign is updated
+// BroadcastCampaignUpdated broadcasts when a campaign is updated using standardized format
 func BroadcastCampaignUpdated(campaignID string, campaignData interface{}) {
 	log.Printf("[DIAGNOSTIC] BroadcastCampaignUpdated called: campaignID=%s", campaignID)
-	BroadcastCampaignListUpdate("update", campaignID, campaignData)
+
+	if broadcaster := GetBroadcaster(); broadcaster != nil {
+		// Use ONLY standardized format for campaign list updates
+		payload := CampaignListUpdatePayload{
+			Action:     "update",
+			CampaignID: campaignID,
+			Campaign:   campaignData,
+		}
+		message := CreateCampaignListUpdateMessageV2(payload)
+
+		// Convert to JSON for broadcasting
+		messageBytes, err := json.Marshal(message)
+		if err != nil {
+			log.Printf("[DIAGNOSTIC] Failed to marshal standardized campaign updated message: %v", err)
+			return
+		}
+
+		broadcaster.BroadcastMessage(messageBytes)
+		log.Printf("✅ [DIAGNOSTIC] Standardized campaign.list.update message sent for update")
+	} else {
+		log.Printf("❌ [DIAGNOSTIC] No broadcaster available for campaign update")
+	}
 }
 
 // BroadcastCampaignDeleted broadcasts when a campaign is deleted
@@ -758,7 +851,7 @@ func BroadcastCampaignDeleted(campaignID string) {
 // BroadcastProxyStatusUpdate broadcasts proxy status changes to eliminate polling
 func BroadcastProxyStatusUpdate(proxyID string, status string, health string, responseTime int64) {
 	log.Printf("[DIAGNOSTIC] BroadcastProxyStatusUpdate called: proxyID=%s, status=%s", proxyID, status)
-	
+
 	// Use legacy format for now (can be updated later to use standardized format)
 	legacyMessage := WebSocketMessage{
 		Type:    "proxy_status_update",
@@ -770,7 +863,7 @@ func BroadcastProxyStatusUpdate(proxyID string, status string, health string, re
 			"responseTime": responseTime,
 		},
 	}
-	
+
 	broadcaster := GetBroadcaster()
 	if broadcaster != nil {
 		// Broadcast to all clients (proxy updates are global)
@@ -799,7 +892,7 @@ func BroadcastProxyDeleted(proxyID string) {
 // BroadcastProxyListUpdate broadcasts proxy list changes to eliminate polling
 func BroadcastProxyListUpdate(action string, proxyID string, proxyData interface{}) {
 	log.Printf("[DIAGNOSTIC] BroadcastProxyListUpdate called: action=%s, proxyID=%s", action, proxyID)
-	
+
 	message := WebSocketMessage{
 		Type:    "proxy_list_update",
 		Message: "Proxy list updated",
@@ -809,13 +902,14 @@ func BroadcastProxyListUpdate(action string, proxyID string, proxyData interface
 			"proxy":   proxyData,
 		},
 	}
-	
+
 	broadcaster := GetBroadcaster()
 	if broadcaster != nil {
 		// Broadcast to all clients (proxy updates are global)
 		broadcaster.BroadcastToCampaign("", message)
 	}
 }
+
 // PERSONA WEBSOCKET BROADCASTS - Missing functionality identified
 // BroadcastPersonaCreated broadcasts when a new persona is created
 func BroadcastPersonaCreated(personaID string, personaData interface{}) {
@@ -838,7 +932,7 @@ func BroadcastPersonaDeleted(personaID string) {
 // BroadcastPersonaListUpdate broadcasts persona list changes to eliminate polling
 func BroadcastPersonaListUpdate(action string, personaID string, personaData interface{}) {
 	log.Printf("[DIAGNOSTIC] BroadcastPersonaListUpdate called: action=%s, personaID=%s", action, personaID)
-	
+
 	message := WebSocketMessage{
 		Type:    "persona_list_update",
 		Message: "Persona list updated",
@@ -848,7 +942,7 @@ func BroadcastPersonaListUpdate(action string, personaID string, personaData int
 			"persona":   personaData,
 		},
 	}
-	
+
 	broadcaster := GetBroadcaster()
 	if broadcaster != nil {
 		// Broadcast to all clients (persona updates are global)
@@ -878,7 +972,7 @@ func BroadcastKeywordSetDeleted(keywordSetID string) {
 // BroadcastKeywordSetListUpdate broadcasts keyword set list changes to eliminate polling
 func BroadcastKeywordSetListUpdate(action string, keywordSetID string, keywordSetData interface{}) {
 	log.Printf("[DIAGNOSTIC] BroadcastKeywordSetListUpdate called: action=%s, keywordSetID=%s", action, keywordSetID)
-	
+
 	message := WebSocketMessage{
 		Type:    "keyword_set_list_update",
 		Message: "Keyword set list updated",
@@ -888,7 +982,7 @@ func BroadcastKeywordSetListUpdate(action string, keywordSetID string, keywordSe
 			"keywordSet":   keywordSetData,
 		},
 	}
-	
+
 	broadcaster := GetBroadcaster()
 	if broadcaster != nil {
 		// Broadcast to all clients (keyword set updates are global)
@@ -896,11 +990,10 @@ func BroadcastKeywordSetListUpdate(action string, keywordSetID string, keywordSe
 	}
 }
 
-
 // BroadcastDashboardActivity broadcasts dashboard activity updates for real-time activity feed
 func BroadcastDashboardActivity(campaignID string, domainName string, activity string, status string, phase string) {
 	log.Printf("[DIAGNOSTIC] BroadcastDashboardActivity called: campaignID=%s, domain=%s, activity=%s", campaignID, domainName, activity)
-	
+
 	message := WebSocketMessage{
 		Type:    "dashboard_activity",
 		Message: "Dashboard activity updated",
@@ -913,7 +1006,7 @@ func BroadcastDashboardActivity(campaignID string, domainName string, activity s
 			"timestamp":  time.Now().Format(time.RFC3339),
 		},
 	}
-	
+
 	broadcaster := GetBroadcaster()
 	if broadcaster != nil {
 		// Broadcast to all clients (dashboard updates are global)
@@ -944,7 +1037,7 @@ func BroadcastHTTPValidationResult(campaignID string, domainName string, validat
 	if validationStatus != "valid" && validationStatus != "success" {
 		status = "not_validated"
 	}
-	
+
 	message := WebSocketMessage{
 		Type:    "dashboard_activity",
 		Message: "HTTP validation and lead scoring completed",
@@ -958,7 +1051,7 @@ func BroadcastHTTPValidationResult(campaignID string, domainName string, validat
 			"timestamp":  time.Now().Format(time.RFC3339),
 		},
 	}
-	
+
 	broadcaster := GetBroadcaster()
 	if broadcaster != nil {
 		broadcaster.BroadcastToCampaign("", message)
@@ -971,11 +1064,11 @@ func CreateCampaignListUpdateMessage(action string, campaignID string, campaignD
 		"action":     action,
 		"campaignId": campaignID,
 	}
-	
+
 	if campaignData != nil {
 		data["campaign"] = campaignData
 	}
-	
+
 	return WebSocketMessage{
 		ID:             uuid.New().String(),
 		Timestamp:      time.Now().UTC().Format(time.RFC3339),
@@ -989,7 +1082,7 @@ func CreateCampaignListUpdateMessage(action string, campaignID string, campaignD
 func BroadcastValidationProgress(campaignID string, validationsProcessed int64, totalValidations int64, validationType string) {
 	log.Printf("🟡 [WEBSOCKET_BROADCAST_DEBUG] BroadcastValidationProgress called: campaignID=%s, processed=%d, total=%d, type=%s",
 		campaignID, validationsProcessed, totalValidations, validationType)
-	
+
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		message := CreateValidationProgressMessage(campaignID, validationsProcessed, totalValidations, validationType)
 		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting validation progress message: %+v", message)
@@ -1003,7 +1096,7 @@ func BroadcastValidationProgress(campaignID string, validationsProcessed int64, 
 // BroadcastSystemNotification broadcasts system-wide notifications
 func BroadcastSystemNotification(message string, level string) {
 	log.Printf("[DIAGNOSTIC] BroadcastSystemNotification called: message=%s, level=%s", message, level)
-	
+
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
 		notification := CreateSystemNotificationMessage(message, level)
 		log.Printf("[DIAGNOSTIC] Broadcasting system notification")

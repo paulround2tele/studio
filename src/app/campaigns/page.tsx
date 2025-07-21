@@ -262,7 +262,7 @@ progressPercentage: phaseData.progress || 100
                   const statusData = message.data as { status?: string };
                   setCampaigns(prev => prev.map((campaign: CampaignViewModel) =>
                     campaign.id === message.campaignId
-                      ? { ...campaign, status: statusData.status ? normalizeStatus(statusData.status) : campaign.status }
+                      ? { ...campaign, phaseStatus: statusData.status ? normalizeStatus(statusData.status) : campaign.phaseStatus }
                       : campaign
                   ));
                 }
@@ -613,26 +613,26 @@ type: 'UPDATE',
     if (campaigns.length > 0 && Math.random() < 0.1) { // Sample logging
       console.log('[CAMPAIGNS_FILTER_DEBUG] Campaign filtering:', {
 campaignId: campaign.id,
-        rawStatus: campaign.status,
-        normalizedStatus: normalizeStatus(campaign.status),
+        rawStatus: campaign.phaseStatus,
+        normalizedStatus: normalizeStatus(campaign.phaseStatus),
         activeTab,
-        isActiveStatusResult: isActiveStatus(normalizeStatus(campaign.status)),
+        isActiveStatusResult: isActiveStatus(normalizeStatus(campaign.phaseStatus)),
         willBeFiltered: activeTab === "all" ? true :
-          activeTab === "active" ? isActiveStatus(normalizeStatus(campaign.status)) :
-          activeTab === "paused" ? normalizeStatus(campaign.status) === "paused" :
-          activeTab === "completed" ? normalizeStatus(campaign.status) === "completed" :
-          activeTab === "failed" ? normalizeStatus(campaign.status) === "failed" : true
+          activeTab === "active" ? isActiveStatus(normalizeStatus(campaign.phaseStatus)) :
+          activeTab === "paused" ? normalizeStatus(campaign.phaseStatus) === "paused" :
+          activeTab === "completed" ? normalizeStatus(campaign.phaseStatus) === "completed" :
+          activeTab === "failed" ? normalizeStatus(campaign.phaseStatus) === "failed" : true
       });
     }
 
     // FIXED: Null-safe status normalization
-    if (!campaign || !campaign.status) {
+    if (!campaign || !campaign.phaseStatus) {
       console.warn('[CAMPAIGNS_FILTER_DEBUG] Campaign with missing status:', campaign);
       return activeTab === "all"; // Show invalid campaigns only on "all" tab
     }
     
     // Normalize campaign status to ensure consistency
-    const status = normalizeStatus(campaign.status);
+    const status = normalizeStatus(campaign.phaseStatus);
     
     if (activeTab === "active") return isActiveStatus(status);
     if (activeTab === "paused") return status === "paused";
@@ -648,15 +648,15 @@ totalCampaigns: campaigns.length,
     activeTab,
     sampleCampaignStatuses: campaigns.slice(0, 3).map(c => ({
 id: c.id,
-      status: c.status,
-      normalized: normalizeStatus(c.status)
+      status: c.phaseStatus,
+      normalized: normalizeStatus(c.phaseStatus)
     }))
   });
 
-  const countActive = campaigns.filter(c => isActiveStatus(normalizeStatus(c.status))).length;
-  const countPaused = campaigns.filter(c => normalizeStatus(c.status) === "paused").length;
-  const countCompleted = campaigns.filter(c => normalizeStatus(c.status) === "completed").length;
-  const countFailed = campaigns.filter(c => normalizeStatus(c.status) === "failed").length;
+  const countActive = campaigns.filter(c => isActiveStatus(normalizeStatus(c.phaseStatus))).length;
+  const countPaused = campaigns.filter(c => normalizeStatus(c.phaseStatus) === "paused").length;
+  const countCompleted = campaigns.filter(c => normalizeStatus(c.phaseStatus) === "completed").length;
+  const countFailed = campaigns.filter(c => normalizeStatus(c.phaseStatus) === "failed").length;
 
 
   // Bulk delete functionality
@@ -921,7 +921,7 @@ title: "Bulk Delete Failed",
       )}
      {/* TEMPORARILY DISABLED: Campaign Progress Monitors causing N+1 queries - blocking bulk delete testing */}
      {useMemo(() => {
-       const activeCampaigns = campaigns.filter(c => isActiveStatus(normalizeStatus(c.status)));
+       const activeCampaigns = campaigns.filter(c => isActiveStatus(normalizeStatus(c.phaseStatus)));
        console.log(`🚨 [DEBUG] DISABLED ${activeCampaigns.length} progress monitors to fix loading issue`);
        
        // Return empty array to disable monitors temporarily

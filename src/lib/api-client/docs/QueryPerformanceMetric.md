@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **bufferHits** | **number** |  | [optional] [default to undefined]
 **bufferReads** | **number** |  | [optional] [default to undefined]
 **campaignId** | **string** | Unique identifier | [optional] [default to undefined]
-**campaignType** | **string** |  | [optional] [default to undefined]
+**campaignPhase** | **string** |  | [optional] [default to undefined]
 **cpuTimeMs** | **number** |  | [optional] [default to undefined]
 **executedAt** | **string** |  | [optional] [default to undefined]
 **executionTimeMs** | **number** |  | [optional] [default to undefined]
@@ -41,7 +41,7 @@ const instance: QueryPerformanceMetric = {
     bufferHits,
     bufferReads,
     campaignId,
-    campaignType,
+    campaignPhase,
     cpuTimeMs,
     executedAt,
     executionTimeMs,

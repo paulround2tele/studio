@@ -30,8 +30,11 @@ import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
 // THIN CLIENT: Removed AuthContext - backend handles auth
 import type { components as _components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
+import { campaignsApi } from '@/lib/api-client/client';
+import type { DNSPhaseConfigRequest, HTTPPhaseConfigRequest } from '@/lib/api-client/models';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 import { cn } from '@/lib/utils';
+import { mapPhaseToConfigurationType, isConfigurablePhase, getPhaseDisplayName, type BackendPhaseEnum } from '@/lib/utils/phaseMapping';
 
 // Types
 type PhaseConfigurationMode = 'panel' | 'dialog';
@@ -67,15 +70,16 @@ interface PhaseConfigurationProps {
   isOpen: boolean;
   onClose: () => void;
   sourceCampaign: CampaignViewModel;
-  phaseType: CampaignType;
+  phaseType: CampaignType | string; // Accept both frontend and backend phase types
   onPhaseStarted: (campaignId: string) => void;
 }
 
 // Display names (UNIFIED - eliminates duplication)
-const phaseDisplayNames: Record<CampaignType, string> = {
+const phaseDisplayNames: Record<string, string> = {
   domain_generation: "Domain Generation",
   dns_validation: "DNS Validation",
   http_keyword_validation: "HTTP Keyword Validation",
+  analysis: "Analysis",
 };
 
 export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
@@ -104,10 +108,10 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
     error: dataLoadError
   } = useCampaignFormData(false);
 
-  // Default form values (UNIFIED - eliminates duplication)
+  // Default form values for phase transition configuration
   const defaultValues = useMemo(() => ({
-    name: `${sourceCampaign.name} - ${phaseDisplayNames[phaseType]}`,
-    description: `Automated ${phaseDisplayNames[phaseType]} phase from ${sourceCampaign.name}`,
+    name: `${sourceCampaign.name}`, // Keep same campaign name for phase transition
+    description: `${phaseDisplayNames[phaseType]} phase configuration for ${sourceCampaign.name}`,
     rotationIntervalSeconds: CampaignFormConstants.DEFAULT_ROTATION_INTERVAL,
     processingSpeedPerMinute: CampaignFormConstants.DEFAULT_PROCESSING_SPEED,
     batchSize: CampaignFormConstants.DEFAULT_BATCH_SIZE,
@@ -127,16 +131,13 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
 
   const { control, formState: { isValid }, watch, reset } = form;
 
-  // Form submission handler (UNIFIED - uses robust Panel logic with unifiedCampaignService)
+  // Form submission handler for single-campaign phase transitions
   const onSubmit = useCallback(async (data: PhaseConfigurationFormValues) => {
     try {
-      console.log('[DEBUG] onSubmit starting with data:', data);
+      console.log('[DEBUG] Phase transition starting with data:', data);
       setIsSubmitting(true);
 
-      // THIN CLIENT: Backend middleware handles auth - if we're here, user is authenticated
-      console.log('[DEBUG] Backend auth verified - proceeding with DNS validation');
-
-      // ✅ FIX: Validate source campaign
+      // Validate source campaign
       console.log('[DEBUG] Checking source campaign:', sourceCampaign);
       if (!sourceCampaign?.id) {
         console.log('[DEBUG] Source campaign validation failed - no sourceCampaign.id');
@@ -149,7 +150,23 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
       }
       console.log('[DEBUG] Source campaign validation passed, id:', sourceCampaign.id);
 
-      // Build update payload based on phase type - using UpdateCampaignRequest structure
+      // Validate phase prerequisites
+      if (phaseType === 'http_keyword_validation') {
+        // HTTP validation can only start after DNS validation is completed
+        const isDnsCompleted = sourceCampaign.currentPhase === 'dns_validation' &&
+                              sourceCampaign.phaseStatus === 'completed';
+        
+        if (!isDnsCompleted) {
+          toast({
+            title: "Phase Prerequisite Not Met",
+            description: "HTTP keyword validation can only start after DNS validation is completed.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      // Build phase transition payload
       let updatePayload: {
         campaignType?: CampaignType;
         personaIds?: string[];
@@ -162,13 +179,11 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
         targetHttpPorts?: number[];
       };
 
-      console.log('[DEBUG] Building payload for phaseType:', phaseType);
+      console.log('[DEBUG] Building phase transition payload for:', phaseType);
       if (phaseType === 'dns_validation') {
-        console.log('[DEBUG] Processing DNS validation phase');
+        console.log('[DEBUG] Configuring DNS validation phase transition');
         // Validate required DNS fields
-        console.log('[DEBUG] Checking DNS persona selection:', data.assignedDnsPersonaId);
         if (!data.assignedDnsPersonaId || data.assignedDnsPersonaId === CampaignFormConstants.NONE_VALUE_PLACEHOLDER) {
-          console.log('[DEBUG] DNS persona validation failed');
           toast({
             title: "Validation Error",
             description: "DNS persona is required for DNS validation.",
@@ -177,11 +192,9 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
           return;
         }
 
-        // ✅ FIX: Validate persona UUID format
+        // Validate persona UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        console.log('[DEBUG] Validating UUID format for:', data.assignedDnsPersonaId);
         if (!uuidRegex.test(data.assignedDnsPersonaId)) {
-          console.log('[DEBUG] UUID validation failed');
           toast({
             title: "Invalid Persona Selection",
             description: "Selected persona is invalid. Please refresh the page and try again.",
@@ -189,23 +202,19 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
           });
           return;
         }
-        console.log('[DEBUG] UUID validation passed');
 
-        // ✅ PHASE TRANSITION: Use UpdateCampaign with campaignType for proper phase transition
         updatePayload = {
-          campaignType: 'dns_validation',
           personaIds: [data.assignedDnsPersonaId],
-          rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
-          processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
-          batchSize: Number(data.batchSize),
-          retryAttempts: Number(data.retryAttempts),
+          rotationIntervalSeconds: data.rotationIntervalSeconds,
+          processingSpeedPerMinute: data.processingSpeedPerMinute,
+          batchSize: data.batchSize,
+          retryAttempts: data.retryAttempts
         };
-        console.log('[DEBUG] Built DNS validation params with phase transition:', updatePayload);
+        console.log('[DEBUG] Built DNS phase transition payload:', updatePayload);
       } else if (phaseType === 'http_keyword_validation') {
-        console.log('[DEBUG] Processing HTTP keyword validation phase');
+        console.log('[DEBUG] Configuring HTTP keyword validation phase transition');
         // Validate required HTTP fields
         if (!data.assignedHttpPersonaId || data.assignedHttpPersonaId === CampaignFormConstants.NONE_VALUE_PLACEHOLDER) {
-          console.log('[DEBUG] HTTP persona validation failed');
           toast({
             title: "Validation Error",
             description: "HTTP persona is required for HTTP keyword validation.",
@@ -215,7 +224,6 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
         }
 
         if (!data.targetKeywordsInput?.trim()) {
-          console.log('[DEBUG] Keywords validation failed');
           toast({
             title: "Validation Error",
             description: "At least one keyword is required for HTTP keyword validation.",
@@ -230,10 +238,9 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
           .map((k: string) => k.trim())
           .filter((k: string) => k.length > 0);
 
-        // ✅ FIX: Validate HTTP persona UUID format
+        // Validate HTTP persona UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(data.assignedHttpPersonaId)) {
-          console.log('[DEBUG] HTTP UUID validation failed');
           toast({
             title: "Invalid Persona Selection",
             description: "Selected HTTP persona is invalid. Please refresh the page and try again.",
@@ -242,94 +249,108 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
           return;
         }
 
-        // ✅ PHASE TRANSITION: Use UpdateCampaign with campaignType for proper phase transition
         updatePayload = {
-          campaignType: 'http_keyword_validation',
           adHocKeywords: adHocKeywords,
           personaIds: [data.assignedHttpPersonaId],
-          proxyPoolId: (data.assignedProxyId && data.assignedProxyId !== CampaignFormConstants.NONE_VALUE_PLACEHOLDER)
-            ? data.assignedProxyId
-            : undefined,
-          rotationIntervalSeconds: Number(data.rotationIntervalSeconds),
-          processingSpeedPerMinute: Number(data.processingSpeedPerMinute),
-          batchSize: Number(data.batchSize),
-          retryAttempts: Number(data.retryAttempts),
-          targetHttpPorts: data.targetHttpPorts,
+          rotationIntervalSeconds: data.rotationIntervalSeconds,
+          processingSpeedPerMinute: data.processingSpeedPerMinute,
+          batchSize: data.batchSize,
+          retryAttempts: data.retryAttempts,
+          targetHttpPorts: data.targetHttpPorts
         };
-        console.log('[DEBUG] Built HTTP validation params with phase transition:', updatePayload);
+        console.log('[DEBUG] Built HTTP phase transition payload:', updatePayload);
+      } else if (phaseType === 'analysis') {
+        // Analysis phase - typically automated, no configuration needed
+        console.log('[DEBUG] Analysis phase detected - auto-starting');
+        updatePayload = {}; // Empty payload for analysis
       } else {
-        console.log('[DEBUG] Unsupported phase type:', phaseType);
+        // Handle non-configurable phases or unsupported phases gracefully
+        const mappedPhase = mapPhaseToConfigurationType(phaseType);
+        if (mappedPhase) {
+          console.warn(`[DEBUG] Phase ${phaseType} mapped to ${mappedPhase}, but no configuration handler implemented`);
+          throw new Error(`Configuration for phase type: ${phaseType} is not yet implemented`);
+        } else {
+          console.log(`[DEBUG] Non-configurable phase: ${phaseType} - no user configuration required`);
+          // For phases like "setup", "generation" that don't need configuration
+          onClose();
+          return;
+        }
+      }
+
+      // Execute phase transition using generated API client
+      console.log('[DEBUG] Executing phase transition for campaign:', sourceCampaign.id);
+      console.log('[DEBUG] Phase transition payload:', updatePayload);
+
+      let configurationResponse;
+      if (phaseType === 'dns_validation') {
+        const dnsPayload: DNSPhaseConfigRequest = {
+          name: data.name,
+          personaIds: updatePayload.personaIds || []
+        };
+        configurationResponse = await campaignsApi.configureDNSValidation(sourceCampaign.id, dnsPayload);
+      } else if (phaseType === 'http_keyword_validation') {
+        const httpPayload: HTTPPhaseConfigRequest = {
+          name: data.name,
+          personaIds: updatePayload.personaIds || [],
+          keywords: updatePayload.adHocKeywords || [],
+          adHocKeywords: updatePayload.adHocKeywords || []
+        };
+        configurationResponse = await campaignsApi.configureHTTPValidation(sourceCampaign.id, httpPayload);
+      } else {
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 
-      // ✅ PHASE TRANSITION: Use UpdateCampaign for all phase transitions
-      console.log('[DEBUG] Using UpdateCampaign for phase transition:', phaseType);
-      console.log('[DEBUG] Campaign ID:', sourceCampaign.id);
-      console.log('[DEBUG] Update payload:', updatePayload);
+      console.log('[DEBUG] Phase transition response:', configurationResponse.data);
+
+      // Handle phase transition response using unified response structure
+      if (!isResponseSuccess(configurationResponse.data)) {
+        console.log('[DEBUG] Phase transition failed:', configurationResponse.data.error);
+        const errorMessage = typeof configurationResponse.data.error === 'string'
+          ? configurationResponse.data.error
+          : 'Failed to configure campaign phase transition';
+        throw new Error(errorMessage);
+      }
+
+      // Phase transition successful - same campaign ID is maintained
+      const campaignId = sourceCampaign.id; // Same campaign, different phase
+      console.log('[DEBUG] Phase transition successful for campaign:', campaignId);
       
-      const updateResult = await unifiedCampaignService.updateCampaign(sourceCampaign.id, updatePayload as any);
-      console.log('[DEBUG] campaignService.updateCampaign returned:', updateResult);
+      const phaseDisplayNamesMap: Record<string, string> = {
+        'dns_validation': 'DNS Validation',
+        'http_keyword_validation': 'HTTP Keyword Validation'
+      };
       
-      if (!isResponseSuccess(updateResult)) {
-        console.log('[DEBUG] Update result indicates error:', updateResult.error);
-        throw new Error(updateResult.error || 'Failed to update campaign for phase transition');
+      const displayName = phaseDisplayNamesMap[phaseType as string] || 'Unknown Phase';
+      
+      toast({
+        title: `${displayName} Phase Started`,
+        description: `Campaign has successfully transitioned to ${displayName} phase.`,
+        variant: "default"
+      });
+
+      // Start the campaign phase using the service layer
+      try {
+        console.log('[DEBUG] Starting campaign phase...');
+        await unifiedCampaignService.startCampaign(campaignId);
+        console.log('[DEBUG] Campaign phase started successfully');
+      } catch (e) {
+        console.log('[DEBUG] Campaign phase start warning:', e);
+        console.warn('Campaign phase may have auto-started:', e);
+      }
+
+      // Close component and notify parent with the same campaign ID
+      console.log('[DEBUG] Closing component and notifying parent');
+      onClose();
+      
+      // Force cache invalidation for phase transition
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
+          detail: { campaignId }
+        }));
       }
       
-      // Fix: Extract the actual campaign data from the nested response
-      const backendResponse = updateResult.data;
-      const updatedCampaign = backendResponse && typeof backendResponse === 'object' && 'data' in backendResponse
-        ? backendResponse.data
-        : backendResponse;
-      console.log('[DEBUG] Updated campaign data:', updatedCampaign);
-      console.log('[DEBUG] Backend response structure:', backendResponse);
-
-      // Type cast to handle the response structure properly
-      const campaignData = updatedCampaign as any;
-      if (campaignData && (campaignData.id || sourceCampaign.id)) {
-        const campaignId = campaignData.id || sourceCampaign.id;
-        console.log('[DEBUG] Success! Campaign ID:', campaignId);
-        
-        const phaseDisplayNamesMap: Record<string, string> = {
-          'dns_validation': 'DNS Validation',
-          'http_keyword_validation': 'HTTP Keyword Validation'
-        };
-        
-        const displayName = phaseDisplayNamesMap[phaseType as string] || 'Unknown Phase';
-        
-        toast({
-          title: `${displayName} Started Successfully`,
-          description: `${displayName} phase has been configured and started on the existing campaign.`,
-          variant: "default"
-        });
-
-        // Start the campaign for the new phase using the service layer
-        try {
-          console.log('[DEBUG] Starting campaign...');
-          await unifiedCampaignService.startCampaign(campaignId);
-          console.log('[DEBUG] Campaign started successfully');
-        } catch (e) {
-          console.log('[DEBUG] Campaign start warning:', e);
-          console.warn('Campaign may have auto-started:', e);
-        }
-
-        // Close component and notify parent with the same campaign ID
-        console.log('[DEBUG] Closing component and notifying parent');
-        onClose();
-        
-        // PERFORMANCE FIX: Immediate cache invalidation and notification
-        // Force cache invalidation synchronized with navigation
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
-            detail: { campaignId }
-          }));
-        }
-        
-        // Notify parent immediately after cache invalidation
-        onPhaseStarted(campaignId);
-      } else {
-        console.log('[DEBUG] No valid campaign ID found in result');
-        throw new Error("Failed to update campaign for phase transition");
-      }
+      // Notify parent that phase transition is complete
+      onPhaseStarted(campaignId);
     } catch (error: unknown) {
       console.log('[DEBUG] Exception caught in onSubmit:', error);
       console.error('[PhaseConfiguration] Campaign creation error:', error);
@@ -400,6 +421,7 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
   const needsDnsPersona = phaseType === 'dns_validation';
   const needsKeywords = phaseType === 'http_keyword_validation';
   const needsHttpPorts = phaseType === 'http_keyword_validation';
+  const isAnalysisPhase = (phaseType as string) === 'analysis';
 
   // Form content component (UNIFIED - eliminates duplication)
   const FormContent = () => (
@@ -804,7 +826,7 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
             </DialogTitle>
             <DialogDescription>
               Configure the settings for the next phase of your campaign pipeline.
-              This will create a new {phaseDisplayNames[phaseType]?.toLowerCase()} campaign using domains from &quot;{sourceCampaign?.name}&quot;.
+              This will transition &quot;{sourceCampaign?.name}&quot; to the {phaseDisplayNames[phaseType]?.toLowerCase()} phase using the existing domain data.
             </DialogDescription>
           </DialogHeader>
 

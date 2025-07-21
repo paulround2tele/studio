@@ -43,7 +43,7 @@ export interface QueryPerformanceMetric {
      * @type {string}
      * @memberof QueryPerformanceMetric
      */
-    'campaignType'?: string;
+    'campaignPhase'?: string;
     /**
      * 
      * @type {number}

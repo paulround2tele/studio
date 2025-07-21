@@ -220,6 +220,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/configure-dns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Configure DNS validation phase
+         * @description Configure DNS validation phase for a campaign and transition to dns_validation phase
+         */
+        post: operations["configureDNSValidation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/configure-http": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Configure HTTP validation phase
+         * @description Configure HTTP validation phase for a campaign and transition to http_validation phase
+         */
+        post: operations["configureHTTPValidation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/pause": {
         parameters: {
             query?: never;
@@ -1567,7 +1607,7 @@ export interface components {
              * @description Unique identifier
              */
             campaignId?: string;
-            campaignType?: string;
+            campaignPhase?: string;
             contentType?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -1628,7 +1668,7 @@ export interface components {
              * @description Unique identifier
              */
             campaignId?: string;
-            campaignType?: string;
+            campaignPhase?: string;
             errorMessage?: string;
             /** Format: date-time */
             executedAt?: string;
@@ -1658,7 +1698,7 @@ export interface components {
             cacheNamespace?: string;
             /** Format: int32 */
             cacheSizeBytes?: number;
-            campaignType?: string;
+            campaignPhase?: string;
             /** Format: double */
             executionTimeMs?: number;
             /** Format: double */
@@ -1694,22 +1734,26 @@ export interface components {
             /** Format: double */
             avgProcessingRate?: number;
             businessStatus?: string;
-            /** @enum {string} */
-            campaignType: "domain_generation" | "dns_validation" | "http_keyword_validation";
             /** Format: date-time */
             completedAt?: string;
             /** Format: date-time */
             createdAt?: string;
             /**
-             * @description Frontend-expected properties
+             * @description Phases-based architecture (replaces legacy CampaignType + Status)
              * @enum {string}
              */
-            currentPhase?: "setup" | "generation" | "dns_validation" | "http_validation" | "analysis" | "cleanup";
-            /** Format: int64 */
+            currentPhase?: "setup" | "generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+            /**
+             * Format: int64
+             * @description @swagger:field dnsValidatedDomains
+             */
             dnsValidatedDomains?: number;
             dnsValidationParams?: components["schemas"]["DNSValidationCampaignParams"];
             domainGenerationParams?: components["schemas"]["DomainGenerationCampaignParams"];
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description @swagger:field domains
+             */
             domains?: number;
             errorMessage?: string;
             /**
@@ -1729,24 +1773,30 @@ export interface components {
             id?: string;
             /** Format: date-time */
             lastHeartbeatAt?: string;
-            launchSequence?: boolean;
             leadItems?: components["schemas"]["LeadItem"][];
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description @swagger:field leads
+             */
             leads?: number;
             metadata?: Record<string, never>;
             name: string;
-            /** @enum {string} */
+            /**
+             * @description @swagger:field phaseStatus
+             * @enum {string}
+             */
             phaseStatus?: "not_started" | "in_progress" | "paused" | "completed" | "failed";
             /** Format: int64 */
             processedItems?: number;
-            /** Format: double */
+            /**
+             * Format: double
+             * @description @swagger:field progress
+             */
             progress?: number;
             /** Format: double */
             progressPercentage?: number;
             /** Format: date-time */
             startedAt?: string;
-            /** @enum {string} */
-            status: "pending" | "queued" | "running" | "pausing" | "paused" | "completed" | "failed" | "archived" | "cancelled";
             /** Format: int64 */
             successfulItems?: number;
             /** Format: int64 */
@@ -1762,12 +1812,19 @@ export interface components {
         CampaignAPI: {
             /** Format: double */
             avgProcessingRate?: number;
-            /** @enum {string} */
-            campaignType?: "domain_generation" | "dns_validation" | "http_keyword_validation";
             /** Format: date-time */
             completedAt?: string;
             /** Format: date-time */
             createdAt?: string;
+            /**
+             * @description Phases-based architecture (replaces legacy CampaignType + Status)
+             * @enum {string}
+             */
+            currentPhase?: "setup" | "generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+            /** Format: int64 */
+            dnsValidatedDomains?: number;
+            /** Format: int64 */
+            domains?: number;
             errorMessage?: string;
             /** Format: date-time */
             estimatedCompletionAt?: string;
@@ -1780,16 +1837,20 @@ export interface components {
             id?: string;
             /** Format: date-time */
             lastHeartbeatAt?: string;
+            /** Format: int64 */
+            leads?: number;
             metadata?: Record<string, never>;
             name?: string;
+            /** @enum {string} */
+            phaseStatus?: "not_started" | "in_progress" | "paused" | "completed" | "failed";
             /** Format: int64 */
             processedItems?: number;
+            /** Format: double */
+            progress?: number;
             /** Format: double */
             progressPercentage?: number;
             /** Format: date-time */
             startedAt?: string;
-            /** @enum {string} */
-            status?: "pending" | "queued" | "running" | "pausing" | "paused" | "completed" | "failed" | "archived" | "cancelled";
             /** Format: int64 */
             successfulItems?: number;
             /** Format: int64 */
@@ -1841,6 +1902,8 @@ export interface components {
         CampaignData: {
             /** Format: date-time */
             createdAt?: string;
+            /** @description Phases-based architecture fields */
+            currentPhase?: string;
             description?: string;
             /**
              * Format: uuid
@@ -1848,8 +1911,12 @@ export interface components {
              */
             id?: string;
             name?: string;
-            status?: string;
-            type?: string;
+            /** @description @Description Status of the current phase */
+            phaseStatus?: string;
+            /** @description @Description Overall progress percentage (0-100) */
+            progress?: {
+                [key: string]: Record<string, never>;
+            };
             /** Format: date-time */
             updatedAt?: string;
         };
@@ -1882,7 +1949,7 @@ export interface components {
             id?: string;
             jobPayload?: Record<string, never>;
             /** @enum {string} */
-            jobType?: "domain_generation" | "dns_validation" | "http_keyword_validation";
+            jobType: "generation" | "dns_validation" | "http_keyword_validation" | "analysis";
             /** Format: date-time */
             lastAttemptedAt?: string;
             lastError?: string;
@@ -2029,7 +2096,6 @@ export interface components {
             triggeredBy?: string;
             validationErrors?: Record<string, never>;
         };
-        CampaignStatusEnum: string;
         CampaignTransactionOptions: {
             /**
              * Format: uuid
@@ -2045,7 +2111,6 @@ export interface components {
             /** Format: date-time */
             Timeout?: string;
         };
-        CampaignTypeEnum: string;
         ChangePasswordRequest: {
             /** Format: password */
             currentPassword: string;
@@ -2168,36 +2233,10 @@ export interface components {
             mode?: string;
         };
         CreateCampaignRequest: {
-            /** @enum {string} */
-            campaignType: "domain_generation" | "dns_validation" | "http_keyword_validation";
             description?: string;
-            dnsValidationParams?: components["schemas"]["DnsValidationParams"];
             domainGenerationParams?: components["schemas"]["DomainGenerationParams"];
-            httpKeywordParams?: components["schemas"]["HttpKeywordParams"];
             launchSequence?: boolean;
             name: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
-        };
-        CreateDNSValidationCampaignRequest: {
-            /** Format: int32 */
-            batchSize?: number;
-            name: string;
-            personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sourceCampaignId: string;
             /**
              * Format: uuid
              * @description Unique identifier
@@ -2220,37 +2259,6 @@ export interface components {
             userId?: string;
             /** Format: int32 */
             variableLength: number;
-        };
-        CreateHTTPKeywordCampaignRequest: {
-            adHocKeywords?: string[];
-            /** Format: int32 */
-            batchSize?: number;
-            keywordSetIds?: string[];
-            name: string;
-            personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyPoolId?: string;
-            proxySelectionStrategy?: string;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sourceCampaignId: string;
-            targetHttpPorts?: number[];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
         };
         CreateKeywordSetRequest: {
             description?: string;
@@ -2314,6 +2322,10 @@ export interface components {
             useSystemResolvers?: boolean;
         };
         DNSConfigUpdateRequest: string;
+        DNSPhaseConfigRequest: {
+            name?: string;
+            personaIds: string[];
+        };
         DNSValidationAPIRequest: {
             /** Format: int32 */
             batchSize?: number;
@@ -2605,12 +2617,12 @@ export interface components {
              * @description Unique identifier
              */
             campaign_id?: string;
-            campaign_status?: string;
-            campaign_type?: string;
+            campaign_phase?: string;
             /** Format: int32 */
             domain_count?: number;
             error_type?: string;
             help?: string;
+            phase_status?: string;
             /**
              * Format: uuid
              * @description Unique identifier
@@ -2901,6 +2913,12 @@ export interface components {
             /** Format: int64 */
             totalCount?: number;
         };
+        HTTPPhaseConfigRequest: {
+            adHocKeywords?: string[];
+            keywords?: string[];
+            name?: string;
+            personaIds: string[];
+        };
         HTTPTLSClientHello: {
             cipherSuites?: string[];
             curvePreferences?: string[];
@@ -3019,24 +3037,8 @@ export interface components {
             /** Format: int32 */
             waitDelaySeconds?: number;
         };
-        InPlaceDNSValidationRequest: {
-            /** Format: int32 */
-            batchSize?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId: string;
-            onlyInvalidDomains?: boolean;
-            personaIds?: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-        };
         JobBusinessStatusEnum: string;
+        JobTypeEnum: string;
         KeywordExtractionAPIResult: {
             /**
              * Format: uuid
@@ -3641,7 +3643,7 @@ export interface components {
              * @description Unique identifier
              */
             campaignId?: string;
-            campaignType?: string;
+            campaignPhase?: string;
             /** Format: double */
             cpuTimeMs?: number;
             /** Format: date-time */
@@ -3758,7 +3760,7 @@ export interface components {
              * @description Unique identifier
              */
             campaignId?: string;
-            campaignType?: string;
+            campaignPhase?: string;
             component?: string;
             /** Format: double */
             currentUsage?: number;
@@ -4847,6 +4849,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignOperationResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    configureDNSValidation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID (UUID) */
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DNSPhaseConfigRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    configureHTTPValidation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID (UUID) */
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HTTPPhaseConfigRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
                 };
             };
             /** @description Bad Request */

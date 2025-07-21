@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 **cacheValue** | **string** |  | [optional] [default to undefined]
 **cacheValueCompressed** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 **campaignId** | **string** | Unique identifier | [optional] [default to undefined]
-**campaignType** | **string** |  | [optional] [default to undefined]
+**campaignPhase** | **string** |  | [optional] [default to undefined]
 **contentType** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **expiresAt** | **string** |  | [optional] [default to undefined]
@@ -37,7 +37,7 @@ const instance: CacheEntry = {
     cacheValue,
     cacheValueCompressed,
     campaignId,
-    campaignType,
+    campaignPhase,
     contentType,
     createdAt,
     expiresAt,

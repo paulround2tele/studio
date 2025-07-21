@@ -7,8 +7,8 @@
 import type { components } from '@/lib/api-client/types';
 
 // Extract OpenAPI union types
-type _CampaignType = components["schemas"]["Campaign"]["campaignType"]; // Unused
-type _CampaignStatus = components["schemas"]["Campaign"]["status"]; // Unused
+type _CampaignPhase = components["schemas"]["Campaign"]["currentPhase"]; // Unused
+type _CampaignPhaseStatus = components["schemas"]["Campaign"]["phaseStatus"]; // Unused
 type _PersonaType = components["schemas"]["Persona"]["personaType"]; // Unused
 type _ProxyProtocol = components["schemas"]["Proxy"]["protocol"]; // Unused
 type _KeywordRuleType = components["schemas"]["KeywordRule"]["ruleType"]; // Unused

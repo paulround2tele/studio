@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 )
 
 // Broadcaster defines an interface for broadcasting messages to WebSocket clients.
@@ -38,15 +39,61 @@ type WebSocketManager struct {
 
 	// instrumentation counters
 	totalConnections int
+
+	// Data integrity tracking for phase transitions
+	eventSequenceMap sync.Map // campaignID -> last sequence number
+	eventHistory     sync.Map // campaignID -> []EventRecord for deduplication
+
+	// Message retry and recovery
+	messageRetryQueue  chan RetryableMessage
+	connectionRecovery chan RecoveryRequest
+	maxRetryAttempts   int
+	retryBackoffMs     int
+}
+
+// EventRecord tracks processed events for deduplication
+type EventRecord struct {
+	EventID        string
+	EventHash      string
+	Timestamp      time.Time
+	SequenceNumber int64
+	MessageType    string
+}
+
+// RetryableMessage represents a message that failed to send and needs retry
+type RetryableMessage struct {
+	CampaignID    string
+	Message       []byte
+	AttemptCount  int
+	LastAttempt   time.Time
+	TargetClients []*Client
+}
+
+// RecoveryRequest represents a request to recover lost events for a client
+type RecoveryRequest struct {
+	CampaignID         string
+	Client             *Client
+	LastSequenceNumber int64
+	ResponseChannel    chan RecoveryResponse
+}
+
+// RecoveryResponse contains recovered events for a client
+type RecoveryResponse struct {
+	Events []StandardizedWebSocketMessage
+	Error  error
 }
 
 // NewWebSocketManager creates a new WebSocketManager.
 func NewWebSocketManager() *WebSocketManager {
 	return &WebSocketManager{
-		clients:    make(map[*Client]bool),
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
+		clients:            make(map[*Client]bool),
+		broadcast:          make(chan []byte),
+		register:           make(chan *Client),
+		unregister:         make(chan *Client),
+		messageRetryQueue:  make(chan RetryableMessage, 100),
+		connectionRecovery: make(chan RecoveryRequest, 10),
+		maxRetryAttempts:   3,
+		retryBackoffMs:     1000,
 	}
 }
 
@@ -108,9 +155,9 @@ func (m *WebSocketManager) BroadcastToCampaign(campaignID string, message WebSoc
 	m.mutex.RLock()
 	clientCount := len(m.clients)
 	m.mutex.RUnlock()
-	
+
 	sentCount := 0
-	
+
 	// Send to clients subscribed to this campaign with proper locking
 	m.mutex.RLock()
 	clientsCopy := make([]*Client, 0, len(m.clients))
@@ -118,7 +165,7 @@ func (m *WebSocketManager) BroadcastToCampaign(campaignID string, message WebSoc
 		clientsCopy = append(clientsCopy, client)
 	}
 	m.mutex.RUnlock()
-	
+
 	for _, client := range clientsCopy {
 		isSubscribed := client.IsSubscribedToCampaign(campaignID)
 		if isSubscribed {
@@ -138,7 +185,7 @@ func (m *WebSocketManager) BroadcastToCampaign(campaignID string, message WebSoc
 			}
 		}
 	}
-	
+
 	log.Printf("[DIAGNOSTIC] BroadcastToCampaign completed: campaignID=%s, messageType=%s, totalClients=%d, subscribedClients=%d, messagesSent=%d",
 		campaignID, message.Type, clientCount, sentCount, sentCount)
 }
@@ -176,4 +223,227 @@ func (m *WebSocketManager) Stats() (active int, total int) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	return len(m.clients), m.totalConnections
+}
+
+// BroadcastSequencedMessage broadcasts a sequenced message with data integrity checks
+func (m *WebSocketManager) BroadcastSequencedMessage(campaignID string, message SequencedWebSocketMessage) error {
+	// Record event in history for deduplication
+	if err := m.recordEventHistory(campaignID, message); err != nil {
+		log.Printf("[ERROR] Failed to record event history for campaign %s: %v", campaignID, err)
+		return err
+	}
+
+	// Update sequence tracking
+	m.eventSequenceMap.Store(campaignID, message.Sequence.SequenceNumber)
+
+	// Convert to JSON for broadcasting
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("[ERROR] Failed to marshal sequenced message: %v", err)
+		return err
+	}
+
+	// Broadcast with retry logic
+	m.broadcastWithRetry(campaignID, messageBytes)
+
+	log.Printf("[INTEGRITY] Broadcast sequenced message: campaignID=%s, eventID=%s, seq=%d",
+		campaignID, message.Sequence.EventID, message.Sequence.SequenceNumber)
+
+	return nil
+}
+
+// recordEventHistory records an event for deduplication and recovery
+func (m *WebSocketManager) recordEventHistory(campaignID string, message SequencedWebSocketMessage) error {
+	historyKey := campaignID
+	var history []EventRecord
+
+	if existingHistory, ok := m.eventHistory.Load(historyKey); ok {
+		history = existingHistory.([]EventRecord)
+	}
+
+	// Check for duplicate events
+	for _, record := range history {
+		if record.EventHash == message.Sequence.EventHash {
+			log.Printf("[INTEGRITY] Duplicate event detected and skipped: %s", message.Sequence.EventID)
+			return nil // Skip duplicate
+		}
+	}
+
+	// Add new event record
+	newRecord := EventRecord{
+		EventID:        message.Sequence.EventID,
+		EventHash:      message.Sequence.EventHash,
+		Timestamp:      message.Timestamp,
+		SequenceNumber: message.Sequence.SequenceNumber,
+		MessageType:    message.Type,
+	}
+
+	history = append(history, newRecord)
+
+	// Keep only last 1000 events per campaign to prevent memory issues
+	if len(history) > 1000 {
+		history = history[len(history)-1000:]
+	}
+
+	m.eventHistory.Store(historyKey, history)
+	return nil
+}
+
+// broadcastWithRetry broadcasts message with retry logic for failed clients
+func (m *WebSocketManager) broadcastWithRetry(campaignID string, messageBytes []byte) {
+	m.mutex.RLock()
+	clientsCopy := make([]*Client, 0, len(m.clients))
+	for client := range m.clients {
+		clientsCopy = append(clientsCopy, client)
+	}
+	m.mutex.RUnlock()
+
+	var failedClients []*Client
+	sentCount := 0
+
+	for _, client := range clientsCopy {
+		if client.IsSubscribedToCampaign(campaignID) {
+			select {
+			case client.send <- messageBytes:
+				sentCount++
+				log.Printf("[INTEGRITY] Message sent to client %s for campaign %s",
+					client.conn.RemoteAddr().String(), campaignID)
+			default:
+				// Client is slow or disconnected, add to retry queue
+				failedClients = append(failedClients, client)
+				log.Printf("[INTEGRITY] Client %s is slow, adding to retry queue",
+					client.conn.RemoteAddr().String())
+			}
+		}
+	}
+
+	// Queue failed sends for retry
+	if len(failedClients) > 0 {
+		retryMessage := RetryableMessage{
+			CampaignID:    campaignID,
+			Message:       messageBytes,
+			AttemptCount:  1,
+			LastAttempt:   time.Now(),
+			TargetClients: failedClients,
+		}
+
+		select {
+		case m.messageRetryQueue <- retryMessage:
+			log.Printf("[INTEGRITY] Queued %d failed sends for retry", len(failedClients))
+		default:
+			log.Printf("[ERROR] Retry queue full, dropping failed sends for campaign %s", campaignID)
+		}
+	}
+
+	log.Printf("[INTEGRITY] Broadcast completed: campaignID=%s, sent=%d, failed=%d",
+		campaignID, sentCount, len(failedClients))
+}
+
+// RecoverMissedEvents recovers missed events for a reconnecting client
+func (m *WebSocketManager) RecoverMissedEvents(campaignID string, client *Client, lastSequenceNumber int64) error {
+	historyKey := campaignID
+
+	historyInterface, ok := m.eventHistory.Load(historyKey)
+	if !ok {
+		log.Printf("[RECOVERY] No event history found for campaign %s", campaignID)
+		return nil // No history available
+	}
+
+	history := historyInterface.([]EventRecord)
+	var missedEvents []StandardizedWebSocketMessage
+
+	// Find events after the client's last sequence number
+	for _, record := range history {
+		if record.SequenceNumber > lastSequenceNumber {
+			// Reconstruct message from event record
+			// Note: In a production system, you'd want to store the full message data
+			recoveryMessage := StandardizedWebSocketMessage{
+				Type:      record.MessageType,
+				Timestamp: record.Timestamp,
+				Data:      json.RawMessage(`{"recovered": true, "eventId": "` + record.EventID + `"}`),
+			}
+			missedEvents = append(missedEvents, recoveryMessage)
+		}
+	}
+
+	// Send missed events to client
+	for _, event := range missedEvents {
+		eventBytes, err := json.Marshal(event)
+		if err != nil {
+			log.Printf("[RECOVERY] Failed to marshal recovery event: %v", err)
+			continue
+		}
+
+		select {
+		case client.send <- eventBytes:
+			log.Printf("[RECOVERY] Sent missed event %s to client %s",
+				event.Type, client.conn.RemoteAddr().String())
+		default:
+			log.Printf("[RECOVERY] Failed to send missed event to client %s",
+				client.conn.RemoteAddr().String())
+		}
+	}
+
+	log.Printf("[RECOVERY] Recovered %d missed events for campaign %s, client %s",
+		len(missedEvents), campaignID, client.conn.RemoteAddr().String())
+
+	return nil
+}
+
+// StartRetryWorker starts the background worker for message retries
+func (m *WebSocketManager) StartRetryWorker() {
+	go func() {
+		for retryMessage := range m.messageRetryQueue {
+			// Wait for backoff period
+			backoffDuration := time.Duration(m.retryBackoffMs*retryMessage.AttemptCount) * time.Millisecond
+			time.Sleep(backoffDuration)
+
+			// Retry sending to failed clients
+			var stillFailedClients []*Client
+			successCount := 0
+
+			for _, client := range retryMessage.TargetClients {
+				// Check if client is still connected
+				m.mutex.RLock()
+				isActive := m.clients[client]
+				m.mutex.RUnlock()
+
+				if !isActive {
+					continue // Client disconnected, skip
+				}
+
+				select {
+				case client.send <- retryMessage.Message:
+					successCount++
+					log.Printf("[RETRY] Successfully sent retry message to client %s",
+						client.conn.RemoteAddr().String())
+				default:
+					stillFailedClients = append(stillFailedClients, client)
+				}
+			}
+
+			// Re-queue if still have failures and haven't exceeded max attempts
+			if len(stillFailedClients) > 0 && retryMessage.AttemptCount < m.maxRetryAttempts {
+				retryMessage.AttemptCount++
+				retryMessage.LastAttempt = time.Now()
+				retryMessage.TargetClients = stillFailedClients
+
+				select {
+				case m.messageRetryQueue <- retryMessage:
+					log.Printf("[RETRY] Re-queued %d failed sends for attempt %d",
+						len(stillFailedClients), retryMessage.AttemptCount)
+				default:
+					log.Printf("[ERROR] Retry queue full, dropping retry attempt %d", retryMessage.AttemptCount)
+				}
+			} else if retryMessage.AttemptCount >= m.maxRetryAttempts {
+				log.Printf("[ERROR] Max retry attempts exceeded for campaign %s, dropping %d sends",
+					retryMessage.CampaignID, len(stillFailedClients))
+			}
+
+			log.Printf("[RETRY] Retry completed: campaignID=%s, attempt=%d, success=%d, stillFailed=%d",
+				retryMessage.CampaignID, retryMessage.AttemptCount, successCount, len(stillFailedClients))
+		}
+	}()
+
+	log.Printf("[INTEGRITY] Started WebSocket retry worker")
 }

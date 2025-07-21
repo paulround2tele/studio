@@ -6,6 +6,8 @@ All URIs are relative to *http://localhost*
 |------------- | ------------- | -------------|
 |[**bulkDeleteCampaigns**](#bulkdeletecampaigns) | **DELETE** /campaigns | Bulk delete campaigns|
 |[**cancelCampaign**](#cancelcampaign) | **POST** /campaigns/{campaignId}/cancel | Cancel campaign|
+|[**configureDNSValidation**](#configurednsvalidation) | **POST** /campaigns/{campaignId}/configure-dns | Configure DNS validation phase|
+|[**configureHTTPValidation**](#configurehttpvalidation) | **POST** /campaigns/{campaignId}/configure-http | Configure HTTP validation phase|
 |[**createCampaign**](#createcampaign) | **POST** /campaigns | Create new campaign|
 |[**deleteCampaign**](#deletecampaign) | **DELETE** /campaigns/{campaignId} | Delete campaign|
 |[**getBulkDomains**](#getbulkdomains) | **POST** /campaigns/bulk/domains | Get bulk domain data|
@@ -120,6 +122,120 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configureDNSValidation**
+> APIResponse configureDNSValidation(dNSPhaseConfigRequest)
+
+Configure DNS validation phase for a campaign and transition to dns_validation phase
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    DNSPhaseConfigRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
+let dNSPhaseConfigRequest: DNSPhaseConfigRequest; //
+
+const { status, data } = await apiInstance.configureDNSValidation(
+    campaignId,
+    dNSPhaseConfigRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **dNSPhaseConfigRequest** | **DNSPhaseConfigRequest**|  | |
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
+
+
+### Return type
+
+**APIResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configureHTTPValidation**
+> APIResponse configureHTTPValidation(hTTPPhaseConfigRequest)
+
+Configure HTTP validation phase for a campaign and transition to http_validation phase
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    HTTPPhaseConfigRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
+let hTTPPhaseConfigRequest: HTTPPhaseConfigRequest; //
+
+const { status, data } = await apiInstance.configureHTTPValidation(
+    campaignId,
+    hTTPPhaseConfigRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **hTTPPhaseConfigRequest** | **HTTPPhaseConfigRequest**|  | |
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
+
+
+### Return type
+
+**APIResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 

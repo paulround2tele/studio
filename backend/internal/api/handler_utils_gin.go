@@ -131,6 +131,11 @@ func respondWithJSONGin(c *gin.Context, code int, payload interface{}) {
 	requestID := getRequestID(c)
 	response := NewSuccessResponse(payload, requestID)
 
+	// DEBUG: Log response structure for API mismatch analysis
+	log.Printf("DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure")
+	log.Printf("DEBUG [respondWithJSONGin]: Original payload type: %T", payload)
+	log.Printf("DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: %T, requestId: %s}", payload, requestID)
+
 	// Add rate limit info if available
 	if limit := c.GetHeader("X-RateLimit-Limit"); limit != "" {
 		if remaining := c.GetHeader("X-RateLimit-Remaining"); remaining != "" {

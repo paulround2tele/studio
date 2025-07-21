@@ -11,45 +11,38 @@ import (
 
 // --- Campaign Update Request DTOs ---
 type UpdateCampaignRequest struct {
-	Name                       *string                    `json:"name,omitempty"`
-	CampaignType               *models.CampaignTypeEnum   `json:"campaignType,omitempty"`
-	Status                     *models.CampaignStatusEnum `json:"status,omitempty"`
-	SourceGenerationCampaignID *uuid.UUID                 `json:"sourceGenerationCampaignId,omitempty"`
-	SourceDnsCampaignID        *uuid.UUID                 `json:"sourceDnsCampaignId,omitempty"`
-	KeywordSetIDs              *[]uuid.UUID               `json:"keywordSetIds,omitempty"`
-	AdHocKeywords              *[]string                  `json:"adHocKeywords,omitempty"`
-	PersonaIDs                 *[]uuid.UUID               `json:"personaIds,omitempty"`
-	ProxyPoolID                *uuid.UUID                 `json:"proxyPoolId,omitempty"`
-	ProxySelectionStrategy     *string                    `json:"proxySelectionStrategy,omitempty"`
-	RotationIntervalSeconds    *int                       `json:"rotationIntervalSeconds,omitempty"`
-	ProcessingSpeedPerMinute   *int                       `json:"processingSpeedPerMinute,omitempty"`
-	BatchSize                  *int                       `json:"batchSize,omitempty"`
-	RetryAttempts              *int                       `json:"retryAttempts,omitempty"`
-	TargetHTTPPorts            *[]int                     `json:"targetHttpPorts,omitempty"`
-	NumDomainsToGenerate       *int64                     `json:"numDomainsToGenerate,omitempty"`
-	VariableLength             *int                       `json:"variableLength,omitempty"`
-	CharacterSet               *string                    `json:"characterSet,omitempty"`
-	ConstantString             *string                    `json:"constantString,omitempty"`
-	TLD                        *string                    `json:"tld,omitempty"`
+	Name                       *string                         `json:"name,omitempty"`
+	CampaignType               *models.JobTypeEnum             `json:"campaignType,omitempty"`
+	Status                     *models.CampaignPhaseStatusEnum `json:"status,omitempty"`
+	SourceGenerationCampaignID *uuid.UUID                      `json:"sourceGenerationCampaignId,omitempty"`
+	SourceDnsCampaignID        *uuid.UUID                      `json:"sourceDnsCampaignId,omitempty"`
+	KeywordSetIDs              *[]uuid.UUID                    `json:"keywordSetIds,omitempty"`
+	AdHocKeywords              *[]string                       `json:"adHocKeywords,omitempty"`
+	PersonaIDs                 *[]uuid.UUID                    `json:"personaIds,omitempty"`
+	ProxyPoolID                *uuid.UUID                      `json:"proxyPoolId,omitempty"`
+	ProxySelectionStrategy     *string                         `json:"proxySelectionStrategy,omitempty"`
+	RotationIntervalSeconds    *int                            `json:"rotationIntervalSeconds,omitempty"`
+	ProcessingSpeedPerMinute   *int                            `json:"processingSpeedPerMinute,omitempty"`
+	BatchSize                  *int                            `json:"batchSize,omitempty"`
+	RetryAttempts              *int                            `json:"retryAttempts,omitempty"`
+	TargetHTTPPorts            *[]int                          `json:"targetHttpPorts,omitempty"`
+	NumDomainsToGenerate       *int64                          `json:"numDomainsToGenerate,omitempty"`
+	VariableLength             *int                            `json:"variableLength,omitempty"`
+	CharacterSet               *string                         `json:"characterSet,omitempty"`
+	ConstantString             *string                         `json:"constantString,omitempty"`
+	TLD                        *string                         `json:"tld,omitempty"`
 }
 
 // --- Unified Campaign Creation Request DTO ---
 
 type CreateCampaignRequest struct {
-	CampaignType   string    `json:"campaignType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation"`
 	Name           string    `json:"name" validate:"required"`
 	Description    string    `json:"description,omitempty"`
 	UserID         uuid.UUID `json:"userId,omitempty"`
-	LaunchSequence bool      `json:"launchSequence,omitempty"` // Whether to automatically chain to next campaign types when this campaign completes
+	LaunchSequence bool      `json:"launchSequence,omitempty"` // Whether to automatically progress through phases when each phase completes
 
-	// Domain Generation specific fields
+	// Phases-based architecture - all campaigns start in setup phase with domain generation
 	DomainGenerationParams *DomainGenerationParams `json:"domainGenerationParams,omitempty"`
-
-	// DNS Validation specific fields
-	DnsValidationParams *DnsValidationParams `json:"dnsValidationParams,omitempty"`
-
-	// HTTP Keyword Validation specific fields
-	HttpKeywordParams *HttpKeywordParams `json:"httpKeywordParams,omitempty"`
 }
 
 type DomainGenerationParams struct {
@@ -98,33 +91,6 @@ type CreateDomainGenerationCampaignRequest struct {
 	UserID               uuid.UUID `json:"userId,omitempty"`
 }
 
-type CreateDNSValidationCampaignRequest struct {
-	Name                       string      `json:"name" validate:"required"`
-	SourceGenerationCampaignID uuid.UUID   `json:"sourceCampaignId" validate:"required"`
-	PersonaIDs                 []uuid.UUID `json:"personaIds" validate:"required,min=1,dive,uuid"`
-	RotationIntervalSeconds    int         `json:"rotationIntervalSeconds,omitempty" validate:"gte=0"`
-	ProcessingSpeedPerMinute   int         `json:"processingSpeedPerMinute,omitempty" validate:"gte=0"`
-	BatchSize                  int         `json:"batchSize,omitempty" validate:"gt=0"`
-	RetryAttempts              int         `json:"retryAttempts,omitempty" validate:"gte=0"`
-	UserID                     uuid.UUID   `json:"userId,omitempty"`
-}
-
-type CreateHTTPKeywordCampaignRequest struct {
-	Name                     string      `json:"name" validate:"required"`
-	SourceCampaignID         uuid.UUID   `json:"sourceCampaignId" validate:"required"`
-	KeywordSetIDs            []uuid.UUID `json:"keywordSetIds,omitempty" validate:"omitempty,dive,uuid"`
-	AdHocKeywords            []string    `json:"adHocKeywords,omitempty" validate:"omitempty,dive,min=1"`
-	PersonaIDs               []uuid.UUID `json:"personaIds" validate:"required,min=1,dive,uuid"`
-	ProxyPoolID              *uuid.UUID  `json:"proxyPoolId,omitempty"`
-	ProxySelectionStrategy   string      `json:"proxySelectionStrategy,omitempty"`
-	RotationIntervalSeconds  int         `json:"rotationIntervalSeconds,omitempty" validate:"gte=0"`
-	ProcessingSpeedPerMinute int         `json:"processingSpeedPerMinute,omitempty" validate:"gte=0"`
-	BatchSize                int         `json:"batchSize,omitempty" validate:"gt=0"`
-	RetryAttempts            int         `json:"retryAttempts,omitempty" validate:"gte=0"`
-	TargetHTTPPorts          []int       `json:"targetHttpPorts,omitempty" validate:"omitempty,dive,gt=0,lte=65535"`
-	UserID                   uuid.UUID   `json:"userId,omitempty"`
-}
-
 // --- Campaign Result Response DTOs ---
 
 type GeneratedDomainsResponse struct {
@@ -154,17 +120,6 @@ type DNSValidationRequest struct {
 	RetryAttempts            *int        `json:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
 }
 
-// InPlaceDNSValidationRequest for validating domains on existing campaigns
-type InPlaceDNSValidationRequest struct {
-	CampaignID               uuid.UUID   `json:"campaignId" validate:"required"`
-	PersonaIDs               []uuid.UUID `json:"personaIds" validate:"omitempty,min=1,dive,uuid"`
-	RotationIntervalSeconds  int         `json:"rotationIntervalSeconds,omitempty" validate:"gte=0"`
-	ProcessingSpeedPerMinute int         `json:"processingSpeedPerMinute,omitempty" validate:"gte=0"`
-	BatchSize                int         `json:"batchSize,omitempty" validate:"gt=0"`
-	RetryAttempts            int         `json:"retryAttempts,omitempty" validate:"gte=0"`
-	OnlyInvalidDomains       bool        `json:"onlyInvalidDomains" validate:"omitempty"`
-}
-
 // BulkDeleteResult represents the result of a bulk delete operation
 type BulkDeleteResult struct {
 	SuccessfullyDeleted int         `json:"successfully_deleted"`
@@ -189,14 +144,11 @@ type CampaignOrchestratorService interface {
 	// Unified campaign creation method (preferred)
 	CreateCampaignUnified(ctx context.Context, req CreateCampaignRequest) (*models.Campaign, error)
 
-	// Legacy campaign creation methods (deprecated but maintained for backward compatibility)
+	// Domain generation campaign creation (the only type that creates separate campaigns)
 	CreateDomainGenerationCampaign(ctx context.Context, req CreateDomainGenerationCampaignRequest) (*models.Campaign, error)
-	CreateDNSValidationCampaign(ctx context.Context, req CreateDNSValidationCampaignRequest) (*models.Campaign, error)
-	CreateHTTPKeywordCampaign(ctx context.Context, req CreateHTTPKeywordCampaignRequest) (*models.Campaign, error)
-	CreateHTTPKeywordValidationCampaign(ctx context.Context, req CreateHTTPKeywordCampaignRequest) (*models.Campaign, error)
 
 	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, interface{}, error) // Stays as interface{} for flexibility at orchestrator level
-	GetCampaignStatus(ctx context.Context, campaignID uuid.UUID) (models.CampaignStatusEnum, *float64, error)
+	GetCampaignStatus(ctx context.Context, campaignID uuid.UUID) (models.CampaignPhaseStatusEnum, *float64, error)
 	ListCampaigns(ctx context.Context, filter store.ListCampaignsFilter) ([]models.Campaign, int64, error)
 
 	// Methods for fetching campaign results
@@ -212,9 +164,13 @@ type CampaignOrchestratorService interface {
 	DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error
 	BulkDeleteCampaigns(ctx context.Context, campaignIDs []uuid.UUID) (*BulkDeleteResult, error)
 	SetCampaignErrorStatus(ctx context.Context, campaignID uuid.UUID, errorMessage string) error
-	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.CampaignStatusEnum) error
+	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.CampaignPhaseStatusEnum) error
 	HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error
 	GetCampaignDependencies(ctx context.Context, campaignID uuid.UUID) (*CampaignDependencyInfo, error)
+
+	// Clean phase transition methods for single-campaign architecture
+	ConfigureDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.DNSPhaseConfigRequest) (*models.Campaign, error)
+	ConfigureHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.HTTPPhaseConfigRequest) (*models.Campaign, error)
 }
 
 // DomainGenerationService defines the interface for domain generation campaign logic.
@@ -229,22 +185,24 @@ type DomainGenerationService interface {
 
 // DNSCampaignService defines the interface for DNS validation campaign logic.
 type DNSCampaignService interface {
-	// CreateCampaign creates a new DNS validation campaign and its associated parameters.
-	CreateCampaign(ctx context.Context, req CreateDNSValidationCampaignRequest) (*models.Campaign, error)
 	// GetCampaignDetails retrieves the base campaign and its specific DNS validation parameters.
 	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.DNSValidationCampaignParams, error)
 	ProcessDNSValidationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
-	// StartInPlaceDNSValidation starts DNS validation on an existing domain generation campaign
-	StartInPlaceDNSValidation(ctx context.Context, req InPlaceDNSValidationRequest) error
+
+	// Phase transition methods for single-campaign architecture
+	ConfigureDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.DNSPhaseConfigRequest) error
+	TransitionToHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID) error
 }
 
 // HTTPKeywordCampaignService defines the interface for HTTP & Keyword validation campaign logic.
 type HTTPKeywordCampaignService interface {
-	// CreateCampaign creates a new HTTP & Keyword campaign and its associated parameters.
-	CreateCampaign(ctx context.Context, req CreateHTTPKeywordCampaignRequest) (*models.Campaign, error)
 	// GetCampaignDetails retrieves the base campaign and its specific HTTP & Keyword validation parameters.
 	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.HTTPKeywordCampaignParams, error)
 	ProcessHTTPKeywordCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
+
+	// Phase transition methods for single-campaign architecture
+	ConfigureHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.HTTPPhaseConfigRequest) error
+	TransitionToAnalysisPhase(ctx context.Context, campaignID uuid.UUID) error
 }
 
 // CampaignWorkerService manages the pool of background workers that process campaign jobs.

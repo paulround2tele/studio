@@ -1,8 +1,12 @@
 package websocket
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"log"
+	"math/rand"
+	"sync/atomic"
 	"time"
 )
 
@@ -21,17 +25,17 @@ type CampaignProgressPayload struct {
 	SuccessfulItems int64   `json:"successfulItems"`
 	FailedItems     int64   `json:"failedItems"`
 	ProgressPercent float64 `json:"progressPercent"`
-	Phase           string  `json:"phase"`
-	Status          string  `json:"status"`
+	CurrentPhase    string  `json:"currentPhase"`
+	PhaseStatus     string  `json:"phaseStatus"`
 }
 
 // CampaignStatusPayload represents campaign status changes
 type CampaignStatusPayload struct {
-	CampaignID string `json:"campaignId"`
-	Status     string `json:"status"`
-	Phase      string `json:"phase,omitempty"`
-	Message    string `json:"message,omitempty"`
-	ErrorCode  string `json:"errorCode,omitempty"`
+	CampaignID   string `json:"campaignId"`
+	PhaseStatus  string `json:"phaseStatus"`
+	CurrentPhase string `json:"currentPhase,omitempty"`
+	Message      string `json:"message,omitempty"`
+	ErrorCode    string `json:"errorCode,omitempty"`
 }
 
 // DomainGenerationPayload represents domain generation events
@@ -89,10 +93,10 @@ type ProxyStatusPayload struct {
 
 // CampaignListUpdatePayload represents campaign list changes (for eliminating polling)
 type CampaignListUpdatePayload struct {
-	Action     string      `json:"action"`     // "create", "update", "delete", "bulk_update"
+	Action     string      `json:"action"` // "create", "update", "delete", "bulk_update"
 	CampaignID string      `json:"campaignId,omitempty"`
-	Campaign   interface{} `json:"campaign,omitempty"`   // Full campaign data for create/update
-	Campaigns  interface{} `json:"campaigns,omitempty"`  // Multiple campaigns for bulk operations
+	Campaign   interface{} `json:"campaign,omitempty"`  // Full campaign data for create/update
+	Campaigns  interface{} `json:"campaigns,omitempty"` // Multiple campaigns for bulk operations
 }
 
 // Helper functions to create standardized messages
@@ -177,6 +181,101 @@ func CreateProxyStatusMessageV2(payload ProxyStatusPayload) StandardizedWebSocke
 	}
 }
 
+// PhaseTransitionPayload represents phase transition events with complete context
+type PhaseTransitionPayload struct {
+	CampaignID         string                 `json:"campaignId"`
+	PreviousPhase      string                 `json:"previousPhase,omitempty"`
+	NewPhase           string                 `json:"newPhase"`
+	NewStatus          string                 `json:"newStatus"`
+	TransitionType     string                 `json:"transitionType"` // "automatic", "manual", "error_recovery"
+	TriggerReason      string                 `json:"triggerReason,omitempty"`
+	PrerequisitesMet   bool                   `json:"prerequisitesMet"`
+	DataIntegrityCheck bool                   `json:"dataIntegrityCheck"`
+	DomainsCount       int64                  `json:"domainsCount"`
+	ProcessedCount     int64                  `json:"processedCount"`
+	SuccessfulCount    int64                  `json:"successfulCount"`
+	FailedCount        int64                  `json:"failedItems"`
+	EstimatedDuration  int64                  `json:"estimatedDuration,omitempty"` // seconds
+	TransitionMetadata map[string]interface{} `json:"transitionMetadata,omitempty"`
+	RollbackData       map[string]interface{} `json:"rollbackData,omitempty"` // For error recovery
+}
+
+// CreatePhaseTransitionMessageV2 creates a standardized phase transition message with complete context
+func CreatePhaseTransitionMessageV2(payload PhaseTransitionPayload) StandardizedWebSocketMessage {
+	data, _ := json.Marshal(payload)
+	return StandardizedWebSocketMessage{
+		Type:      "campaign.phase.transition",
+		Timestamp: time.Now(),
+		Data:      data,
+	}
+}
+
+// WebSocketEventSequence manages event ordering and deduplication
+type WebSocketEventSequence struct {
+	CampaignID      string `json:"campaignId"`
+	EventID         string `json:"eventId"`        // Unique event identifier
+	SequenceNumber  int64  `json:"sequenceNumber"` // Global sequence for ordering
+	EventHash       string `json:"eventHash"`      // Hash for deduplication
+	PreviousEventID string `json:"previousEventId,omitempty"`
+	CheckpointData  bool   `json:"checkpointData"` // Whether this event includes full state
+}
+
+// Enhanced message structure with sequence tracking
+type SequencedWebSocketMessage struct {
+	StandardizedWebSocketMessage
+	Sequence WebSocketEventSequence `json:"sequence"`
+}
+
+// CreateSequencedMessage wraps a standard message with sequence information
+func CreateSequencedMessage(campaignID string, message StandardizedWebSocketMessage, isCheckpoint bool) SequencedWebSocketMessage {
+	eventID := generateEventID()
+	sequenceNum := atomic.AddInt64(&globalSequenceCounter, 1)
+
+	sequence := WebSocketEventSequence{
+		CampaignID:     campaignID,
+		EventID:        eventID,
+		SequenceNumber: sequenceNum,
+		EventHash:      generateEventHash(message),
+		CheckpointData: isCheckpoint,
+	}
+
+	return SequencedWebSocketMessage{
+		StandardizedWebSocketMessage: message,
+		Sequence:                     sequence,
+	}
+}
+
+// generateEventID creates a unique event identifier
+func generateEventID() string {
+	return fmt.Sprintf("evt_%d_%s", time.Now().UnixNano(), randomString(8))
+}
+
+// generateEventHash creates a hash for event deduplication
+func generateEventHash(message StandardizedWebSocketMessage) string {
+	data, _ := json.Marshal(message)
+	hash := sha256.Sum256(data)
+	return fmt.Sprintf("%x", hash)[:16]
+}
+
+// randomString generates a cryptographically secure random string of specified length
+func randomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, length)
+	randBytes := make([]byte, length)
+	_, err := rand.Read(randBytes)
+	if err != nil {
+		// Fallback to timestamp-based randomness if crypto/rand fails
+		for i := range b {
+			b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+		}
+		return string(b)
+	}
+	for i := range b {
+		b[i] = charset[int(randBytes[i])%len(charset)]
+	}
+	return string(b)
+}
+
 // Legacy compatibility functions that convert old message format to new format
 
 // ConvertLegacyMessage converts old WebSocketMessage to new standardized format
@@ -190,8 +289,8 @@ func ConvertLegacyMessage(legacy WebSocketMessage) (StandardizedWebSocketMessage
 		payload = CampaignProgressPayload{
 			CampaignID:      legacy.CampaignID,
 			ProgressPercent: legacy.Progress,
-			Phase:           legacy.Phase,
-			Status:          legacy.Status,
+			CurrentPhase:    legacy.Phase,
+			PhaseStatus:     legacy.Status,
 			// Note: ProcessedItems, TotalItems would need to be extracted from legacy.Data
 		}
 	case "domain_generated":
@@ -262,6 +361,6 @@ func (m *WebSocketManager) BroadcastStandardizedMessage(campaignID string, messa
 			log.Printf("[DIAGNOSTIC] Removed slow/disconnected client %p", client)
 		}
 	}
-	
+
 	log.Printf("[DIAGNOSTIC] Successfully broadcast to %d clients", broadcastCount)
 }

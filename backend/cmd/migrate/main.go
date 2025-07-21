@@ -353,6 +353,31 @@ func executeConcurrentMigration(db *sql.DB, content string) error {
 
 // executeTransactionalMigration executes regular migrations in a transaction
 func executeTransactionalMigration(db *sql.DB, content string) error {
+	// Check if migration already has transaction control
+	hasTransactionControl := strings.Contains(strings.ToUpper(content), "BEGIN") &&
+		strings.Contains(strings.ToUpper(content), "COMMIT")
+
+	if hasTransactionControl {
+		// Migration handles its own transaction, execute directly
+		log.Printf("Migration contains transaction control, executing directly")
+		statements := splitSQLStatements(content)
+
+		for _, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" || strings.HasPrefix(stmt, "--") {
+				continue
+			}
+
+			log.Printf("Executing: %s", truncateStatement(stmt))
+			_, err := db.Exec(stmt)
+			if err != nil {
+				return fmt.Errorf("failed to execute statement: %v", err)
+			}
+		}
+		return nil
+	}
+
+	// No transaction control, wrap in our own transaction
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %v", err)
@@ -374,21 +399,21 @@ func splitSQLStatements(content string) []string {
 	var current strings.Builder
 	inFunction := false
 	var functionDelimiter string
-	
+
 	scanner := bufio.NewScanner(strings.NewReader(content))
-	
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		trimmed := strings.TrimSpace(line)
-		
+
 		// Skip empty lines and comments (unless we're inside a function)
 		if !inFunction && (trimmed == "" || strings.HasPrefix(trimmed, "--")) {
 			continue
 		}
-		
+
 		current.WriteString(line)
 		current.WriteString("\n")
-		
+
 		// Check for function delimiters
 		if !inFunction && strings.Contains(trimmed, "$$") {
 			// Extract the delimiter (everything between the first $$ markers)
@@ -399,7 +424,7 @@ func splitSQLStatements(content string) []string {
 				continue
 			}
 		}
-		
+
 		// Check for end of function
 		if inFunction && strings.Contains(trimmed, functionDelimiter) {
 			inFunction = false
@@ -411,19 +436,19 @@ func splitSQLStatements(content string) []string {
 			}
 			continue
 		}
-		
+
 		// If not in function and line ends with semicolon, it's end of statement
 		if !inFunction && strings.HasSuffix(trimmed, ";") {
 			statements = append(statements, current.String())
 			current.Reset()
 		}
 	}
-	
+
 	// Add any remaining content
 	if current.Len() > 0 {
 		statements = append(statements, current.String())
 	}
-	
+
 	return statements
 }
 

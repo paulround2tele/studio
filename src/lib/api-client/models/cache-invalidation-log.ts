@@ -43,7 +43,7 @@ export interface CacheInvalidationLog {
      * @type {string}
      * @memberof CacheInvalidationLog
      */
-    'campaignType'?: string;
+    'campaignPhase'?: string;
     /**
      * 
      * @type {string}

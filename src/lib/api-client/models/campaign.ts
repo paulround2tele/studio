@@ -52,12 +52,6 @@ export interface Campaign {
      * @type {string}
      * @memberof Campaign
      */
-    'campaignType': CampaignCampaignTypeEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof Campaign
-     */
     'completedAt'?: string;
     /**
      * 
@@ -66,13 +60,13 @@ export interface Campaign {
      */
     'createdAt'?: string;
     /**
-     * Frontend-expected properties
+     * Phases-based architecture (replaces legacy CampaignType + Status)
      * @type {string}
      * @memberof Campaign
      */
     'currentPhase'?: CampaignCurrentPhaseEnum;
     /**
-     * 
+     * @swagger:field dnsValidatedDomains
      * @type {number}
      * @memberof Campaign
      */
@@ -90,7 +84,7 @@ export interface Campaign {
      */
     'domainGenerationParams'?: DomainGenerationCampaignParams;
     /**
-     * 
+     * @swagger:field domains
      * @type {number}
      * @memberof Campaign
      */
@@ -139,18 +133,12 @@ export interface Campaign {
     'lastHeartbeatAt'?: string;
     /**
      * 
-     * @type {boolean}
-     * @memberof Campaign
-     */
-    'launchSequence'?: boolean;
-    /**
-     * 
      * @type {Array<LeadItem>}
      * @memberof Campaign
      */
     'leadItems'?: Array<LeadItem>;
     /**
-     * 
+     * @swagger:field leads
      * @type {number}
      * @memberof Campaign
      */
@@ -168,7 +156,7 @@ export interface Campaign {
      */
     'name': string;
     /**
-     * 
+     * @swagger:field phaseStatus
      * @type {string}
      * @memberof Campaign
      */
@@ -180,7 +168,7 @@ export interface Campaign {
      */
     'processedItems'?: number;
     /**
-     * 
+     * @swagger:field progress
      * @type {number}
      * @memberof Campaign
      */
@@ -197,12 +185,6 @@ export interface Campaign {
      * @memberof Campaign
      */
     'startedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Campaign
-     */
-    'status': CampaignStatusEnum;
     /**
      * 
      * @type {number}
@@ -229,20 +211,12 @@ export interface Campaign {
     'userId'?: string;
 }
 
-export const CampaignCampaignTypeEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation'
-} as const;
-
-export type CampaignCampaignTypeEnum = typeof CampaignCampaignTypeEnum[keyof typeof CampaignCampaignTypeEnum];
 export const CampaignCurrentPhaseEnum = {
     Setup: 'setup',
     Generation: 'generation',
     DnsValidation: 'dns_validation',
-    HttpValidation: 'http_validation',
-    Analysis: 'analysis',
-    Cleanup: 'cleanup'
+    HttpKeywordValidation: 'http_keyword_validation',
+    Analysis: 'analysis'
 } as const;
 
 export type CampaignCurrentPhaseEnum = typeof CampaignCurrentPhaseEnum[keyof typeof CampaignCurrentPhaseEnum];
@@ -255,18 +229,5 @@ export const CampaignPhaseStatusEnum = {
 } as const;
 
 export type CampaignPhaseStatusEnum = typeof CampaignPhaseStatusEnum[keyof typeof CampaignPhaseStatusEnum];
-export const CampaignStatusEnum = {
-    Pending: 'pending',
-    Queued: 'queued',
-    Running: 'running',
-    Pausing: 'pausing',
-    Paused: 'paused',
-    Completed: 'completed',
-    Failed: 'failed',
-    Archived: 'archived',
-    Cancelled: 'cancelled'
-} as const;
-
-export type CampaignStatusEnum = typeof CampaignStatusEnum[keyof typeof CampaignStatusEnum];
 
 

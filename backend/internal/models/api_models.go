@@ -36,25 +36,31 @@ type LoginResponseAPI struct {
 	ExpiresAt       string   `json:"expiresAt,omitempty" example:"2025-06-19T14:00:00Z"`
 }
 
-// CampaignAPI represents a campaign in API responses
+// CampaignAPI represents a campaign in API responses (phases-based architecture)
 type CampaignAPI struct {
-	ID                    uuid.UUID          `json:"id" example:"123e4567-e89b-12d3-a456-426614174000"`
-	Name                  string             `json:"name" example:"Domain Discovery Campaign"`
-	CampaignType          CampaignTypeEnum   `json:"campaignType" example:"domain_generation" enums:"domain_generation,dns_validation,http_keyword_validation"`
-	Status                CampaignStatusEnum `json:"status" example:"running" enums:"pending,queued,running,pausing,paused,completed,failed,archived,cancelled"`
-	UserID                *uuid.UUID         `json:"userId,omitempty" example:"123e4567-e89b-12d3-a456-426614174001"`
-	CreatedAt             time.Time          `json:"createdAt"`
-	UpdatedAt             time.Time          `json:"updatedAt"`
-	StartedAt             *time.Time         `json:"startedAt,omitempty"`
-	CompletedAt           *time.Time         `json:"completedAt,omitempty"`
-	ProgressPercentage    *float64           `json:"progressPercentage,omitempty" example:"75.5"`
-	TotalItems            *int64             `json:"totalItems,omitempty" example:"1000"`
-	ProcessedItems        *int64             `json:"processedItems,omitempty" example:"755"`
-	SuccessfulItems       *int64             `json:"successfulItems,omitempty" example:"700"`
-	FailedItems           *int64             `json:"failedItems,omitempty" example:"55"`
-	ErrorMessage          *string            `json:"errorMessage,omitempty" example:"Network timeout error"`
-	Metadata              interface{}        `json:"metadata,omitempty"`
-	EstimatedCompletionAt *time.Time         `json:"estimatedCompletionAt,omitempty"`
-	AvgProcessingRate     *float64           `json:"avgProcessingRate,omitempty" example:"10.5"`
-	LastHeartbeatAt       *time.Time         `json:"lastHeartbeatAt,omitempty"`
+	ID                    uuid.UUID   `json:"id" example:"123e4567-e89b-12d3-a456-426614174000"`
+	Name                  string      `json:"name" example:"Domain Discovery Campaign"`
+	UserID                *uuid.UUID  `json:"userId,omitempty" example:"123e4567-e89b-12d3-a456-426614174001"`
+	CreatedAt             time.Time   `json:"createdAt"`
+	UpdatedAt             time.Time   `json:"updatedAt"`
+	StartedAt             *time.Time  `json:"startedAt,omitempty"`
+	CompletedAt           *time.Time  `json:"completedAt,omitempty"`
+	ProgressPercentage    *float64    `json:"progressPercentage,omitempty" example:"75.5"`
+	TotalItems            *int64      `json:"totalItems,omitempty" example:"1000"`
+	ProcessedItems        *int64      `json:"processedItems,omitempty" example:"755"`
+	SuccessfulItems       *int64      `json:"successfulItems,omitempty" example:"700"`
+	FailedItems           *int64      `json:"failedItems,omitempty" example:"55"`
+	ErrorMessage          *string     `json:"errorMessage,omitempty" example:"Network timeout error"`
+	Metadata              interface{} `json:"metadata,omitempty"`
+	EstimatedCompletionAt *time.Time  `json:"estimatedCompletionAt,omitempty"`
+	AvgProcessingRate     *float64    `json:"avgProcessingRate,omitempty" example:"10.5"`
+	LastHeartbeatAt       *time.Time  `json:"lastHeartbeatAt,omitempty"`
+
+	// Phases-based architecture (replaces legacy CampaignType + Status)
+	CurrentPhase        *CampaignPhaseEnum       `json:"currentPhase,omitempty" example:"generation" enums:"setup,generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus         *CampaignPhaseStatusEnum `json:"phaseStatus,omitempty" example:"in_progress" enums:"not_started,in_progress,paused,completed,failed"`
+	Progress            *float64                 `json:"progress,omitempty" example:"75.5"`
+	Domains             *int64                   `json:"domains,omitempty" example:"1000"`
+	Leads               *int64                   `json:"leads,omitempty" example:"25"`
+	DNSValidatedDomains *int64                   `json:"dnsValidatedDomains,omitempty" example:"800"`
 }

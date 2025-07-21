@@ -3,7 +3,6 @@ package services
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -44,20 +43,96 @@ func NewDNSCampaignService(db *sqlx.DB, cs store.CampaignStore, ps store.Persona
 	}
 }
 
-func (s *dnsCampaignServiceImpl) CreateCampaign(ctx context.Context, req CreateDNSValidationCampaignRequest) (*models.Campaign, error) {
-	log.Printf("DNSCampaignService: CreateCampaign called - This should NOT create separate campaigns!")
-	log.Printf("ARCHITECTURAL FIX: DNS phase transitions should use Campaign Orchestrator's UpdateCampaign with phase transition")
+// ConfigureDNSValidationPhase configures DNS validation phase for a campaign (single-campaign architecture)
+func (s *dnsCampaignServiceImpl) ConfigureDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.DNSPhaseConfigRequest) error {
+	log.Printf("ConfigureDNSValidationPhase: Configuring DNS validation phase for campaign %s", campaignID)
 
-	// CRITICAL ARCHITECTURAL FIX:
-	// This method should NOT exist for phase transitions. Phase transitions should be handled
-	// by the Campaign Orchestrator's transitionToDNSValidation method using UpdateCampaign.
-	//
-	// This method violates the single-campaign architecture where:
-	// - campaignType stays 'domain_generation'
-	// - currentPhase changes to 'dns_validation'
-	// - Domain status updates happen in-place on generated_domains table
+	// Convert persona IDs from strings to UUIDs
+	personaUUIDs := make([]uuid.UUID, len(req.PersonaIDs))
+	for i, idStr := range req.PersonaIDs {
+		personaUUID, parseErr := uuid.Parse(idStr)
+		if parseErr != nil {
+			return fmt.Errorf("invalid persona ID format: %s", idStr)
+		}
+		personaUUIDs[i] = personaUUID
+	}
 
-	return nil, fmt.Errorf("ARCHITECTURAL VIOLATION: DNS phase transitions must use Campaign Orchestrator's UpdateCampaign, not CreateCampaign. Source campaign: %s", req.SourceGenerationCampaignID)
+	// Validate personas are DNS type and enabled
+	var querier store.Querier
+	if s.db != nil {
+		querier = s.db
+	}
+
+	if err := s.validatePersonaIDs(ctx, querier, personaUUIDs, models.PersonaTypeDNS); err != nil {
+		return fmt.Errorf("persona validation failed: %w", err)
+	}
+
+	// Create/update DNS validation parameters using self-reference for in-place validation
+	dnsParams := &models.DNSValidationCampaignParams{
+		CampaignID:                 campaignID,
+		SourceGenerationCampaignID: &campaignID, // Self-reference for phase transition
+		PersonaIDs:                 personaUUIDs,
+		RotationIntervalSeconds:    models.IntPtr(30),
+		ProcessingSpeedPerMinute:   models.IntPtr(60),
+		BatchSize:                  models.IntPtr(50),
+		RetryAttempts:              models.IntPtr(3),
+	}
+
+	// Store DNS validation parameters
+	if err := s.campaignStore.CreateDNSValidationParams(ctx, querier, dnsParams); err != nil {
+		log.Printf("INFO: DNS params may already exist for campaign %s, continuing...", campaignID)
+	}
+
+	log.Printf("ConfigureDNSValidationPhase: Successfully configured DNS validation phase for campaign %s", campaignID)
+	return nil
+}
+
+// TransitionToHTTPValidationPhase transitions campaign from DNS validation to HTTP validation phase
+func (s *dnsCampaignServiceImpl) TransitionToHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID) error {
+	log.Printf("TransitionToHTTPValidationPhase: Transitioning campaign %s to HTTP validation phase", campaignID)
+
+	var querier store.Querier
+	if s.db != nil {
+		querier = s.db
+	}
+
+	// Get campaign and validate current state
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, querier, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to get campaign %s: %w", campaignID, err)
+	}
+
+	// Validate campaign is in DNS validation phase and completed
+	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseDNSValidation {
+		return fmt.Errorf("campaign %s must be in dns_validation phase to transition to HTTP validation, current: %v", campaignID, campaign.CurrentPhase)
+	}
+
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.CampaignPhaseStatusSucceeded {
+		return fmt.Errorf("DNS validation phase must be completed before transitioning to HTTP validation, current status: %v", campaign.PhaseStatus)
+	}
+
+	// Update campaign phase to HTTP validation
+	httpPhase := models.CampaignPhaseHTTPValidation
+	pendingStatus := models.CampaignPhaseStatusPending
+
+	campaign.CurrentPhase = &httpPhase
+	campaign.PhaseStatus = &pendingStatus
+	campaign.UpdatedAt = time.Now().UTC()
+
+	// Reset progress for new phase
+	campaign.ProcessedItems = models.Int64Ptr(0)
+	campaign.ProgressPercentage = models.Float64Ptr(0.0)
+
+	// Update campaign record
+	if err := s.campaignStore.UpdateCampaign(ctx, querier, campaign); err != nil {
+		return fmt.Errorf("failed to update campaign for HTTP validation phase transition: %w", err)
+	}
+
+	// Broadcast phase transition
+	websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, "pending", "http_keyword_validation", 0, 0)
+
+	log.Printf("TransitionToHTTPValidationPhase: Successfully transitioned campaign %s to HTTP validation phase", campaignID)
+	return nil
 }
 
 func (s *dnsCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.DNSValidationCampaignParams, error) {
@@ -70,8 +145,12 @@ func (s *dnsCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaig
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get campaign by ID %s: %w", campaignID, err)
 	}
-	if campaign.CampaignType != models.CampaignTypeDNSValidation {
-		return nil, nil, fmt.Errorf("campaign %s is not a DNS validation campaign (type: %s)", campaignID, campaign.CampaignType)
+	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseDNSValidation {
+		currentPhase := "unknown"
+		if campaign.CurrentPhase != nil {
+			currentPhase = string(*campaign.CurrentPhase)
+		}
+		return nil, nil, fmt.Errorf("campaign %s is not a DNS validation campaign (current phase: %s)", campaignID, currentPhase)
 	}
 
 	params, err := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
@@ -128,171 +207,6 @@ func modelsDNStoConfigDNSJSON(details models.DNSConfigDetails) config.DNSValidat
 	}
 }
 
-// StartInPlaceDNSValidation starts DNS validation on an existing campaign using its stored configuration
-func (s *dnsCampaignServiceImpl) StartInPlaceDNSValidation(ctx context.Context, req InPlaceDNSValidationRequest) error {
-	log.Printf("INFO [In-Place DNS Validation]: Starting in-place DNS validation for campaign %s", req.CampaignID)
-
-	// DEBUG: Check if database connection is nil
-	if s.db == nil {
-		log.Printf("ERROR [In-Place DNS Validation]: Database connection is nil in DNS service!")
-		return fmt.Errorf("database connection is nil in DNS service")
-	}
-	log.Printf("DEBUG [In-Place DNS Validation]: Database connection is valid (%p)", s.db)
-
-	// Get the campaign and its DNS validation parameters
-	var campaign *models.Campaign
-	var dnsParams *models.DNSValidationCampaignParams
-	var err error
-
-	if s.db != nil {
-		// SQL implementation
-		campaign, err = s.campaignStore.GetCampaignByID(ctx, s.db, req.CampaignID)
-		if err != nil {
-			return fmt.Errorf("failed to get campaign: %w", err)
-		}
-
-		dnsParams, err = s.campaignStore.GetDNSValidationParams(ctx, s.db, req.CampaignID)
-		if err != nil {
-			log.Printf("INFO [In-Place DNS Validation]: No existing DNS params found for campaign %s, using request parameters", req.CampaignID)
-			dnsParams = nil
-		}
-	} else {
-		return fmt.Errorf("database connection is nil - cannot perform in-place DNS validation")
-	}
-
-	// Validate campaign is suitable for in-place DNS validation
-	if campaign.CampaignType != models.CampaignTypeDomainGeneration && campaign.CampaignType != models.CampaignTypeDNSValidation {
-		return fmt.Errorf("campaign type %s is not suitable for DNS validation", campaign.CampaignType)
-	}
-
-	if campaign.Status != models.CampaignStatusCompleted && campaign.Status != models.CampaignStatusRunning {
-		return fmt.Errorf("campaign must be completed or running to perform in-place DNS validation, current status: %s", campaign.Status)
-	}
-
-	// Determine persona IDs: use request personas if provided, otherwise use campaign's stored personas
-	var personaIDs []uuid.UUID
-	if len(req.PersonaIDs) > 0 {
-		personaIDs = req.PersonaIDs
-		log.Printf("INFO [In-Place DNS Validation]: Using personas from request: %v", personaIDs)
-	} else if dnsParams != nil && len(dnsParams.PersonaIDs) > 0 {
-		personaIDs = dnsParams.PersonaIDs
-		log.Printf("INFO [In-Place DNS Validation]: Using personas from stored campaign config: %v", personaIDs)
-	} else {
-		return fmt.Errorf("no DNS personas found in request or campaign configuration - please configure DNS personas first")
-	}
-
-	// Determine other validation parameters (use request values or stored values or defaults)
-	rotationInterval := req.RotationIntervalSeconds
-	if rotationInterval == 0 && dnsParams != nil && dnsParams.RotationIntervalSeconds != nil {
-		rotationInterval = *dnsParams.RotationIntervalSeconds
-	}
-	if rotationInterval == 0 {
-		rotationInterval = 30 // Default: 30 seconds
-	}
-
-	processingSpeed := req.ProcessingSpeedPerMinute
-	if processingSpeed == 0 && dnsParams != nil && dnsParams.ProcessingSpeedPerMinute != nil {
-		processingSpeed = *dnsParams.ProcessingSpeedPerMinute
-	}
-	if processingSpeed == 0 {
-		processingSpeed = 60 // Default: 60 domains per minute
-	}
-
-	batchSize := req.BatchSize
-	if batchSize == 0 && dnsParams != nil && dnsParams.BatchSize != nil {
-		batchSize = *dnsParams.BatchSize
-	}
-	if batchSize == 0 {
-		batchSize = 10 // Default: 10 domains per batch
-	}
-
-	retryAttempts := req.RetryAttempts
-	if retryAttempts == 0 && dnsParams != nil && dnsParams.RetryAttempts != nil {
-		retryAttempts = *dnsParams.RetryAttempts
-	}
-	if retryAttempts == 0 {
-		retryAttempts = 3 // Default: 3 retry attempts
-	}
-
-	log.Printf("INFO [In-Place DNS Validation]: Using validation parameters - Personas: %v, Rotation: %ds, Speed: %d/min, Batch: %d, Retries: %d",
-		personaIDs, rotationInterval, processingSpeed, batchSize, retryAttempts)
-
-	// Update or create DNS validation parameters for this campaign
-	// CRITICAL FIX: Set SourceGenerationCampaignID to the same campaign ID for in-place validation
-	sourceGenCampaignID := req.CampaignID
-	updateParams := models.DNSValidationCampaignParams{
-		CampaignID:                 req.CampaignID,
-		SourceGenerationCampaignID: &sourceGenCampaignID,
-		PersonaIDs:                 personaIDs,
-		RotationIntervalSeconds:    &rotationInterval,
-		ProcessingSpeedPerMinute:   &processingSpeed,
-		BatchSize:                  &batchSize,
-		RetryAttempts:              &retryAttempts,
-	}
-
-	// Store/update the DNS validation parameters
-	err = s.campaignStore.CreateDNSValidationParams(ctx, nil, &updateParams)
-	if err != nil {
-		log.Printf("INFO [In-Place DNS Validation]: DNS params may already exist for campaign %s, continuing...", req.CampaignID)
-	}
-
-	// ATOMIC TRANSACTION: Update campaign state, phase, and broadcast in a single transaction
-	err = s.atomicPhaseTransition(ctx, campaign, req.CampaignID)
-	if err != nil {
-		return fmt.Errorf("failed to perform atomic phase transition: %w", err)
-	}
-
-	// Create a job for the worker service to process the DNS validation
-	if s.campaignJobStore != nil {
-		jobCreationTime := time.Now().UTC()
-
-		// Create job payload from the stored DNS validation params
-		storedParams, getErr := s.campaignStore.GetDNSValidationParams(ctx, s.db, req.CampaignID)
-		if getErr != nil {
-			log.Printf("WARNING [In-Place DNS Validation]: Failed to get stored DNS params for job payload: %v", getErr)
-		}
-
-		job := &models.CampaignJob{
-			ID:              uuid.New(),
-			CampaignID:      req.CampaignID,
-			JobType:         models.CampaignTypeDNSValidation,
-			Status:          models.JobStatusQueued,
-			ScheduledAt:     jobCreationTime,
-			NextExecutionAt: sql.NullTime{Time: jobCreationTime, Valid: true},
-			CreatedAt:       jobCreationTime,
-			UpdatedAt:       jobCreationTime,
-			MaxAttempts:     3,
-		}
-
-		// Add job payload if we successfully retrieved the DNS params
-		if storedParams != nil {
-			payloadBytes, err := json.Marshal(storedParams)
-			if err != nil {
-				log.Printf("WARNING [In-Place DNS Validation]: Failed to marshal DNS validation job payload: %v", err)
-			} else {
-				rawMsg := json.RawMessage(payloadBytes)
-				job.JobPayload = &rawMsg
-			}
-		}
-
-		if err := s.campaignJobStore.CreateJob(ctx, s.db, job); err != nil {
-			log.Printf("ERROR [In-Place DNS Validation]: Failed to create DNS validation job for campaign %s: %v", req.CampaignID, err)
-			return fmt.Errorf("failed to create DNS validation job: %w", err)
-		} else {
-			log.Printf("SUCCESS [In-Place DNS Validation]: Created DNS validation job %s for campaign %s", job.ID, req.CampaignID)
-		}
-	} else {
-		log.Printf("WARNING [In-Place DNS Validation]: campaignJobStore is nil for campaign %s. DNS validation configured but no job created.", req.CampaignID)
-	}
-
-	// CRITICAL FIX: Immediately broadcast phase transition to frontend
-	log.Printf("BROADCAST [In-Place DNS Validation]: Broadcasting phase transition to dns_validation for campaign %s", req.CampaignID)
-	websocket.BroadcastCampaignProgress(req.CampaignID.String(), 0.0, "running", "dns_validation")
-
-	log.Printf("SUCCESS [In-Place DNS Validation]: Successfully configured in-place DNS validation for campaign %s with personas %v", req.CampaignID, personaIDs)
-	return nil
-}
-
 func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedInThisBatch int, err error) {
 	log.Printf("ProcessDNSValidationCampaignBatch: Starting for campaignID %s", campaignID)
 
@@ -339,18 +253,28 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	}
 
 	// Fix the status transition logic
-	originalStatus := campaign.Status
-	if campaign.Status == models.CampaignStatusPending || campaign.Status == models.CampaignStatusQueued {
-		campaign.Status = models.CampaignStatusRunning
+	var originalStatus *models.CampaignPhaseStatusEnum
+	if campaign.PhaseStatus != nil {
+		originalStatus = campaign.PhaseStatus
+	}
+
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus == models.CampaignPhaseStatusPending {
+		status := models.CampaignPhaseStatusInProgress
+		campaign.PhaseStatus = &status
 		now := time.Now().UTC()
 		campaign.StartedAt = &now
 		if errUpdateCamp := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCamp != nil {
 			opErr = fmt.Errorf("failed to mark campaign %s as running: %w", campaignID, errUpdateCamp)
 			return false, 0, opErr
 		}
-		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s marked as Running (was %s).", campaignID, originalStatus)
-	} else if campaign.Status != models.CampaignStatusRunning && campaign.Status != models.CampaignStatusCompleted && campaign.Status != models.CampaignStatusPaused {
-		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s not runnable (status: %s). DNS validation requires status: running, completed, or paused.", campaignID, campaign.Status)
+		originalStatusStr := "unknown"
+		if originalStatus != nil {
+			originalStatusStr = string(*originalStatus)
+		}
+		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s marked as Running (was %s).", campaignID, originalStatusStr)
+	} else if campaign.PhaseStatus != nil && *campaign.PhaseStatus != models.CampaignPhaseStatusInProgress && *campaign.PhaseStatus != models.CampaignPhaseStatusSucceeded && *campaign.PhaseStatus != models.CampaignPhaseStatusPaused {
+		statusStr := string(*campaign.PhaseStatus)
+		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s not runnable (status: %s). DNS validation requires status: in_progress, completed, or paused.", campaignID, statusStr)
 		return true, 0, nil
 	}
 
@@ -388,7 +312,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	}
 
 	// Check if this is a completed campaign being re-triggered for DNS validation
-	if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 && campaign.Status == models.CampaignStatusCompleted {
+	if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 && campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded {
 		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s was completed, checking for domains that need re-validation (preserving valid results).", campaignID)
 
 		// Count domains that already have valid DNS status (these will be skipped)
@@ -415,7 +339,8 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 			// This allows progress calculation to work correctly
 			campaign.ProcessedItems = &validDomainCount
 			campaign.ProgressPercentage = models.Float64Ptr(float64(validDomainCount) / float64(*campaign.TotalItems) * 100.0)
-			campaign.Status = models.CampaignStatusRunning
+			status := models.CampaignPhaseStatusInProgress
+			campaign.PhaseStatus = &status
 			campaign.CompletedAt = nil
 			now := time.Now().UTC()
 			if campaign.StartedAt == nil {
@@ -461,18 +386,30 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		} // Should be set
 
 		if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 {
-			campaign.Status = models.CampaignStatusCompleted
+			status := models.CampaignPhaseStatusSucceeded
+			campaign.PhaseStatus = &status
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
-			log.Printf("ProcessDNSValidationCampaignBatch: All domains processed for campaign %s. Marking complete.", campaignID)
+
+			// AUTOMATIC PHASE TRANSITION: Set currentPhase to http_validation
+			httpValidationPhase := models.CampaignPhaseHTTPValidation
+			campaign.CurrentPhase = &httpValidationPhase
+
+			log.Printf("ProcessDNSValidationCampaignBatch: All domains processed for campaign %s. Marking complete and transitioning to http_keyword_validation phase.", campaignID)
 			done = true
 		} else if *campaign.TotalItems == 0 {
-			campaign.Status = models.CampaignStatusCompleted
+			status := models.CampaignPhaseStatusSucceeded
+			campaign.PhaseStatus = &status
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
-			log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s has 0 total items. Marking complete.", campaignID)
+
+			// AUTOMATIC PHASE TRANSITION: Set currentPhase to http_validation
+			httpValidationPhase := models.CampaignPhaseHTTPValidation
+			campaign.CurrentPhase = &httpValidationPhase
+
+			log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s has 0 total items. Marking complete and transitioning to http_keyword_validation phase.", campaignID)
 			done = true
 		} else {
 			log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s has %d/%d processed, but no domains fetched for this batch. May need more jobs or source completed.", campaignID, *campaign.ProcessedItems, *campaign.TotalItems)
@@ -719,19 +656,25 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		*campaign.ProgressPercentage = 100
 	}
 
-	// Determine 'done' status based on current state, even if there was a context error
+	// Determine 'done' status and auto-transition to HTTP validation phase
 	if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 {
-		campaign.Status = models.CampaignStatusCompleted
-		campaign.ProgressPercentage = models.Float64Ptr(100.0)
-		campaign.CompletedAt = &nowTime
+		// DNS validation phase is complete - transition to HTTP validation
+		httpPhase := models.CampaignPhaseHTTPValidation
+		pendingStatus := models.CampaignPhaseStatusPending
+		campaign.CurrentPhase = &httpPhase
+		campaign.PhaseStatus = &pendingStatus
+		campaign.ProgressPercentage = models.Float64Ptr(0.0) // Reset progress for new phase
 		done = true
-		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s completed DNS validation (post-batch).", campaignID)
+		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s completed DNS validation, auto-transitioning to HTTP validation phase.", campaignID)
 	} else if *campaign.TotalItems == 0 {
-		campaign.Status = models.CampaignStatusCompleted
-		campaign.ProgressPercentage = models.Float64Ptr(100.0)
-		campaign.CompletedAt = &nowTime
+		// DNS validation phase is complete - transition to HTTP validation
+		httpPhase := models.CampaignPhaseHTTPValidation
+		pendingStatus := models.CampaignPhaseStatusPending
+		campaign.CurrentPhase = &httpPhase
+		campaign.PhaseStatus = &pendingStatus
+		campaign.ProgressPercentage = models.Float64Ptr(0.0) // Reset progress for new phase
 		done = true
-		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s has 0 total items, marked as completed (post-batch).", campaignID)
+		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s has 0 total items, auto-transitioning to HTTP validation phase.", campaignID)
 	} else {
 		done = false
 	}
@@ -755,7 +698,10 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 
 		if done {
 			// Campaign completed
-			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "dns_validation")
+			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "dns_validation", processedCount, totalCount)
+
+			// Broadcast automatic phase transition to HTTP validation
+			websocket.BroadcastPhaseTransition(campaignID.String(), "dns_validation", "http_keyword_validation", 100.0)
 		} else {
 			// Progress update
 			websocket.BroadcastValidationProgress(campaignID.String(), processedCount, totalCount, "dns_validation")
@@ -827,8 +773,10 @@ func (s *dnsCampaignServiceImpl) atomicPhaseTransition(ctx context.Context, camp
 		log.Printf("INFO [Atomic Phase Transition]: Starting atomic transition for campaign %s", campaignID)
 
 		// Step 1: Update campaign status to running if it was completed (within transaction)
-		if campaign.Status == models.CampaignStatusCompleted {
-			err := s.campaignStore.UpdateCampaignStatus(ctx, querier, campaignID, models.CampaignStatusRunning, sql.NullString{})
+		if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded {
+			status := models.CampaignPhaseStatusInProgress
+			campaign.PhaseStatus = &status
+			err := s.campaignStore.UpdateCampaign(ctx, querier, campaign)
 			if err != nil {
 				return fmt.Errorf("failed to update campaign status to running: %w", err)
 			}
@@ -868,29 +816,9 @@ func (s *dnsCampaignServiceImpl) broadcastPhaseTransitionEvent(ctx context.Conte
 	log.Printf("BROADCAST [Phase Transition]: Broadcasting phase transition to %s for campaign %s", newPhase, campaignID)
 
 	// Broadcast via WebSocket for real-time UI updates
-	websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, newStatus, newPhase)
+	websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, newStatus, newPhase, 0, 0)
 
-	// Create phase transition event message
-	transitionMessage := websocket.WebSocketMessage{
-		ID:         uuid.New().String(),
-		Timestamp:  time.Now().Format(time.RFC3339),
-		Type:       "phase_transition",
-		CampaignID: campaignID.String(),
-		Data: map[string]interface{}{
-			"campaignId":     campaignID.String(),
-			"previousPhase":  "domain_generation", // Could be made dynamic if needed
-			"newPhase":       newPhase,
-			"newStatus":      newStatus,
-			"timestamp":      time.Now().Format(time.RFC3339),
-			"transitionType": "dns_validation_start",
-		},
-	}
-
-	// Broadcast the phase transition event
-	if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
-		broadcaster.BroadcastToCampaign(campaignID.String(), transitionMessage)
-		log.Printf("✅ [Phase Transition]: WebSocket phase transition event broadcast successful for campaign %s", campaignID)
-	} else {
-		log.Printf("⚠️ [Phase Transition]: No WebSocket broadcaster available for campaign %s", campaignID)
-	}
+	// CONSOLIDATED: Use standardized phase transition broadcast
+	websocket.BroadcastPhaseTransition(campaignID.String(), "domain_generation", newPhase, 0.0)
+	log.Printf("✅ [Phase Transition]: Standardized phase transition broadcast successful for campaign %s", campaignID)
 }

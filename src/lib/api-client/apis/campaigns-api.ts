@@ -44,6 +44,8 @@ import type { CampaignOperationResponse } from '../models';
 // @ts-ignore
 import type { CreateCampaignRequest } from '../models';
 // @ts-ignore
+import type { DNSPhaseConfigRequest } from '../models';
+// @ts-ignore
 import type { DNSValidationAPIRequest } from '../models';
 // @ts-ignore
 import type { DNSValidationResultsResponse } from '../models';
@@ -55,6 +57,8 @@ import type { ErrorResponse } from '../models';
 import type { GeneratedDomainsResponse } from '../models';
 // @ts-ignore
 import type { HTTPKeywordResultsResponse } from '../models';
+// @ts-ignore
+import type { HTTPPhaseConfigRequest } from '../models';
 // @ts-ignore
 import type { HTTPValidationRequest } from '../models';
 // @ts-ignore
@@ -135,6 +139,86 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Configure DNS validation phase for a campaign and transition to dns_validation phase
+         * @summary Configure DNS validation phase
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {DNSPhaseConfigRequest} dNSPhaseConfigRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        configureDNSValidation: async (campaignId: string, dNSPhaseConfigRequest: DNSPhaseConfigRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('configureDNSValidation', 'campaignId', campaignId)
+            // verify required parameter 'dNSPhaseConfigRequest' is not null or undefined
+            assertParamExists('configureDNSValidation', 'dNSPhaseConfigRequest', dNSPhaseConfigRequest)
+            const localVarPath = `/campaigns/{campaignId}/configure-dns`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(dNSPhaseConfigRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Configure HTTP validation phase for a campaign and transition to http_validation phase
+         * @summary Configure HTTP validation phase
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {HTTPPhaseConfigRequest} hTTPPhaseConfigRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        configureHTTPValidation: async (campaignId: string, hTTPPhaseConfigRequest: HTTPPhaseConfigRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('configureHTTPValidation', 'campaignId', campaignId)
+            // verify required parameter 'hTTPPhaseConfigRequest' is not null or undefined
+            assertParamExists('configureHTTPValidation', 'hTTPPhaseConfigRequest', hTTPPhaseConfigRequest)
+            const localVarPath = `/campaigns/{campaignId}/configure-http`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(hTTPPhaseConfigRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -861,6 +945,34 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Configure DNS validation phase for a campaign and transition to dns_validation phase
+         * @summary Configure DNS validation phase
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {DNSPhaseConfigRequest} dNSPhaseConfigRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async configureDNSValidation(campaignId: string, dNSPhaseConfigRequest: DNSPhaseConfigRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configureDNSValidation(campaignId, dNSPhaseConfigRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.configureDNSValidation']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Configure HTTP validation phase for a campaign and transition to http_validation phase
+         * @summary Configure HTTP validation phase
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {HTTPPhaseConfigRequest} hTTPPhaseConfigRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async configureHTTPValidation(campaignId: string, hTTPPhaseConfigRequest: HTTPPhaseConfigRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configureHTTPValidation(campaignId, hTTPPhaseConfigRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.configureHTTPValidation']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Create a new campaign with specified configuration parameters
          * @summary Create new campaign
          * @param {CreateCampaignRequest} createCampaignRequest 
@@ -1136,6 +1248,28 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.cancelCampaign(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
+         * Configure DNS validation phase for a campaign and transition to dns_validation phase
+         * @summary Configure DNS validation phase
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {DNSPhaseConfigRequest} dNSPhaseConfigRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        configureDNSValidation(campaignId: string, dNSPhaseConfigRequest: DNSPhaseConfigRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.configureDNSValidation(campaignId, dNSPhaseConfigRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Configure HTTP validation phase for a campaign and transition to http_validation phase
+         * @summary Configure HTTP validation phase
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {HTTPPhaseConfigRequest} hTTPPhaseConfigRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        configureHTTPValidation(campaignId: string, hTTPPhaseConfigRequest: HTTPPhaseConfigRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.configureHTTPValidation(campaignId, hTTPPhaseConfigRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Create a new campaign with specified configuration parameters
          * @summary Create new campaign
          * @param {CreateCampaignRequest} createCampaignRequest 
@@ -1354,6 +1488,28 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     cancelCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignOperationResponse>;
+
+    /**
+     * Configure DNS validation phase for a campaign and transition to dns_validation phase
+     * @summary Configure DNS validation phase
+     * @param {string} campaignId Campaign ID (UUID)
+     * @param {DNSPhaseConfigRequest} dNSPhaseConfigRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    configureDNSValidation(campaignId: string, dNSPhaseConfigRequest: DNSPhaseConfigRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
+
+    /**
+     * Configure HTTP validation phase for a campaign and transition to http_validation phase
+     * @summary Configure HTTP validation phase
+     * @param {string} campaignId Campaign ID (UUID)
+     * @param {HTTPPhaseConfigRequest} hTTPPhaseConfigRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    configureHTTPValidation(campaignId: string, hTTPPhaseConfigRequest: HTTPPhaseConfigRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
 
     /**
      * Create a new campaign with specified configuration parameters
@@ -1577,6 +1733,32 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public cancelCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).cancelCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Configure DNS validation phase for a campaign and transition to dns_validation phase
+     * @summary Configure DNS validation phase
+     * @param {string} campaignId Campaign ID (UUID)
+     * @param {DNSPhaseConfigRequest} dNSPhaseConfigRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public configureDNSValidation(campaignId: string, dNSPhaseConfigRequest: DNSPhaseConfigRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).configureDNSValidation(campaignId, dNSPhaseConfigRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Configure HTTP validation phase for a campaign and transition to http_validation phase
+     * @summary Configure HTTP validation phase
+     * @param {string} campaignId Campaign ID (UUID)
+     * @param {HTTPPhaseConfigRequest} hTTPPhaseConfigRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public configureHTTPValidation(campaignId: string, hTTPPhaseConfigRequest: HTTPPhaseConfigRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).configureHTTPValidation(campaignId, hTTPPhaseConfigRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

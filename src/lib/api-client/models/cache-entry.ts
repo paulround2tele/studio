@@ -61,7 +61,7 @@ export interface CacheEntry {
      * @type {string}
      * @memberof CacheEntry
      */
-    'campaignType'?: string;
+    'campaignPhase'?: string;
     /**
      * 
      * @type {string}

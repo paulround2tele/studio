@@ -20,6 +20,7 @@ import {
   Activity
 } from 'lucide-react';
 import type { CampaignViewModel } from '@/lib/types';
+import { CampaignPhaseStatusEnum, CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { cn } from '@/lib/utils';
 
 // Unified interfaces combining both original components
@@ -343,7 +344,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           </div>
 
           {/* Estimated Completion */}
-          {campaign.estimatedCompletionAt && campaign.status === 'running' && (
+          {campaign.estimatedCompletionAt && campaign.phaseStatus === CampaignPhaseStatusEnum.InProgress && (
             <div className="pt-4 border-t">
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground">Estimated Completion</div>
@@ -355,7 +356,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           )}
 
           {/* Campaign Type Specific Metrics */}
-          {campaign.campaignType === 'domain_generation' && campaign.domainGenerationParams && (
+          {campaign.currentPhase === CampaignCurrentPhaseEnum.Generation && campaign.domainGenerationParams && (
             <div className="pt-4 border-t">
               <div className="text-xs text-muted-foreground mb-2">Domain Generation Settings</div>
               <div className="grid grid-cols-2 gap-4 text-sm">

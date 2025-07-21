@@ -18,7 +18,7 @@ import {
 } from '@/lib/services/unifiedCampaignService';
 
 type Campaign = components['schemas']['Campaign'];
-type CampaignType = NonNullable<Campaign['campaignType']>;
+type CampaignPhase = NonNullable<Campaign['currentPhase']>;
 type GeneratedDomainBackend = components['schemas']['GeneratedDomain'];
 import { useCampaignDetailsStore } from '@/lib/stores/campaignDetailsStore';
 
@@ -94,8 +94,8 @@ export const useCampaignOperations = (campaignId: string) => {
   const loadDomainData = useCallback(async (campaignData: CampaignViewModel) => {
     console.log('🔍 [Domain Loading] Starting for campaign:', {
 id: campaignId,
-      type: campaignData.campaignType,
-      status: campaignData.status
+      type: campaignData.currentPhase,
+      status: campaignData.phaseStatus
     });
 
     try {
@@ -119,9 +119,9 @@ id: campaignId,
       // DNS validation and HTTP validation campaigns are essentially domain generation campaigns
       // that have been transitioned to validation phases. They ALWAYS need to show generated domains.
       const hasDomainGenerationHistory =
-        campaignData.campaignType === 'domain_generation' ||
-        campaignData.campaignType === 'dns_validation' ||
-        campaignData.campaignType === 'http_keyword_validation' ||
+        campaignData.currentPhase === 'generation' ||
+        campaignData.currentPhase === 'dns_validation' ||
+        campaignData.currentPhase === 'http_keyword_validation' ||
         campaignData.domainGenerationParams !== undefined;
       
       if (hasDomainGenerationHistory) {
@@ -143,11 +143,11 @@ id: campaignId,
           count: updates.generatedDomains?.length || 0,
           sampleDomains: updates.generatedDomains?.slice(0, 3).map(d => d.domainName) || [],
           currentPhase: isDNSValidationPhase ? 'DNS_VALIDATION' : isHTTPValidationPhase ? 'HTTP_VALIDATION' : 'DOMAIN_GENERATION' as any,
-          campaignType: campaignData.campaignType
+          campaignType: campaignData.currentPhase
         });
       }
 
-      if (campaignData.campaignType === 'dns_validation' || isDNSValidationPhase) {
+      if (campaignData.currentPhase === 'dns_validation' || isDNSValidationPhase) {
         console.log('📡 [Domain Loading] BULK-ONLY: Using enhanced bulk service for DNS validation');
         
         // Use bulk service data instead of individual API call
@@ -170,7 +170,7 @@ id: campaignId,
       }
 
       // CRITICAL FIX: For HTTP validation phase, use bulk service data
-      if (campaignData.campaignType === 'http_keyword_validation' || isHTTPValidationPhase) {
+      if (campaignData.currentPhase === 'http_keyword_validation' || isHTTPValidationPhase) {
         console.log('📡 [Domain Loading] BULK-ONLY: Processing HTTP validation items from bulk data');
         
         const httpKeywordResults = safeGetArray(richData, 'httpKeywordResults');
@@ -191,7 +191,7 @@ id: campaignId,
         console.log('✅ [Domain Loading] BULK-ONLY: HTTP items loaded:', updates.httpCampaignItems?.length || 0);
 
         // If we need generated domains for HTTP validation and haven't loaded them yet
-        if (isHTTPValidationPhase && campaignData.campaignType === 'domain_generation' && !updates.generatedDomains) {
+        if (isHTTPValidationPhase && campaignData.currentPhase === 'generation' && !updates.generatedDomains) {
           console.log('📡 [Domain Loading] BULK-ONLY: Loading generated domains for HTTP validation from bulk data');
           
           if (richData?.domains && Array.isArray(richData.domains)) {
@@ -254,8 +254,8 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
         console.log(`📡 [Campaign Loading] BULK-ONLY: Campaign data loaded:`, {
           id: campaignData?.id,
           name: campaignData?.name,
-          campaignType: campaignData?.campaignType,
-          status: campaignData?.status,
+          campaignType: campaignData?.currentPhase,
+          status: campaignData?.phaseStatus,
           domainsCount: safeGetArray(richData, 'domains').length,
           dnsValidatedCount: safeGetArray(richData, 'dnsValidatedDomains').length,
           leadsCount: safeGetArray(richData, 'leads').length
@@ -268,8 +268,8 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
         console.log(`🎯 [Campaign Loading] Campaign data extracted:`, {
           id: campaignData.id,
           name: campaignData.name,
-          type: campaignData.campaignType,
-          status: campaignData.status,
+          type: campaignData.currentPhase,
+          status: campaignData.phaseStatus,
           hasValidId: !!campaignData.id && campaignData.id !== '00000000-0000-0000-0000-000000000000'
         });
         
@@ -313,7 +313,7 @@ title: "Error Loading Campaign",
 
 
   // Start campaign phase
-  const startPhase = useCallback(async (phaseToStart: CampaignType) => {
+  const startPhase = useCallback(async (phaseToStart: string) => {
     if (!campaign || !campaignId) return;
 
     const actionKey = `phase-${phaseToStart}`;
@@ -321,8 +321,8 @@ title: "Error Loading Campaign",
 
     try {
       console.log(`🚀 [Campaign Operations] Starting phase ${phaseToStart} for campaign ${campaignId}`, {
-campaignStatus: campaign.status,
-        campaignType: campaign.campaignType,
+campaignStatus: campaign.phaseStatus,
+        campaignType: campaign.currentPhase,
         phaseToStart
       });
       

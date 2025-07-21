@@ -768,6 +768,133 @@ async function runCampaignCreationTest() {
           domainsGenerated: domainRows,
           targetMinimum: 20
         });
+
+        // EXTENDED TEST: Now trigger DNS validation for the completed campaign
+        logger.info('EXTENDING TEST: Attempting to trigger DNS validation on completed campaign');
+        
+        // Extract campaign ID from current URL
+        const currentUrl = page.url();
+        const campaignIdMatch = currentUrl.match(/\/campaigns\/([a-f0-9-]+)/);
+        const campaignId = campaignIdMatch ? campaignIdMatch[1] : null;
+        
+        if (campaignId) {
+          logger.info(`Extracted campaign ID for DNS validation: ${campaignId}`);
+          
+          // Look for DNS validation trigger button or controls
+          logger.info('Looking for DNS validation controls...');
+          
+          // Try multiple potential selectors for DNS validation buttons
+          const dnsValidationSelectors = [
+            'button:has-text("Start DNS Validation")',
+            'button:has-text("DNS Validation")',
+            'button:has-text("Validate DNS")',
+            '[data-testid*="dns-validation"]',
+            '[data-testid*="start-dns"]',
+            'button[aria-label*="DNS"]',
+            'button[aria-label*="dns"]'
+          ];
+
+          let dnsButton = null;
+          for (const selector of dnsValidationSelectors) {
+            try {
+              dnsButton = await page.waitForSelector(selector, { timeout: 3000 });
+              if (dnsButton) {
+                logger.info(`Found DNS validation button with selector: ${selector}`);
+                break;
+              }
+            } catch (e) {
+              logger.debug(`DNS validation button not found with selector: ${selector}`);
+            }
+          }
+
+          if (dnsButton) {
+            logger.info('Clicking DNS validation button...');
+            await dnsButton.click();
+            
+            // Wait for DNS validation to start
+            await page.waitForTimeout(2000);
+            
+            // Take screenshot after DNS validation trigger
+            await page.screenshot({
+              path: path.join(config.outputDir, `dns-validation-triggered-${timestamp}.png`),
+              fullPage: true
+            });
+            
+            // Monitor for DNS validation progress for 10 seconds
+            logger.info('Monitoring DNS validation progress for 10 seconds...');
+            await page.waitForTimeout(10000);
+            
+            logger.info('DNS validation test phase completed');
+            
+            // Now try HTTP validation
+            logger.info('EXTENDING TEST: Attempting to trigger HTTP validation...');
+            
+            const httpValidationSelectors = [
+              'button:has-text("Start HTTP Validation")',
+              'button:has-text("HTTP Validation")',
+              'button:has-text("Validate HTTP")',
+              '[data-testid*="http-validation"]',
+              '[data-testid*="start-http"]',
+              'button[aria-label*="HTTP"]',
+              'button[aria-label*="http"]'
+            ];
+
+            let httpButton = null;
+            for (const selector of httpValidationSelectors) {
+              try {
+                httpButton = await page.waitForSelector(selector, { timeout: 3000 });
+                if (httpButton) {
+                  logger.info(`Found HTTP validation button with selector: ${selector}`);
+                  break;
+                }
+              } catch (e) {
+                logger.debug(`HTTP validation button not found with selector: ${selector}`);
+              }
+            }
+
+            if (httpButton) {
+              logger.info('Clicking HTTP validation button...');
+              await httpButton.click();
+              
+              // Wait for HTTP validation to start
+              await page.waitForTimeout(2000);
+              
+              // Take screenshot after HTTP validation trigger
+              await page.screenshot({
+                path: path.join(config.outputDir, `http-validation-triggered-${timestamp}.png`),
+                fullPage: true
+              });
+              
+              // Monitor for HTTP validation progress for 10 seconds
+              logger.info('Monitoring HTTP validation progress for 10 seconds...');
+              await page.waitForTimeout(10000);
+              
+              logger.info('HTTP validation test phase completed');
+              
+            } else {
+              logger.warn('HTTP validation button not found on page');
+              
+              // Take screenshot to see what validation options are available
+              await page.screenshot({
+                path: path.join(config.outputDir, `validation-options-${timestamp}.png`),
+                fullPage: true
+              });
+            }
+            
+          } else {
+            logger.warn('DNS validation button not found on page');
+            
+            // Take screenshot to see what validation options are available
+            await page.screenshot({
+              path: path.join(config.outputDir, `no-dns-validation-button-${timestamp}.png`),
+              fullPage: true
+            });
+          }
+          
+        } else {
+          logger.error('Could not extract campaign ID from URL for validation testing');
+        }
+        
       } else {
         logger.warn('Domain generation may still be in progress', {
           domainsFound: domainRows,
@@ -785,11 +912,11 @@ async function runCampaignCreationTest() {
       });
     }
 
-    // Get backend logs after campaign creation
+    // Get backend logs after full test completion
     const logsAfter = await backendLogs.getNewLogs();
-    logger.info('Backend logs after campaign creation', { count: logsAfter.length });
+    logger.info('Backend logs after complete test (including validation attempts)', { count: logsAfter.length });
 
-    logger.info('Domain generation campaign creation test completed');
+    logger.info('Extended campaign creation test completed (domain generation + DNS + HTTP validation)');
 
   } catch (error) {
     logger.error('Test execution failed', { 

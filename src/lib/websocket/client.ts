@@ -92,6 +92,12 @@ class SessionWebSocketClient {
   // Session management
   private lastSessionValidation = 0;
   private sessionValidationInterval: number;
+  
+  // Data integrity and sequence tracking
+  private lastSequenceNumbers: Map<string, number> = new Map(); // campaignId -> last sequence
+  private eventHistory: Map<string, Set<string>> = new Map(); // campaignId -> Set of eventHashes
+  private pendingRecovery: Set<string> = new Set(); // campaignIds pending recovery
+  private maxEventHistorySize = 1000;
 
   static getInstance(): SessionWebSocketClient {
     if (!SessionWebSocketClient.instance) {
@@ -256,6 +262,9 @@ class SessionWebSocketClient {
           this.handleSessionExpired();
           return;
         }
+        
+        // Process message with data integrity checks
+        this.processMessageWithIntegrity(message);
         
         this.emit('message', message);
       } catch (error) {
@@ -465,6 +474,82 @@ class SessionWebSocketClient {
     this.messageQueue = [];
   }
 
+  // Data integrity processing
+  private processMessageWithIntegrity(message: WebSocketMessage): void {
+    // Check if message has sequence information
+    const messageData = message.payload as any;
+    if (messageData && messageData.sequence) {
+      const sequence = messageData.sequence;
+      const campaignId = sequence.campaignId;
+      
+      // Validate sequence order
+      const lastSequence = this.lastSequenceNumbers.get(campaignId) || 0;
+      if (sequence.sequenceNumber <= lastSequence) {
+        console.warn(`[DATA INTEGRITY] Out-of-order message detected for campaign ${campaignId}: ${sequence.sequenceNumber} <= ${lastSequence}`);
+        return; // Skip out-of-order messages
+      }
+      
+      // Check for duplicate events
+      let eventHistory = this.eventHistory.get(campaignId);
+      if (!eventHistory) {
+        eventHistory = new Set();
+        this.eventHistory.set(campaignId, eventHistory);
+      }
+      
+      if (eventHistory.has(sequence.eventHash)) {
+        console.warn(`[DATA INTEGRITY] Duplicate event detected and skipped: ${sequence.eventId}`);
+        return; // Skip duplicate events
+      }
+      
+      // Record event
+      eventHistory.add(sequence.eventHash);
+      this.lastSequenceNumbers.set(campaignId, sequence.sequenceNumber);
+      
+      // Prune old events to prevent memory leaks
+      if (eventHistory.size > this.maxEventHistorySize) {
+        const eventsArray = Array.from(eventHistory);
+        eventHistory.clear();
+        eventsArray.slice(-this.maxEventHistorySize / 2).forEach(hash => eventHistory!.add(hash));
+      }
+      
+      console.log(`[DATA INTEGRITY] Message processed: campaign=${campaignId}, seq=${sequence.sequenceNumber}, event=${sequence.eventId}`);
+    }
+  }
+
+  // Request event recovery for a campaign
+  requestEventRecovery(campaignId: string): void {
+    if (this.pendingRecovery.has(campaignId)) {
+      console.log(`[DATA RECOVERY] Recovery already pending for campaign ${campaignId}`);
+      return;
+    }
+    
+    const lastSequence = this.lastSequenceNumbers.get(campaignId) || 0;
+    this.pendingRecovery.add(campaignId);
+    
+    this.send({
+      type: 'request_event_recovery',
+      payload: {
+        campaignId,
+        lastSequenceNumber: lastSequence
+      }
+    });
+    
+    console.log(`[DATA RECOVERY] Requested event recovery for campaign ${campaignId} from sequence ${lastSequence}`);
+    
+    // Clear pending status after timeout
+    setTimeout(() => {
+      this.pendingRecovery.delete(campaignId);
+    }, 30000); // 30 second timeout
+  }
+
+  // Clear data integrity tracking for a campaign
+  clearCampaignTracking(campaignId: string): void {
+    this.lastSequenceNumbers.delete(campaignId);
+    this.eventHistory.delete(campaignId);
+    this.pendingRecovery.delete(campaignId);
+    console.log(`[DATA INTEGRITY] Cleared tracking for campaign ${campaignId}`);
+  }
+
   // Statistics
   getStats(): {
     isConnected: boolean;
@@ -472,6 +557,8 @@ class SessionWebSocketClient {
     reconnectAttempts: number;
     queuedMessages: number;
     lastSessionValidation: number;
+    trackedCampaigns: string[];
+    eventHistorySize: number;
   } {
     return {
       isConnected: this.isConnected(),
@@ -479,6 +566,8 @@ class SessionWebSocketClient {
       reconnectAttempts: this.reconnectAttempts,
       queuedMessages: this.messageQueue.length,
       lastSessionValidation: this.lastSessionValidation,
+      trackedCampaigns: Array.from(this.lastSequenceNumbers.keys()),
+      eventHistorySize: Array.from(this.eventHistory.values()).reduce((total, set) => total + set.size, 0),
     };
   }
 }

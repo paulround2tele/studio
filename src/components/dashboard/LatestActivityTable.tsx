@@ -61,7 +61,7 @@ const getGlobalDomainStatusForPhase = (
   phase: CampaignPhase,
   campaign: CampaignViewModel | RichCampaignData
 ): DomainActivityStatus => {
-  const selectedType = campaign.selectedType || campaign.campaignType;
+  const selectedType = campaign.selectedType || campaign.currentPhase;
   const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
   if (!phasesForType || !phase || !phasesForType.includes(phase)) return 'n_a'; // Phase not applicable to this campaign type
 
@@ -74,7 +74,7 @@ const getGlobalDomainStatusForPhase = (
     const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
     validatedInThisPhase = dnsValidatedDomains.includes(domainName);
   }
-  else if (phase === 'http_validation') {
+  else if (phase === 'http_keyword_validation') {
     // For HTTP validation, we check if this domain has successful HTTP keyword results
     const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
     validatedInThisPhase = dnsValidatedDomains.includes(domainName);
@@ -82,8 +82,8 @@ const getGlobalDomainStatusForPhase = (
 
   // If validated in this phase, it's validated
   if (validatedInThisPhase) return 'validated' as any;
-  // If campaign status is completed, and this phase was part of its flow
-  if (campaign.status === 'completed' && phasesForType.includes(phase)) {
+  // If campaign phase status is completed, and this phase was part of its flow
+  if (campaign.phaseStatus === 'completed' && phasesForType.includes(phase)) {
      // If it reached here, it means it wasn't in the validated list for this phase
      return 'not_validated' as any;
   }
@@ -96,7 +96,7 @@ const getGlobalDomainStatusForPhase = (
     const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
     
     if (phase === 'dns_validation' && domains.includes(domainName)) return 'not_validated' as any;
-    if (phase === 'http_validation' && dnsValidatedDomains.includes(domainName)) return 'not_validated' as any;
+    if (phase === 'http_keyword_validation' && dnsValidatedDomains.includes(domainName)) return 'not_validated' as any;
     return 'n_a'; // Not applicable or filtered out before even reaching this phase's potential input
   }
   
@@ -113,7 +113,7 @@ const getGlobalDomainStatusForPhase = (
     // If the domain was generated (in `campaign.domains`) but not yet DNS validated, it's pending for DNS
     if (phase === 'dns_validation' && domains.includes(domainName)) return 'Pending' as any;
      // If DNS validated but not yet HTTP validated, it's pending for HTTP
-    if (phase === 'http_validation' && dnsValidatedDomains.includes(domainName)) return 'Pending' as any;
+    if (phase === 'http_keyword_validation' && dnsValidatedDomains.includes(domainName)) return 'Pending' as any;
     return 'Pending'; // General pending for phases not yet reached
   }
 
@@ -125,7 +125,7 @@ const getGlobalLeadStatusAndScore = (
   domainName: string,
   campaign: CampaignViewModel | RichCampaignData
 ): { status: DomainActivityStatus; score?: number } => {
-    const selectedType = campaign.selectedType || campaign.campaignType;
+    const selectedType = campaign.selectedType || campaign.currentPhase;
     const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
     if (!phasesForType || !phasesForType.includes('analysis')) return { status: 'n_a' };
 
@@ -140,8 +140,8 @@ const getGlobalLeadStatusAndScore = (
     if (campaign.currentPhase === 'analysis' && campaign.phaseStatus === 'completed') {
         return { status: hasLeads ? 'scanned' : 'no_leads', score };
     }
-    // If campaign status is completed, and lead generation was part of its flow
-    if (campaign.status === 'completed' && phasesForType && phasesForType.includes('analysis')) {
+    // If campaign phase status is completed, and lead generation was part of its flow
+    if (campaign.phaseStatus === 'completed' && phasesForType && phasesForType.includes('analysis')) {
         // Check if leads exist for this domain from when the LeadGen phase was active
         return { status: hasLeads ? 'scanned' : 'no_leads', score };
     }
@@ -312,7 +312,7 @@ export default function LatestActivityTable() {
           
           if (domains.length === 0) {
             // Still show campaign entry even without domains for completed campaigns
-            if (campaign.status === 'completed') {
+            if (campaign.phaseStatus === 'completed') {
               processedActivities.push({
                 id: `${campaign.id}-placeholder`,
                 domain: 'No domains found',
@@ -349,7 +349,7 @@ export default function LatestActivityTable() {
               activity: 'Domain processing',
               generatedDate: campaign.createdAt!, // Or a more specific date if available per domain
               dnsStatus: getGlobalDomainStatusForPhase(domainName, 'dns_validation', safeRichCampaign || campaign),
-              httpStatus: getGlobalDomainStatusForPhase(domainName, 'http_validation', safeRichCampaign || campaign),
+              httpStatus: getGlobalDomainStatusForPhase(domainName, 'http_keyword_validation', safeRichCampaign || campaign),
               leadScanStatus: leadInfo.status,
               leadScore: leadInfo.score, // Store the score here
               sourceUrl: `http://${domainName}`, // Assuming HTTP for direct link

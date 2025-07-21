@@ -1630,7 +1630,7 @@ ul.nav-tabs {
       "description" : "Unique identifier",
       "format" : "uuid"
     },
-    "campaignType" : {
+    "campaignPhase" : {
       "type" : "string"
     },
     "contentType" : {
@@ -1733,7 +1733,7 @@ ul.nav-tabs {
       "description" : "Unique identifier",
       "format" : "uuid"
     },
-    "campaignType" : {
+    "campaignPhase" : {
       "type" : "string"
     },
     "errorMessage" : {
@@ -1786,7 +1786,7 @@ ul.nav-tabs {
       "type" : "integer",
       "format" : "int32"
     },
-    "campaignType" : {
+    "campaignPhase" : {
       "type" : "string"
     },
     "executionTimeMs" : {
@@ -1852,7 +1852,7 @@ ul.nav-tabs {
   }
 };
     defs["Campaign"] = {
-  "required" : [ "campaignType", "name", "status" ],
+  "required" : [ "name" ],
   "type" : "object",
   "properties" : {
     "avgProcessingRate" : {
@@ -1861,10 +1861,6 @@ ul.nav-tabs {
     },
     "businessStatus" : {
       "type" : "string"
-    },
-    "campaignType" : {
-      "type" : "string",
-      "enum" : [ "domain_generation", "dns_validation", "http_keyword_validation" ]
     },
     "completedAt" : {
       "type" : "string",
@@ -1876,11 +1872,12 @@ ul.nav-tabs {
     },
     "currentPhase" : {
       "type" : "string",
-      "description" : "Frontend-expected properties",
-      "enum" : [ "setup", "generation", "dns_validation", "http_validation", "analysis", "cleanup" ]
+      "description" : "Phases-based architecture (replaces legacy CampaignType + Status)",
+      "enum" : [ "setup", "generation", "dns_validation", "http_keyword_validation", "analysis" ]
     },
     "dnsValidatedDomains" : {
       "type" : "integer",
+      "description" : "@swagger:field dnsValidatedDomains",
       "format" : "int64"
     },
     "dnsValidationParams" : {
@@ -1891,6 +1888,7 @@ ul.nav-tabs {
     },
     "domains" : {
       "type" : "integer",
+      "description" : "@swagger:field domains",
       "format" : "int64"
     },
     "errorMessage" : {
@@ -1924,14 +1922,111 @@ ul.nav-tabs {
       "type" : "string",
       "format" : "date-time"
     },
-    "launchSequence" : {
-      "type" : "boolean"
-    },
     "leadItems" : {
       "type" : "array",
       "items" : {
         "$ref" : "#/components/schemas/LeadItem"
       }
+    },
+    "leads" : {
+      "type" : "integer",
+      "description" : "@swagger:field leads",
+      "format" : "int64"
+    },
+    "metadata" : {
+      "type" : "object"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "phaseStatus" : {
+      "type" : "string",
+      "description" : "@swagger:field phaseStatus",
+      "enum" : [ "not_started", "in_progress", "paused", "completed", "failed" ]
+    },
+    "processedItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "progress" : {
+      "type" : "number",
+      "description" : "@swagger:field progress",
+      "format" : "double"
+    },
+    "progressPercentage" : {
+      "type" : "number",
+      "format" : "double"
+    },
+    "startedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "successfulItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "totalItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "updatedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "userId" : {
+      "type" : "string",
+      "description" : "Unique identifier",
+      "format" : "uuid"
+    }
+  }
+};
+    defs["CampaignAPI"] = {
+  "type" : "object",
+  "properties" : {
+    "avgProcessingRate" : {
+      "type" : "number",
+      "format" : "double"
+    },
+    "completedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "createdAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "currentPhase" : {
+      "type" : "string",
+      "description" : "Phases-based architecture (replaces legacy CampaignType + Status)",
+      "enum" : [ "setup", "generation", "dns_validation", "http_keyword_validation", "analysis" ]
+    },
+    "dnsValidatedDomains" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "domains" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "errorMessage" : {
+      "type" : "string"
+    },
+    "estimatedCompletionAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "failedItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "id" : {
+      "type" : "string",
+      "description" : "Unique identifier",
+      "format" : "uuid"
+    },
+    "lastHeartbeatAt" : {
+      "type" : "string",
+      "format" : "date-time"
     },
     "leads" : {
       "type" : "integer",
@@ -1962,90 +2057,6 @@ ul.nav-tabs {
     "startedAt" : {
       "type" : "string",
       "format" : "date-time"
-    },
-    "status" : {
-      "type" : "string",
-      "enum" : [ "pending", "queued", "running", "pausing", "paused", "completed", "failed", "archived", "cancelled" ]
-    },
-    "successfulItems" : {
-      "type" : "integer",
-      "format" : "int64"
-    },
-    "totalItems" : {
-      "type" : "integer",
-      "format" : "int64"
-    },
-    "updatedAt" : {
-      "type" : "string",
-      "format" : "date-time"
-    },
-    "userId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
-    }
-  }
-};
-    defs["CampaignAPI"] = {
-  "type" : "object",
-  "properties" : {
-    "avgProcessingRate" : {
-      "type" : "number",
-      "format" : "double"
-    },
-    "campaignType" : {
-      "type" : "string",
-      "enum" : [ "domain_generation", "dns_validation", "http_keyword_validation" ]
-    },
-    "completedAt" : {
-      "type" : "string",
-      "format" : "date-time"
-    },
-    "createdAt" : {
-      "type" : "string",
-      "format" : "date-time"
-    },
-    "errorMessage" : {
-      "type" : "string"
-    },
-    "estimatedCompletionAt" : {
-      "type" : "string",
-      "format" : "date-time"
-    },
-    "failedItems" : {
-      "type" : "integer",
-      "format" : "int64"
-    },
-    "id" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
-    },
-    "lastHeartbeatAt" : {
-      "type" : "string",
-      "format" : "date-time"
-    },
-    "metadata" : {
-      "type" : "object"
-    },
-    "name" : {
-      "type" : "string"
-    },
-    "processedItems" : {
-      "type" : "integer",
-      "format" : "int64"
-    },
-    "progressPercentage" : {
-      "type" : "number",
-      "format" : "double"
-    },
-    "startedAt" : {
-      "type" : "string",
-      "format" : "date-time"
-    },
-    "status" : {
-      "type" : "string",
-      "enum" : [ "pending", "queued", "running", "pausing", "paused", "completed", "failed", "archived", "cancelled" ]
     },
     "successfulItems" : {
       "type" : "integer",
@@ -2133,6 +2144,10 @@ ul.nav-tabs {
       "type" : "string",
       "format" : "date-time"
     },
+    "currentPhase" : {
+      "type" : "string",
+      "description" : "Phases-based architecture fields"
+    },
     "description" : {
       "type" : "string"
     },
@@ -2144,11 +2159,16 @@ ul.nav-tabs {
     "name" : {
       "type" : "string"
     },
-    "status" : {
-      "type" : "string"
+    "phaseStatus" : {
+      "type" : "string",
+      "description" : "@Description Status of the current phase"
     },
-    "type" : {
-      "type" : "string"
+    "progress" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "object"
+      },
+      "description" : "@Description Overall progress percentage (0-100)"
     },
     "updatedAt" : {
       "type" : "string",
@@ -2188,6 +2208,7 @@ ul.nav-tabs {
   }
 };
     defs["CampaignJob"] = {
+  "required" : [ "jobType" ],
   "type" : "object",
   "properties" : {
     "attempts" : {
@@ -2217,7 +2238,7 @@ ul.nav-tabs {
     },
     "jobType" : {
       "type" : "string",
-      "enum" : [ "domain_generation", "dns_validation", "http_keyword_validation" ]
+      "enum" : [ "generation", "dns_validation", "http_keyword_validation", "analysis" ]
     },
     "lastAttemptedAt" : {
       "type" : "string",
@@ -2758,72 +2779,20 @@ ul.nav-tabs {
   }
 };
     defs["CreateCampaignRequest"] = {
-  "required" : [ "campaignType", "name" ],
+  "required" : [ "name" ],
   "type" : "object",
   "properties" : {
-    "campaignType" : {
-      "type" : "string",
-      "enum" : [ "domain_generation", "dns_validation", "http_keyword_validation" ]
-    },
     "description" : {
       "type" : "string"
     },
-    "dnsValidationParams" : {
-      "$ref" : "#/components/schemas/DnsValidationParams"
-    },
     "domainGenerationParams" : {
       "$ref" : "#/components/schemas/DomainGenerationParams"
-    },
-    "httpKeywordParams" : {
-      "$ref" : "#/components/schemas/HttpKeywordParams"
     },
     "launchSequence" : {
       "type" : "boolean"
     },
     "name" : {
       "type" : "string"
-    },
-    "userId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
-    }
-  }
-};
-    defs["CreateDNSValidationCampaignRequest"] = {
-  "required" : [ "name", "personaIds", "sourceCampaignId" ],
-  "type" : "object",
-  "properties" : {
-    "batchSize" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "name" : {
-      "type" : "string"
-    },
-    "personaIds" : {
-      "type" : "array",
-      "items" : {
-        "type" : "string",
-        "format" : "uuid"
-      }
-    },
-    "processingSpeedPerMinute" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "retryAttempts" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "rotationIntervalSeconds" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "sourceCampaignId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
     },
     "userId" : {
       "type" : "string",
@@ -2864,76 +2833,6 @@ ul.nav-tabs {
     "variableLength" : {
       "type" : "integer",
       "format" : "int32"
-    }
-  }
-};
-    defs["CreateHTTPKeywordCampaignRequest"] = {
-  "required" : [ "name", "personaIds", "sourceCampaignId" ],
-  "type" : "object",
-  "properties" : {
-    "adHocKeywords" : {
-      "type" : "array",
-      "items" : {
-        "type" : "string"
-      }
-    },
-    "batchSize" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "keywordSetIds" : {
-      "type" : "array",
-      "items" : {
-        "type" : "string",
-        "format" : "uuid"
-      }
-    },
-    "name" : {
-      "type" : "string"
-    },
-    "personaIds" : {
-      "type" : "array",
-      "items" : {
-        "type" : "string",
-        "format" : "uuid"
-      }
-    },
-    "processingSpeedPerMinute" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "proxyPoolId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
-    },
-    "proxySelectionStrategy" : {
-      "type" : "string"
-    },
-    "retryAttempts" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "rotationIntervalSeconds" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "sourceCampaignId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
-    },
-    "targetHttpPorts" : {
-      "type" : "array",
-      "items" : {
-        "type" : "integer",
-        "format" : "int32"
-      }
-    },
-    "userId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
     }
   }
 };
@@ -3095,6 +2994,21 @@ ul.nav-tabs {
     },
     "useSystemResolvers" : {
       "type" : "boolean"
+    }
+  }
+};
+    defs["DNSPhaseConfigRequest"] = {
+  "required" : [ "personaIds" ],
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "personaIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
     }
   }
 };
@@ -3719,10 +3633,7 @@ ul.nav-tabs {
       "description" : "Unique identifier",
       "format" : "uuid"
     },
-    "campaign_status" : {
-      "type" : "string"
-    },
-    "campaign_type" : {
+    "campaign_phase" : {
       "type" : "string"
     },
     "domain_count" : {
@@ -3733,6 +3644,9 @@ ul.nav-tabs {
       "type" : "string"
     },
     "help" : {
+      "type" : "string"
+    },
+    "phase_status" : {
       "type" : "string"
     },
     "provided_value" : {
@@ -4322,6 +4236,33 @@ ul.nav-tabs {
     }
   }
 };
+    defs["HTTPPhaseConfigRequest"] = {
+  "required" : [ "personaIds" ],
+  "type" : "object",
+  "properties" : {
+    "adHocKeywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "keywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "personaIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    }
+  }
+};
     defs["HTTPTLSClientHello"] = {
   "type" : "object",
   "properties" : {
@@ -4604,43 +4545,6 @@ ul.nav-tabs {
       "format" : "int32"
     },
     "waitDelaySeconds" : {
-      "type" : "integer",
-      "format" : "int32"
-    }
-  }
-};
-    defs["InPlaceDNSValidationRequest"] = {
-  "required" : [ "campaignId" ],
-  "type" : "object",
-  "properties" : {
-    "batchSize" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "campaignId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
-    },
-    "onlyInvalidDomains" : {
-      "type" : "boolean"
-    },
-    "personaIds" : {
-      "type" : "array",
-      "items" : {
-        "type" : "string",
-        "format" : "uuid"
-      }
-    },
-    "processingSpeedPerMinute" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "retryAttempts" : {
-      "type" : "integer",
-      "format" : "int32"
-    },
-    "rotationIntervalSeconds" : {
       "type" : "integer",
       "format" : "int32"
     }
@@ -5844,7 +5748,7 @@ ul.nav-tabs {
       "description" : "Unique identifier",
       "format" : "uuid"
     },
-    "campaignType" : {
+    "campaignPhase" : {
       "type" : "string"
     },
     "cpuTimeMs" : {
@@ -6073,7 +5977,7 @@ ul.nav-tabs {
       "description" : "Unique identifier",
       "format" : "uuid"
     },
-    "campaignType" : {
+    "campaignPhase" : {
       "type" : "string"
     },
     "component" : {
@@ -7177,12 +7081,6 @@ ul.nav-tabs {
         defs["CampaignPhaseStatusEnum"] = {
   "type" : "string"
 };
-        defs["CampaignStatusEnum"] = {
-  "type" : "string"
-};
-        defs["CampaignTypeEnum"] = {
-  "type" : "string"
-};
         defs["DNSConfigUpdateRequest"] = {
   "type" : "string"
 };
@@ -7220,6 +7118,9 @@ ul.nav-tabs {
   "type" : "string"
 };
         defs["JobBusinessStatusEnum"] = {
+  "type" : "string"
+};
+        defs["JobTypeEnum"] = {
   "type" : "string"
 };
         defs["KeywordRuleTypeEnum"] = {
@@ -7304,6 +7205,12 @@ ul.nav-tabs {
                     </li>
                     <li data-group="Campaigns" data-name="cancelCampaign" class="">
                       <a href="#api-Campaigns-cancelCampaign">cancelCampaign</a>
+                    </li>
+                    <li data-group="Campaigns" data-name="configureDNSValidation" class="">
+                      <a href="#api-Campaigns-configureDNSValidation">configureDNSValidation</a>
+                    </li>
+                    <li data-group="Campaigns" data-name="configureHTTPValidation" class="">
+                      <a href="#api-Campaigns-configureHTTPValidation">configureHTTPValidation</a>
                     </li>
                     <li data-group="Campaigns" data-name="createCampaign" class="">
                       <a href="#api-Campaigns-createCampaign">createCampaign</a>
@@ -11151,6 +11058,1178 @@ Campaign ID (UUID)
                         </article>
                       </div>
                       <hr>
+                    <div id="api-Campaigns-configureDNSValidation">
+                      <article id="api-Campaigns-configureDNSValidation-0" data-group="User" data-name="configureDNSValidation" data-version="0">
+                        <div class="pull-left">
+                          <h1>configureDNSValidation</h1>
+                          <p>Configure DNS validation phase</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Configure DNS validation phase for a campaign and transition to dns_validation phase</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/campaigns/{campaignId}/configure-dns</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Campaigns-configureDNSValidation-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-configureDNSValidation-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-configureDNSValidation-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureDNSValidation-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Campaigns-configureDNSValidation-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json" \
+ "http://localhost/campaigns/{campaignId}/configure-dns" \
+ -d '{
+  &quot;personaIds&quot; : [ &quot;personaIds&quot;, &quot;personaIds&quot; ],
+  &quot;name&quot; : &quot;name&quot;
+}'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.CampaignsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        CampaignsApi apiInstance = new CampaignsApi();
+        String campaignId = campaignId_example; // String | Campaign ID (UUID)
+        DNSPhaseConfigRequest dNSPhaseConfigRequest = ; // DNSPhaseConfigRequest | 
+
+        try {
+            APIResponse result = apiInstance.configureDNSValidation(campaignId, dNSPhaseConfigRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#configureDNSValidation");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final String campaignId = new String(); // String | Campaign ID (UUID)
+final DNSPhaseConfigRequest dNSPhaseConfigRequest = new DNSPhaseConfigRequest(); // DNSPhaseConfigRequest | 
+
+try {
+    final result = await api_instance.configureDNSValidation(campaignId, dNSPhaseConfigRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->configureDNSValidation: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.CampaignsApi;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+        CampaignsApi apiInstance = new CampaignsApi();
+        String campaignId = campaignId_example; // String | Campaign ID (UUID)
+        DNSPhaseConfigRequest dNSPhaseConfigRequest = ; // DNSPhaseConfigRequest | 
+
+        try {
+            APIResponse result = apiInstance.configureDNSValidation(campaignId, dNSPhaseConfigRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#configureDNSValidation");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+CampaignsApi *apiInstance = [[CampaignsApi alloc] init];
+String *campaignId = campaignId_example; // Campaign ID (UUID) (default to null)
+DNSPhaseConfigRequest *dNSPhaseConfigRequest = ; // 
+
+// Configure DNS validation phase
+[apiInstance configureDNSValidationWith:campaignId
+    dNSPhaseConfigRequest:dNSPhaseConfigRequest
+              completionHandler: ^(APIResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.CampaignsApi()
+var campaignId = campaignId_example; // {String} Campaign ID (UUID)
+var dNSPhaseConfigRequest = ; // {DNSPhaseConfigRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.configureDNSValidation(campaignId, dNSPhaseConfigRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class configureDNSValidationExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new CampaignsApi();
+            var campaignId = campaignId_example;  // String | Campaign ID (UUID) (default to null)
+            var dNSPhaseConfigRequest = new DNSPhaseConfigRequest(); // DNSPhaseConfigRequest | 
+
+            try {
+                // Configure DNS validation phase
+                APIResponse result = apiInstance.configureDNSValidation(campaignId, dNSPhaseConfigRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling CampaignsApi.configureDNSValidation: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\CampaignsApi();
+$campaignId = campaignId_example; // String | Campaign ID (UUID)
+$dNSPhaseConfigRequest = ; // DNSPhaseConfigRequest | 
+
+try {
+    $result = $api_instance->configureDNSValidation($campaignId, $dNSPhaseConfigRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling CampaignsApi->configureDNSValidation: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::CampaignsApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::CampaignsApi->new();
+my $campaignId = campaignId_example; # String | Campaign ID (UUID)
+my $dNSPhaseConfigRequest = WWW::OPenAPIClient::Object::DNSPhaseConfigRequest->new(); # DNSPhaseConfigRequest | 
+
+eval {
+    my $result = $api_instance->configureDNSValidation(campaignId => $campaignId, dNSPhaseConfigRequest => $dNSPhaseConfigRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling CampaignsApi->configureDNSValidation: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.CampaignsApi()
+campaignId = campaignId_example # String | Campaign ID (UUID) (default to null)
+dNSPhaseConfigRequest =  # DNSPhaseConfigRequest | 
+
+try:
+    # Configure DNS validation phase
+    api_response = api_instance.configure_dns_validation(campaignId, dNSPhaseConfigRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling CampaignsApi->configureDNSValidation: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureDNSValidation-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate CampaignsApi;
+
+pub fn main() {
+    let campaignId = campaignId_example; // String
+    let dNSPhaseConfigRequest = ; // DNSPhaseConfigRequest
+
+    let mut context = CampaignsApi::Context::default();
+    let result = client.configureDNSValidation(campaignId, dNSPhaseConfigRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">campaignId*</td>
+<td>
+
+
+    <div id="d2e199_configureDNSValidation_campaignId">
+        <div class="json-schema-view">
+            <div class="primitive">
+                <span class="type">
+                    String
+                </span>
+
+                    <div class="inner description marked">
+Campaign ID (UUID)
+                    </div>
+            </div>
+                <div class="inner required">
+                    Required
+                </div>
+        </div>
+    </div>
+</td>
+</tr>
+
+                            </table>
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">dNSPhaseConfigRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/DNSPhaseConfigRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_configureDNSValidation_dNSPhaseConfigRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_configureDNSValidation_dNSPhaseConfigRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Campaigns-configureDNSValidation-title-200"></h3>
+                            <p id="examples-Campaigns-configureDNSValidation-description-200" class="marked"></p>
+                            <script>
+                              var responseCampaigns200_description = `Operation successful`;
+                              var responseCampaigns200_description_break = responseCampaigns200_description.indexOf('\n');
+                              if (responseCampaigns200_description_break == -1) {
+                                $("#examples-Campaigns-configureDNSValidation-title-200").text("Status: 200 - " + responseCampaigns200_description);
+                              } else {
+                                $("#examples-Campaigns-configureDNSValidation-title-200").text("Status: 200 - " + responseCampaigns200_description.substring(0, responseCampaigns200_description_break));
+                                $("#examples-Campaigns-configureDNSValidation-description-200").html(responseCampaigns200_description.substring(responseCampaigns200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-configureDNSValidation-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-configureDNSValidation-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-configureDNSValidation-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-configureDNSValidation-200-schema">
+                                <div id="responses-Campaigns-configureDNSValidation-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-configureDNSValidation-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-configureDNSValidation-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-configureDNSValidation-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-configureDNSValidation-title-400"></h3>
+                            <p id="examples-Campaigns-configureDNSValidation-description-400" class="marked"></p>
+                            <script>
+                              var responseCampaigns400_description = `Bad Request`;
+                              var responseCampaigns400_description_break = responseCampaigns400_description.indexOf('\n');
+                              if (responseCampaigns400_description_break == -1) {
+                                $("#examples-Campaigns-configureDNSValidation-title-400").text("Status: 400 - " + responseCampaigns400_description);
+                              } else {
+                                $("#examples-Campaigns-configureDNSValidation-title-400").text("Status: 400 - " + responseCampaigns400_description.substring(0, responseCampaigns400_description_break));
+                                $("#examples-Campaigns-configureDNSValidation-description-400").html(responseCampaigns400_description.substring(responseCampaigns400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-configureDNSValidation-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-configureDNSValidation-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-configureDNSValidation-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-configureDNSValidation-400-schema">
+                                <div id="responses-Campaigns-configureDNSValidation-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-configureDNSValidation-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-configureDNSValidation-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-configureDNSValidation-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-configureDNSValidation-title-500"></h3>
+                            <p id="examples-Campaigns-configureDNSValidation-description-500" class="marked"></p>
+                            <script>
+                              var responseCampaigns500_description = `Internal Server Error`;
+                              var responseCampaigns500_description_break = responseCampaigns500_description.indexOf('\n');
+                              if (responseCampaigns500_description_break == -1) {
+                                $("#examples-Campaigns-configureDNSValidation-title-500").text("Status: 500 - " + responseCampaigns500_description);
+                              } else {
+                                $("#examples-Campaigns-configureDNSValidation-title-500").text("Status: 500 - " + responseCampaigns500_description.substring(0, responseCampaigns500_description_break));
+                                $("#examples-Campaigns-configureDNSValidation-description-500").html(responseCampaigns500_description.substring(responseCampaigns500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-configureDNSValidation-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-configureDNSValidation-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-configureDNSValidation-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-configureDNSValidation-500-schema">
+                                <div id="responses-Campaigns-configureDNSValidation-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-configureDNSValidation-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-configureDNSValidation-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-configureDNSValidation-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Campaigns-configureHTTPValidation">
+                      <article id="api-Campaigns-configureHTTPValidation-0" data-group="User" data-name="configureHTTPValidation" data-version="0">
+                        <div class="pull-left">
+                          <h1>configureHTTPValidation</h1>
+                          <p>Configure HTTP validation phase</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Configure HTTP validation phase for a campaign and transition to http_validation phase</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/campaigns/{campaignId}/configure-http</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Campaigns-configureHTTPValidation-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Campaigns-configureHTTPValidation-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Campaigns-configureHTTPValidation-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Accept: application/json" \
+ -H "Content-Type: application/json" \
+ "http://localhost/campaigns/{campaignId}/configure-http" \
+ -d '{
+  &quot;keywords&quot; : [ &quot;keywords&quot;, &quot;keywords&quot; ],
+  &quot;personaIds&quot; : [ &quot;personaIds&quot;, &quot;personaIds&quot; ],
+  &quot;adHocKeywords&quot; : [ &quot;adHocKeywords&quot;, &quot;adHocKeywords&quot; ],
+  &quot;name&quot; : &quot;name&quot;
+}'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.CampaignsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        CampaignsApi apiInstance = new CampaignsApi();
+        String campaignId = campaignId_example; // String | Campaign ID (UUID)
+        HTTPPhaseConfigRequest hTTPPhaseConfigRequest = ; // HTTPPhaseConfigRequest | 
+
+        try {
+            APIResponse result = apiInstance.configureHTTPValidation(campaignId, hTTPPhaseConfigRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#configureHTTPValidation");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final String campaignId = new String(); // String | Campaign ID (UUID)
+final HTTPPhaseConfigRequest hTTPPhaseConfigRequest = new HTTPPhaseConfigRequest(); // HTTPPhaseConfigRequest | 
+
+try {
+    final result = await api_instance.configureHTTPValidation(campaignId, hTTPPhaseConfigRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->configureHTTPValidation: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.CampaignsApi;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+        CampaignsApi apiInstance = new CampaignsApi();
+        String campaignId = campaignId_example; // String | Campaign ID (UUID)
+        HTTPPhaseConfigRequest hTTPPhaseConfigRequest = ; // HTTPPhaseConfigRequest | 
+
+        try {
+            APIResponse result = apiInstance.configureHTTPValidation(campaignId, hTTPPhaseConfigRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#configureHTTPValidation");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+CampaignsApi *apiInstance = [[CampaignsApi alloc] init];
+String *campaignId = campaignId_example; // Campaign ID (UUID) (default to null)
+HTTPPhaseConfigRequest *hTTPPhaseConfigRequest = ; // 
+
+// Configure HTTP validation phase
+[apiInstance configureHTTPValidationWith:campaignId
+    hTTPPhaseConfigRequest:hTTPPhaseConfigRequest
+              completionHandler: ^(APIResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.CampaignsApi()
+var campaignId = campaignId_example; // {String} Campaign ID (UUID)
+var hTTPPhaseConfigRequest = ; // {HTTPPhaseConfigRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.configureHTTPValidation(campaignId, hTTPPhaseConfigRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class configureHTTPValidationExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new CampaignsApi();
+            var campaignId = campaignId_example;  // String | Campaign ID (UUID) (default to null)
+            var hTTPPhaseConfigRequest = new HTTPPhaseConfigRequest(); // HTTPPhaseConfigRequest | 
+
+            try {
+                // Configure HTTP validation phase
+                APIResponse result = apiInstance.configureHTTPValidation(campaignId, hTTPPhaseConfigRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling CampaignsApi.configureHTTPValidation: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\CampaignsApi();
+$campaignId = campaignId_example; // String | Campaign ID (UUID)
+$hTTPPhaseConfigRequest = ; // HTTPPhaseConfigRequest | 
+
+try {
+    $result = $api_instance->configureHTTPValidation($campaignId, $hTTPPhaseConfigRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling CampaignsApi->configureHTTPValidation: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::CampaignsApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::CampaignsApi->new();
+my $campaignId = campaignId_example; # String | Campaign ID (UUID)
+my $hTTPPhaseConfigRequest = WWW::OPenAPIClient::Object::HTTPPhaseConfigRequest->new(); # HTTPPhaseConfigRequest | 
+
+eval {
+    my $result = $api_instance->configureHTTPValidation(campaignId => $campaignId, hTTPPhaseConfigRequest => $hTTPPhaseConfigRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling CampaignsApi->configureHTTPValidation: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.CampaignsApi()
+campaignId = campaignId_example # String | Campaign ID (UUID) (default to null)
+hTTPPhaseConfigRequest =  # HTTPPhaseConfigRequest | 
+
+try:
+    # Configure HTTP validation phase
+    api_response = api_instance.configure_http_validation(campaignId, hTTPPhaseConfigRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling CampaignsApi->configureHTTPValidation: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-configureHTTPValidation-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate CampaignsApi;
+
+pub fn main() {
+    let campaignId = campaignId_example; // String
+    let hTTPPhaseConfigRequest = ; // HTTPPhaseConfigRequest
+
+    let mut context = CampaignsApi::Context::default();
+    let result = client.configureHTTPValidation(campaignId, hTTPPhaseConfigRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">campaignId*</td>
+<td>
+
+
+    <div id="d2e199_configureHTTPValidation_campaignId">
+        <div class="json-schema-view">
+            <div class="primitive">
+                <span class="type">
+                    String
+                </span>
+
+                    <div class="inner description marked">
+Campaign ID (UUID)
+                    </div>
+            </div>
+                <div class="inner required">
+                    Required
+                </div>
+        </div>
+    </div>
+</td>
+</tr>
+
+                            </table>
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">hTTPPhaseConfigRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/HTTPPhaseConfigRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else if (schema.items != null && schema.items.$ref != null) {
+    schema.items = defsParser.$refs.get(schema.items.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_configureHTTPValidation_hTTPPhaseConfigRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_configureHTTPValidation_hTTPPhaseConfigRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Campaigns-configureHTTPValidation-title-200"></h3>
+                            <p id="examples-Campaigns-configureHTTPValidation-description-200" class="marked"></p>
+                            <script>
+                              var responseCampaigns200_description = `Operation successful`;
+                              var responseCampaigns200_description_break = responseCampaigns200_description.indexOf('\n');
+                              if (responseCampaigns200_description_break == -1) {
+                                $("#examples-Campaigns-configureHTTPValidation-title-200").text("Status: 200 - " + responseCampaigns200_description);
+                              } else {
+                                $("#examples-Campaigns-configureHTTPValidation-title-200").text("Status: 200 - " + responseCampaigns200_description.substring(0, responseCampaigns200_description_break));
+                                $("#examples-Campaigns-configureHTTPValidation-description-200").html(responseCampaigns200_description.substring(responseCampaigns200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-configureHTTPValidation-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-configureHTTPValidation-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-configureHTTPValidation-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-configureHTTPValidation-200-schema">
+                                <div id="responses-Campaigns-configureHTTPValidation-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-configureHTTPValidation-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-configureHTTPValidation-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-configureHTTPValidation-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-configureHTTPValidation-title-400"></h3>
+                            <p id="examples-Campaigns-configureHTTPValidation-description-400" class="marked"></p>
+                            <script>
+                              var responseCampaigns400_description = `Bad Request`;
+                              var responseCampaigns400_description_break = responseCampaigns400_description.indexOf('\n');
+                              if (responseCampaigns400_description_break == -1) {
+                                $("#examples-Campaigns-configureHTTPValidation-title-400").text("Status: 400 - " + responseCampaigns400_description);
+                              } else {
+                                $("#examples-Campaigns-configureHTTPValidation-title-400").text("Status: 400 - " + responseCampaigns400_description.substring(0, responseCampaigns400_description_break));
+                                $("#examples-Campaigns-configureHTTPValidation-description-400").html(responseCampaigns400_description.substring(responseCampaigns400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-configureHTTPValidation-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-configureHTTPValidation-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-configureHTTPValidation-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-configureHTTPValidation-400-schema">
+                                <div id="responses-Campaigns-configureHTTPValidation-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-configureHTTPValidation-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-configureHTTPValidation-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-configureHTTPValidation-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-configureHTTPValidation-title-500"></h3>
+                            <p id="examples-Campaigns-configureHTTPValidation-description-500" class="marked"></p>
+                            <script>
+                              var responseCampaigns500_description = `Internal Server Error`;
+                              var responseCampaigns500_description_break = responseCampaigns500_description.indexOf('\n');
+                              if (responseCampaigns500_description_break == -1) {
+                                $("#examples-Campaigns-configureHTTPValidation-title-500").text("Status: 500 - " + responseCampaigns500_description);
+                              } else {
+                                $("#examples-Campaigns-configureHTTPValidation-title-500").text("Status: 500 - " + responseCampaigns500_description.substring(0, responseCampaigns500_description_break));
+                                $("#examples-Campaigns-configureHTTPValidation-description-500").html(responseCampaigns500_description.substring(responseCampaigns500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-configureHTTPValidation-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-configureHTTPValidation-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-configureHTTPValidation-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-configureHTTPValidation-500-schema">
+                                <div id="responses-Campaigns-configureHTTPValidation-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-configureHTTPValidation-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-configureHTTPValidation-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-configureHTTPValidation-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
                     <div id="api-Campaigns-createCampaign">
                       <article id="api-Campaigns-createCampaign-0" data-group="User" data-name="createCampaign" data-version="0">
                         <div class="pull-left">
@@ -11190,35 +12269,12 @@ Campaign ID (UUID)
  -H "Content-Type: application/json" \
  "http://localhost/campaigns" \
  -d '{
-  &quot;httpKeywordParams&quot; : {
-    &quot;keywordSetIds&quot; : [ &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;, &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot; ],
-    &quot;proxyPoolId&quot; : &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;,
-    &quot;personaIds&quot; : [ &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;, &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot; ],
-    &quot;rotationIntervalSeconds&quot; : 2,
-    &quot;adHocKeywords&quot; : [ &quot;adHocKeywords&quot;, &quot;adHocKeywords&quot; ],
-    &quot;targetHttpPorts&quot; : [ 4, 4 ],
-    &quot;sourceCampaignId&quot; : &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;,
-    &quot;batchSize&quot; : 7,
-    &quot;processingSpeedPerMinute&quot; : 9,
-    &quot;proxySelectionStrategy&quot; : &quot;proxySelectionStrategy&quot;,
-    &quot;retryAttempts&quot; : 3
-  },
-  &quot;campaignType&quot; : &quot;domain_generation&quot;,
   &quot;name&quot; : &quot;name&quot;,
   &quot;description&quot; : &quot;description&quot;,
-  &quot;dnsValidationParams&quot; : {
-    &quot;sourceGenerationCampaignId&quot; : &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;,
-    &quot;personaIds&quot; : [ &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;, &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot; ],
-    &quot;rotationIntervalSeconds&quot; : 5,
-    &quot;sourceCampaignId&quot; : &quot;046b6c7f-0b8a-43b9-b35d-6489e6daee91&quot;,
-    &quot;batchSize&quot; : 0,
-    &quot;processingSpeedPerMinute&quot; : 6,
-    &quot;retryAttempts&quot; : 1
-  },
   &quot;domainGenerationParams&quot; : {
     &quot;characterSet&quot; : &quot;characterSet&quot;,
-    &quot;variableLength&quot; : 2,
-    &quot;numDomainsToGenerate&quot; : 5,
+    &quot;variableLength&quot; : 6,
+    &quot;numDomainsToGenerate&quot; : 0,
     &quot;patternType&quot; : &quot;prefix&quot;,
     &quot;constantString&quot; : &quot;constantString&quot;,
     &quot;tld&quot; : &quot;tld&quot;

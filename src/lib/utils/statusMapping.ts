@@ -5,34 +5,26 @@
 
 import type { components } from '@/lib/api-client/types';
 
-type CampaignStatus = NonNullable<components['schemas']['Campaign']['status']>;
+type CampaignStatus = NonNullable<components['schemas']['Campaign']['phaseStatus']>;
 
 // Define the actual status values used by the system (aligned with API)
 export const CAMPAIGN_STATUSES = {
-  PENDING: 'pending',
-  QUEUED: 'queued',
-  RUNNING: 'running',
-  PAUSING: 'pausing',
+  NOT_STARTED: 'not_started',
+  IN_PROGRESS: 'in_progress',
   PAUSED: 'paused',
   COMPLETED: 'completed',
-  FAILED: 'failed',
-  ARCHIVED: 'archived',
-  CANCELLED: 'cancelled'
+  FAILED: 'failed'
 } as const;
 
 export type ValidCampaignStatus = typeof CAMPAIGN_STATUSES[keyof typeof CAMPAIGN_STATUSES];
 
 // All valid status values as array
 export const ALL_CAMPAIGN_STATUSES: CampaignStatus[] = [
-  'pending',
-  'queued',
-  'running',
-  'pausing',
+  'not_started',
+  'in_progress',
   'paused',
   'completed',
-  'failed',
-  'archived',
-  'cancelled'
+  'failed'
 ];
 
 /**
@@ -43,11 +35,11 @@ export function isValidCampaignStatus(status: string): status is CampaignStatus 
 }
 
 /**
- * Normalize status from unknown source to valid campaign status
+ * Normalize status string to valid campaign status
  */
 export function normalizeStatus(status: unknown): CampaignStatus {
   if (typeof status !== 'string') {
-    return 'pending';
+    return 'not_started';
   }
 
   const lowercaseStatus = status.toLowerCase();
@@ -63,17 +55,15 @@ export function normalizeStatus(status: unknown): CampaignStatus {
     case 'created':
     case 'new':
     case 'pending':
-      return 'pending';
+      return 'not_started';
     case 'scheduled':
     case 'ready':
-      return 'queued';
+    case 'queued':
     case 'active':
     case 'inprogress':
     case 'running':
-      return 'running';
-    case 'stopping':
-    case 'stop':
-      return 'pausing';
+    case 'pausing':
+      return 'in_progress';
     case 'stopped':
     case 'halted':
       return 'paused';
@@ -85,17 +75,16 @@ export function normalizeStatus(status: unknown): CampaignStatus {
     case 'error':
     case 'errored':
     case 'failure':
-    case 'failed':
-      return 'failed';
-    case 'deleted':
-    case 'removed':
-      return 'archived';
     case 'aborted':
     case 'terminated':
-      return 'cancelled';
+    case 'cancelled':
+    case 'archived':
+    case 'deleted':
+    case 'removed':
+      return 'failed';
     default:
-      console.warn(`Unknown status value: ${status}, defaulting to pending`);
-      return 'pending';
+      console.warn(`Unknown status value: ${status}, defaulting to not_started`);
+      return 'not_started';
   }
 }
 
@@ -104,88 +93,51 @@ export function normalizeStatus(status: unknown): CampaignStatus {
  */
 export function getStatusDisplayName(status: CampaignStatus): string {
   switch (status) {
-    case 'pending':
-      return 'Pending';
-    case 'queued':
-      return 'Queued';
-    case 'running':
-      return 'Running';
-    case 'pausing':
-      return 'Pausing';
+    case 'not_started':
+      return 'Not Started';
+    case 'in_progress':
+      return 'In Progress';
     case 'paused':
       return 'Paused';
     case 'completed':
       return 'Completed';
     case 'failed':
       return 'Failed';
-    case 'archived':
-      return 'Archived';
-    case 'cancelled':
-      return 'Cancelled';
     default:
       return 'Unknown';
   }
 }
 
 /**
- * Get status color for UI (Tailwind classes)
+ * Get status color variant for UI components
  */
-export function getStatusColor(status: CampaignStatus): string {
+export function getStatusVariant(status: CampaignStatus): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
-    case 'pending':
-      return 'text-yellow-600 bg-yellow-50';
-    case 'queued':
-      return 'text-blue-600 bg-blue-50';
-    case 'running':
-      return 'text-green-600 bg-green-50';
-    case 'pausing':
-      return 'text-orange-600 bg-orange-50';
+    case 'not_started':
+      return 'outline';
+    case 'in_progress':
+      return 'default';
     case 'paused':
-      return 'text-gray-600 bg-gray-50';
+      return 'secondary';
     case 'completed':
-      return 'text-green-700 bg-green-100';
+      return 'default';
     case 'failed':
-      return 'text-red-600 bg-red-50';
-    case 'archived':
-      return 'text-gray-500 bg-gray-100';
-    case 'cancelled':
-      return 'text-red-500 bg-red-100';
+      return 'destructive';
     default:
-      return 'text-gray-600 bg-gray-50';
+      return 'outline';
   }
 }
 
 /**
- * Check if a status represents an active/running state
+ * Check if status represents an active campaign
  */
 export function isActiveStatus(status: CampaignStatus): boolean {
-  return ['running', 'pausing'].includes(status);
+  return status === 'in_progress';
 }
 
 /**
- * Check if a status represents a terminal/final state
+ * Get status color for UI (alias for getStatusVariant)
  */
-export function isTerminalStatus(status: CampaignStatus): boolean {
-  return ['completed', 'failed', 'archived', 'cancelled'].includes(status);
-}
-
-/**
- * Check if a status can be transitioned to running
- */
-export function canStart(status: CampaignStatus): boolean {
-  return ['pending', 'queued', 'paused'].includes(status);
-}
-
-/**
- * Check if a status can be paused
- */
-export function canPause(status: CampaignStatus): boolean {
-  return ['running'].includes(status);
-}
-
-/**
- * Check if a status can be cancelled
- */
-export function canCancel(status: CampaignStatus): boolean {
-  return !isTerminalStatus(status);
+export function getStatusColor(status: CampaignStatus): 'default' | 'secondary' | 'destructive' | 'outline' {
+  return getStatusVariant(status);
 }

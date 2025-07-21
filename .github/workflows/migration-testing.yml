@@ -1,0 +1,1027 @@
+name: Enterprise-Scale Migration Testing
+
+on:
+  # Trigger on pull requests to main branch
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - 'src/**'
+      - 'scripts/testing/**'
+      - '.github/workflows/**'
+  
+  # Trigger on pushes to main branch
+  push:
+    branches: [ main ]
+  
+  # Scheduled enterprise-scale testing (nightly)
+  schedule:
+    # Run at 2 AM UTC daily
+    - cron: '0 2 * * *'
+  
+  # Manual trigger with parameters
+  workflow_dispatch:
+    inputs:
+      test_level:
+        description: 'Test level to execute'
+        required: true
+        default: 'integration'
+        type: choice
+        options:
+          - unit
+          - integration
+          - stress
+          - full
+      
+      parallel_execution:
+        description: 'Enable parallel test execution'
+        required: false
+        default: true
+        type: boolean
+      
+      performance_baseline:
+        description: 'Establish new performance baseline'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  # Test environment configuration
+  NODE_VERSION: '18'
+  GO_VERSION: '1.21'
+  MYSQL_VERSION: '8.0'
+  
+  # Performance targets
+  TARGET_WEBSOCKET_REDUCTION: 50
+  TARGET_DATABASE_IMPROVEMENT: 40
+  TARGET_MEMORY_REDUCTION: 25
+  OVERALL_PASS_THRESHOLD: 85
+  
+  # Test configuration
+  ENABLE_PARALLEL_EXECUTION: ${{ inputs.parallel_execution || 'true' }}
+  MAX_CONCURRENT_TESTS: 4
+  RETRY_FAILED_TESTS: true
+  MAX_RETRIES: 3
+
+jobs:
+  # =============================================================================
+  # Pre-flight Checks and Setup
+  # =============================================================================
+  
+  preflight:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      test-level: ${{ steps.determine-level.outputs.level }}
+      should-run-stress: ${{ steps.determine-level.outputs.stress }}
+      performance-baseline: ${{ steps.determine-level.outputs.baseline }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Determine test level
+        id: determine-level
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "level=${{ inputs.test_level }}" >> $GITHUB_OUTPUT
+            echo "baseline=${{ inputs.performance_baseline }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "level=stress" >> $GITHUB_OUTPUT
+            echo "baseline=false" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "level=integration" >> $GITHUB_OUTPUT
+            echo "baseline=false" >> $GITHUB_OUTPUT
+          else
+            echo "level=unit" >> $GITHUB_OUTPUT
+            echo "baseline=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Determine if stress tests should run
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.test_level }}" = "stress" ] || [ "${{ inputs.test_level }}" = "full" ]; then
+            echo "stress=true" >> $GITHUB_OUTPUT
+          else
+            echo "stress=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Validate test configuration
+        run: |
+          echo "Test Level: ${{ steps.determine-level.outputs.level }}"
+          echo "Run Stress Tests: ${{ steps.determine-level.outputs.stress }}"
+          echo "Performance Baseline: ${{ steps.determine-level.outputs.baseline }}"
+          echo "Parallel Execution: $ENABLE_PARALLEL_EXECUTION"
+      
+      - name: Check testing infrastructure
+        run: |
+          # Verify testing scripts exist
+          required_files=(
+            "scripts/testing/synthetic-domain-factory.js"
+            "scripts/testing/performance-benchmarks.js"
+            "scripts/testing/memory-monitor.js"
+            "scripts/testing/websocket-validator.js"
+            "scripts/testing/run-performance-tests.sh"
+            "scripts/testing/test-environment-setup.sh"
+          )
+          
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Missing required file: $file"
+              exit 1
+            else
+              echo "✅ Found: $file"
+            fi
+          done
+          
+          echo "All required testing infrastructure files are present"
+
+  # =============================================================================
+  # Test Environment Setup
+  # =============================================================================
+  
+  setup-environment:
+    name: Setup Test Environment
+    runs-on: ubuntu-latest
+    needs: preflight
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: performance_test
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'scripts/package.json'
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: 'backend/go.sum'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client bc python3-pip
+          pip3 install mysql-connector-python
+      
+      - name: Setup test environment
+        run: |
+          cd scripts/testing
+          chmod +x test-environment-setup.sh
+          chmod +x run-performance-tests.sh
+          
+          # Configure environment variables
+          export TEST_DB_HOST=127.0.0.1
+          export TEST_DB_PORT=3306
+          export TEST_DB_USER=test_user
+          export TEST_DB_PASSWORD=test_password
+          export TEST_DB_NAME=performance_test
+          export BACKEND_HOST=127.0.0.1
+          export BACKEND_PORT=8080
+          
+          # Run environment setup
+          ./test-environment-setup.sh --config-only
+      
+      - name: Install Node.js dependencies
+        run: |
+          cd scripts/testing
+          if [ -f config/package.json ]; then
+            cd config && npm install
+          fi
+      
+      - name: Initialize database schema
+        run: |
+          # Wait for MySQL to be ready
+          while ! mysqladmin ping -h127.0.0.1 -P3306 -utest_user -ptest_password --silent; do
+            echo "Waiting for MySQL..."
+            sleep 5
+          done
+          
+          # Setup database schema
+          mysql -h127.0.0.1 -P3306 -utest_user -ptest_password performance_test < scripts/testing/db-performance-test.sql
+          echo "Database schema initialized"
+      
+      - name: Build backend service
+        run: |
+          cd backend
+          go mod tidy
+          go build -o apiserver cmd/apiserver/main.go
+      
+      - name: Start backend service
+        run: |
+          cd backend
+          export DB_HOST=127.0.0.1
+          export DB_PORT=3306
+          export DB_USER=test_user
+          export DB_PASSWORD=test_password
+          export DB_NAME=performance_test
+          
+          ./apiserver &
+          echo $! > apiserver.pid
+          
+          # Wait for service to start
+          sleep 10
+          
+          # Health check
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/health > /dev/null; then
+              echo "Backend service is healthy"
+              break
+            fi
+            echo "Waiting for backend service (attempt $i/30)..."
+            sleep 2
+          done
+      
+      - name: Upload environment state
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-environment
+          path: |
+            scripts/testing/config/
+            backend/apiserver.pid
+          retention-days: 1
+
+  # =============================================================================
+  # Unit Testing (Fast Feedback)
+  # =============================================================================
+  
+  unit-tests:
+    name: Unit Tests (1K domains)
+    runs-on: ubuntu-latest
+    needs: [preflight, setup-environment]
+    if: needs.preflight.outputs.test-level == 'unit' || needs.preflight.outputs.test-level == 'integration' || needs.preflight.outputs.test-level == 'full'
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Download environment state
+        uses: actions/download-artifact@v3
+        with:
+          name: test-environment
+          path: .
+      
+      - name: Install dependencies
+        run: |
+          cd scripts/testing
+          npm install ws mysql2 uuid
+      
+      - name: Run unit tests
+        run: |
+          cd scripts/testing
+          chmod +x run-performance-tests.sh
+          
+          # Set environment variables
+          export DB_HOST=127.0.0.1
+          export DB_PORT=3306
+          export DB_USER=test_user
+          export DB_PASSWORD=test_password
+          export DB_NAME=performance_test
+          
+          # Run unit tests
+          ./run-performance-tests.sh --unit --parallel
+      
+      - name: Upload unit test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: unit-test-results
+          path: |
+            scripts/testing/reports/
+            scripts/testing/logs/
+          retention-days: 7
+      
+      - name: Check unit test results
+        run: |
+          cd scripts/testing
+          
+          # Check if unit tests passed
+          if [ -f "reports/pipeline_results/summary_*.txt" ]; then
+            echo "Unit test summary:"
+            cat reports/pipeline_results/summary_*.txt
+            
+            # Check overall result
+            if grep -q "Overall Result: PASS" reports/pipeline_results/summary_*.txt; then
+              echo "✅ Unit tests passed"
+              exit 0
+            else
+              echo "❌ Unit tests failed"
+              exit 1
+            fi
+          else
+            echo "❌ No unit test results found"
+            exit 1
+          fi
+
+  # =============================================================================
+  # Integration Testing (Realistic Load)
+  # =============================================================================
+  
+  integration-tests:
+    name: Integration Tests (100K domains)
+    runs-on: ubuntu-latest
+    needs: [preflight, setup-environment, unit-tests]
+    if: |
+      always() && 
+      needs.unit-tests.result == 'success' &&
+      (needs.preflight.outputs.test-level == 'integration' || needs.preflight.outputs.test-level == 'full')
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Download environment state
+        uses: actions/download-artifact@v3
+        with:
+          name: test-environment
+          path: .
+      
+      - name: Install dependencies
+        run: |
+          cd scripts/testing
+          npm install ws mysql2 uuid
+      
+      - name: Run integration tests
+        run: |
+          cd scripts/testing
+          
+          # Set environment variables
+          export DB_HOST=127.0.0.1
+          export DB_PORT=3306
+          export DB_USER=test_user
+          export DB_PASSWORD=test_password
+          export DB_NAME=performance_test
+          
+          # Run integration tests
+          ./run-performance-tests.sh --integration --parallel
+      
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: |
+            scripts/testing/reports/
+            scripts/testing/logs/
+          retention-days: 7
+      
+      - name: Validate performance targets
+        run: |
+          cd scripts/testing
+          
+          # Check performance targets
+          python3 << 'EOF'
+import json
+import glob
+import sys
+
+def check_performance_targets():
+    results_files = glob.glob("reports/*_performance_*.json")
+    
+    if not results_files:
+        print("❌ No performance results found")
+        return False
+    
+    targets_met = 0
+    total_targets = 3
+    
+    for file in results_files:
+        try:
+            with open(file, 'r') as f:
+                data = json.load(f)
+            
+            # Check WebSocket reduction
+            if 'webSocketPerformance' in data and 'improvement' in data['webSocketPerformance']:
+                reduction = data['webSocketPerformance']['improvement'].get('messageReduction', 0)
+                if reduction >= 50:
+                    print(f"✅ WebSocket reduction: {reduction}% (target: 50%)")
+                    targets_met += 1
+                else:
+                    print(f"❌ WebSocket reduction: {reduction}% (target: 50%)")
+            
+            # Check database improvement
+            if 'databasePerformance' in data and 'improvement' in data['databasePerformance']:
+                improvement = data['databasePerformance']['improvement'].get('queryPerformance', 0)
+                if improvement >= 40:
+                    print(f"✅ Database improvement: {improvement}% (target: 40%)")
+                else:
+                    print(f"❌ Database improvement: {improvement}% (target: 40%)")
+            
+            # Check memory reduction
+            if 'memoryUsage' in data and 'improvement' in data['memoryUsage']:
+                reduction = data['memoryUsage']['improvement'].get('memoryReduction', 0)
+                if reduction >= 25:
+                    print(f"✅ Memory reduction: {reduction}% (target: 25%)")
+                else:
+                    print(f"❌ Memory reduction: {reduction}% (target: 25%)")
+                    
+        except Exception as e:
+            print(f"Error reading {file}: {e}")
+    
+    success_rate = (targets_met / total_targets) * 100
+    print(f"\nPerformance targets achieved: {targets_met}/{total_targets} ({success_rate:.1f}%)")
+    
+    return success_rate >= 85
+
+if __name__ == "__main__":
+    if check_performance_targets():
+        print("✅ Integration tests performance validation passed")
+        sys.exit(0)
+    else:
+        print("❌ Integration tests performance validation failed")
+        sys.exit(1)
+EOF
+
+  # =============================================================================
+  # Stress Testing (Enterprise Scale)
+  # =============================================================================
+  
+  stress-tests:
+    name: Stress Tests (1M+ domains)
+    runs-on: ubuntu-latest
+    needs: [preflight, setup-environment]
+    if: needs.preflight.outputs.should-run-stress == 'true'
+    timeout-minutes: 120
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Download environment state
+        uses: actions/download-artifact@v3
+        with:
+          name: test-environment
+          path: .
+      
+      - name: Install dependencies
+        run: |
+          cd scripts/testing
+          npm install ws mysql2 uuid
+      
+      - name: Run stress tests
+        run: |
+          cd scripts/testing
+          
+          # Set environment variables for stress testing
+          export DB_HOST=127.0.0.1
+          export DB_PORT=3306
+          export DB_USER=test_user
+          export DB_PASSWORD=test_password
+          export DB_NAME=performance_test
+          export ENABLE_PARALLEL_EXECUTION=true
+          export MAX_CONCURRENT_TESTS=6
+          
+          # Run stress tests
+          ./run-performance-tests.sh --stress --parallel
+      
+      - name: Upload stress test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: stress-test-results
+          path: |
+            scripts/testing/reports/
+            scripts/testing/logs/
+          retention-days: 14
+      
+      - name: Validate enterprise scale performance
+        run: |
+          cd scripts/testing
+          
+          # Check enterprise scale metrics
+          python3 << 'EOF'
+import json
+import glob
+import sys
+
+def check_enterprise_scale():
+    results_files = glob.glob("reports/*_performance_*.json")
+    
+    if not results_files:
+        print("❌ No stress test results found")
+        return False
+    
+    enterprise_metrics = {
+        'throughput': 0,
+        'scalability': 0,
+        'stability': 0
+    }
+    
+    for file in results_files:
+        try:
+            with open(file, 'r') as f:
+                data = json.load(f)
+            
+            # Check throughput
+            if 'throughputTest' in data:
+                throughput = data['throughputTest'].get('domainsPerSecond', 0)
+                if throughput >= 800:
+                    enterprise_metrics['throughput'] = 100
+                    print(f"✅ Throughput: {throughput} domains/sec (target: ≥800)")
+                else:
+                    enterprise_metrics['throughput'] = min(100, (throughput / 800) * 100)
+                    print(f"⚠️  Throughput: {throughput} domains/sec (target: ≥800)")
+            
+            # Check scalability
+            if 'enterpriseScaleTest' in data:
+                scalability = data['enterpriseScaleTest'].get('scalabilityScore', 0)
+                enterprise_metrics['scalability'] = scalability
+                if scalability >= 85:
+                    print(f"✅ Scalability score: {scalability}/100")
+                else:
+                    print(f"⚠️  Scalability score: {scalability}/100 (target: ≥85)")
+            
+            # Check system stability
+            if 'loadCapacityTest' in data:
+                stability = data['loadCapacityTest'].get('connectionSuccessRate', 0)
+                enterprise_metrics['stability'] = stability
+                if stability >= 95:
+                    print(f"✅ System stability: {stability}%")
+                else:
+                    print(f"⚠️  System stability: {stability}% (target: ≥95%)")
+                    
+        except Exception as e:
+            print(f"Error reading {file}: {e}")
+    
+    overall_score = sum(enterprise_metrics.values()) / len(enterprise_metrics)
+    print(f"\nEnterprise Scale Score: {overall_score:.1f}/100")
+    
+    return overall_score >= 85
+
+if __name__ == "__main__":
+    if check_enterprise_scale():
+        print("✅ Enterprise scale validation passed")
+        sys.exit(0)
+    else:
+        print("❌ Enterprise scale validation failed")
+        sys.exit(1)
+EOF
+
+  # =============================================================================
+  # Performance Baseline Management
+  # =============================================================================
+  
+  baseline-management:
+    name: Performance Baseline Management
+    runs-on: ubuntu-latest
+    needs: [preflight, integration-tests]
+    if: |
+      always() && 
+      needs.integration-tests.result == 'success' &&
+      needs.preflight.outputs.performance-baseline == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download test results
+        uses: actions/download-artifact@v3
+        with:
+          name: integration-test-results
+          path: test-results/
+      
+      - name: Establish performance baseline
+        run: |
+          cd test-results
+          
+          # Create baseline from current results
+          python3 << 'EOF'
+import json
+import glob
+import os
+
+def establish_baseline():
+    results_files = glob.glob("reports/*_performance_*.json")
+    
+    if not results_files:
+        print("❌ No performance results to establish baseline")
+        return False
+    
+    baseline = {
+        "established": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+        "version": "${{ github.sha }}",
+        "metrics": {}
+    }
+    
+    for file in results_files:
+        try:
+            with open(file, 'r') as f:
+                data = json.load(f)
+            
+            test_type = os.path.basename(file).split('_')[0]
+            baseline["metrics"][test_type] = {
+                "webSocketPerformance": data.get("webSocketPerformance", {}),
+                "databasePerformance": data.get("databasePerformance", {}),
+                "memoryUsage": data.get("memoryUsage", {}),
+                "throughputTest": data.get("throughputTest", {})
+            }
+        except Exception as e:
+            print(f"Error processing {file}: {e}")
+    
+    # Save baseline
+    with open("performance-baseline.json", "w") as f:
+        json.dump(baseline, f, indent=2)
+    
+    print("✅ Performance baseline established")
+    print(f"Baseline includes {len(baseline['metrics'])} test types")
+    
+    return True
+
+if __name__ == "__main__":
+    establish_baseline()
+EOF
+      
+      - name: Upload baseline
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-baseline
+          path: test-results/performance-baseline.json
+          retention-days: 30
+
+  # =============================================================================
+  # Test Results Aggregation and Reporting
+  # =============================================================================
+  
+  aggregate-results:
+    name: Aggregate Test Results
+    runs-on: ubuntu-latest
+    needs: [preflight, unit-tests, integration-tests, stress-tests]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download all test results
+        uses: actions/download-artifact@v3
+        with:
+          path: all-results/
+      
+      - name: Generate comprehensive report
+        run: |
+          cd all-results
+          
+          # Create comprehensive test report
+          python3 << 'EOF'
+import json
+import glob
+import os
+import sys
+from datetime import datetime
+
+def generate_report():
+    report = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "pipeline": {
+            "id": "${{ github.run_id }}",
+            "commit": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "event": "${{ github.event_name }}",
+            "actor": "${{ github.actor }}"
+        },
+        "summary": {
+            "total_tests": 0,
+            "passed_tests": 0,
+            "failed_tests": 0,
+            "overall_result": "FAIL",
+            "performance_targets_met": 0,
+            "performance_targets_total": 3
+        },
+        "test_levels": {},
+        "performance_analysis": {
+            "websocket_reduction": {"achieved": False, "value": 0, "target": 50},
+            "database_improvement": {"achieved": False, "value": 0, "target": 40},
+            "memory_reduction": {"achieved": False, "value": 0, "target": 25}
+        },
+        "recommendations": []
+    }
+    
+    # Process test results from all artifacts
+    for artifact_dir in os.listdir('.'):
+        if 'test-results' in artifact_dir:
+            artifact_path = os.path.join(artifact_dir, 'reports')
+            if os.path.exists(artifact_path):
+                process_test_results(artifact_path, report)
+    
+    # Calculate summary
+    if report["summary"]["total_tests"] > 0:
+        pass_rate = (report["summary"]["passed_tests"] / report["summary"]["total_tests"]) * 100
+        report["summary"]["pass_rate"] = round(pass_rate, 1)
+        report["summary"]["overall_result"] = "PASS" if pass_rate >= 85 else "FAIL"
+    
+    # Generate recommendations
+    generate_recommendations(report)
+    
+    # Save comprehensive report
+    with open("comprehensive-test-report.json", "w") as f:
+        json.dump(report, f, indent=2)
+    
+    # Generate markdown summary
+    generate_markdown_summary(report)
+    
+    return report["summary"]["overall_result"] == "PASS"
+
+def process_test_results(results_path, report):
+    for file in glob.glob(os.path.join(results_path, "*.json")):
+        try:
+            with open(file, 'r') as f:
+                data = json.load(f)
+            
+            # Extract test level from filename
+            test_level = os.path.basename(file).split('_')[0]
+            
+            if test_level not in report["test_levels"]:
+                report["test_levels"][test_level] = {
+                    "status": "unknown",
+                    "duration": 0,
+                    "metrics": {}
+                }
+            
+            # Process performance metrics
+            process_performance_metrics(data, report)
+            
+            # Update test counts (simplified)
+            report["summary"]["total_tests"] += 1
+            if "PASS" in str(data):  # Simplified check
+                report["summary"]["passed_tests"] += 1
+            else:
+                report["summary"]["failed_tests"] += 1
+                
+        except Exception as e:
+            print(f"Error processing {file}: {e}")
+
+def process_performance_metrics(data, report):
+    # WebSocket performance
+    if 'webSocketPerformance' in data and 'improvement' in data['webSocketPerformance']:
+        reduction = data['webSocketPerformance']['improvement'].get('messageReduction', 0)
+        if reduction > report["performance_analysis"]["websocket_reduction"]["value"]:
+            report["performance_analysis"]["websocket_reduction"]["value"] = reduction
+            report["performance_analysis"]["websocket_reduction"]["achieved"] = reduction >= 50
+    
+    # Database performance
+    if 'databasePerformance' in data and 'improvement' in data['databasePerformance']:
+        improvement = data['databasePerformance']['improvement'].get('queryPerformance', 0)
+        if improvement > report["performance_analysis"]["database_improvement"]["value"]:
+            report["performance_analysis"]["database_improvement"]["value"] = improvement
+            report["performance_analysis"]["database_improvement"]["achieved"] = improvement >= 40
+    
+    # Memory performance
+    if 'memoryUsage' in data and 'improvement' in data['memoryUsage']:
+        reduction = data['memoryUsage']['improvement'].get('memoryReduction', 0)
+        if reduction > report["performance_analysis"]["memory_reduction"]["value"]:
+            report["performance_analysis"]["memory_reduction"]["value"] = reduction
+            report["performance_analysis"]["memory_reduction"]["achieved"] = reduction >= 25
+
+def generate_recommendations(report):
+    recommendations = []
+    
+    # Performance recommendations
+    perf = report["performance_analysis"]
+    
+    if not perf["websocket_reduction"]["achieved"]:
+        recommendations.append({
+            "category": "WebSocket Performance",
+            "priority": "High",
+            "issue": f"WebSocket reduction: {perf['websocket_reduction']['value']:.1f}% (target: 50%)",
+            "action": "Implement message compression and optimize message structure"
+        })
+    
+    if not perf["database_improvement"]["achieved"]:
+        recommendations.append({
+            "category": "Database Performance", 
+            "priority": "High",
+            "issue": f"Database improvement: {perf['database_improvement']['value']:.1f}% (target: 40%)",
+            "action": "Add database indexes and optimize query patterns"
+        })
+    
+    if not perf["memory_reduction"]["achieved"]:
+        recommendations.append({
+            "category": "Memory Usage",
+            "priority": "Medium",
+            "issue": f"Memory reduction: {perf['memory_reduction']['value']:.1f}% (target: 25%)",
+            "action": "Implement memory-efficient data structures and cleanup procedures"
+        })
+    
+    report["recommendations"] = recommendations
+
+def generate_markdown_summary(report):
+    with open("test-summary.md", "w") as f:
+        f.write("# Enterprise-Scale Migration Testing Report\n\n")
+        f.write(f"**Pipeline ID:** {report['pipeline']['id']}\n")
+        f.write(f"**Commit:** {report['pipeline']['commit'][:8]}\n")
+        f.write(f"**Branch:** {report['pipeline']['branch']}\n")
+        f.write(f"**Timestamp:** {report['timestamp']}\n\n")
+        
+        # Summary
+        f.write("## Summary\n\n")
+        f.write(f"- **Overall Result:** {'✅ PASS' if report['summary']['overall_result'] == 'PASS' else '❌ FAIL'}\n")
+        f.write(f"- **Tests Executed:** {report['summary']['total_tests']}\n")
+        f.write(f"- **Pass Rate:** {report['summary'].get('pass_rate', 0):.1f}%\n\n")
+        
+        # Performance Targets
+        f.write("## Performance Targets\n\n")
+        perf = report["performance_analysis"]
+        
+        for target_name, target_data in perf.items():
+            status = "✅" if target_data["achieved"] else "❌"
+            target_label = target_name.replace("_", " ").title()
+            f.write(f"- **{target_label}:** {status} {target_data['value']:.1f}% (target: {target_data['target']}%)\n")
+        
+        f.write("\n")
+        
+        # Recommendations
+        if report["recommendations"]:
+            f.write("## Recommendations\n\n")
+            for rec in report["recommendations"]:
+                f.write(f"### {rec['category']} ({rec['priority']} Priority)\n")
+                f.write(f"**Issue:** {rec['issue']}\n")
+                f.write(f"**Action:** {rec['action']}\n\n")
+
+if __name__ == "__main__":
+    if generate_report():
+        print("✅ Comprehensive test report generated successfully")
+        sys.exit(0)
+    else:
+        print("❌ Test results indicate failure")
+        sys.exit(1)
+EOF
+      
+      - name: Upload comprehensive report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: comprehensive-test-report
+          path: |
+            all-results/comprehensive-test-report.json
+            all-results/test-summary.md
+          retention-days: 30
+      
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const summary = fs.readFileSync('all-results/test-summary.md', 'utf8');
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            } catch (error) {
+              console.log('Could not post PR comment:', error);
+            }
+      
+      - name: Set job status
+        run: |
+          cd all-results
+          
+          if [ -f "comprehensive-test-report.json" ]; then
+            overall_result=$(python3 -c "
+import json
+with open('comprehensive-test-report.json', 'r') as f:
+    data = json.load(f)
+print(data['summary']['overall_result'])
+")
+            
+            if [ "$overall_result" = "PASS" ]; then
+              echo "✅ All tests passed successfully"
+              exit 0
+            else
+              echo "❌ Test execution failed"
+              exit 1
+            fi
+          else
+            echo "❌ No comprehensive report found"
+            exit 1
+          fi
+
+  # =============================================================================
+  # Notification and Cleanup
+  # =============================================================================
+  
+  notify-completion:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: [aggregate-results]
+    if: always()
+    
+    steps:
+      - name: Determine notification status
+        id: status
+        run: |
+          if [ "${{ needs.aggregate-results.result }}" = "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=Enterprise-scale migration testing completed successfully" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=Enterprise-scale migration testing failed" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Post to Slack (if configured)
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ steps.status.outputs.status }}
+          channel: '#migration-testing'
+          message: |
+            ${{ steps.status.outputs.message }}
+            Pipeline: ${{ github.run_id }}
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Create GitHub issue on failure
+        if: steps.status.outputs.status == 'failure' && github.event_name == 'schedule'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Nightly Migration Testing Failed - ${new Date().toISOString().split('T')[0]}`,
+              body: `
+                # Nightly Migration Testing Failure
+                
+                The scheduled enterprise-scale migration testing has failed.
+                
+                **Pipeline ID:** ${{ github.run_id }}
+                **Commit:** ${{ github.sha }}
+                **Timestamp:** ${new Date().toISOString()}
+                
+                Please check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+                
+                ## Next Steps
+                1. Review test results and logs
+                2. Identify root cause of failures
+                3. Implement fixes
+                4. Re-run testing pipeline
+                
+                /cc @migration-team
+              `,
+              labels: ['testing', 'migration', 'failure', 'urgent']
+            });
+      
+      - name: Summary
+        run: |
+          echo "==============================================="
+          echo "Enterprise-Scale Migration Testing Complete"
+          echo "==============================================="
+          echo "Status: ${{ steps.status.outputs.status }}"
+          echo "Pipeline ID: ${{ github.run_id }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "==============================================="

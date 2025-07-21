@@ -23,9 +23,9 @@ data: unknown;
   campaignId?: string;
   messageId?: string;
   sequenceNumber?: number;
-  // DNS validation phase transition fields
-  phase?: string;
-  status?: string;
+  // Phase transition fields - phases-based naming
+  currentPhase?: string;
+  phaseStatus?: string;
 }
 
 export interface DomainGenerationPayload {
@@ -115,6 +115,11 @@ clearSelectedDomains: () => void;
 getDomainsBatch: (offset: number, limit: number) => DomainCacheEntry[];
 pruneCache: () => void;
 reset: () => void;
+  
+  // Phase transition support for single-campaign architecture
+canTransitionToPhase: (targetPhase: string) => boolean;
+validatePhasePrerequisites: (targetPhase: string) => { canProceed: boolean; reason?: string };
+handlePhaseTransition: (newPhase: string, newStatus: string) => void;
 }
 
 // Default states
@@ -164,7 +169,7 @@ campaign: null,
     actionLoading: {},
 
     // Actions,
-setCampaign: (campaign) => set({ campaign, campaignStatus: campaign?.status || null }),
+setCampaign: (campaign) => set({ campaign, campaignStatus: campaign?.phaseStatus || null }),
     
     setLoading: (loading) => set({ loading }),
     
@@ -219,7 +224,7 @@ id: payload.domainId || `${payload.domain}-${Date.now()}`,
           set({
 campaign: {
               ...state.campaign,
-              status: payload.status as CampaignStatus
+              phaseStatus: payload.status as CampaignStatus
             }
             // IMPORTANT: Do NOT clear generatedDomains, dnsCampaignItems, or httpCampaignItems
           });
@@ -229,37 +234,133 @@ campaign: {
       // Handle phase completion updates - PRESERVE domain data during phase transitions
       if (message.type === 'phase_complete' && message.data) {
         const payload = message.data as {
-campaignId: string;
-phase: string;
-status: string;
+          campaignId: string;
+          currentPhase: string;
+          phaseStatus: string;
           progress?: number;
         };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
           console.log('🔄 [Phase Transition] Phase completion update:', {
-oldPhase: state.campaign.currentPhase,
-            newPhase: payload.phase,
-            status: payload.status,
+            oldPhase: state.campaign.currentPhase,
+            newPhase: payload.currentPhase,
+            phaseStatus: payload.phaseStatus,
             preservingDomains: {
-generatedDomains: state.generatedDomains.length,
+              generatedDomains: state.generatedDomains.length,
               dnsCampaignItems: state.dnsCampaignItems.length,
               httpCampaignItems: state.httpCampaignItems.length
             }
           });
           
           set({
-campaign: {
+            campaign: {
               ...state.campaign,
-              currentPhase: payload.phase  as any,
-phaseStatus: payload.status  as any,
-progress: payload.progress || 100,
+              currentPhase: payload.currentPhase as any,
+              progress: payload.progress || 100,
               progressPercentage: payload.progress || 100, // CRITICAL: Update both progress fields,
-processedItems: state.totalDomainCount, // Use WebSocket domain count as processed items,
-status: payload.status === 'completed' ? 'completed' : state.campaign.status
+              processedItems: state.totalDomainCount, // Use WebSocket domain count as processed items,
+              phaseStatus: payload.phaseStatus === 'completed' ? 'completed' :
+                          payload.phaseStatus === 'running' ? 'in_progress' :
+                          payload.phaseStatus === 'failed' ? 'failed' :
+                          payload.phaseStatus === 'pending' ? 'not_started' :
+                          payload.phaseStatus === 'paused' ? 'paused' :
+                          state.campaign.phaseStatus
             }
             // 🔥 CRITICAL: Domain data (generatedDomains, dnsCampaignItems, httpCampaignItems)
             // is intentionally NOT modified here to preserve domains during phase transitions
           });
+        }
+      }
+
+      // Handle enhanced phase transitions with data integrity checks
+      if (message.type === 'campaign.phase.transition' && message.data) {
+        const payload = message.data as {
+          campaignId: string;
+          previousPhase?: string;
+          newPhase: string;
+          newStatus: string;
+          transitionType: string;
+          triggerReason?: string;
+          prerequisitesMet: boolean;
+          dataIntegrityCheck: boolean;
+          domainsCount: number;
+          processedCount: number;
+          successfulCount: number;
+          failedItems: number;
+          estimatedDuration?: number;
+          transitionMetadata?: Record<string, unknown>;
+          rollbackData?: Record<string, unknown>;
+        };
+        const state = get();
+        if (state.campaign && payload.campaignId === state.campaign.id) {
+          console.log('🛡️ [DATA INTEGRITY] Enhanced phase transition received:', {
+            campaignId: payload.campaignId,
+            transition: `${payload.previousPhase || 'unknown'} → ${payload.newPhase}`,
+            dataIntegrityCheck: payload.dataIntegrityCheck,
+            prerequisitesMet: payload.prerequisitesMet,
+            preservingDomains: {
+              generatedDomains: state.generatedDomains.length,
+              dnsCampaignItems: state.dnsCampaignItems.length,
+              httpCampaignItems: state.httpCampaignItems.length,
+              totalDomainCount: state.totalDomainCount
+            },
+            serverReportedCounts: {
+              domainsCount: payload.domainsCount,
+              processedCount: payload.processedCount,
+              successfulCount: payload.successfulCount,
+              failedItems: payload.failedItems
+            }
+          });
+
+          // Data integrity validation
+          if (!payload.dataIntegrityCheck) {
+            console.warn('⚠️ [DATA INTEGRITY] Server reported data integrity check failed');
+            set({ error: 'Phase transition failed data integrity check. Please refresh to verify data consistency.' });
+            return;
+          }
+
+          if (!payload.prerequisitesMet) {
+            console.warn('⚠️ [DATA INTEGRITY] Phase transition prerequisites not met');
+            set({ error: `Cannot transition to ${payload.newPhase}: prerequisites not met. ${payload.triggerReason || ''}` });
+            return;
+          }
+
+          // Validate domain count consistency (allow for small differences due to timing)
+          const domainCountDifference = Math.abs(state.totalDomainCount - payload.domainsCount);
+          if (domainCountDifference > 10) { // Allow up to 10 domain difference for timing tolerances
+            console.warn('⚠️ [DATA INTEGRITY] Domain count mismatch detected:', {
+              frontend: state.totalDomainCount,
+              backend: payload.domainsCount,
+              difference: domainCountDifference
+            });
+          }
+
+          // 🔥 CRITICAL: Atomic update preserving ALL domain data with integrity validation
+          set({
+            campaign: {
+              ...state.campaign,
+              currentPhase: payload.newPhase as any,
+              phaseStatus: payload.newStatus === 'completed' ? 'completed' as const :
+                     payload.newStatus === 'failed' ? 'failed' as const :
+                     payload.newStatus === 'pending' ? 'not_started' as const :
+                     payload.newStatus === 'running' ? 'in_progress' as const :
+                     state.campaign.phaseStatus,
+              // Update progress if this is a checkpoint
+              progress: payload.processedCount > 0 ? (payload.processedCount / payload.domainsCount) * 100 : state.campaign.progress,
+              progressPercentage: payload.processedCount > 0 ? (payload.processedCount / payload.domainsCount) * 100 : state.campaign.progressPercentage,
+              processedItems: Math.max(payload.processedCount, state.campaign.processedItems || 0),
+              successfulItems: Math.max(payload.successfulCount, state.campaign.successfulItems || 0),
+              failedItems: Math.max(payload.failedItems, state.campaign.failedItems || 0),
+              totalItems: Math.max(payload.domainsCount, state.campaign.totalItems || 0),
+              updatedAt: new Date().toISOString()
+            },
+            // 🛡️ DATA INTEGRITY: Update total count only if server reports higher count
+            totalDomainCount: Math.max(state.totalDomainCount, payload.domainsCount),
+            // Clear any previous errors on successful transition
+            error: null
+          });
+
+          console.log('✅ [DATA INTEGRITY] Phase transition completed successfully with data preservation');
         }
       }
 
@@ -273,6 +374,8 @@ status: payload.status === 'completed' ? 'completed' : state.campaign.status
           processedItems?: number;
           successfulItems?: number;
           failedItems?: number;
+          phase?: string;
+          status?: string;
         };
         const state = get();
         if (state.campaign && payload.campaignId === state.campaign.id) {
@@ -280,9 +383,9 @@ status: payload.status === 'completed' ? 'completed' : state.campaign.status
           const progress = payload.progressPercentage || payload.progress || 0;
           const processedItems = payload.processedItems || Math.floor((progress / 100) * (state.campaign.totalItems || 0));
           
-          // CRITICAL FIX: Phase and status are at message level, not data level
-          const messagePhase = (message as any).phase;
-          const messageStatus = (message as any).status;
+          // 🐛 CRITICAL FIX: Phase and status are in message.data, not at message level
+          const messagePhase = payload.phase;
+          const messageStatus = payload.status;
           
           console.log(`🔧 [STORE_UPDATE] Processing campaign_progress message:`, {
             progress,
@@ -291,7 +394,7 @@ status: payload.status === 'completed' ? 'completed' : state.campaign.status
             messagePhase,
             messageStatus,
             currentCampaignPhase: state.campaign.currentPhase,
-            currentCampaignStatus: state.campaign.status
+            currentCampaignStatus: state.campaign.phaseStatus
           });
           
           const updatedCampaign = {
@@ -305,12 +408,17 @@ status: payload.status === 'completed' ? 'completed' : state.campaign.status
             totalItems: payload.totalItems || state.campaign.totalItems,
             // Update phase and status
             currentPhase: messagePhase ? messagePhase as any : state.campaign.currentPhase as any,
-            phaseStatus: messageStatus ? messageStatus as any : state.campaign.phaseStatus as any,
-            // CRITICAL: Update status during phase transitions
-            status: messageStatus === 'running' ? 'running' :
-                   messageStatus === 'completed' ? 'completed' :
-                   messageStatus === 'failed' ? 'failed' :
-                   messageStatus || state.campaign.status,
+            // CRITICAL: Update status during phase transitions with proper typing
+            phaseStatus: messageStatus === 'running' ? 'in_progress' as const :
+                   messageStatus === 'completed' ? 'completed' as const :
+                   messageStatus === 'failed' ? 'failed' as const :
+                   messageStatus === 'pending' ? 'not_started' as const :
+                   messageStatus === 'queued' ? 'not_started' as const :
+                   messageStatus === 'paused' ? 'paused' as const :
+                   messageStatus === 'pausing' ? 'paused' as const :
+                   messageStatus === 'archived' ? 'completed' as const :
+                   messageStatus === 'cancelled' ? 'failed' as const :
+                   state.campaign.phaseStatus,
             // Update timestamp for freshness tracking
             updatedAt: new Date().toISOString()
           };
@@ -352,8 +460,7 @@ campaign: {
               processedItems: payload.validationsProcessed,
               totalItems: payload.totalValidations,
               currentPhase: payload.phase  as any,
-phaseStatus: 'in_progress'  as any,
-status: 'running' as CampaignStatus
+phaseStatus: 'in_progress' as const
             }
           });
         }
@@ -400,9 +507,9 @@ error: `Domain generation stopped: ${offsetError.message || 'Maximum offset limi
             set({
 campaign: {
                 ...state.campaign,
-                status: payload.status === 'failed' ? 'failed' :
+                phaseStatus: payload.status === 'failed' ? 'failed' :
                        payload.status === 'completed' ? 'completed' :
-                       state.campaign.status
+                       state.campaign.phaseStatus
               }
             });
           }
@@ -433,9 +540,9 @@ campaignId: string;
             set({
 campaign: {
                 ...state.campaign,
-                status: payload.status === 'failed' ? 'failed' :
+                phaseStatus: payload.status === 'failed' ? 'failed' :
                        payload.status === 'completed' ? 'completed' :
-                       state.campaign.status
+                       state.campaign.phaseStatus
               }
             });
           }
@@ -626,7 +733,103 @@ campaign: null,
       pagination: defaultPagination,
       selectedDomains: new Set(),
       actionLoading: {}
-})
+}),
+
+    // Phase transition support for single-campaign architecture
+    canTransitionToPhase: (targetPhase: string): boolean => {
+      const state = get();
+      if (!state.campaign) return false;
+      
+      switch (targetPhase) {
+        case 'dns_validation':
+          // DNS validation can start after domain generation is completed
+          return state.campaign.currentPhase === 'generation' &&
+                 state.campaign.phaseStatus === 'completed';
+        case 'http_validation':
+          // HTTP validation can start after DNS validation is completed
+          return state.campaign.currentPhase === 'dns_validation' &&
+                 state.campaign.phaseStatus === 'completed';
+        default:
+          return false;
+      }
+    },
+
+    validatePhasePrerequisites: (targetPhase: string): { canProceed: boolean; reason?: string } => {
+      const state = get();
+      if (!state.campaign) {
+        return { canProceed: false, reason: 'No campaign available' };
+      }
+
+      switch (targetPhase) {
+        case 'dns_validation':
+          if (state.campaign.currentPhase !== 'generation') {
+            return {
+              canProceed: false,
+              reason: 'DNS validation requires domain generation phase to be the current phase'
+            };
+          }
+          if (state.campaign.phaseStatus !== 'completed') {
+            return {
+              canProceed: false,
+              reason: 'Domain generation must be completed before starting DNS validation'
+            };
+          }
+          if (state.generatedDomains.length === 0) {
+            return {
+              canProceed: false,
+              reason: 'No domains available for DNS validation'
+            };
+          }
+          return { canProceed: true };
+
+        case 'http_validation':
+          if (state.campaign.currentPhase !== 'dns_validation') {
+            return {
+              canProceed: false,
+              reason: 'HTTP validation requires DNS validation phase to be the current phase'
+            };
+          }
+          if (state.campaign.phaseStatus !== 'completed') {
+            return {
+              canProceed: false,
+              reason: 'DNS validation must be completed before starting HTTP keyword validation'
+            };
+          }
+          return { canProceed: true };
+
+        default:
+          return { canProceed: false, reason: `Unknown phase: ${targetPhase}` };
+      }
+    },
+
+    handlePhaseTransition: (newPhase: string, newStatus: string): void => {
+      const state = get();
+      if (!state.campaign) return;
+
+      console.log('[Store] Handling phase transition:', {
+        oldPhase: state.campaign.currentPhase,
+        newPhase,
+        newStatus,
+        preservingDomains: {
+          generated: state.generatedDomains.length,
+          dns: state.dnsCampaignItems.length,
+          http: state.httpCampaignItems.length
+        }
+      });
+
+      set({
+        campaign: {
+          ...state.campaign,
+          currentPhase: newPhase as any,
+          phaseStatus: newStatus === 'completed' ? 'completed' :
+                  newStatus === 'running' ? 'in_progress' :
+                  newStatus === 'failed' ? 'failed' :
+                  state.campaign.phaseStatus,
+          updatedAt: new Date().toISOString()
+        }
+        // Explicitly preserve all domain data during phase transitions
+      });
+    }
 }))
 );
 
@@ -687,6 +890,11 @@ export const useCampaignDetailsActions = () => {
   const updateFromWebSocket = useCampaignDetailsStore(state => state.updateFromWebSocket);
   const updateStreamingStats = useCampaignDetailsStore(state => state.updateStreamingStats);
   const reset = useCampaignDetailsStore(state => state.reset);
+  
+  // Phase transition support
+  const canTransitionToPhase = useCampaignDetailsStore(state => state.canTransitionToPhase);
+  const validatePhasePrerequisites = useCampaignDetailsStore(state => state.validatePhasePrerequisites);
+  const handlePhaseTransition = useCampaignDetailsStore(state => state.handlePhaseTransition);
 
   return useMemo(() => ({
     setCampaign,
@@ -698,6 +906,9 @@ export const useCampaignDetailsActions = () => {
     setActionLoading,
     updateFromWebSocket,
     updateStreamingStats,
-    reset
-}), [setCampaign, setLoading, setError, updateFromAPI, updateFilters, updatePagination, setActionLoading, updateFromWebSocket, updateStreamingStats, reset]);
+    reset,
+    canTransitionToPhase,
+    validatePhasePrerequisites,
+    handlePhaseTransition
+}), [setCampaign, setLoading, setError, updateFromAPI, updateFilters, updatePagination, setActionLoading, updateFromWebSocket, updateStreamingStats, reset, canTransitionToPhase, validatePhasePrerequisites, handlePhaseTransition]);
 };

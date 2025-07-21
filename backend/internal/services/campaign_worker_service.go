@@ -171,26 +171,26 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 	defer cancelJobCtx()
 
 	switch job.JobType {
-	case models.CampaignTypeDomainGeneration:
+	case models.JobTypeGeneration:
 		if s.genService == nil {
 			processErr = fmt.Errorf("domain generation service is nil")
 		} else {
 			batchDone, processedCount, processErr = s.genService.ProcessGenerationCampaignBatch(jobCtx, job.CampaignID)
 		}
-	case models.CampaignTypeDNSValidation:
+	case models.JobTypeDNSValidation:
 		if s.dnsService == nil {
 			processErr = fmt.Errorf("DNS validation service is nil")
 		} else {
 			batchDone, processedCount, processErr = s.dnsService.ProcessDNSValidationCampaignBatch(jobCtx, job.CampaignID)
 		}
-	case models.CampaignTypeHTTPKeywordValidation:
+	case models.JobTypeHTTPValidation:
 		if s.httpKeywordService == nil {
 			processErr = fmt.Errorf("HTTP keyword validation service is nil")
 		} else {
 			batchDone, processedCount, processErr = s.httpKeywordService.ProcessHTTPKeywordCampaignBatch(jobCtx, job.CampaignID)
 		}
 	default:
-		processErr = fmt.Errorf("unknown campaign type '%s' for job %s", job.JobType, job.ID)
+		processErr = fmt.Errorf("unknown job type '%s' for job %s", job.JobType, job.ID)
 	}
 
 	job.UpdatedAt = time.Now().UTC()
@@ -221,12 +221,12 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 				// Get current campaign to check its status
 				if currentCampaign, _, err := s.campaignOrchestratorSvc.GetCampaignDetails(jobCtx, job.CampaignID); err != nil {
 					log.Printf("Worker [%s]: Failed to get campaign %s to check status: %v", workerName, job.CampaignID, err)
-				} else if currentCampaign.Status == models.CampaignStatusPending {
+				} else if currentCampaign.PhaseStatus != nil && *currentCampaign.PhaseStatus == models.CampaignPhaseStatusPending {
 					// Campaign is still pending, should be cancelled (not failed)
-					if err := s.campaignOrchestratorSvc.SetCampaignStatus(jobCtx, job.CampaignID, models.CampaignStatusCancelled); err != nil {
-						log.Printf("Worker [%s]: Failed to set campaign %s to cancelled: %v", workerName, job.CampaignID, err)
+					if err := s.campaignOrchestratorSvc.SetCampaignStatus(jobCtx, job.CampaignID, models.CampaignPhaseStatusFailed); err != nil {
+						log.Printf("Worker [%s]: Failed to set campaign %s to failed: %v", workerName, job.CampaignID, err)
 					} else {
-						log.Printf("Worker [%s]: Successfully set pending campaign %s to cancelled status", workerName, job.CampaignID)
+						log.Printf("Worker [%s]: Successfully set pending campaign %s to failed status", workerName, job.CampaignID)
 					}
 				} else {
 					// Campaign is running or in other state, can be set to failed

@@ -97,7 +97,7 @@ type CacheEntry struct {
 	CacheKey             string           `db:"cache_key" json:"cacheKey"`
 	CacheNamespace       string           `db:"cache_namespace" json:"cacheNamespace"`
 	ServiceName          string           `db:"service_name" json:"serviceName"`
-	CampaignType         sql.NullString   `db:"campaign_type" json:"campaignType,omitempty"`
+	CampaignPhase        sql.NullString   `db:"campaign_phase" json:"campaignPhase,omitempty"` // Phase-based tracking for security analytics
 	CampaignID           uuid.NullUUID    `db:"campaign_id" json:"campaignId,omitempty"`
 	CacheValue           *string          `db:"cache_value" json:"cacheValue,omitempty"`
 	CacheValueCompressed []byte           `db:"cache_value_compressed" json:"cacheValueCompressed,omitempty"`
@@ -122,7 +122,7 @@ type CacheInvalidationLog struct {
 	InvalidationPattern string         `db:"invalidation_pattern" json:"invalidationPattern"`
 	InvalidationReason  string         `db:"invalidation_reason" json:"invalidationReason"`
 	AffectedKeysCount   int            `db:"affected_keys_count" json:"affectedKeysCount"`
-	CampaignType        sql.NullString `db:"campaign_type" json:"campaignType,omitempty"`
+	CampaignPhase       sql.NullString `db:"campaign_phase" json:"campaignPhase,omitempty"` // Phase-based tracking for security analytics
 	CampaignID          uuid.NullUUID  `db:"campaign_id" json:"campaignId,omitempty"`
 	TriggeredBy         string         `db:"triggered_by" json:"triggeredBy"`
 	ExecutionTimeMs     float64        `db:"execution_time_ms" json:"executionTimeMs"`
@@ -148,7 +148,7 @@ type CacheMetric struct {
 	ID              uuid.UUID      `db:"id" json:"id"`
 	ServiceName     string         `db:"service_name" json:"serviceName"`
 	CacheNamespace  string         `db:"cache_namespace" json:"cacheNamespace"`
-	CampaignType    sql.NullString `db:"campaign_type" json:"campaignType,omitempty"`
+	CampaignPhase   sql.NullString `db:"campaign_phase" json:"campaignPhase,omitempty"` // Phase-based tracking for security analytics
 	OperationType   string         `db:"operation_type" json:"operationType"`
 	CacheKey        string         `db:"cache_key" json:"cacheKey"`
 	ExecutionTimeMs float64        `db:"execution_time_ms" json:"executionTimeMs"`

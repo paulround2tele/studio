@@ -37,7 +37,7 @@ type CampaignStore interface {
 	DeleteCampaign(ctx context.Context, exec Querier, id uuid.UUID) error
 	ListCampaigns(ctx context.Context, exec Querier, filter ListCampaignsFilter) ([]*models.Campaign, error)
 	CountCampaigns(ctx context.Context, exec Querier, filter ListCampaignsFilter) (int64, error)
-	UpdateCampaignStatus(ctx context.Context, exec Querier, id uuid.UUID, status models.CampaignStatusEnum, errorMessage sql.NullString) error
+	UpdateCampaignStatus(ctx context.Context, exec Querier, id uuid.UUID, status models.CampaignPhaseStatusEnum, errorMessage sql.NullString) error
 	UpdateCampaignProgress(ctx context.Context, exec Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error
 
 	CreateDomainGenerationParams(ctx context.Context, exec Querier, params *models.DomainGenerationCampaignParams) error
@@ -76,7 +76,7 @@ type CampaignStore interface {
 	GetGeneratedDomainsWithCursor(ctx context.Context, exec Querier, filter ListGeneratedDomainsFilter) (*PaginatedResult[*models.GeneratedDomain], error)
 	GetDNSValidationResultsWithCursor(ctx context.Context, exec Querier, filter ListDNSValidationResultsFilter) (*PaginatedResult[*models.DNSValidationResult], error)
 	GetHTTPKeywordResultsWithCursor(ctx context.Context, exec Querier, filter ListHTTPValidationResultsFilter) (*PaginatedResult[*models.HTTPKeywordResult], error)
-	
+
 	// Performance monitoring methods
 	RecordQueryPerformance(ctx context.Context, exec Querier, metric *models.QueryPerformanceMetric) error
 	RecordConnectionPoolMetrics(ctx context.Context, exec Querier, metrics *models.ConnectionPoolMetrics) error
@@ -85,13 +85,13 @@ type CampaignStore interface {
 // ListCampaignsFilter and ListValidationResultsFilter remain the same
 
 type ListCampaignsFilter struct {
-	Type      models.CampaignTypeEnum
-	Status    models.CampaignStatusEnum
-	UserID    string
-	Limit     int
-	Offset    int
-	SortBy    string
-	SortOrder string
+	CurrentPhase *models.CampaignPhaseEnum       // Phases-based filtering
+	PhaseStatus  *models.CampaignPhaseStatusEnum // Status of current phase
+	UserID       string
+	Limit        int
+	Offset       int
+	SortBy       string
+	SortOrder    string
 }
 
 type ListValidationResultsFilter struct {
@@ -188,14 +188,14 @@ type CampaignJobStore interface {
 	CreateJob(ctx context.Context, exec Querier, job *models.CampaignJob) error
 	GetJobByID(ctx context.Context, jobID uuid.UUID) (*models.CampaignJob, error)
 	UpdateJob(ctx context.Context, exec Querier, job *models.CampaignJob) error
-	GetNextQueuedJob(ctx context.Context, campaignTypes []models.CampaignTypeEnum, workerID string) (*models.CampaignJob, error)
+	GetNextQueuedJob(ctx context.Context, campaignTypes []models.JobTypeEnum, workerID string) (*models.CampaignJob, error)
 	DeleteJob(ctx context.Context, jobID uuid.UUID) error
 	ListJobs(ctx context.Context, filter ListJobsFilter) ([]*models.CampaignJob, error)
 }
 
 type ListJobsFilter struct {
 	CampaignID   uuid.NullUUID
-	CampaignType models.CampaignTypeEnum
+	CampaignType models.JobTypeEnum
 	Status       models.CampaignJobStatusEnum
 	Limit        int
 	Offset       int

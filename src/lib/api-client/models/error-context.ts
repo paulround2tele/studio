@@ -37,13 +37,7 @@ export interface ErrorContext {
      * @type {string}
      * @memberof ErrorContext
      */
-    'campaign_status'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ErrorContext
-     */
-    'campaign_type'?: string;
+    'campaign_phase'?: string;
     /**
      * 
      * @type {number}
@@ -62,6 +56,12 @@ export interface ErrorContext {
      * @memberof ErrorContext
      */
     'help'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ErrorContext
+     */
+    'phase_status'?: string;
     /**
      * Unique identifier
      * @type {string}

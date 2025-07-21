@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
 import type { components } from '@/lib/api-client/types';
+import { CampaignCurrentPhaseEnum, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
 import { useDomainPagination } from '@/lib/hooks/usePagination';
 
 type GeneratedDomain = components['schemas']['GeneratedDomain'];
@@ -194,7 +195,7 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
   const domainDetails = useMemo((): DomainDetail[] => {
     let domains: DomainDetail[] = [];
 
-    if (campaign.campaignType === 'domain_generation') {
+    if (campaign.currentPhase === CampaignCurrentPhaseEnum.Generation) {
       domains = generatedDomains.map(domain => ({
         id: domain.id || '',
         domainName: domain.domainName || '',
@@ -204,7 +205,7 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
         httpStatus: domain.httpStatus ? convertBackendStatus(domain.httpStatus) : getDomainStatusFromValidation(domain.domainName || '', httpCampaignItems),
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
-    } else if (campaign.campaignType === 'dns_validation') {
+    } else if (campaign.currentPhase === CampaignCurrentPhaseEnum.DnsValidation) {
       domains = dnsCampaignItems.map(item => ({
         id: item.id,
         domainName: item.domainName || item.domain || '',
@@ -213,7 +214,7 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
         httpStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', httpCampaignItems),
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
-    } else if (campaign.campaignType === 'http_keyword_validation') {
+    } else if (campaign.currentPhase === CampaignCurrentPhaseEnum.HttpKeywordValidation) {
       domains = httpCampaignItems.map(item => ({
         id: item.id,
         domainName: item.domainName || item.domain || '',
@@ -419,9 +420,9 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
             {domainDetails.length === 0 ? (
               <div className="space-y-2">
                 <p>No domains to display yet.</p>
-                {campaign.status === 'pending' || campaign.status === 'running' ? (
+                {campaign.phaseStatus === CampaignPhaseStatusEnum.NotStarted || campaign.phaseStatus === CampaignPhaseStatusEnum.InProgress ? (
                   <p className="text-sm">
-                    {campaign.campaignType === 'domain_generation'
+                    {campaign.currentPhase === CampaignCurrentPhaseEnum.Generation
                       ? 'Domain generation is in progress...'
                       : 'Campaign processing is starting...'
                     }

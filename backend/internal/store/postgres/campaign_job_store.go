@@ -47,6 +47,8 @@ func (s *campaignJobStorePostgres) CreateJob(ctx context.Context, exec store.Que
 		job.ScheduledAt = now
 	}
 
+	log.Printf("DEBUG [CampaignJobStore]: About to insert job with JobType=%q (enum value: %v) for campaign %v", string(job.JobType), job.JobType, job.CampaignID)
+
 	// Create a map to hold the job data with the correct column names
 	jobData := map[string]interface{}{
 		"id":                   job.ID,
@@ -88,22 +90,22 @@ func (s *campaignJobStorePostgres) CreateJob(ctx context.Context, exec store.Que
 
 func (s *campaignJobStorePostgres) GetJobByID(ctx context.Context, jobID uuid.UUID) (*models.CampaignJob, error) {
 	type dbJob struct {
-		ID                 uuid.UUID               `db:"id"`
-		CampaignID         uuid.UUID               `db:"campaign_id"`
-		JobType            models.CampaignTypeEnum `db:"job_type"` // Changed CampaignType to JobType and db tag
-		Status             string                  `db:"status"`
-		JobPayload         *json.RawMessage        `db:"job_payload"` // Changed Payload to JobPayload and db tag
-		Attempts           int                     `db:"attempts"`
-		MaxAttempts        int                     `db:"max_attempts"`
-		LastError          sql.NullString          `db:"last_error"`
-		LastAttemptedAt    sql.NullTime            `db:"last_attempted_at"` // Added
-		CreatedAt          time.Time               `db:"created_at"`
-		UpdatedAt          time.Time               `db:"updated_at"`
-		ScheduledAt        sql.NullTime            `db:"scheduled_at"`         // Added to fetch directly
-		ProcessingServerID sql.NullString          `db:"processing_server_id"` // Changed WorkerID to ProcessingServerID and db tag
-		NextExecutionAt    sql.NullTime            `db:"next_execution_at"`    // Kept for compatibility if used by GetNextQueuedJob logic
-		LockedAt           sql.NullTime            `db:"locked_at"`            // Added
-		LockedBy           sql.NullString          `db:"locked_by"`            // Added
+		ID                 uuid.UUID          `db:"id"`
+		CampaignID         uuid.UUID          `db:"campaign_id"`
+		JobType            models.JobTypeEnum `db:"job_type"` // Changed CampaignType to JobType and db tag
+		Status             string             `db:"status"`
+		JobPayload         *json.RawMessage   `db:"job_payload"` // Changed Payload to JobPayload and db tag
+		Attempts           int                `db:"attempts"`
+		MaxAttempts        int                `db:"max_attempts"`
+		LastError          sql.NullString     `db:"last_error"`
+		LastAttemptedAt    sql.NullTime       `db:"last_attempted_at"` // Added
+		CreatedAt          time.Time          `db:"created_at"`
+		UpdatedAt          time.Time          `db:"updated_at"`
+		ScheduledAt        sql.NullTime       `db:"scheduled_at"`         // Added to fetch directly
+		ProcessingServerID sql.NullString     `db:"processing_server_id"` // Changed WorkerID to ProcessingServerID and db tag
+		NextExecutionAt    sql.NullTime       `db:"next_execution_at"`    // Kept for compatibility if used by GetNextQueuedJob logic
+		LockedAt           sql.NullTime       `db:"locked_at"`            // Added
+		LockedBy           sql.NullString     `db:"locked_by"`            // Added
 	}
 
 	dbj := &dbJob{}
@@ -205,7 +207,7 @@ func (s *campaignJobStorePostgres) UpdateJob(ctx context.Context, exec store.Que
 	return err
 }
 
-func (s *campaignJobStorePostgres) GetNextQueuedJob(ctx context.Context, campaignTypes []models.CampaignTypeEnum, workerID string) (*models.CampaignJob, error) {
+func (s *campaignJobStorePostgres) GetNextQueuedJob(ctx context.Context, campaignTypes []models.JobTypeEnum, workerID string) (*models.CampaignJob, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("pg: failed to begin transaction for GetNextQueuedJob: %w", err)

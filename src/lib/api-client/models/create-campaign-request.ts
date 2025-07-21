@@ -15,13 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { DnsValidationParams } from './dns-validation-params';
-// May contain unused imports in some cases
-// @ts-ignore
 import type { DomainGenerationParams } from './domain-generation-params';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { HttpKeywordParams } from './http-keyword-params';
 
 /**
  * 
@@ -34,31 +28,13 @@ export interface CreateCampaignRequest {
      * @type {string}
      * @memberof CreateCampaignRequest
      */
-    'campaignType': CreateCampaignRequestCampaignTypeEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateCampaignRequest
-     */
     'description'?: string;
-    /**
-     * 
-     * @type {DnsValidationParams}
-     * @memberof CreateCampaignRequest
-     */
-    'dnsValidationParams'?: DnsValidationParams;
     /**
      * 
      * @type {DomainGenerationParams}
      * @memberof CreateCampaignRequest
      */
     'domainGenerationParams'?: DomainGenerationParams;
-    /**
-     * 
-     * @type {HttpKeywordParams}
-     * @memberof CreateCampaignRequest
-     */
-    'httpKeywordParams'?: HttpKeywordParams;
     /**
      * 
      * @type {boolean}
@@ -78,13 +54,4 @@ export interface CreateCampaignRequest {
      */
     'userId'?: string;
 }
-
-export const CreateCampaignRequestCampaignTypeEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation'
-} as const;
-
-export type CreateCampaignRequestCampaignTypeEnum = typeof CreateCampaignRequestCampaignTypeEnum[keyof typeof CreateCampaignRequestCampaignTypeEnum];
-
 

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Briefcase, RefreshCw, CheckCircle, AlertCircle, Clock, Pause, Play, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CampaignViewModel, CampaignStatus } from '@/lib/types';
+import type { CampaignViewModel, CampaignPhaseStatus } from '@/lib/types';
 
 export interface CampaignHeaderProps {
   campaign: CampaignViewModel;
@@ -18,45 +18,47 @@ export interface CampaignHeaderProps {
   className?: string;
 }
 
-const getStatusIcon = (status: CampaignStatus) => {
+const getStatusIcon = (status: CampaignPhaseStatus) => {
   switch (status) {
     case 'completed': return CheckCircle;
     case 'failed': return AlertCircle;
-    case 'running': return Play;
+    case 'in_progress': return Play;
     case 'paused': return Pause;
-    case 'pending': return Clock;
+    case 'not_started': return Clock;
     default: return XCircle;
   }
 };
 
-const getStatusVariant = (status: CampaignStatus): 'default' | 'secondary' | 'destructive' | 'outline' => {
+const getStatusVariant = (status: CampaignPhaseStatus): 'default' | 'secondary' | 'destructive' | 'outline' => {
   switch (status) {
     case 'completed': return 'default' as any;
     case 'failed': return 'destructive' as any;
-    case 'running': return 'secondary' as any;
+    case 'in_progress': return 'secondary' as any;
     case 'paused': return 'outline' as any;
-    case 'pending': return 'outline' as any;
+    case 'not_started': return 'outline' as any;
     default: return 'outline' as any;
   }
 };
 
-const getStatusDisplayText = (status: CampaignStatus): string => {
+const getStatusDisplayText = (status: CampaignPhaseStatus): string => {
   switch (status) {
     case 'completed': return 'Completed';
     case 'failed': return 'Failed';
-    case 'running': return 'Running';
+    case 'in_progress': return 'In Progress';
     case 'paused': return 'Paused';
-    case 'pending': return 'Pending';
+    case 'not_started': return 'Not Started';
     default: return 'Unknown';
   }
 };
 
-const getCampaignTypeDisplayName = (campaignType: string): string => {
-  switch (campaignType) {
-    case 'domain_generation': return 'Domain Generation';
+const getPhaseDisplayName = (phase: string): string => {
+  switch (phase) {
+    case 'setup': return 'Campaign Setup';
+    case 'generation': return 'Domain Generation';
     case 'dns_validation': return 'DNS Validation';
     case 'http_keyword_validation': return 'HTTP Validation';
-    default: return campaignType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    case 'analysis': return 'Analysis';
+    default: return phase.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 };
 
@@ -74,13 +76,13 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
   onRefresh,
   className
 }) => {
-  const campaignStatus = campaign.status || 'Pending';
-  const campaignType = campaign.campaignType || '';
+  const campaignStatus = campaign.phaseStatus || 'not_started';
+  const campaignPhase = campaign.currentPhase || 'setup';
   
   const StatusIcon = getStatusIcon(campaignStatus);
   const statusVariant = getStatusVariant(campaignStatus);
   const statusText = getStatusDisplayText(campaignStatus);
-  const campaignTypeDisplayName = getCampaignTypeDisplayName(campaignType);
+  const phaseDisplayName = getPhaseDisplayName(campaignPhase);
 
   return (
     <Card className={cn("shadow-lg", className)}>
@@ -91,7 +93,7 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
             <div>
               <CardTitle className="text-xl">{campaign.name || 'Unnamed Campaign'}</CardTitle>
               <CardDescription>
-                {campaignTypeDisplayName} Campaign
+                Campaign in {phaseDisplayName} Phase
                 {campaign.createdAt && (
                   <span className="ml-2 text-xs">
                     Created {formatDate(campaign.createdAt)}
@@ -131,8 +133,8 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
           </div>
           
           <div className="space-y-1">
-            <div className="text-muted-foreground">Type</div>
-            <div className="font-medium">{campaignTypeDisplayName}</div>
+            <div className="text-muted-foreground">Current Phase</div>
+            <div className="font-medium">{phaseDisplayName}</div>
           </div>
           
           <div className="space-y-1">

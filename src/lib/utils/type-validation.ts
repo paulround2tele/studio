@@ -12,8 +12,8 @@ type DNSValidationResult = components['schemas']['DNSValidationResult'];
 type HTTPKeywordResult = components['schemas']['HTTPKeywordResult'];
 
 // Extract union types from OpenAPI for validation
-type CampaignType = NonNullable<Campaign['campaignType']>;
-type CampaignStatus = NonNullable<Campaign['status']>;
+type CampaignPhase = NonNullable<Campaign['currentPhase']>;
+type CampaignPhaseStatus = NonNullable<Campaign['phaseStatus']>;
 type PersonaType = 'dns' | 'http'; // From OpenAPI PersonaResponse
 type ProxyProtocol = 'http' | 'https' | 'socks5' | 'socks4'; // From OpenAPI Proxy
 
@@ -58,12 +58,12 @@ type CampaignJob = {
 };
 
 // Runtime type validation functions
-export function validateCampaignType(value: unknown): value is CampaignType {
+export function validateCampaignPhase(value: unknown): value is CampaignPhase {
   return typeof value === 'string' && 
     ['domain_generation', 'dns_validation', 'http_keyword_validation'].includes(value);
 }
 
-export function validateCampaignStatus(value: unknown): value is CampaignStatus {
+export function validateCampaignPhaseStatus(value: unknown): value is CampaignPhaseStatus {
   return typeof value === 'string' &&
     ['pending', 'queued', 'running', 'pausing', 'paused', 'completed', 'failed', 'archived', 'cancelled'].includes(value);
 }
@@ -97,8 +97,8 @@ export function validateCampaign(data: unknown): data is Campaign {
   return (
     validateUUID(campaign.id) &&
     typeof campaign.name === 'string' &&
-    validateCampaignType(campaign.campaignType) &&
-    validateCampaignStatus(campaign.status) &&
+    validateCampaignPhase(campaign.currentPhase) &&
+    validateCampaignPhaseStatus(campaign.phaseStatus) &&
     validateISODateTime(campaign.createdAt) &&
     validateISODateTime(campaign.updatedAt) &&
     (campaign.userId === undefined || campaign.userId === null || validateUUID(campaign.userId)) &&
@@ -240,7 +240,7 @@ export function validateCampaignJob(data: unknown): data is CampaignJob {
   return (
     validateUUID(job.id) &&
     validateUUID(job.campaignId) &&
-    validateCampaignType(job.jobType) &&
+    validateCampaignPhase(job.jobType) &&
     typeof job.status === 'string' &&
     ['Pending', 'queued', 'InProgress', 'processing', 'completed', 'Failed', 'retry'].includes(job.status as string) &&
     validateISODateTime(job.scheduledAt) &&

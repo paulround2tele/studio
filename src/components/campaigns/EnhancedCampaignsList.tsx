@@ -67,14 +67,14 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(campaign =>
         campaign.name?.toLowerCase().includes(query) ||
-        campaign.campaignType?.toLowerCase().includes(query) ||
+        campaign.currentPhase?.toLowerCase().includes(query) ||
         campaign.id?.toLowerCase().includes(query)
       );
     }
 
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(campaign => campaign.status === statusFilter);
+      filtered = filtered.filter(campaign => campaign.phaseStatus === statusFilter);
     }
 
     // Apply sorting
@@ -92,8 +92,8 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
           bValue = new Date(b.createdAt || 0);
           break;
         case 'status':
-          aValue = a.status || '';
-          bValue = b.status || '';
+          aValue = a.phaseStatus || '';
+          bValue = b.phaseStatus || '';
           break;
         case 'progress':
           aValue = a.progressPercentage || 0;
@@ -140,7 +140,7 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
 
   // Get unique statuses for filter dropdown
   const uniqueStatuses = useMemo(() => {
-    const statuses = [...new Set(campaigns.map(c => c.status).filter(Boolean))];
+    const statuses = [...new Set(campaigns.map(c => c.phaseStatus).filter(Boolean))];
     return statuses.sort();
   }, [campaigns]);
 
@@ -177,7 +177,7 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  {uniqueStatuses.map(status => (
+                  {uniqueStatuses.map(status => status && (
                     <SelectItem key={status} value={status}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </SelectItem>

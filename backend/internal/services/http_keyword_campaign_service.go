@@ -62,20 +62,99 @@ func NewHTTPKeywordCampaignService(
 	}
 }
 
-func (s *httpKeywordCampaignServiceImpl) CreateCampaign(ctx context.Context, req CreateHTTPKeywordCampaignRequest) (*models.Campaign, error) {
-	log.Printf("HTTPKeywordCampaignService: CreateCampaign called - This should NOT create separate campaigns!")
-	log.Printf("ARCHITECTURAL FIX: HTTP keyword phase transitions should use Campaign Orchestrator's UpdateCampaign with phase transition")
+// ConfigureHTTPValidationPhase configures HTTP validation phase for a campaign (single-campaign architecture)
+func (s *httpKeywordCampaignServiceImpl) ConfigureHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.HTTPPhaseConfigRequest) error {
+	log.Printf("ConfigureHTTPValidationPhase: Configuring HTTP validation phase for campaign %s", campaignID)
 
-	// CRITICAL ARCHITECTURAL FIX:
-	// This method should NOT exist for phase transitions. Phase transitions should be handled
-	// by the Campaign Orchestrator's transitionToHTTPValidation method using UpdateCampaign.
-	//
-	// This method violates the single-campaign architecture where:
-	// - campaignType stays 'domain_generation'
-	// - currentPhase changes to 'http_keyword_validation'
-	// - Domain status updates happen in-place on generated_domains table
+	// Convert persona IDs from strings to UUIDs
+	personaUUIDs := make([]uuid.UUID, len(req.PersonaIDs))
+	for i, idStr := range req.PersonaIDs {
+		personaUUID, parseErr := uuid.Parse(idStr)
+		if parseErr != nil {
+			return fmt.Errorf("invalid persona ID format: %s", idStr)
+		}
+		personaUUIDs[i] = personaUUID
+	}
 
-	return nil, fmt.Errorf("ARCHITECTURAL VIOLATION: HTTP keyword phase transitions must use Campaign Orchestrator's UpdateCampaign, not CreateCampaign. Source campaign: %s", req.SourceCampaignID)
+	// Validate personas are HTTP type and enabled
+	var querier store.Querier
+	if s.db != nil {
+		querier = s.db
+	}
+
+	if err := s.validatePersonaIDs(ctx, querier, personaUUIDs, models.PersonaTypeHTTP); err != nil {
+		return fmt.Errorf("persona validation failed: %w", err)
+	}
+
+	// Create/update HTTP validation parameters using self-reference for in-place validation
+	httpParams := &models.HTTPKeywordCampaignParams{
+		CampaignID:               campaignID,
+		SourceCampaignID:         campaignID, // Self-reference for phase transition
+		PersonaIDs:               personaUUIDs,
+		KeywordSetIDs:            []uuid.UUID{}, // Will be configured separately if needed
+		AdHocKeywords:            &req.AdHocKeywords,
+		RotationIntervalSeconds:  models.IntPtr(30),
+		ProcessingSpeedPerMinute: models.IntPtr(60),
+		BatchSize:                models.IntPtr(50),
+		RetryAttempts:            models.IntPtr(3),
+	}
+
+	// Store HTTP validation parameters
+	if err := s.campaignStore.CreateHTTPKeywordParams(ctx, querier, httpParams); err != nil {
+		log.Printf("INFO: HTTP params may already exist for campaign %s, continuing...", campaignID)
+	}
+
+	log.Printf("ConfigureHTTPValidationPhase: Successfully configured HTTP validation phase for campaign %s", campaignID)
+	return nil
+}
+
+// TransitionToAnalysisPhase transitions campaign from HTTP validation to analysis phase
+func (s *httpKeywordCampaignServiceImpl) TransitionToAnalysisPhase(ctx context.Context, campaignID uuid.UUID) error {
+	log.Printf("TransitionToAnalysisPhase: Transitioning campaign %s to analysis phase", campaignID)
+
+	var querier store.Querier
+	if s.db != nil {
+		querier = s.db
+	}
+
+	// Get campaign and validate current state
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, querier, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to get campaign %s: %w", campaignID, err)
+	}
+
+	// Validate campaign is in HTTP validation phase and completed
+	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseHTTPValidation {
+		return fmt.Errorf("campaign %s must be in http_keyword_validation phase to transition to analysis, current: %v", campaignID, campaign.CurrentPhase)
+	}
+
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.CampaignPhaseStatusSucceeded {
+		return fmt.Errorf("HTTP validation phase must be completed before transitioning to analysis, current status: %v", campaign.PhaseStatus)
+	}
+
+	// Update campaign phase to analysis
+	analysisPhase := models.CampaignPhaseAnalysis
+	pendingStatus := models.CampaignPhaseStatusPending
+
+	campaign.CurrentPhase = &analysisPhase
+	campaign.PhaseStatus = &pendingStatus
+	// PhaseStatus is already set above, remove this line
+	campaign.UpdatedAt = time.Now().UTC()
+
+	// Reset progress for new phase
+	campaign.ProcessedItems = models.Int64Ptr(0)
+	campaign.ProgressPercentage = models.Float64Ptr(0.0)
+
+	// Update campaign record
+	if err := s.campaignStore.UpdateCampaign(ctx, querier, campaign); err != nil {
+		return fmt.Errorf("failed to update campaign for analysis phase transition: %w", err)
+	}
+
+	// Broadcast phase transition
+	websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, "pending", "analysis", 0, 0)
+
+	log.Printf("TransitionToAnalysisPhase: Successfully transitioned campaign %s to analysis phase", campaignID)
+	return nil
 }
 
 func (s *httpKeywordCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.HTTPKeywordCampaignParams, error) {
@@ -90,11 +169,15 @@ func (s *httpKeywordCampaignServiceImpl) GetCampaignDetails(ctx context.Context,
 		fmt.Printf("[DEBUG http_keyword] Error getting campaign: %v\n", err)
 		return nil, nil, fmt.Errorf("failed to get campaign by ID %s: %w", campaignID, err)
 	}
-	fmt.Printf("[DEBUG http_keyword] Campaign type: %s\n", campaign.CampaignType)
+	currentPhase := "unknown"
+	if campaign.CurrentPhase != nil {
+		currentPhase = string(*campaign.CurrentPhase)
+	}
+	fmt.Printf("[DEBUG http_keyword] Campaign phase: %s\n", currentPhase)
 
-	if campaign.CampaignType != models.CampaignTypeHTTPKeywordValidation {
-		fmt.Printf("[DEBUG http_keyword] Campaign %s is not an HTTP/Keyword campaign (type: %s)\n", campaignID, campaign.CampaignType)
-		return nil, nil, fmt.Errorf("campaign %s is not an HTTP/Keyword campaign (type: %s)", campaignID, campaign.CampaignType)
+	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseHTTPValidation {
+		fmt.Printf("[DEBUG http_keyword] Campaign %s is not an HTTP/Keyword campaign (phase: %s)\n", campaignID, currentPhase)
+		return nil, nil, fmt.Errorf("campaign %s is not an HTTP/Keyword campaign (phase: %s)", campaignID, currentPhase)
 	}
 
 	fmt.Printf("[DEBUG http_keyword] Calling GetHTTPKeywordParams for campaign ID: %s\n", campaignID)
@@ -246,18 +329,23 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		return false, 0, opErr
 	}
 
-	if campaign.Status != models.CampaignStatusRunning && campaign.Status != models.CampaignStatusQueued {
-		if campaign.Status == models.CampaignStatusQueued {
-			campaign.Status = models.CampaignStatusRunning
-			now := time.Now().UTC()
-			campaign.StartedAt = &now
-			if errUpdateCamp := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCamp != nil {
-				opErr = fmt.Errorf("failed to mark campaign %s as running: %w", campaignID, errUpdateCamp)
-				return false, 0, opErr
-			}
-		} else {
-			log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s not runnable (status: %s). Skipping.", campaignID, campaign.Status)
-			return true, 0, nil
+	if campaign.PhaseStatus == nil || (*campaign.PhaseStatus != models.CampaignPhaseStatusInProgress && *campaign.PhaseStatus != models.CampaignPhaseStatusPending) {
+		statusStr := "unknown"
+		if campaign.PhaseStatus != nil {
+			statusStr = string(*campaign.PhaseStatus)
+		}
+		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s not runnable (status: %s). Skipping.", campaignID, statusStr)
+		return true, 0, nil
+	}
+
+	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusPending {
+		status := models.CampaignPhaseStatusInProgress
+		campaign.PhaseStatus = &status
+		now := time.Now().UTC()
+		campaign.StartedAt = &now
+		if errUpdateCamp := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCamp != nil {
+			opErr = fmt.Errorf("failed to mark campaign %s as running: %w", campaignID, errUpdateCamp)
+			return false, 0, opErr
 		}
 	}
 
@@ -281,7 +369,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	} else {
 		log.Printf("ProcessHTTPKeywordCampaignBatch: Warning - could not count valid DNS results for TotalItems update: %v. Using existing %v or source processed %v.",
 			countErr, campaign.TotalItems, sourceDNSCampaign.ProcessedItems)
-		if (campaign.TotalItems == nil || *campaign.TotalItems == 0) && sourceDNSCampaign.Status == models.CampaignStatusCompleted {
+		if (campaign.TotalItems == nil || *campaign.TotalItems == 0) && sourceDNSCampaign.PhaseStatus != nil && *sourceDNSCampaign.PhaseStatus == models.CampaignPhaseStatusSucceeded {
 			if sourceDNSCampaign.ProcessedItems != nil {
 				campaign.TotalItems = models.Int64Ptr(*sourceDNSCampaign.ProcessedItems)
 			} else if sourceDNSCampaign.TotalItems != nil { // Fallback if processed is nil
@@ -315,20 +403,32 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	}
 
 	if *campaign.TotalItems > 0 && *campaign.ProcessedItems >= *campaign.TotalItems {
-		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s already processed all %d items. Marking complete.", campaignID, *campaign.TotalItems)
-		campaign.Status = models.CampaignStatusCompleted
+		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s already processed all %d items. Marking complete and transitioning to analysis phase.", campaignID, *campaign.TotalItems)
+		status := models.CampaignPhaseStatusSucceeded
+		campaign.PhaseStatus = &status
 		campaign.ProgressPercentage = models.Float64Ptr(100.0)
 		now := time.Now().UTC()
 		campaign.CompletedAt = &now
+
+		// AUTOMATIC PHASE TRANSITION: Set currentPhase to analysis
+		analysisPhase := models.CampaignPhaseAnalysis
+		campaign.CurrentPhase = &analysisPhase
+
 		opErr = s.campaignStore.UpdateCampaign(ctx, querier, campaign)
 		return true, 0, opErr
 	}
 	if *campaign.TotalItems == 0 {
-		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s has 0 TotalItems. Marking complete.", campaignID)
-		campaign.Status = models.CampaignStatusCompleted
+		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s has 0 TotalItems. Marking complete and transitioning to analysis phase.", campaignID)
+		status := models.CampaignPhaseStatusSucceeded
+		campaign.PhaseStatus = &status
 		campaign.ProgressPercentage = models.Float64Ptr(100.0)
 		now := time.Now().UTC()
 		campaign.CompletedAt = &now
+
+		// AUTOMATIC PHASE TRANSITION: Set currentPhase to analysis
+		analysisPhase := models.CampaignPhaseAnalysis
+		campaign.CurrentPhase = &analysisPhase
+
 		opErr = s.campaignStore.UpdateCampaign(ctx, querier, campaign)
 		return true, 0, opErr
 	}
@@ -367,11 +467,17 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		}
 
 		if *campaign.TotalItems > 0 && *campaign.ProcessedItems >= *campaign.TotalItems {
-			campaign.Status = models.CampaignStatusCompleted
+			status := models.CampaignPhaseStatusSucceeded
+			campaign.PhaseStatus = &status
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
-			log.Printf("ProcessHTTPKeywordCampaignBatch: All items processed for HTTP campaign %s. Marking complete.", campaignID)
+
+			// AUTOMATIC PHASE TRANSITION: Set currentPhase to analysis
+			analysisPhase := models.CampaignPhaseAnalysis
+			campaign.CurrentPhase = &analysisPhase
+
+			log.Printf("ProcessHTTPKeywordCampaignBatch: All items processed for HTTP campaign %s. Marking complete and transitioning to analysis phase.", campaignID)
 			done = true
 		} else {
 			lastDomainCursor := ""
@@ -690,16 +796,23 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	}
 
 	if *campaign.TotalItems > 0 && *campaign.ProcessedItems >= *campaign.TotalItems {
-		campaign.Status = models.CampaignStatusCompleted
-		campaign.ProgressPercentage = models.Float64Ptr(100.0)
-		campaign.CompletedAt = &nowTime
+		// HTTP validation phase is complete - transition to Analysis phase
+		analysisPhase := models.CampaignPhaseAnalysis
+		pendingStatus := models.CampaignPhaseStatusPending
+		campaign.CurrentPhase = &analysisPhase
+		campaign.PhaseStatus = &pendingStatus
+		campaign.ProgressPercentage = models.Float64Ptr(0.0) // Reset progress for new phase
 		done = true
-		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s completed HTTP/Keyword validation (post-batch).", campaignID)
+		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s completed HTTP validation, auto-transitioning to Analysis phase.", campaignID)
 	} else if *campaign.TotalItems == 0 {
-		campaign.Status = models.CampaignStatusCompleted
-		campaign.ProgressPercentage = models.Float64Ptr(100.0)
-		campaign.CompletedAt = &nowTime
+		// HTTP validation phase is complete - transition to Analysis phase
+		analysisPhase := models.CampaignPhaseAnalysis
+		pendingStatus := models.CampaignPhaseStatusPending
+		campaign.CurrentPhase = &analysisPhase
+		campaign.PhaseStatus = &pendingStatus
+		campaign.ProgressPercentage = models.Float64Ptr(0.0) // Reset progress for new phase
 		done = true
+		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s has 0 total items, auto-transitioning to Analysis phase.", campaignID)
 	} else {
 		done = false
 	}
@@ -721,7 +834,10 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 
 		if done {
 			// Campaign completed
-			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "http_keyword_validation")
+			websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "http_keyword_validation", processedCount, totalCount)
+
+			// Broadcast automatic phase transition to analysis
+			websocket.BroadcastPhaseTransition(campaignID.String(), "http_keyword_validation", "analysis", 100.0)
 		} else {
 			// Progress update
 			websocket.BroadcastValidationProgress(campaignID.String(), processedCount, totalCount, "http_keyword_validation")

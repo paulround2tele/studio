@@ -7,14 +7,13 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **avgProcessingRate** | **number** |  | [optional] [default to undefined]
 **businessStatus** | **string** |  | [optional] [default to undefined]
-**campaignType** | **string** |  | [default to undefined]
 **completedAt** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
-**currentPhase** | **string** | Frontend-expected properties | [optional] [default to undefined]
-**dnsValidatedDomains** | **number** |  | [optional] [default to undefined]
+**currentPhase** | **string** | Phases-based architecture (replaces legacy CampaignType + Status) | [optional] [default to undefined]
+**dnsValidatedDomains** | **number** | @swagger:field dnsValidatedDomains | [optional] [default to undefined]
 **dnsValidationParams** | [**DNSValidationCampaignParams**](DNSValidationCampaignParams.md) |  | [optional] [default to undefined]
 **domainGenerationParams** | [**DomainGenerationCampaignParams**](DomainGenerationCampaignParams.md) |  | [optional] [default to undefined]
-**domains** | **number** |  | [optional] [default to undefined]
+**domains** | **number** | @swagger:field domains | [optional] [default to undefined]
 **errorMessage** | **string** |  | [optional] [default to undefined]
 **estimatedCompletionAt** | **string** | Additional tracking fields | [optional] [default to undefined]
 **extractedContent** | [**Array&lt;ExtractedContentItem&gt;**](ExtractedContentItem.md) | Content analysis data expected by frontend | [optional] [default to undefined]
@@ -22,17 +21,15 @@ Name | Type | Description | Notes
 **httpKeywordValidationParams** | [**HTTPKeywordCampaignParams**](HTTPKeywordCampaignParams.md) |  | [optional] [default to undefined]
 **id** | **string** | Unique identifier | [optional] [default to undefined]
 **lastHeartbeatAt** | **string** |  | [optional] [default to undefined]
-**launchSequence** | **boolean** |  | [optional] [default to undefined]
 **leadItems** | [**Array&lt;LeadItem&gt;**](LeadItem.md) |  | [optional] [default to undefined]
-**leads** | **number** |  | [optional] [default to undefined]
+**leads** | **number** | @swagger:field leads | [optional] [default to undefined]
 **metadata** | **object** |  | [optional] [default to undefined]
 **name** | **string** |  | [default to undefined]
-**phaseStatus** | **string** |  | [optional] [default to undefined]
+**phaseStatus** | **string** | @swagger:field phaseStatus | [optional] [default to undefined]
 **processedItems** | **number** |  | [optional] [default to undefined]
-**progress** | **number** |  | [optional] [default to undefined]
+**progress** | **number** | @swagger:field progress | [optional] [default to undefined]
 **progressPercentage** | **number** |  | [optional] [default to undefined]
 **startedAt** | **string** |  | [optional] [default to undefined]
-**status** | **string** |  | [default to undefined]
 **successfulItems** | **number** |  | [optional] [default to undefined]
 **totalItems** | **number** |  | [optional] [default to undefined]
 **updatedAt** | **string** |  | [optional] [default to undefined]
@@ -46,7 +43,6 @@ import { Campaign } from './api';
 const instance: Campaign = {
     avgProcessingRate,
     businessStatus,
-    campaignType,
     completedAt,
     createdAt,
     currentPhase,
@@ -61,7 +57,6 @@ const instance: Campaign = {
     httpKeywordValidationParams,
     id,
     lastHeartbeatAt,
-    launchSequence,
     leadItems,
     leads,
     metadata,
@@ -71,7 +66,6 @@ const instance: Campaign = {
     progress,
     progressPercentage,
     startedAt,
-    status,
     successfulItems,
     totalItems,
     updatedAt,

@@ -3,7 +3,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import type { components } from '@/lib/api-client/types';
 import type { DomainGenerationPattern } from '@/lib/types/openapi-extensions';
 
-type CampaignSelectedType = components['schemas']['Campaign']['campaignType'];
+type CampaignSelectedType = components['schemas']['Campaign']['currentPhase'];
 
 /**
  * Performance-optimized hook for domain calculation with safeguards
@@ -38,7 +38,7 @@ export function useDomainCalculation(
     tlds: string | undefined
   ) => {
     // Early return for non-domain-generation campaigns
-    if (campaignType !== 'domain_generation') {
+    if (campaignType !== 'generation') {
       return { total: 0, isSafe: true, warning: null };
     }
 

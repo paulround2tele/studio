@@ -2,15 +2,12 @@
 // Campaign data transformation utilities for UI compatibility (OpenAPI Migration)
 
 import type { components } from '@/lib/api-client/types';
-
-type Campaign = components['schemas']['Campaign'];
-type CampaignType = NonNullable<Campaign['campaignType']>;
-type CampaignStatus = NonNullable<Campaign['status']>;
-
-// Keep these frontend-specific types from legacy for now
-import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
+import type { CampaignCurrentPhaseEnum, CampaignPhaseStatusEnum } from '@/lib/api-client/models/campaign';
+import type { CampaignViewModel } from '@/lib/types';
 
 type OpenAPICampaign = components['schemas']['Campaign'];
+type CampaignPhase = CampaignCurrentPhaseEnum;
+type CampaignPhaseStatus = CampaignPhaseStatusEnum;
 
 /**
  * Helper function to find campaign ID in nested API response structures
@@ -46,41 +43,39 @@ function findCampaignIdInData(data: unknown): string | null {
   return null;
 }
 
-// Map OpenAPI Campaign status to frontend CampaignStatus
-function mapOpenAPICampaignStatus(status?: string): CampaignStatus {
+// Map string to CampaignPhaseStatus enum
+function mapToPhaseStatus(status?: string): CampaignPhaseStatus {
   switch (status) {
-    case 'pending':
-      return 'pending';
-    case 'queued':
-      return 'queued';
-    case 'running':
-      return 'running';
-    case 'pausing':
-      return 'pausing';
+    case 'not_started':
+      return 'not_started';
+    case 'in_progress':
+      return 'in_progress';
     case 'paused':
       return 'paused';
     case 'completed':
       return 'completed';
     case 'failed':
       return 'failed';
-    case 'cancelled':
-      return 'cancelled';
     default:
-      return 'pending';
+      return 'not_started';
   }
 }
 
-// Map OpenAPI Campaign type to frontend CampaignType
-function mapOpenAPICampaignType(type?: string): CampaignType {
-  switch (type) {
-    case 'domain_generation':
-      return 'domain_generation';
+// Map string to CampaignPhase enum
+function mapToPhase(phase?: string): CampaignPhase {
+  switch (phase) {
+    case 'setup':
+      return 'setup';
+    case 'generation':
+      return 'generation';
     case 'dns_validation':
       return 'dns_validation';
     case 'http_keyword_validation':
       return 'http_keyword_validation';
+    case 'analysis':
+      return 'analysis';
     default:
-      return 'domain_generation';
+      return 'setup';
   }
 }
 
@@ -111,20 +106,14 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
     }
   }
   
-  // Map OpenAPI types to frontend types
-  const campaignStatus = mapOpenAPICampaignStatus(campaign.status);
-  const campaignType = mapOpenAPICampaignType(campaign.campaignType);
-  
-  // Map current backend status to UI phase and status concepts
-  const currentPhase = mapStatusToPhase(campaignStatus, campaignType);
-  const phaseStatus = mapStatusToPhaseStatus(campaignStatus);
+  // Use OpenAPI schema fields directly - no legacy mapping needed
+  const currentPhase = mapToPhase(campaign.currentPhase);
+  const phaseStatus = mapToPhaseStatus(campaign.phaseStatus);
   
   return {
-    // Core fields - using OpenAPI types directly
+    // Core OpenAPI Campaign fields (direct mapping)
     id: campaignId,
     name: campaign.name || '',
-    campaignType: campaignType,
-    status: campaignStatus,
     userId: campaign.userId,
     createdAt: campaign.createdAt || new Date().toISOString(),
     updatedAt: campaign.updatedAt || new Date().toISOString(),
@@ -136,23 +125,31 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
     successfulItems: campaign.successfulItems,
     failedItems: campaign.failedItems,
     errorMessage: campaign.errorMessage,
-    metadata: {} as Record<string, never>, // OpenAPI uses empty object
+    metadata: campaign.metadata || {},
     estimatedCompletionAt: campaign.estimatedCompletionAt,
     avgProcessingRate: campaign.avgProcessingRate,
     lastHeartbeatAt: campaign.lastHeartbeatAt,
+    businessStatus: campaign.businessStatus,
     
-    // UI compatibility fields
-    selectedType: campaignType,
+    // Phase-based architecture fields
     currentPhase,
     phaseStatus,
+    
+    // UI compatibility fields
+    selectedType: currentPhase,
     progress: campaign.progressPercentage || 0,
     
     // Use actual count values from backend (these are numbers, not arrays)
     domains: campaign.domains || 0,
     dnsValidatedDomains: campaign.dnsValidatedDomains || 0,
-    // httpValidatedDomains: 0, // Not available in backend yet - this property doesn't exist in the OpenAPI schema
-    // extractedContent: [], // UI-only field for now - this property doesn't exist in the OpenAPI schema
     leads: campaign.leads || 0,
+    
+    // OpenAPI param fields
+    dnsValidationParams: campaign.dnsValidationParams,
+    httpKeywordValidationParams: campaign.httpKeywordValidationParams,
+    domainGenerationParams: campaign.domainGenerationParams,
+    extractedContent: campaign.extractedContent,
+    leadItems: campaign.leadItems,
     
     // Default UI configuration
     domainSourceConfig: {
@@ -169,71 +166,7 @@ export function transformCampaignsToViewModels(campaigns: OpenAPICampaign[]): Ca
   return campaigns.map(transformCampaignToViewModel);
 }
 
-/**
- * Map backend CampaignStatus to UI phase concept
- */
-function mapStatusToPhase(status: CampaignStatus, campaignType: CampaignType): CampaignPhase {
-  switch (status) {
-    case 'pending':
-      return "setup";
-    case 'queued':
-      return "setup";
-    case 'running':
-      // Map to appropriate phase based on campaign type
-      switch (campaignType) {
-        case 'domain_generation':
-          return 'generation';
-        case 'dns_validation':
-          return 'dns_validation';
-        case 'http_keyword_validation':
-          return 'http_validation';
-        default:
-          return 'generation';
-      }
-    case 'pausing':
-      return mapStatusToPhase('running', campaignType); // Same phase as running
-    case 'paused':
-      return mapStatusToPhase('running', campaignType); // Same phase as running
-    case 'completed':
-      return "cleanup";
-    case 'failed':
-      return mapStatusToPhase('running', campaignType); // Show which phase failed
-    case 'archived':
-      return "cleanup";
-    case 'cancelled':
-      return "cleanup";
-    default:
-      return "setup";
-  }
-}
-
-/**
- * Map backend CampaignStatus to UI phase status concept
- */
-function mapStatusToPhaseStatus(status: CampaignStatus): CampaignPhaseStatus {
-  switch (status) {
-    case 'pending':
-      return 'not_started';
-    case 'queued':
-      return 'not_started';
-    case 'running':
-      return "in_progress";
-    case 'pausing':
-      return "in_progress";
-    case 'paused':
-      return 'paused';
-    case 'completed':
-      return 'completed';
-    case 'failed':
-      return 'failed';
-    case 'archived':
-      return 'completed';
-    case 'cancelled':
-      return 'failed';
-    default:
-      return 'not_started';
-  }
-}
+// These legacy mapping functions are no longer needed since we use OpenAPI schema directly
 
 /**
  * Extract UI-specific fields from CampaignViewModel back to Campaign
@@ -243,8 +176,8 @@ export function extractCampaignFromViewModel(viewModel: CampaignViewModel): Open
   return {
     id: viewModel.id || '00000000-0000-0000-0000-000000000000',
     name: viewModel.name || '',
-    campaignType: viewModel.campaignType || 'domain_generation',
-    status: viewModel.status || 'Pending',
+    currentPhase: viewModel.currentPhase,
+    phaseStatus: viewModel.phaseStatus,
     userId: viewModel.userId || '',
     createdAt: viewModel.createdAt || new Date().toISOString(),
     updatedAt: viewModel.updatedAt || new Date().toISOString(),
@@ -256,10 +189,19 @@ export function extractCampaignFromViewModel(viewModel: CampaignViewModel): Open
     successfulItems: viewModel.successfulItems ? Number(viewModel.successfulItems) : undefined,
     failedItems: viewModel.failedItems ? Number(viewModel.failedItems) : undefined,
     errorMessage: viewModel.errorMessage,
-    metadata: viewModel.metadata as Record<string, never>,
+    metadata: viewModel.metadata || {},
     estimatedCompletionAt: viewModel.estimatedCompletionAt,
     avgProcessingRate: viewModel.avgProcessingRate,
-    lastHeartbeatAt: viewModel.lastHeartbeatAt
+    lastHeartbeatAt: viewModel.lastHeartbeatAt,
+    businessStatus: viewModel.businessStatus,
+    domains: viewModel.domains,
+    dnsValidatedDomains: viewModel.dnsValidatedDomains,
+    leads: viewModel.leads,
+    dnsValidationParams: viewModel.dnsValidationParams,
+    httpKeywordValidationParams: viewModel.httpKeywordValidationParams,
+    domainGenerationParams: viewModel.domainGenerationParams,
+    extractedContent: viewModel.extractedContent,
+    leadItems: viewModel.leadItems
   };
 }
 
@@ -286,10 +228,10 @@ export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: 
     updatedViewModel.avgProcessingRate = apiUpdate.avgProcessingRate;
   }
   if (apiUpdate.metadata !== undefined) {
-    updatedViewModel.metadata = {} as Record<string, never>; // OpenAPI uses empty object
+    updatedViewModel.metadata = apiUpdate.metadata || {};
   }
   
-  // Update OpenAPI fields directly (no more branded types)
+  // Update OpenAPI fields directly
   if (apiUpdate.id) {
     updatedViewModel.id = apiUpdate.id;
   }
@@ -326,17 +268,43 @@ export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: 
   if (apiUpdate.failedItems !== undefined) {
     updatedViewModel.failedItems = apiUpdate.failedItems;
   }
+  if (apiUpdate.businessStatus !== undefined) {
+    updatedViewModel.businessStatus = apiUpdate.businessStatus;
+  }
+  if (apiUpdate.domains !== undefined) {
+    updatedViewModel.domains = apiUpdate.domains;
+  }
+  if (apiUpdate.dnsValidatedDomains !== undefined) {
+    updatedViewModel.dnsValidatedDomains = apiUpdate.dnsValidatedDomains;
+  }
+  if (apiUpdate.leads !== undefined) {
+    updatedViewModel.leads = apiUpdate.leads;
+  }
   
-  // Re-derive UI fields from updated API data if status or type changed
-  if (apiUpdate.status || apiUpdate.campaignType) {
-    const newStatus = mapOpenAPICampaignStatus(apiUpdate.status) || viewModel.status;
-    const newType = mapOpenAPICampaignType(apiUpdate.campaignType) || viewModel.campaignType;
-    
-    updatedViewModel.status = newStatus;
-    updatedViewModel.campaignType = newType;
-    updatedViewModel.currentPhase = mapStatusToPhase(newStatus || '', newType || '');
-    updatedViewModel.phaseStatus = mapStatusToPhaseStatus(newStatus || '');
-    updatedViewModel.selectedType = newType;
+  // Update phase-based fields if provided
+  if (apiUpdate.currentPhase !== undefined) {
+    updatedViewModel.currentPhase = mapToPhase(apiUpdate.currentPhase);
+    updatedViewModel.selectedType = updatedViewModel.currentPhase;
+  }
+  if (apiUpdate.phaseStatus !== undefined) {
+    updatedViewModel.phaseStatus = mapToPhaseStatus(apiUpdate.phaseStatus);
+  }
+  
+  // Update param fields
+  if (apiUpdate.dnsValidationParams !== undefined) {
+    updatedViewModel.dnsValidationParams = apiUpdate.dnsValidationParams;
+  }
+  if (apiUpdate.httpKeywordValidationParams !== undefined) {
+    updatedViewModel.httpKeywordValidationParams = apiUpdate.httpKeywordValidationParams;
+  }
+  if (apiUpdate.domainGenerationParams !== undefined) {
+    updatedViewModel.domainGenerationParams = apiUpdate.domainGenerationParams;
+  }
+  if (apiUpdate.extractedContent !== undefined) {
+    updatedViewModel.extractedContent = apiUpdate.extractedContent;
+  }
+  if (apiUpdate.leadItems !== undefined) {
+    updatedViewModel.leadItems = apiUpdate.leadItems;
   }
   
   return updatedViewModel;

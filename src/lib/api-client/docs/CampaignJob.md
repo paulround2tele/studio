@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 **createdAt** | **string** |  | [optional] [default to undefined]
 **id** | **string** | Unique identifier | [optional] [default to undefined]
 **jobPayload** | **object** |  | [optional] [default to undefined]
-**jobType** | **string** |  | [optional] [default to undefined]
+**jobType** | **string** |  | [default to undefined]
 **lastAttemptedAt** | **string** |  | [optional] [default to undefined]
 **lastError** | **string** |  | [optional] [default to undefined]
 **lockedAt** | **string** |  | [optional] [default to undefined]

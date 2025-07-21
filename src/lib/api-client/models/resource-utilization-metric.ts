@@ -37,7 +37,7 @@ export interface ResourceUtilizationMetric {
      * @type {string}
      * @memberof ResourceUtilizationMetric
      */
-    'campaignType'?: string;
+    'campaignPhase'?: string;
     /**
      * 
      * @type {string}

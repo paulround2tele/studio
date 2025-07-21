@@ -61,7 +61,7 @@ export interface CampaignJob {
      * @type {string}
      * @memberof CampaignJob
      */
-    'jobType'?: CampaignJobJobTypeEnum;
+    'jobType': CampaignJobJobTypeEnum;
     /**
      * 
      * @type {string}
@@ -133,9 +133,10 @@ export const CampaignJobBusinessStatusEnum = {
 
 export type CampaignJobBusinessStatusEnum = typeof CampaignJobBusinessStatusEnum[keyof typeof CampaignJobBusinessStatusEnum];
 export const CampaignJobJobTypeEnum = {
-    DomainGeneration: 'domain_generation',
+    Generation: 'generation',
     DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation'
+    HttpKeywordValidation: 'http_keyword_validation',
+    Analysis: 'analysis'
 } as const;
 
 export type CampaignJobJobTypeEnum = typeof CampaignJobJobTypeEnum[keyof typeof CampaignJobJobTypeEnum];

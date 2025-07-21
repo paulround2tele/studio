@@ -614,10 +614,9 @@ func main() {
 		log.Println("Registered WebSocket campaign test route under /api/v2/test-campaign-ws/:campaignId.")
 	}
 
-	// V2 Campaign routes (session auth only)
+	// V2 Campaign routes (session auth only) - simple auth like /auth/me
 	campaignApiV2 := router.Group("/api/v2")
 	campaignApiV2.Use(authMiddleware.FastSessionAuth())
-	campaignApiV2.Use(securityMiddleware.SessionProtection())
 	newCampaignRoutesGroup := campaignApiV2.Group("/campaigns")
 	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware)
 	log.Println("Registered new campaign orchestration routes under /api/v2/campaigns.")

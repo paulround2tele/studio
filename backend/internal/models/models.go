@@ -9,29 +9,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// CampaignTypeEnum defines the type of campaign
-// @enum string
-// @example domain_generation
-type CampaignTypeEnum string
-
-const (
-	CampaignTypeDomainGeneration      CampaignTypeEnum = "domain_generation"      // @enum domain_generation
-	CampaignTypeDNSValidation         CampaignTypeEnum = "dns_validation"         // @enum dns_validation
-	CampaignTypeHTTPKeywordValidation CampaignTypeEnum = "http_keyword_validation" // @enum http_keyword_validation
-)
-
 // CampaignPhaseEnum defines the current phase of a campaign
 // @enum string
 // @example setup
 type CampaignPhaseEnum string
 
 const (
-	CampaignPhaseSetup          CampaignPhaseEnum = "setup"          // @enum setup
-	CampaignPhaseGeneration     CampaignPhaseEnum = "generation"     // @enum generation
-	CampaignPhaseDNSValidation  CampaignPhaseEnum = "dns_validation" // @enum dns_validation
-	CampaignPhaseHTTPValidation CampaignPhaseEnum = "http_validation" // @enum http_validation
-	CampaignPhaseAnalysis       CampaignPhaseEnum = "analysis"       // @enum analysis
-	CampaignPhaseCleanup        CampaignPhaseEnum = "cleanup"        // @enum cleanup
+	CampaignPhaseSetup          CampaignPhaseEnum = "setup"                   // @enum setup
+	CampaignPhaseGeneration     CampaignPhaseEnum = "generation"              // @enum generation
+	CampaignPhaseDNSValidation  CampaignPhaseEnum = "dns_validation"          // @enum dns_validation
+	CampaignPhaseHTTPValidation CampaignPhaseEnum = "http_keyword_validation" // @enum http_keyword_validation
+	CampaignPhaseAnalysis       CampaignPhaseEnum = "analysis"                // @enum analysis
 )
 
 // CampaignPhaseStatusEnum defines the status of a campaign phase
@@ -40,29 +28,28 @@ const (
 type CampaignPhaseStatusEnum string
 
 const (
-	CampaignPhaseStatusPending    CampaignPhaseStatusEnum = "not_started"  // @enum not_started
-	CampaignPhaseStatusInProgress CampaignPhaseStatusEnum = "in_progress"  // @enum in_progress
-	CampaignPhaseStatusPaused     CampaignPhaseStatusEnum = "paused"       // @enum paused
-	CampaignPhaseStatusSucceeded  CampaignPhaseStatusEnum = "completed"    // @enum completed
-	CampaignPhaseStatusFailed     CampaignPhaseStatusEnum = "failed"       // @enum failed
+	CampaignPhaseStatusPending    CampaignPhaseStatusEnum = "not_started" // @enum not_started
+	CampaignPhaseStatusInProgress CampaignPhaseStatusEnum = "in_progress" // @enum in_progress
+	CampaignPhaseStatusPaused     CampaignPhaseStatusEnum = "paused"      // @enum paused
+	CampaignPhaseStatusSucceeded  CampaignPhaseStatusEnum = "completed"   // @enum completed
+	CampaignPhaseStatusFailed     CampaignPhaseStatusEnum = "failed"      // @enum failed
 )
 
-// CampaignStatusEnum defines the status of a campaign
-// @enum string
-// @example pending
-type CampaignStatusEnum string
+// DNSPhaseConfigRequest represents DNS validation phase configuration
+// @description Request body for configuring DNS validation phase
+type DNSPhaseConfigRequest struct {
+	PersonaIDs []string `json:"personaIds" validate:"required,min=1" binding:"required" example:"[\"persona-uuid-1\", \"persona-uuid-2\"]" description:"Array of persona IDs to use for DNS validation"`
+	Name       *string  `json:"name,omitempty" example:"My DNS Campaign" description:"Optional name for the campaign"`
+}
 
-const (
-	CampaignStatusPending   CampaignStatusEnum = "pending"   // @enum pending
-	CampaignStatusQueued    CampaignStatusEnum = "queued"    // @enum queued
-	CampaignStatusRunning   CampaignStatusEnum = "running"   // @enum running
-	CampaignStatusPausing   CampaignStatusEnum = "pausing"   // @enum pausing (User or system initiated pause)
-	CampaignStatusPaused    CampaignStatusEnum = "paused"    // @enum paused
-	CampaignStatusCompleted CampaignStatusEnum = "completed" // @enum completed
-	CampaignStatusFailed    CampaignStatusEnum = "failed"    // @enum failed (Terminal failure after retries or critical error)
-	CampaignStatusArchived  CampaignStatusEnum = "archived"  // @enum archived (For long-term storage, not active)
-	CampaignStatusCancelled CampaignStatusEnum = "cancelled" // @enum cancelled (User initiated cancellation)
-)
+// HTTPPhaseConfigRequest represents HTTP validation phase configuration
+// @description Request body for configuring HTTP keyword validation phase
+type HTTPPhaseConfigRequest struct {
+	PersonaIDs    []string `json:"personaIds" validate:"required,min=1" binding:"required" example:"[\"persona-uuid-1\", \"persona-uuid-2\"]" description:"Array of persona IDs to use for HTTP validation"`
+	Keywords      []string `json:"keywords,omitempty" example:"[\"keyword1\", \"keyword2\"]" description:"Predefined keywords to search for"`
+	AdHocKeywords []string `json:"adHocKeywords,omitempty" example:"[\"custom1\", \"custom2\"]" description:"Custom keywords to search for"`
+	Name          *string  `json:"name,omitempty" example:"My HTTP Campaign" description:"Optional name for the campaign"`
+}
 
 // PersonaTypeEnum defines the type of persona
 type PersonaTypeEnum string
@@ -110,6 +97,18 @@ type KeywordRuleTypeEnum string
 const (
 	KeywordRuleTypeString KeywordRuleTypeEnum = "string"
 	KeywordRuleTypeRegex  KeywordRuleTypeEnum = "regex"
+)
+
+// JobTypeEnum defines the type of job for background processing (phases-based)
+// @enum string
+// @example generation
+type JobTypeEnum string
+
+const (
+	JobTypeGeneration     JobTypeEnum = "generation"              // @enum generation
+	JobTypeDNSValidation  JobTypeEnum = "dns_validation"          // @enum dns_validation
+	JobTypeHTTPValidation JobTypeEnum = "http_keyword_validation" // @enum http_keyword_validation
+	JobTypeAnalysis       JobTypeEnum = "analysis"                // @enum analysis
 )
 
 // CampaignJobStatusEnum defines the status of a background campaign job
@@ -220,20 +219,20 @@ type HTTPConfigDetails struct {
 // Persona represents a persona configuration
 // @Description Persona settings and validation rules
 type Persona struct {
-	ID            uuid.UUID        `db:"id" json:"id"`
-	Name          string           `db:"name" json:"name" validate:"required"`
-	PersonaType   PersonaTypeEnum  `db:"persona_type" json:"personaType" validate:"required,oneof=dns http"`
-	Description   sql.NullString   `db:"description" json:"description,omitempty"`
-	ConfigDetails json.RawMessage  `db:"config_details" json:"configDetails" validate:"required"` // Keep as RawMessage for DB compatibility
-	IsEnabled     bool             `db:"is_enabled" json:"isEnabled"`
+	ID            uuid.UUID          `db:"id" json:"id"`
+	Name          string             `db:"name" json:"name" validate:"required"`
+	PersonaType   PersonaTypeEnum    `db:"persona_type" json:"personaType" validate:"required,oneof=dns http"`
+	Description   sql.NullString     `db:"description" json:"description,omitempty"`
+	ConfigDetails json.RawMessage    `db:"config_details" json:"configDetails" validate:"required"` // Keep as RawMessage for DB compatibility
+	IsEnabled     bool               `db:"is_enabled" json:"isEnabled"`
 	Status        *PersonaStatusEnum `db:"status" json:"status,omitempty"` // Frontend expects this field
-	CreatedAt     time.Time        `db:"created_at" json:"createdAt"`
-	UpdatedAt     time.Time        `db:"updated_at" json:"updatedAt"`
+	CreatedAt     time.Time          `db:"created_at" json:"createdAt"`
+	UpdatedAt     time.Time          `db:"updated_at" json:"updatedAt"`
 
 	// Frontend-expected properties
-	LastTested    *time.Time `db:"last_tested" json:"lastTested,omitempty"`
-	LastError     *string    `db:"last_error" json:"lastError,omitempty"`
-	Tags          *[]string  `db:"tags" json:"tags,omitempty"`
+	LastTested *time.Time `db:"last_tested" json:"lastTested,omitempty"`
+	LastError  *string    `db:"last_error" json:"lastError,omitempty"`
+	Tags       *[]string  `db:"tags" json:"tags,omitempty"`
 }
 
 // Proxy represents a proxy server configuration
@@ -260,12 +259,12 @@ type Proxy struct {
 	UpdatedAt     time.Time          `db:"updated_at" json:"updatedAt"`
 
 	// Frontend-expected fields
-	Status       *ProxyStatusEnum `db:"status" json:"status,omitempty"`                 // Frontend expects this enum field
-	Notes        sql.NullString   `db:"notes" json:"notes,omitempty"`                   // Proxy notes/comments
-	SuccessCount sql.NullInt32    `db:"success_count" json:"successCount,omitempty"`    // Count of successful operations
-	FailureCount sql.NullInt32    `db:"failure_count" json:"failureCount,omitempty"`    // Count of failed operations
-	LastTested   sql.NullTime     `db:"last_tested" json:"lastTested,omitempty"`        // Last test timestamp
-	LastError    sql.NullString   `db:"last_error" json:"lastError,omitempty"`          // Last error message
+	Status       *ProxyStatusEnum `db:"status" json:"status,omitempty"`              // Frontend expects this enum field
+	Notes        sql.NullString   `db:"notes" json:"notes,omitempty"`                // Proxy notes/comments
+	SuccessCount sql.NullInt32    `db:"success_count" json:"successCount,omitempty"` // Count of successful operations
+	FailureCount sql.NullInt32    `db:"failure_count" json:"failureCount,omitempty"` // Count of failed operations
+	LastTested   sql.NullTime     `db:"last_tested" json:"lastTested,omitempty"`     // Last test timestamp
+	LastError    sql.NullString   `db:"last_error" json:"lastError,omitempty"`       // Last error message
 
 	// Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash
 	InputUsername sql.NullString `json:"inputUsername,omitempty"` // For API input, to be parsed from/into Address or used for PasswordHash
@@ -296,26 +295,23 @@ type KeywordRule struct {
 	UpdatedAt       time.Time           `db:"updated_at" json:"updatedAt"`
 }
 
-// Campaign represents a generic campaign
-// @Description Campaign configuration and status
+// Campaign represents a generic campaign using phases-based architecture
+// @Description Campaign configuration and status with phases-based execution
 type Campaign struct {
-	ID                 uuid.UUID          `db:"id" json:"id"`
-	Name               string             `db:"name" json:"name" validate:"required"`
-	CampaignType       CampaignTypeEnum   `db:"campaign_type" json:"campaignType" validate:"required"`
-	Status             CampaignStatusEnum `db:"status" json:"status" validate:"required"`
-	UserID             *uuid.UUID         `db:"user_id" json:"userId,omitempty"`
-	LaunchSequence     bool               `db:"launch_sequence" json:"launchSequence"` // Whether to automatically chain to next campaign types when this campaign completes
-	CreatedAt          time.Time          `db:"created_at" json:"createdAt"`
-	UpdatedAt          time.Time          `db:"updated_at" json:"updatedAt"`
-	StartedAt          *time.Time         `db:"started_at" json:"startedAt,omitempty"`
-	CompletedAt        *time.Time         `db:"completed_at" json:"completedAt,omitempty"`
-	ProgressPercentage *float64           `db:"progress_percentage" json:"progressPercentage,omitempty" validate:"omitempty,gte=0,lte=100"`
-	TotalItems         *int64             `db:"total_items" json:"totalItems,omitempty" validate:"omitempty,gte=0"`
-	ProcessedItems     *int64             `db:"processed_items" json:"processedItems,omitempty" validate:"omitempty,gte=0"`
-	ErrorMessage       *string            `db:"error_message" json:"errorMessage,omitempty"`
-	SuccessfulItems    *int64             `db:"successful_items" json:"successfulItems,omitempty"`
-	FailedItems        *int64             `db:"failed_items" json:"failedItems,omitempty"`
-	Metadata           *json.RawMessage   `db:"metadata" json:"metadata,omitempty"`
+	ID                 uuid.UUID        `db:"id" json:"id"`
+	Name               string           `db:"name" json:"name" validate:"required"`
+	UserID             *uuid.UUID       `db:"user_id" json:"userId,omitempty"`
+	CreatedAt          time.Time        `db:"created_at" json:"createdAt"`
+	UpdatedAt          time.Time        `db:"updated_at" json:"updatedAt"`
+	StartedAt          *time.Time       `db:"started_at" json:"startedAt,omitempty"`
+	CompletedAt        *time.Time       `db:"completed_at" json:"completedAt,omitempty"`
+	ProgressPercentage *float64         `db:"progress_percentage" json:"progressPercentage,omitempty" validate:"omitempty,gte=0,lte=100"`
+	TotalItems         *int64           `db:"total_items" json:"totalItems,omitempty" validate:"omitempty,gte=0"`
+	ProcessedItems     *int64           `db:"processed_items" json:"processedItems,omitempty" validate:"omitempty,gte=0"`
+	ErrorMessage       *string          `db:"error_message" json:"errorMessage,omitempty"`
+	SuccessfulItems    *int64           `db:"successful_items" json:"successfulItems,omitempty"`
+	FailedItems        *int64           `db:"failed_items" json:"failedItems,omitempty"`
+	Metadata           *json.RawMessage `db:"metadata" json:"metadata,omitempty"`
 
 	// Additional tracking fields
 	EstimatedCompletionAt *time.Time `db:"estimated_completion_at" json:"estimatedCompletionAt,omitempty"`
@@ -323,13 +319,36 @@ type Campaign struct {
 	LastHeartbeatAt       *time.Time `db:"last_heartbeat_at" json:"lastHeartbeatAt,omitempty"`
 	BusinessStatus        *string    `db:"business_status" json:"businessStatus,omitempty"`
 
-	// Frontend-expected properties
-	CurrentPhase        *CampaignPhaseEnum       `db:"current_phase" json:"currentPhase,omitempty"`
-	PhaseStatus         *CampaignPhaseStatusEnum `db:"phase_status" json:"phaseStatus,omitempty"`
-	Progress            *float64                 `db:"progress" json:"progress,omitempty" validate:"omitempty,gte=0,lte=100"`
-	Domains             *int64                   `db:"domains" json:"domains,omitempty"`
-	Leads               *int64                   `db:"leads" json:"leads,omitempty"`
-	DNSValidatedDomains *int64                   `db:"dns_validated_domains" json:"dnsValidatedDomains,omitempty"`
+	// Phases-based architecture (replaces legacy CampaignType + Status)
+	// @swagger:field currentPhase
+	// @description Current phase of campaign execution
+	// @example generation
+	CurrentPhase *CampaignPhaseEnum `db:"current_phase" json:"currentPhase,omitempty" validate:"omitempty,oneof=setup generation dns_validation http_keyword_validation analysis"`
+
+	// @swagger:field phaseStatus
+	// @description Status of the current phase
+	// @example in_progress
+	PhaseStatus *CampaignPhaseStatusEnum `db:"phase_status" json:"phaseStatus,omitempty" validate:"omitempty,oneof=not_started in_progress paused completed failed"`
+
+	// @swagger:field progress
+	// @description Overall progress percentage (0-100)
+	// @example 75.5
+	Progress *float64 `db:"progress" json:"progress,omitempty" validate:"omitempty,gte=0,lte=100"`
+
+	// @swagger:field domains
+	// @description Total number of domains processed
+	// @example 1000
+	Domains *int64 `db:"domains" json:"domains,omitempty"`
+
+	// @swagger:field leads
+	// @description Number of leads generated
+	// @example 25
+	Leads *int64 `db:"leads" json:"leads,omitempty"`
+
+	// @swagger:field dnsValidatedDomains
+	// @description Number of DNS validated domains
+	// @example 800
+	DNSValidatedDomains *int64 `db:"dns_validated_domains" json:"dnsValidatedDomains,omitempty"`
 
 	// Direct access to campaign parameters (flattened for frontend convenience)
 	DomainGenerationParams      *DomainGenerationCampaignParams `json:"domainGenerationParams,omitempty"`
@@ -353,10 +372,10 @@ type ExtractedContentItem struct {
 
 // ExtractedContentAnalysis represents AI analysis of extracted content
 type ExtractedContentAnalysis struct {
-	Summary           *string   `json:"summary,omitempty"`
-	AdvancedKeywords  *[]string `json:"advancedKeywords,omitempty"`
-	Categories        *[]string `json:"categories,omitempty"`
-	Sentiment         *string   `json:"sentiment,omitempty" validate:"omitempty,oneof=Positive Negative Neutral"`
+	Summary          *string   `json:"summary,omitempty"`
+	AdvancedKeywords *[]string `json:"advancedKeywords,omitempty"`
+	Categories       *[]string `json:"categories,omitempty"`
+	Sentiment        *string   `json:"sentiment,omitempty" validate:"omitempty,oneof=Positive Negative Neutral"`
 }
 
 // LeadItem represents a lead generated from campaign analysis
@@ -426,25 +445,25 @@ const (
 
 // GeneratedDomain represents a domain name generated by a campaign
 type GeneratedDomain struct {
-	ID                   uuid.UUID            `db:"id" json:"id" firestore:"id"`
-	GenerationCampaignID uuid.UUID            `db:"domain_generation_campaign_id" json:"generationCampaignId" firestore:"generationCampaignId" validate:"required"`
-	DomainName           string               `db:"domain_name" json:"domainName" firestore:"domainName" validate:"required,hostname_rfc1123"`
-	OffsetIndex          int64                `db:"offset_index" json:"offsetIndex" firestore:"offsetIndex" validate:"gte=0"` // Absolute offset in the total possible generation space for this config
-	GeneratedAt          time.Time            `db:"generated_at" json:"generatedAt" firestore:"generatedAt"`
-	SourceKeyword        sql.NullString       `db:"source_keyword" json:"sourceKeyword,omitempty" firestore:"sourceKeyword,omitempty"`
-	SourcePattern        sql.NullString       `db:"source_pattern" json:"sourcePattern,omitempty" firestore:"sourcePattern,omitempty"`
-	TLD                  sql.NullString       `db:"tld" json:"tld,omitempty" firestore:"tld,omitempty"`
-	CreatedAt            time.Time            `db:"created_at" json:"createdAt" firestore:"createdAt"`
-	
+	ID                   uuid.UUID      `db:"id" json:"id" firestore:"id"`
+	GenerationCampaignID uuid.UUID      `db:"domain_generation_campaign_id" json:"generationCampaignId" firestore:"generationCampaignId" validate:"required"`
+	DomainName           string         `db:"domain_name" json:"domainName" firestore:"domainName" validate:"required,hostname_rfc1123"`
+	OffsetIndex          int64          `db:"offset_index" json:"offsetIndex" firestore:"offsetIndex" validate:"gte=0"` // Absolute offset in the total possible generation space for this config
+	GeneratedAt          time.Time      `db:"generated_at" json:"generatedAt" firestore:"generatedAt"`
+	SourceKeyword        sql.NullString `db:"source_keyword" json:"sourceKeyword,omitempty" firestore:"sourceKeyword,omitempty"`
+	SourcePattern        sql.NullString `db:"source_pattern" json:"sourcePattern,omitempty" firestore:"sourcePattern,omitempty"`
+	TLD                  sql.NullString `db:"tld" json:"tld,omitempty" firestore:"tld,omitempty"`
+	CreatedAt            time.Time      `db:"created_at" json:"createdAt" firestore:"createdAt"`
+
 	// Domain-centric validation status fields
-	DNSStatus            *DomainDNSStatusEnum `db:"dns_status" json:"dnsStatus,omitempty" firestore:"dnsStatus,omitempty"`
-	DNSIP                sql.NullString       `db:"dns_ip" json:"dnsIp,omitempty" firestore:"dnsIp,omitempty"`
-	HTTPStatus           *DomainHTTPStatusEnum `db:"http_status" json:"httpStatus,omitempty" firestore:"httpStatus,omitempty"`
-	HTTPStatusCode       sql.NullInt32        `db:"http_status_code" json:"httpStatusCode,omitempty" firestore:"httpStatusCode,omitempty"`
-	HTTPTitle            sql.NullString       `db:"http_title" json:"httpTitle,omitempty" firestore:"httpTitle,omitempty"`
-	HTTPKeywords         sql.NullString       `db:"http_keywords" json:"httpKeywords,omitempty" firestore:"httpKeywords,omitempty"`
-	LeadScore            sql.NullFloat64      `db:"lead_score" json:"leadScore,omitempty" firestore:"leadScore,omitempty"`
-	LastValidatedAt      sql.NullTime         `db:"last_validated_at" json:"lastValidatedAt,omitempty" firestore:"lastValidatedAt,omitempty"`
+	DNSStatus       *DomainDNSStatusEnum  `db:"dns_status" json:"dnsStatus,omitempty" firestore:"dnsStatus,omitempty"`
+	DNSIP           sql.NullString        `db:"dns_ip" json:"dnsIp,omitempty" firestore:"dnsIp,omitempty"`
+	HTTPStatus      *DomainHTTPStatusEnum `db:"http_status" json:"httpStatus,omitempty" firestore:"httpStatus,omitempty"`
+	HTTPStatusCode  sql.NullInt32         `db:"http_status_code" json:"httpStatusCode,omitempty" firestore:"httpStatusCode,omitempty"`
+	HTTPTitle       sql.NullString        `db:"http_title" json:"httpTitle,omitempty" firestore:"httpTitle,omitempty"`
+	HTTPKeywords    sql.NullString        `db:"http_keywords" json:"httpKeywords,omitempty" firestore:"httpKeywords,omitempty"`
+	LeadScore       sql.NullFloat64       `db:"lead_score" json:"leadScore,omitempty" firestore:"leadScore,omitempty"`
+	LastValidatedAt sql.NullTime          `db:"last_validated_at" json:"lastValidatedAt,omitempty" firestore:"lastValidatedAt,omitempty"`
 }
 
 // DNSValidationCampaignParams holds parameters for a DNS validation campaign
@@ -528,19 +547,19 @@ type AuditLog struct {
 	UserAgent  sql.NullString   `db:"user_agent" json:"userAgent,omitempty" firestore:"userAgent,omitempty"`
 }
 
-// CampaignJob represents a job for the background worker system.
+// CampaignJob represents a job for the background worker system (phases-based)
 type CampaignJob struct {
 	ID                 uuid.UUID              `db:"id" json:"id" firestore:"id"`
 	CampaignID         uuid.UUID              `db:"campaign_id" json:"campaignId" firestore:"campaignId"`
-	JobType            CampaignTypeEnum       `db:"job_type" json:"jobType" firestore:"jobType"` // Renamed from CampaignType to JobType
+	JobType            JobTypeEnum            `db:"job_type" json:"jobType" firestore:"jobType" validate:"required,oneof=generation dns_validation http_keyword_validation analysis"`
 	Status             CampaignJobStatusEnum  `db:"status" json:"status" firestore:"status"`
 	ScheduledAt        time.Time              `db:"scheduled_at" json:"scheduledAt" firestore:"scheduledAt"`
-	JobPayload         *json.RawMessage       `db:"job_payload" json:"jobPayload,omitempty" firestore:"jobPayload,omitempty"` // Renamed from Payload to JobPayload
+	JobPayload         *json.RawMessage       `db:"job_payload" json:"jobPayload,omitempty" firestore:"jobPayload,omitempty"`
 	Attempts           int                    `db:"attempts" json:"attempts" firestore:"attempts"`
 	MaxAttempts        int                    `db:"max_attempts" json:"maxAttempts" firestore:"maxAttempts"`
 	LastError          sql.NullString         `db:"last_error" json:"lastError,omitempty" firestore:"lastError,omitempty"`
-	LastAttemptedAt    sql.NullTime           `db:"last_attempted_at" json:"lastAttemptedAt,omitempty" firestore:"lastAttemptedAt,omitempty"`          // Added
-	ProcessingServerID sql.NullString         `db:"processing_server_id" json:"processingServerId,omitempty" firestore:"processingServerId,omitempty"` // Changed WorkerID to ProcessingServerID to match DB
+	LastAttemptedAt    sql.NullTime           `db:"last_attempted_at" json:"lastAttemptedAt,omitempty" firestore:"lastAttemptedAt,omitempty"`
+	ProcessingServerID sql.NullString         `db:"processing_server_id" json:"processingServerId,omitempty" firestore:"processingServerId,omitempty"`
 	CreatedAt          time.Time              `db:"created_at" json:"createdAt" firestore:"createdAt"`
 	UpdatedAt          time.Time              `db:"updated_at" json:"updatedAt" firestore:"updatedAt"`
 	NextExecutionAt    sql.NullTime           `db:"next_execution_at" json:"nextExecutionAt,omitempty" firestore:"nextExecutionAt,omitempty"`
@@ -597,7 +616,7 @@ type QueryPerformanceMetric struct {
 	ExecutedAt              time.Time       `db:"executed_at" json:"executedAt"`
 	ServiceName             string          `db:"service_name" json:"serviceName"`
 	CampaignID              *uuid.UUID      `db:"campaign_id" json:"campaignId,omitempty"`
-	CampaignType            *string         `db:"campaign_type" json:"campaignType,omitempty"`
+	CampaignPhase           *string         `db:"campaign_phase" json:"campaignPhase,omitempty"` // Phase-based tracking for analytics
 	MemoryUsedBytes         int64           `db:"memory_used_bytes" json:"memoryUsedBytes"`
 	OptimizationApplied     bool            `db:"optimization_applied" json:"optimizationApplied"`
 	OptimizationSuggestions json.RawMessage `db:"optimization_suggestions" json:"optimizationSuggestions"`
@@ -617,7 +636,7 @@ type ResourceUtilizationMetric struct {
 	EfficiencyScore     float64         `db:"efficiency_score" json:"efficiencyScore"`
 	BottleneckDetected  bool            `db:"bottleneck_detected" json:"bottleneckDetected"`
 	RecordedAt          time.Time       `db:"recorded_at" json:"recordedAt"`
-	CampaignType        *string         `db:"campaign_type" json:"campaignType,omitempty"`
+	CampaignPhase       *string         `db:"campaign_phase" json:"campaignPhase,omitempty"` // Phase-based tracking for analytics
 	CampaignID          *uuid.UUID      `db:"campaign_id" json:"campaignId,omitempty"`
 	Component           *string         `db:"component" json:"component,omitempty"`
 	OptimizationApplied json.RawMessage `db:"optimization_applied" json:"optimizationApplied"`

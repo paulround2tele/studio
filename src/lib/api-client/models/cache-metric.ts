@@ -43,7 +43,7 @@ export interface CacheMetric {
      * @type {string}
      * @memberof CacheMetric
      */
-    'campaignType'?: string;
+    'campaignPhase'?: string;
     /**
      * 
      * @type {number}

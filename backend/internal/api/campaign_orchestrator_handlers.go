@@ -41,6 +41,28 @@ func NewCampaignOrchestratorAPIHandler(orchService services.CampaignOrchestrator
 	}
 }
 
+// Helper functions for phases-based campaign responses
+func getPhaseStatusString(campaign *models.Campaign) string {
+	if campaign.PhaseStatus != nil {
+		return string(*campaign.PhaseStatus)
+	}
+	return "not_started"
+}
+
+func getTotalItemsCount(campaign *models.Campaign) int {
+	if campaign.TotalItems != nil {
+		return int(*campaign.TotalItems)
+	}
+	return 0
+}
+
+func getCurrentPhaseString(campaign *models.Campaign) string {
+	if campaign.CurrentPhase != nil {
+		return string(*campaign.CurrentPhase)
+	}
+	return "setup"
+}
+
 // RegisterCampaignOrchestrationRoutes registers all campaign orchestration related routes.
 // It requires a base group and auth middleware instance for session-based access control.
 //
@@ -71,6 +93,10 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	// Domain-centric validation routes - session-based auth
 	group.POST("/:campaignId/validate-dns", h.validateDNSForCampaign)
 	group.POST("/:campaignId/validate-http", h.validateHTTPForCampaign)
+
+	// Phase configuration routes - session-based auth
+	group.POST("/:campaignId/configure-dns", h.configureDNSValidationGin)
+	group.POST("/:campaignId/configure-http", h.configureHTTPValidationGin)
 
 	// Campaign modification routes - session-based auth
 	group.PUT("/:campaignId", h.updateCampaign)
@@ -136,79 +162,62 @@ func (h *CampaignOrchestratorAPIHandler) createCampaign(c *gin.Context) {
 		}
 	}
 
-	// Validate that appropriate params are provided for the campaign type
-	if err := h.validateCampaignRequest(req); err != nil {
+	// Validate that domain generation params are provided for phases-based campaigns
+	if req.DomainGenerationParams == nil {
 		var validationErrors []ErrorDetail
 		validationErrors = append(validationErrors, ErrorDetail{
 			Code:    ErrorCodeValidation,
-			Message: err.Error(),
+			Message: "domainGenerationParams required for campaign creation - all campaigns start with domain generation phase",
 		})
 		respondWithValidationErrorGin(c, validationErrors)
 		return
 	}
 
-	// Create campaign using the orchestrator service
-	campaign, err := h.orchestratorService.CreateCampaignUnified(c.Request.Context(), req)
+	// Get user ID from context (set by middleware)
+	userID, _ := c.Get("user_id")
+
+	// Convert CreateCampaignRequest to CreateDomainGenerationCampaignRequest
+	domainGenReq := services.CreateDomainGenerationCampaignRequest{
+		Name:                 req.Name,
+		PatternType:          req.DomainGenerationParams.PatternType,
+		VariableLength:       req.DomainGenerationParams.VariableLength,
+		CharacterSet:         req.DomainGenerationParams.CharacterSet,
+		ConstantString:       req.DomainGenerationParams.ConstantString,
+		TLD:                  req.DomainGenerationParams.TLD,
+		NumDomainsToGenerate: req.DomainGenerationParams.NumDomainsToGenerate,
+		UserID:               userID.(uuid.UUID),
+	}
+
+	// Create campaign using the working phases-based method
+	log.Printf("DEBUG [createCampaign]: Calling CreateDomainGenerationCampaign - Name: %s, PatternType: %s, TLD: %s",
+		domainGenReq.Name, domainGenReq.PatternType, domainGenReq.TLD)
+
+	campaign, err := h.orchestratorService.CreateDomainGenerationCampaign(c.Request.Context(), domainGenReq)
 	if err != nil {
-		log.Printf("Error creating campaign: %v", err)
+		log.Printf("DEBUG [createCampaign]: CreateDomainGenerationCampaign failed: %v", err)
+
 		// Use detailed error response with appropriate error code
 		respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
 			"Failed to create campaign", []ErrorDetail{
 				{
 					Code:    ErrorCodeInternalServer,
 					Message: err.Error(),
-					Context: ErrorContext{
-						CampaignType: req.CampaignType,
-					},
 				},
 			})
 		return
 	}
 
+	log.Printf("DEBUG [createCampaign]: Campaign created successfully - ID: %s, Type: %T",
+		campaign.ID, campaign)
+	log.Printf("DEBUG [createCampaign]: Campaign CurrentPhase: %v, PhaseStatus: %v",
+		campaign.CurrentPhase, campaign.PhaseStatus)
+
 	// Broadcast campaign creation to WebSocket clients
 	websocket.BroadcastCampaignCreated(campaign.ID.String(), campaign)
 	log.Printf("Campaign created and broadcasted: %s", campaign.ID)
 
+	log.Printf("DEBUG [createCampaign]: Response will be wrapped in APIResponse structure")
 	respondWithJSONGin(c, http.StatusCreated, campaign)
-}
-
-// validateCampaignRequest ensures appropriate parameters are provided for each campaign type
-func (h *CampaignOrchestratorAPIHandler) validateCampaignRequest(req services.CreateCampaignRequest) error {
-	switch req.CampaignType {
-	case "domain_generation":
-		if req.DomainGenerationParams == nil {
-			return fmt.Errorf("domainGenerationParams required for domain_generation campaigns")
-		}
-		if req.DnsValidationParams != nil || req.HttpKeywordParams != nil {
-			return fmt.Errorf("only domainGenerationParams should be provided for domain_generation campaigns")
-		}
-	case "dns_validation":
-		if req.DnsValidationParams == nil {
-			return fmt.Errorf("dnsValidationParams required for dns_validation campaigns")
-		}
-		if req.DomainGenerationParams != nil || req.HttpKeywordParams != nil {
-			return fmt.Errorf("only dnsValidationParams should be provided for dns_validation campaigns")
-		}
-		// Validate dual-path strategy: exactly one source must be specified
-		hasSourceGen := req.DnsValidationParams.SourceGenerationCampaignID != nil
-		hasSourceCampaign := req.DnsValidationParams.SourceCampaignID != nil
-		if !hasSourceGen && !hasSourceCampaign {
-			return fmt.Errorf("dnsValidationParams must specify either sourceGenerationCampaignId (for phased validation) or sourceCampaignId (for standalone validation)")
-		}
-		if hasSourceGen && hasSourceCampaign {
-			return fmt.Errorf("dnsValidationParams cannot specify both sourceGenerationCampaignId and sourceCampaignId - choose one validation type")
-		}
-	case "http_keyword_validation":
-		if req.HttpKeywordParams == nil {
-			return fmt.Errorf("httpKeywordParams required for http_keyword_validation campaigns")
-		}
-		if req.DomainGenerationParams != nil || req.DnsValidationParams != nil {
-			return fmt.Errorf("only httpKeywordParams should be provided for http_keyword_validation campaigns")
-		}
-	default:
-		return fmt.Errorf("unsupported campaign type: %s", req.CampaignType)
-	}
-	return nil
 }
 
 // updateCampaign updates an existing campaign's configuration for DNS validation transition
@@ -378,14 +387,12 @@ func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 		return
 	}
 
-	statusFilter := models.CampaignStatusEnum(c.Query("status"))
-	typeFilter := models.CampaignTypeEnum(c.Query("type"))
-
+	// Simplified filtering for phases-based architecture - remove legacy filters for now
 	filter := store.ListCampaignsFilter{
-		Limit:  limit,
-		Offset: offset,
-		Status: statusFilter,
-		Type:   typeFilter,
+		Limit:     limit,
+		Offset:    offset,
+		SortBy:    c.Query("sortBy"),
+		SortOrder: c.Query("sortOrder"),
 	}
 
 	campaigns, totalCount, err := h.orchestratorService.ListCampaigns(c.Request.Context(), filter)
@@ -407,6 +414,94 @@ func (h *CampaignOrchestratorAPIHandler) listCampaigns(c *gin.Context) {
 			Count:    int(totalCount),
 		},
 	})
+	respondWithJSONGin(c, http.StatusOK, response)
+}
+
+// configureDNSValidationGin configures DNS validation phase for a campaign
+// @Summary Configure DNS validation phase
+// @Description Configure DNS validation phase for a campaign and transition to dns_validation phase
+// @Tags campaigns
+// @ID configureDNSValidation
+// @Accept json
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Param request body DNSPhaseConfigRequest true "DNS validation configuration"
+// @Success 200 {object} APIResponse "Campaign configured successfully"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 404 {object} ErrorResponse "Campaign not found"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /campaigns/{campaignId}/configure-dns [post]
+func (h *CampaignOrchestratorAPIHandler) configureDNSValidationGin(c *gin.Context) {
+	campaignIDStr := c.Param("campaignId")
+	campaignID, err := uuid.Parse(campaignIDStr)
+	if err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid campaign ID format", nil)
+		return
+	}
+
+	var req DNSPhaseConfigRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid request body", nil)
+		return
+	}
+
+	campaign, err := h.orchestratorService.ConfigureDNSValidationPhase(c.Request.Context(), campaignID, req)
+	if err != nil {
+		log.Printf("Error configuring DNS validation for campaign %s: %v", campaignIDStr, err)
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation, err.Error(), nil)
+		return
+	}
+
+	log.Printf("Successfully configured DNS validation for campaign %s", campaignIDStr)
+
+	// ✅ FIX: Use UNIFIED APIResponse format instead of direct campaign object
+	response := NewSuccessResponse(campaign, getRequestID(c))
+	respondWithJSONGin(c, http.StatusOK, response)
+}
+
+// configureHTTPValidationGin configures HTTP validation phase for a campaign
+// @Summary Configure HTTP validation phase
+// @Description Configure HTTP validation phase for a campaign and transition to http_validation phase
+// @Tags campaigns
+// @ID configureHTTPValidation
+// @Accept json
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Param request body HTTPPhaseConfigRequest true "HTTP validation configuration"
+// @Success 200 {object} APIResponse "Campaign configured successfully"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 404 {object} ErrorResponse "Campaign not found"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /campaigns/{campaignId}/configure-http [post]
+func (h *CampaignOrchestratorAPIHandler) configureHTTPValidationGin(c *gin.Context) {
+	campaignIDStr := c.Param("campaignId")
+	campaignID, err := uuid.Parse(campaignIDStr)
+	if err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid campaign ID format", nil)
+		return
+	}
+
+	var req HTTPPhaseConfigRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid request body", nil)
+		return
+	}
+
+	campaign, err := h.orchestratorService.ConfigureHTTPValidationPhase(c.Request.Context(), campaignID, req)
+	if err != nil {
+		log.Printf("Error configuring HTTP validation for campaign %s: %v", campaignIDStr, err)
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation, err.Error(), nil)
+		return
+	}
+
+	log.Printf("Successfully configured HTTP validation for campaign %s", campaignIDStr)
+
+	// ✅ FIX: Use UNIFIED APIResponse format instead of direct campaign object
+	response := NewSuccessResponse(campaign, getRequestID(c))
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
@@ -441,23 +536,24 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDetails(c *gin.Context) {
 		return
 	}
 
-	// Combine base campaign and specific params into a single response DTO
+	// Use phases-based campaign response format
 	resp := CampaignDetailsResponse{
 		Campaign: CampaignData{
-			ID:          baseCampaign.ID.String(),
-			Name:        baseCampaign.Name,
-			Type:        string(baseCampaign.CampaignType),
-			Status:      string(baseCampaign.Status),
-			CreatedAt:   baseCampaign.CreatedAt.Format(time.RFC3339),
-			UpdatedAt:   baseCampaign.UpdatedAt.Format(time.RFC3339),
-			Description: "", // Description field will be populated from service layer
+			ID:           baseCampaign.ID.String(),
+			Name:         baseCampaign.Name,
+			CurrentPhase: baseCampaign.CurrentPhase,
+			PhaseStatus:  baseCampaign.PhaseStatus,
+			CreatedAt:    baseCampaign.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:    baseCampaign.UpdatedAt.Format(time.RFC3339),
+			Description:  "",                           // Description field will be populated from service layer
+			Progress:     make(map[string]interface{}), // Initialize progress map
 		},
 		Params: CampaignParamsData{
-			DomainCount:   0,  // Will be populated from actual params
+			DomainCount:   getTotalItemsCount(baseCampaign),
 			KeywordSetID:  "", // Will be populated from actual params
 			PersonaID:     "", // Will be populated from actual params
 			ProxyPoolID:   "", // Will be populated from actual params
-			Configuration: "", // Will be populated from actual params
+			Configuration: getCurrentPhaseString(baseCampaign),
 		},
 	}
 	respondWithJSONGin(c, http.StatusOK, resp)
@@ -886,64 +982,61 @@ func (h *CampaignOrchestratorAPIHandler) validateDNSForCampaign(c *gin.Context) 
 	}
 
 	// Validate the source campaign can be used for DNS validation
-	if sourceCampaign.CampaignType != models.CampaignTypeDomainGeneration && sourceCampaign.CampaignType != models.CampaignTypeDNSValidation {
-		log.Printf("ERROR [DNS Validation]: Invalid campaign type for DNS validation. Expected domain_generation or dns_validation, got %s", sourceCampaign.CampaignType)
+	currentPhaseStr := "unknown"
+	if sourceCampaign.CurrentPhase != nil {
+		currentPhaseStr = string(*sourceCampaign.CurrentPhase)
+	}
+
+	if sourceCampaign.CurrentPhase == nil ||
+		(*sourceCampaign.CurrentPhase != models.CampaignPhaseGeneration && *sourceCampaign.CurrentPhase != models.CampaignPhaseDNSValidation) {
+		log.Printf("ERROR [DNS Validation]: Invalid campaign phase for DNS validation. Expected generation or dns_validation, got %s", currentPhaseStr)
 		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
-			"Invalid campaign type for DNS validation", []ErrorDetail{
+			"Invalid campaign phase for DNS validation", []ErrorDetail{
 				{
 					Code:    ErrorCodeValidation,
 					Message: "DNS validation can only be performed on domain generation or DNS validation campaigns",
 					Context: ErrorContext{
-						CampaignID:   campaignID.String(),
-						CampaignType: string(sourceCampaign.CampaignType),
+						CampaignID:    campaignID.String(),
+						CampaignPhase: currentPhaseStr,
 					},
 				},
 			})
 		return
 	}
 
-	if sourceCampaign.Status != models.CampaignStatusCompleted && sourceCampaign.Status != models.CampaignStatusRunning {
+	phaseStatusStr := "unknown"
+	if sourceCampaign.PhaseStatus != nil {
+		phaseStatusStr = string(*sourceCampaign.PhaseStatus)
+	}
+
+	if sourceCampaign.PhaseStatus == nil ||
+		(*sourceCampaign.PhaseStatus != models.CampaignPhaseStatusSucceeded && *sourceCampaign.PhaseStatus != models.CampaignPhaseStatusInProgress) {
 		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
 			"Campaign must be completed or running", []ErrorDetail{
 				{
 					Code:    ErrorCodeValidation,
 					Message: "Source campaign must be completed or running before in-place DNS validation can be performed",
 					Context: ErrorContext{
-						CampaignID:     campaignID.String(),
-						CampaignStatus: string(sourceCampaign.Status),
+						CampaignID:  campaignID.String(),
+						PhaseStatus: phaseStatusStr,
 					},
 				},
 			})
 		return
 	}
 
-	// Create in-place DNS validation request
-	inPlaceRequest := services.InPlaceDNSValidationRequest{
-		CampaignID:               campaignID,
-		PersonaIDs:               req.PersonaIDs, // These may be empty - the service will read from campaign config
-		RotationIntervalSeconds:  30,
-		ProcessingSpeedPerMinute: 60,
-		BatchSize:                10,
-		RetryAttempts:            3,
-		OnlyInvalidDomains:       true, // For re-validation, only process invalid domains
+	// Create DNS phase configuration request using clean single-campaign architecture
+	dnsPhaseReq := models.DNSPhaseConfigRequest{
+		PersonaIDs: make([]string, len(req.PersonaIDs)),
 	}
 
-	// Use override parameters if provided in the request
-	if req.RotationIntervalSeconds != 0 {
-		inPlaceRequest.RotationIntervalSeconds = req.RotationIntervalSeconds
-	}
-	if req.ProcessingSpeedPerMinute != 0 {
-		inPlaceRequest.ProcessingSpeedPerMinute = req.ProcessingSpeedPerMinute
-	}
-	if req.BatchSize != 0 {
-		inPlaceRequest.BatchSize = req.BatchSize
-	}
-	if req.RetryAttempts != 0 {
-		inPlaceRequest.RetryAttempts = req.RetryAttempts
+	// Convert UUIDs to strings for phase config
+	for i, personaID := range req.PersonaIDs {
+		dnsPhaseReq.PersonaIDs[i] = personaID.String()
 	}
 
-	// Start in-place DNS validation using the DNS campaign service
-	err = h.dnsService.StartInPlaceDNSValidation(c.Request.Context(), inPlaceRequest)
+	// Use the orchestrator's clean phase configuration method
+	_, err = h.orchestratorService.ConfigureDNSValidationPhase(c.Request.Context(), campaignID, dnsPhaseReq)
 	if err != nil {
 		log.Printf("ERROR [DNS Validation]: Failed to start in-place DNS validation for campaign %s: %v", campaignID, err)
 
@@ -1073,26 +1166,24 @@ func (h *CampaignOrchestratorAPIHandler) validateHTTPForCampaign(c *gin.Context)
 		return
 	}
 
-	// Create HTTP keyword campaign request
-	createReq := services.CreateHTTPKeywordCampaignRequest{
-		Name:                     fmt.Sprintf("HTTP Validation for Campaign %s", campaignIDStr),
-		SourceCampaignID:         campaignID,
-		KeywordSetIDs:            req.KeywordSetIDs,
-		AdHocKeywords:            req.AdHocKeywords,
-		PersonaIDs:               req.PersonaIDs,
-		ProxyPoolID:              req.ProxyPoolID,
-		ProxySelectionStrategy:   "round_robin", // Default strategy
-		RotationIntervalSeconds:  0,             // Default
-		ProcessingSpeedPerMinute: derefIntPtr(req.ProcessingSpeedPerMinute, 60),
-		BatchSize:                derefIntPtr(req.BatchSize, 20),
-		RetryAttempts:            derefIntPtr(req.RetryAttempts, 1),
-		TargetHTTPPorts:          req.TargetHTTPPorts,
-		UserID:                   uuid.Nil, // Would be extracted from session in real implementation
-	}
-
 	// ARCHITECTURAL FIX: Use Campaign Orchestrator's phase transition instead of separate campaign creation
 	log.Printf("ARCHITECTURAL FIX: HTTP validation should use phase transition, not separate campaign creation")
-	httpCampaign, err := h.orchestratorService.CreateHTTPKeywordValidationCampaign(c.Request.Context(), createReq)
+	// ARCHITECTURAL FIX: Use phase transition instead of separate campaign creation
+	// Convert persona UUIDs to strings for the phase config request
+	personaIDStrings := make([]string, len(req.PersonaIDs))
+	for i, personaID := range req.PersonaIDs {
+		personaIDStrings[i] = personaID.String()
+	}
+
+	// Create HTTP phase configuration request
+	httpPhaseReq := models.HTTPPhaseConfigRequest{
+		Name:          nil, // Keep existing campaign name
+		PersonaIDs:    personaIDStrings,
+		AdHocKeywords: req.AdHocKeywords,
+	}
+
+	// Configure HTTP validation phase on the existing campaign
+	httpCampaign, err := h.orchestratorService.ConfigureHTTPValidationPhase(c.Request.Context(), campaignID, httpPhaseReq)
 	if err != nil {
 		log.Printf("ERROR [HTTP Validation]: Failed to create HTTP keyword campaign for source %s: %v", campaignIDStr, err)
 
@@ -1440,15 +1531,16 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 				}
 			}
 
-			// Convert campaign to CampaignData
+			// Convert campaign to CampaignData with phases-based architecture
 			campaignData := CampaignData{
-				ID:          campaign.ID.String(),
-				Name:        campaign.Name,
-				Type:        string(campaign.CampaignType),
-				Status:      string(campaign.Status),
-				CreatedAt:   campaign.CreatedAt.Format(time.RFC3339),
-				UpdatedAt:   campaign.UpdatedAt.Format(time.RFC3339),
-				Description: "", // Add description if available
+				ID:           campaign.ID.String(),
+				Name:         campaign.Name,
+				CurrentPhase: campaign.CurrentPhase,
+				PhaseStatus:  campaign.PhaseStatus,
+				CreatedAt:    campaign.CreatedAt.Format(time.RFC3339),
+				UpdatedAt:    campaign.UpdatedAt.Format(time.RFC3339),
+				Description:  "",                           // Add description if available
+				Progress:     make(map[string]interface{}), // Initialize progress map
 			}
 
 			response.Campaigns[campaignIDStr] = EnrichedCampaignData{

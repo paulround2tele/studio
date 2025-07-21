@@ -8,7 +8,7 @@ import { AlertCircle, CheckCircle, Clock, Pause, Wifi, WifiOff } from 'lucide-re
 import { useToast } from '@/hooks/use-toast';
 // THIN CLIENT: Removed AuthContext - backend handles auth
 import { websocketService } from '@/lib/services/websocketService.simple';
-import type { CampaignViewModel, CampaignPhase, CampaignStatus } from '@/lib/types';
+import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
 import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
@@ -25,13 +25,14 @@ lastHeartbeat: Date | null;
 }
 
 // Memoized status icon component for better performance
-const StatusIcon = memo(({ status }: { status: CampaignStatus }) => {
+const StatusIcon = memo(({ status }: { status: CampaignPhaseStatus }) => {
   switch (status) {
-    case 'running': return <Clock className="h-4 w-4" />;
+    case 'in_progress': return <Clock className="h-4 w-4" />;
     case 'completed': return <CheckCircle className="h-4 w-4" />;
     case 'failed': return <AlertCircle className="h-4 w-4" />;
     case 'paused': return <Pause className="h-4 w-4" />;
-default: return <Clock className="h-4 w-4" />;
+    case 'not_started': return <Clock className="h-4 w-4" />;
+    default: return <Clock className="h-4 w-4" />;
   }
 });
 
@@ -76,7 +77,7 @@ isConnected: false,
   const [realtimeData, setRealtimeData] = useState({
 domainsGenerated: 0,
     currentProgress: campaign.progress || 0,
-    currentStatus: normalizeStatus(campaign.status),
+    currentStatus: normalizeStatus(campaign.phaseStatus),
     currentPhase: campaign.currentPhase || 'Pending'  as any,
 lastActivity: new Date(),
     errors: [] as string[]
@@ -94,8 +95,8 @@ lastActivity: new Date(),
 id: campaign.id,
     currentPhase: campaign.currentPhase  as any,
 phaseStatus: campaign.phaseStatus  as any,
-status: campaign.status
-  }), [campaign.id, campaign.currentPhase, campaign.phaseStatus, campaign.status]);
+status: campaign.phaseStatus
+  }), [campaign.id, campaign.currentPhase, campaign.phaseStatus, campaign.phaseStatus]);
 
   // Optimized WebSocket message handler with stable dependencies
   const handleWebSocketMessage = useCallback((message: WebSocketMessage & { campaignId?: string; message?: string }) => {
@@ -148,9 +149,8 @@ currentStatus: normalizeStatus(phaseData.status),
             lastActivity: new Date()
           }));
           onCampaignUpdate?.({
-currentPhase: phaseData.phase as CampaignPhase  as any,
-phaseStatus: phaseData.status  as any,
-status: phaseData.status === 'completed' ? 'completed' : normalizeStatus(phaseData.status),
+            currentPhase: phaseData.phase as CampaignPhase as any,
+            phaseStatus: phaseData.status === 'completed' ? 'completed' : normalizeStatus(phaseData.status),
             progress: phaseData.progress || 100
           });
           toast({
@@ -187,7 +187,7 @@ phaseStatus: campaignProgressData.status as any
             lastActivity: new Date()
           }));
           onCampaignUpdate?.({
-status: normalizeStatus(statusData.status)
+phaseStatus: normalizeStatus(statusData.status)
           });
         }
         break;
@@ -264,16 +264,16 @@ title: "Real-time Monitoring Connected",
   useEffect(() => {
     console.log(`[CampaignProgressMonitor] Campaign prop changed for ${campaignKey.id}:`, {
 progress: campaign.progress,
-      status: campaign.status,
+      status: campaign.phaseStatus,
       currentPhase: campaign.currentPhase as any
     });
     setRealtimeData(prev => ({
       ...prev,
       currentProgress: campaign.progress || 0,
-      currentStatus: normalizeStatus(campaign.status),
+      currentStatus: normalizeStatus(campaign.phaseStatus),
       currentPhase: campaign.currentPhase || 'Pending' as any
     }));
-  }, [campaignKey.id, campaign.progress, campaign.status, campaign.currentPhase]);
+  }, [campaignKey.id, campaign.progress, campaign.phaseStatus, campaign.currentPhase]);
 
   // Memoize status color computation
   const statusColor = useMemo(() => getStatusColor(realtimeData.currentStatus), [realtimeData.currentStatus]);

@@ -78,14 +78,13 @@ docs/ConnectionPoolMetrics.md
 docs/ConnectionPoolReport.md
 docs/CookieHandling.md
 docs/CreateCampaignRequest.md
-docs/CreateDNSValidationCampaignRequest.md
 docs/CreateDomainGenerationCampaignRequest.md
-docs/CreateHTTPKeywordCampaignRequest.md
 docs/CreateKeywordSetRequest.md
 docs/CreatePersonaRequest.md
 docs/CreateProxyRequest.md
 docs/CreateUserRequest.md
 docs/DNSConfigDetails.md
+docs/DNSPhaseConfigRequest.md
 docs/DNSValidationAPIRequest.md
 docs/DNSValidationCampaignParams.md
 docs/DNSValidationRequest.md
@@ -126,6 +125,7 @@ docs/HTTPCookieHandling.md
 docs/HTTPKeywordCampaignParams.md
 docs/HTTPKeywordResult.md
 docs/HTTPKeywordResultsResponse.md
+docs/HTTPPhaseConfigRequest.md
 docs/HTTPTLSClientHello.md
 docs/HTTPValidationRequest.md
 docs/HTTPValidationStartResponse.md
@@ -134,7 +134,6 @@ docs/HealthCheckResponse.md
 docs/HealthStatus.md
 docs/HttpKeywordParams.md
 docs/HttpPersonaConfig.md
-docs/InPlaceDNSValidationRequest.md
 docs/KeywordExtractionAPIResult.md
 docs/KeywordExtractionApi.md
 docs/KeywordExtractionRequestItem.md
@@ -290,9 +289,7 @@ models/connection-pool-metrics.ts
 models/connection-pool-report.ts
 models/cookie-handling.ts
 models/create-campaign-request.ts
-models/create-dnsvalidation-campaign-request.ts
 models/create-domain-generation-campaign-request.ts
-models/create-httpkeyword-campaign-request.ts
 models/create-keyword-set-request.ts
 models/create-persona-request.ts
 models/create-proxy-request.ts
@@ -307,6 +304,7 @@ models/detailed-test-result-response.ts
 models/dns-persona-config.ts
 models/dns-validation-params.ts
 models/dnsconfig-details.ts
+models/dnsphase-config-request.ts
 models/dnsvalidation-apirequest.ts
 models/dnsvalidation-campaign-params.ts
 models/dnsvalidation-request.ts
@@ -340,10 +338,10 @@ models/httpcookie-handling.ts
 models/httpkeyword-campaign-params.ts
 models/httpkeyword-result.ts
 models/httpkeyword-results-response.ts
+models/httpphase-config-request.ts
 models/httptlsclient-hello.ts
 models/httpvalidation-request.ts
 models/httpvalidation-start-response.ts
-models/in-place-dnsvalidation-request.ts
 models/index.ts
 models/keyword-extraction-apiresult.ts
 models/keyword-extraction-request-item.ts

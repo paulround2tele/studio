@@ -351,14 +351,26 @@ type CampaignDetailsResponse struct {
 }
 
 // CampaignData represents campaign information
+// @Description Campaign data with phases-based architecture
 type CampaignData struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Type        string `json:"type" enums:"domain_generation,dns_validation,http_keyword_validation"`
-	Status      string `json:"status" enums:"pending,queued,running,pausing,paused,completed,failed,archived,cancelled"`
-	CreatedAt   string `json:"createdAt"`
-	UpdatedAt   string `json:"updatedAt"`
-	Description string `json:"description,omitempty"`
+	ID          string `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
+	Name        string `json:"name" example:"Domain Generation Campaign" description:"Campaign name"`
+	CreatedAt   string `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
+	UpdatedAt   string `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
+	Description string `json:"description,omitempty" example:"Campaign for generating and validating domains" description:"Optional campaign description"`
+
+	// Phases-based architecture fields
+	// @Description Current phase of campaign execution
+	// @Example "generation"
+	CurrentPhase *models.CampaignPhaseEnum `json:"currentPhase,omitempty" enums:"setup,generation,dns_validation,http_keyword_validation,analysis"`
+
+	// @Description Status of the current phase
+	// @Example "in_progress"
+	PhaseStatus *models.CampaignPhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,in_progress,paused,completed,failed"`
+
+	// @Description Overall progress percentage (0-100)
+	// @Example 75.5
+	Progress map[string]interface{} `json:"progress,omitempty" description:"Phase-specific progress information"`
 }
 
 // CampaignParamsData represents campaign parameters
@@ -380,20 +392,21 @@ type EnrichedCampaignData struct {
 }
 
 // ErrorContext represents error context information with all possible fields
+// @Description Error context information for API responses
 type ErrorContext struct {
-	CampaignType     string `json:"campaign_type,omitempty"`
-	CampaignID       string `json:"campaign_id,omitempty"`
-	CampaignCount    int    `json:"campaign_count,omitempty"`
-	ProvidedValue    string `json:"provided_value,omitempty"`
-	CampaignStatus   string `json:"campaign_status,omitempty"`
-	ValidationJobID  string `json:"validation_job_id,omitempty"`
-	SourceCampaignID string `json:"source_campaign_id,omitempty"`
-	TargetCampaignID string `json:"target_campaign_id,omitempty"`
-	DomainCount      int    `json:"domain_count,omitempty"`
-	ResultCount      int    `json:"result_count,omitempty"`
-	ErrorType        string `json:"error_type,omitempty"`
-	RequiredField    string `json:"required_field,omitempty"`
-	Help             string `json:"help,omitempty"`
+	CampaignID       string `json:"campaign_id,omitempty" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
+	CampaignCount    int    `json:"campaign_count,omitempty" example:"5" description:"Number of campaigns involved"`
+	ProvidedValue    string `json:"provided_value,omitempty" example:"invalid_phase" description:"Value that caused the error"`
+	CampaignPhase    string `json:"campaign_phase,omitempty" example:"generation" description:"Current campaign phase when error occurred"`
+	PhaseStatus      string `json:"phase_status,omitempty" example:"failed" description:"Phase status when error occurred"`
+	ValidationJobID  string `json:"validation_job_id,omitempty" example:"job-uuid-123" description:"Validation job ID if applicable"`
+	SourceCampaignID string `json:"source_campaign_id,omitempty" example:"src-campaign-uuid" description:"Source campaign ID for operations"`
+	TargetCampaignID string `json:"target_campaign_id,omitempty" example:"target-campaign-uuid" description:"Target campaign ID for operations"`
+	DomainCount      int    `json:"domain_count,omitempty" example:"1000" description:"Number of domains involved"`
+	ResultCount      int    `json:"result_count,omitempty" example:"250" description:"Number of results processed"`
+	ErrorType        string `json:"error_type,omitempty" example:"validation_error" description:"Type of error that occurred"`
+	RequiredField    string `json:"required_field,omitempty" example:"currentPhase" description:"Field that is required but missing"`
+	Help             string `json:"help,omitempty" example:"Ensure campaign is in valid phase" description:"Help message for resolving the error"`
 }
 
 // CampaignStartResponse represents campaign start operation response
@@ -424,6 +437,8 @@ type LoginRequest = models.LoginRequest
 type ChangePasswordRequest = models.ChangePasswordRequest
 type CreateCampaignRequest = services.CreateCampaignRequest
 type UpdateCampaignRequest = services.UpdateCampaignRequest
+type DNSPhaseConfigRequest = models.DNSPhaseConfigRequest
+type HTTPPhaseConfigRequest = models.HTTPPhaseConfigRequest
 type CreateProxyRequest = models.CreateProxyRequest
 type UpdateProxyRequest = models.UpdateProxyRequest
 type DNSValidationAPIRequest struct {

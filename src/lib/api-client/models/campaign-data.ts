@@ -27,6 +27,12 @@ export interface CampaignData {
      */
     'createdAt'?: string;
     /**
+     * Phases-based architecture fields
+     * @type {string}
+     * @memberof CampaignData
+     */
+    'currentPhase'?: string;
+    /**
      * 
      * @type {string}
      * @memberof CampaignData
@@ -45,17 +51,17 @@ export interface CampaignData {
      */
     'name'?: string;
     /**
-     * 
+     * @Description Status of the current phase
      * @type {string}
      * @memberof CampaignData
      */
-    'status'?: string;
+    'phaseStatus'?: string;
     /**
-     * 
-     * @type {string}
+     * @Description Overall progress percentage (0-100)
+     * @type {{ [key: string]: object; }}
      * @memberof CampaignData
      */
-    'type'?: string;
+    'progress'?: { [key: string]: object; };
     /**
      * 
      * @type {string}

@@ -17,11 +17,16 @@ export type GeneratedDomain = components["schemas"]["GeneratedDomain"];
 export type DNSValidationResult = components["schemas"]["DNSValidationResult"];
 export type HTTPKeywordResult = components["schemas"]["HTTPKeywordResult"];
 
-// Type aliases for enum values
-export type CampaignType = NonNullable<Campaign["campaignType"]>;
-export type CampaignStatus = Campaign["status"];
+// Phase-based architecture types (replacing legacy CampaignType and CampaignStatus)
+export type CampaignPhase = NonNullable<Campaign["currentPhase"]>;
+export type CampaignPhaseStatus = NonNullable<Campaign["phaseStatus"]>;
 export type PersonaType = NonNullable<Persona["personaType"]>;
 export type ProxyProtocol = NonNullable<Proxy["protocol"]>;
+
+// Legacy compatibility exports - these redirect to phases-only architecture
+export type CampaignStatus = CampaignPhaseStatus;
+export type CampaignType = CampaignPhase;
+export type CampaignTypeEnum = CampaignPhase;
 
 // UI-specific string union types (corrected to match actual usage)
 export type ProxyStatus = "Active" | "Disabled" | "Testing" | "Failed";
@@ -45,9 +50,10 @@ export interface ApiResponse<T = unknown> {
   message?: string;           // Keep for backwards compatibility during transition
 }
 
-// Legacy type aliases for backwards compatibility - with proper null handling
-export type CampaignPhase = components['schemas']['Campaign']['currentPhase'];
-export type CampaignPhaseStatus = "not_started" | "in_progress" | "paused" | "completed" | "failed";
+// Legacy type aliases for backwards compatibility - now using proper OpenAPI definitions
+// Note: These are duplicated above but kept for backwards compatibility
+export type CampaignPhaseCompat = components['schemas']['Campaign']['currentPhase'];
+export type CampaignPhaseStatusCompat = components['schemas']['Campaign']['phaseStatus'];
 
 // Persona type aliases
 export type HttpPersona = Persona;

@@ -7,11 +7,11 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **campaign_count** | **number** |  | [optional] [default to undefined]
 **campaign_id** | **string** | Unique identifier | [optional] [default to undefined]
-**campaign_status** | **string** |  | [optional] [default to undefined]
-**campaign_type** | **string** |  | [optional] [default to undefined]
+**campaign_phase** | **string** |  | [optional] [default to undefined]
 **domain_count** | **number** |  | [optional] [default to undefined]
 **error_type** | **string** |  | [optional] [default to undefined]
 **help** | **string** |  | [optional] [default to undefined]
+**phase_status** | **string** |  | [optional] [default to undefined]
 **provided_value** | **string** | Unique identifier | [optional] [default to undefined]
 **required_field** | **string** |  | [optional] [default to undefined]
 **result_count** | **number** |  | [optional] [default to undefined]
@@ -27,11 +27,11 @@ import { ErrorContext } from './api';
 const instance: ErrorContext = {
     campaign_count,
     campaign_id,
-    campaign_status,
-    campaign_type,
+    campaign_phase,
     domain_count,
     error_type,
     help,
+    phase_status,
     provided_value,
     required_field,
     result_count,

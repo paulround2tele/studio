@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **cacheKey** | **string** |  | [optional] [default to undefined]
 **cacheNamespace** | **string** |  | [optional] [default to undefined]
 **cacheSizeBytes** | **number** |  | [optional] [default to undefined]
-**campaignType** | **string** |  | [optional] [default to undefined]
+**campaignPhase** | **string** |  | [optional] [default to undefined]
 **executionTimeMs** | **number** |  | [optional] [default to undefined]
 **hitRatioPct** | **number** |  | [optional] [default to undefined]
 **id** | **string** | Unique identifier | [optional] [default to undefined]
@@ -26,7 +26,7 @@ const instance: CacheMetric = {
     cacheKey,
     cacheNamespace,
     cacheSizeBytes,
-    campaignType,
+    campaignPhase,
     executionTimeMs,
     hitRatioPct,
     id,

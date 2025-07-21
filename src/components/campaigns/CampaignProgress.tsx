@@ -2,7 +2,6 @@
 
 import React, { memo, useMemo, useCallback } from 'react';
 import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
-import { CAMPAIGN_PHASES_ORDERED } from '@/lib/constants';
 import { CheckCircle, AlertTriangle, Clock, Loader2, WorkflowIcon, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -21,9 +20,8 @@ const phaseDisplayNames: Record<NonNullable<CampaignPhase>, string> = {
   setup: "Campaign Setup",
   generation: "Domain Generation",
   dns_validation: "DNS Validation",
-  http_validation: "HTTP Validation",
+  http_keyword_validation: "HTTP Keyword Validation",
   analysis: "Analysis",
-  cleanup: "Cleanup",
 };
 
 // Memoized phase status icon component for better performance
@@ -112,30 +110,30 @@ const getProgressWidthClass = (width: number): string => {
 
 // Memoized main component for optimal performance
 const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
-  const selectedType = campaign.selectedType || campaign.campaignType;
+  // All campaigns follow the same phase progression in the phases-based architecture
+  const allPhases: CampaignPhase[] = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
   
   // Memoize display phases calculation to prevent recalculation on every render
   const displayPhases = useMemo(() => {
-    const orderedPhases = (selectedType && CAMPAIGN_PHASES_ORDERED[selectedType] ? CAMPAIGN_PHASES_ORDERED[selectedType] : []) as CampaignPhase[];
     return (campaign.currentPhase as any) === "setup" ?
-      ["setup" as CampaignPhase, ...orderedPhases] :
-      orderedPhases;
-  }, [campaign.currentPhase, selectedType]);
+      ["setup" as CampaignPhase, ...allPhases] :
+      allPhases;
+  }, [campaign.currentPhase]);
   
-  // Memoize operational phases for the selected type
+  // Memoize operational phases for unified workflow
   const operationalPhasesForType = useMemo(() => {
-    return (selectedType && CAMPAIGN_PHASES_ORDERED[selectedType] ? CAMPAIGN_PHASES_ORDERED[selectedType] : []) as CampaignPhase[];
-  }, [selectedType]);
+    return allPhases;
+  }, []);
 
   // Memoize current operational phase calculations
   const { currentOperationalPhase: _currentOperationalPhase, currentOperationalPhaseIndex: _currentOperationalPhaseIndex } = useMemo(() => {
     const currentPhase = (campaign.currentPhase as any) === "setup" ? null : campaign.currentPhase;
-    const phaseIndex = currentPhase ? displayPhases.indexOf(currentPhase) : -1;
+    const phaseIndex = currentPhase ? operationalPhasesForType.indexOf(currentPhase) : -1;
     return {
       currentOperationalPhase: currentPhase,
       currentOperationalPhaseIndex: phaseIndex
     };
-  }, [campaign.currentPhase, displayPhases]);
+  }, [campaign.currentPhase, operationalPhasesForType]);
 
   // Simplified and fixed node status calculation
   const getNodeStatus = useCallback((phase: CampaignPhase): CampaignPhaseStatus => {
@@ -150,7 +148,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
     }
 
     // Handle completed campaigns
-    if (campaign.status === "completed" || (campaign.currentPhase as any) === "completed") {
+    if ((campaign.currentPhase as any) === "completed" || campaign.phaseStatus === "completed") {
       // All operational phases should be completed for completed campaigns
       if (operationalPhaseIndexInType !== -1) {
         return 'completed';
@@ -161,7 +159,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
     // Handle current active phase
     if (isActivePhaseNode) {
       // Use the actual phase status from campaign data
-      const phaseStatus = campaign.phaseStatus;
+      const phaseStatus = campaign.phaseStatus as string;
       if (phaseStatus === 'failed') return 'failed';
       if (phaseStatus === 'in_progress') return 'in_progress';
       if (phaseStatus === 'completed') return 'completed';
@@ -176,7 +174,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
 
     // Handle phases after the current phase (not started yet)
     return 'not_started';
-  }, [campaign.currentPhase, campaign.phaseStatus, campaign.status, operationalPhasesForType]);
+  }, [campaign.currentPhase, campaign.phaseStatus, operationalPhasesForType]);
 
   // Memoize progress calculation - FIXED: Use actual campaign progress values like CampaignListItem
   const progressWidth = useMemo(() => {
@@ -188,7 +186,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
       progressValue = Math.floor((campaign.processedItems / campaign.totalItems) * 100);
     }
 
-    if ((campaign.currentPhase as any) === "completed" || campaign.status === "completed") return 100;
+    if ((campaign.currentPhase as any) === "completed" || campaign.phaseStatus === "completed") return 100;
     if ((campaign.currentPhase as any) === "setup") return 0;
     
     // For paused or failed campaigns, return the actual progress where it stopped
@@ -198,7 +196,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
 
     // For active campaigns, use actual progress value
     return Math.max(0, Math.min(100, progressValue));
-  }, [campaign.currentPhase, campaign.status, campaign.phaseStatus, campaign.progressPercentage, campaign.progress, campaign.totalItems, campaign.processedItems]);
+  }, [campaign.currentPhase, campaign.phaseStatus, campaign.progressPercentage, campaign.progress, campaign.totalItems, campaign.processedItems]);
   
   return (
     <div className="space-y-6">
@@ -239,15 +237,15 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
         </div>
       </TooltipProvider>
 
-      {(((campaign.phaseStatus as any) === 'in_progress' || (campaign.phaseStatus as any) === 'completed') && campaign.currentPhase !== "setup") || campaign.status === "completed" ? (
+      {(((campaign.phaseStatus as any) === 'in_progress' || (campaign.phaseStatus as any) === 'completed') && campaign.currentPhase !== "setup") || (campaign.currentPhase as any) === "completed" ? (
         <div className="mt-4">
           <div className="flex justify-between text-sm mb-1">
             <span>
-              {campaign.status === "completed" ? 'Campaign Completed' :
+              {(campaign.currentPhase as any) === "completed" ? 'Campaign Completed' :
                (campaign.phaseStatus as any) === 'completed' ? 'Phase Completed' : 'Current Phase Progress'}
-              {campaign.status !== "completed" && `(${campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})`}
+              {(campaign.currentPhase as any) !== "completed" && `(${campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})`}
             </span>
-            <span>{campaign.status === "completed" ? '100' : (campaign.progressPercentage || campaign.progress || 0)}%</span>
+            <span>{(campaign.currentPhase as any) === "completed" ? '100' : (campaign.progressPercentage || campaign.progress || 0)}%</span>
           </div>
           <Progress
             value={(campaign.currentPhase as any) === "completed" ? 100 : (campaign.progressPercentage || campaign.progress || 0)}

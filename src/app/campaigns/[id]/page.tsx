@@ -31,16 +31,16 @@ import { websocketService } from '@/lib/services/websocketService.simple';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
 
 // Types
-import type { Campaign } from '@/lib/api-client/models';
+import type { Campaign, CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 
-type CampaignType = Campaign['campaignType'];
+type CampaignPhase = Campaign['currentPhase'];
 
 export default function RefactoredCampaignDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const campaignId = params.id as string;
-  const campaignTypeFromQuery = searchParams.get('type') as CampaignType | null;
+  const campaignPhaseFromQuery = searchParams.get('phase') as CampaignCurrentPhaseEnum | null;
 
   // 🔧 CRITICAL FIX: All hooks must be called before any conditional logic
   // Initialization tracking
@@ -103,8 +103,8 @@ export default function RefactoredCampaignDetailsPage() {
   const webSocketConditions = useMemo(() => {
     console.log(`🔍 [DEBUG] WebSocket conditions check:`, {
 campaign: campaign?.id,
-      campaignType: campaign?.campaignType,
-      status: campaign?.status,
+      currentPhase: campaign?.currentPhase,
+      phaseStatus: campaign?.phaseStatus,
       progress: campaign?.progress
     });
     
@@ -120,24 +120,23 @@ shouldConnect: false,
     }
     
     // Allow WebSocket connections for domain generation and validation campaigns
-    const allowedCampaignTypes = ['domain_generation', 'dns_validation', 'http_keyword_validation'];
-    const campaignType = String(campaign.campaignType || '');
-    if (!campaignType || !allowedCampaignTypes.includes(campaignType)) {
-      console.log(`❌ [DEBUG] WebSocket DISCONNECTED - Campaign type not supported for streaming:`, campaignType);
+    const allowedCampaignPhases = ['generation', 'dns_validation', 'http_keyword_validation'];
+    const currentPhase = String(campaign.currentPhase || '');
+    if (!currentPhase || !allowedCampaignPhases.includes(currentPhase)) {
+      console.log(`❌ [DEBUG] WebSocket DISCONNECTED - Campaign phase not supported for streaming:`, currentPhase);
       return {
 shouldConnect: false,
         campaignId: campaign.id,
-        campaignType: campaignType,
-        status: campaign.status,
+        currentPhase: currentPhase,
+        phaseStatus: campaign.phaseStatus,
         progress: campaign.progress || 0
       };
     }
 
     // ENHANCED: More inclusive status checking for better real-time connectivity
-    const statusLower = (campaign.status || '').toLowerCase();
+    const statusLower = (campaign.phaseStatus || '').toLowerCase();
     const isActiveStatus = [
-      'pending', 'queued', 'inprogress', 'in_progress', 'running',
-      'pausing', 'paused', 'resuming'
+      'not_started', 'in_progress', 'paused'
     ].includes(statusLower);
     
     // Connect for completed campaigns to receive validation updates
@@ -172,10 +171,9 @@ shouldConnect: false,
     return {
       shouldConnect,
       campaignId: campaign?.id,
-      campaignType: campaign?.campaignType,
-      status: campaign?.status,
-      progress: campaign?.progress || 0,
-      currentPhase: campaign?.currentPhase as any
+      currentPhase: campaign?.currentPhase,
+      phaseStatus: campaign?.phaseStatus,
+      progress: campaign?.progress || 0
     };
   }, [campaign]);
 
@@ -246,8 +244,8 @@ type: 'campaign_progress',
                   timestamp: message.timestamp || new Date().toISOString(),
                   campaignId: message.campaignId || campaignId,
                   // Forward phase and status from message level,
-phase: message.phase,
-status: message.status
+currentPhase: message.currentPhase,
+phaseStatus: message.phaseStatus
 });
                 break;
                 
@@ -360,9 +358,9 @@ default:
     );
   }
 
-  // 🔧 ENHANCED: If campaign type is missing, try to load campaign data first to get the type
-  if (!campaignTypeFromQuery) {
-    console.warn('⚠️ [Refactored Page] No campaign type provided in URL, will attempt to load from API');
+  // 🔧 ENHANCED: If campaign phase is missing, try to load campaign data first to get the phase
+  if (!campaignPhaseFromQuery) {
+    console.warn('⚠️ [Refactored Page] No campaign phase provided in URL, will attempt to load from API');
   }
 
   // Error state (only for actual errors, not loading/transition states)
@@ -463,7 +461,7 @@ default:
         />
 
         {/* Content Similarity View - Original component for lead analysis */}
-        {campaign.campaignType === 'http_keyword_validation' && campaign.status === 'completed' && (
+        {campaign.currentPhase === 'http_keyword_validation' && campaign.phaseStatus === 'completed' && (
           <ContentSimilarityView campaign={campaign} />
         )}
       </div>

@@ -560,7 +560,7 @@ components:
                     description: Unique identifier
                     format: uuid
                     type: string
-                campaignType:
+                campaignPhase:
                     type: string
                 contentType:
                     type: string
@@ -635,7 +635,7 @@ components:
                     description: Unique identifier
                     format: uuid
                     type: string
-                campaignType:
+                campaignPhase:
                     type: string
                 errorMessage:
                     type: string
@@ -673,7 +673,7 @@ components:
                 cacheSizeBytes:
                     format: int32
                     type: integer
-                campaignType:
+                campaignPhase:
                     type: string
                 executionTimeMs:
                     format: double
@@ -726,12 +726,6 @@ components:
                     type: number
                 businessStatus:
                     type: string
-                campaignType:
-                    enum:
-                        - domain_generation
-                        - dns_validation
-                        - http_keyword_validation
-                    type: string
                 completedAt:
                     format: date-time
                     type: string
@@ -739,16 +733,16 @@ components:
                     format: date-time
                     type: string
                 currentPhase:
-                    description: Frontend-expected properties
+                    description: Phases-based architecture (replaces legacy CampaignType + Status)
                     enum:
                         - setup
                         - generation
                         - dns_validation
-                        - http_validation
+                        - http_keyword_validation
                         - analysis
-                        - cleanup
                     type: string
                 dnsValidatedDomains:
+                    description: '@swagger:field dnsValidatedDomains'
                     format: int64
                     type: integer
                 dnsValidationParams:
@@ -756,6 +750,7 @@ components:
                 domainGenerationParams:
                     $ref: '#/components/schemas/DomainGenerationCampaignParams'
                 domains:
+                    description: '@swagger:field domains'
                     format: int64
                     type: integer
                 errorMessage:
@@ -781,12 +776,97 @@ components:
                 lastHeartbeatAt:
                     format: date-time
                     type: string
-                launchSequence:
-                    type: boolean
                 leadItems:
                     items:
                         $ref: '#/components/schemas/LeadItem'
                     type: array
+                leads:
+                    description: '@swagger:field leads'
+                    format: int64
+                    type: integer
+                metadata:
+                    type: object
+                name:
+                    type: string
+                phaseStatus:
+                    description: '@swagger:field phaseStatus'
+                    enum:
+                        - not_started
+                        - in_progress
+                        - paused
+                        - completed
+                        - failed
+                    type: string
+                processedItems:
+                    format: int64
+                    type: integer
+                progress:
+                    description: '@swagger:field progress'
+                    format: double
+                    type: number
+                progressPercentage:
+                    format: double
+                    type: number
+                startedAt:
+                    format: date-time
+                    type: string
+                successfulItems:
+                    format: int64
+                    type: integer
+                totalItems:
+                    format: int64
+                    type: integer
+                updatedAt:
+                    format: date-time
+                    type: string
+                userId:
+                    description: Unique identifier
+                    format: uuid
+                    type: string
+            required:
+                - name
+            type: object
+        CampaignAPI:
+            properties:
+                avgProcessingRate:
+                    format: double
+                    type: number
+                completedAt:
+                    format: date-time
+                    type: string
+                createdAt:
+                    format: date-time
+                    type: string
+                currentPhase:
+                    description: Phases-based architecture (replaces legacy CampaignType + Status)
+                    enum:
+                        - setup
+                        - generation
+                        - dns_validation
+                        - http_keyword_validation
+                        - analysis
+                    type: string
+                dnsValidatedDomains:
+                    format: int64
+                    type: integer
+                domains:
+                    format: int64
+                    type: integer
+                errorMessage:
+                    type: string
+                estimatedCompletionAt:
+                    format: date-time
+                    type: string
+                failedItems:
+                    format: int64
+                    type: integer
+                id:
+                    description: Unique identifier
+                    format: uuid
+                    type: string
+                lastHeartbeatAt:
+                    format: date-time
+                    type: string
                 leads:
                     format: int64
                     type: integer
@@ -813,93 +893,6 @@ components:
                     type: number
                 startedAt:
                     format: date-time
-                    type: string
-                status:
-                    enum:
-                        - pending
-                        - queued
-                        - running
-                        - pausing
-                        - paused
-                        - completed
-                        - failed
-                        - archived
-                        - cancelled
-                    type: string
-                successfulItems:
-                    format: int64
-                    type: integer
-                totalItems:
-                    format: int64
-                    type: integer
-                updatedAt:
-                    format: date-time
-                    type: string
-                userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-            required:
-                - name
-                - campaignType
-                - status
-            type: object
-        CampaignAPI:
-            properties:
-                avgProcessingRate:
-                    format: double
-                    type: number
-                campaignType:
-                    enum:
-                        - domain_generation
-                        - dns_validation
-                        - http_keyword_validation
-                    type: string
-                completedAt:
-                    format: date-time
-                    type: string
-                createdAt:
-                    format: date-time
-                    type: string
-                errorMessage:
-                    type: string
-                estimatedCompletionAt:
-                    format: date-time
-                    type: string
-                failedItems:
-                    format: int64
-                    type: integer
-                id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-                lastHeartbeatAt:
-                    format: date-time
-                    type: string
-                metadata:
-                    type: object
-                name:
-                    type: string
-                processedItems:
-                    format: int64
-                    type: integer
-                progressPercentage:
-                    format: double
-                    type: number
-                startedAt:
-                    format: date-time
-                    type: string
-                status:
-                    enum:
-                        - pending
-                        - queued
-                        - running
-                        - pausing
-                        - paused
-                        - completed
-                        - failed
-                        - archived
-                        - cancelled
                     type: string
                 successfulItems:
                     format: int64
@@ -963,6 +956,9 @@ components:
                 createdAt:
                     format: date-time
                     type: string
+                currentPhase:
+                    description: Phases-based architecture fields
+                    type: string
                 description:
                     type: string
                 id:
@@ -971,10 +967,14 @@ components:
                     type: string
                 name:
                     type: string
-                status:
+                phaseStatus:
+                    description: '@Description Status of the current phase'
                     type: string
-                type:
-                    type: string
+                progress:
+                    additionalProperties:
+                        type: object
+                    description: '@Description Overall progress percentage (0-100)'
+                    type: object
                 updatedAt:
                     format: date-time
                     type: string
@@ -1026,9 +1026,10 @@ components:
                     type: object
                 jobType:
                     enum:
-                        - domain_generation
+                        - generation
                         - dns_validation
                         - http_keyword_validation
+                        - analysis
                     type: string
                 lastAttemptedAt:
                     format: date-time
@@ -1065,6 +1066,8 @@ components:
                 updatedAt:
                     format: date-time
                     type: string
+            required:
+                - jobType
             type: object
         CampaignJobStatusEnum:
             type: string
@@ -1221,8 +1224,6 @@ components:
                 validationErrors:
                     type: object
             type: object
-        CampaignStatusEnum:
-            type: string
         CampaignTransactionOptions:
             properties:
                 CampaignID:
@@ -1244,8 +1245,6 @@ components:
                     format: date-time
                     type: string
             type: object
-        CampaignTypeEnum:
-            type: string
         ChangePasswordRequest:
             properties:
                 currentPassword:
@@ -1434,20 +1433,10 @@ components:
             type: object
         CreateCampaignRequest:
             properties:
-                campaignType:
-                    enum:
-                        - domain_generation
-                        - dns_validation
-                        - http_keyword_validation
-                    type: string
                 description:
                     type: string
-                dnsValidationParams:
-                    $ref: '#/components/schemas/DnsValidationParams'
                 domainGenerationParams:
                     $ref: '#/components/schemas/DomainGenerationParams'
-                httpKeywordParams:
-                    $ref: '#/components/schemas/HttpKeywordParams'
                 launchSequence:
                     type: boolean
                 name:
@@ -1457,42 +1446,7 @@ components:
                     format: uuid
                     type: string
             required:
-                - campaignType
                 - name
-            type: object
-        CreateDNSValidationCampaignRequest:
-            properties:
-                batchSize:
-                    format: int32
-                    type: integer
-                name:
-                    type: string
-                personaIds:
-                    items:
-                        format: uuid
-                        type: string
-                    type: array
-                processingSpeedPerMinute:
-                    format: int32
-                    type: integer
-                retryAttempts:
-                    format: int32
-                    type: integer
-                rotationIntervalSeconds:
-                    format: int32
-                    type: integer
-                sourceCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-                userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-            required:
-                - name
-                - sourceCampaignId
-                - personaIds
             type: object
         CreateDomainGenerationCampaignRequest:
             properties:
@@ -1527,60 +1481,6 @@ components:
                 - characterSet
                 - constantString
                 - tld
-            type: object
-        CreateHTTPKeywordCampaignRequest:
-            properties:
-                adHocKeywords:
-                    items:
-                        type: string
-                    type: array
-                batchSize:
-                    format: int32
-                    type: integer
-                keywordSetIds:
-                    items:
-                        format: uuid
-                        type: string
-                    type: array
-                name:
-                    type: string
-                personaIds:
-                    items:
-                        format: uuid
-                        type: string
-                    type: array
-                processingSpeedPerMinute:
-                    format: int32
-                    type: integer
-                proxyPoolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-                proxySelectionStrategy:
-                    type: string
-                retryAttempts:
-                    format: int32
-                    type: integer
-                rotationIntervalSeconds:
-                    format: int32
-                    type: integer
-                sourceCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-                targetHttpPorts:
-                    items:
-                        format: int32
-                        type: integer
-                    type: array
-                userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-            required:
-                - name
-                - sourceCampaignId
-                - personaIds
             type: object
         CreateKeywordSetRequest:
             properties:
@@ -1716,6 +1616,17 @@ components:
             type: object
         DNSConfigUpdateRequest:
             type: string
+        DNSPhaseConfigRequest:
+            properties:
+                name:
+                    type: string
+                personaIds:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - personaIds
+            type: object
         DNSValidationAPIRequest:
             properties:
                 batchSize:
@@ -2203,9 +2114,7 @@ components:
                     description: Unique identifier
                     format: uuid
                     type: string
-                campaign_status:
-                    type: string
-                campaign_type:
+                campaign_phase:
                     type: string
                 domain_count:
                     format: int32
@@ -2213,6 +2122,8 @@ components:
                 error_type:
                     type: string
                 help:
+                    type: string
+                phase_status:
                     type: string
                 provided_value:
                     description: Unique identifier
@@ -2673,6 +2584,25 @@ components:
                     format: int64
                     type: integer
             type: object
+        HTTPPhaseConfigRequest:
+            properties:
+                adHocKeywords:
+                    items:
+                        type: string
+                    type: array
+                keywords:
+                    items:
+                        type: string
+                    type: array
+                name:
+                    type: string
+                personaIds:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - personaIds
+            type: object
         HTTPTLSClientHello:
             properties:
                 cipherSuites:
@@ -2883,35 +2813,9 @@ components:
             required:
                 - userAgent
             type: object
-        InPlaceDNSValidationRequest:
-            properties:
-                batchSize:
-                    format: int32
-                    type: integer
-                campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-                onlyInvalidDomains:
-                    type: boolean
-                personaIds:
-                    items:
-                        format: uuid
-                        type: string
-                    type: array
-                processingSpeedPerMinute:
-                    format: int32
-                    type: integer
-                retryAttempts:
-                    format: int32
-                    type: integer
-                rotationIntervalSeconds:
-                    format: int32
-                    type: integer
-            required:
-                - campaignId
-            type: object
         JobBusinessStatusEnum:
+            type: string
+        JobTypeEnum:
             type: string
         KeywordExtractionAPIResult:
             properties:
@@ -3821,7 +3725,7 @@ components:
                     description: Unique identifier
                     format: uuid
                     type: string
-                campaignType:
+                campaignPhase:
                     type: string
                 cpuTimeMs:
                     format: double
@@ -3990,7 +3894,7 @@ components:
                     description: Unique identifier
                     format: uuid
                     type: string
-                campaignType:
+                campaignPhase:
                     type: string
                 component:
                     type: string
@@ -5238,6 +5142,80 @@ paths:
             security:
                 - sessionAuth: []
             summary: Cancel campaign
+            tags:
+                - campaigns
+    /campaigns/{campaignId}/configure-dns:
+        post:
+            description: Configure DNS validation phase for a campaign and transition to dns_validation phase
+            operationId: configureDNSValidation
+            parameters:
+                - description: Campaign ID (UUID)
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Configure DNS validation phase
+            tags:
+                - campaigns
+    /campaigns/{campaignId}/configure-http:
+        post:
+            description: Configure HTTP validation phase for a campaign and transition to http_validation phase
+            operationId: configureHTTPValidation
+            parameters:
+                - description: Campaign ID (UUID)
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Configure HTTP validation phase
             tags:
                 - campaigns
     /campaigns/{campaignId}/pause:

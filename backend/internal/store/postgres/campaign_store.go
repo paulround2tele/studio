@@ -37,19 +37,19 @@ func (s *campaignStorePostgres) BeginTxx(ctx context.Context, opts *sql.TxOption
 // --- Campaign CRUD --- //
 
 func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
-	query := `INSERT INTO campaigns (id, name, campaign_type, status, user_id, created_at, updated_at,
-                                                         started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status)
-                          VALUES (:id, :name, :campaign_type, :status, :user_id, :created_at, :updated_at,
-                                          :started_at, :completed_at, :progress_percentage, :total_items, :processed_items, :successful_items, :failed_items, :metadata, :error_message, :business_status)`
+	query := `INSERT INTO campaigns (id, name, current_phase, phase_status, user_id, created_at, updated_at,
+	                                                        started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status)
+	                         VALUES (:id, :name, :current_phase, :phase_status, :user_id, :created_at, :updated_at,
+	                                         :started_at, :completed_at, :progress_percentage, :total_items, :processed_items, :successful_items, :failed_items, :metadata, :error_message, :business_status)`
 	_, err := exec.NamedExecContext(ctx, query, campaign)
 	return err
 }
 
 func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.Campaign, error) {
 	campaign := &models.Campaign{}
-	query := `SELECT id, name, campaign_type, status, user_id, created_at, updated_at,
-                                         started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status
-                          FROM campaigns WHERE id = $1`
+	query := `SELECT id, name, current_phase, phase_status, user_id, created_at, updated_at,
+	                                        started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status
+	                             FROM campaigns WHERE id = $1`
 	err := exec.GetContext(ctx, campaign, query, id)
 	if err == sql.ErrNoRows {
 		return nil, store.ErrNotFound
@@ -59,12 +59,12 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 
 func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
 	query := `UPDATE campaigns SET
-                                name = :name, campaign_type = :campaign_type, status = :status, user_id = :user_id,
-                                updated_at = :updated_at, started_at = :started_at, completed_at = :completed_at,
-                                progress_percentage = :progress_percentage, total_items = :total_items,
-                                processed_items = :processed_items, successful_items = :successful_items, failed_items = :failed_items, metadata = :metadata, error_message = :error_message,
-                                business_status = :business_status
-                          WHERE id = :id`
+	                               name = :name, current_phase = :current_phase, phase_status = :phase_status, user_id = :user_id,
+	                               updated_at = :updated_at, started_at = :started_at, completed_at = :completed_at,
+	                               progress_percentage = :progress_percentage, total_items = :total_items,
+	                               processed_items = :processed_items, successful_items = :successful_items, failed_items = :failed_items, metadata = :metadata, error_message = :error_message,
+	                               business_status = :business_status
+	                         WHERE id = :id`
 	result, err := exec.NamedExecContext(ctx, query, campaign)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 
 	// Delete related records first to avoid foreign key constraint violations
 	// Order matters: delete leaf nodes first, then parent nodes
-	
+
 	// 1. Delete HTTP keyword validation results (no foreign dependencies)
 	_, err = exec.ExecContext(ctx, `DELETE FROM http_keyword_results WHERE http_keyword_campaign_id = $1`, id)
 	if err != nil {
@@ -144,7 +144,13 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 				tempParams.PatternType,
 				tempParams.VariableLength,
 				tempParams.CharacterSet,
-				func() string { if tempParams.ConstantString != nil { return *tempParams.ConstantString } else { return "" } }(),
+				func() string {
+					if tempParams.ConstantString != nil {
+						return *tempParams.ConstantString
+					} else {
+						return ""
+					}
+				}(),
 				tempParams.TLD))
 	}
 
@@ -176,20 +182,13 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 }
 
 func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Querier, filter store.ListCampaignsFilter) ([]*models.Campaign, error) {
-	baseQuery := `SELECT id, name, campaign_type, status, user_id, created_at, updated_at,
-                                         started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status
-                              FROM campaigns`
+	baseQuery := `SELECT id, name, current_phase, phase_status, user_id, created_at, updated_at,
+	                                        started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status
+	                             FROM campaigns`
 	args := []interface{}{}
 	conditions := []string{}
 
-	if filter.Type != "" {
-		conditions = append(conditions, "campaign_type = ?")
-		args = append(args, filter.Type)
-	}
-	if filter.Status != "" {
-		conditions = append(conditions, "status = ?")
-		args = append(args, filter.Status)
-	}
+	// Type and Status fields removed - using phase-based filtering instead
 	if filter.UserID != "" {
 		conditions = append(conditions, "user_id = ?")
 		args = append(args, filter.UserID)
@@ -201,7 +200,7 @@ func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Qu
 	}
 
 	if filter.SortBy != "" {
-		validSortCols := map[string]string{"created_at": "created_at", "name": "name", "status": "status", "updated_at": "updated_at"}
+		validSortCols := map[string]string{"created_at": "created_at", "name": "name", "phase_status": "phase_status", "updated_at": "updated_at"}
 		if col, ok := validSortCols[filter.SortBy]; ok {
 			finalQuery += " ORDER BY " + col
 			if strings.ToUpper(filter.SortOrder) == "DESC" {
@@ -245,13 +244,13 @@ func (s *campaignStorePostgres) CountCampaigns(ctx context.Context, exec store.Q
 	args := []interface{}{}
 	conditions := []string{}
 
-	if filter.Type != "" {
-		conditions = append(conditions, "campaign_type = ?")
-		args = append(args, filter.Type)
+	if filter.CurrentPhase != nil {
+		conditions = append(conditions, "current_phase = ?")
+		args = append(args, *filter.CurrentPhase)
 	}
-	if filter.Status != "" {
-		conditions = append(conditions, "status = ?")
-		args = append(args, filter.Status)
+	if filter.PhaseStatus != nil {
+		conditions = append(conditions, "phase_status = ?")
+		args = append(args, *filter.PhaseStatus)
 	}
 	if filter.UserID != "" {
 		conditions = append(conditions, "user_id = ?")
@@ -278,13 +277,13 @@ func (s *campaignStorePostgres) CountCampaigns(ctx context.Context, exec store.Q
 	return count, err
 }
 
-func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec store.Querier, id uuid.UUID, status models.CampaignStatusEnum, errorMessage sql.NullString) error {
+func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec store.Querier, id uuid.UUID, status models.CampaignPhaseStatusEnum, errorMessage sql.NullString) error {
 	// Use the store's database connection if no executor is provided
 	if exec == nil {
 		exec = s.db
 	}
-	
-	query := `UPDATE campaigns SET status = $1, error_message = $2, updated_at = NOW() WHERE id = $3`
+
+	query := `UPDATE campaigns SET phase_status = $1, error_message = $2, updated_at = NOW() WHERE id = $3`
 	result, err := exec.ExecContext(ctx, query, status, errorMessage, id)
 	if err != nil {
 		return err
@@ -301,10 +300,10 @@ func (s *campaignStorePostgres) UpdateCampaignProgress(ctx context.Context, exec
 	query := `UPDATE campaigns 
 		SET processed_items = $1, 
 			total_items = $2, 
-			progress_percentage = $3, 
-			status = CASE 
-				WHEN status NOT IN ('completed', 'failed') THEN 'running' 
-				ELSE status 
+			progress_percentage = $3,
+			phase_status = CASE
+				WHEN phase_status NOT IN ('completed', 'failed') THEN 'in_progress'
+				ELSE phase_status
 			END,
 			updated_at = NOW() 
 		WHERE id = $4`
@@ -337,7 +336,7 @@ func (s *campaignStorePostgres) CreateDomainGenerationParams(ctx context.Context
 
 func (s *campaignStorePostgres) GetDomainGenerationParams(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.DomainGenerationCampaignParams, error) {
 	params := &models.DomainGenerationCampaignParams{}
-        query := `SELECT campaign_id, pattern_type, variable_length, character_set, constant_string, tld, num_domains_to_generate, total_possible_combinations, current_offset, created_at, updated_at
+	query := `SELECT campaign_id, pattern_type, variable_length, character_set, constant_string, tld, num_domains_to_generate, total_possible_combinations, current_offset, created_at, updated_at
                          FROM domain_generation_campaign_params WHERE campaign_id = $1`
 	err := exec.GetContext(ctx, params, query, campaignID)
 	if err == sql.ErrNoRows {
@@ -365,12 +364,12 @@ func (s *campaignStorePostgres) GetDomainGenerationConfigStateByHash(ctx context
 	state := &models.DomainGenerationConfigState{}
 	query := `SELECT config_hash, last_offset, config_details, updated_at
 			  FROM domain_generation_config_states WHERE config_hash = $1`
-	
+
 	// Use the store's database connection if no executor is provided
 	if exec == nil {
 		exec = s.db
 	}
-	
+
 	err := exec.GetContext(ctx, state, query, configHash)
 	if err == sql.ErrNoRows {
 		return nil, store.ErrNotFound
@@ -459,7 +458,7 @@ func (s *campaignStorePostgres) CreateDNSValidationParams(ctx context.Context, e
 	if exec == nil {
 		exec = s.db
 	}
-	
+
 	query := `INSERT INTO dns_validation_params
 	               (campaign_id, source_generation_campaign_id, persona_ids, rotation_interval_seconds, processing_speed_per_minute, batch_size, retry_attempts, metadata)
 	             VALUES (:campaign_id, :source_generation_campaign_id, :persona_ids, :rotation_interval_seconds, :processing_speed_per_minute, :batch_size, :retry_attempts, :metadata)`
@@ -857,12 +856,12 @@ func (s *campaignStorePostgres) CountCampaignsWithPatternHash(ctx context.Contex
 	if exec == nil {
 		exec = s.db
 	}
-	
+
 	query := `
 		SELECT COUNT(DISTINCT dgcp.campaign_id)
 		FROM domain_generation_campaign_params dgcp
 		INNER JOIN campaigns c ON c.id = dgcp.campaign_id
-		WHERE c.campaign_type = 'domain_generation'
+		WHERE c.current_phase = 'generation'
 		AND (
 			-- Calculate hash from pattern params and compare
 			md5(
@@ -876,7 +875,7 @@ func (s *campaignStorePostgres) CountCampaignsWithPatternHash(ctx context.Contex
 			) = $1
 		)
 	`
-	
+
 	var count int
 	err := exec.GetContext(ctx, &count, query, patternHash)
 	return count, err
@@ -888,13 +887,13 @@ func (s *campaignStorePostgres) CleanupUnusedPatternConfigState(ctx context.Cont
 	if exec == nil {
 		exec = s.db
 	}
-	
+
 	// Check if any campaigns are still using this pattern
 	count, err := s.CountCampaignsWithPatternHash(ctx, exec, patternHash)
 	if err != nil {
 		return fmt.Errorf("failed to count campaigns with pattern hash %s: %w", patternHash, err)
 	}
-	
+
 	// If no campaigns are using this pattern, delete the config state
 	if count == 0 {
 		query := `DELETE FROM domain_generation_config_states WHERE config_hash = $1`
@@ -902,13 +901,13 @@ func (s *campaignStorePostgres) CleanupUnusedPatternConfigState(ctx context.Cont
 		if err != nil {
 			return fmt.Errorf("failed to delete unused pattern config state %s: %w", patternHash, err)
 		}
-		
+
 		rowsAffected, _ := result.RowsAffected()
 		if rowsAffected > 0 {
 			log.Printf("Cleaned up unused pattern config state: %s", patternHash)
 		}
 	}
-	
+
 	return nil
 }
 

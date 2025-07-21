@@ -15,9 +15,9 @@ export type UpdatePersonaRequest = components["schemas"]["UpdatePersonaRequest"]
 export type CreateCampaignRequest = components["schemas"]["CreateCampaignRequest"];
 export type { CampaignDetailsResponse } from '@/lib/api-client/models/campaign-details-response';
 
-// Type aliases for UI compatibility (matching OpenAPI enum values exactly)
-export type CampaignSelectedType = Campaign["campaignType"];
-export type CampaignStatus = Campaign["status"];
+// Type aliases for UI compatibility (using phases-only architecture)
+export type CampaignSelectedType = Campaign["currentPhase"];
+export type CampaignStatus = Campaign["phaseStatus"];
 export type PersonaType = PersonaResponse["personaType"];
 
 // UI-specific extensions only (NOT replacing OpenAPI types)
