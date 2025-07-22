@@ -1416,33 +1416,50 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 		}
 	}
 
-	// Validate campaign IDs
-	if len(req.CampaignIDs) == 0 {
-		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
-			"Campaign IDs list cannot be empty", []ErrorDetail{
-				{
-					Field:   "campaignIds",
-					Code:    ErrorCodeValidation,
-					Message: "At least one campaign ID must be provided",
-				},
-			})
-		return
-	}
-
 	const maxBatchSize = 1000 // Enterprise-scale limit
-	if len(req.CampaignIDs) > maxBatchSize {
-		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
-			fmt.Sprintf("Maximum %d campaigns allowed per request", maxBatchSize), []ErrorDetail{
-				{
-					Field:   "campaignIds",
-					Code:    ErrorCodeValidation,
-					Message: fmt.Sprintf("Batch size %d exceeds maximum of %d", len(req.CampaignIDs), maxBatchSize),
-					Context: ErrorContext{
-						CampaignCount: len(req.CampaignIDs),
+
+	// Handle empty campaignIds as "get all campaigns" request
+	var campaignIDs []string
+	if len(req.CampaignIDs) == 0 {
+		// Get all campaign IDs with pagination support
+		filter := store.ListCampaignsFilter{
+			Limit:  req.Limit,
+			Offset: req.Offset,
+		}
+		campaigns, _, err := h.orchestratorService.ListCampaigns(c.Request.Context(), filter)
+		if err != nil {
+			log.Printf("Error listing campaigns for bulk enriched data: %v", err)
+			respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeDatabaseError,
+				"Failed to retrieve campaigns", nil)
+			return
+		}
+
+		// Extract campaign IDs and convert to strings
+		for _, campaign := range campaigns {
+			campaignIDs = append(campaignIDs, campaign.ID.String())
+		}
+
+		log.Printf("Bulk enriched data: Processing ALL campaigns (%d found)", len(campaignIDs))
+	} else {
+		// Use provided campaign IDs
+		campaignIDs = req.CampaignIDs
+
+		if len(campaignIDs) > maxBatchSize {
+			respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+				fmt.Sprintf("Maximum %d campaigns allowed per request", maxBatchSize), []ErrorDetail{
+					{
+						Field:   "campaignIds",
+						Code:    ErrorCodeValidation,
+						Message: fmt.Sprintf("Batch size %d exceeds maximum of %d", len(campaignIDs), maxBatchSize),
+						Context: ErrorContext{
+							CampaignCount: len(campaignIDs),
+						},
 					},
-				},
-			})
-		return
+				})
+			return
+		}
+
+		log.Printf("Bulk enriched data: Processing SPECIFIC campaigns (%d provided)", len(campaignIDs))
 	}
 
 	response := BulkEnrichedDataResponse{
@@ -1460,8 +1477,8 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 	ctx := c.Request.Context()
 
 	// Parse all campaign IDs upfront
-	campaignIDs := make([]uuid.UUID, 0, len(req.CampaignIDs))
-	for _, campaignIDStr := range req.CampaignIDs {
+	parsedCampaignIDs := make([]uuid.UUID, 0, len(campaignIDs))
+	for _, campaignIDStr := range campaignIDs {
 		campaignID, err := uuid.Parse(campaignIDStr)
 		if err != nil {
 			log.Printf("Invalid campaign ID format: %s", campaignIDStr)
@@ -1469,18 +1486,20 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 			metadata.FailedCampaigns = append(metadata.FailedCampaigns, campaignIDStr)
 			continue
 		}
-		campaignIDs = append(campaignIDs, campaignID)
+		parsedCampaignIDs = append(parsedCampaignIDs, campaignID)
 	}
 
 	// Process campaigns in optimized batches to prevent memory issues
 	batchSize := 50 // Process 50 campaigns at a time for optimal memory usage
-	for i := 0; i < len(campaignIDs); i += batchSize {
+	for i := 0; i < len(parsedCampaignIDs); i += batchSize {
 		end := i + batchSize
-		if end > len(campaignIDs) {
-			end = len(campaignIDs)
+		if end > len(parsedCampaignIDs) {
+			end = len(parsedCampaignIDs)
 		}
 
-		batchCampaignIDs := campaignIDs[i:end]
+		batchCampaignIDs := parsedCampaignIDs[i:end]
+
+		log.Printf("DEBUG [getBulkEnrichedCampaignData]: Processing batch %d - Campaign IDs: %v", i/batchSize+1, batchCampaignIDs)
 
 		// Process each campaign in the batch
 		for _, campaignID := range batchCampaignIDs {
@@ -1501,13 +1520,17 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 			httpResults, _ := h.orchestratorService.GetHTTPKeywordResultsForCampaign(ctx, campaignID, 10000, "", store.ListValidationResultsFilter{})
 
 			// Extract domain lists with null checks
-			var domainList, dnsValidatedList []string
+			var domainList []models.GeneratedDomain
+			var dnsValidatedList []string
 			var leads []models.LeadItem
 			var httpKeywordResults []interface{}
 
 			if domains != nil && domains.Data != nil {
+				// CRITICAL FIX: Preserve full domain objects with status instead of just strings
+				// This ensures DNS/HTTP status, lead scores, and other metadata reach the frontend
+				domainList = make([]models.GeneratedDomain, 0, len(domains.Data))
 				for _, d := range domains.Data {
-					domainList = append(domainList, d.DomainName)
+					domainList = append(domainList, d)
 				}
 			}
 

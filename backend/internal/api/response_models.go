@@ -384,11 +384,11 @@ type CampaignParamsData struct {
 
 // EnrichedCampaignData represents enriched data for a single campaign
 type EnrichedCampaignData struct {
-	Campaign            CampaignData      `json:"campaign"`
-	Domains             []string          `json:"domains"`
-	DNSValidatedDomains []string          `json:"dnsValidatedDomains"`
-	Leads               []models.LeadItem `json:"leads"`
-	HTTPKeywordResults  []interface{}     `json:"httpKeywordResults"` // TODO: Replace with proper type when available
+	Campaign            CampaignData             `json:"campaign"`
+	Domains             []models.GeneratedDomain `json:"domains"`             // CRITICAL FIX: Full domain objects with status
+	DNSValidatedDomains []string                 `json:"dnsValidatedDomains"` // Keep as strings for backward compatibility
+	Leads               []models.LeadItem        `json:"leads"`
+	HTTPKeywordResults  []interface{}            `json:"httpKeywordResults"` // TODO: Replace with proper type when available
 }
 
 // ErrorContext represents error context information with all possible fields
@@ -466,7 +466,7 @@ type AddProxyToPoolRequest struct {
 // BulkEnrichedDataRequest represents a request for bulk enriched campaign data
 // @Description Request payload for retrieving enriched data for multiple campaigns
 type BulkEnrichedDataRequest struct {
-	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-50 campaigns)"`
+	CampaignIDs []string `json:"campaignIds" binding:"max=1000" validate:"max=1000,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (empty = all campaigns, max 1000 specific campaigns)"`
 	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of items per campaign (1-1000)"`
 	Offset      int      `json:"offset,omitempty" validate:"omitempty,min=0" example:"0" description:"Number of items to skip per campaign"`
 }

@@ -81,7 +81,7 @@ func toKeywordSetResponse(ks *models.KeywordSet, rules []models.KeywordRule) Key
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 409 {object} map[string]string "Keyword set with name already exists"
 // @Failure 500 {object} map[string]string "Failed to create keyword set"
-// @Router /keyword-sets [post]
+// @Router /keywords/sets [post]
 func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 	var req CreateKeywordSetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -246,7 +246,7 @@ func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 // @Param isEnabled query bool false "Filter by enabled status"
 // @Success 200 {array} KeywordSetResponse "List of keyword sets"
 // @Failure 500 {object} map[string]string "Failed to list keyword sets"
-// @Router /keyword-sets [get]
+// @Router /keywords/sets [get]
 func (h *APIHandler) ListKeywordSetsGin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -302,7 +302,7 @@ func (h *APIHandler) ListKeywordSetsGin(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid keyword set ID format"
 // @Failure 404 {object} map[string]string "Keyword set not found"
 // @Failure 500 {object} map[string]string "Failed to fetch keyword set"
-// @Router /keyword-sets/{setId} [get]
+// @Router /keywords/sets/{setId} [get]
 func (h *APIHandler) GetKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, err := uuid.Parse(setIDStr)
@@ -346,7 +346,7 @@ func (h *APIHandler) GetKeywordSetGin(c *gin.Context) {
 // @Failure 404 {object} map[string]string "Keyword set not found"
 // @Failure 409 {object} map[string]string "Keyword set name already exists"
 // @Failure 500 {object} map[string]string "Failed to update keyword set"
-// @Router /keyword-sets/{setId} [put]
+// @Router /keywords/sets/{setId} [put]
 func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, errParam := uuid.Parse(setIDStr)
@@ -526,7 +526,7 @@ func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 404 {object} map[string]string "Keyword set not found"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /keyword-sets/{setId} [delete]
+// @Router /keywords/sets/{setId} [delete]
 func (h *APIHandler) DeleteKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, errParam := uuid.Parse(setIDStr)

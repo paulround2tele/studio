@@ -159,7 +159,7 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
 
   // Helper function to convert backend status to frontend DomainActivityStatus
   const convertBackendStatus = useCallback((backendStatus?: string): DomainActivityStatus => {
-    if (!backendStatus) return 'n_a' as any;
+    if (!backendStatus) return 'not_validated' as any; // FIXED: Use not_validated instead of n_a for missing status
     switch (backendStatus.toLowerCase()) {
       case 'ok':
       case 'valid':
@@ -170,15 +170,16 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
       case 'error':
       case 'invalid':
       case 'unresolved':
-      case 'Failed':
+      case 'failed': // FIXED: Handle lowercase 'failed'
         return 'Failed' as any;
-      case 'Pending':
+      case 'pending': // FIXED: Handle lowercase 'pending' from backend initialization
       case 'processing':
       case 'queued':
         return 'Pending' as any;
       case 'timeout':
         return 'Failed' as any;
       default:
+        console.log('[DomainStreamingTable] Unknown backend status:', backendStatus);
         return 'not_validated' as any;
     }
   }, []);

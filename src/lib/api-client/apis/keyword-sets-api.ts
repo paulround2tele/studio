@@ -49,7 +49,7 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
         createKeywordSet: async (createKeywordSetRequest: CreateKeywordSetRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'createKeywordSetRequest' is not null or undefined
             assertParamExists('createKeywordSet', 'createKeywordSetRequest', createKeywordSetRequest)
-            const localVarPath = `/keyword-sets`;
+            const localVarPath = `/keywords/sets`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -85,7 +85,7 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
         deleteKeywordSet: async (setId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'setId' is not null or undefined
             assertParamExists('deleteKeywordSet', 'setId', setId)
-            const localVarPath = `/keyword-sets/{setId}`
+            const localVarPath = `/keywords/sets/{setId}`
                 .replace(`{${"setId"}}`, encodeURIComponent(String(setId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -119,7 +119,7 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
         getKeywordSet: async (setId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'setId' is not null or undefined
             assertParamExists('getKeywordSet', 'setId', setId)
-            const localVarPath = `/keyword-sets/{setId}`
+            const localVarPath = `/keywords/sets/{setId}`
                 .replace(`{${"setId"}}`, encodeURIComponent(String(setId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -154,7 +154,7 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
          * @throws {RequiredError}
          */
         listKeywordSets: async (limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/keyword-sets`;
+            const localVarPath = `/keywords/sets`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -206,7 +206,7 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
             assertParamExists('updateKeywordSet', 'setId', setId)
             // verify required parameter 'updateKeywordSetRequest' is not null or undefined
             assertParamExists('updateKeywordSet', 'updateKeywordSetRequest', updateKeywordSetRequest)
-            const localVarPath = `/keyword-sets/{setId}`
+            const localVarPath = `/keywords/sets/{setId}`
                 .replace(`{${"setId"}}`, encodeURIComponent(String(setId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);

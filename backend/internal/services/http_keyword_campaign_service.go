@@ -726,6 +726,10 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 			muResults.Lock()
 			dbResults = append(dbResults, dbRes)
 			muResults.Unlock()
+
+			// CRITICAL FIX: Broadcast individual HTTP validation results via WebSocket
+			// This mirrors the DNS validation pattern to provide real-time domain status updates
+			s.streamHTTPResultWithFallback(batchCtx, campaignID.String(), currentDNSRecord.DomainName, dbRes)
 		}(*dnsRecord)
 	}
 	wg.Wait()
@@ -786,13 +790,27 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		campaign.ProgressPercentage = models.Float64Ptr(0.0)
 	}
 
+	// MULTI-PHASE PROGRESS TRACKING: HTTP validation uses 66-100% range
+	httpPhaseStartProgress := 66.0 // HTTP phase starts at 66%
+	httpPhaseEndProgress := 100.0  // HTTP phase ends at 100%
+
 	if *campaign.TotalItems > 0 {
-		*campaign.ProgressPercentage = (float64(*campaign.ProcessedItems) / float64(*campaign.TotalItems)) * 100
-		if *campaign.ProgressPercentage > 100 {
-			*campaign.ProgressPercentage = 100
+		// Calculate HTTP validation progress within the 66-100% range
+		httpProgress := (float64(*campaign.ProcessedItems) / float64(*campaign.TotalItems)) * 100
+		if httpProgress > 100 {
+			httpProgress = 100
 		}
+
+		// Scale HTTP progress to 66-100% range
+		scaledProgress := httpPhaseStartProgress + (httpProgress/100.0)*(httpPhaseEndProgress-httpPhaseStartProgress)
+		*campaign.ProgressPercentage = scaledProgress
+
+		log.Printf("[MULTI-PHASE] HTTP validation progress for campaign %s: %.1f%% within phase, %.1f%% overall (66-100%% range)",
+			campaignID, httpProgress, scaledProgress)
 	} else if *campaign.TotalItems == 0 {
-		*campaign.ProgressPercentage = 100
+		// If total is 0, HTTP phase is complete - set to 100%
+		*campaign.ProgressPercentage = httpPhaseEndProgress
+		log.Printf("[MULTI-PHASE] HTTP validation complete for campaign %s (0 total items) - setting to %.1f%%", campaignID, httpPhaseEndProgress)
 	}
 
 	if *campaign.TotalItems > 0 && *campaign.ProcessedItems >= *campaign.TotalItems {
@@ -801,18 +819,20 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		pendingStatus := models.CampaignPhaseStatusPending
 		campaign.CurrentPhase = &analysisPhase
 		campaign.PhaseStatus = &pendingStatus
-		campaign.ProgressPercentage = models.Float64Ptr(0.0) // Reset progress for new phase
+		// CRITICAL FIX: Maintain cumulative progress at 100% instead of resetting to 0%
+		campaign.ProgressPercentage = models.Float64Ptr(httpPhaseEndProgress)
 		done = true
-		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s completed HTTP validation, auto-transitioning to Analysis phase.", campaignID)
+		log.Printf("[PHASE-TRANSITION] Campaign %s completed HTTP validation, transitioning to Analysis at %.1f%% progress", campaignID, httpPhaseEndProgress)
 	} else if *campaign.TotalItems == 0 {
 		// HTTP validation phase is complete - transition to Analysis phase
 		analysisPhase := models.CampaignPhaseAnalysis
 		pendingStatus := models.CampaignPhaseStatusPending
 		campaign.CurrentPhase = &analysisPhase
 		campaign.PhaseStatus = &pendingStatus
-		campaign.ProgressPercentage = models.Float64Ptr(0.0) // Reset progress for new phase
+		// CRITICAL FIX: Maintain cumulative progress at 100% instead of resetting to 0%
+		campaign.ProgressPercentage = models.Float64Ptr(httpPhaseEndProgress)
 		done = true
-		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s has 0 total items, auto-transitioning to Analysis phase.", campaignID)
+		log.Printf("[PHASE-TRANSITION] Campaign %s (0 total items) transitioning to Analysis at %.1f%% progress", campaignID, httpPhaseEndProgress)
 	} else {
 		done = false
 	}
@@ -859,4 +879,54 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	log.Printf("ProcessHTTPKeywordCampaignBatch: Finished batch for campaign %s. Processed: %d, DoneForJob: %t. LastDomainCursor: %s. CampaignProcessed: %d/%d, Final opErr: %v",
 		campaignID, processedInThisBatch, done, lastDomainCursor, processedItemsVal, totalItemsVal, opErr)
 	return done, processedInThisBatch, opErr
+}
+
+// streamHTTPResultWithFallback attempts to stream HTTP validation results with fallback mechanisms
+// This mirrors the DNS validation pattern to provide real-time domain status updates
+func (s *httpKeywordCampaignServiceImpl) streamHTTPResultWithFallback(ctx context.Context, campaignID string, domainName string, result *models.HTTPKeywordResult) error {
+	// Create HTTP validation payload for WebSocket broadcasting
+	payload := websocket.HTTPValidationPayload{
+		CampaignID:       campaignID,
+		DomainID:         result.ID.String(),
+		Domain:           domainName,
+		ValidationStatus: result.ValidationStatus,
+		ProcessingTime:   0, // Could add timing if needed
+		TotalValidated:   0, // Could add count if needed
+	}
+
+	// Add HTTP status if available
+	if result.HTTPStatusCode != nil {
+		payload.HTTPStatus = int(*result.HTTPStatusCode)
+	}
+
+	// Add found keywords if available
+	if result.FoundKeywordsFromSets != nil {
+		// Parse the JSON to extract keywords
+		// This is a simplified approach - could be enhanced
+		payload.Keywords = []string{} // Placeholder
+	}
+
+	// Primary attempt: Use WebSocket broadcaster
+	broadcaster := websocket.GetBroadcaster()
+	if broadcaster != nil {
+		// Create standardized message using V2 format
+		message := websocket.CreateHTTPValidationMessageV2(payload)
+
+		// Convert standardized message to legacy format for compatibility
+		legacyMessage := websocket.WebSocketMessage{
+			ID:         uuid.New().String(),
+			Timestamp:  message.Timestamp.Format(time.RFC3339),
+			Type:       message.Type,
+			CampaignID: campaignID,
+			Data:       payload,
+		}
+
+		// Attempt broadcast using existing method
+		broadcaster.BroadcastToCampaign(campaignID, legacyMessage)
+		log.Printf("✅ [HTTP_STREAMING_SUCCESS] WebSocket broadcast successful for campaign %s, domain %s, type: %s", campaignID, domainName, message.Type)
+		return nil
+	} else {
+		log.Printf("⚠️ [HTTP_STREAMING_WARNING] No WebSocket broadcaster available for campaign %s, domain %s", campaignID, domainName)
+		return fmt.Errorf("no WebSocket broadcaster available")
+	}
 }

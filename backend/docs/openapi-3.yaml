@@ -358,8 +358,6 @@ components:
                 offset:
                     format: int32
                     type: integer
-            required:
-                - campaignIds
             type: object
         BulkEnrichedDataResponse:
             properties:
@@ -5958,7 +5956,7 @@ paths:
             summary: Stream keyword extraction
             tags:
                 - keyword-extraction
-    /keyword-sets:
+    /keywords/sets:
         get:
             description: Retrieve a list of keyword sets with optional filtering
             operationId: listKeywordSets
@@ -6050,7 +6048,7 @@ paths:
             summary: Create keyword set
             tags:
                 - keyword-sets
-    /keyword-sets/{setId}:
+    /keywords/sets/{setId}:
         delete:
             description: Delete a keyword set by ID
             operationId: deleteKeywordSet

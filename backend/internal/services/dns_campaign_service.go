@@ -119,9 +119,27 @@ func (s *dnsCampaignServiceImpl) TransitionToHTTPValidationPhase(ctx context.Con
 	campaign.PhaseStatus = &pendingStatus
 	campaign.UpdatedAt = time.Now().UTC()
 
-	// Reset progress for new phase
-	campaign.ProcessedItems = models.Int64Ptr(0)
-	campaign.ProgressPercentage = models.Float64Ptr(0.0)
+	// MULTI-PHASE PROGRESS TRACKING: Maintain cumulative progress across phases
+	// Phase Progress Ranges:
+	// - Generation: 0-33%
+	// - DNS Validation: 33-66%
+	// - HTTP Validation: 66-100%
+
+	oldProgress := 0.0
+	if campaign.ProgressPercentage != nil {
+		oldProgress = *campaign.ProgressPercentage
+	}
+
+	log.Printf("DEBUG [TransitionToHTTPValidationPhase]: MULTI-PHASE PROGRESS - Campaign %s", campaignID)
+	log.Printf("DEBUG [TransitionToHTTPValidationPhase]: - DNS phase completed, progress: %.2f%%", oldProgress)
+
+	// Set progress to 66% (DNS validation complete, starting HTTP validation)
+	httpPhaseStartProgress := 66.0
+	campaign.ProcessedItems = models.Int64Ptr(0) // Reset items counter for new phase
+	campaign.ProgressPercentage = models.Float64Ptr(httpPhaseStartProgress)
+
+	log.Printf("DEBUG [TransitionToHTTPValidationPhase]: - HTTP phase starting at: %.2f%%", httpPhaseStartProgress)
+	log.Printf("DEBUG [TransitionToHTTPValidationPhase]: - Items counter reset for new phase tracking")
 
 	// Update campaign record
 	if err := s.campaignStore.UpdateCampaign(ctx, querier, campaign); err != nil {
@@ -647,13 +665,27 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		campaign.ProgressPercentage = models.Float64Ptr(0.0)
 	}
 
+	// MULTI-PHASE PROGRESS TRACKING: DNS validation uses 33-66% range
+	dnsPhaseStartProgress := 33.0 // DNS phase starts at 33%
+	dnsPhaseEndProgress := 66.0   // DNS phase ends at 66%
+
 	if *campaign.TotalItems > 0 {
-		*campaign.ProgressPercentage = (float64(*campaign.ProcessedItems) / float64(*campaign.TotalItems)) * 100
-		if *campaign.ProgressPercentage > 100 {
-			*campaign.ProgressPercentage = 100
+		// Calculate DNS validation progress within the 33-66% range
+		dnsProgress := (float64(*campaign.ProcessedItems) / float64(*campaign.TotalItems)) * 100
+		if dnsProgress > 100 {
+			dnsProgress = 100
 		}
-	} else if *campaign.TotalItems == 0 { // If total is 0, it's 100% done
-		*campaign.ProgressPercentage = 100
+
+		// Scale DNS progress to 33-66% range
+		scaledProgress := dnsPhaseStartProgress + (dnsProgress/100.0)*(dnsPhaseEndProgress-dnsPhaseStartProgress)
+		*campaign.ProgressPercentage = scaledProgress
+
+		log.Printf("[MULTI-PHASE] DNS validation progress for campaign %s: %.1f%% within phase, %.1f%% overall (33-66%% range)",
+			campaignID, dnsProgress, scaledProgress)
+	} else if *campaign.TotalItems == 0 {
+		// If total is 0, DNS phase is complete - set to 66%
+		*campaign.ProgressPercentage = dnsPhaseEndProgress
+		log.Printf("[MULTI-PHASE] DNS validation complete for campaign %s (0 total items) - setting to %.1f%%", campaignID, dnsPhaseEndProgress)
 	}
 
 	// Determine 'done' status and auto-transition to HTTP validation phase
@@ -663,18 +695,20 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		pendingStatus := models.CampaignPhaseStatusPending
 		campaign.CurrentPhase = &httpPhase
 		campaign.PhaseStatus = &pendingStatus
-		campaign.ProgressPercentage = models.Float64Ptr(0.0) // Reset progress for new phase
+		// CRITICAL FIX: Maintain cumulative progress at 66% instead of resetting to 0%
+		campaign.ProgressPercentage = models.Float64Ptr(dnsPhaseEndProgress)
 		done = true
-		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s completed DNS validation, auto-transitioning to HTTP validation phase.", campaignID)
+		log.Printf("[PHASE-TRANSITION] Campaign %s completed DNS validation, transitioning to HTTP validation at %.1f%% progress", campaignID, dnsPhaseEndProgress)
 	} else if *campaign.TotalItems == 0 {
 		// DNS validation phase is complete - transition to HTTP validation
 		httpPhase := models.CampaignPhaseHTTPValidation
 		pendingStatus := models.CampaignPhaseStatusPending
 		campaign.CurrentPhase = &httpPhase
 		campaign.PhaseStatus = &pendingStatus
-		campaign.ProgressPercentage = models.Float64Ptr(0.0) // Reset progress for new phase
+		// CRITICAL FIX: Maintain cumulative progress at 66% instead of resetting to 0%
+		campaign.ProgressPercentage = models.Float64Ptr(dnsPhaseEndProgress)
 		done = true
-		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s has 0 total items, auto-transitioning to HTTP validation phase.", campaignID)
+		log.Printf("[PHASE-TRANSITION] Campaign %s (0 total items) transitioning to HTTP validation at %.1f%% progress", campaignID, dnsPhaseEndProgress)
 	} else {
 		done = false
 	}

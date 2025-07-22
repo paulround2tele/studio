@@ -195,12 +195,29 @@ id: campaignId,
           console.log('📡 [Domain Loading] BULK-ONLY: Loading generated domains for HTTP validation from bulk data');
           
           if (richData?.domains && Array.isArray(richData.domains)) {
-            updates.generatedDomains = (richData.domains as string[]).map((domainName: string, index: number) => ({
-              id: `domain-${index}`,
-              domainName,
-              generationCampaignId: campaignId,
-              createdAt: new Date().toISOString()
-            } as GeneratedDomainBackend));
+            // Handle both old format (string[]) and new format (GeneratedDomain[])
+            updates.generatedDomains = richData.domains.map((domain: any, index: number) => {
+              if (typeof domain === 'string') {
+                // Legacy string format
+                return {
+                  id: `domain-${index}`,
+                  domainName: domain,
+                  generationCampaignId: campaignId,
+                  createdAt: new Date().toISOString()
+                } as GeneratedDomainBackend;
+              } else {
+                // New GeneratedDomain object format
+                return {
+                  id: domain.id || `domain-${index}`,
+                  domainName: domain.domainName || '',
+                  generationCampaignId: campaignId,
+                  createdAt: domain.createdAt || new Date().toISOString(),
+                  dnsStatus: domain.dnsStatus,
+                  httpStatus: domain.httpStatus,
+                  leadScore: domain.leadScore
+                } as GeneratedDomainBackend;
+              }
+            });
           } else {
             updates.generatedDomains = [];
           }
@@ -231,7 +248,9 @@ generatedDomainsCount: updates.generatedDomains?.length || 0,
       return;
     }
 
+    // REFRESH FIX: Don't clear campaign data during refresh to prevent empty table flash
     if (showLoadingSpinner) useCampaignDetailsStore.getState().setLoading(true);
+    // Only clear error, keep existing campaign data visible during refresh
     useCampaignDetailsStore.getState().setError(null);
 
     try {
@@ -347,7 +366,7 @@ campaignStatus: campaign.phaseStatus,
       console.error(`❌ [Campaign Operations] Error starting phase:`, error);
       
       toast({
-title: "Error Starting Phase",
+        title: "Error Starting Phase",
         description: errorMessage,
         variant: "destructive"
       });
@@ -367,7 +386,7 @@ title: "Error Starting Phase",
       
       if (result.success) {
         toast({
-title: "Campaign Paused",
+          title: "Campaign Paused",
           description: result.message || 'Campaign paused successfully'
         });
         await loadCampaignData(false);
@@ -378,7 +397,7 @@ title: "Campaign Paused",
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to pause campaign';
       toast({
-title: "Error Pausing Campaign",
+        title: "Error Pausing Campaign",
         description: errorMessage,
         variant: "destructive"
       });
@@ -398,7 +417,7 @@ title: "Error Pausing Campaign",
       
       if (result.success) {
         toast({
-title: "Campaign Resumed",
+          title: "Campaign Resumed",
           description: result.message || 'Campaign resumed successfully'
         });
         await loadCampaignData(false);
@@ -409,7 +428,7 @@ title: "Campaign Resumed",
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to resume campaign';
       toast({
-title: "Error Resuming Campaign",
+        title: "Error Resuming Campaign",
         description: errorMessage,
         variant: "destructive"
       });
@@ -429,7 +448,7 @@ title: "Error Resuming Campaign",
       
       if (result.success) {
         toast({
-title: "Campaign Cancelled",
+          title: "Campaign Cancelled",
           description: result.message || 'Campaign cancelled successfully'
         });
         await loadCampaignData(false);
@@ -440,7 +459,7 @@ title: "Campaign Cancelled",
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to cancel campaign';
       toast({
-title: "Error Cancelling Campaign",
+        title: "Error Cancelling Campaign",
         description: errorMessage,
         variant: "destructive"
       });
@@ -488,7 +507,7 @@ title: "Export Started",
       
       if (result.success) {
         toast({
-title: "Campaign Deleted",
+          title: "Campaign Deleted",
           description: result.message || 'Campaign deleted successfully'
         });
         // Note: Don't reload campaign data since campaign is deleted
@@ -500,7 +519,7 @@ title: "Campaign Deleted",
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete campaign';
       toast({
-title: "Error Deleting Campaign",
+        title: "Error Deleting Campaign",
         description: errorMessage,
         variant: "destructive"
       });

@@ -245,17 +245,22 @@ export default function CampaignFormV2() {
 
   // Watch form changes for real-time domain calculation
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout;
+    
     const subscription = form.watch((data) => {
       if (data.constantPart && data.allowedCharSet && data.generationPattern) {
-        const debounceTimer = setTimeout(() => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
           calculateDomainStatistics(data);
         }, 500); // Debounce for 500ms
-
-        return () => clearTimeout(debounceTimer);
       }
     });
-    return () => subscription.unsubscribe();
-  }, [form]);
+    
+    return () => {
+      clearTimeout(debounceTimer);
+      subscription.unsubscribe();
+    };
+  }, [form, calculateDomainStatistics]);
 
 
   // Selection handlers - using correct field paths from CampaignFormTypes
@@ -342,40 +347,60 @@ export default function CampaignFormV2() {
       };
 
       // Build the correct CreateCampaignRequest payload
-      const requestPayload = {
+      const requestPayload: any = {
         name: data.name,
         description: data.description,
         launchSequence: data.launchSequence,
         domainGenerationParams: {
           characterSet: data.allowedCharSet,
           constantString: data.constantPart,
-          tld: data.tldsInput.split(',')[0]?.trim() || 'com', // Use first TLD
+          tld: '.' + (data.tldsInput.split(',')[0]?.trim() || 'com'), // Backend requires dot prefix
           patternType: mapPatternType(data.generationPattern),
-          variableLength: data.prefixVariableLength || 6,
+          variableLength: data.prefixVariableLength || 3,
           numDomainsToGenerate: data.maxDomainsToGenerate || 1000,
         }
       };
 
-      const response = await unifiedCampaignService.createCampaign(requestPayload);
+      // Add full sequence parameters if enabled
+      if (data.launchSequence) {
+        requestPayload.dnsValidationParams = {
+          personaIds: data.dnsValidationParams?.personaIds || [],
+          rotationIntervalSeconds: data.dnsValidationParams?.rotationIntervalSeconds || 300,
+          processingSpeedPerMinute: data.dnsValidationParams?.processingSpeedPerMinute || 60,
+          batchSize: data.dnsValidationParams?.batchSize || 10,
+          retryAttempts: data.dnsValidationParams?.retryAttempts || 3
+        };
+
+        requestPayload.httpKeywordParams = {
+          personaIds: data.httpKeywordParams?.personaIds || [],
+          proxyIds: data.httpKeywordParams?.proxyIds || [],
+          keywordSetIds: data.httpKeywordParams?.keywordSetIds || [],
+          targetHttpPorts: data.httpKeywordParams?.targetHttpPorts || [80, 443],
+          processingSpeedPerMinute: data.httpKeywordParams?.processingSpeedPerMinute || 60,
+          rotationIntervalSeconds: data.httpKeywordParams?.rotationIntervalSeconds || 300,
+          retryAttempts: data.httpKeywordParams?.retryAttempts || 3,
+          batchSize: data.httpKeywordParams?.batchSize || 10
+        };
+      }
+
+      // Use direct API client instead of service layer (same fix as personas)
+      const response = await campaignsApi.createCampaign(requestPayload);
       
-      if (response.success) {
+      if (response.status === 200 || response.status === 201) {
         toast({
           title: "Campaign Created",
           description: `Campaign "${data.name}" has been created successfully.`,
         });
         router.push('/campaigns');
       } else {
-        toast({
-          title: "Creation Failed",
-          description: response.error || "Failed to create campaign. Please try again.",
-          variant: "destructive"
-        });
+        throw new Error(`API returned status ${response.status}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Campaign creation error:', error);
+      const errorMessage = error?.response?.data?.error || error?.message || "Failed to create campaign. Please try again.";
       toast({
         title: "Creation Failed",
-        description: "Failed to create campaign. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     }

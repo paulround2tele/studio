@@ -1329,7 +1329,6 @@ ul.nav-tabs {
   }
 };
     defs["BulkEnrichedDataRequest"] = {
-  "required" : [ "campaignIds" ],
   "type" : "object",
   "properties" : {
     "campaignIds" : {
@@ -27611,7 +27610,7 @@ DNS persona ID for DNS customization
                         <p class="marked">Create a new keyword set with optional rules</p>
                         <p></p>
                         <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/keyword-sets</span></code></pre>
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/keywords/sets</span></code></pre>
                         <p>
                           <h3>Usage and SDK Samples</h3>
                         </p>
@@ -27636,7 +27635,7 @@ DNS persona ID for DNS customization
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "http://localhost/keyword-sets" \
+ "http://localhost/keywords/sets" \
  -d '{
   &quot;isEnabled&quot; : true,
   &quot;name&quot; : &quot;name&quot;,
@@ -28169,7 +28168,7 @@ $(document).ready(function() {
                         <p class="marked">Delete a keyword set by ID</p>
                         <p></p>
                         <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="delete"><code><span class="pln">/keyword-sets/{setId}</span></code></pre>
+                        <pre class="prettyprint language-html prettyprinted" data-type="delete"><code><span class="pln">/keywords/sets/{setId}</span></code></pre>
                         <p>
                           <h3>Usage and SDK Samples</h3>
                         </p>
@@ -28193,7 +28192,7 @@ $(document).ready(function() {
                           <div class="tab-pane active" id="examples-KeywordSets-deleteKeywordSet-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X DELETE \
  -H "Accept: application/json" \
- "http://localhost/keyword-sets/{setId}"
+ "http://localhost/keywords/sets/{setId}"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-KeywordSets-deleteKeywordSet-0-java">
@@ -28690,7 +28689,7 @@ Keyword Set ID (UUID)
                         <p class="marked">Retrieve a specific keyword set by ID including its rules</p>
                         <p></p>
                         <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/keyword-sets/{setId}</span></code></pre>
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/keywords/sets/{setId}</span></code></pre>
                         <p>
                           <h3>Usage and SDK Samples</h3>
                         </p>
@@ -28714,7 +28713,7 @@ Keyword Set ID (UUID)
                           <div class="tab-pane active" id="examples-KeywordSets-getKeywordSet-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "http://localhost/keyword-sets/{setId}"
+ "http://localhost/keywords/sets/{setId}"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-KeywordSets-getKeywordSet-0-java">
@@ -29211,7 +29210,7 @@ Keyword set ID
                         <p class="marked">Retrieve a list of keyword sets with optional filtering</p>
                         <p></p>
                         <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/keyword-sets</span></code></pre>
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/keywords/sets</span></code></pre>
                         <p>
                           <h3>Usage and SDK Samples</h3>
                         </p>
@@ -29235,7 +29234,7 @@ Keyword set ID
                           <div class="tab-pane active" id="examples-KeywordSets-listKeywordSets-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "http://localhost/keyword-sets?limit=56&offset=56&includeRules=true&isEnabled=true"
+ "http://localhost/keywords/sets?limit=56&offset=56&includeRules=true&isEnabled=true"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-KeywordSets-listKeywordSets-0-java">
@@ -29824,7 +29823,7 @@ Filter by enabled status
                         <p class="marked">Update an existing keyword set and its rules</p>
                         <p></p>
                         <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="put"><code><span class="pln">/keyword-sets/{setId}</span></code></pre>
+                        <pre class="prettyprint language-html prettyprinted" data-type="put"><code><span class="pln">/keywords/sets/{setId}</span></code></pre>
                         <p>
                           <h3>Usage and SDK Samples</h3>
                         </p>
@@ -29849,7 +29848,7 @@ Filter by enabled status
                             <pre class="prettyprint"><code class="language-bsh">curl -X PUT \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "http://localhost/keyword-sets/{setId}" \
+ "http://localhost/keywords/sets/{setId}" \
  -d '{
   &quot;isEnabled&quot; : true,
   &quot;name&quot; : &quot;name&quot;,

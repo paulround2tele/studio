@@ -441,11 +441,15 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 	status := models.CampaignPhaseStatusPending
 	// Prepare campaign metadata for full sequence support
 	var campaignMetadata map[string]interface{}
-	if req.LaunchSequence != nil && *req.LaunchSequence {
-		campaignMetadata = map[string]interface{}{
-			"launch_sequence": true,
-		}
+	isFullSequence := req.LaunchSequence != nil && *req.LaunchSequence
+	campaignMetadata = map[string]interface{}{
+		"launch_sequence":  isFullSequence,
+		"fullSequenceMode": isFullSequence,
+	}
+	if isFullSequence {
 		log.Printf("Campaign %s configured for full sequence mode", req.Name)
+	} else {
+		log.Printf("Campaign %s configured for individual phase mode", req.Name)
 	}
 
 	// Convert metadata to JSON
@@ -506,8 +510,12 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 	if req.LaunchSequence != nil && *req.LaunchSequence {
 		log.Printf("Full sequence mode enabled for campaign %s - creating phase parameters", req.Name)
 
-		// Create DNS validation parameters if provided
+		// CRITICAL FIX: DNS validation parameters should ONLY be created in full sequence mode
+		// This was causing auto-transitions to trigger even without full sequence enabled
 		if req.DNSValidationParams != nil {
+			log.Printf("[DEBUG] DNS validation params provided for campaign %s - checking if full sequence mode is enabled", req.Name)
+
+			// Only create DNS params if we're already inside the full sequence block (isFullSequence context)
 			dnsParams := &models.DNSValidationCampaignParams{
 				CampaignID:               campaignID,
 				PersonaIDs:               req.DNSValidationParams.PersonaIDs,
@@ -522,7 +530,9 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 				log.Printf("Error creating DNS validation params for campaign %s: %v", req.Name, opErr)
 				return nil, opErr
 			}
-			log.Printf("DNS validation params created for full sequence campaign %s", req.Name)
+			log.Printf("[FULL-SEQUENCE] DNS validation params created for campaign %s", req.Name)
+		} else {
+			log.Printf("[FULL-SEQUENCE] No DNS validation params provided for campaign %s", req.Name)
 		}
 
 		// Create HTTP keyword validation parameters if provided
@@ -1190,23 +1200,27 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 	}
 	newProcessedItems := currentProcessedItems + int64(processedInThisBatch)
 
-	// Calculate progress percentage
+	// MULTI-PHASE PROGRESS: Generation phase covers 0-33% of total campaign progress
 	var progressPercentage float64
 	var targetItems int64
 
 	if genParams.NumDomainsToGenerate > 0 {
 		targetItems = int64(genParams.NumDomainsToGenerate)
-		progressPercentage = (float64(newProcessedItems) / float64(targetItems)) * 100
+		// Scale generation progress to 0-33% range
+		generationProgress := (float64(newProcessedItems) / float64(targetItems)) * 100
+		progressPercentage = (generationProgress / 100.0) * 33.0 // Scale to 33%
 	} else {
 		targetItems = genParams.TotalPossibleCombinations
 		if genParams.TotalPossibleCombinations > 0 {
-			progressPercentage = (float64(genParams.CurrentOffset) / float64(genParams.TotalPossibleCombinations)) * 100
+			// Scale generation progress to 0-33% range
+			generationProgress := (float64(genParams.CurrentOffset) / float64(genParams.TotalPossibleCombinations)) * 100
+			progressPercentage = (generationProgress / 100.0) * 33.0 // Scale to 33%
 		} else {
-			progressPercentage = 100.0
+			progressPercentage = 33.0 // Generation complete
 		}
 	}
-	if progressPercentage > 100.0 {
-		progressPercentage = 100.0
+	if progressPercentage > 33.0 {
+		progressPercentage = 33.0 // Cap generation phase at 33%
 	}
 
 	// 🔧 COMPLETION DEBUG: Add comprehensive completion condition logging
@@ -1227,17 +1241,18 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 
 		log.Printf("[COMPLETION_DEBUG] ✅ COMPLETION TRIGGERED for campaign %s", campaignID)
 
-		// Campaign is completed - update to 100% and set completed status
-		if errUpdateProgress := s.campaignStore.UpdateCampaignProgress(ctx, querier, campaignID, newProcessedItems, targetItems, 100.0); errUpdateProgress != nil {
-			opErr = fmt.Errorf("failed to update campaign %s final progress: %w", campaignID, errUpdateProgress)
+		// MULTI-PHASE: Generation phase completed - set to 33% (not 100%)
+		generationCompleteProgress := 33.0
+		if errUpdateProgress := s.campaignStore.UpdateCampaignProgress(ctx, querier, campaignID, newProcessedItems, targetItems, generationCompleteProgress); errUpdateProgress != nil {
+			opErr = fmt.Errorf("failed to update campaign %s generation phase progress: %w", campaignID, errUpdateProgress)
 			log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
 			return false, processedInThisBatch, opErr
 		}
 
-		// Mark campaign as completed and automatically transition to DNS validation phase
+		// Mark generation phase as completed (33% progress) and ready for DNS validation phase
 		succeededStatus := models.CampaignPhaseStatusSucceeded
 		campaign.PhaseStatus = &succeededStatus
-		campaign.ProgressPercentage = models.Float64Ptr(100.0)
+		campaign.ProgressPercentage = models.Float64Ptr(generationCompleteProgress)
 		campaign.ProcessedItems = models.Int64Ptr(newProcessedItems)
 		campaign.TotalItems = models.Int64Ptr(targetItems)
 		campaign.CompletedAt = &nowTime

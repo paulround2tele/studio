@@ -93,7 +93,21 @@ export function extractResponseData<T>(response: unknown): T | null {
   // BULK-ONLY STRATEGY: Only handle unified envelope format
   if (apiResponse && typeof apiResponse === 'object' && 'success' in apiResponse && 'data' in apiResponse) {
     if (apiResponse.success === true) {
-      return apiResponse.data as T;
+      // 🔥 CRITICAL FIX: Handle double-wrapped backend envelope structure
+      // Backend returns: { success, data: { success, data: ACTUAL_DATA } }
+      // Frontend needs: ACTUAL_DATA (could be array, object, etc.)
+      const extractedData = apiResponse.data as any;
+      
+      // Check if this is a double-wrapped envelope (data contains another envelope)
+      if (extractedData && typeof extractedData === 'object' &&
+          'success' in extractedData && 'data' in extractedData &&
+          extractedData.success === true) {
+        console.log('[DEBUG] Detected double-wrapped envelope, extracting nested data');
+        return extractedData.data as T;
+      }
+      
+      // Single envelope case (normal)
+      return extractedData as T;
     } else {
       throw new Error(apiResponse.error || 'Unknown API error');
     }

@@ -41,11 +41,37 @@ const formatDate = (dateString: string): string => {
 
 // Helper functions to safely access campaign data
 const getCampaignDomains = (campaign: CampaignViewModel | RichCampaignData): string[] => {
-  return Array.isArray(campaign.domains) ? campaign.domains : [];
+  if (!Array.isArray(campaign.domains)) return [];
+  
+  // Handle both old format (string[]) and new format (GeneratedDomain[])
+  return campaign.domains.map((domain: any) => {
+    if (typeof domain === 'string') return domain;
+    if (typeof domain === 'object' && domain && 'domainName' in domain) {
+      return (domain as any).domainName;
+    }
+    return String(domain); // Fallback for unexpected formats
+  }).filter(Boolean); // Remove any empty/falsy values
 };
 
 const getCampaignDnsValidatedDomains = (campaign: CampaignViewModel | RichCampaignData): string[] => {
-  return Array.isArray(campaign.dnsValidatedDomains) ? campaign.dnsValidatedDomains : [];
+  if (!Array.isArray(campaign.dnsValidatedDomains)) return [];
+  
+  // Handle both old format (string[]) and new format (GeneratedDomain[])
+  return campaign.dnsValidatedDomains.map((domain: any) => {
+    if (typeof domain === 'string') return domain;
+    if (typeof domain === 'object' && domain && 'domainName' in domain) {
+      return (domain as any).domainName;
+    }
+    return String(domain); // Fallback for unexpected formats
+  }).filter(Boolean); // Remove any empty/falsy values
+};
+
+const getCampaignHTTPKeywordValidatedDomains = (campaign: CampaignViewModel | RichCampaignData): string[] => {
+  if ('leads' in campaign && Array.isArray(campaign.leads)) {
+    // leads field contains the successfully HTTP validated domains as strings
+    return campaign.leads.map(lead => String(lead)).filter(Boolean);
+  }
+  return [];
 };
 
 const getCampaignLeads = (campaign: CampaignViewModel | RichCampaignData): Array<CampaignLead> => {

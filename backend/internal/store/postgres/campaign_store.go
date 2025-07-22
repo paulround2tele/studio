@@ -412,17 +412,20 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 		if domain.CreatedAt.IsZero() {
 			domain.CreatedAt = time.Now().UTC()
 		}
-		// Set initial status values for new domains
+		// ROBUST STATUS INITIALIZATION: Ensure all domains have proper initial status values
 		if domain.DNSStatus == nil {
 			pending := models.DomainDNSStatusPending
 			domain.DNSStatus = &pending
+			log.Printf("DEBUG [CreateGeneratedDomains]: Initialized DNS status to 'pending' for domain %s", domain.DomainName)
 		}
 		if domain.HTTPStatus == nil {
 			pending := models.DomainHTTPStatusPending
 			domain.HTTPStatus = &pending
+			log.Printf("DEBUG [CreateGeneratedDomains]: Initialized HTTP status to 'pending' for domain %s", domain.DomainName)
 		}
 		if !domain.LeadScore.Valid {
 			domain.LeadScore = sql.NullFloat64{Float64: 0.0, Valid: true}
+			log.Printf("DEBUG [CreateGeneratedDomains]: Initialized lead score to 0.0 for domain %s", domain.DomainName)
 		}
 		_, err := stmt.ExecContext(ctx, domain)
 		if err != nil {
@@ -440,7 +443,17 @@ func (s *campaignStorePostgres) GetGeneratedDomainsByCampaign(ctx context.Contex
 			  WHERE domain_generation_campaign_id = $1 AND offset_index >= $2
 			  ORDER BY offset_index ASC
 			  LIMIT $3`
+
+	log.Printf("DEBUG [GetGeneratedDomainsByCampaign]: Query for campaign %s, limit %d, lastOffset %d", campaignID, limit, lastOffsetIndex)
+
 	err := exec.SelectContext(ctx, &domains, query, campaignID, lastOffsetIndex, limit)
+
+	log.Printf("DEBUG [GetGeneratedDomainsByCampaign]: Found %d domains for campaign %s", len(domains), campaignID)
+	if len(domains) > 0 {
+		log.Printf("DEBUG [GetGeneratedDomainsByCampaign]: First domain: %s (DNS: %v, HTTP: %v)",
+			domains[0].DomainName, domains[0].DNSStatus, domains[0].HTTPStatus)
+	}
+
 	return domains, err
 }
 
@@ -556,9 +569,44 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 		if result.CreatedAt.IsZero() {
 			result.CreatedAt = time.Now().UTC()
 		}
+
+		log.Printf("DEBUG [CreateDNSValidationResults]: Saving DNS result - Domain: %s, Status: %s, Business Status: %s",
+			result.DomainName, result.ValidationStatus, func() string {
+				if result.BusinessStatus != nil {
+					return *result.BusinessStatus
+				}
+				return "nil"
+			}())
+
 		_, err := stmt.ExecContext(ctx, result)
 		if err != nil {
+			log.Printf("ERROR [CreateDNSValidationResults]: Failed to save DNS result for domain %s: %v", result.DomainName, err)
 			return err
+		}
+
+		// UPDATE DOMAIN STATUS: Also update the generated_domains table with DNS status
+		if result.GeneratedDomainID.Valid {
+			updateDomainQuery := `UPDATE generated_domains SET
+				dns_status = $1,
+				last_validated_at = $2
+				WHERE id = $3`
+
+			var dnsStatus models.DomainDNSStatusEnum
+			switch result.ValidationStatus {
+			case "resolved":
+				dnsStatus = models.DomainDNSStatusOK
+			case "unresolved", "timeout":
+				dnsStatus = models.DomainDNSStatusError
+			default:
+				dnsStatus = models.DomainDNSStatusPending
+			}
+
+			_, updateErr := exec.ExecContext(ctx, updateDomainQuery, dnsStatus, result.LastCheckedAt, result.GeneratedDomainID.UUID)
+			if updateErr != nil {
+				log.Printf("WARNING [CreateDNSValidationResults]: Failed to update domain DNS status for %s: %v", result.DomainName, updateErr)
+			} else {
+				log.Printf("DEBUG [CreateDNSValidationResults]: Updated domain DNS status to '%s' for %s", dnsStatus, result.DomainName)
+			}
 		}
 	}
 	return nil
@@ -816,6 +864,41 @@ func (s *campaignStorePostgres) CreateHTTPKeywordResults(ctx context.Context, ex
 		_, err := stmt.ExecContext(ctx, &dbRes)
 		if err != nil {
 			return err
+		}
+
+		// UPDATE DOMAIN STATUS: Also update the generated_domains table with HTTP status
+		// This mirrors the DNS validation pattern to ensure domain status consistency
+		if result.DNSResultID.Valid {
+			// First get the generated_domain_id from the DNS result
+			var generatedDomainID uuid.UUID
+			getDomainQuery := `SELECT generated_domain_id FROM dns_validation_results WHERE id = $1`
+			err := exec.GetContext(ctx, &generatedDomainID, getDomainQuery, result.DNSResultID.UUID)
+			if err != nil {
+				log.Printf("WARNING [CreateHTTPKeywordResults]: Failed to get generated_domain_id for DNS result %s: %v", result.DNSResultID.UUID, err)
+				continue
+			}
+
+			updateDomainQuery := `UPDATE generated_domains SET
+				http_status = $1,
+				last_validated_at = $2
+				WHERE id = $3`
+
+			var httpStatus models.DomainHTTPStatusEnum
+			switch result.ValidationStatus {
+			case "valid_http_response":
+				httpStatus = models.DomainHTTPStatusOK
+			case "invalid_http_response_error", "timeout", "cancelled_during_processing":
+				httpStatus = models.DomainHTTPStatusError
+			default:
+				httpStatus = models.DomainHTTPStatusPending
+			}
+
+			_, updateErr := exec.ExecContext(ctx, updateDomainQuery, httpStatus, result.LastCheckedAt, generatedDomainID)
+			if updateErr != nil {
+				log.Printf("WARNING [CreateHTTPKeywordResults]: Failed to update domain HTTP status for %s: %v", result.DomainName, updateErr)
+			} else {
+				log.Printf("DEBUG [CreateHTTPKeywordResults]: Updated domain HTTP status to '%s' for %s", httpStatus, result.DomainName)
+			}
 		}
 	}
 	return nil

@@ -644,7 +644,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/keyword-sets": {
+    "/keywords/sets": {
         parameters: {
             query?: never;
             header?: never;
@@ -668,7 +668,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/keyword-sets/{setId}": {
+    "/keywords/sets/{setId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1484,7 +1484,7 @@ export interface components {
             totalCount?: number;
         };
         BulkEnrichedDataRequest: {
-            campaignIds: string[];
+            campaignIds?: string[];
             /** Format: int32 */
             limit?: number;
             /** Format: int32 */

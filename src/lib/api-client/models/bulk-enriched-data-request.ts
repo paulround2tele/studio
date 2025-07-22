@@ -25,7 +25,7 @@ export interface BulkEnrichedDataRequest {
      * @type {Array<string>}
      * @memberof BulkEnrichedDataRequest
      */
-    'campaignIds': Array<string>;
+    'campaignIds'?: Array<string>;
     /**
      * 
      * @type {number}

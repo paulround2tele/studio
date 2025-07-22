@@ -425,29 +425,33 @@ export class UnifiedCampaignService {
     status?: string;
   }): Promise<UnifiedCampaignsListResponse> {
     try {
-      const axiosResponse = await campaignsApi.listCampaigns(options?.limit, options?.offset, options?.status);
+      // SINGLE CALL: Use bulk enriched endpoint with empty campaignIds = get ALL campaigns
+      const enrichedResponse = await campaignsApi.getBulkEnrichedCampaignData({
+        campaignIds: [], // Empty array = return ALL campaigns (backend modification)
+        limit: options?.limit,
+        offset: options?.offset
+      });
       
-      // 🐛 DEBUG: Logging type safety validation - unifiedCampaignService.ts:407
-      console.log('[DEBUG] getCampaigns axiosResponse type:', typeof axiosResponse);
-      console.log('[DEBUG] getCampaigns axiosResponse structure:', Object.keys(axiosResponse || {}));
+      const enrichedData = extractResponseData<BulkEnrichedDataResponse>(enrichedResponse);
       
-      // ✅ FIXED: Using proper OpenAPI type instead of any
-      const response = extractResponseData<{ data: Campaign[]; requestId?: string }>(axiosResponse);
-      console.log('[DEBUG] Extracted response type:', typeof response);
-      
-      // Extract campaigns from unified API response structure
-      const campaigns = response?.data || [];
-      const requestId = response?.requestId || `campaigns-${Date.now()}`;
-      
+      // Convert enriched data back to Campaign[] format
+      const campaigns: Campaign[] = [];
+      if (enrichedData?.campaigns) {
+        for (const [campaignId, enrichedCampaign] of Object.entries(enrichedData.campaigns)) {
+          if (enrichedCampaign?.campaign) {
+            campaigns.push(enrichedCampaign.campaign as Campaign);
+          }
+        }
+      }
+
       return {
         success: true,
         data: campaigns,
         error: null,
-        requestId,
-        message: 'Campaigns retrieved successfully'
+        requestId: `campaigns-${Date.now()}`,
+        message: `Successfully loaded ${campaigns.length} campaigns via single bulk enriched call`
       };
     } catch (error: unknown) {
-      console.error('[UnifiedCampaignService] Error fetching campaigns:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to get campaigns';
       return {
         success: false,
@@ -839,7 +843,15 @@ export class UnifiedCampaignService {
       // Extract domains from bulk response envelope
       const campaignData = response?.campaigns?.[campaignId];
       const rawDomains = campaignData?.domains || [];
-      const data = rawDomains as string[]; // Type assertion for domain strings
+      
+      // Handle both old format (string[]) and new format (GeneratedDomain[])
+      const data = rawDomains.map((domain: any) => {
+        if (typeof domain === 'string') {
+          return domain; // Legacy string format
+        } else {
+          return domain.domainName || ''; // New GeneratedDomain object format
+        }
+      }).filter(Boolean); // Remove any empty/falsy values
       
       console.log(`[UnifiedCampaignService] ✅ Retrieved ${data.length} domains for campaign ${campaignId} via bulk API`);
       

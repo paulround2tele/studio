@@ -479,6 +479,21 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDetails(ctx context.Context
 	var specificParams interface{}
 	var specificErr error
 
+	// Check if this is a full sequence mode campaign from metadata
+	isFullSequenceMode := false
+	if baseCampaign.Metadata != nil {
+		var metadata map[string]interface{}
+		if err := json.Unmarshal(*baseCampaign.Metadata, &metadata); err == nil {
+			if fullSeq, exists := metadata["fullSequenceMode"]; exists {
+				if fullSeqBool, ok := fullSeq.(bool); ok {
+					isFullSequenceMode = fullSeqBool
+				}
+			}
+		}
+	}
+
+	log.Printf("GetCampaignDetails: Campaign %s mode: fullSequence=%v, phase=%v", campaignID, isFullSequenceMode, baseCampaign.CurrentPhase)
+
 	// All campaigns are now phases-based, check current phase to load appropriate params
 	if baseCampaign.CurrentPhase != nil {
 		switch *baseCampaign.CurrentPhase {
@@ -493,7 +508,16 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDetails(ctx context.Context
 		case models.CampaignPhaseDNSValidation:
 			_, params, errGet := s.dnsService.GetCampaignDetails(ctx, campaignID)
 			if errGet != nil {
-				specificErr = fmt.Errorf("orchestrator: get dns validation params failed: %w", errGet)
+				// Smart handling based on campaign mode
+				if isFullSequenceMode {
+					// Full sequence mode: params should exist, this is an error
+					specificErr = fmt.Errorf("orchestrator: get dns validation params failed: %w", errGet)
+				} else {
+					// Individual phase mode: missing params is normal, log and continue
+					log.Printf("GetCampaignDetails: DNS params not found for individual phase mode campaign %s (normal behavior)", campaignID)
+					specificParams = nil
+					baseCampaign.DNSValidationParams = nil
+				}
 			} else {
 				specificParams = params
 				baseCampaign.DNSValidationParams = params
@@ -501,7 +525,16 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDetails(ctx context.Context
 		case models.CampaignPhaseHTTPValidation:
 			_, params, errGet := s.httpKeywordService.GetCampaignDetails(ctx, campaignID)
 			if errGet != nil {
-				specificErr = fmt.Errorf("orchestrator: get http keyword params failed: %w", errGet)
+				// Smart handling based on campaign mode
+				if isFullSequenceMode {
+					// Full sequence mode: params should exist, this is an error
+					specificErr = fmt.Errorf("orchestrator: get http keyword params failed: %w", errGet)
+				} else {
+					// Individual phase mode: missing params is normal, log and continue
+					log.Printf("GetCampaignDetails: HTTP params not found for individual phase mode campaign %s (normal behavior)", campaignID)
+					specificParams = nil
+					baseCampaign.HTTPKeywordValidationParams = nil
+				}
 			} else {
 				specificParams = params
 				baseCampaign.HTTPKeywordValidationParams = params

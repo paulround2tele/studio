@@ -4,11 +4,11 @@ All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**createKeywordSet**](#createkeywordset) | **POST** /keyword-sets | Create keyword set|
-|[**deleteKeywordSet**](#deletekeywordset) | **DELETE** /keyword-sets/{setId} | Delete keyword set|
-|[**getKeywordSet**](#getkeywordset) | **GET** /keyword-sets/{setId} | Get keyword set|
-|[**listKeywordSets**](#listkeywordsets) | **GET** /keyword-sets | List keyword sets|
-|[**updateKeywordSet**](#updatekeywordset) | **PUT** /keyword-sets/{setId} | Update keyword set|
+|[**createKeywordSet**](#createkeywordset) | **POST** /keywords/sets | Create keyword set|
+|[**deleteKeywordSet**](#deletekeywordset) | **DELETE** /keywords/sets/{setId} | Delete keyword set|
+|[**getKeywordSet**](#getkeywordset) | **GET** /keywords/sets/{setId} | Get keyword set|
+|[**listKeywordSets**](#listkeywordsets) | **GET** /keywords/sets | List keyword sets|
+|[**updateKeywordSet**](#updatekeywordset) | **PUT** /keywords/sets/{setId} | Update keyword set|
 
 # **createKeywordSet**
 > StreamExtractKeywords200Response createKeywordSet(createKeywordSetRequest)

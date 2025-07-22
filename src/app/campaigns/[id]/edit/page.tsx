@@ -1,11 +1,11 @@
 
 "use client";
 
-import CampaignFormV2, { type CampaignViewModel } from '@/components/campaigns/CampaignFormV2';
+import CampaignFormV2 from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
 import type { components } from '@/lib/api-client/types';
 
-type _Campaign = components['schemas']['Campaign'];
+type Campaign = components['schemas']['Campaign'];
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
@@ -63,7 +63,7 @@ function EditCampaignPageContent() {
         description={`Modify the details for campaign "${campaign.name}".`}
         icon={FilePenLine}
       />
-      <CampaignFormV2 campaignToEdit={campaign as CampaignViewModel} isEditing={true} />
+      <CampaignFormV2 />
     </>
   );
 }
