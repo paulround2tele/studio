@@ -24,6 +24,8 @@ import { getPersonas } from '@/lib/services/personaService';
 import { getProxies } from '@/lib/services/proxyService.production';
 import { listProxyPools } from '@/lib/services/proxyPoolService.production';
 import { listKeywordSets } from '@/lib/services/keywordSetService';
+import { campaignsApi } from '@/lib/api-client/client';
+import { calculateMaxTheoreticalDomains, calculateRemainingDomains } from '@/lib/utils/domainCalculation';
 
 // Response types from OpenAPI - using exact same types as personas page
 type PersonaBase = components['schemas']['PersonaResponse'];
@@ -55,6 +57,12 @@ const MAX_PERSONAS_SELECTED = 5;
 const MAX_PROXIES_SELECTED = 10;
 const MAX_KEYWORD_SETS_SELECTED = 5;
 
+// Common TLD options
+const COMMON_TLDS = [
+  'com', 'net', 'org', 'io', 'co', 'app', 'dev', 'tech', 'info', 'biz',
+  'me', 'tv', 'cc', 'ai', 'xyz', 'online', 'site', 'website', 'store'
+];
+
 export default function CampaignFormV2() {
   const router = useRouter();
   const { toast } = useToast();
@@ -66,6 +74,11 @@ export default function CampaignFormV2() {
   const [proxyPools, setProxyPools] = useState<ProxyPoolResponse[]>([]);
   const [keywordSets, setKeywordSets] = useState<KeywordSetResponse[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  
+  // Domain calculation state
+  const [totalRemainingDomains, setTotalRemainingDomains] = useState<number>(0);
+  const [currentOffset, setCurrentOffset] = useState<number>(0);
+  const [calculatingDomains, setCalculatingDomains] = useState(false);
 
   // Form initialization - using EXACT CampaignFormTypes structure
   const form = useForm<CampaignFormValues>({
@@ -77,8 +90,8 @@ export default function CampaignFormV2() {
       constantPart: "",
       allowedCharSet: "abcdefghijklmnopqrstuvwxyz0123456789",
       tldsInput: "com",
-      prefixVariableLength: 6,
-      suffixVariableLength: 0,
+      prefixVariableLength: 3,
+      suffixVariableLength: 3,
       maxDomainsToGenerate: 1000,
       
       // Launch sequence toggle
@@ -178,6 +191,72 @@ export default function CampaignFormV2() {
 
     fetchData();
   }, [toast]);
+  // Domain calculation function
+  const calculateDomainStatistics = async (formData: any) => {
+    if (!formData.constantPart || !formData.allowedCharSet) return;
+    
+    setCalculatingDomains(true);
+    try {
+      // Build domain generation config for calculation
+      const config = {
+        patternType: formData.generationPattern.replace('_variable', '') as 'prefix' | 'suffix' | 'both',
+        characterSet: formData.allowedCharSet,
+        constantString: formData.constantPart,
+        tld: formData.tldsInput,
+        variableLength: formData.generationPattern === 'prefix_variable'
+          ? formData.prefixVariableLength
+          : formData.generationPattern === 'suffix_variable'
+          ? formData.suffixVariableLength
+          : Math.max(formData.prefixVariableLength, formData.suffixVariableLength),
+        numDomainsToGenerate: formData.maxDomainsToGenerate
+      };
+
+      // Get current offset from backend and calculate remaining domains
+      let offset = 0;
+      try {
+        const offsetResponse = await campaignsApi.getPatternOffset({
+          patternType: config.patternType,
+          characterSet: config.characterSet,
+          constantString: config.constantString,
+          tld: config.tld,
+          variableLength: config.variableLength
+        });
+
+        offset = (offsetResponse.data as any)?.data?.currentOffset || 0;
+        setCurrentOffset(offset);
+      } catch (offsetError) {
+        console.warn('Could not fetch current offset, using 0:', offsetError);
+        setCurrentOffset(0);
+      }
+
+      // Calculate remaining domains
+      const maxTheoretical = calculateMaxTheoreticalDomains(config);
+      const remaining = calculateRemainingDomains(config, offset);
+      setTotalRemainingDomains(remaining);
+
+    } catch (error) {
+      console.error('Error calculating domain statistics:', error);
+      setCurrentOffset(0);
+      setTotalRemainingDomains(0);
+    } finally {
+      setCalculatingDomains(false);
+    }
+  };
+
+  // Watch form changes for real-time domain calculation
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      if (data.constantPart && data.allowedCharSet && data.generationPattern) {
+        const debounceTimer = setTimeout(() => {
+          calculateDomainStatistics(data);
+        }, 500); // Debounce for 500ms
+
+        return () => clearTimeout(debounceTimer);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
 
   // Selection handlers - using correct field paths from CampaignFormTypes
   const addPersona = (personaId: string, type: 'dns' | 'http') => {
@@ -304,10 +383,14 @@ export default function CampaignFormV2() {
 
   // Watch form values for UI updates
   const watchLaunchSequence = form.watch('launchSequence');
+  const watchGenerationPattern = form.watch('generationPattern');
   const watchDnsPersonas = form.watch('dnsValidationParams.personaIds');
   const watchHttpPersonas = form.watch('httpKeywordParams.personaIds');
   const watchProxies = form.watch('httpKeywordParams.proxyIds');
   const watchKeywordSets = form.watch('httpKeywordParams.keywordSetIds');
+
+  // Determine if suffix variable length should be enabled
+  const isSuffixEnabled = watchGenerationPattern === 'suffix_variable' || watchGenerationPattern === 'both_variable';
 
   return (
     <>
@@ -355,6 +438,34 @@ export default function CampaignFormV2() {
                     </FormItem>
                   )}
                 />
+
+                {/* Domain Statistics Display */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">
+                      {calculatingDomains ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        </div>
+                      ) : (
+                        totalRemainingDomains.toLocaleString()
+                      )}
+                    </div>
+                    <div className="text-sm text-foreground/80 font-medium">Total Remaining Domains</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-400">
+                      {calculatingDomains ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                        </div>
+                      ) : (
+                        currentOffset.toLocaleString()
+                      )}
+                    </div>
+                    <div className="text-sm text-foreground/80 font-medium">Current Offset</div>
+                  </div>
+                </div>
               </div>
 
               {/* Launch Sequence Toggle */}
@@ -483,14 +594,21 @@ export default function CampaignFormV2() {
                     <FormItem>
                       <FormLabel>Suffix Variable Length</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
                           type="number"
-                          placeholder="0"
+                          placeholder="3"
                           value={field.value || ''}
                           onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          disabled={!isSuffixEnabled}
+                          className={!isSuffixEnabled ? 'bg-muted text-muted-foreground' : ''}
                         />
                       </FormControl>
                       <FormMessage />
+                      {!isSuffixEnabled && (
+                        <p className="text-xs text-muted-foreground">
+                          Only available when Suffix or Both pattern is selected
+                        </p>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -500,13 +618,44 @@ export default function CampaignFormV2() {
                   name="tldsInput"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>TLDs (comma-separated)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="com,net,org"
-                          {...field}
-                        />
-                      </FormControl>
+                      <FormLabel>Top Level Domains</FormLabel>
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2 min-h-[2.5rem] p-3 border rounded-lg bg-background">
+                          {field.value?.split(',').filter(Boolean).map((tld: string) => (
+                            <Badge key={tld.trim()} variant="secondary" className="flex items-center gap-1">
+                              .{tld.trim()}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={() => {
+                                  const currentTlds = field.value?.split(',').filter(Boolean) || [];
+                                  const newTlds = currentTlds.filter((t: string) => t.trim() !== tld.trim());
+                                  field.onChange(newTlds.join(','));
+                                }}
+                              />
+                            </Badge>
+                          ))}
+                          {(!field.value || field.value.split(',').filter(Boolean).length === 0) && (
+                            <span className="text-muted-foreground text-sm">Select TLDs...</span>
+                          )}
+                        </div>
+                        <Select onValueChange={(value) => {
+                          const currentTlds = field.value?.split(',').filter(Boolean) || [];
+                          if (!currentTlds.includes(value)) {
+                            field.onChange([...currentTlds, value].join(','));
+                          }
+                        }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Add TLD" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {COMMON_TLDS.map((tld) => (
+                              <SelectItem key={tld} value={tld}>
+                                .{tld}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
