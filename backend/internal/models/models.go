@@ -466,6 +466,59 @@ type GeneratedDomain struct {
 	LastValidatedAt sql.NullTime          `db:"last_validated_at" json:"lastValidatedAt,omitempty" firestore:"lastValidatedAt,omitempty"`
 }
 
+// MarshalJSON provides custom JSON marshaling for GeneratedDomain to handle sql.Null* types properly
+func (gd GeneratedDomain) MarshalJSON() ([]byte, error) {
+	type Alias GeneratedDomain
+
+	// Create a temporary struct with proper JSON-serializable types
+	temp := struct {
+		Alias
+		SourceKeyword   *string  `json:"sourceKeyword,omitempty"`
+		SourcePattern   *string  `json:"sourcePattern,omitempty"`
+		TLD             *string  `json:"tld,omitempty"`
+		DNSIP           *string  `json:"dnsIp,omitempty"`
+		HTTPStatusCode  *int32   `json:"httpStatusCode,omitempty"`
+		HTTPTitle       *string  `json:"httpTitle,omitempty"`
+		HTTPKeywords    *string  `json:"httpKeywords,omitempty"`
+		LeadScore       *float64 `json:"leadScore,omitempty"`
+		LastValidatedAt *string  `json:"lastValidatedAt,omitempty"`
+	}{
+		Alias: Alias(gd),
+	}
+
+	// Convert sql.NullString fields to proper JSON representation
+	if gd.SourceKeyword.Valid {
+		temp.SourceKeyword = &gd.SourceKeyword.String
+	}
+	if gd.SourcePattern.Valid {
+		temp.SourcePattern = &gd.SourcePattern.String
+	}
+	if gd.TLD.Valid {
+		temp.TLD = &gd.TLD.String
+	}
+	if gd.DNSIP.Valid {
+		temp.DNSIP = &gd.DNSIP.String
+	}
+	if gd.HTTPStatusCode.Valid {
+		temp.HTTPStatusCode = &gd.HTTPStatusCode.Int32
+	}
+	if gd.HTTPTitle.Valid {
+		temp.HTTPTitle = &gd.HTTPTitle.String
+	}
+	if gd.HTTPKeywords.Valid {
+		temp.HTTPKeywords = &gd.HTTPKeywords.String
+	}
+	if gd.LeadScore.Valid {
+		temp.LeadScore = &gd.LeadScore.Float64
+	}
+	if gd.LastValidatedAt.Valid {
+		timeStr := gd.LastValidatedAt.Time.Format(time.RFC3339)
+		temp.LastValidatedAt = &timeStr
+	}
+
+	return json.Marshal(temp)
+}
+
 // DNSValidationCampaignParams holds parameters for a DNS validation campaign
 type DNSValidationCampaignParams struct {
 	CampaignID                 uuid.UUID        `db:"campaign_id" json:"-" firestore:"-"`

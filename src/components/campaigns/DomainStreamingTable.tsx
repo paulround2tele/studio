@@ -196,17 +196,53 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
   const domainDetails = useMemo((): DomainDetail[] => {
     let domains: DomainDetail[] = [];
 
-    if (campaign.currentPhase === CampaignCurrentPhaseEnum.Generation) {
-      domains = generatedDomains.map(domain => ({
-        id: domain.id || '',
-        domainName: domain.domainName || '',
-        generatedDate: domain.generatedAt,
-        // Use new domain-centric status fields, fallback to legacy lookup if needed
-        dnsStatus: domain.dnsStatus ? convertBackendStatus(domain.dnsStatus) : getDomainStatusFromValidation(domain.domainName || '', dnsCampaignItems),
-        httpStatus: domain.httpStatus ? convertBackendStatus(domain.httpStatus) : getDomainStatusFromValidation(domain.domainName || '', httpCampaignItems),
-        leadScanStatus: 'n_a' as DomainActivityStatus,
-      }));
-    } else if (campaign.currentPhase === CampaignCurrentPhaseEnum.DnsValidation) {
+    // CRITICAL FIX: Always prioritize generatedDomains as it contains the correct status fields
+    // regardless of campaign phase. The backend stores domain status in GeneratedDomain objects.
+    if (generatedDomains.length > 0) {
+      domains = generatedDomains.map((domain, index) => {
+        // Handle both string and object formats
+        let domainName = '';
+        let domainId = '';
+        let generatedDate = '';
+        let dnsStatus = 'not_validated' as DomainActivityStatus;
+        let httpStatus = 'not_validated' as DomainActivityStatus;
+        
+        if (typeof domain === 'string') {
+          // Domain is just a string (domain name)
+          domainName = domain;
+          domainId = `string-domain-${index}`;
+          generatedDate = campaign.createdAt || new Date().toISOString();
+        } else if (typeof domain === 'object' && domain !== null && 'domainName' in domain) {
+          // Domain is an object (GeneratedDomain)
+          domainName = domain.domainName || '';
+          domainId = domain.id || `domain-${index}`;
+          generatedDate = domain.generatedAt || domain.createdAt || campaign.createdAt || new Date().toISOString();
+          
+          // Use actual domain status from generated_domains table (single source of truth)
+          if (domain.dnsStatus) {
+            dnsStatus = convertBackendStatus(domain.dnsStatus);
+          }
+          if (domain.httpStatus) {
+            httpStatus = convertBackendStatus(domain.httpStatus);
+          }
+        } else {
+          // Fallback for unexpected types
+          domainName = `unknown-domain-${index}`;
+          domainId = `fallback-domain-${index}`;
+          generatedDate = campaign.createdAt || new Date().toISOString();
+        }
+        
+        return {
+          id: domainId,
+          domainName: domainName,
+          generatedDate: generatedDate,
+          dnsStatus: dnsStatus,
+          httpStatus: httpStatus,
+          leadScanStatus: 'n_a' as DomainActivityStatus,
+        };
+      });
+    } else if (campaign.currentPhase === CampaignCurrentPhaseEnum.DnsValidation && dnsCampaignItems.length > 0) {
+      // Fallback to legacy data structure only if generatedDomains is empty
       domains = dnsCampaignItems.map(item => ({
         id: item.id,
         domainName: item.domainName || item.domain || '',
@@ -215,7 +251,8 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
         httpStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', httpCampaignItems),
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
-    } else if (campaign.currentPhase === CampaignCurrentPhaseEnum.HttpKeywordValidation) {
+    } else if (campaign.currentPhase === CampaignCurrentPhaseEnum.HttpKeywordValidation && httpCampaignItems.length > 0) {
+      // Fallback to legacy data structure only if generatedDomains is empty
       domains = httpCampaignItems.map(item => ({
         id: item.id,
         domainName: item.domainName || item.domain || '',
@@ -225,6 +262,24 @@ export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
         leadScanStatus: 'n_a' as DomainActivityStatus,
       }));
     }
+
+    console.log(`🔍 [DomainStreamingTable] Domain data processed:`, {
+      phase: campaign.currentPhase,
+      generatedDomainsCount: generatedDomains.length,
+      dnsCampaignItemsCount: dnsCampaignItems.length,
+      httpCampaignItemsCount: httpCampaignItems.length,
+      domainsOutput: domains.length,
+      sampleDomain: domains[0],
+      sampleGeneratedDomain: generatedDomains[0],
+      generatedDomainsStructure: generatedDomains.slice(0, 2).map(d => ({
+        type: typeof d,
+        isString: typeof d === 'string',
+        isObject: typeof d === 'object',
+        keys: typeof d === 'object' ? Object.keys(d) : 'N/A',
+        domainName: typeof d === 'object' ? d.domainName : d,
+        domainNameType: typeof d === 'object' ? typeof d.domainName : typeof d
+      }))
+    });
 
     return domains;
   }, [campaign, generatedDomains, dnsCampaignItems, httpCampaignItems, convertBackendStatus, getDomainStatusFromValidation]);

@@ -74,8 +74,9 @@ type CampaignStore interface {
 
 	// Enhanced cursor-based pagination methods for enterprise scale
 	GetGeneratedDomainsWithCursor(ctx context.Context, exec Querier, filter ListGeneratedDomainsFilter) (*PaginatedResult[*models.GeneratedDomain], error)
-	GetDNSValidationResultsWithCursor(ctx context.Context, exec Querier, filter ListDNSValidationResultsFilter) (*PaginatedResult[*models.DNSValidationResult], error)
-	GetHTTPKeywordResultsWithCursor(ctx context.Context, exec Querier, filter ListHTTPValidationResultsFilter) (*PaginatedResult[*models.HTTPKeywordResult], error)
+	// NOTE: Legacy validation result cursor methods removed as part of dual architecture elimination
+	// GetDNSValidationResultsWithCursor and GetHTTPKeywordResultsWithCursor have been eliminated
+	// as they queried legacy tables (dns_validation_results, http_keyword_results)
 
 	// Performance monitoring methods
 	RecordQueryPerformance(ctx context.Context, exec Querier, metric *models.QueryPerformanceMetric) error

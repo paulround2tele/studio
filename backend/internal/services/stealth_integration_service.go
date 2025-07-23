@@ -205,16 +205,15 @@ func (s *stealthIntegrationServiceImpl) getDomainsForDNSValidation(ctx context.C
 	// Query for generated domains that don't have DNS validation results yet
 	var domains []*models.GeneratedDomain
 	query := `
-		SELECT gd.id, gd.domain_name, gd.generation_campaign_id, gd.generated_at, gd.offset_index
-		FROM generated_domains gd
-		LEFT JOIN dns_validation_results dvr ON gd.id = dvr.generated_domain_id AND dvr.dns_campaign_id = $1
-		WHERE gd.domain_generation_campaign_id = $2 
-		  AND dvr.id IS NULL
-		ORDER BY gd.offset_index
+		SELECT id, domain_name, domain_generation_campaign_id, generated_at, offset_index
+		FROM generated_domains
+		WHERE domain_generation_campaign_id = $1
+		  AND (dns_status IS NULL OR dns_status = 'pending')
+		ORDER BY offset_index
 		LIMIT 1000
 	`
 
-	err = s.db.SelectContext(ctx, &domains, query, campaignID, sourceCampaignID)
+	err = s.db.SelectContext(ctx, &domains, query, sourceCampaignID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query domains for DNS validation: %w", err)
 	}
@@ -235,18 +234,16 @@ func (s *stealthIntegrationServiceImpl) getDomainsForHTTPValidation(ctx context.
 
 	var domains []*models.GeneratedDomain
 	query := `
-		SELECT gd.id, gd.domain_name, gd.generation_campaign_id, gd.generated_at, gd.offset_index
-		FROM generated_domains gd
-		INNER JOIN dns_validation_results dvr ON gd.id = dvr.generated_domain_id 
-		LEFT JOIN http_keyword_results hkr ON gd.domain_name = hkr.domain_name AND hkr.http_keyword_campaign_id = $1
-		WHERE dvr.dns_campaign_id = $2 
-		  AND dvr.validation_status = 'valid_dns'
-		  AND hkr.id IS NULL
-		ORDER BY gd.offset_index
+		SELECT id, domain_name, domain_generation_campaign_id, generated_at, offset_index
+		FROM generated_domains
+		WHERE domain_generation_campaign_id = $1
+		  AND dns_status = 'ok'
+		  AND (http_status IS NULL OR http_status = 'pending')
+		ORDER BY offset_index
 		LIMIT 1000
 	`
 
-	err = s.db.SelectContext(ctx, &domains, query, campaignID, sourceDNSCampaignID)
+	err = s.db.SelectContext(ctx, &domains, query, sourceDNSCampaignID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query domains for HTTP validation: %w", err)
 	}

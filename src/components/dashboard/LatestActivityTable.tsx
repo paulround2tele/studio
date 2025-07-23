@@ -87,6 +87,55 @@ const getGlobalDomainStatusForPhase = (
   phase: CampaignPhase,
   campaign: CampaignViewModel | RichCampaignData
 ): DomainActivityStatus => {
+  // CRITICAL FIX: First, try to read actual domain status from GeneratedDomain objects
+  // This is the authoritative source of truth for domain status
+  const domains = getCampaignDomains(campaign);
+  
+  // Get the actual GeneratedDomain objects if available
+  const generatedDomains = (campaign as any).domains;
+  if (generatedDomains && Array.isArray(generatedDomains)) {
+    const domainObject = generatedDomains.find((d: any) =>
+      (typeof d === 'object' && d.domainName === domainName) ||
+      (typeof d === 'string' && d === domainName)
+    );
+    
+    if (domainObject && typeof domainObject === 'object') {
+      // Convert backend status to frontend format
+      const convertStatus = (backendStatus?: string): DomainActivityStatus => {
+        if (!backendStatus) return 'not_validated' as any;
+        switch (backendStatus.toLowerCase()) {
+          case 'ok':
+          case 'valid':
+          case 'resolved':
+          case 'validated':
+          case 'succeeded':
+            return 'validated' as any;
+          case 'error':
+          case 'invalid':
+          case 'unresolved':
+          case 'failed':
+          case 'timeout':
+            return 'Failed' as any;
+          case 'pending':
+          case 'processing':
+          case 'queued':
+            return 'Pending' as any;
+          default:
+            return 'not_validated' as any;
+        }
+      };
+      
+      // Return the actual status from the domain object
+      if (phase === 'dns_validation' && domainObject.dnsStatus) {
+        return convertStatus(domainObject.dnsStatus);
+      }
+      if (phase === 'http_keyword_validation' && domainObject.httpStatus) {
+        return convertStatus(domainObject.httpStatus);
+      }
+    }
+  }
+  
+  // FALLBACK: Use legacy logic only if domain status fields are not available
   const selectedType = campaign.selectedType || campaign.currentPhase;
   const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
   if (!phasesForType || !phase || !phasesForType.includes(phase)) return 'n_a'; // Phase not applicable to this campaign type
@@ -94,37 +143,19 @@ const getGlobalDomainStatusForPhase = (
   const phaseIndexInType = phasesForType.indexOf(phase);
   const currentCampaignPhaseIndexInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
 
-  // Check if this domain was validated in this phase
+  // Check if this domain was validated in this phase using legacy logic
   let validatedInThisPhase = false;
   if (phase === 'dns_validation') {
     const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
     validatedInThisPhase = dnsValidatedDomains.includes(domainName);
   }
   else if (phase === 'http_keyword_validation') {
-    // For HTTP validation, we check if this domain has successful HTTP keyword results
     const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
     validatedInThisPhase = dnsValidatedDomains.includes(domainName);
   }
 
   // If validated in this phase, it's validated
   if (validatedInThisPhase) return 'validated' as any;
-  // If campaign phase status is completed, and this phase was part of its flow
-  if (campaign.phaseStatus === 'completed' && phasesForType.includes(phase)) {
-     // If it reached here, it means it wasn't in the validated list for this phase
-     return 'not_validated' as any;
-  }
-
-  // If current campaign phase is past the phase we're checking for this domain,
-  // and it wasn't validated, then it's 'Not Validated' for that phase.
-  if (currentCampaignPhaseIndexInType > phaseIndexInType || (campaign.currentPhase === phase && campaign.phaseStatus === 'failed')) {
-    // Check if this domain *should* have been processed by this phase
-    const domains = getCampaignDomains(campaign);
-    const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
-    
-    if (phase === 'dns_validation' && domains.includes(domainName)) return 'not_validated' as any;
-    if (phase === 'http_keyword_validation' && dnsValidatedDomains.includes(domainName)) return 'not_validated' as any;
-    return 'n_a'; // Not applicable or filtered out before even reaching this phase's potential input
-  }
   
   // If current campaign phase IS the phase we're checking and it's active
   if (campaign.currentPhase === phase && (campaign.phaseStatus === 'in_progress' || campaign.phaseStatus === 'paused' || campaign.phaseStatus === 'not_started')) {
@@ -133,14 +164,22 @@ const getGlobalDomainStatusForPhase = (
   
   // If current campaign phase is before the phase we're checking, or campaign is in setup
   if (currentCampaignPhaseIndexInType < phaseIndexInType || campaign.currentPhase === 'setup') {
-    const domains = getCampaignDomains(campaign);
-    const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
-    
-    // If the domain was generated (in `campaign.domains`) but not yet DNS validated, it's pending for DNS
-    if (phase === 'dns_validation' && domains.includes(domainName)) return 'Pending' as any;
-     // If DNS validated but not yet HTTP validated, it's pending for HTTP
-    if (phase === 'http_keyword_validation' && dnsValidatedDomains.includes(domainName)) return 'Pending' as any;
-    return 'Pending'; // General pending for phases not yet reached
+    // If the domain was generated but not yet processed for this phase, it's pending
+    if (domains.includes(domainName)) return 'Pending' as any;
+    return 'n_a'; // Not applicable
+  }
+
+  // If current campaign phase is past the phase we're checking
+  if (currentCampaignPhaseIndexInType > phaseIndexInType || (campaign.currentPhase === phase && campaign.phaseStatus === 'failed')) {
+    // Check if this domain should have been processed by this phase
+    if (domains.includes(domainName)) return 'not_validated' as any;
+    return 'n_a'; // Not applicable
+  }
+  
+  // If campaign phase status is completed, and this phase was part of its flow
+  if (campaign.phaseStatus === 'completed' && phasesForType.includes(phase)) {
+     // If it reached here, it means it wasn't in the validated list for this phase
+     return 'not_validated' as any;
   }
 
   return 'Pending'; // Default catch-all
@@ -318,20 +357,28 @@ export default function LatestActivityTable() {
           // Enhanced domain extraction - check multiple sources
           let domains: string[] = [];
           
-          // Try rich campaign data first
-          if (richCampaign?.domains && Array.isArray(richCampaign.domains)) {
-            domains = richCampaign.domains;
-            console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} domains from rich data`);
+          // Use helper functions to properly extract domain names from both old and new formats
+          const campaignData = (richCampaign as any) || campaign;
+          const extractedDomains = getCampaignDomains(campaignData);
+          if (extractedDomains.length > 0) {
+            domains = extractedDomains;
+            console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} domains from helper function`);
           }
-          // Fallback to base campaign data
-          else if (campaign.domains && Array.isArray(campaign.domains)) {
-            domains = campaign.domains;
-            console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} domains from base data`);
+          // For DNS validation phase, also try DNS validated domains
+          else if (campaign.currentPhase === 'dns_validation') {
+            const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaignData);
+            if (dnsValidatedDomains.length > 0) {
+              domains = dnsValidatedDomains;
+              console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} DNS validated domains`);
+            }
           }
-          // For completed campaigns, try DNS validated domains as another source
-          else if (campaign.dnsValidatedDomains && Array.isArray(campaign.dnsValidatedDomains)) {
-            domains = campaign.dnsValidatedDomains;
-            console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} DNS validated domains`);
+          // For HTTP validation phase, try HTTP validated domains (leads)
+          else if (campaign.currentPhase === 'http_keyword_validation') {
+            const httpValidatedDomains = getCampaignHTTPKeywordValidatedDomains(campaignData);
+            if (httpValidatedDomains.length > 0) {
+              domains = httpValidatedDomains;
+              console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} HTTP validated domains`);
+            }
           }
           
           console.log(`[LatestActivity] Processing campaign ${campaign.name} (${campaign.currentPhase}): ${domains.length} domains found`);

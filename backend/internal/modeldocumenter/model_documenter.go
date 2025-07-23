@@ -518,11 +518,12 @@ func getModelNameForTable(tableName string) string {
 		"domain_generation_config_states":   "DomainGenerationConfigState",
 		"generated_domains":                 "GeneratedDomain",
 		"dns_validation_campaign_params":    "DNSValidationCampaignParams",
-		"dns_validation_results":            "DNSValidationResult",
-		"http_keyword_campaign_params":      "HTTPKeywordCampaignParams",
-		"http_keyword_results":              "HTTPKeywordResult",
-		"audit_logs":                        "AuditLog",
-		"campaign_jobs":                     "CampaignJob",
+		// NOTE: Legacy validation result tables removed as part of dual architecture elimination
+		// "dns_validation_results":            "DNSValidationResult",
+		"http_keyword_campaign_params": "HTTPKeywordCampaignParams",
+		// "http_keyword_results":              "HTTPKeywordResult",
+		"audit_logs":    "AuditLog",
+		"campaign_jobs": "CampaignJob",
 	}
 
 	return tableToModel[tableName]
