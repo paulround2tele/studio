@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **completedAt** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **currentPhase** | **string** | Phases-based architecture (replaces legacy CampaignType + Status) | [optional] [default to undefined]
+**dnsConfig** | **object** | Validation configuration stored as JSON (replaces removed separate tables) | [optional] [default to undefined]
 **dnsValidatedDomains** | **number** | @swagger:field dnsValidatedDomains | [optional] [default to undefined]
 **dnsValidationParams** | [**DNSValidationCampaignParams**](DNSValidationCampaignParams.md) |  | [optional] [default to undefined]
 **domainGenerationParams** | [**DomainGenerationCampaignParams**](DomainGenerationCampaignParams.md) |  | [optional] [default to undefined]
@@ -18,6 +19,8 @@ Name | Type | Description | Notes
 **estimatedCompletionAt** | **string** | Additional tracking fields | [optional] [default to undefined]
 **extractedContent** | [**Array&lt;ExtractedContentItem&gt;**](ExtractedContentItem.md) | Content analysis data expected by frontend | [optional] [default to undefined]
 **failedItems** | **number** |  | [optional] [default to undefined]
+**fullSequenceMode** | **boolean** | Full sequence mode support | [optional] [default to undefined]
+**httpConfig** | **object** | @swagger:field httpConfig | [optional] [default to undefined]
 **httpKeywordValidationParams** | [**HTTPKeywordCampaignParams**](HTTPKeywordCampaignParams.md) |  | [optional] [default to undefined]
 **id** | **string** | Unique identifier | [optional] [default to undefined]
 **lastHeartbeatAt** | **string** |  | [optional] [default to undefined]
@@ -46,6 +49,7 @@ const instance: Campaign = {
     completedAt,
     createdAt,
     currentPhase,
+    dnsConfig,
     dnsValidatedDomains,
     dnsValidationParams,
     domainGenerationParams,
@@ -54,6 +58,8 @@ const instance: Campaign = {
     estimatedCompletionAt,
     extractedContent,
     failedItems,
+    fullSequenceMode,
+    httpConfig,
     httpKeywordValidationParams,
     id,
     lastHeartbeatAt,

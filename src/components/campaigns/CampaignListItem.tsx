@@ -64,8 +64,8 @@ const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
   const allPhases = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
   if (allPhases.length === 0) return 0;
 
-  // Use progressPercentage first, then progress, then calculate based on items
-  let progressValue = campaign.progressPercentage ?? campaign.progress ?? 0;
+  // Use backend-calculated progressPercentage (no frontend calculation needed)
+  let progressValue = campaign.progressPercentage ?? 0;
   
   // If no direct progress, try to calculate from processed vs total items
   if (progressValue === 0 && campaign.totalItems && campaign.processedItems) {
@@ -74,10 +74,10 @@ const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
 
   if ((campaign.currentPhase as any) === "completed" || (campaign.phaseStatus as any) === "completed") return 100;
   
-  if ((campaign.phaseStatus as any) === "paused" || (campaign.phaseStatus as any) === "failed" || (campaign.currentPhase as any) === "setup") {
-    // For paused or failed, progress reflects where it stopped. For Idle, it's 0.
+  if ((campaign.phaseStatus as any) === "paused" || (campaign.phaseStatus as any) === "failed" || !campaign.currentPhase) {
+    // For paused or failed, progress reflects where it stopped. For not started, it's 0.
     const currentPhaseIndexInType = campaign.currentPhase ? allPhases.indexOf(campaign.currentPhase) : -1;
-     if((campaign.currentPhase as any) === "setup" || currentPhaseIndexInType === -1) return Math.max(0, progressValue);
+     if(!campaign.currentPhase || currentPhaseIndexInType === -1) return Math.max(0, progressValue);
 
     const completedPhasesProgress = (currentPhaseIndexInType / allPhases.length) * 100;
     const currentPhaseProgressContribution = (progressValue / allPhases.length);
@@ -99,7 +99,7 @@ const getStatusBadgeInfo = (campaign: CampaignViewModel): { text: string, varian
   if ((campaign.phaseStatus as any) === "failed") return { text: `Failed: ${campaign.currentPhase || 'Unknown'}`, variant: "destructive", icon: <AlertTriangle className="h-4 w-4 text-destructive" /> };
   if ((campaign.phaseStatus as any) === "paused") return { text: `Paused: ${campaign.currentPhase || 'Unknown'}`, variant: "outline", icon: <PauseCircle className="h-4 w-4 text-muted-foreground" /> };
   if ((campaign.phaseStatus as any) === "in_progress") return { text: `Active: ${campaign.currentPhase || 'Unknown'}`, variant: "secondary", icon: <Loader2 className="h-4 w-4 text-blue-500 animate-spin" /> };
-  if ((campaign.currentPhase as any) === "setup" || (campaign.phaseStatus as any) === "pending") return { text: "Pending Start", variant: "outline", icon: <Play className="h-4 w-4 text-muted-foreground" /> };
+  if (!campaign.currentPhase || (campaign.phaseStatus as any) === "pending") return { text: "Pending Start", variant: "outline", icon: <Play className="h-4 w-4 text-muted-foreground" /> };
   if ((campaign.phaseStatus as any) === "completed") {
      // Determine next phase in unified workflow
      const getNextPhaseInWorkflow = (currentPhase: string): string | null => {

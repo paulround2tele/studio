@@ -22,7 +22,11 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { APIResponse } from '../models';
+// @ts-ignore
 import type { AddProxyToPoolRequest } from '../models';
+// @ts-ignore
+import type { CreateLeadGenerationCampaign200Response } from '../models';
 // @ts-ignore
 import type { ErrorResponse } from '../models';
 // @ts-ignore
@@ -31,10 +35,6 @@ import type { ProxyPool } from '../models';
 import type { ProxyPoolMembershipResponse } from '../models';
 // @ts-ignore
 import type { ProxyPoolRequest } from '../models';
-// @ts-ignore
-import type { StandardAPIResponse } from '../models';
-// @ts-ignore
-import type { StreamExtractKeywords200Response } from '../models';
 /**
  * ProxyPoolsApi - axios parameter creator
  * @export
@@ -277,7 +277,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+        async addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.addProxyToPool(poolId, addProxyToPoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.addProxyToPool']?.[localVarOperationServerIndex]?.url;
@@ -290,7 +290,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+        async createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createProxyPool(proxyPoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.createProxyPool']?.[localVarOperationServerIndex]?.url;
@@ -303,7 +303,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StandardAPIResponse>> {
+        async deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteProxyPool(poolId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.deleteProxyPool']?.[localVarOperationServerIndex]?.url;
@@ -315,7 +315,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listProxyPools(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+        async listProxyPools(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listProxyPools(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.listProxyPools']?.[localVarOperationServerIndex]?.url;
@@ -367,7 +367,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+        addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
             return localVarFp.addProxyToPool(poolId, addProxyToPoolRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -377,7 +377,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+        createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
             return localVarFp.createProxyPool(proxyPoolRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -387,7 +387,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse> {
+        deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
             return localVarFp.deleteProxyPool(poolId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -396,7 +396,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+        listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
             return localVarFp.listProxyPools(options).then((request) => request(axios, basePath));
         },
         /**
@@ -439,7 +439,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    addProxyToPool(poolId: string, addProxyToPoolRequest: AddProxyToPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
 
     /**
      * Create a new proxy pool with configuration settings
@@ -449,7 +449,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    createProxyPool(proxyPoolRequest: ProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
 
     /**
      * Delete a proxy pool
@@ -459,7 +459,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<StandardAPIResponse>;
+    deleteProxyPool(poolId: string, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
 
     /**
      * Retrieve all proxy pools with their associated proxies
@@ -468,7 +468,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
 
     /**
      * Remove a proxy from a specific proxy pool

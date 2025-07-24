@@ -4,14 +4,14 @@
 import CampaignFormV2 from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
 import type { components } from '@/lib/api-client/types';
+import { CampaignsApi } from '@/lib/api-client';
 
-type Campaign = components['schemas']['Campaign'];
+type CampaignDetailsResponse = components['schemas']['CampaignDetailsResponse'];
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { useCampaignOperations } from '@/hooks/useCampaignOperations';
 
 function EditCampaignPageContent() {
   const params = useParams();
@@ -19,8 +19,10 @@ function EditCampaignPageContent() {
 
   const campaignId = params.id as string;
   
-  // 🚀 MODERNIZED: Use centralized campaign operations hook
-  const { campaign, loading, error, loadCampaignData } = useCampaignOperations(campaignId);
+  // Backend-driven architecture: Fetch campaign data directly from API
+  const [campaignData, setCampaignData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!campaignId) {
@@ -28,8 +30,23 @@ function EditCampaignPageContent() {
     }
     
     // Load campaign data for editing
-    loadCampaignData?.(true);
-  }, [campaignId, loadCampaignData]);
+    const loadCampaign = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const campaignsApi = new CampaignsApi();
+        const response = await campaignsApi.getCampaignProgressStandalone(campaignId);
+        setCampaignData(response.data);
+      } catch (err) {
+        console.error('Failed to load campaign:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load campaign');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCampaign();
+  }, [campaignId]);
 
   if (loading) {
     return (
@@ -46,7 +63,7 @@ function EditCampaignPageContent() {
     );
   }
 
-  if (error || !campaign) {
+  if (error || !campaignData?.campaign) {
     return (
        <div className="text-center py-10">
         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
@@ -58,9 +75,9 @@ function EditCampaignPageContent() {
   
   return (
     <>
-      <PageHeader 
-        title={`Edit Campaign: ${campaign.name}`}
-        description={`Modify the details for campaign "${campaign.name}".`}
+      <PageHeader
+        title={`Edit Campaign: ${campaignData.campaign.name}`}
+        description={`Modify the details for campaign "${campaignData.campaign.name}".`}
         icon={FilePenLine}
       />
       <CampaignFormV2 />

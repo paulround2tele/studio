@@ -103,9 +103,9 @@ const DomainGenerationConfig = memo<DomainGenerationConfigProps>(({
     } as const;
     
     const tlds = (tldsInput as string).split(',').map(tld => tld.trim()).filter(tld => tld.length > 0);
-    // Ensure TLD format is consistent (remove leading dot if present, then add it)
-    const primaryTld = tlds[0] || 'com';
-    const normalizedTld = primaryTld.startsWith('.') ? primaryTld.substring(1) : primaryTld;
+    // Ensure TLD format is consistent (ensure dot prefix for backend)
+    const primaryTld = tlds[0] || '.com';
+    const normalizedTld = primaryTld.startsWith('.') ? primaryTld : '.' + primaryTld;
     const variableLength = parseInt(String(prefixVariableLength || 3), 10);
     
     return {

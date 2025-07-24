@@ -62,7 +62,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **streamExtractKeywords**
-> StreamExtractKeywords200Response streamExtractKeywords()
+> CreateLeadGenerationCampaign200Response streamExtractKeywords()
 
 Extract keywords from a single URL with real-time streaming results
 
@@ -102,7 +102,7 @@ const { status, data } = await apiInstance.streamExtractKeywords(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 

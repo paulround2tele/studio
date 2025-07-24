@@ -45,9 +45,9 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
         getPersonas('http'),
         getPersonas('dns'),
         getProxies(),
-        // PERFORMANCE FIX: Only load minimal campaign data for form dropdowns
-        // Limit to 20 most recent campaigns to reduce load time
-        campaignsApi.listCampaigns(20, 0)
+        // TEMPORARY: Campaign listing disabled during legacy cleanup - only standalone services remain
+        // TODO: Implement campaign listing using standalone service endpoints after cleanup is complete
+        Promise.resolve({ data: { data: { data: [] } } }) // Mock empty campaigns response
       ]);
 
       // Process HTTP personas result
@@ -97,7 +97,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
           const campaignViewModels = transformCampaignsToViewModels(campaignsArray);
           // Filter campaigns that can be used as source (only domain_generation and dns_validation)
           const validSourceCampaigns = campaignViewModels.filter(c =>
-            c.selectedType === 'generation' || c.selectedType === 'dns_validation'
+            c.selectedType === 'domain_generation' || c.selectedType === 'dns_validation'
           );
           setSourceCampaigns(validSourceCampaigns);
         } else {

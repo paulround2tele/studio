@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { CreateLeadGenerationCampaign200Response } from '../models';
+// @ts-ignore
 import type { CreatePersonaRequest } from '../models';
 // @ts-ignore
 import type { ErrorResponse } from '../models';
@@ -31,8 +33,6 @@ import type { PersonaDeleteResponse } from '../models';
 import type { PersonaResponse } from '../models';
 // @ts-ignore
 import type { PersonaTestResponse } from '../models';
-// @ts-ignore
-import type { StreamExtractKeywords200Response } from '../models';
 // @ts-ignore
 import type { UpdatePersonaRequest } from '../models';
 /**
@@ -354,7 +354,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+        async createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createPersona(createPersonaRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.createPersona']?.[localVarOperationServerIndex]?.url;
@@ -422,7 +422,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listAllPersonas(limit?: number, offset?: number, isEnabled?: boolean, personaType?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StreamExtractKeywords200Response>> {
+        async listAllPersonas(limit?: number, offset?: number, isEnabled?: boolean, personaType?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listAllPersonas(limit, offset, isEnabled, personaType, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.listAllPersonas']?.[localVarOperationServerIndex]?.url;
@@ -472,7 +472,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+        createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
             return localVarFp.createPersona(createPersonaRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -525,7 +525,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listAllPersonas(limit?: number, offset?: number, isEnabled?: boolean, personaType?: string, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response> {
+        listAllPersonas(limit?: number, offset?: number, isEnabled?: boolean, personaType?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
             return localVarFp.listAllPersonas(limit, offset, isEnabled, personaType, options).then((request) => request(axios, basePath));
         },
         /**
@@ -566,7 +566,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    createPersona(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
 
     /**
      * Delete a persona by ID
@@ -619,7 +619,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    listAllPersonas(limit?: number, offset?: number, isEnabled?: boolean, personaType?: string, options?: RawAxiosRequestConfig): AxiosPromise<StreamExtractKeywords200Response>;
+    listAllPersonas(limit?: number, offset?: number, isEnabled?: boolean, personaType?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
 
     /**
      * Test a persona configuration to verify it works correctly

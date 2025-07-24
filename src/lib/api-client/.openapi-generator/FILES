@@ -19,6 +19,7 @@ configuration.ts
 docs/APIKey.md
 docs/APIResponse.md
 docs/AddProxyToPoolRequest.md
+docs/AnalysisConfig.md
 docs/ArchitectureRefactorLog.md
 docs/AuditLog.md
 docs/AuthAuditLog.md
@@ -32,7 +33,6 @@ docs/BulkDatabaseQueryRequest.md
 docs/BulkDatabaseQueryResponse.md
 docs/BulkDatabaseStatsRequest.md
 docs/BulkDatabaseStatsResponse.md
-docs/BulkDeleteRequest.md
 docs/BulkDeleteResult.md
 docs/BulkDomainsRequest.md
 docs/BulkDomainsResponse.md
@@ -53,7 +53,6 @@ docs/CacheInvalidationLog.md
 docs/CacheMetric.md
 docs/CachedSessionConfig.md
 docs/CachedSessionData.md
-docs/Campaign.md
 docs/CampaignAPI.md
 docs/CampaignAccessGrant.md
 docs/CampaignActionResponse.md
@@ -63,6 +62,8 @@ docs/CampaignDetailsResponse.md
 docs/CampaignJob.md
 docs/CampaignOperationResponse.md
 docs/CampaignParamsData.md
+docs/CampaignPhase.md
+docs/CampaignProgressResponse.md
 docs/CampaignStartResponse.md
 docs/CampaignStateEvent.md
 docs/CampaignStateSnapshot.md
@@ -80,6 +81,8 @@ docs/CookieHandling.md
 docs/CreateCampaignRequest.md
 docs/CreateDomainGenerationCampaignRequest.md
 docs/CreateKeywordSetRequest.md
+docs/CreateLeadGenerationCampaign200Response.md
+docs/CreateLeadGenerationCampaignRequest.md
 docs/CreatePersonaRequest.md
 docs/CreateProxyRequest.md
 docs/CreateUserRequest.md
@@ -87,6 +90,7 @@ docs/DNSConfigDetails.md
 docs/DNSPhaseConfigRequest.md
 docs/DNSValidationAPIRequest.md
 docs/DNSValidationCampaignParams.md
+docs/DNSValidationConfig.md
 docs/DNSValidationRequest.md
 docs/DNSValidationResult.md
 docs/DNSValidationResultsResponse.md
@@ -103,8 +107,11 @@ docs/DnsPersonaConfig.md
 docs/DnsValidationParams.md
 docs/DomainBatch.md
 docs/DomainGenerationCampaignParams.md
+docs/DomainGenerationConfig.md
 docs/DomainGenerationConfigState.md
 docs/DomainGenerationParams.md
+docs/DomainGenerationProgress.md
+docs/DomainGenerationStats.md
 docs/EnrichedCampaignData.md
 docs/ErrorContext.md
 docs/ErrorDetail.md
@@ -116,6 +123,7 @@ docs/ExtractedContentAnalysis.md
 docs/ExtractedContentItem.md
 docs/FeatureFlagsApi.md
 docs/GeneralErrorResponse.md
+docs/GenerateDomainsRequest.md
 docs/GeneratedDomain.md
 docs/GeneratedDomainsResponse.md
 docs/HTTP2Settings.md
@@ -128,7 +136,7 @@ docs/HTTPKeywordResultsResponse.md
 docs/HTTPKeywordValidationRequest.md
 docs/HTTPPhaseConfigRequest.md
 docs/HTTPTLSClientHello.md
-docs/HTTPValidationRequest.md
+docs/HTTPValidationConfig.md
 docs/HTTPValidationStartResponse.md
 docs/HealthApi.md
 docs/HealthCheckResponse.md
@@ -144,6 +152,9 @@ docs/KeywordSet.md
 docs/KeywordSetDeleteResponse.md
 docs/KeywordSetResponse.md
 docs/KeywordSetsApi.md
+docs/LeadGenerationCampaign.md
+docs/LeadGenerationCampaignResponse.md
+docs/LeadGenerationProgress.md
 docs/LeadItem.md
 docs/LoginRequest.md
 docs/LoginResponse.md
@@ -167,6 +178,9 @@ docs/PersonaResponse.md
 docs/PersonaTestResponse.md
 docs/PersonaTestResultData.md
 docs/PersonasApi.md
+docs/PhaseConfigureRequest.md
+docs/PhaseProgressResponse.md
+docs/PhaseStartRequest.md
 docs/PingResponse.md
 docs/ProcessingInfo.md
 docs/ProxiesApi.md
@@ -202,11 +216,9 @@ docs/SessionData.md
 docs/SessionMetrics.md
 docs/SessionRefreshResponse.md
 docs/SessionResponse.md
-docs/StandardAPIResponse.md
 docs/Status.md
 docs/StealthConfig.md
 docs/StealthMetrics.md
-docs/StreamExtractKeywords200Response.md
 docs/SuccessMessageResponse.md
 docs/SuccessResponse.md
 docs/SystemInfo.md
@@ -231,6 +243,7 @@ docs/WorkerPoolMetrics.md
 git_push.sh
 index.ts
 models/add-proxy-to-pool-request.ts
+models/analysis-config.ts
 models/apikey.ts
 models/apiresponse.ts
 models/architecture-refactor-log.ts
@@ -245,7 +258,6 @@ models/bulk-database-query-request.ts
 models/bulk-database-query-response.ts
 models/bulk-database-stats-request.ts
 models/bulk-database-stats-response.ts
-models/bulk-delete-request.ts
 models/bulk-delete-result.ts
 models/bulk-domains-request.ts
 models/bulk-domains-response.ts
@@ -275,12 +287,13 @@ models/campaign-details-response.ts
 models/campaign-job.ts
 models/campaign-operation-response.ts
 models/campaign-params-data.ts
+models/campaign-phase.ts
+models/campaign-progress-response.ts
 models/campaign-start-response.ts
 models/campaign-state-event.ts
 models/campaign-state-snapshot.ts
 models/campaign-state-transition.ts
 models/campaign-transaction-options.ts
-models/campaign.ts
 models/change-password-request.ts
 models/communication-pattern.ts
 models/config-lock.ts
@@ -292,6 +305,8 @@ models/cookie-handling.ts
 models/create-campaign-request.ts
 models/create-domain-generation-campaign-request.ts
 models/create-keyword-set-request.ts
+models/create-lead-generation-campaign-request.ts
+models/create-lead-generation-campaign200-response.ts
 models/create-persona-request.ts
 models/create-proxy-request.ts
 models/create-user-request.ts
@@ -308,6 +323,7 @@ models/dnsconfig-details.ts
 models/dnsphase-config-request.ts
 models/dnsvalidation-apirequest.ts
 models/dnsvalidation-campaign-params.ts
+models/dnsvalidation-config.ts
 models/dnsvalidation-request.ts
 models/dnsvalidation-result.ts
 models/dnsvalidation-results-response.ts
@@ -315,7 +331,10 @@ models/dnsvalidation-start-response.ts
 models/domain-batch.ts
 models/domain-generation-campaign-params.ts
 models/domain-generation-config-state.ts
+models/domain-generation-config.ts
 models/domain-generation-params.ts
+models/domain-generation-progress.ts
+models/domain-generation-stats.ts
 models/enriched-campaign-data.ts
 models/error-context.ts
 models/error-detail.ts
@@ -326,6 +345,7 @@ models/event-store-record.ts
 models/extracted-content-analysis.ts
 models/extracted-content-item.ts
 models/general-error-response.ts
+models/generate-domains-request.ts
 models/generated-domain.ts
 models/generated-domains-response.ts
 models/health-check-response.ts
@@ -342,7 +362,7 @@ models/httpkeyword-results-response.ts
 models/httpkeyword-validation-request.ts
 models/httpphase-config-request.ts
 models/httptlsclient-hello.ts
-models/httpvalidation-request.ts
+models/httpvalidation-config.ts
 models/httpvalidation-start-response.ts
 models/index.ts
 models/keyword-extraction-apiresult.ts
@@ -352,6 +372,9 @@ models/keyword-rule.ts
 models/keyword-set-delete-response.ts
 models/keyword-set-response.ts
 models/keyword-set.ts
+models/lead-generation-campaign-response.ts
+models/lead-generation-campaign.ts
+models/lead-generation-progress.ts
 models/lead-item.ts
 models/login-request.ts
 models/login-response-api.ts
@@ -374,6 +397,9 @@ models/persona-response.ts
 models/persona-test-response.ts
 models/persona-test-result-data.ts
 models/persona.ts
+models/phase-configure-request.ts
+models/phase-progress-response.ts
+models/phase-start-request.ts
 models/ping-response.ts
 models/processing-info.ts
 models/proxy-details-response.ts
@@ -406,11 +432,9 @@ models/session-metrics.ts
 models/session-refresh-response.ts
 models/session-response.ts
 models/session.ts
-models/standard-apiresponse.ts
 models/status.ts
 models/stealth-config.ts
 models/stealth-metrics.ts
-models/stream-extract-keywords200-response.ts
 models/success-message-response.ts
 models/success-response.ts
 models/system-info.ts

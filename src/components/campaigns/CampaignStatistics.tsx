@@ -20,7 +20,7 @@ import {
   Activity
 } from 'lucide-react';
 import type { CampaignViewModel } from '@/lib/types';
-import { CampaignPhaseStatusEnum, CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
+import type { CampaignPhase } from '@/lib/api-client/models';
 import { cn } from '@/lib/utils';
 
 // Unified interfaces combining both original components
@@ -98,7 +98,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
       totalDomains,
       campaign.processedItems || 0,
       // Calculate from progress if available
-      campaign.totalItems ? Math.floor(((campaign.progressPercentage || campaign.progress || 0) / 100) * campaign.totalItems) : 0
+      campaign.totalItems ? Math.floor(((campaign.progressPercentage || 0) / 100) * campaign.totalItems) : 0
     );
     const successfulItems = campaign.successfulItems || 0;
     const failedItems = campaign.failedItems || 0;
@@ -111,7 +111,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
     // Enhanced progress calculation
     const progressPercentage = Math.max(
       campaign.progressPercentage || 0,
-      campaign.progress || 0,
+      0,
       calculatePercentage(processedItems, targetItems)
     );
 
@@ -344,7 +344,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           </div>
 
           {/* Estimated Completion */}
-          {campaign.estimatedCompletionAt && campaign.phaseStatus === CampaignPhaseStatusEnum.InProgress && (
+          {campaign.estimatedCompletionAt && campaign.phaseStatus === 'in_progress' && (
             <div className="pt-4 border-t">
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground">Estimated Completion</div>
@@ -356,7 +356,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           )}
 
           {/* Campaign Type Specific Metrics */}
-          {campaign.currentPhase === CampaignCurrentPhaseEnum.Generation && campaign.domainGenerationParams && (
+          {campaign.currentPhase === 'domain_generation' && campaign.domainGenerationParams && (
             <div className="pt-4 border-t">
               <div className="text-xs text-muted-foreground mb-2">Domain Generation Settings</div>
               <div className="grid grid-cols-2 gap-4 text-sm">

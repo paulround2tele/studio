@@ -13,6 +13,9 @@ export const WebSocketMessageTypes = {
   CAMPAIGN_DELETED: 'campaign_deleted',         // NEW: Single campaign removed
   PHASE_TRANSITION: 'phase_transition',         // NEW: Campaign phase transitions
   CAMPAIGN_PHASE_TRANSITION: 'campaign.phase.transition', // Enhanced phase transitions with data integrity
+  // User-Driven Phase Lifecycle WebSocket events
+  PHASE_STATE_CHANGED: 'phase.state.changed',  // Phase state transitions (ready -> configured -> running -> completed)
+  PHASE_CONFIGURATION_REQUIRED: 'phase.configuration.required', // Phase requires configuration before start
   DOMAIN_GENERATED: 'domain_generated',
   DNS_VALIDATION_RESULT: 'dns.validation.result', // Updated to standardized format
   HTTP_VALIDATION_RESULT: 'http.validation.result', // Updated to standardized format
@@ -115,11 +118,34 @@ export interface ErrorMessage extends BaseWebSocketMessage {
   };
 }
 
+// User-Driven Phase Lifecycle message types
+export interface PhaseStateChangedMessage extends BaseWebSocketMessage {
+  type: typeof WebSocketMessageTypes.PHASE_STATE_CHANGED;
+  data: {
+    campaign_id: string;
+    phase: string;
+    old_state: string;
+    new_state: string;
+    timestamp: string;
+  };
+}
+
+export interface PhaseConfigurationRequiredMessage extends BaseWebSocketMessage {
+  type: typeof WebSocketMessageTypes.PHASE_CONFIGURATION_REQUIRED;
+  data: {
+    campaign_id: string;
+    phase: string;
+    message: string;
+  };
+}
+
 export type TypedWebSocketMessage =
   | CampaignProgressMessage
   | CampaignStatusMessage
   | PhaseTransitionMessage
   | EnhancedPhaseTransitionMessage
+  | PhaseStateChangedMessage
+  | PhaseConfigurationRequiredMessage
   | SystemNotificationMessage
   | ErrorMessage
   | BaseWebSocketMessage;
@@ -130,6 +156,9 @@ export interface WebSocketHandlers {
   onCampaignStatus?: (message: CampaignStatusMessage) => void;
   onPhaseTransition?: (message: PhaseTransitionMessage) => void;
   onEnhancedPhaseTransition?: (message: EnhancedPhaseTransitionMessage) => void;
+  // User-Driven Phase Lifecycle handlers
+  onPhaseStateChanged?: (message: PhaseStateChangedMessage) => void;
+  onPhaseConfigurationRequired?: (message: PhaseConfigurationRequiredMessage) => void;
   onDomainGenerated?: (message: BaseWebSocketMessage) => void;
   onDNSValidationResult?: (message: BaseWebSocketMessage) => void;
   onHTTPValidationResult?: (message: BaseWebSocketMessage) => void;
@@ -174,6 +203,12 @@ export function routeWebSocketMessage(
       break;
     case WebSocketMessageTypes.CAMPAIGN_PHASE_TRANSITION:
       handlers.onEnhancedPhaseTransition?.(message as EnhancedPhaseTransitionMessage);
+      break;
+    case WebSocketMessageTypes.PHASE_STATE_CHANGED:
+      handlers.onPhaseStateChanged?.(message as PhaseStateChangedMessage);
+      break;
+    case WebSocketMessageTypes.PHASE_CONFIGURATION_REQUIRED:
+      handlers.onPhaseConfigurationRequired?.(message as PhaseConfigurationRequiredMessage);
       break;
     case WebSocketMessageTypes.DOMAIN_GENERATED:
       handlers.onDomainGenerated?.(message);

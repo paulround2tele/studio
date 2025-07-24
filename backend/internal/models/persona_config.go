@@ -68,10 +68,5 @@ type DnsPersonaConfig struct {
 	RateLimitBurst             int                `json:"rateLimitBurst" validate:"min=1"`
 }
 
-// Standard API response wrapper
-type APIResponse struct {
-	Status  string      `json:"status"`
-	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message"`
-	Error   string      `json:"error,omitempty"`
-}
+// NOTE: APIResponse struct removed to prevent conflicts.
+// All API responses use the unified APIResponse format from backend/internal/api/response_types.go

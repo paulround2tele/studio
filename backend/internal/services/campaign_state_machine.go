@@ -17,11 +17,11 @@ type CampaignStateMachine struct {
 func NewCampaignStateMachine() *CampaignStateMachine {
 	return &CampaignStateMachine{
 		transitions: map[models.CampaignPhaseStatusEnum][]models.CampaignPhaseStatusEnum{
-			models.CampaignPhaseStatusPending:    {models.CampaignPhaseStatusInProgress, models.CampaignPhaseStatusFailed},
-			models.CampaignPhaseStatusInProgress: {models.CampaignPhaseStatusPaused, models.CampaignPhaseStatusSucceeded, models.CampaignPhaseStatusFailed},
-			models.CampaignPhaseStatusPaused:     {models.CampaignPhaseStatusInProgress},
-			models.CampaignPhaseStatusSucceeded:  {},                                  // Terminal state
-			models.CampaignPhaseStatusFailed:     {models.CampaignPhaseStatusPending}, // Allow retry
+			models.PhaseStatusNotStarted: {models.PhaseStatusInProgress, models.PhaseStatusFailed},
+			models.PhaseStatusInProgress: {models.PhaseStatusPaused, models.PhaseStatusCompleted, models.PhaseStatusFailed},
+			models.PhaseStatusPaused:     {models.PhaseStatusInProgress},
+			models.PhaseStatusCompleted:  {},                             // Terminal state
+			models.PhaseStatusFailed:     {models.PhaseStatusNotStarted}, // Allow retry
 		},
 	}
 }

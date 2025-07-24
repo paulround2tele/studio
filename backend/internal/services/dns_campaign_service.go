@@ -103,17 +103,17 @@ func (s *dnsCampaignServiceImpl) TransitionToHTTPValidationPhase(ctx context.Con
 	}
 
 	// Validate campaign is in DNS validation phase and completed
-	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseDNSValidation {
+	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.PhaseTypeDNSValidation {
 		return fmt.Errorf("campaign %s must be in dns_validation phase to transition to HTTP validation, current: %v", campaignID, campaign.CurrentPhase)
 	}
 
-	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.CampaignPhaseStatusSucceeded {
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusCompleted {
 		return fmt.Errorf("DNS validation phase must be completed before transitioning to HTTP validation, current status: %v", campaign.PhaseStatus)
 	}
 
 	// Update campaign phase to HTTP validation
-	httpPhase := models.CampaignPhaseHTTPValidation
-	pendingStatus := models.CampaignPhaseStatusPending
+	httpPhase := models.PhaseTypeHTTPKeywordValidation
+	pendingStatus := models.PhaseStatusNotStarted
 
 	campaign.CurrentPhase = &httpPhase
 	campaign.PhaseStatus = &pendingStatus
@@ -163,7 +163,7 @@ func (s *dnsCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaig
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get campaign by ID %s: %w", campaignID, err)
 	}
-	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseDNSValidation {
+	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.PhaseTypeDNSValidation {
 		currentPhase := "unknown"
 		if campaign.CurrentPhase != nil {
 			currentPhase = string(*campaign.CurrentPhase)
@@ -276,8 +276,8 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		originalStatus = campaign.PhaseStatus
 	}
 
-	if campaign.PhaseStatus == nil || *campaign.PhaseStatus == models.CampaignPhaseStatusPending {
-		status := models.CampaignPhaseStatusInProgress
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus == models.PhaseStatusNotStarted {
+		status := models.PhaseStatusInProgress
 		campaign.PhaseStatus = &status
 		now := time.Now().UTC()
 		campaign.StartedAt = &now
@@ -290,7 +290,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 			originalStatusStr = string(*originalStatus)
 		}
 		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s marked as Running (was %s).", campaignID, originalStatusStr)
-	} else if campaign.PhaseStatus != nil && *campaign.PhaseStatus != models.CampaignPhaseStatusInProgress && *campaign.PhaseStatus != models.CampaignPhaseStatusSucceeded && *campaign.PhaseStatus != models.CampaignPhaseStatusPaused {
+	} else if campaign.PhaseStatus != nil && *campaign.PhaseStatus != models.PhaseStatusInProgress && *campaign.PhaseStatus != models.PhaseStatusCompleted && *campaign.PhaseStatus != models.PhaseStatusPaused {
 		statusStr := string(*campaign.PhaseStatus)
 		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s not runnable (status: %s). DNS validation requires status: in_progress, completed, or paused.", campaignID, statusStr)
 		return true, 0, nil
@@ -330,7 +330,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	}
 
 	// Check if this is a completed campaign being re-triggered for DNS validation
-	if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 && campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded {
+	if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 && campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusCompleted {
 		log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s was completed, checking for domains that need re-validation (preserving valid results).", campaignID)
 
 		// Count domains that already have valid DNS status (these will be skipped)
@@ -357,7 +357,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 			// This allows progress calculation to work correctly
 			campaign.ProcessedItems = &validDomainCount
 			campaign.ProgressPercentage = models.Float64Ptr(float64(validDomainCount) / float64(*campaign.TotalItems) * 100.0)
-			status := models.CampaignPhaseStatusInProgress
+			status := models.PhaseStatusInProgress
 			campaign.PhaseStatus = &status
 			campaign.CompletedAt = nil
 			now := time.Now().UTC()
@@ -404,27 +404,27 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		} // Should be set
 
 		if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 {
-			status := models.CampaignPhaseStatusSucceeded
+			status := models.PhaseStatusCompleted
 			campaign.PhaseStatus = &status
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
 
 			// AUTOMATIC PHASE TRANSITION: Set currentPhase to http_validation
-			httpValidationPhase := models.CampaignPhaseHTTPValidation
+			httpValidationPhase := models.PhaseTypeHTTPKeywordValidation
 			campaign.CurrentPhase = &httpValidationPhase
 
 			log.Printf("ProcessDNSValidationCampaignBatch: All domains processed for campaign %s. Marking complete and transitioning to http_keyword_validation phase.", campaignID)
 			done = true
 		} else if *campaign.TotalItems == 0 {
-			status := models.CampaignPhaseStatusSucceeded
+			status := models.PhaseStatusCompleted
 			campaign.PhaseStatus = &status
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
 
 			// AUTOMATIC PHASE TRANSITION: Set currentPhase to http_validation
-			httpValidationPhase := models.CampaignPhaseHTTPValidation
+			httpValidationPhase := models.PhaseTypeHTTPKeywordValidation
 			campaign.CurrentPhase = &httpValidationPhase
 
 			log.Printf("ProcessDNSValidationCampaignBatch: Campaign %s has 0 total items. Marking complete and transitioning to http_keyword_validation phase.", campaignID)
@@ -691,8 +691,8 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	// Determine 'done' status and auto-transition to HTTP validation phase
 	if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 {
 		// DNS validation phase is complete - transition to HTTP validation
-		httpPhase := models.CampaignPhaseHTTPValidation
-		pendingStatus := models.CampaignPhaseStatusPending
+		httpPhase := models.PhaseTypeHTTPKeywordValidation
+		pendingStatus := models.PhaseStatusNotStarted
 		campaign.CurrentPhase = &httpPhase
 		campaign.PhaseStatus = &pendingStatus
 		// CRITICAL FIX: Maintain cumulative progress at 66% instead of resetting to 0%
@@ -701,8 +701,8 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		log.Printf("[PHASE-TRANSITION] Campaign %s completed DNS validation, transitioning to HTTP validation at %.1f%% progress", campaignID, dnsPhaseEndProgress)
 	} else if *campaign.TotalItems == 0 {
 		// DNS validation phase is complete - transition to HTTP validation
-		httpPhase := models.CampaignPhaseHTTPValidation
-		pendingStatus := models.CampaignPhaseStatusPending
+		httpPhase := models.PhaseTypeHTTPKeywordValidation
+		pendingStatus := models.PhaseStatusNotStarted
 		campaign.CurrentPhase = &httpPhase
 		campaign.PhaseStatus = &pendingStatus
 		// CRITICAL FIX: Maintain cumulative progress at 66% instead of resetting to 0%
@@ -807,8 +807,8 @@ func (s *dnsCampaignServiceImpl) atomicPhaseTransition(ctx context.Context, camp
 		log.Printf("INFO [Atomic Phase Transition]: Starting atomic transition for campaign %s", campaignID)
 
 		// Step 1: Update campaign status to running if it was completed (within transaction)
-		if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded {
-			status := models.CampaignPhaseStatusInProgress
+		if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusCompleted {
+			status := models.PhaseStatusInProgress
 			campaign.PhaseStatus = &status
 			err := s.campaignStore.UpdateCampaign(ctx, querier, campaign)
 			if err != nil {
@@ -825,7 +825,7 @@ func (s *dnsCampaignServiceImpl) atomicPhaseTransition(ctx context.Context, camp
 		}
 
 		// Update the currentPhase to dns_validation
-		dnsValidationPhase := models.CampaignPhaseDNSValidation
+		dnsValidationPhase := models.PhaseTypeDNSValidation
 		updatedCampaign.CurrentPhase = &dnsValidationPhase
 
 		err = s.campaignStore.UpdateCampaign(ctx, querier, updatedCampaign)

@@ -2,12 +2,12 @@
 // Campaign data transformation utilities for UI compatibility (OpenAPI Migration)
 
 import type { components } from '@/lib/api-client/types';
-import type { CampaignCurrentPhaseEnum, CampaignPhaseStatusEnum } from '@/lib/api-client/models/campaign';
+import type { LeadGenerationCampaignCurrentPhaseEnum, LeadGenerationCampaignPhaseStatusEnum } from '@/lib/api-client/models/lead-generation-campaign';
 import type { CampaignViewModel } from '@/lib/types';
 
 type OpenAPICampaign = components['schemas']['Campaign'];
-type CampaignPhase = CampaignCurrentPhaseEnum;
-type CampaignPhaseStatus = CampaignPhaseStatusEnum;
+type CampaignPhase = LeadGenerationCampaignCurrentPhaseEnum;
+type CampaignPhaseStatus = LeadGenerationCampaignPhaseStatusEnum;
 
 /**
  * Helper function to find campaign ID in nested API response structures
@@ -65,9 +65,10 @@ function mapToPhaseStatus(status?: string): CampaignPhaseStatus {
 function mapToPhase(phase?: string): CampaignPhase {
   switch (phase) {
     case 'setup':
-      return 'setup';
     case 'generation':
-      return 'generation';
+      return 'domain_generation';
+    case 'domain_generation':
+      return 'domain_generation';
     case 'dns_validation':
       return 'dns_validation';
     case 'http_keyword_validation':
@@ -75,7 +76,7 @@ function mapToPhase(phase?: string): CampaignPhase {
     case 'analysis':
       return 'analysis';
     default:
-      return 'setup';
+      return 'domain_generation';
   }
 }
 
@@ -114,6 +115,7 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
     // Core OpenAPI Campaign fields (direct mapping)
     id: campaignId,
     name: campaign.name || '',
+    campaignType: 'lead_generation', // Required field for lead generation campaigns
     userId: campaign.userId,
     createdAt: campaign.createdAt || new Date().toISOString(),
     updatedAt: campaign.updatedAt || new Date().toISOString(),
@@ -132,12 +134,11 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
     businessStatus: campaign.businessStatus,
     
     // Phase-based architecture fields
-    currentPhase,
+    currentPhase: currentPhase as any, // Cast for cleanup period type compatibility
     phaseStatus,
     
     // UI compatibility fields
-    selectedType: currentPhase,
-    progress: campaign.progressPercentage || 0,
+    selectedType: currentPhase as any, // Cast for cleanup period type compatibility
     
     // Use actual count values from backend (these are numbers, not arrays)
     domains: campaign.domains || 0,
@@ -176,6 +177,7 @@ export function extractCampaignFromViewModel(viewModel: CampaignViewModel): Open
   return {
     id: viewModel.id || '00000000-0000-0000-0000-000000000000',
     name: viewModel.name || '',
+    campaignType: 'lead_generation', // Required field for lead generation campaigns
     currentPhase: viewModel.currentPhase,
     phaseStatus: viewModel.phaseStatus,
     userId: viewModel.userId || '',
@@ -219,7 +221,6 @@ export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: 
   }
   if (apiUpdate.progressPercentage !== undefined) {
     updatedViewModel.progressPercentage = apiUpdate.progressPercentage;
-    updatedViewModel.progress = apiUpdate.progressPercentage;
   }
   if (apiUpdate.errorMessage !== undefined) {
     updatedViewModel.errorMessage = apiUpdate.errorMessage;

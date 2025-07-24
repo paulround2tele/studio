@@ -38,7 +38,7 @@ export function useDomainCalculation(
     tlds: string | undefined
   ) => {
     // Early return for non-domain-generation campaigns
-    if (campaignType !== 'generation') {
+    if (campaignType !== 'domain_generation') {
       return { total: 0, isSafe: true, warning: null };
     }
 

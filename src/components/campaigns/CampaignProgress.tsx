@@ -17,25 +17,22 @@ interface CampaignProgressProps {
 }
 
 const phaseDisplayNames: Record<NonNullable<CampaignPhase>, string> = {
-  setup: "Campaign Setup",
-  generation: "Domain Generation",
+  domain_generation: "Domain Generation",
   dns_validation: "DNS Validation",
   http_keyword_validation: "HTTP Keyword Validation",
   analysis: "Analysis",
 };
 
 // Memoized phase status icon component for better performance
-const PhaseStatusIcon = memo(({ phase, status, isActivePhase, isCampaignIdle }: {
+const PhaseStatusIcon = memo(({ phase, status, isActivePhase }: {
   phase: CampaignPhase;
   status: CampaignPhaseStatus;
   isActivePhase: boolean;
-  isCampaignIdle: boolean;
 }) => {
-  if (isCampaignIdle && phase === "setup") return <Play className="h-5 w-5 text-blue-500" />;
   if (status === 'completed') return <CheckCircle className="h-5 w-5 text-green-500" />;
   if (status === 'failed') return <AlertTriangle className="h-5 w-5 text-destructive" />;
   if (status === 'in_progress' && isActivePhase) return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
-  if (status === 'not_started' && (isActivePhase || isCampaignIdle)) return <Clock className="h-5 w-5 text-muted-foreground" />;
+  if (status === 'not_started' && isActivePhase) return <Clock className="h-5 w-5 text-muted-foreground" />;
   return <WorkflowIcon className="h-5 w-5 text-muted-foreground/50" />; // Default for phases not yet active or completed
 });
 
@@ -48,7 +45,6 @@ const PhaseItem = memo(({
   displayPhases,
   operationalPhasesForType: _operationalPhasesForType,
   isActivePhaseNode,
-  isCampaignIdle,
   nodeStatus
 }: {
   phase: CampaignPhase;
@@ -56,7 +52,6 @@ const PhaseItem = memo(({
   displayPhases: CampaignPhase[];
   operationalPhasesForType: CampaignPhase[];
   isActivePhaseNode: boolean;
-  isCampaignIdle: boolean;
   nodeStatus: CampaignPhaseStatus;
 }) => {
   return (
@@ -66,21 +61,20 @@ const PhaseItem = memo(({
           "relative z-10 flex flex-col items-center text-center group",
            // Adjust width distribution; might need fine-tuning based on max phases
           displayPhases.length <= 4 ? "w-1/4" : "w-1/5",
-          (nodeStatus === 'completed' || (isActivePhaseNode && nodeStatus !== 'not_started' && nodeStatus !== 'failed') || (isCampaignIdle && phase === "setup")) ? "text-foreground" : "text-muted-foreground"
+          (nodeStatus === 'completed' || (isActivePhaseNode && nodeStatus !== 'not_started' && nodeStatus !== 'failed')) ? "text-foreground" : "text-muted-foreground"
         )}>
           <div className={cn(
             "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300",
             nodeStatus === 'completed' ? "bg-primary border-primary text-primary-foreground" :
             (isActivePhaseNode && nodeStatus === 'in_progress') ? "bg-blue-500 border-blue-500 text-white" :
             (isActivePhaseNode && nodeStatus === 'failed') ? "bg-destructive border-destructive text-destructive-foreground" :
-            (isCampaignIdle && phase === "setup") ? "bg-blue-500 border-blue-500 text-white" : // Special for Idle start
             "bg-secondary border-border group-hover:border-muted-foreground"
           )}>
-            <PhaseStatusIcon phase={phase} status={nodeStatus} isActivePhase={isActivePhaseNode} isCampaignIdle={isCampaignIdle && phase === "setup"} />
+            <PhaseStatusIcon phase={phase} status={nodeStatus} isActivePhase={isActivePhaseNode} />
           </div>
           <p className={cn(
               "mt-2 text-xs sm:text-sm font-medium transition-all duration-300",
-               (nodeStatus === 'completed' || (isActivePhaseNode && nodeStatus !== 'not_started' && nodeStatus !== 'failed') || (isCampaignIdle && phase === "setup")) ? "font-semibold" : "font-normal"
+               (nodeStatus === 'completed' || (isActivePhaseNode && nodeStatus !== 'not_started' && nodeStatus !== 'failed')) ? "font-semibold" : "font-normal"
            )}>
              {phase ? phaseDisplayNames[phase] : 'Unknown'}
            </p>
@@ -89,7 +83,7 @@ const PhaseItem = memo(({
        </TooltipTrigger>
        <TooltipContent>
          <p>{phase ? phaseDisplayNames[phase] : 'Unknown'}</p>
-        Status: { isActivePhaseNode && phase !== "setup" ? campaign.phaseStatus : nodeStatus}
+        Status: { isActivePhaseNode && true ? campaign.phaseStatus : nodeStatus}
       </TooltipContent>
     </Tooltip>
   );
@@ -111,14 +105,13 @@ const getProgressWidthClass = (width: number): string => {
 // Memoized main component for optimal performance
 const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
   // All campaigns follow the same phase progression in the phases-based architecture
-  const allPhases: CampaignPhase[] = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
+  const allPhases: CampaignPhase[] = ['domain_generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
   
   // Memoize display phases calculation to prevent recalculation on every render
   const displayPhases = useMemo(() => {
-    return (campaign.currentPhase as any) === "setup" ?
-      ["setup" as CampaignPhase, ...allPhases] :
-      allPhases;
-  }, [campaign.currentPhase]);
+    // All campaigns use the standard phase progression - no special setup phase
+    return allPhases;
+  }, []);
   
   // Memoize operational phases for unified workflow
   const operationalPhasesForType = useMemo(() => {
@@ -127,7 +120,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
 
   // Memoize current operational phase calculations
   const { currentOperationalPhase: _currentOperationalPhase, currentOperationalPhaseIndex: _currentOperationalPhaseIndex } = useMemo(() => {
-    const currentPhase = (campaign.currentPhase as any) === "setup" ? null : campaign.currentPhase;
+    const currentPhase = campaign.currentPhase;
     const phaseIndex = currentPhase ? operationalPhasesForType.indexOf(currentPhase) : -1;
     return {
       currentOperationalPhase: currentPhase,
@@ -138,13 +131,12 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
   // Simplified and fixed node status calculation
   const getNodeStatus = useCallback((phase: CampaignPhase): CampaignPhaseStatus => {
     const isActivePhaseNode = phase === campaign.currentPhase;
-    const isCampaignIdle = (campaign.currentPhase as any) === "setup";
     const operationalPhaseIndexInType = operationalPhasesForType.indexOf(phase);
     const currentPhaseIndex = campaign.currentPhase ? operationalPhasesForType.indexOf(campaign.currentPhase) : -1;
 
-    // Handle idle campaigns (setup phase)
-    if (isCampaignIdle) {
-      return phase === "setup" ? "not_started" : "not_started";
+    // Handle campaigns without a current phase (not started yet)
+    if (!campaign.currentPhase) {
+      return 'not_started';
     }
 
     // Handle completed campaigns
@@ -178,8 +170,8 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
 
   // Memoize progress calculation - FIXED: Use actual campaign progress values like CampaignListItem
   const progressWidth = useMemo(() => {
-    // Use progressPercentage first, then progress, then calculate based on items
-    let progressValue = campaign.progressPercentage ?? campaign.progress ?? 0;
+    // Use overallProgress first, then progressPercentage fallback, then calculate based on items
+    let progressValue = campaign.overallProgress ?? campaign.progressPercentage ?? 0;
     
     // If no direct progress, try to calculate from processed vs total items
     if (progressValue === 0 && campaign.totalItems && campaign.processedItems) {
@@ -187,7 +179,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
     }
 
     if ((campaign.currentPhase as any) === "completed" || campaign.phaseStatus === "completed") return 100;
-    if ((campaign.currentPhase as any) === "setup") return 0;
+    if (!campaign.currentPhase) return 0;
     
     // For paused or failed campaigns, return the actual progress where it stopped
     if ((campaign.phaseStatus as any) === "paused" || (campaign.phaseStatus as any) === "failed") {
@@ -196,7 +188,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
 
     // For active campaigns, use actual progress value
     return Math.max(0, Math.min(100, progressValue));
-  }, [campaign.currentPhase, campaign.phaseStatus, campaign.progressPercentage, campaign.progress, campaign.totalItems, campaign.processedItems]);
+  }, [campaign.currentPhase, campaign.phaseStatus, campaign.overallProgress, campaign.progressPercentage, campaign.totalItems, campaign.processedItems]);
   
   return (
     <div className="space-y-6">
@@ -205,7 +197,6 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
         <div className="relative flex justify-between items-center mx-4"> {/* Added margin for edge nodes */}
           {displayPhases.map((phase: CampaignPhase) => {
             const isActivePhaseNode = phase === campaign.currentPhase;
-            const isCampaignIdle = (campaign.currentPhase as any) === "setup";
             const nodeStatus = getNodeStatus(phase);
 
             return (
@@ -216,7 +207,6 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
                 displayPhases={displayPhases}
                 operationalPhasesForType={operationalPhasesForType}
                 isActivePhaseNode={isActivePhaseNode}
-                isCampaignIdle={isCampaignIdle}
                 nodeStatus={nodeStatus}
               />
             );
@@ -237,7 +227,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
         </div>
       </TooltipProvider>
 
-      {(((campaign.phaseStatus as any) === 'in_progress' || (campaign.phaseStatus as any) === 'completed') && campaign.currentPhase !== "setup") || (campaign.currentPhase as any) === "completed" ? (
+      {(((campaign.phaseStatus as any) === 'in_progress' || (campaign.phaseStatus as any) === 'completed') && true) || (campaign.currentPhase as any) === "completed" ? (
         <div className="mt-4">
           <div className="flex justify-between text-sm mb-1">
             <span>
@@ -245,13 +235,13 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
                (campaign.phaseStatus as any) === 'completed' ? 'Phase Completed' : 'Current Phase Progress'}
               {(campaign.currentPhase as any) !== "completed" && `(${campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})`}
             </span>
-            <span>{(campaign.currentPhase as any) === "completed" ? '100' : (campaign.progressPercentage || campaign.progress || 0)}%</span>
+            <span>{(campaign.currentPhase as any) === "completed" ? '100' : (campaign.overallProgress || campaign.progressPercentage || 0)}%</span>
           </div>
           <Progress
-            value={(campaign.currentPhase as any) === "completed" ? 100 : (campaign.progressPercentage || campaign.progress || 0)}
+            value={(campaign.currentPhase as any) === "completed" ? 100 : (campaign.overallProgress || campaign.progressPercentage || 0)}
             className="w-full h-3"
             indicatorVariant={
-              ((campaign.phaseStatus as any) === 'completed' && (campaign.progress === 100 || (campaign.currentPhase as any) === "completed"))
+              ((campaign.phaseStatus as any) === 'completed' && (campaign.progressPercentage === 100 || (campaign.currentPhase as any) === "completed"))
                 ? "success" // Green when phase succeeded
                 : "info"    // Blue during progress
             }
@@ -265,7 +255,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
           <p className="text-sm text-green-600 dark:text-green-400">All phases for &quot;{campaign.name}&quot; finished successfully.</p>
         </div>
       )}
-      {(campaign.phaseStatus as any) === 'Failed' && campaign.currentPhase !== "setup" && (
+      {(campaign.phaseStatus as any) === 'Failed' && true && (
          <div className="mt-4 text-center p-4 bg-red-50 dark:bg-red-900/30 rounded-md border border-red-200 dark:border-red-700">
           <AlertTriangle className="h-10 w-10 text-red-600 dark:text-red-400 mx-auto mb-2"/>
           <h3 className="text-lg font-semibold text-red-700 dark:text-red-300">Phase Failed</h3>

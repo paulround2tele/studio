@@ -14,7 +14,7 @@ All URIs are relative to *http://localhost*
 |[**updatePersona**](#updatepersona) | **PUT** /personas/{id} | Update persona|
 
 # **createPersona**
-> StreamExtractKeywords200Response createPersona(createPersonaRequest)
+> CreateLeadGenerationCampaign200Response createPersona(createPersonaRequest)
 
 Create a new persona (DNS or HTTP) with configuration details
 
@@ -46,7 +46,7 @@ const { status, data } = await apiInstance.createPersona(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 
@@ -280,7 +280,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listAllPersonas**
-> StreamExtractKeywords200Response listAllPersonas()
+> CreateLeadGenerationCampaign200Response listAllPersonas()
 
 Retrieve a list of all personas with optional filtering by type and status
 
@@ -320,7 +320,7 @@ const { status, data } = await apiInstance.listAllPersonas(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 

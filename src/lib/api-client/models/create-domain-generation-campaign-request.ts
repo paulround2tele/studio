@@ -40,6 +40,12 @@ export interface CreateDomainGenerationCampaignRequest {
     'constantString': string;
     /**
      * 
+     * @type {string}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'description'?: string;
+    /**
+     * 
      * @type {DNSValidationRequest}
      * @memberof CreateDomainGenerationCampaignRequest
      */
@@ -51,7 +57,7 @@ export interface CreateDomainGenerationCampaignRequest {
      */
     'httpKeywordParams'?: HTTPKeywordValidationRequest;
     /**
-     * Full sequence support - optional parameters for auto-chaining phases
+     * 
      * @type {boolean}
      * @memberof CreateDomainGenerationCampaignRequest
      */

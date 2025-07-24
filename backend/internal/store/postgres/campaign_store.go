@@ -36,33 +36,59 @@ func (s *campaignStorePostgres) BeginTxx(ctx context.Context, opts *sql.TxOption
 // --- Campaign CRUD --- //
 
 func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
-	query := `INSERT INTO campaigns (id, name, current_phase, phase_status, user_id, created_at, updated_at,
-	                                                        started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status)
-	                         VALUES (:id, :name, :current_phase, :phase_status, :user_id, :created_at, :updated_at,
-	                                         :started_at, :completed_at, :progress_percentage, :total_items, :processed_items, :successful_items, :failed_items, :metadata, :error_message, :business_status)`
+	// DEBUG: Log what we're about to store
+	metadataStr := "NULL"
+	if campaign.Metadata != nil {
+		metadataStr = string(*campaign.Metadata)
+	}
+	log.Printf("DEBUG CreateCampaign: About to INSERT campaign %s with metadata: %s", campaign.ID, metadataStr)
+
+	query := `INSERT INTO lead_generation_campaigns (id, name, current_phase, phase_status, user_id, created_at, updated_at, metadata)
+	                         VALUES (:id, :name, :current_phase, :phase_status, :user_id, :created_at, :updated_at, :metadata)`
 	_, err := exec.NamedExecContext(ctx, query, campaign)
+
+	if err != nil {
+		log.Printf("DEBUG CreateCampaign: INSERT FAILED for campaign %s: %v", campaign.ID, err)
+	} else {
+		log.Printf("DEBUG CreateCampaign: INSERT SUCCEEDED for campaign %s", campaign.ID)
+	}
+
 	return err
 }
 
 func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.Campaign, error) {
+	log.Printf("DEBUG GetCampaignByID: About to SELECT campaign %s", id)
+
 	campaign := &models.Campaign{}
 	query := `SELECT id, name, current_phase, phase_status, user_id, created_at, updated_at,
-	                                        started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status
-	                             FROM campaigns WHERE id = $1`
+	                                        NULL as started_at, NULL as completed_at, NULL as progress_percentage, NULL as total_items, NULL as processed_items, NULL as successful_items, NULL as failed_items, metadata, NULL as error_message, NULL as business_status
+	                             FROM lead_generation_campaigns WHERE id = $1`
 	err := exec.GetContext(ctx, campaign, query, id)
+
 	if err == sql.ErrNoRows {
+		log.Printf("DEBUG GetCampaignByID: Campaign %s NOT FOUND", id)
 		return nil, store.ErrNotFound
 	}
+
+	if err != nil {
+		log.Printf("DEBUG GetCampaignByID: SELECT FAILED for campaign %s: %v", id, err)
+		return campaign, err
+	}
+
+	// DEBUG: Log what we actually retrieved
+	metadataStr := "NULL"
+	if campaign.Metadata != nil {
+		metadataStr = string(*campaign.Metadata)
+	}
+	log.Printf("DEBUG GetCampaignByID: SELECT SUCCEEDED for campaign %s, retrieved metadata: %s", id, metadataStr)
+
 	return campaign, err
 }
 
 func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
-	query := `UPDATE campaigns SET
+	query := `UPDATE lead_generation_campaigns SET
 	                               name = :name, current_phase = :current_phase, phase_status = :phase_status, user_id = :user_id,
-	                               updated_at = :updated_at, started_at = :started_at, completed_at = :completed_at,
-	                               progress_percentage = :progress_percentage, total_items = :total_items,
-	                               processed_items = :processed_items, successful_items = :successful_items, failed_items = :failed_items, metadata = :metadata, error_message = :error_message,
-	                               business_status = :business_status
+	                               updated_at = :updated_at
 	                         WHERE id = :id`
 	result, err := exec.NamedExecContext(ctx, query, campaign)
 	if err != nil {
@@ -78,7 +104,7 @@ func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Q
 func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Querier, id uuid.UUID) error {
 	// First check if campaign exists
 	var exists bool
-	checkQuery := `SELECT EXISTS(SELECT 1 FROM campaigns WHERE id = $1)`
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM lead_generation_campaigns WHERE id = $1)`
 	err := exec.GetContext(ctx, &exists, checkQuery, id)
 	if err != nil {
 		return err
@@ -110,10 +136,7 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 		return fmt.Errorf("failed to delete HTTP keyword campaign params: %w", err)
 	}
 
-	_, err = exec.ExecContext(ctx, `DELETE FROM dns_validation_params WHERE campaign_id = $1`, id)
-	if err != nil {
-		return fmt.Errorf("failed to delete DNS validation params: %w", err)
-	}
+	// DNS validation params are now stored as JSON in campaigns table, so no separate deletion needed
 
 	// Get domain generation params before deletion to calculate pattern hash for cleanup
 	var patternHash string
@@ -149,7 +172,7 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 	}
 
 	// 6. Finally, delete the campaign itself
-	result, err := exec.ExecContext(ctx, `DELETE FROM campaigns WHERE id = $1`, id)
+	result, err := exec.ExecContext(ctx, `DELETE FROM lead_generation_campaigns WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete campaign: %w", err)
 	}
@@ -172,8 +195,8 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 
 func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Querier, filter store.ListCampaignsFilter) ([]*models.Campaign, error) {
 	baseQuery := `SELECT id, name, current_phase, phase_status, user_id, created_at, updated_at,
-	                                        started_at, completed_at, progress_percentage, total_items, processed_items, successful_items, failed_items, metadata, error_message, business_status
-	                             FROM campaigns`
+	                                        NULL as started_at, NULL as completed_at, NULL as progress_percentage, NULL as total_items, NULL as processed_items, NULL as successful_items, NULL as failed_items, domains_data as metadata, NULL as error_message, NULL as business_status
+	                             FROM lead_generation_campaigns`
 	args := []interface{}{}
 	conditions := []string{}
 
@@ -229,7 +252,7 @@ func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Qu
 }
 
 func (s *campaignStorePostgres) CountCampaigns(ctx context.Context, exec store.Querier, filter store.ListCampaignsFilter) (int64, error) {
-	baseQuery := `SELECT COUNT(*) FROM campaigns`
+	baseQuery := `SELECT COUNT(*) FROM lead_generation_campaigns`
 	args := []interface{}{}
 	conditions := []string{}
 
@@ -272,7 +295,7 @@ func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec s
 		exec = s.db
 	}
 
-	query := `UPDATE campaigns SET phase_status = $1, error_message = $2, updated_at = NOW() WHERE id = $3`
+	query := `UPDATE lead_generation_campaigns SET phase_status = $1, error_message = $2, updated_at = NOW() WHERE id = $3`
 	result, err := exec.ExecContext(ctx, query, status, errorMessage, id)
 	if err != nil {
 		return err
@@ -427,7 +450,7 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 func (s *campaignStorePostgres) GetGeneratedDomainsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error) {
 	domains := []*models.GeneratedDomain{}
 	// lastOffsetIndex = -1 can indicate to fetch the first page
-	query := `SELECT id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, dns_ip, http_status, http_status_code, http_title, http_keywords, lead_score, last_validated_at
+	query := `SELECT id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, dns_ip, http_status, http_status_code, http_title, http_keywords, lead_score, lead_status, last_validated_at
 			  FROM generated_domains
 			  WHERE domain_generation_campaign_id = $1 AND offset_index >= $2
 			  ORDER BY offset_index ASC
@@ -461,72 +484,48 @@ func (s *campaignStorePostgres) CreateDNSValidationParams(ctx context.Context, e
 		exec = s.db
 	}
 
-	query := `INSERT INTO dns_validation_params
-	               (campaign_id, source_generation_campaign_id, persona_ids, rotation_interval_seconds, processing_speed_per_minute, batch_size, retry_attempts, metadata)
-	             VALUES (:campaign_id, :source_generation_campaign_id, :persona_ids, :rotation_interval_seconds, :processing_speed_per_minute, :batch_size, :retry_attempts, :metadata)`
-
-	personaIDStrings := make([]string, len(params.PersonaIDs))
-	for i, pid := range params.PersonaIDs {
-		personaIDStrings[i] = pid.String()
+	// Convert params to JSON for storage in campaigns.dns_config
+	configJSON, err := json.Marshal(params)
+	if err != nil {
+		return fmt.Errorf("failed to marshal DNS validation config: %w", err)
 	}
 
-	arg := struct {
-		*models.DNSValidationCampaignParams
-		PersonaIDs pq.StringArray `db:"persona_ids"`
-	}{
-		DNSValidationCampaignParams: params,
-		PersonaIDs:                  pq.StringArray(personaIDStrings),
-	}
-
-	_, err := exec.NamedExecContext(ctx, query, &arg)
+	query := `UPDATE lead_generation_campaigns SET dns_config = $1 WHERE id = $2`
+	_, err = exec.ExecContext(ctx, query, configJSON, params.CampaignID)
 	return err
 }
 
 func (s *campaignStorePostgres) GetDNSValidationParams(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.DNSValidationCampaignParams, error) {
-	// Temporary struct for scanning persona_ids as string array
-	type dnsParamsScan struct {
-		CampaignID                 uuid.UUID        `db:"campaign_id"`
-		SourceGenerationCampaignID uuid.NullUUID    `db:"source_generation_campaign_id"`
-		ScannedPersonaIDs          pq.StringArray   `db:"persona_ids"`
-		RotationIntervalSeconds    int              `db:"rotation_interval_seconds"`
-		ProcessingSpeedPerMinute   int              `db:"processing_speed_per_minute"`
-		BatchSize                  int              `db:"batch_size"`
-		RetryAttempts              int              `db:"retry_attempts"`
-		Metadata                   *json.RawMessage `db:"metadata"`
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
 	}
 
-	scanTarget := &dnsParamsScan{}
-	query := `SELECT campaign_id, source_generation_campaign_id, persona_ids, rotation_interval_seconds, processing_speed_per_minute, batch_size, retry_attempts, metadata
-		         FROM dns_validation_params WHERE campaign_id = $1`
-	err := exec.GetContext(ctx, scanTarget, query, campaignID)
+	var configJSON []byte
+	query := `SELECT dns_config FROM lead_generation_campaigns WHERE id = $1`
+	err := exec.GetContext(ctx, &configJSON, query, campaignID)
 	if err != nil {
-		if err == sql.ErrNoRows { // Specific check for ErrNoRows
+		if err == sql.ErrNoRows {
 			return nil, store.ErrNotFound
 		}
-		return nil, fmt.Errorf("GetDNSValidationParams: db query error: %w", err) // General DB error
+		return nil, fmt.Errorf("GetDNSValidationParams: db query error: %w", err)
 	}
 
-	// Convert scanned data
-	params := &models.DNSValidationCampaignParams{
-		CampaignID:                 scanTarget.CampaignID,
-		SourceGenerationCampaignID: &scanTarget.SourceGenerationCampaignID.UUID, // Handles NULL correctly (becomes uuid.Nil)
-		RotationIntervalSeconds:    models.IntPtr(scanTarget.RotationIntervalSeconds),
-		ProcessingSpeedPerMinute:   models.IntPtr(scanTarget.ProcessingSpeedPerMinute),
-		BatchSize:                  models.IntPtr(scanTarget.BatchSize),
-		RetryAttempts:              models.IntPtr(scanTarget.RetryAttempts),
-		Metadata:                   scanTarget.Metadata,
-		PersonaIDs:                 make([]uuid.UUID, 0, len(scanTarget.ScannedPersonaIDs)),
+	// If dns_config is null, return empty params
+	if configJSON == nil {
+		return &models.DNSValidationCampaignParams{
+			CampaignID: campaignID,
+			PersonaIDs: []uuid.UUID{},
+		}, nil
 	}
 
-	for _, idStr := range scanTarget.ScannedPersonaIDs {
-		id, parseErr := uuid.Parse(idStr)
-		if parseErr != nil {
-			return nil, fmt.Errorf("GetDNSValidationParams: persona ID parse error '%s': %w", idStr, parseErr)
-		}
-		params.PersonaIDs = append(params.PersonaIDs, id)
+	// Unmarshal JSON config
+	var params models.DNSValidationCampaignParams
+	if err := json.Unmarshal(configJSON, &params); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal DNS validation config: %w", err)
 	}
 
-	return params, nil
+	return &params, nil
 }
 
 // --- DNS Validation Results --- //
@@ -1072,7 +1071,7 @@ func (s *campaignStorePostgres) CountCampaignsWithPatternHash(ctx context.Contex
 	query := `
 		SELECT COUNT(DISTINCT dgcp.campaign_id)
 		FROM domain_generation_campaign_params dgcp
-		INNER JOIN campaigns c ON c.id = dgcp.campaign_id
+		INNER JOIN lead_generation_campaigns c ON c.id = dgcp.campaign_id
 		WHERE c.current_phase = 'generation'
 		AND (
 			-- Calculate hash from pattern params and compare
@@ -1121,6 +1120,262 @@ func (s *campaignStorePostgres) CleanupUnusedPatternConfigState(ctx context.Cont
 	}
 
 	return nil
+}
+
+// JSONB operations for standalone domain generation service
+
+// UpdateDomainsData updates the domains_data JSONB column for a campaign
+func (s *campaignStorePostgres) UpdateDomainsData(ctx context.Context, exec store.Querier, campaignID uuid.UUID, domainsData interface{}) error {
+	jsonData, err := json.Marshal(domainsData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal domains data: %w", err)
+	}
+
+	query := `UPDATE lead_generation_campaigns SET domains_data = $1 WHERE id = $2`
+	result, err := exec.ExecContext(ctx, query, jsonData, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to update domains_data column: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+
+	return nil
+}
+
+// GetDomainsData retrieves the domains_data JSONB column for a campaign
+func (s *campaignStorePostgres) GetDomainsData(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (interface{}, error) {
+	var jsonData []byte
+	query := `SELECT domains_data FROM lead_generation_campaigns WHERE id = $1`
+
+	err := exec.GetContext(ctx, &jsonData, query, campaignID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to get domains_data column: %w", err)
+	}
+
+	if len(jsonData) == 0 {
+		return nil, nil // No data found
+	}
+
+	var domainsData interface{}
+	if err := json.Unmarshal(jsonData, &domainsData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal domains data: %w", err)
+	}
+
+	return domainsData, nil
+}
+
+// AppendDomainsData appends new domains to the domains_data JSONB column
+func (s *campaignStorePostgres) AppendDomainsData(ctx context.Context, exec store.Querier, campaignID uuid.UUID, newDomains interface{}) error {
+	// Get current domains data
+	currentData, err := s.GetDomainsData(ctx, exec, campaignID)
+	if err != nil && err != store.ErrNotFound {
+		return fmt.Errorf("failed to get current domains data: %w", err)
+	}
+
+	// Initialize domains data structure if it doesn't exist
+	var domainsMap map[string]interface{}
+	if currentData == nil {
+		domainsMap = make(map[string]interface{})
+	} else {
+		var ok bool
+		domainsMap, ok = currentData.(map[string]interface{})
+		if !ok {
+			domainsMap = make(map[string]interface{})
+		}
+	}
+
+	// Get existing domains array or create new one
+	var existingDomains []interface{}
+	if domains, exists := domainsMap["domains"]; exists {
+		if domainArray, ok := domains.([]interface{}); ok {
+			existingDomains = domainArray
+		}
+	}
+
+	// Append new domains
+	if newDomainsArray, ok := newDomains.([]interface{}); ok {
+		existingDomains = append(existingDomains, newDomainsArray...)
+	} else if newDomainsMap, ok := newDomains.(map[string]interface{}); ok {
+		if domains, exists := newDomainsMap["domains"]; exists {
+			if domainArray, ok := domains.([]interface{}); ok {
+				existingDomains = append(existingDomains, domainArray...)
+			}
+		}
+	}
+
+	// Update the domains in the map
+	domainsMap["domains"] = existingDomains
+	domainsMap["updated_at"] = time.Now()
+
+	// Update the database
+	return s.UpdateDomainsData(ctx, exec, campaignID, domainsMap)
+}
+
+// --- JSONB Operations for Standalone Services Architecture ---
+
+// UpdateDNSResults updates the DNS results JSONB column for a campaign
+func (s *campaignStorePostgres) UpdateDNSResults(ctx context.Context, exec store.Querier, campaignID uuid.UUID, dnsResults interface{}) error {
+	if exec == nil {
+		exec = s.db
+	}
+
+	dnsResultsJSON, err := json.Marshal(dnsResults)
+	if err != nil {
+		return fmt.Errorf("failed to marshal DNS results: %w", err)
+	}
+
+	query := `UPDATE lead_generation_campaigns SET dns_results = $1, updated_at = NOW() WHERE id = $2`
+	result, err := exec.ExecContext(ctx, query, dnsResultsJSON, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to update DNS results: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err == nil && rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+	return err
+}
+
+// GetDNSResults retrieves the DNS results JSONB data for a campaign
+func (s *campaignStorePostgres) GetDNSResults(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (interface{}, error) {
+	if exec == nil {
+		exec = s.db
+	}
+
+	var dnsResults sql.NullString
+	query := `SELECT dns_results FROM lead_generation_campaigns WHERE id = $1`
+	err := exec.GetContext(ctx, &dnsResults, query, campaignID)
+	if err == sql.ErrNoRows {
+		return nil, store.ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get DNS results: %w", err)
+	}
+
+	if !dnsResults.Valid || dnsResults.String == "" {
+		return nil, nil
+	}
+
+	var result interface{}
+	if err := json.Unmarshal([]byte(dnsResults.String), &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal DNS results: %w", err)
+	}
+
+	return result, nil
+}
+
+// UpdateHTTPResults updates the HTTP results JSONB column for a campaign
+func (s *campaignStorePostgres) UpdateHTTPResults(ctx context.Context, exec store.Querier, campaignID uuid.UUID, httpResults interface{}) error {
+	if exec == nil {
+		exec = s.db
+	}
+
+	httpResultsJSON, err := json.Marshal(httpResults)
+	if err != nil {
+		return fmt.Errorf("failed to marshal HTTP results: %w", err)
+	}
+
+	query := `UPDATE lead_generation_campaigns SET http_results = $1, updated_at = NOW() WHERE id = $2`
+	result, err := exec.ExecContext(ctx, query, httpResultsJSON, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to update HTTP results: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err == nil && rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+	return err
+}
+
+// GetHTTPResults retrieves the HTTP results JSONB data for a campaign
+func (s *campaignStorePostgres) GetHTTPResults(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (interface{}, error) {
+	if exec == nil {
+		exec = s.db
+	}
+
+	var httpResults sql.NullString
+	query := `SELECT http_results FROM lead_generation_campaigns WHERE id = $1`
+	err := exec.GetContext(ctx, &httpResults, query, campaignID)
+	if err == sql.ErrNoRows {
+		return nil, store.ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get HTTP results: %w", err)
+	}
+
+	if !httpResults.Valid || httpResults.String == "" {
+		return nil, nil
+	}
+
+	var result interface{}
+	if err := json.Unmarshal([]byte(httpResults.String), &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal HTTP results: %w", err)
+	}
+
+	return result, nil
+}
+
+// UpdateAnalysisResults updates the analysis results JSONB column for a campaign
+func (s *campaignStorePostgres) UpdateAnalysisResults(ctx context.Context, exec store.Querier, campaignID uuid.UUID, analysisResults interface{}) error {
+	if exec == nil {
+		exec = s.db
+	}
+
+	analysisResultsJSON, err := json.Marshal(analysisResults)
+	if err != nil {
+		return fmt.Errorf("failed to marshal analysis results: %w", err)
+	}
+
+	query := `UPDATE lead_generation_campaigns SET analysis_results = $1, updated_at = NOW() WHERE id = $2`
+	result, err := exec.ExecContext(ctx, query, analysisResultsJSON, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to update analysis results: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err == nil && rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+	return err
+}
+
+// GetAnalysisResults retrieves the analysis results JSONB data for a campaign
+func (s *campaignStorePostgres) GetAnalysisResults(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (interface{}, error) {
+	if exec == nil {
+		exec = s.db
+	}
+
+	var analysisResults sql.NullString
+	query := `SELECT analysis_results FROM lead_generation_campaigns WHERE id = $1`
+	err := exec.GetContext(ctx, &analysisResults, query, campaignID)
+	if err == sql.ErrNoRows {
+		return nil, store.ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get analysis results: %w", err)
+	}
+
+	if !analysisResults.Valid || analysisResults.String == "" {
+		return nil, nil
+	}
+
+	var result interface{}
+	if err := json.Unmarshal([]byte(analysisResults.String), &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal analysis results: %w", err)
+	}
+
+	return result, nil
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)

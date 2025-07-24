@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **avgProcessingRate** | **number** |  | [optional] [default to undefined]
 **completedAt** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
-**currentPhase** | **string** | Phases-based architecture (replaces legacy CampaignType + Status) | [optional] [default to undefined]
+**currentPhase** | **string** |  | [optional] [default to undefined]
 **dnsValidatedDomains** | **number** |  | [optional] [default to undefined]
 **domains** | **number** |  | [optional] [default to undefined]
 **errorMessage** | **string** |  | [optional] [default to undefined]

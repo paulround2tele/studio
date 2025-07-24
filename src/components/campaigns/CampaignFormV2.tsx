@@ -19,7 +19,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 // Import types and services - using the EXACT same pattern as personas page
 import type { CampaignFormValues } from './types/CampaignFormTypes';
 import type { components } from '@/lib/api-client/types';
-import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
+// REMOVED: Legacy unifiedCampaignService deleted during cleanup - using standalone services
+// import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
 import { getPersonas } from '@/lib/services/personaService';
 import { getProxies } from '@/lib/services/proxyService.production';
 import { listProxyPools } from '@/lib/services/proxyPoolService.production';
@@ -59,7 +60,7 @@ const MAX_KEYWORD_SETS_SELECTED = 5;
 
 // Common TLD options
 const COMMON_TLDS = [
-  'com', 'net', 'org', 'io', 'co', 'app', 'dev', 'tech', 'info', 'biz',
+  '.com', '.net', '.org', '.io', '.co', '.app', '.dev', '.tech', '.info', '.biz',
   'me', 'tv', 'cc', 'ai', 'xyz', 'online', 'site', 'website', 'store'
 ];
 
@@ -333,71 +334,77 @@ export default function CampaignFormV2() {
     form.setValue('httpKeywordParams.keywordSetIds', updated);
   };
 
-  // Form submission
+  // Form submission - Updated for standalone services workflow
   const onSubmit = async (data: CampaignFormValues) => {
     try {
-      // Map form values to correct API schema
-      const mapPatternType = (pattern: string): 'prefix' | 'suffix' | 'both' => {
-        switch (pattern) {
-          case 'prefix_variable': return 'prefix';
-          case 'suffix_variable': return 'suffix';
-          case 'both_variable': return 'both';
-          default: return 'prefix';
-        }
+      // Parse TLDs from input and ensure dot prefixes for backend compatibility
+      const tlds = data.tldsInput.split(',')
+        .map(tld => tld.trim())
+        .filter(Boolean)
+        .map(tld => tld.startsWith('.') ? tld : '.' + tld);
+      
+      // Build domain generation config using auto-generated types
+      const domainConfig: any = {
+        generationPattern: data.generationPattern,
+        constantPart: data.constantPart,
+        allowedCharSet: data.allowedCharSet,
+        tlds: tlds,
+        prefixVariableLength: data.prefixVariableLength,
+        suffixVariableLength: data.suffixVariableLength,
+        numDomainsToGenerate: data.maxDomainsToGenerate,
       };
 
-      // Build the correct CreateCampaignRequest payload
-      const requestPayload: any = {
+      // Create standalone services request using auto-generated types
+      const request: any = {
         name: data.name,
         description: data.description,
-        launchSequence: data.launchSequence,
-        domainGenerationParams: {
-          characterSet: data.allowedCharSet,
-          constantString: data.constantPart,
-          tld: '.' + (data.tldsInput.split(',')[0]?.trim() || 'com'), // Backend requires dot prefix
-          patternType: mapPatternType(data.generationPattern),
-          variableLength: data.prefixVariableLength || 3,
-          numDomainsToGenerate: data.maxDomainsToGenerate || 1000,
-        }
+        domainConfig: domainConfig,
       };
 
-      // Add full sequence parameters if enabled
-      if (data.launchSequence) {
-        requestPayload.dnsValidationParams = {
-          personaIds: data.dnsValidationParams?.personaIds || [],
-          rotationIntervalSeconds: data.dnsValidationParams?.rotationIntervalSeconds || 300,
-          processingSpeedPerMinute: data.dnsValidationParams?.processingSpeedPerMinute || 60,
-          batchSize: data.dnsValidationParams?.batchSize || 10,
-          retryAttempts: data.dnsValidationParams?.retryAttempts || 3
-        };
-
-        requestPayload.httpKeywordParams = {
-          personaIds: data.httpKeywordParams?.personaIds || [],
-          proxyIds: data.httpKeywordParams?.proxyIds || [],
-          keywordSetIds: data.httpKeywordParams?.keywordSetIds || [],
-          targetHttpPorts: data.httpKeywordParams?.targetHttpPorts || [80, 443],
-          processingSpeedPerMinute: data.httpKeywordParams?.processingSpeedPerMinute || 60,
-          rotationIntervalSeconds: data.httpKeywordParams?.rotationIntervalSeconds || 300,
-          retryAttempts: data.httpKeywordParams?.retryAttempts || 3,
-          batchSize: data.httpKeywordParams?.batchSize || 10
-        };
-      }
-
-      // Use direct API client instead of service layer (same fix as personas)
-      const response = await campaignsApi.createCampaign(requestPayload);
+      // Use standalone services API - all state management happens in backend
+      const response = await campaignsApi.createLeadGenerationCampaign(request);
       
-      if (response.status === 200 || response.status === 201) {
-        toast({
-          title: "Campaign Created",
-          description: `Campaign "${data.name}" has been created successfully.`,
-        });
-        router.push('/campaigns');
-      } else {
-        throw new Error(`API returned status ${response.status}`);
+      // Handle unified APIResponse structure safely
+      const responseData = response.data;
+      let campaignData: any = null;
+      
+      if (responseData && typeof responseData === 'object') {
+        // Check if response follows APIResponse<T> pattern with data field
+        if ('data' in responseData) {
+          campaignData = (responseData as any).data;
+        } else if ('id' in responseData) {
+          // Direct campaign object response
+          campaignData = responseData;
+        } else if ('error' in responseData) {
+          // Handle error response
+          throw new Error((responseData as any).error || 'Failed to create campaign');
+        }
       }
+      
+      if (!campaignData || !campaignData.id) {
+        throw new Error('Campaign creation succeeded but no campaign ID returned');
+      }
+      
+      toast({
+        title: "Campaign Created",
+        description: `Lead generation campaign "${data.name}" has been created successfully.`,
+      });
+
+      // Navigate to campaign details page
+      router.push(`/campaigns/${campaignData.id}`);
     } catch (error: any) {
       console.error('Campaign creation error:', error);
-      const errorMessage = error?.response?.data?.error || error?.message || "Failed to create campaign. Please try again.";
+      
+      // Enhanced error handling for various response structures
+      let errorMessage = "Failed to create campaign. Please try again.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error.response?.data) {
+        const errorData = error.response.data;
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      }
+      
       toast({
         title: "Creation Failed",
         description: errorMessage,
@@ -407,7 +414,8 @@ export default function CampaignFormV2() {
   };
 
   // Watch form values for UI updates
-  const watchLaunchSequence = form.watch('launchSequence');
+  const watchFullSequenceMode = form.watch('fullSequenceMode');
+  const watchLaunchSequence = form.watch('launchSequence'); // Keep for backend compatibility
   const watchGenerationPattern = form.watch('generationPattern');
   const watchDnsPersonas = form.watch('dnsValidationParams.personaIds');
   const watchHttpPersonas = form.watch('httpKeywordParams.personaIds');
@@ -497,21 +505,25 @@ export default function CampaignFormV2() {
               <div className="border rounded-lg p-4">
                 <FormField
                   control={form.control}
-                  name="launchSequence"
+                  name="fullSequenceMode"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between">
                       <div className="space-y-0.5">
                         <FormLabel className="text-base">
-                          Enable Full Sequence Mode
+                          Enable Full Auto Sequence Mode
                         </FormLabel>
                         <div className="text-sm text-muted-foreground">
-                          Launch campaign with DNS validation and HTTP keyword validation phases
+                          Configure all parameters (generation, DNS, HTTP) now and automatically progress through phases when each completes successfully
                         </div>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            // Also sync launchSequence for backend compatibility
+                            form.setValue('launchSequence', checked);
+                          }}
                         />
                       </FormControl>
                     </FormItem>
@@ -688,9 +700,12 @@ export default function CampaignFormV2() {
               </div>
 
               {/* Full Sequence Mode Parameters */}
-              {watchLaunchSequence && (
+              {watchFullSequenceMode && (
                 <div className="space-y-6 border rounded-lg p-4">
-                  <h3 className="text-lg font-medium">Full Sequence Parameters</h3>
+                  <h3 className="text-lg font-medium">Full Auto Sequence Parameters</h3>
+                  <div className="text-sm text-muted-foreground mb-4">
+                    Configure all validation phases now. The campaign will automatically progress: Generation → DNS Validation → HTTP Keyword Validation
+                  </div>
                   
                   {/* DNS Validation */}
                   <div className="space-y-4">
@@ -1023,11 +1038,11 @@ export default function CampaignFormV2() {
               )}
 
               {/* Validation Alert */}
-              {watchLaunchSequence && (!watchDnsPersonas?.length || !watchHttpPersonas?.length) && (
+              {watchFullSequenceMode && (!watchDnsPersonas?.length || !watchHttpPersonas?.length) && (
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Full sequence mode requires at least one DNS persona and one HTTP persona to be selected.
+                    Full auto sequence mode requires at least one DNS persona and one HTTP persona to be selected.
                   </AlertDescription>
                 </Alert>
               )}
@@ -1037,9 +1052,9 @@ export default function CampaignFormV2() {
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={watchLaunchSequence && (!watchDnsPersonas?.length || !watchHttpPersonas?.length)}
+                <Button
+                  type="submit"
+                  disabled={watchFullSequenceMode && (!watchDnsPersonas?.length || !watchHttpPersonas?.length)}
                 >
                   Create Campaign
                 </Button>

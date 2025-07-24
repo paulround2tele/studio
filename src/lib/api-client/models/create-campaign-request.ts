@@ -15,7 +15,13 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
+import type { DNSValidationRequest } from './dnsvalidation-request';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { DomainGenerationParams } from './domain-generation-params';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { HTTPKeywordValidationRequest } from './httpkeyword-validation-request';
 
 /**
  * 
@@ -31,10 +37,28 @@ export interface CreateCampaignRequest {
     'description'?: string;
     /**
      * 
+     * @type {DNSValidationRequest}
+     * @memberof CreateCampaignRequest
+     */
+    'dnsValidationParams'?: DNSValidationRequest;
+    /**
+     * 
      * @type {DomainGenerationParams}
      * @memberof CreateCampaignRequest
      */
     'domainGenerationParams'?: DomainGenerationParams;
+    /**
+     * Full sequence mode support - when enabled, stores all phase configurations at creation
+     * @type {boolean}
+     * @memberof CreateCampaignRequest
+     */
+    'fullSequenceMode'?: boolean;
+    /**
+     * 
+     * @type {HTTPKeywordValidationRequest}
+     * @memberof CreateCampaignRequest
+     */
+    'httpKeywordParams'?: HTTPKeywordValidationRequest;
     /**
      * 
      * @type {boolean}

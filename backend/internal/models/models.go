@@ -9,32 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CampaignPhaseEnum defines the current phase of a campaign
-// @enum string
-// @example setup
-type CampaignPhaseEnum string
-
-const (
-	CampaignPhaseSetup          CampaignPhaseEnum = "setup"                   // @enum setup
-	CampaignPhaseGeneration     CampaignPhaseEnum = "generation"              // @enum generation
-	CampaignPhaseDNSValidation  CampaignPhaseEnum = "dns_validation"          // @enum dns_validation
-	CampaignPhaseHTTPValidation CampaignPhaseEnum = "http_keyword_validation" // @enum http_keyword_validation
-	CampaignPhaseAnalysis       CampaignPhaseEnum = "analysis"                // @enum analysis
-)
-
-// CampaignPhaseStatusEnum defines the status of a campaign phase
-// @enum string
-// @example not_started
-type CampaignPhaseStatusEnum string
-
-const (
-	CampaignPhaseStatusPending    CampaignPhaseStatusEnum = "not_started" // @enum not_started
-	CampaignPhaseStatusInProgress CampaignPhaseStatusEnum = "in_progress" // @enum in_progress
-	CampaignPhaseStatusPaused     CampaignPhaseStatusEnum = "paused"      // @enum paused
-	CampaignPhaseStatusSucceeded  CampaignPhaseStatusEnum = "completed"   // @enum completed
-	CampaignPhaseStatusFailed     CampaignPhaseStatusEnum = "failed"      // @enum failed
-)
-
 // DNSPhaseConfigRequest represents DNS validation phase configuration
 // @description Request body for configuring DNS validation phase
 type DNSPhaseConfigRequest struct {
@@ -295,16 +269,44 @@ type KeywordRule struct {
 	UpdatedAt       time.Time           `db:"updated_at" json:"updatedAt"`
 }
 
-// Campaign represents a generic campaign using phases-based architecture
-// @Description Campaign configuration and status with phases-based execution
-type Campaign struct {
-	ID                 uuid.UUID        `db:"id" json:"id"`
-	Name               string           `db:"name" json:"name" validate:"required"`
-	UserID             *uuid.UUID       `db:"user_id" json:"userId,omitempty"`
-	CreatedAt          time.Time        `db:"created_at" json:"createdAt"`
-	UpdatedAt          time.Time        `db:"updated_at" json:"updatedAt"`
-	StartedAt          *time.Time       `db:"started_at" json:"startedAt,omitempty"`
-	CompletedAt        *time.Time       `db:"completed_at" json:"completedAt,omitempty"`
+// ======================================================================
+// LEAD GENERATION CAMPAIGN - Phase-Centric Architecture
+// ======================================================================
+
+// LeadGenerationCampaign represents a lead generation campaign with 4 phases
+// @Description Lead generation campaign with phase-based execution model
+type LeadGenerationCampaign struct {
+	ID     uuid.UUID  `db:"id" json:"id"`
+	Name   string     `db:"name" json:"name" validate:"required"`
+	UserID *uuid.UUID `db:"user_id" json:"userId,omitempty"`
+
+	// Campaign lifecycle timestamps
+	CreatedAt   time.Time  `db:"created_at" json:"createdAt"`
+	UpdatedAt   time.Time  `db:"updated_at" json:"updatedAt"`
+	StartedAt   *time.Time `db:"started_at" json:"startedAt,omitempty"`
+	CompletedAt *time.Time `db:"completed_at" json:"completedAt,omitempty"`
+
+	// Campaign type (always 'lead_generation' in new architecture)
+	CampaignType string `db:"campaign_type" json:"campaignType" validate:"required,eq=lead_generation"`
+
+	// Phase management
+	CurrentPhaseID  *uuid.UUID     `db:"current_phase_id" json:"currentPhaseId,omitempty"`
+	CurrentPhase    *PhaseTypeEnum `db:"current_phase" json:"currentPhase,omitempty"`
+	TotalPhases     int            `db:"total_phases" json:"totalPhases" validate:"eq=4"`
+	CompletedPhases int            `db:"completed_phases" json:"completedPhases" validate:"gte=0,lte=4"`
+	OverallProgress *float64       `db:"overall_progress" json:"overallProgress,omitempty" validate:"omitempty,gte=0,lte=100"`
+
+	// Sequence mode configuration
+	IsFullSequenceMode bool `db:"is_full_sequence_mode" json:"isFullSequenceMode"`
+	AutoAdvancePhases  bool `db:"auto_advance_phases" json:"autoAdvancePhases"`
+
+	// JSONB columns for efficient phase data storage
+	DomainsData     *json.RawMessage `db:"domains_data" json:"domainsData,omitempty" gorm:"type:jsonb"`
+	DNSResults      *json.RawMessage `db:"dns_results" json:"dnsResults,omitempty" gorm:"type:jsonb"`
+	HTTPResults     *json.RawMessage `db:"http_results" json:"httpResults,omitempty" gorm:"type:jsonb"`
+	AnalysisResults *json.RawMessage `db:"analysis_results" json:"analysisResults,omitempty" gorm:"type:jsonb"`
+
+	// Legacy fields for backward compatibility during transition
 	ProgressPercentage *float64         `db:"progress_percentage" json:"progressPercentage,omitempty" validate:"omitempty,gte=0,lte=100"`
 	TotalItems         *int64           `db:"total_items" json:"totalItems,omitempty" validate:"omitempty,gte=0"`
 	ProcessedItems     *int64           `db:"processed_items" json:"processedItems,omitempty" validate:"omitempty,gte=0"`
@@ -313,52 +315,103 @@ type Campaign struct {
 	FailedItems        *int64           `db:"failed_items" json:"failedItems,omitempty"`
 	Metadata           *json.RawMessage `db:"metadata" json:"metadata,omitempty"`
 
-	// Additional tracking fields
+	// Campaign-level tracking (aggregated from phases)
 	EstimatedCompletionAt *time.Time `db:"estimated_completion_at" json:"estimatedCompletionAt,omitempty"`
 	AvgProcessingRate     *float64   `db:"avg_processing_rate" json:"avgProcessingRate,omitempty"`
 	LastHeartbeatAt       *time.Time `db:"last_heartbeat_at" json:"lastHeartbeatAt,omitempty"`
 	BusinessStatus        *string    `db:"business_status" json:"businessStatus,omitempty"`
 
-	// Phases-based architecture (replaces legacy CampaignType + Status)
-	// @swagger:field currentPhase
-	// @description Current phase of campaign execution
-	// @example generation
-	CurrentPhase *CampaignPhaseEnum `db:"current_phase" json:"currentPhase,omitempty" validate:"omitempty,oneof=setup generation dns_validation http_keyword_validation analysis"`
+	// Summary metrics (computed from phases)
+	Domains             *int64 `json:"domains,omitempty"`             // Total domains from domain generation phase
+	Leads               *int64 `json:"leads,omitempty"`               // Total leads from analysis phase
+	DNSValidatedDomains *int64 `json:"dnsValidatedDomains,omitempty"` // Successful DNS validations
 
-	// @swagger:field phaseStatus
-	// @description Status of the current phase
-	// @example in_progress
-	PhaseStatus *CampaignPhaseStatusEnum `db:"phase_status" json:"phaseStatus,omitempty" validate:"omitempty,oneof=not_started in_progress paused completed failed"`
+	// Phase collections (populated when needed)
+	Phases []CampaignPhase `json:"phases,omitempty"`
 
-	// @swagger:field progress
-	// @description Overall progress percentage (0-100)
-	// @example 75.5
-	Progress *float64 `db:"progress" json:"progress,omitempty" validate:"omitempty,gte=0,lte=100"`
-
-	// @swagger:field domains
-	// @description Total number of domains processed
-	// @example 1000
-	Domains *int64 `db:"domains" json:"domains,omitempty"`
-
-	// @swagger:field leads
-	// @description Number of leads generated
-	// @example 25
-	Leads *int64 `db:"leads" json:"leads,omitempty"`
-
-	// @swagger:field dnsValidatedDomains
-	// @description Number of DNS validated domains
-	// @example 800
-	DNSValidatedDomains *int64 `db:"dns_validated_domains" json:"dnsValidatedDomains,omitempty"`
-
-	// Direct access to campaign parameters (flattened for frontend convenience)
+	// Legacy fields for backward compatibility during transition
+	PhaseStatus                 *PhaseStatusEnum                `db:"phase_status" json:"phaseStatus,omitempty"` // Computed from current phase status
+	FullSequenceMode            *bool                           `json:"fullSequenceMode,omitempty"`              // Maps to IsFullSequenceMode
 	DomainGenerationParams      *DomainGenerationCampaignParams `json:"domainGenerationParams,omitempty"`
 	DNSValidationParams         *DNSValidationCampaignParams    `json:"dnsValidationParams,omitempty"`
 	HTTPKeywordValidationParams *HTTPKeywordCampaignParams      `json:"httpKeywordValidationParams,omitempty"`
+	DNSConfig                   *json.RawMessage                `json:"dnsConfig,omitempty"`
+	HTTPConfig                  *json.RawMessage                `json:"httpConfig,omitempty"`
 
-	// Content analysis data expected by frontend
+	// Content analysis data (from analysis phase)
 	ExtractedContent *[]ExtractedContentItem `json:"extractedContent,omitempty"`
 	LeadItems        *[]LeadItem             `json:"leadItems,omitempty"`
 }
+
+// Campaign is an alias for LeadGenerationCampaign for backward compatibility
+type Campaign = LeadGenerationCampaign
+
+// ======================================================================
+// CAMPAIGN PHASE MODEL
+// ======================================================================
+
+// CampaignPhase represents an individual phase within a lead generation campaign
+type CampaignPhase struct {
+	ID         uuid.UUID     `db:"id" json:"id"`
+	CampaignID uuid.UUID     `db:"campaign_id" json:"campaignId"`
+	PhaseType  PhaseTypeEnum `db:"phase_type" json:"phaseType"`
+	PhaseOrder int           `db:"phase_order" json:"phaseOrder" validate:"gte=1,lte=4"`
+
+	// Phase execution status
+	Status             PhaseStatusEnum `db:"status" json:"status"`
+	ProgressPercentage *float64        `db:"progress_percentage" json:"progressPercentage,omitempty" validate:"omitempty,gte=0,lte=100"`
+
+	// Phase lifecycle timestamps
+	StartedAt    *time.Time `db:"started_at" json:"startedAt,omitempty"`
+	CompletedAt  *time.Time `db:"completed_at" json:"completedAt,omitempty"`
+	PausedAt     *time.Time `db:"paused_at" json:"pausedAt,omitempty"`
+	FailedAt     *time.Time `db:"failed_at" json:"failedAt,omitempty"`
+	ErrorMessage *string    `db:"error_message" json:"errorMessage,omitempty"`
+
+	// Phase execution counters
+	TotalItems      *int64 `db:"total_items" json:"totalItems,omitempty"`
+	ProcessedItems  *int64 `db:"processed_items" json:"processedItems,omitempty"`
+	SuccessfulItems *int64 `db:"successful_items" json:"successfulItems,omitempty"`
+	FailedItems     *int64 `db:"failed_items" json:"failedItems,omitempty"`
+
+	// Phase configuration (JSON storage for phase-specific params)
+	Configuration *json.RawMessage `db:"configuration" json:"configuration,omitempty"`
+
+	// Audit fields
+	CreatedAt time.Time `db:"created_at" json:"createdAt"`
+	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
+}
+
+// ======================================================================
+// PHASE TYPE AND STATUS ENUMS
+// ======================================================================
+
+// PhaseTypeEnum defines the types of phases in a lead generation campaign
+type PhaseTypeEnum string
+
+const (
+	PhaseTypeDomainGeneration      PhaseTypeEnum = "domain_generation"
+	PhaseTypeDNSValidation         PhaseTypeEnum = "dns_validation"
+	PhaseTypeHTTPKeywordValidation PhaseTypeEnum = "http_keyword_validation"
+	PhaseTypeAnalysis              PhaseTypeEnum = "analysis"
+)
+
+// PhaseStatusEnum defines the execution status of a phase
+type PhaseStatusEnum string
+
+const (
+	PhaseStatusNotStarted PhaseStatusEnum = "not_started"
+	PhaseStatusReady      PhaseStatusEnum = "ready"      // Phase is ready to be configured
+	PhaseStatusConfigured PhaseStatusEnum = "configured" // Phase has been configured and ready to start
+	PhaseStatusInProgress PhaseStatusEnum = "in_progress"
+	PhaseStatusPaused     PhaseStatusEnum = "paused"
+	PhaseStatusCompleted  PhaseStatusEnum = "completed"
+	PhaseStatusFailed     PhaseStatusEnum = "failed"
+)
+
+// Legacy aliases for backward compatibility
+type CampaignPhaseEnum = PhaseTypeEnum
+type CampaignPhaseStatusEnum = PhaseStatusEnum
 
 // ExtractedContentItem represents content extracted and analyzed from domains
 type ExtractedContentItem struct {
@@ -443,6 +496,17 @@ const (
 	DomainHTTPStatusTimeout DomainHTTPStatusEnum = "timeout"
 )
 
+// DomainLeadStatusEnum defines lead processing status for domains
+type DomainLeadStatusEnum string
+
+const (
+	DomainLeadStatusPending DomainLeadStatusEnum = "pending"
+	DomainLeadStatusMatch   DomainLeadStatusEnum = "match"    // Keywords found
+	DomainLeadStatusNoMatch DomainLeadStatusEnum = "no_match" // No keywords found
+	DomainLeadStatusError   DomainLeadStatusEnum = "error"
+	DomainLeadStatusTimeout DomainLeadStatusEnum = "timeout"
+)
+
 // GeneratedDomain represents a domain name generated by a campaign
 type GeneratedDomain struct {
 	ID                   uuid.UUID      `db:"id" json:"id" firestore:"id"`
@@ -462,6 +526,7 @@ type GeneratedDomain struct {
 	HTTPStatusCode  sql.NullInt32         `db:"http_status_code" json:"httpStatusCode,omitempty" firestore:"httpStatusCode,omitempty"`
 	HTTPTitle       sql.NullString        `db:"http_title" json:"httpTitle,omitempty" firestore:"httpTitle,omitempty"`
 	HTTPKeywords    sql.NullString        `db:"http_keywords" json:"httpKeywords,omitempty" firestore:"httpKeywords,omitempty"`
+	LeadStatus      *DomainLeadStatusEnum `db:"lead_status" json:"leadStatus,omitempty" firestore:"leadStatus,omitempty"`
 	LeadScore       sql.NullFloat64       `db:"lead_score" json:"leadScore,omitempty" firestore:"leadScore,omitempty"`
 	LastValidatedAt sql.NullTime          `db:"last_validated_at" json:"lastValidatedAt,omitempty" firestore:"lastValidatedAt,omitempty"`
 }

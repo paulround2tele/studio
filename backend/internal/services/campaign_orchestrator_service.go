@@ -62,16 +62,110 @@ func NewCampaignOrchestratorService(
 	}
 }
 
-func (s *campaignOrchestratorServiceImpl) CreateDomainGenerationCampaign(ctx context.Context, req CreateDomainGenerationCampaignRequest) (*models.Campaign, error) {
-	log.Printf("Orchestrator: Delegating CreateDomainGenerationCampaign for Name: %s", req.Name)
-	camp, err := s.domainGenService.CreateCampaign(ctx, req)
-	if err == nil && s.asyncManager != nil {
+// CreateLeadGenerationCampaign creates a new Lead Generation Campaign with 4 phases:
+// Phase 1: Domain Generation, Phase 2: DNS Validation, Phase 3: HTTP Keyword Validation, Phase 4: Analysis
+func (s *campaignOrchestratorServiceImpl) CreateLeadGenerationCampaign(ctx context.Context, req CreateLeadGenerationCampaignRequest) (*models.Campaign, error) {
+	log.Printf("Orchestrator: Creating Lead Generation Campaign: %s", req.Name)
+
+	var opErr error
+	var querier store.Querier
+	isSQL := s.db != nil
+	var sqlTx *sqlx.Tx
+
+	if isSQL {
+		var startTxErr error
+		sqlTx, startTxErr = s.db.BeginTxx(ctx, nil)
+		if startTxErr != nil {
+			return nil, fmt.Errorf("failed to begin SQL transaction: %w", startTxErr)
+		}
+		querier = sqlTx
+		log.Printf("SQL Transaction started for CreateLeadGenerationCampaign %s.", req.Name)
+
+		defer func() {
+			if p := recover(); p != nil {
+				log.Printf("Panic recovered during SQL CreateLeadGenerationCampaign for %s, rolling back: %v", req.Name, p)
+				_ = sqlTx.Rollback()
+				panic(p)
+			} else if opErr != nil {
+				log.Printf("Error occurred for CreateLeadGenerationCampaign %s (SQL), rolling back: %v", req.Name, opErr)
+				_ = sqlTx.Rollback()
+			} else {
+				if commitErr := sqlTx.Commit(); commitErr != nil {
+					log.Printf("Error committing SQL transaction for CreateLeadGenerationCampaign %s: %v", req.Name, commitErr)
+					opErr = commitErr
+				} else {
+					log.Printf("SQL Transaction committed for CreateLeadGenerationCampaign %s.", req.Name)
+				}
+			}
+		}()
+	} else {
+		querier = nil
+		log.Printf("Operating in Firestore mode for CreateLeadGenerationCampaign %s.", req.Name)
+	}
+
+	// Create the campaign starting in Phase 1 (Domain Generation)
+	campaignID := uuid.New()
+	currentPhase := models.PhaseTypeDomainGeneration // Phase 1: Domain Generation
+	phaseStatus := models.PhaseStatusNotStarted      // Ready to start
+
+	campaign := &models.Campaign{
+		ID:                 campaignID,
+		Name:               req.Name,
+		CurrentPhase:       &currentPhase,
+		CreatedAt:          time.Now().UTC(),
+		UpdatedAt:          time.Now().UTC(),
+		CampaignType:       "lead_generation",
+		TotalPhases:        4,
+		CompletedPhases:    0,
+		IsFullSequenceMode: false, // Lead generation campaigns are phase-centric
+		AutoAdvancePhases:  false, // Manual phase transitions
+		// Legacy field for backward compatibility
+		PhaseStatus:      &phaseStatus,
+		FullSequenceMode: func() *bool { b := false; return &b }(),
+	}
+
+	// Store domain generation parameters (Phase 1) - using DomainConfig field
+	constantStr := &req.DomainConfig.ConstantString
+	if req.DomainConfig.ConstantString == "" {
+		constantStr = nil
+	}
+
+	domainParams := &models.DomainGenerationCampaignParams{
+		CampaignID:                campaignID,
+		PatternType:               req.DomainConfig.PatternType,
+		VariableLength:            req.DomainConfig.VariableLength,
+		CharacterSet:              req.DomainConfig.CharacterSet,
+		ConstantString:            constantStr,
+		TLD:                       req.DomainConfig.TLD,
+		NumDomainsToGenerate:      int(req.DomainConfig.NumDomainsToGenerate),
+		TotalPossibleCombinations: 0, // Will be calculated later
+		CurrentOffset:             0, // Start from beginning
+		CreatedAt:                 time.Now().UTC(),
+		UpdatedAt:                 time.Now().UTC(),
+	}
+	campaign.DomainGenerationParams = domainParams
+
+	// Note: DNS and HTTP validation parameters are not set during campaign creation
+	// They will be configured when transitioning to those phases in the lead generation workflow
+
+	// Create the campaign in the database
+	err := s.campaignStore.CreateCampaign(ctx, querier, campaign)
+	if err != nil {
+		opErr = err
+		return nil, err
+	}
+
+	log.Printf("Lead Generation Campaign created successfully: %s (ID: %s) - Starting in Phase 1: Domain Generation",
+		campaign.Name, campaign.ID)
+
+	// Publish async message
+	if s.asyncManager != nil {
 		msg := &communication.AsyncMessage{
 			ID:            uuid.New().String(),
 			CorrelationID: uuid.New().String(),
 			SourceService: "orchestrator-service",
-			TargetService: "domain-generation-service",
-			MessageType:   "campaign_created",
+			TargetService: "lead-generation-service",
+			MessageType:   "lead_generation_campaign_created",
 			Payload:       req,
 			Pattern:       communication.PatternPubSub,
 			Timestamp:     time.Now(),
@@ -80,7 +174,32 @@ func (s *campaignOrchestratorServiceImpl) CreateDomainGenerationCampaign(ctx con
 			log.Printf("async publish error: %v", perr)
 		}
 	}
-	return camp, err
+
+	return campaign, nil
+}
+
+// DEPRECATED: CreateDomainGenerationCampaign - Use CreateLeadGenerationCampaign instead
+// This function is kept for backward compatibility but should be migrated
+func (s *campaignOrchestratorServiceImpl) CreateDomainGenerationCampaign(ctx context.Context, req CreateDomainGenerationCampaignRequest) (*models.Campaign, error) {
+	log.Printf("DEPRECATED: CreateDomainGenerationCampaign called - migrating to Lead Generation Campaign for: %s", req.Name)
+
+	// Convert to CreateLeadGenerationCampaignRequest
+	newReq := CreateLeadGenerationCampaignRequest{
+		Name:        req.Name,
+		Description: req.Description,
+		UserID:      req.UserID,
+		DomainConfig: DomainGenerationConfig{
+			PatternType:          req.PatternType,
+			VariableLength:       req.VariableLength,
+			CharacterSet:         req.CharacterSet,
+			ConstantString:       req.ConstantString,
+			TLD:                  req.TLD,
+			NumDomainsToGenerate: req.NumDomainsToGenerate,
+			BatchSize:            1000, // Default batch size
+		},
+	}
+
+	return s.CreateLeadGenerationCampaign(ctx, newReq)
 }
 
 // ConfigureDNSValidationPhase configures DNS validation phase for a campaign (single-campaign architecture)
@@ -121,22 +240,39 @@ func (s *campaignOrchestratorServiceImpl) ConfigureDNSValidationPhase(ctx contex
 		return nil, opErr
 	}
 
-	// Validate campaign is eligible for DNS validation phase
-	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseGeneration {
-		currentPhase := "unknown"
-		if campaign.CurrentPhase != nil {
-			currentPhase = string(*campaign.CurrentPhase)
-		}
-		opErr = fmt.Errorf("DNS validation phase can only be configured on generation campaigns, found: %s", currentPhase)
+	// Validate campaign is eligible for DNS validation phase (flexible approach)
+	// Allow DNS validation configuration in multiple scenarios:
+	// 1. Generation phase completed (initial DNS config)
+	// 2. DNS validation phase (reconfiguration)
+	// 3. HTTP validation phase (restart DNS validation)
+	if campaign.CurrentPhase == nil {
+		opErr = fmt.Errorf("campaign phase not set - cannot configure DNS validation")
 		return nil, opErr
 	}
 
-	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.CampaignPhaseStatusSucceeded {
-		statusStr := "unknown"
-		if campaign.PhaseStatus != nil {
-			statusStr = string(*campaign.PhaseStatus)
+	currentPhase := *campaign.CurrentPhase
+	switch currentPhase {
+	case models.PhaseTypeDomainGeneration:
+		// Initial DNS configuration - require generation to be completed
+		if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusCompleted {
+			statusStr := "unknown"
+			if campaign.PhaseStatus != nil {
+				statusStr = string(*campaign.PhaseStatus)
+			}
+			opErr = fmt.Errorf("domain generation must be completed before configuring DNS validation phase, current status: %s", statusStr)
+			return nil, opErr
 		}
-		opErr = fmt.Errorf("domain generation must be completed before configuring DNS validation phase, current status: %s", statusStr)
+	case models.PhaseTypeDNSValidation:
+		// DNS validation reconfiguration - always allowed
+		log.Printf("Reconfiguring DNS validation for campaign %s in dns_validation phase", campaignID)
+	case models.PhaseTypeHTTPKeywordValidation:
+		// Restart DNS validation from HTTP phase - always allowed
+		log.Printf("Restarting DNS validation for campaign %s from http_keyword_validation phase", campaignID)
+	case models.PhaseTypeAnalysis:
+		// Allow DNS validation restart from analysis phase
+		log.Printf("Restarting DNS validation for campaign %s from analysis phase", campaignID)
+	default:
+		opErr = fmt.Errorf("DNS validation cannot be configured from current phase: %s", currentPhase)
 		return nil, opErr
 	}
 
@@ -175,12 +311,12 @@ func (s *campaignOrchestratorServiceImpl) ConfigureDNSValidationPhase(ctx contex
 	}
 
 	// Transition campaign to DNS validation phase
-	dnsPhase := models.CampaignPhaseDNSValidation
-	pendingStatus := models.CampaignPhaseStatusPending
+	dnsPhase := models.PhaseTypeDNSValidation
+	pendingStatus := models.PhaseStatusNotStarted
 
 	campaign.CurrentPhase = &dnsPhase
 	campaign.PhaseStatus = &pendingStatus
-	status := models.CampaignPhaseStatusPending
+	status := models.PhaseStatusNotStarted
 	campaign.PhaseStatus = &status
 	campaign.UpdatedAt = time.Now().UTC()
 
@@ -232,9 +368,9 @@ func (s *campaignOrchestratorServiceImpl) ConfigureDNSValidationPhase(ctx contex
 
 		transitionPayload := websocket.PhaseTransitionPayload{
 			CampaignID:         campaignID.String(),
-			PreviousPhase:      string(models.CampaignPhaseGeneration),
-			NewPhase:           string(models.CampaignPhaseDNSValidation),
-			NewStatus:          string(models.CampaignPhaseStatusPending),
+			PreviousPhase:      string(models.PhaseTypeDomainGeneration),
+			NewPhase:           string(models.PhaseTypeDNSValidation),
+			NewStatus:          string(models.PhaseStatusNotStarted),
 			TransitionType:     "manual",
 			TriggerReason:      "DNS validation phase configured",
 			PrerequisitesMet:   true,
@@ -246,7 +382,7 @@ func (s *campaignOrchestratorServiceImpl) ConfigureDNSValidationPhase(ctx contex
 			TransitionMetadata: map[string]interface{}{
 				"personaCount":    len(personaUUIDs),
 				"totalDomains":    totalDomains,
-				"validationPhase": string(models.CampaignPhaseDNSValidation),
+				"validationPhase": string(models.PhaseTypeDNSValidation),
 				"configuredBy":    "orchestrator",
 				"configuredAt":    time.Now().UTC().Format(time.RFC3339),
 			},
@@ -266,7 +402,7 @@ func (s *campaignOrchestratorServiceImpl) ConfigureDNSValidationPhase(ctx contex
 		}
 
 		// Also send basic progress update for backward compatibility
-		websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, string(models.CampaignPhaseStatusPending), string(models.CampaignPhaseDNSValidation), 0, 0)
+		websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, string(models.PhaseStatusNotStarted), string(models.PhaseTypeDNSValidation), 0, 0)
 	}
 
 	log.Printf("ConfigureDNSValidationPhase: Successfully configured DNS validation phase for campaign %s", campaignID)
@@ -311,25 +447,76 @@ func (s *campaignOrchestratorServiceImpl) ConfigureHTTPValidationPhase(ctx conte
 		return nil, opErr
 	}
 
-	// Validate campaign is eligible for HTTP validation phase
-	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseGeneration {
-		currentPhase := "unknown"
-		if campaign.CurrentPhase != nil {
-			currentPhase = string(*campaign.CurrentPhase)
+	// Enhanced prerequisite validation for HTTP validation
+	// Check campaign mode and phase requirements
+	if campaign.CurrentPhase == nil {
+		opErr = fmt.Errorf("campaign has no current phase set")
+		return nil, opErr
+	}
+
+	isFullSequenceMode := campaign.FullSequenceMode != nil && *campaign.FullSequenceMode
+
+	// Determine valid phases based on campaign mode
+	var allowedPhases []models.CampaignPhaseEnum
+	var phaseReason string
+
+	if isFullSequenceMode {
+		// Full sequence mode: Allow configuration during initial setup or after DNS completion
+		allowedPhases = []models.CampaignPhaseEnum{
+			models.PhaseTypeDomainGeneration,      // Initial setup - full auto sequence mode
+			models.PhaseTypeDNSValidation,         // After DNS validation completes
+			models.PhaseTypeHTTPKeywordValidation, // Restart/reconfigure HTTP validation
+			models.PhaseTypeAnalysis,              // Go back from analysis to reconfigure HTTP
 		}
-		opErr = fmt.Errorf("HTTP validation phase can only be configured on generation campaigns, found: %s", currentPhase)
+		phaseReason = "In full sequence mode, HTTP validation can be configured during initial setup (generation), after DNS validation, or for reconfiguration (http_keyword_validation/analysis)"
+	} else {
+		// Step-by-step mode: Strict prerequisite - DNS must be completed first
+		allowedPhases = []models.CampaignPhaseEnum{
+			models.PhaseTypeDNSValidation,         // DNS validation must be completed first in step-by-step mode
+			models.PhaseTypeHTTPKeywordValidation, // Restart/reconfigure HTTP validation
+			models.PhaseTypeAnalysis,              // Go back from analysis to reconfigure HTTP
+		}
+		phaseReason = "In step-by-step mode, HTTP validation requires DNS validation to be completed first"
+	}
+
+	validPhase := false
+	for _, allowed := range allowedPhases {
+		if *campaign.CurrentPhase == allowed {
+			validPhase = true
+			break
+		}
+	}
+
+	if !validPhase {
+		currentPhase := string(*campaign.CurrentPhase)
+		campaignMode := "step-by-step"
+		if isFullSequenceMode {
+			campaignMode = "full sequence"
+		}
+		opErr = fmt.Errorf("HTTP validation prerequisite validation failed: %s. Current phase: %s, Campaign mode: %s", phaseReason, currentPhase, campaignMode)
 		return nil, opErr
 	}
 
-	// Must have completed DNS validation phase first
-	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseDNSValidation {
-		opErr = fmt.Errorf("DNS validation phase must be completed before configuring HTTP validation phase, current phase: %v", campaign.CurrentPhase)
-		return nil, opErr
+	// Additional validation for step-by-step mode: ensure DNS validation has actually completed
+	if !isFullSequenceMode && *campaign.CurrentPhase == models.PhaseTypeDNSValidation {
+		// Check if DNS validation phase has completed status
+		if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusCompleted {
+			currentStatus := "unknown"
+			if campaign.PhaseStatus != nil {
+				currentStatus = string(*campaign.PhaseStatus)
+			}
+			opErr = fmt.Errorf("DNS validation must be completed before HTTP validation can be configured. Current DNS validation status: %s", currentStatus)
+			return nil, opErr
+		}
 	}
 
-	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.CampaignPhaseStatusSucceeded {
-		opErr = fmt.Errorf("DNS validation phase must be completed before configuring HTTP validation phase, current phase status: %v", campaign.PhaseStatus)
-		return nil, opErr
+	// Log reconfiguration scenarios for debugging
+	if campaign.CurrentPhase != nil {
+		if *campaign.CurrentPhase == models.PhaseTypeHTTPKeywordValidation {
+			log.Printf("ConfigureHTTPValidationPhase: Reconfiguring HTTP validation for campaign %s (current phase: http_keyword_validation)", campaignID)
+		} else if *campaign.CurrentPhase == models.PhaseTypeAnalysis {
+			log.Printf("ConfigureHTTPValidationPhase: Reconfiguring HTTP validation from analysis phase for campaign %s", campaignID)
+		}
 	}
 
 	// CRITICAL FIX: Get count of domains that passed DNS validation
@@ -373,12 +560,12 @@ func (s *campaignOrchestratorServiceImpl) ConfigureHTTPValidationPhase(ctx conte
 	}
 
 	// Transition campaign to HTTP validation phase
-	httpPhase := models.CampaignPhaseHTTPValidation
-	pendingStatus := models.CampaignPhaseStatusPending
+	httpPhase := models.PhaseTypeHTTPKeywordValidation
+	pendingStatus := models.PhaseStatusNotStarted
 
 	campaign.CurrentPhase = &httpPhase
 	campaign.PhaseStatus = &pendingStatus
-	status := models.CampaignPhaseStatusPending
+	status := models.PhaseStatusNotStarted
 	campaign.PhaseStatus = &status
 	campaign.UpdatedAt = time.Now().UTC()
 
@@ -428,9 +615,9 @@ func (s *campaignOrchestratorServiceImpl) ConfigureHTTPValidationPhase(ctx conte
 	if s.asyncManager != nil {
 		transitionPayload := websocket.PhaseTransitionPayload{
 			CampaignID:         campaignID.String(),
-			PreviousPhase:      string(models.CampaignPhaseDNSValidation),
-			NewPhase:           string(models.CampaignPhaseHTTPValidation),
-			NewStatus:          string(models.CampaignPhaseStatusPending),
+			PreviousPhase:      string(models.PhaseTypeDNSValidation),
+			NewPhase:           string(models.PhaseTypeHTTPKeywordValidation),
+			NewStatus:          string(models.PhaseStatusNotStarted),
 			TransitionType:     "manual",
 			TriggerReason:      "HTTP validation phase configured",
 			PrerequisitesMet:   true,
@@ -458,7 +645,7 @@ func (s *campaignOrchestratorServiceImpl) ConfigureHTTPValidationPhase(ctx conte
 			}
 		}
 
-		websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, string(models.CampaignPhaseStatusPending), string(models.CampaignPhaseHTTPValidation), 0, 0)
+		websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, string(models.PhaseStatusNotStarted), string(models.PhaseTypeHTTPKeywordValidation), 0, 0)
 	}
 
 	log.Printf("ConfigureHTTPValidationPhase: Successfully configured HTTP validation phase for campaign %s", campaignID)
@@ -497,7 +684,7 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDetails(ctx context.Context
 	// All campaigns are now phases-based, check current phase to load appropriate params
 	if baseCampaign.CurrentPhase != nil {
 		switch *baseCampaign.CurrentPhase {
-		case models.CampaignPhaseGeneration:
+		case models.PhaseTypeDomainGeneration:
 			_, params, errGet := s.domainGenService.GetCampaignDetails(ctx, campaignID)
 			if errGet != nil {
 				specificErr = fmt.Errorf("orchestrator: get domain gen params failed: %w", errGet)
@@ -505,7 +692,7 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDetails(ctx context.Context
 				specificParams = params
 				baseCampaign.DomainGenerationParams = params
 			}
-		case models.CampaignPhaseDNSValidation:
+		case models.PhaseTypeDNSValidation:
 			_, params, errGet := s.dnsService.GetCampaignDetails(ctx, campaignID)
 			if errGet != nil {
 				// Smart handling based on campaign mode
@@ -522,7 +709,7 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDetails(ctx context.Context
 				specificParams = params
 				baseCampaign.DNSValidationParams = params
 			}
-		case models.CampaignPhaseHTTPValidation:
+		case models.PhaseTypeHTTPKeywordValidation:
 			_, params, errGet := s.httpKeywordService.GetCampaignDetails(ctx, campaignID)
 			if errGet != nil {
 				// Smart handling based on campaign mode
@@ -564,7 +751,7 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignStatus(ctx context.Context,
 		return "", nil, err
 	}
 
-	status := models.CampaignPhaseStatusPending
+	status := models.PhaseStatusNotStarted
 	if campaign.PhaseStatus != nil {
 		status = *campaign.PhaseStatus
 	}
@@ -614,7 +801,7 @@ func (s *campaignOrchestratorServiceImpl) GetGeneratedDomainsForCampaign(ctx con
 	}
 
 	phase := *campaign.CurrentPhase
-	if phase != models.CampaignPhaseGeneration && phase != models.CampaignPhaseDNSValidation {
+	if phase != models.PhaseTypeDomainGeneration && phase != models.PhaseTypeDNSValidation {
 		return nil, fmt.Errorf("orchestrator: campaign %s is not in domain generation or DNS validation phase, current phase: %s", campaignID, phase)
 	}
 
@@ -703,7 +890,7 @@ func (s *campaignOrchestratorServiceImpl) GetHTTPKeywordResultsForCampaign(ctx c
 		return nil, fmt.Errorf("orchestrator: campaign %s has no current phase set", campaignID)
 	}
 
-	if *campaign.CurrentPhase != models.CampaignPhaseHTTPValidation {
+	if *campaign.CurrentPhase != models.PhaseTypeHTTPKeywordValidation {
 		return nil, fmt.Errorf("orchestrator: campaign %s is not in HTTP validation phase, current phase: %s", campaignID, *campaign.CurrentPhase)
 	}
 
@@ -741,9 +928,9 @@ func (s *campaignOrchestratorServiceImpl) GetHTTPKeywordResultsForCampaign(ctx c
 	// }
 	// Replicating this with pointer checks:
 	// Check if campaign phase is completed and use processed items count
-	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded && campaign.ProcessedItems != nil {
+	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusCompleted && campaign.ProcessedItems != nil {
 		totalCount = *campaign.ProcessedItems
-	} else if campaign.TotalItems == nil && campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded {
+	} else if campaign.TotalItems == nil && campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusCompleted {
 		// If total items was nil, and it's completed, processed items might also be nil, implying 0.
 		totalCount = 0
 	}
@@ -819,15 +1006,46 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 
 	// Allow starting campaigns in specific scenarios:
 	// 1. Standard flow: campaign phase status is not_started
-	// 2. DNS validation flow: completed domain_generation campaign with DNS params added
+	// 2. Setup phase: campaigns in setup phase (new campaigns)
+	// 3. DNS validation flow: completed domain_generation campaign with DNS params added
+	// 4. Full sequence mode: campaigns created with all configurations
 	isValidForStart := false
 	startReason := ""
 
-	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusPending {
+	// Check if campaign has full sequence mode enabled (new field or legacy metadata)
+	isFullSequenceMode := false
+	if campaign.FullSequenceMode != nil && *campaign.FullSequenceMode {
+		isFullSequenceMode = true
+		log.Printf("[DIAGNOSTIC] Campaign %s has fullSequenceMode enabled via field", campaignID)
+	} else {
+		// Fallback to legacy metadata check for backward compatibility
+		if campaign.Metadata != nil {
+			var metadata map[string]interface{}
+			if err := json.Unmarshal(*campaign.Metadata, &metadata); err == nil {
+				if seq, ok := metadata["launch_sequence"].(bool); ok && seq {
+					isFullSequenceMode = true
+					log.Printf("[DIAGNOSTIC] Campaign %s has fullSequenceMode enabled via legacy metadata", campaignID)
+				}
+			}
+		}
+	}
+
+	// Standard pending campaigns
+	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusNotStarted {
 		isValidForStart = true
 		startReason = "standard_pending_campaign"
-	} else if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded &&
-		campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseGeneration {
+	} else if campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeDomainGeneration {
+		// New campaigns in setup phase (especially full sequence mode)
+		isValidForStart = true
+		startReason = "setup_phase_campaign"
+		log.Printf("[DIAGNOSTIC] StartCampaign allowing setup phase campaign %s", campaignID)
+	} else if campaign.PhaseStatus == nil || *campaign.PhaseStatus == models.PhaseStatusNotStarted {
+		// Handle campaigns with nil status (new campaigns)
+		isValidForStart = true
+		startReason = "new_campaign_nil_status"
+		log.Printf("[DIAGNOSTIC] StartCampaign allowing campaign with nil/pending status %s", campaignID)
+	} else if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusCompleted &&
+		campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeDomainGeneration {
 		// Check if this is a domain generation campaign that has DNS validation params added
 		// This enables DNS validation processing on existing domain generation campaigns
 		if dnsParams, getErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID); getErr == nil && dnsParams != nil {
@@ -837,9 +1055,19 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 		}
 	}
 
+	// Special handling for full sequence mode campaigns
+	if isFullSequenceMode && !isValidForStart {
+		// Full sequence mode campaigns should be startable if they have generation params
+		if campaign.DomainGenerationParams != nil {
+			isValidForStart = true
+			startReason = "full_sequence_mode_with_generation_params"
+			log.Printf("[DIAGNOSTIC] StartCampaign allowing full sequence mode campaign %s", campaignID)
+		}
+	}
+
 	if !isValidForStart {
 		log.Printf("[DIAGNOSTIC] StartCampaign FAILED - Invalid status for campaign %s: expected '%s' or DNS validation transition, but got phase '%s' status '%s'",
-			campaignID, models.CampaignPhaseStatusPending, currentPhaseStr, phaseStatusStr)
+			campaignID, models.PhaseStatusNotStarted, currentPhaseStr, phaseStatusStr)
 		opErr = fmt.Errorf("campaign %s not startable: phase=%s status=%s", campaignID, currentPhaseStr, phaseStatusStr)
 		return opErr // opErr will be handled by defer if in SQL transaction
 	}
@@ -850,13 +1078,13 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 	jobType := models.JobTypeGeneration // default fallback
 	if campaign.CurrentPhase != nil {
 		switch *campaign.CurrentPhase {
-		case models.CampaignPhaseGeneration:
+		case models.PhaseTypeDomainGeneration:
 			jobType = models.JobTypeGeneration
-		case models.CampaignPhaseDNSValidation:
+		case models.PhaseTypeDNSValidation:
 			jobType = models.JobTypeDNSValidation
-		case models.CampaignPhaseHTTPValidation:
+		case models.PhaseTypeHTTPKeywordValidation:
 			jobType = models.JobTypeHTTPValidation
-		case models.CampaignPhaseAnalysis:
+		case models.PhaseTypeAnalysis:
 			jobType = models.JobTypeAnalysis
 		default:
 			jobType = models.JobTypeGeneration
@@ -874,68 +1102,80 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 		NextExecutionAt: sql.NullTime{Time: time.Now().UTC(), Valid: true},
 	}
 
-	// Set job payload based on campaign type and available params
-	// Priority: Check for DNS validation params first (in-place processing), then use currentPhase, then fall back to campaign type
-	dnsParams, dnsErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
-
-	// 🐛 CRITICAL DIAGNOSTIC: Add comprehensive logging for job routing decisions
-	log.Printf("[🔍 DIAGNOSTIC] StartCampaign job routing for campaign %s:", campaignID)
+	// 🚀 PHASE-AWARE JOB ROUTING: Set job payload based on current campaign phase
+	log.Printf("[🔍 DIAGNOSTIC] StartCampaign phase-aware routing for campaign %s:", campaignID)
 	log.Printf("[🔍 DIAGNOSTIC] - CurrentPhase: %v", campaign.CurrentPhase)
 	log.Printf("[🔍 DIAGNOSTIC] - PhaseStatus: %v", campaign.PhaseStatus)
-	log.Printf("[🔍 DIAGNOSTIC] - DNS params found: %t (error: %v)", dnsParams != nil, dnsErr)
 	log.Printf("[🔍 DIAGNOSTIC] - Start reason: %s", startReason)
 
-	if dnsErr == nil && dnsParams != nil {
-		// DNS validation processing on existing campaign (in-place)
-		log.Printf("[✅ SUCCESS] Creating DNS validation job for in-place processing on campaign %s", campaignID)
-		initialJob.JobType = models.JobTypeDNSValidation
-		payloadBytes, err := json.Marshal(dnsParams)
-		if err != nil {
-			log.Printf("Warning: Failed to marshal DNS validation job payload: %v", err)
-		} else {
-			rawMsg := json.RawMessage(payloadBytes)
-			initialJob.JobPayload = &rawMsg
-		}
-	} else if campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseDNSValidation {
-		// 🐛 CRITICAL FIX: Use currentPhase for job routing when DNS params not found
-		log.Printf("[🔧 PHASE_FIX] Campaign %s in DNS validation phase but no DNS params found - attempting to retrieve or create", campaignID)
+	// Phase-aware parameter fetching and job creation
+	if campaign.CurrentPhase == nil {
+		log.Printf("[❌ ERROR] Campaign %s has no current phase set", campaignID)
+		return fmt.Errorf("campaign %s has no current phase set", campaignID)
+	}
 
-		// Try to get DNS params again with error handling
-		retryParams, retryErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
-		if retryErr == nil && retryParams != nil {
-			log.Printf("[✅ RETRY_SUCCESS] DNS params found on retry for campaign %s", campaignID)
-			initialJob.JobType = models.JobTypeDNSValidation
-			if payloadBytes, err := json.Marshal(retryParams); err == nil {
+	switch *campaign.CurrentPhase {
+	case models.PhaseTypeDomainGeneration:
+		// Domain Generation Phase: NO DNS/HTTP parameter fetching needed
+		log.Printf("[✅ DOMAIN_GEN] Creating domain generation job for campaign %s", campaignID)
+		initialJob.JobType = models.JobTypeGeneration
+
+		// Only fetch domain generation params
+		params, getErr := s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
+		if getErr != nil {
+			log.Printf("[⚠️ WARNING] Failed to get domain generation params for campaign %s: %v", campaignID, getErr)
+		} else {
+			payloadBytes, err := json.Marshal(params)
+			if err != nil {
+				log.Printf("[⚠️ WARNING] Failed to marshal domain generation job payload: %v", err)
+			} else {
 				rawMsg := json.RawMessage(payloadBytes)
 				initialJob.JobPayload = &rawMsg
 			}
-		} else {
-			log.Printf("[🔧 PHASE_FIX] Creating DNS validation job based on currentPhase despite missing params")
-			initialJob.JobType = models.JobTypeDNSValidation
-			log.Printf("[⚠️ WARNING] DNS validation job created without params - job processor should handle gracefully")
 		}
-	} else if campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseHTTPValidation {
-		// 🔧 ENHANCEMENT: Support HTTP keyword validation phase routing
-		log.Printf("[🔧 PHASE_FIX] Campaign %s in HTTP keyword validation phase", campaignID)
+
+	case models.PhaseTypeDNSValidation:
+		// DNS Validation Phase: Only fetch DNS parameters
+		log.Printf("[✅ DNS_VAL] Creating DNS validation job for campaign %s", campaignID)
+		initialJob.JobType = models.JobTypeDNSValidation
+
+		dnsParams, dnsErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
+		if dnsErr != nil {
+			log.Printf("[⚠️ WARNING] Failed to get DNS validation params for campaign %s: %v", campaignID, dnsErr)
+		} else {
+			payloadBytes, err := json.Marshal(dnsParams)
+			if err != nil {
+				log.Printf("[⚠️ WARNING] Failed to marshal DNS validation job payload: %v", err)
+			} else {
+				rawMsg := json.RawMessage(payloadBytes)
+				initialJob.JobPayload = &rawMsg
+			}
+		}
+
+	case models.PhaseTypeHTTPKeywordValidation:
+		// HTTP Keyword Validation Phase: Only fetch HTTP parameters
+		log.Printf("[✅ HTTP_VAL] Creating HTTP keyword validation job for campaign %s", campaignID)
+		initialJob.JobType = models.JobTypeHTTPValidation
+
 		httpParams, httpErr := s.campaignStore.GetHTTPKeywordParams(ctx, querier, campaignID)
-		if httpErr == nil && httpParams != nil {
-			log.Printf("[✅ SUCCESS] Creating HTTP keyword validation job for campaign %s", campaignID)
-			initialJob.JobType = models.JobTypeHTTPValidation
-			if payloadBytes, err := json.Marshal(httpParams); err == nil {
+		if httpErr != nil {
+			log.Printf("[⚠️ WARNING] Failed to get HTTP keyword params for campaign %s: %v", campaignID, httpErr)
+		} else {
+			payloadBytes, err := json.Marshal(httpParams)
+			if err != nil {
+				log.Printf("[⚠️ WARNING] Failed to marshal HTTP keyword job payload: %v", err)
+			} else {
 				rawMsg := json.RawMessage(payloadBytes)
 				initialJob.JobPayload = &rawMsg
 			}
-		} else {
-			log.Printf("[🔧 PHASE_FIX] Creating HTTP keyword validation job based on currentPhase despite missing params")
-			initialJob.JobType = models.JobTypeHTTPValidation
-			log.Printf("[⚠️ WARNING] HTTP keyword validation job created without params - job processor should handle gracefully")
 		}
-	} else if campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseAnalysis {
+
+	case models.PhaseTypeAnalysis:
 		// 🔧 PHASE_FIX: Auto-complete analysis phase and transition to final completion
 		log.Printf("[🔧 PHASE_FIX] Campaign %s in Analysis phase - auto-completing and marking campaign as final completed", campaignID)
 
 		// Mark campaign phase as completed
-		completedStatus := models.CampaignPhaseStatusSucceeded
+		completedStatus := models.PhaseStatusCompleted
 		campaign.PhaseStatus = &completedStatus
 		campaign.ProgressPercentage = models.Float64Ptr(100.0)
 		nowTime := time.Now().UTC()
@@ -953,65 +1193,12 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 
 		log.Printf("[✅ SUCCESS] Campaign %s analysis phase completed - campaign marked as fully complete", campaignID)
 		return nil // No job needed - campaign is complete
-	} else {
-		// Standard processing based on current phase
-		currentPhaseStr := "nil"
-		if campaign.CurrentPhase != nil {
-			currentPhaseStr = string(*campaign.CurrentPhase)
-		}
-		log.Printf("[📋 FALLBACK] Using standard phase routing for campaign %s (phase: %s)", campaignID, currentPhaseStr)
 
-		if campaign.CurrentPhase != nil {
-			switch *campaign.CurrentPhase {
-			case models.CampaignPhaseGeneration:
-				params, getErr := s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
-				if getErr != nil {
-					log.Printf("Warning: Failed to get domain generation params for job payload: %v", getErr)
-				} else {
-					// Marshal the params struct directly to JSON
-					payloadBytes, err := json.Marshal(params)
-					if err != nil {
-						log.Printf("Warning: Failed to marshal domain generation job payload: %v", err)
-					} else {
-						rawMsg := json.RawMessage(payloadBytes)
-						initialJob.JobPayload = &rawMsg
-					}
-				}
-			case models.CampaignPhaseDNSValidation:
-				params, getErr := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
-				if getErr != nil {
-					log.Printf("Warning: Failed to get DNS validation params for job payload: %v", getErr)
-				} else {
-					// Marshal the params struct directly to JSON
-					payloadBytes, err := json.Marshal(params)
-					if err != nil {
-						log.Printf("Warning: Failed to marshal DNS validation job payload: %v", err)
-					} else {
-						rawMsg := json.RawMessage(payloadBytes)
-						initialJob.JobPayload = &rawMsg
-					}
-				}
-			case models.CampaignPhaseHTTPValidation:
-				params, getErr := s.campaignStore.GetHTTPKeywordParams(ctx, querier, campaignID)
-				if getErr != nil {
-					log.Printf("Warning: Failed to get HTTP keyword params for job payload: %v", getErr)
-				} else {
-					// Marshal the params struct directly to JSON
-					payloadBytes, err := json.Marshal(params)
-					if err != nil {
-						log.Printf("Warning: Failed to marshal HTTP keyword job payload: %v", err)
-					} else {
-						rawMsg := json.RawMessage(payloadBytes)
-						initialJob.JobPayload = &rawMsg
-					}
-				}
-			default:
-				log.Printf("Warning: Unknown campaign phase %s for campaign %s", currentPhaseStr, campaignID)
-			}
-		} else {
-			log.Printf("Warning: Campaign %s has no current phase set", campaignID)
-		}
+	default:
+		log.Printf("[❌ ERROR] Unknown campaign phase %v for campaign %s", *campaign.CurrentPhase, campaignID)
+		return fmt.Errorf("unknown campaign phase %v for campaign %s", *campaign.CurrentPhase, campaignID)
 	}
+
 	// s.campaignJobStore.CreateJob is called with its original signature.
 	// It was NOT using 'tx' in the original code, so it does NOT use 'querier' here.
 	// It handles its own DB interaction (e.g. using s.db directly, or its own transaction, or Firestore client).
@@ -1030,7 +1217,7 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 	// we need to make sure the campaign is marked as in progress so it doesn't get stuck in not_started
 	if !jobCreated {
 		log.Printf("No job created for campaign %s. Marking campaign phase as in progress directly.", campaignID)
-		runningStatus := models.CampaignPhaseStatusInProgress
+		runningStatus := models.PhaseStatusInProgress
 		campaign.PhaseStatus = &runningStatus
 		campaign.UpdatedAt = time.Now().UTC()
 		if campaign.StartedAt == nil {
@@ -1045,13 +1232,13 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 
 	// DIAGNOSTIC: Check if this is DNS validation after phase transition
 	// After phase transition: campaign phase is now dns_validation and status is not_started
-	isDNSValidationAfterTransition := (campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusPending &&
-		campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseDNSValidation &&
+	isDNSValidationAfterTransition := (campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusNotStarted &&
+		campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeDNSValidation &&
 		startReason == "standard_pending_campaign")
 
 	// DIAGNOSTIC: Legacy check for DNS validation on completed campaign (before transition)
-	isDNSValidationOnCompleted := (campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded &&
-		campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseGeneration &&
+	isDNSValidationOnCompleted := (campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusCompleted &&
+		campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeDomainGeneration &&
 		startReason == "dns_validation_phase_on_domain_generation")
 
 	currentPhaseStatusStr := "nil"
@@ -1060,7 +1247,7 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 	}
 
 	log.Printf("[DIAGNOSTIC] StartCampaign transition check - campaignID=%s, currentPhaseStatus=%s, targetPhaseStatus=%s, isDNSValidationAfterTransition=%t, isDNSValidationOnCompleted=%t, startReason=%s",
-		campaignID, currentPhaseStatusStr, models.CampaignPhaseStatusInProgress, isDNSValidationAfterTransition, isDNSValidationOnCompleted, startReason)
+		campaignID, currentPhaseStatusStr, models.PhaseStatusInProgress, isDNSValidationAfterTransition, isDNSValidationOnCompleted, startReason)
 
 	// FIX: For DNS validation campaigns (both legacy and post-transition), use appropriate handling
 	if isDNSValidationOnCompleted {
@@ -1072,7 +1259,7 @@ func (s *campaignOrchestratorServiceImpl) StartCampaign(ctx context.Context, cam
 		// Continue to normal status transition flow
 	}
 
-	queuedStatus := models.CampaignPhaseStatusInProgress
+	queuedStatus := models.PhaseStatusInProgress
 	desc := fmt.Sprintf("Campaign phase status changed to %s", queuedStatus)
 	// Update phase status instead of legacy campaign status
 	campaign.PhaseStatus = &queuedStatus
@@ -1132,12 +1319,12 @@ func (s *campaignOrchestratorServiceImpl) PauseCampaign(ctx context.Context, cam
 		currentPhaseStatusStr = string(*campaign.PhaseStatus)
 	}
 
-	if campaign.PhaseStatus == nil || (*campaign.PhaseStatus != models.CampaignPhaseStatusInProgress) {
+	if campaign.PhaseStatus == nil || (*campaign.PhaseStatus != models.PhaseStatusInProgress) {
 		opErr = fmt.Errorf("campaign %s not running: %s", campaignID, currentPhaseStatusStr)
 		return opErr
 	}
 
-	pausedStatus := models.CampaignPhaseStatusPaused
+	pausedStatus := models.PhaseStatusPaused
 	desc := fmt.Sprintf("Phase status changed from %s to %s", currentPhaseStatusStr, pausedStatus)
 	campaign.PhaseStatus = &pausedStatus
 	campaign.UpdatedAt = time.Now().UTC()
@@ -1193,7 +1380,7 @@ func (s *campaignOrchestratorServiceImpl) ResumeCampaign(ctx context.Context, ca
 	}
 
 	// Check if campaign phase is paused
-	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.CampaignPhaseStatusPaused {
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusPaused {
 		currentPhaseStatus := "unknown"
 		if campaign.PhaseStatus != nil {
 			currentPhaseStatus = string(*campaign.PhaseStatus)
@@ -1206,13 +1393,13 @@ func (s *campaignOrchestratorServiceImpl) ResumeCampaign(ctx context.Context, ca
 	jobType := models.JobTypeGeneration // default fallback
 	if campaign.CurrentPhase != nil {
 		switch *campaign.CurrentPhase {
-		case models.CampaignPhaseGeneration:
+		case models.PhaseTypeDomainGeneration:
 			jobType = models.JobTypeGeneration
-		case models.CampaignPhaseDNSValidation:
+		case models.PhaseTypeDNSValidation:
 			jobType = models.JobTypeDNSValidation
-		case models.CampaignPhaseHTTPValidation:
+		case models.PhaseTypeHTTPKeywordValidation:
 			jobType = models.JobTypeHTTPValidation
-		case models.CampaignPhaseAnalysis:
+		case models.PhaseTypeAnalysis:
 			jobType = models.JobTypeAnalysis
 		default:
 			jobType = models.JobTypeGeneration
@@ -1223,7 +1410,7 @@ func (s *campaignOrchestratorServiceImpl) ResumeCampaign(ctx context.Context, ca
 	if campaign.PhaseStatus != nil {
 		currentPhaseStatusStr = string(*campaign.PhaseStatus)
 	}
-	desc := fmt.Sprintf("Phase status changed from %s to %s", currentPhaseStatusStr, models.CampaignPhaseStatusInProgress)
+	desc := fmt.Sprintf("Phase status changed from %s to %s", currentPhaseStatusStr, models.PhaseStatusInProgress)
 	resumeJob := &models.CampaignJob{
 		ID:              uuid.New(),
 		CampaignID:      campaignID,
@@ -1250,7 +1437,7 @@ func (s *campaignOrchestratorServiceImpl) ResumeCampaign(ctx context.Context, ca
 	// we need to make sure the campaign is marked as in progress so it doesn't get stuck in queued
 	if !jobCreated {
 		log.Printf("No resume job created for campaign %s. Marking campaign phase as in progress directly.", campaignID)
-		runningStatus := models.CampaignPhaseStatusInProgress
+		runningStatus := models.PhaseStatusInProgress
 		campaign.PhaseStatus = &runningStatus
 		campaign.UpdatedAt = time.Now().UTC()
 		if campaign.StartedAt == nil {
@@ -1266,7 +1453,7 @@ func (s *campaignOrchestratorServiceImpl) ResumeCampaign(ctx context.Context, ca
 	}
 
 	// Update campaign phase status to in progress for normal resume flow
-	inProgressStatus := models.CampaignPhaseStatusInProgress
+	inProgressStatus := models.PhaseStatusInProgress
 	campaign.PhaseStatus = &inProgressStatus
 	campaign.UpdatedAt = time.Now().UTC()
 	if err := s.campaignStore.UpdateCampaign(ctx, querier, campaign); err != nil {
@@ -1321,8 +1508,8 @@ func (s *campaignOrchestratorServiceImpl) CancelCampaign(ctx context.Context, ca
 	}
 
 	// Check if campaign phase is already in a final state
-	if campaign.PhaseStatus != nil && (*campaign.PhaseStatus == models.CampaignPhaseStatusSucceeded ||
-		*campaign.PhaseStatus == models.CampaignPhaseStatusFailed) {
+	if campaign.PhaseStatus != nil && (*campaign.PhaseStatus == models.PhaseStatusCompleted ||
+		*campaign.PhaseStatus == models.PhaseStatusFailed) {
 		currentPhaseStatus := string(*campaign.PhaseStatus)
 		opErr = fmt.Errorf("campaign %s already in a final state: %s", campaignID, currentPhaseStatus)
 		return opErr
@@ -1332,10 +1519,10 @@ func (s *campaignOrchestratorServiceImpl) CancelCampaign(ctx context.Context, ca
 	if campaign.PhaseStatus != nil {
 		currentPhaseStatusStr = string(*campaign.PhaseStatus)
 	}
-	desc := fmt.Sprintf("Phase status changed from %s to %s", currentPhaseStatusStr, models.CampaignPhaseStatusFailed)
+	desc := fmt.Sprintf("Phase status changed from %s to %s", currentPhaseStatusStr, models.PhaseStatusFailed)
 
 	// Update campaign phase status to failed (cancelled campaigns are marked as failed)
-	cancelledStatus := models.CampaignPhaseStatusFailed
+	cancelledStatus := models.PhaseStatusFailed
 	campaign.PhaseStatus = &cancelledStatus
 	campaign.UpdatedAt = time.Now().UTC()
 	if campaign.CompletedAt == nil {
@@ -1409,7 +1596,7 @@ func (s *campaignOrchestratorServiceImpl) SetCampaignErrorStatus(ctx context.Con
 	desc := fmt.Sprintf("Campaign %s error: %s", campaign.Name, errorMessage)
 
 	// Update campaign phase status to failed
-	failedStatus := models.CampaignPhaseStatusFailed
+	failedStatus := models.PhaseStatusFailed
 	campaign.PhaseStatus = &failedStatus
 	campaign.UpdatedAt = time.Now().UTC()
 	campaign.ErrorMessage = models.StringPtr(errorMessage)
@@ -1483,7 +1670,7 @@ func (s *campaignOrchestratorServiceImpl) SetCampaignStatus(ctx context.Context,
 	campaign.UpdatedAt = time.Now().UTC()
 
 	// Set completion time for final states
-	if status == models.CampaignPhaseStatusSucceeded || status == models.CampaignPhaseStatusFailed {
+	if status == models.PhaseStatusCompleted || status == models.PhaseStatusFailed {
 		if campaign.CompletedAt == nil {
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
@@ -1518,7 +1705,7 @@ func (s *campaignOrchestratorServiceImpl) updateCampaignPhaseStatusInTx(ctx cont
 	}
 
 	// Set completion time for final states
-	if newStatus == models.CampaignPhaseStatusSucceeded || newStatus == models.CampaignPhaseStatusFailed {
+	if newStatus == models.PhaseStatusCompleted || newStatus == models.PhaseStatusFailed {
 		if campaign.CompletedAt == nil {
 			campaign.CompletedAt = &campaign.UpdatedAt
 		}
@@ -1637,6 +1824,153 @@ func (s *campaignOrchestratorServiceImpl) UpdateCampaign(ctx context.Context, ca
 	return campaign, nil
 }
 
+// RestartDNSValidationPhase restarts the DNS validation phase with optional new configuration
+func (s *campaignOrchestratorServiceImpl) RestartDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req *DNSValidationRequest) (*models.Campaign, error) {
+	// Get the campaign
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, s.db, campaignID)
+	if err != nil {
+		log.Printf("[ERROR] Failed to get campaign %s for DNS restart: %v", campaignID, err)
+		return nil, fmt.Errorf("failed to get campaign: %w", err)
+	}
+
+	// Validate that DNS validation can be restarted
+	if campaign.CurrentPhase == nil {
+		return nil, fmt.Errorf("campaign has no current phase")
+	}
+
+	// Prevent restarting domain generation
+	if *campaign.CurrentPhase == models.PhaseTypeDomainGeneration {
+		return nil, fmt.Errorf("domain generation phase cannot be restarted")
+	}
+
+	// Only allow restarting DNS validation phase or later phases
+	if *campaign.CurrentPhase != models.PhaseTypeDNSValidation &&
+		*campaign.CurrentPhase != models.PhaseTypeHTTPKeywordValidation &&
+		*campaign.CurrentPhase != models.PhaseTypeAnalysis {
+		return nil, fmt.Errorf("DNS validation can only be restarted from DNS validation, HTTP validation, or analysis phases")
+	}
+
+	// Reset to DNS validation phase
+	dnsPhase := models.PhaseTypeDNSValidation
+	pendingStatus := models.PhaseStatusNotStarted
+	campaign.CurrentPhase = &dnsPhase
+	campaign.PhaseStatus = &pendingStatus
+	campaign.ProcessedItems = models.Int64Ptr(0)
+	campaign.ProgressPercentage = models.Float64Ptr(0.0)
+	campaign.ErrorMessage = nil
+
+	// Update DNS validation configuration if provided
+	if req != nil {
+		// Create DNS config JSON
+		dnsConfigData := map[string]interface{}{
+			"personaIds":               req.PersonaIDs,
+			"rotationIntervalSeconds":  req.RotationIntervalSeconds,
+			"processingSpeedPerMinute": req.ProcessingSpeedPerMinute,
+			"batchSize":                req.BatchSize,
+			"retryAttempts":            req.RetryAttempts,
+		}
+
+		dnsConfigJSON, err := json.Marshal(dnsConfigData)
+		if err != nil {
+			log.Printf("[ERROR] Failed to marshal DNS config for campaign %s: %v", campaignID, err)
+			return nil, fmt.Errorf("failed to marshal DNS config: %w", err)
+		}
+
+		dnsConfigRaw := json.RawMessage(dnsConfigJSON)
+		campaign.DNSConfig = &dnsConfigRaw
+	}
+
+	campaign.UpdatedAt = time.Now().UTC()
+
+	// Save the updated campaign
+	err = s.campaignStore.UpdateCampaign(ctx, s.db, campaign)
+	if err != nil {
+		log.Printf("[ERROR] Failed to restart DNS validation for campaign %s: %v", campaignID, err)
+		return nil, fmt.Errorf("failed to update campaign: %w", err)
+	}
+
+	log.Printf("[INFO] Restarted DNS validation phase for campaign %s", campaignID)
+	return campaign, nil
+}
+
+// RestartHTTPValidationPhase restarts the HTTP validation phase with optional new configuration
+func (s *campaignOrchestratorServiceImpl) RestartHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req *HTTPKeywordValidationRequest) (*models.Campaign, error) {
+	// Get the campaign
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, s.db, campaignID)
+	if err != nil {
+		log.Printf("[ERROR] Failed to get campaign %s for HTTP restart: %v", campaignID, err)
+		return nil, fmt.Errorf("failed to get campaign: %w", err)
+	}
+
+	// Validate that HTTP validation can be restarted
+	if campaign.CurrentPhase == nil {
+		return nil, fmt.Errorf("campaign has no current phase")
+	}
+
+	// Prevent restarting domain generation
+	if *campaign.CurrentPhase == models.PhaseTypeDomainGeneration {
+		return nil, fmt.Errorf("domain generation phase cannot be restarted")
+	}
+
+	// Only allow restarting HTTP validation phase or later phases
+	if *campaign.CurrentPhase != models.PhaseTypeHTTPKeywordValidation &&
+		*campaign.CurrentPhase != models.PhaseTypeAnalysis {
+		return nil, fmt.Errorf("HTTP validation can only be restarted from HTTP validation or analysis phases")
+	}
+
+	// Check if DNS validation was completed (prerequisite validation)
+	// We'll use the orchestrator service method to check for DNS results
+	dnsResults, err := s.GetDNSValidationResultsForCampaign(ctx, campaignID, 1, "", store.ListValidationResultsFilter{})
+	if err != nil {
+		log.Printf("[ERROR] Failed to check DNS validation results for campaign %s: %v", campaignID, err)
+		return nil, fmt.Errorf("failed to verify DNS validation prerequisite")
+	}
+
+	if dnsResults.TotalCount == 0 {
+		return nil, fmt.Errorf("HTTP validation requires completed DNS validation results")
+	}
+
+	// Reset to HTTP validation phase
+	httpPhase := models.PhaseTypeHTTPKeywordValidation
+	pendingStatus := models.PhaseStatusNotStarted
+	campaign.CurrentPhase = &httpPhase
+	campaign.PhaseStatus = &pendingStatus
+	campaign.ProcessedItems = models.Int64Ptr(0)
+	campaign.ProgressPercentage = models.Float64Ptr(0.0)
+	campaign.ErrorMessage = nil
+
+	// Update HTTP validation configuration if provided
+	if req != nil {
+		// Create HTTP config JSON
+		httpConfigData := map[string]interface{}{
+			"personaIds":    req.PersonaIDs,
+			"keywords":      req.Keywords,
+			"adHocKeywords": req.AdHocKeywords,
+		}
+
+		httpConfigJSON, err := json.Marshal(httpConfigData)
+		if err != nil {
+			log.Printf("[ERROR] Failed to marshal HTTP config for campaign %s: %v", campaignID, err)
+			return nil, fmt.Errorf("failed to marshal HTTP config: %w", err)
+		}
+
+		httpConfigRaw := json.RawMessage(httpConfigJSON)
+		campaign.HTTPConfig = &httpConfigRaw
+	}
+
+	campaign.UpdatedAt = time.Now().UTC()
+
+	// Save the updated campaign
+	err = s.campaignStore.UpdateCampaign(ctx, s.db, campaign)
+	if err != nil {
+		log.Printf("[ERROR] Failed to restart HTTP validation for campaign %s: %v", campaignID, err)
+		return nil, fmt.Errorf("failed to update campaign: %w", err)
+	}
+
+	log.Printf("[INFO] Restarted HTTP validation phase for campaign %s", campaignID)
+	return campaign, nil
+}
+
 // ConfigureDNSValidation configures DNS validation parameters for a campaign
 
 // updateHTTPValidationParams creates or updates HTTP validation parameters
@@ -1653,12 +1987,12 @@ func (s *campaignOrchestratorServiceImpl) transitionToDNSValidation(ctx context.
 
 	// CRITICAL FIX: Do NOT change campaign type - it remains a domain_generation campaign
 	// Only change the current phase to DNS validation
-	pendingStatus := models.CampaignPhaseStatusPending
+	pendingStatus := models.PhaseStatusNotStarted
 	campaign.PhaseStatus = &pendingStatus
 	campaign.UpdatedAt = time.Now().UTC()
 
 	// CORRECT: Set currentPhase to dns_validation while keeping campaignType as domain_generation
-	dnsPhase := models.CampaignPhaseDNSValidation
+	dnsPhase := models.PhaseTypeDNSValidation
 	campaign.CurrentPhase = &dnsPhase
 
 	// Reset phase status for the new phase (already set above)
@@ -1827,7 +2161,7 @@ func (s *campaignOrchestratorServiceImpl) deleteCampaignWithDependencies(ctx con
 	}
 
 	// Auto-cancel running campaigns before deletion to enable force delete functionality
-	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusInProgress {
+	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusInProgress {
 		log.Printf("Auto-cancelling running campaign %s before deletion", campaignID)
 
 		// Use existing CancelCampaign method to maintain consistency and proper status transitions
@@ -1856,13 +2190,13 @@ func (s *campaignOrchestratorServiceImpl) deleteCampaignWithDependencies(ctx con
 		var dependencyType models.JobTypeEnum = models.JobTypeGeneration // default
 		if campaign.CurrentPhase != nil {
 			switch *campaign.CurrentPhase {
-			case models.CampaignPhaseGeneration:
+			case models.PhaseTypeDomainGeneration:
 				dependencyType = models.JobTypeGeneration
-			case models.CampaignPhaseDNSValidation:
+			case models.PhaseTypeDNSValidation:
 				dependencyType = models.JobTypeDNSValidation
-			case models.CampaignPhaseHTTPValidation:
+			case models.PhaseTypeHTTPKeywordValidation:
 				dependencyType = models.JobTypeHTTPValidation
-			case models.CampaignPhaseAnalysis:
+			case models.PhaseTypeAnalysis:
 				dependencyType = models.JobTypeAnalysis
 			}
 		}
@@ -1885,7 +2219,7 @@ func (s *campaignOrchestratorServiceImpl) deleteCampaignWithDependencies(ctx con
 
 	// Handle domain generation pattern offset reset logic BEFORE deleting the campaign
 	// Check if this is a domain generation campaign based on current phase
-	if campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseGeneration {
+	if campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeDomainGeneration {
 		if err := s.handleDomainGenerationOffsetOnDeletion(ctx, querier, campaignID, campaign); err != nil {
 			log.Printf("Warning: Failed to handle domain generation offset on deletion for campaign %s: %v", campaignID, err)
 			// Don't fail the deletion operation for offset handling errors
@@ -1918,7 +2252,7 @@ func (s *campaignOrchestratorServiceImpl) findDependentCampaigns(ctx context.Con
 		}
 
 		for _, campaign := range allCampaigns {
-			if campaign != nil && campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseDNSValidation {
+			if campaign != nil && campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeDNSValidation {
 				// Check if this DNS validation phase campaign references our domain generation campaign
 				dnsParams, err := s.campaignStore.GetDNSValidationParams(ctx, querier, campaign.ID)
 				if err == nil && dnsParams.SourceGenerationCampaignID != nil && *dnsParams.SourceGenerationCampaignID == campaignID {
@@ -1941,7 +2275,7 @@ func (s *campaignOrchestratorServiceImpl) findDependentCampaigns(ctx context.Con
 		}
 
 		for _, campaign := range allCampaigns {
-			if campaign != nil && campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseHTTPValidation {
+			if campaign != nil && campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeHTTPKeywordValidation {
 				// Check if this HTTP validation phase campaign references our DNS campaign
 				httpParams, err := s.campaignStore.GetHTTPKeywordParams(ctx, querier, campaign.ID)
 				if err == nil && httpParams.SourceCampaignID == campaignID {
@@ -2033,13 +2367,13 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDependencies(ctx context.Co
 	var dependencyType models.JobTypeEnum = models.JobTypeGeneration // default
 	if campaign.CurrentPhase != nil {
 		switch *campaign.CurrentPhase {
-		case models.CampaignPhaseGeneration:
+		case models.PhaseTypeDomainGeneration:
 			dependencyType = models.JobTypeGeneration
-		case models.CampaignPhaseDNSValidation:
+		case models.PhaseTypeDNSValidation:
 			dependencyType = models.JobTypeDNSValidation
-		case models.CampaignPhaseHTTPValidation:
+		case models.PhaseTypeHTTPKeywordValidation:
 			dependencyType = models.JobTypeHTTPValidation
-		case models.CampaignPhaseAnalysis:
+		case models.PhaseTypeAnalysis:
 			dependencyType = models.JobTypeAnalysis
 		}
 	}
@@ -2059,7 +2393,7 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDependencies(ctx context.Co
 
 	// Check if campaign can be deleted (not currently running)
 	canDelete := true
-	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.CampaignPhaseStatusInProgress {
+	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusInProgress {
 		canDelete = false
 	}
 
@@ -2069,6 +2403,44 @@ func (s *campaignOrchestratorServiceImpl) GetCampaignDependencies(ctx context.Co
 		HasDependencies:    len(dependentCampaigns) > 0,
 		CanDelete:          canDelete,
 	}, nil
+}
+
+// broadcastPhaseTransition sends notifications for automatic phase transitions
+func (s *campaignOrchestratorServiceImpl) broadcastPhaseTransition(campaignID uuid.UUID, fromPhase, toPhase, message string) {
+	log.Printf("[AUTO-TRANSITION] Campaign %s: %s → %s - %s", campaignID, fromPhase, toPhase, message)
+
+	// Create phase transition payload for WebSocket broadcast
+	transitionPayload := websocket.PhaseTransitionPayload{
+		CampaignID:         campaignID.String(),
+		PreviousPhase:      fromPhase,
+		NewPhase:           toPhase,
+		NewStatus:          string(models.PhaseStatusNotStarted),
+		TransitionType:     "automatic",
+		TriggerReason:      message,
+		PrerequisitesMet:   true,
+		DataIntegrityCheck: true,
+		TransitionMetadata: map[string]interface{}{
+			"autoTransition":   true,
+			"notificationType": "toast",
+			"message":          message,
+			"transitionTime":   time.Now().UTC().Format(time.RFC3339),
+		},
+	}
+
+	// Create sequenced message for data integrity
+	phaseTransitionMsg := websocket.CreatePhaseTransitionMessageV2(transitionPayload)
+	sequencedMsg := websocket.CreateSequencedMessage(campaignID.String(), phaseTransitionMsg, true)
+
+	// Broadcast using enhanced WebSocket with integrity checks
+	if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+		if wsManager, ok := broadcaster.(*websocket.WebSocketManager); ok {
+			if err := wsManager.BroadcastSequencedMessage(campaignID.String(), sequencedMsg); err != nil {
+				log.Printf("WARNING: Failed to broadcast automatic phase transition for campaign %s: %v", campaignID, err)
+			} else {
+				log.Printf("[AUTO-TRANSITION] Successfully broadcasted phase transition notification for campaign %s", campaignID)
+			}
+		}
+	}
 }
 
 // HandleCampaignCompletion handles phase transitions when a campaign completes.
@@ -2088,23 +2460,32 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 	}
 	log.Printf("[DEBUG] Campaign %s current phase: %s completed", campaignID, currentPhaseStr)
 
-	// Check if campaign has launch_sequence enabled
-	launchSequence := false
-	if campaign.Metadata != nil {
-		var metadata map[string]interface{}
-		if err := json.Unmarshal(*campaign.Metadata, &metadata); err == nil {
-			if seq, ok := metadata["launch_sequence"].(bool); ok {
-				launchSequence = seq
+	// Check if campaign has full sequence mode enabled (new field or legacy metadata)
+	isFullSequenceMode := false
+
+	// Check new fullSequenceMode field first (preferred)
+	if campaign.FullSequenceMode != nil && *campaign.FullSequenceMode {
+		isFullSequenceMode = true
+		log.Printf("[INFO] Campaign %s has fullSequenceMode enabled via field", campaignID)
+	} else {
+		// Fallback to legacy metadata check for backward compatibility
+		if campaign.Metadata != nil {
+			var metadata map[string]interface{}
+			if err := json.Unmarshal(*campaign.Metadata, &metadata); err == nil {
+				if seq, ok := metadata["launch_sequence"].(bool); ok && seq {
+					isFullSequenceMode = true
+					log.Printf("[INFO] Campaign %s has fullSequenceMode enabled via legacy metadata", campaignID)
+				}
 			}
 		}
 	}
 
-	if !launchSequence {
-		log.Printf("[INFO] Campaign %s does not have launch_sequence enabled - staying in current phase for manual configuration", campaignID)
+	if !isFullSequenceMode {
+		log.Printf("[INFO] Campaign %s does not have full auto sequence mode enabled - staying in current phase for manual configuration", campaignID)
 		return nil
 	}
 
-	log.Printf("[INFO] Campaign %s has launch_sequence enabled - checking for automatic phase transition", campaignID)
+	log.Printf("[INFO] Campaign %s has full auto sequence mode enabled - proceeding with automatic phase transition", campaignID)
 
 	// Only proceed with phase transitions if launch_sequence=true
 	if campaign.CurrentPhase == nil {
@@ -2113,15 +2494,20 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 	}
 
 	switch *campaign.CurrentPhase {
-	case models.CampaignPhaseGeneration:
+	case models.PhaseTypeDomainGeneration:
 		// Check if DNS validation parameters exist before transitioning
 		if campaign.DNSValidationParams == nil {
-			log.Printf("[WARNING] Campaign %s has launch_sequence=true but no DNS validation params - cannot auto-transition", campaignID)
+			log.Printf("[WARNING] Campaign %s has full sequence mode enabled but no DNS validation params - cannot auto-transition", campaignID)
 			return nil
 		}
 
-		dnsPhase := models.CampaignPhaseDNSValidation
+		// Transition to DNS validation phase
+		dnsPhase := models.PhaseTypeDNSValidation
+		pendingStatus := models.PhaseStatusNotStarted
 		campaign.CurrentPhase = &dnsPhase
+		campaign.PhaseStatus = &pendingStatus
+		campaign.ProcessedItems = models.Int64Ptr(0) // Reset processed count for new phase
+		campaign.ProgressPercentage = models.Float64Ptr(0.0)
 		campaign.UpdatedAt = time.Now().UTC()
 
 		err = s.campaignStore.UpdateCampaign(ctx, s.db, campaign)
@@ -2130,18 +2516,26 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 			return err
 		}
 
-		log.Printf("[INFO] Auto-transitioned campaign %s to dns_validation phase", campaignID)
+		// Broadcast automatic phase transition with notification
+		s.broadcastPhaseTransition(campaignID, "generation", "dns_validation", "Generation completed successfully! Starting DNS validation...")
+
+		log.Printf("[INFO] Auto-transitioned campaign %s to dns_validation phase with notification", campaignID)
 		return nil
 
-	case models.CampaignPhaseDNSValidation:
+	case models.PhaseTypeDNSValidation:
 		// Check if HTTP keyword validation parameters exist before transitioning
 		if campaign.HTTPKeywordValidationParams == nil {
-			log.Printf("[WARNING] Campaign %s has launch_sequence=true but no HTTP keyword params - cannot auto-transition", campaignID)
+			log.Printf("[WARNING] Campaign %s has full sequence mode enabled but no HTTP keyword params - cannot auto-transition", campaignID)
 			return nil
 		}
 
-		httpPhase := models.CampaignPhaseHTTPValidation
+		// Transition to HTTP validation phase
+		httpPhase := models.PhaseTypeHTTPKeywordValidation
+		pendingStatus := models.PhaseStatusNotStarted
 		campaign.CurrentPhase = &httpPhase
+		campaign.PhaseStatus = &pendingStatus
+		campaign.ProcessedItems = models.Int64Ptr(0) // Reset processed count for new phase
+		campaign.ProgressPercentage = models.Float64Ptr(0.0)
 		campaign.UpdatedAt = time.Now().UTC()
 
 		err = s.campaignStore.UpdateCampaign(ctx, s.db, campaign)
@@ -2150,12 +2544,20 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 			return err
 		}
 
-		log.Printf("[INFO] Auto-transitioned campaign %s to http_keyword_validation phase", campaignID)
+		// Broadcast automatic phase transition with notification
+		s.broadcastPhaseTransition(campaignID, "dns_validation", "http_keyword_validation", "DNS validation completed successfully! Starting HTTP keyword validation...")
+
+		log.Printf("[INFO] Auto-transitioned campaign %s to http_keyword_validation phase with notification", campaignID)
 		return nil
 
-	case models.CampaignPhaseHTTPValidation:
-		analysisPhase := models.CampaignPhaseAnalysis
+	case models.PhaseTypeHTTPKeywordValidation:
+		// Transition to analysis phase
+		analysisPhase := models.PhaseTypeAnalysis
+		pendingStatus := models.PhaseStatusNotStarted
 		campaign.CurrentPhase = &analysisPhase
+		campaign.PhaseStatus = &pendingStatus
+		campaign.ProcessedItems = models.Int64Ptr(0) // Reset processed count for new phase
+		campaign.ProgressPercentage = models.Float64Ptr(0.0)
 		campaign.UpdatedAt = time.Now().UTC()
 
 		err = s.campaignStore.UpdateCampaign(ctx, s.db, campaign)
@@ -2164,10 +2566,13 @@ func (s *campaignOrchestratorServiceImpl) HandleCampaignCompletion(ctx context.C
 			return err
 		}
 
-		log.Printf("[INFO] Auto-transitioned campaign %s to analysis phase", campaignID)
+		// Broadcast automatic phase transition with notification
+		s.broadcastPhaseTransition(campaignID, "http_keyword_validation", "analysis", "HTTP keyword validation completed successfully! Starting final analysis...")
+
+		log.Printf("[INFO] Auto-transitioned campaign %s to analysis phase with notification", campaignID)
 		return nil
 
-	case models.CampaignPhaseAnalysis:
+	case models.PhaseTypeAnalysis:
 		log.Printf("[INFO] Campaign %s has completed all phases", campaignID)
 		return nil
 

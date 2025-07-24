@@ -14,7 +14,7 @@ All URIs are relative to *http://localhost*
 |[**updateProxy**](#updateproxy) | **PUT** /proxies/{proxyId} | Update proxy|
 
 # **addProxy**
-> StreamExtractKeywords200Response addProxy(createProxyRequest)
+> CreateLeadGenerationCampaign200Response addProxy(createProxyRequest)
 
 Add a new proxy configuration
 
@@ -46,7 +46,7 @@ const { status, data } = await apiInstance.addProxy(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 
@@ -68,7 +68,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deleteProxy**
-> StreamExtractKeywords200Response deleteProxy()
+> CreateLeadGenerationCampaign200Response deleteProxy()
 
 Delete a proxy configuration
 
@@ -99,7 +99,7 @@ const { status, data } = await apiInstance.deleteProxy(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 
@@ -274,7 +274,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listProxies**
-> StreamExtractKeywords200Response listProxies()
+> CreateLeadGenerationCampaign200Response listProxies()
 
 Retrieve a list of proxies with optional filtering by protocol, status, and health
 
@@ -317,7 +317,7 @@ const { status, data } = await apiInstance.listProxies(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 

@@ -100,6 +100,12 @@ export interface GeneratedDomain {
     'leadScore'?: string;
     /**
      * 
+     * @type {string}
+     * @memberof GeneratedDomain
+     */
+    'leadStatus'?: GeneratedDomainLeadStatusEnum;
+    /**
+     * 
      * @type {number}
      * @memberof GeneratedDomain
      */
@@ -140,5 +146,14 @@ export const GeneratedDomainHttpStatusEnum = {
 } as const;
 
 export type GeneratedDomainHttpStatusEnum = typeof GeneratedDomainHttpStatusEnum[keyof typeof GeneratedDomainHttpStatusEnum];
+export const GeneratedDomainLeadStatusEnum = {
+    Pending: 'pending',
+    Match: 'match',
+    NoMatch: 'no_match',
+    Error: 'error',
+    Timeout: 'timeout'
+} as const;
+
+export type GeneratedDomainLeadStatusEnum = typeof GeneratedDomainLeadStatusEnum[keyof typeof GeneratedDomainLeadStatusEnum];
 
 

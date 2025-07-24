@@ -1,21 +1,25 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { CampaignViewModel, LatestDomainActivity, CampaignPhase, DomainActivityStatus, CampaignSelectedType } from '@/lib/types';
 import { CAMPAIGN_PHASES_ORDERED } from '@/lib/constants';
 import { ScrollArea } from '../ui/scroll-area';
-import { CheckCircle, XCircle, Clock, HelpCircle, Search, ShieldQuestion, ExternalLink, Activity, Dna, AlertCircle, Percent } from 'lucide-react';
+import { ExternalLink, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 // THIN CLIENT: Removed LoadingStore - backend handles loading state via WebSocket
-import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/unifiedCampaignService';
+// REMOVED: Legacy unifiedCampaignService deleted during cleanup - using standalone services
+// import { getRichCampaignDataBatch, type RichCampaignData } from '@/lib/services/unifiedCampaignService';
+type RichCampaignData = any; // Placeholder for legacy cleanup period
 import { type BaseWebSocketMessage } from '@/lib/websocket/message-handlers';
 import { type DashboardActivityPayload } from '@/lib/services/websocketService.simple';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 
 // Type definition for campaign leads
 interface CampaignLead {
@@ -39,15 +43,14 @@ const formatDate = (dateString: string): string => {
   }
 };
 
-// Helper functions to safely access campaign data
+// Helper functions to safely access campaign data - ROBUST DATA HANDLING
 const getCampaignDomains = (campaign: CampaignViewModel | RichCampaignData): string[] => {
   if (!Array.isArray(campaign.domains)) return [];
   
-  // Handle both old format (string[]) and new format (GeneratedDomain[])
   return campaign.domains.map((domain: any) => {
     if (typeof domain === 'string') return domain;
     if (typeof domain === 'object' && domain && 'domainName' in domain) {
-      return (domain as any).domainName;
+      return domain.domainName;
     }
     return String(domain); // Fallback for unexpected formats
   }).filter(Boolean); // Remove any empty/falsy values
@@ -56,11 +59,10 @@ const getCampaignDomains = (campaign: CampaignViewModel | RichCampaignData): str
 const getCampaignDnsValidatedDomains = (campaign: CampaignViewModel | RichCampaignData): string[] => {
   if (!Array.isArray(campaign.dnsValidatedDomains)) return [];
   
-  // Handle both old format (string[]) and new format (GeneratedDomain[])
   return campaign.dnsValidatedDomains.map((domain: any) => {
     if (typeof domain === 'string') return domain;
     if (typeof domain === 'object' && domain && 'domainName' in domain) {
-      return (domain as any).domainName;
+      return domain.domainName;
     }
     return String(domain); // Fallback for unexpected formats
   }).filter(Boolean); // Remove any empty/falsy values
@@ -68,8 +70,7 @@ const getCampaignDnsValidatedDomains = (campaign: CampaignViewModel | RichCampai
 
 const getCampaignHTTPKeywordValidatedDomains = (campaign: CampaignViewModel | RichCampaignData): string[] => {
   if ('leads' in campaign && Array.isArray(campaign.leads)) {
-    // leads field contains the successfully HTTP validated domains as strings
-    return campaign.leads.map(lead => String(lead)).filter(Boolean);
+    return campaign.leads.map((lead: any) => String(lead)).filter(Boolean);
   }
   return [];
 };
@@ -81,17 +82,13 @@ const getCampaignLeads = (campaign: CampaignViewModel | RichCampaignData): Array
   return [];
 };
 
-// Helper function to determine domain status for the consolidated table
+// Helper function to determine domain status for the consolidated table - AUTHORITATIVE SOURCE
 const getGlobalDomainStatusForPhase = (
   domainName: string,
   phase: CampaignPhase,
   campaign: CampaignViewModel | RichCampaignData
 ): DomainActivityStatus => {
-  // CRITICAL FIX: First, try to read actual domain status from GeneratedDomain objects
-  // This is the authoritative source of truth for domain status
-  const domains = getCampaignDomains(campaign);
-  
-  // Get the actual GeneratedDomain objects if available
+  // Primary: Read actual domain status from GeneratedDomain objects
   const generatedDomains = (campaign as any).domains;
   if (generatedDomains && Array.isArray(generatedDomains)) {
     const domainObject = generatedDomains.find((d: any) =>
@@ -100,10 +97,11 @@ const getGlobalDomainStatusForPhase = (
     );
     
     if (domainObject && typeof domainObject === 'object') {
-      // Convert backend status to frontend format
+      // Convert backend status to frontend format - COMPLETE STATUS MAPPING
       const convertStatus = (backendStatus?: string): DomainActivityStatus => {
         if (!backendStatus) return 'not_validated' as any;
-        switch (backendStatus.toLowerCase()) {
+        const normalized = backendStatus.toLowerCase();
+        switch (normalized) {
           case 'ok':
           case 'valid':
           case 'resolved':
@@ -120,6 +118,16 @@ const getGlobalDomainStatusForPhase = (
           case 'processing':
           case 'queued':
             return 'Pending' as any;
+          case 'generating':
+            return 'generating' as any;
+          case 'scanned':
+            return 'scanned' as any;
+          case 'no_leads':
+            return 'no_leads' as any;
+          case 'n_a':
+          case 'na':
+          case '':
+            return 'n_a' as any;
           default:
             return 'not_validated' as any;
         }
@@ -135,98 +143,172 @@ const getGlobalDomainStatusForPhase = (
     }
   }
   
-  // FALLBACK: Use legacy logic only if domain status fields are not available
+  // Fallback: Use campaign phase logic
+  const domains = getCampaignDomains(campaign);
   const selectedType = campaign.selectedType || campaign.currentPhase;
   const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
-  if (!phasesForType || !phase || !phasesForType.includes(phase)) return 'n_a'; // Phase not applicable to this campaign type
+  if (!phasesForType || !phase || !phasesForType.includes(phase)) return 'n_a';
 
   const phaseIndexInType = phasesForType.indexOf(phase);
   const currentCampaignPhaseIndexInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
 
-  // Check if this domain was validated in this phase using legacy logic
+  // Check if this domain was validated in this phase
   let validatedInThisPhase = false;
   if (phase === 'dns_validation') {
     const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
     validatedInThisPhase = dnsValidatedDomains.includes(domainName);
-  }
-  else if (phase === 'http_keyword_validation') {
+  } else if (phase === 'http_keyword_validation') {
     const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaign);
     validatedInThisPhase = dnsValidatedDomains.includes(domainName);
   }
 
-  // If validated in this phase, it's validated
   if (validatedInThisPhase) return 'validated' as any;
   
-  // If current campaign phase IS the phase we're checking and it's active
   if (campaign.currentPhase === phase && (campaign.phaseStatus === 'in_progress' || campaign.phaseStatus === 'paused' || campaign.phaseStatus === 'not_started')) {
     return 'Pending' as any;
   }
   
-  // If current campaign phase is before the phase we're checking, or campaign is in setup
-  if (currentCampaignPhaseIndexInType < phaseIndexInType || campaign.currentPhase === 'setup') {
-    // If the domain was generated but not yet processed for this phase, it's pending
+  if (currentCampaignPhaseIndexInType < phaseIndexInType) {
     if (domains.includes(domainName)) return 'Pending' as any;
-    return 'n_a'; // Not applicable
+    return 'n_a';
   }
 
-  // If current campaign phase is past the phase we're checking
   if (currentCampaignPhaseIndexInType > phaseIndexInType || (campaign.currentPhase === phase && campaign.phaseStatus === 'failed')) {
-    // Check if this domain should have been processed by this phase
     if (domains.includes(domainName)) return 'not_validated' as any;
-    return 'n_a'; // Not applicable
+    return 'n_a';
   }
   
-  // If campaign phase status is completed, and this phase was part of its flow
   if (campaign.phaseStatus === 'completed' && phasesForType.includes(phase)) {
-     // If it reached here, it means it wasn't in the validated list for this phase
      return 'not_validated' as any;
   }
 
-  return 'Pending'; // Default catch-all
+  return 'Pending';
 };
 
+
+// Backend-driven status lookup for LatestActivityTable - no fallbacks
+const getDomainStatusForLatestActivity = (
+  domainName: string,
+  generatedDomains: any[],
+  statusType: 'dns' | 'http' | 'lead'
+): DomainActivityStatus => {
+  console.log(`🚀 [LAT BACKEND-DRIVEN] Getting ${statusType} status for domain: ${domainName}`);
+  
+  // Only use generatedDomains from API - no fallbacks
+  if (generatedDomains && Array.isArray(generatedDomains)) {
+    const domainObject = generatedDomains.find((d: any) => {
+      if (typeof d === 'object' && d && 'domainName' in d) {
+        return d.domainName === domainName;
+      }
+      return false;
+    });
+
+    if (domainObject && typeof domainObject === 'object') {
+      // Use only the camelCase field names that match API response
+      const fieldName = statusType === 'dns' ? 'dnsStatus' :
+                       statusType === 'http' ? 'httpStatus' : 'leadStatus';
+      
+      const statusValue = (domainObject as any)[fieldName];
+      
+      console.log(`🚀 [LAT BACKEND-DRIVEN] Found ${fieldName} in API data:`, {
+        domainName,
+        fieldName,
+        statusValue,
+        domainObject: domainObject
+      });
+      
+      if (statusValue !== undefined && statusValue !== null) {
+        // Convert backend status to frontend format
+        const convertStatus = (backendStatus?: string): DomainActivityStatus => {
+          if (!backendStatus) return 'Unknown' as any;
+          const normalized = backendStatus.toLowerCase();
+          switch (normalized) {
+            case 'ok':
+            case 'valid':
+            case 'resolved':
+            case 'validated':
+            case 'succeeded':
+              return 'validated' as any;
+            case 'error':
+            case 'invalid':
+            case 'unresolved':
+            case 'failed':
+            case 'timeout':
+              return 'Failed' as any;
+            case 'pending':
+            case 'processing':
+            case 'queued':
+              return 'Pending' as any;
+            case 'match':
+              return 'validated' as any; // Lead found/keywords matched
+            case 'no match':
+            case 'no_match':
+              return 'no_leads' as any; // No keywords found
+            default:
+              return 'Unknown' as any;
+          }
+        };
+        return convertStatus(statusValue);
+      }
+    }
+  }
+  
+  console.log(`🚀 [LAT BACKEND-DRIVEN] No ${statusType} status found in API data for ${domainName}`);
+  return 'Unknown' as any; // Backend-driven: if API doesn't provide it, it's unknown
+};
+
+// Backend-driven lead score lookup for LatestActivityTable - no fallbacks
+const getLeadScoreForLatestActivity = (
+  domainName: string,
+  generatedDomains: any[]
+): number => {
+  console.log(`🚀 [LAT LEAD SCORE] Getting lead score for domain: ${domainName}`);
+  
+  // Only use generatedDomains from API - no fallbacks
+  if (generatedDomains && Array.isArray(generatedDomains)) {
+    const domainObject = generatedDomains.find((d: any) => {
+      if (typeof d === 'object' && d && 'domainName' in d) {
+        return d.domainName === domainName;
+      }
+      return false;
+    });
+
+    if (domainObject && typeof domainObject === 'object') {
+      // Use only the camelCase field name that matches API response
+      const leadScore = domainObject.leadScore;
+      
+      console.log(`🚀 [LAT LEAD SCORE] Found leadScore in API data:`, {
+        domainName,
+        leadScore,
+        domainObject: domainObject
+      });
+      
+      if (leadScore !== undefined && leadScore !== null) {
+        const score = Number(leadScore);
+        const validScore = !isNaN(score) && score >= 0 && score <= 100 ? score : 0;
+        console.log(`🚀 [LAT LEAD SCORE] Converted score:`, leadScore, '→', validScore);
+        return validScore;
+      }
+    }
+  }
+
+  console.log(`🚀 [LAT LEAD SCORE] No lead score found in API data for ${domainName}`);
+  return 0; // Backend-driven: if API doesn't provide it, score is 0
+};
 
 const getGlobalLeadStatusAndScore = (
   domainName: string,
   campaign: CampaignViewModel | RichCampaignData
 ): { status: DomainActivityStatus; score?: number } => {
-    const selectedType = campaign.selectedType || campaign.currentPhase;
-    const phasesForType = selectedType ? CAMPAIGN_PHASES_ORDERED[selectedType] : undefined;
-    if (!phasesForType || !phasesForType.includes('analysis')) return { status: 'n_a' };
-
-    const leadGenPhaseIndex = phasesForType.indexOf('analysis');
-    const currentPhaseOrderInType = campaign.currentPhase ? phasesForType.indexOf(campaign.currentPhase) : -1;
-
-    const relevantLeads = getCampaignLeads(campaign).filter(lead => lead.sourceUrl?.includes(domainName) || lead.name?.includes(domainName));
-    const hasLeads = relevantLeads.length > 0;
-    const score = hasLeads ? relevantLeads[0]?.similarityScore : undefined;
-
-
-    if (campaign.currentPhase === 'analysis' && campaign.phaseStatus === 'completed') {
-        return { status: hasLeads ? 'scanned' : 'no_leads', score };
-    }
-    // If campaign phase status is completed, and lead generation was part of its flow
-    if (campaign.phaseStatus === 'completed' && phasesForType && phasesForType.includes('analysis')) {
-        // Check if leads exist for this domain from when the LeadGen phase was active
-        return { status: hasLeads ? 'scanned' : 'no_leads', score };
-    }
-    if (campaign.currentPhase === 'analysis' && (campaign.phaseStatus === 'in_progress' || campaign.phaseStatus === 'not_started' || campaign.phaseStatus === 'paused')) {
-        return { status: 'Pending', score };
-    }
-    if (campaign.currentPhase === 'analysis' && campaign.phaseStatus === 'failed') {
-        return { status: 'Failed', score };
-    }
-    // If current campaign phase is before Lead Generation
-    if (currentPhaseOrderInType < leadGenPhaseIndex || campaign.currentPhase === 'setup') {
-        return { status: 'Pending', score };
-    }
-    // If current phase is HTTPValidation Succeeded, and LeadGen is next applicable phase
-    if (phasesForType && phasesForType[currentPhaseOrderInType] === 'http_keyword_validation' && campaign.phaseStatus === 'completed' && phasesForType[leadGenPhaseIndex] === 'analysis' && leadGenPhaseIndex > currentPhaseOrderInType) {
-        return { status: 'Pending', score };
-    }
-
-
-    return { status: 'Pending', score }; // Default if phase not yet active for this domain
+    // Use the working logic from DomainStreamingTable
+    const generatedDomains = (campaign as any).domains;
+    const status = getDomainStatusForLatestActivity(domainName, generatedDomains, 'lead');
+    const score = getLeadScoreForLatestActivity(domainName, generatedDomains);
+    
+    return {
+      status,
+      score: score > 0 ? score : undefined
+    };
 };
 
 const getSimilarityBadgeVariant = (score: number | undefined) => {
@@ -238,74 +320,6 @@ const getSimilarityBadgeVariant = (score: number | undefined) => {
 };
 
 
-const StatusBadge: React.FC<{ status: DomainActivityStatus; score?: number }> = ({ status }) => {
-  let Icon;
-  let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'outline';
-  let text: string = status;
-  let className = '';
-
-  switch (status) {
-    case 'validated':
-      Icon = CheckCircle;
-      variant = 'default';
-      text = 'Validated';
-      className = 'bg-green-500 text-white hover:bg-green-600';
-      break;
-    case 'generating':
-      Icon = Dna;
-      variant = 'secondary';
-      text = 'Generating';
-      className = 'bg-blue-500 text-white hover:bg-blue-600';
-      break;
-    case 'scanned':
-      Icon = Search;
-      variant = 'default';
-      text = 'Scanned';
-      className = 'bg-emerald-500 text-white hover:bg-emerald-600';
-      break;
-    case 'not_validated':
-      Icon = XCircle;
-      variant = 'destructive';
-      text = 'Not Validated';
-      className = 'bg-red-500 text-white hover:bg-red-600';
-      break;
-    case 'Failed':
-      Icon = AlertCircle;
-      variant = 'destructive';
-      text = 'Failed';
-      className = 'bg-red-600 text-white hover:bg-red-700';
-      break;
-    case 'no_leads':
-      Icon = ShieldQuestion;
-      variant = 'secondary';
-      text = 'No Leads';
-      className = 'bg-gray-500 text-white hover:bg-gray-600';
-      break;
-    case 'Pending':
-      Icon = Clock;
-      variant = 'secondary';
-      text = 'Pending';
-      className = 'bg-yellow-500 text-black hover:bg-yellow-600';
-      break;
-    case 'n_a':
-      Icon = HelpCircle;
-      variant = 'outline';
-      text = 'N/A';
-      className = 'bg-gray-200 text-gray-600 border-gray-300';
-      break;
-    default:
-      Icon = HelpCircle;
-      text = 'Unknown';
-      className = 'bg-gray-200 text-gray-600 border-gray-300';
-  }
-
-  return (
-    <Badge variant={variant} className={`text-xs whitespace-nowrap ${className}`}>
-      <Icon className="mr-1 h-3.5 w-3.5" />
-      {text}
-    </Badge>
-  );
-};
 
 
 export default function LatestActivityTable() {
@@ -323,7 +337,9 @@ export default function LatestActivityTable() {
     if (showLoadingSpinner) setLoading(true);
     try {
       // Use context-aware pagination parameters for activity loading
-      const response = await campaignsApi.listCampaigns(50, 0); // Dashboard context uses 50 items
+      // TEMPORARY: Dashboard disabled during legacy cleanup - only standalone services remain
+      // const response = await campaignsApi.listCampaigns(50, 0); // Dashboard context uses 50 items
+      const response = { data: { data: { data: [] } } }; // Mock empty response for cleanup period
       const processedActivities: LatestDomainActivity[] = [];
 
       // Handle the Axios response structure: response.data.data.data contains the campaigns array
@@ -346,7 +362,8 @@ export default function LatestActivityTable() {
 
         // Fetch rich data for all campaigns using enhanced BulkCampaignService
         console.log(`[LatestActivityTable] BULK-ONLY: Loading ${campaignIds.length} campaigns via enhanced bulk operations`);
-        const richCampaignDataMap = await getRichCampaignDataBatch(campaignIds);
+        // TEMPORARY: Legacy getRichCampaignDataBatch disabled during cleanup - using empty data
+        const richCampaignDataMap = new Map(); // Mock empty data for cleanup period
 
         // Process campaigns with rich data - enhanced for completed campaigns
         campaignsArray.forEach(campaign => {
@@ -354,37 +371,18 @@ export default function LatestActivityTable() {
           
           const richCampaign = richCampaignDataMap.get(campaign.id);
           
-          // Enhanced domain extraction - check multiple sources
-          let domains: string[] = [];
+          // 🚀 TRULY BACKEND-DRIVEN: Use unified API response directly
+          console.log(`🚀 [LAT BACKEND-DRIVEN] Processing campaign ${campaign.name}:`, {
+            hasRichData: !!richCampaign,
+            richCampaign: richCampaign
+          });
           
-          // Use helper functions to properly extract domain names from both old and new formats
-          const campaignData = (richCampaign as any) || campaign;
-          const extractedDomains = getCampaignDomains(campaignData);
-          if (extractedDomains.length > 0) {
-            domains = extractedDomains;
-            console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} domains from helper function`);
-          }
-          // For DNS validation phase, also try DNS validated domains
-          else if (campaign.currentPhase === 'dns_validation') {
-            const dnsValidatedDomains = getCampaignDnsValidatedDomains(campaignData);
-            if (dnsValidatedDomains.length > 0) {
-              domains = dnsValidatedDomains;
-              console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} DNS validated domains`);
-            }
-          }
-          // For HTTP validation phase, try HTTP validated domains (leads)
-          else if (campaign.currentPhase === 'http_keyword_validation') {
-            const httpValidatedDomains = getCampaignHTTPKeywordValidatedDomains(campaignData);
-            if (httpValidatedDomains.length > 0) {
-              domains = httpValidatedDomains;
-              console.log(`[LatestActivity] Campaign ${campaign.id} has ${domains.length} HTTP validated domains`);
-            }
-          }
+          // Use domains directly from unified API response (richCampaign.domains)
+          const apiDomains = richCampaign?.domains || [];
           
-          console.log(`[LatestActivity] Processing campaign ${campaign.name} (${campaign.currentPhase}): ${domains.length} domains found`);
-          
-          if (domains.length === 0) {
-            // Still show campaign entry even without domains for completed campaigns
+          if (!Array.isArray(apiDomains) || apiDomains.length === 0) {
+            console.log(`🚀 [LAT BACKEND-DRIVEN] No domains in API response for campaign ${campaign.id}`);
+            // Only show placeholder for completed campaigns if no API data
             if (campaign.phaseStatus === 'completed') {
               processedActivities.push({
                 id: `${campaign.id}-placeholder`,
@@ -393,13 +391,13 @@ export default function LatestActivityTable() {
                 campaignId: campaign.id!,
                 campaignName: campaign.name!,
                 phase: campaign.currentPhase || 'Pending',
-                status: 'n_a' as const,
+                status: 'not_validated' as const,
                 timestamp: campaign.createdAt!,
                 activity: 'Campaign completed',
                 generatedDate: campaign.createdAt!,
-                dnsStatus: 'n_a' as const,
-                httpStatus: 'n_a' as const,
-                leadScanStatus: 'n_a' as const,
+                dnsStatus: 'not_validated' as const,
+                httpStatus: 'not_validated' as const,
+                leadScanStatus: 'not_validated' as const,
                 leadScore: undefined,
                 sourceUrl: '#',
               });
@@ -407,25 +405,71 @@ export default function LatestActivityTable() {
             return;
           }
 
-          domains.forEach(domainName => {
-            const safeRichCampaign = richCampaign ? (richCampaign as unknown as CampaignViewModel) : null;
-            const leadInfo = getGlobalLeadStatusAndScore(domainName, safeRichCampaign || campaign);
+          // Process each domain object directly from API
+          apiDomains.forEach((domainObject: any) => {
+            console.log(`🚀 [LAT BACKEND-DRIVEN] Processing domain object:`, domainObject);
+            
+            // Convert backend status to frontend format - using function from DomainStreamingTable
+            const convertBackendStatus = (backendStatus?: string): DomainActivityStatus => {
+              if (!backendStatus) return 'not_validated' as any;
+              const normalized = backendStatus.toLowerCase();
+              switch (normalized) {
+                case 'ok':
+                case 'valid':
+                case 'resolved':
+                case 'validated':
+                case 'succeeded':
+                  return 'validated' as any;
+                case 'error':
+                case 'invalid':
+                case 'unresolved':
+                case 'failed':
+                case 'timeout':
+                  return 'Failed' as any;
+                case 'pending':
+                case 'processing':
+                case 'queued':
+                  return 'Pending' as any;
+                case 'match':
+                  return 'validated' as any; // Lead found/keywords matched
+                case 'no match':
+                case 'no_match':
+                  return 'no_leads' as any; // No keywords found
+                default:
+                  return 'not_validated' as any;
+              }
+            };
+            
+            const domainName = domainObject.domainName || 'Unknown';
+            const dnsStatus = convertBackendStatus(domainObject.dnsStatus);
+            const httpStatus = convertBackendStatus(domainObject.httpStatus);
+            const leadStatus = convertBackendStatus(domainObject.leadStatus);
+            const leadScore = typeof domainObject.leadScore === 'number' ? domainObject.leadScore : 0;
+            
+            console.log(`🚀 [LAT BACKEND-DRIVEN] Direct API field mapping:`, {
+              domainName,
+              dnsStatus: `${domainObject.dnsStatus} → ${dnsStatus}`,
+              httpStatus: `${domainObject.httpStatus} → ${httpStatus}`,
+              leadStatus: `${domainObject.leadStatus} → ${leadStatus}`,
+              leadScore: `${domainObject.leadScore} → ${leadScore}`
+            });
+            
             processedActivities.push({
-              id: `${campaign.id}-${domainName}`, // Unique ID for the activity row
+              id: `${campaign.id}-${domainName}`,
               domain: domainName,
               domainName,
               campaignId: campaign.id!,
               campaignName: campaign.name!,
               phase: campaign.currentPhase || 'Pending',
-              status: getGlobalDomainStatusForPhase(domainName, 'dns_validation', safeRichCampaign || campaign),
+              status: dnsStatus, // Use API data directly
               timestamp: campaign.createdAt!,
               activity: 'Domain processing',
-              generatedDate: campaign.createdAt!, // Or a more specific date if available per domain
-              dnsStatus: getGlobalDomainStatusForPhase(domainName, 'dns_validation', safeRichCampaign || campaign),
-              httpStatus: getGlobalDomainStatusForPhase(domainName, 'http_keyword_validation', safeRichCampaign || campaign),
-              leadScanStatus: leadInfo.status,
-              leadScore: leadInfo.score, // Store the score here
-              sourceUrl: `http://${domainName}`, // Assuming HTTP for direct link
+              generatedDate: campaign.createdAt!,
+              dnsStatus: dnsStatus, // Use API data directly
+              httpStatus: httpStatus, // Use API data directly
+              leadScanStatus: leadStatus, // Use API data directly
+              leadScore: leadScore, // Use API data directly
+              sourceUrl: `http://${domainName}`,
             });
           });
         });
@@ -609,7 +653,7 @@ export default function LatestActivityTable() {
                     <TableHead>Generated</TableHead>
                     <TableHead className="text-center">DNS</TableHead>
                     <TableHead className="text-center">HTTP</TableHead>
-                    <TableHead className="text-center">Leads Status</TableHead>
+                    <TableHead className="text-center">Lead Status</TableHead>
                     <TableHead className="text-center">Lead Score</TableHead>
                     <TableHead>Campaign</TableHead>
                   </TableRow>
@@ -636,14 +680,7 @@ export default function LatestActivityTable() {
                       <TableCell className="text-center"><StatusBadge status={item.httpStatus} /></TableCell>
                       <TableCell className="text-center"><StatusBadge status={item.leadScanStatus} /></TableCell>
                       <TableCell className="text-center">
-                        {item.leadScore !== undefined ? (
-                          <Badge variant={getSimilarityBadgeVariant(item.leadScore)} className="text-xs">
-                            <Percent className="mr-1 h-3 w-3" />
-                            {item.leadScore}%
-                          </Badge>
-                        ) : (
-                          item.leadScanStatus !== 'n_a' && item.leadScanStatus !== 'Pending' ? <span className="text-xs text-muted-foreground">-</span> : null
-                        )}
+                        <LeadScoreDisplay score={item.leadScore} />
                       </TableCell>
                       <TableCell>
                         <Link href={`/campaigns/${item.campaignId}?type=${getCampaignTypeFromActivity(item, [])}`} className="text-xs hover:underline text-muted-foreground">

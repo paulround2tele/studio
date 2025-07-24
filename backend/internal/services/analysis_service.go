@@ -76,7 +76,7 @@ func (s *AnalysisService) ProcessAnalysisCampaignBatch(ctx context.Context, camp
 	}
 
 	// Verify this is an analysis campaign
-	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.CampaignPhaseAnalysis {
+	if campaign.CurrentPhase == nil || *campaign.CurrentPhase != models.PhaseTypeAnalysis {
 		opErr = fmt.Errorf("campaign %s is not in analysis phase (current phase: %v)", campaignID, campaign.CurrentPhase)
 		return false, 0, opErr
 	}
@@ -84,8 +84,8 @@ func (s *AnalysisService) ProcessAnalysisCampaignBatch(ctx context.Context, camp
 	log.Printf("ProcessAnalysisCampaignBatch: Starting analysis processing for campaign %s", campaignID)
 
 	// Start campaign if it's not running
-	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.CampaignPhaseStatusInProgress {
-		status := models.CampaignPhaseStatusInProgress
+	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusInProgress {
+		status := models.PhaseStatusInProgress
 		campaign.PhaseStatus = &status
 		campaign.StartedAt = &[]time.Time{time.Now().UTC()}[0]
 		log.Printf("ProcessAnalysisCampaignBatch: Campaign %s marked as Running for analysis phase.", campaignID)
@@ -108,7 +108,7 @@ func (s *AnalysisService) ProcessAnalysisCampaignBatch(ctx context.Context, camp
 	log.Printf("ProcessAnalysisCampaignBatch: Performing automated analysis/cleanup for campaign %s", campaignID)
 
 	// Mark analysis as complete immediately since it's automated
-	status := models.CampaignPhaseStatusSucceeded
+	status := models.PhaseStatusCompleted
 	campaign.PhaseStatus = &status
 	campaign.ProgressPercentage = models.Float64Ptr(100.0)
 	campaign.ProcessedItems = models.Int64Ptr(1)

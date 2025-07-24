@@ -53,7 +53,8 @@ type PatternOffsetResponse struct {
 	TotalPossibleCombinations int64  `json:"totalPossibleCombinations"`
 }
 
-// LEGACY RESPONSE TYPES REMOVED - ALL ENDPOINTS NOW USE UNIFIED APIResponse FORMAT
+// INFRASTRUCTURE COMPLIANCE NOTE: These response models should be auto-generated
+// Currently keeping for backward compatibility while migrating to unified APIResponse format
 // See response_types.go for the unified APIResponse structure
 
 // SuccessMessageResponse represents a simple success message
@@ -361,8 +362,8 @@ type CampaignData struct {
 
 	// Phases-based architecture fields
 	// @Description Current phase of campaign execution
-	// @Example "generation"
-	CurrentPhase *models.CampaignPhaseEnum `json:"currentPhase,omitempty" enums:"setup,generation,dns_validation,http_keyword_validation,analysis"`
+	// @Example "domain_generation"
+	CurrentPhase *models.CampaignPhaseEnum `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
 
 	// @Description Status of the current phase
 	// @Example "in_progress"
@@ -640,4 +641,111 @@ type BulkStatsMetadata struct {
 	SkippedItems     int      `json:"skippedItems" example:"1" description:"Number of items skipped due to errors"`
 	FailedItems      []string `json:"failedItems,omitempty" example:"['invalid_schema']" description:"List of items that failed processing"`
 	ProcessingTimeMs int64    `json:"processingTimeMs" example:"1850" description:"Total processing time in milliseconds"`
+}
+
+// === STANDALONE SERVICES ARCHITECTURE RESPONSE MODELS ===
+
+// CreateLeadGenerationCampaignRequest represents a request to create a lead generation campaign
+// @Description Request payload for creating a new lead generation campaign with Phase 1 initialization
+type CreateLeadGenerationCampaignRequest struct {
+	Name         string                 `json:"name" validate:"required" example:"My Lead Generation Campaign" description:"Campaign name"`
+	Description  string                 `json:"description,omitempty" example:"Campaign description" description:"Campaign description"`
+	UserID       string                 `json:"userId,omitempty" example:"550e8400-e29b-41d4-a716-446655440000" description:"User UUID"`
+	DomainConfig DomainGenerationConfig `json:"domainConfig" validate:"required" description:"Domain generation configuration for Phase 1"`
+}
+
+// DomainGenerationConfig represents domain generation configuration
+// @Description Configuration for domain generation phase
+type DomainGenerationConfig struct {
+	PatternType          string `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
+	VariableLength       int    `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`
+	CharacterSet         string `json:"characterSet" validate:"required" example:"abcdefghijklmnopqrstuvwxyz" description:"Character set for generation"`
+	ConstantString       string `json:"constantString" validate:"required" example:"test" description:"Constant string part"`
+	TLD                  string `json:"tld" validate:"required" example:".com" description:"Top-level domain"`
+	NumDomainsToGenerate int    `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0" example:"1000" description:"Number of domains to generate"`
+	BatchSize            int    `json:"batchSize,omitempty" validate:"omitempty,gt=0" example:"100" description:"Batch size for generation"`
+}
+
+// PhaseConfigureRequest represents a request to configure a specific campaign phase
+// @Description Request payload for configuring campaign phase parameters
+type PhaseConfigureRequest struct {
+	PhaseType string      `json:"phaseType" validate:"required,oneof=dns_validation http_keyword_validation analysis" example:"dns_validation" description:"Type of phase to configure"`
+	Config    interface{} `json:"config" validate:"required" description:"Phase-specific configuration object"`
+}
+
+// DNSValidationConfig represents DNS validation phase configuration
+// @Description Configuration for DNS validation phase
+type DNSValidationConfig struct {
+	PersonaIDs               []string `json:"personaIds" validate:"required,min=1" example:"[\"550e8400-e29b-41d4-a716-446655440000\"]" description:"Array of persona IDs to use for DNS validation"`
+	RotationIntervalSeconds  int      `json:"rotationIntervalSeconds,omitempty" validate:"omitempty,gte=60" example:"300" description:"Interval in seconds between persona rotations"`
+	ProcessingSpeedPerMinute int      `json:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=1" example:"100" description:"Number of domains to process per minute"`
+	BatchSize                int      `json:"batchSize,omitempty" validate:"omitempty,gte=1" example:"50" description:"Number of domains to process in each batch"`
+	RetryAttempts            int      `json:"retryAttempts,omitempty" validate:"omitempty,gte=0" example:"3" description:"Number of retry attempts for failed validations"`
+}
+
+// HTTPValidationConfig represents HTTP validation phase configuration
+// @Description Configuration for HTTP keyword validation phase
+type HTTPValidationConfig struct {
+	PersonaIDs               []string `json:"personaIds" validate:"required,min=1" example:"[\"550e8400-e29b-41d4-a716-446655440000\"]" description:"Array of persona IDs to use for HTTP validation"`
+	KeywordSetIDs            []string `json:"keywordSetIds,omitempty" example:"[\"set1\", \"set2\"]" description:"Array of predefined keyword set IDs"`
+	AdHocKeywords            []string `json:"adHocKeywords,omitempty" example:"[\"custom1\", \"custom2\"]" description:"Array of custom keywords to search for"`
+	ProxyIDs                 []string `json:"proxyIds,omitempty" example:"[\"proxy1\", \"proxy2\"]" description:"Array of specific proxy IDs to use"`
+	ProxyPoolID              string   `json:"proxyPoolId,omitempty" example:"pool-uuid" description:"Proxy pool ID for automatic proxy selection"`
+	ProxySelectionStrategy   string   `json:"proxySelectionStrategy,omitempty" validate:"omitempty,oneof=round_robin random least_used" example:"round_robin" description:"Strategy for proxy rotation"`
+	TargetHTTPPorts          []int    `json:"targetHttpPorts,omitempty" example:"[80, 443, 8080]" description:"Array of HTTP ports to target"`
+	RotationIntervalSeconds  int      `json:"rotationIntervalSeconds,omitempty" validate:"omitempty,gte=60" example:"300" description:"Interval in seconds between proxy rotations"`
+	ProcessingSpeedPerMinute int      `json:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=1" example:"50" description:"Number of domains to process per minute"`
+	BatchSize                int      `json:"batchSize,omitempty" validate:"omitempty,gte=1" example:"25" description:"Number of domains to process in each batch"`
+	RetryAttempts            int      `json:"retryAttempts,omitempty" validate:"omitempty,gte=0" example:"3" description:"Number of retry attempts for failed validations"`
+}
+
+// AnalysisConfig represents analysis phase configuration
+// @Description Configuration for analysis phase
+type AnalysisConfig struct {
+	AnalysisType       string   `json:"analysisType" validate:"required,oneof=basic comprehensive custom" example:"comprehensive" description:"Type of analysis to perform"`
+	IncludeScreenshots bool     `json:"includeScreenshots,omitempty" example:"true" description:"Whether to capture screenshots during analysis"`
+	GenerateReport     bool     `json:"generateReport,omitempty" example:"true" description:"Whether to generate a final analysis report"`
+	CustomRules        []string `json:"customRules,omitempty" example:"[\"rule1\", \"rule2\"]" description:"Array of custom analysis rules to apply"`
+}
+
+// PhaseStartRequest represents a request to start a configured campaign phase
+// @Description Request payload for starting a campaign phase
+type PhaseStartRequest struct {
+	PhaseType string `json:"phaseType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation analysis" example:"dns_validation" description:"Type of phase to start"`
+}
+
+// LeadGenerationCampaignResponse represents a lead generation campaign response for standalone services
+// @Description Lead generation campaign response with JSONB data support
+type LeadGenerationCampaignResponse struct {
+	ID              string      `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
+	Name            string      `json:"name" example:"My Lead Generation Campaign" description:"Campaign name"`
+	Description     string      `json:"description,omitempty" example:"Campaign description" description:"Campaign description"`
+	CurrentPhase    string      `json:"currentPhase" example:"domain_generation" description:"Current phase of execution"`
+	Status          string      `json:"status" example:"in_progress" description:"Current campaign status"`
+	DomainsData     interface{} `json:"domainsData,omitempty" description:"Domain generation phase data"`
+	DNSResults      interface{} `json:"dnsResults,omitempty" description:"DNS validation phase results"`
+	HTTPResults     interface{} `json:"httpResults,omitempty" description:"HTTP validation phase results"`
+	AnalysisResults interface{} `json:"analysisResults,omitempty" description:"Analysis phase results"`
+	CreatedAt       string      `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
+	UpdatedAt       string      `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
+}
+
+// PhaseProgressResponse represents progress information for a specific phase
+// @Description Progress tracking for individual campaign phases
+type PhaseProgressResponse struct {
+	PhaseType    string  `json:"phaseType" example:"domain_generation" description:"Type of phase"`
+	Status       string  `json:"status" example:"in_progress" description:"Current phase status"`
+	Progress     float64 `json:"progress" example:"75.5" description:"Phase completion percentage (0-100)"`
+	StartedAt    *string `json:"startedAt,omitempty" example:"2024-01-15T10:30:00Z" description:"Phase start timestamp"`
+	CompletedAt  *string `json:"completedAt,omitempty" example:"2024-01-15T11:30:00Z" description:"Phase completion timestamp"`
+	EstimatedEnd *string `json:"estimatedEnd,omitempty" example:"2024-01-15T12:00:00Z" description:"Estimated completion time"`
+}
+
+// CampaignProgressResponse represents overall campaign progress across all phases
+// @Description Comprehensive progress tracking for lead generation campaigns
+type CampaignProgressResponse struct {
+	CampaignID      string                           `json:"campaignId" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
+	CurrentPhase    string                           `json:"currentPhase" example:"dns_validation" description:"Currently active phase"`
+	OverallProgress float64                          `json:"overallProgress" example:"62.5" description:"Overall campaign completion percentage (0-100)"`
+	PhaseProgress   map[string]PhaseProgressResponse `json:"phaseProgress" description:"Progress details for each phase"`
 }

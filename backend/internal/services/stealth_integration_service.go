@@ -111,11 +111,11 @@ func (s *stealthIntegrationServiceImpl) GetStealthConfigForCampaign(ctx context.
 	// For now, use intelligent defaults based on campaign size and type
 
 	switch {
-	case campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseDNSValidation:
+	case campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeDNSValidation:
 		// DNS validation is more sensitive to detection
 		config = AggressiveStealthConfig()
 
-	case campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.CampaignPhaseHTTPValidation:
+	case campaign.CurrentPhase != nil && *campaign.CurrentPhase == models.PhaseTypeHTTPKeywordValidation:
 		// HTTP validation needs moderate stealth
 		config = DefaultStealthConfig()
 

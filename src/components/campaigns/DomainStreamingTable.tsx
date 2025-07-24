@@ -1,600 +1,387 @@
-// Domain Streaming Table Component - High-performance virtual table with real-time updates
-// Handles 2M+ domains with <500ms rendering and memory-efficient caching
-
 "use client";
 
-import React, { useMemo, useCallback, useState, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Download,
-  ExternalLink,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  Filter,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  Dna,
-  ShieldQuestion,
-  HelpCircle,
-  Percent
-} from 'lucide-react';
-import type { CampaignViewModel, CampaignValidationItem, DomainActivityStatus } from '@/lib/types';
-import type { components } from '@/lib/api-client/types';
-import { CampaignCurrentPhaseEnum, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
-import { useDomainPagination } from '@/lib/hooks/usePagination';
+import { ExternalLink } from 'lucide-react';
+import type {
+  CampaignViewModel,
+  CampaignValidationItem
+} from '@/lib/types';
+import type { GeneratedDomain, GeneratedDomainLeadStatusEnum } from '@/lib/api-client';
+import { ScrollArea } from '../ui/scroll-area';
+import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
+import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 
-type GeneratedDomain = components['schemas']['GeneratedDomain'];
-import { cn } from '@/lib/utils';
-
-// Table filter interface
-export interface TableFilters {
-  searchTerm: string;
-  statusFilter: DomainActivityStatus | 'all';
-  sortBy: 'domainName' | 'generatedDate' | 'dnsStatus' | 'httpStatus';
-  sortOrder: 'asc' | 'desc';
-}
-
-export interface DomainStreamingTableProps {
+interface DomainStreamingTableProps {
   campaign: CampaignViewModel;
   generatedDomains: GeneratedDomain[];
   dnsCampaignItems: CampaignValidationItem[];
   httpCampaignItems: CampaignValidationItem[];
-  totalDomains: number;
+  totalDomains?: number;
   loading?: boolean;
-  filters: TableFilters;
-  onFiltersChange: (filters: Partial<TableFilters>) => void;
-  onDownloadDomains: (domains: string[], fileNamePrefix: string) => void;
+  filters?: any;
+  onFiltersChange?: (filters: any) => void;
+  onDownloadDomains?: (domains: string[], fileNamePrefix: string) => void;
   className?: string;
 }
 
-// Domain detail interface for unified table display
-interface DomainDetail {
-  id: string;
+interface EnrichedDomain {
   domainName: string;
-  generatedDate?: string;
   dnsStatus: DomainActivityStatus;
   httpStatus: DomainActivityStatus;
   leadScanStatus: DomainActivityStatus;
-  leadScore?: number;
+  leadScore: number; // 0-100 range
 }
 
-// Status badge component with optimized rendering
-const StatusBadge = React.memo<{ status: DomainActivityStatus; score?: number }>(function StatusBadge({ status, score }) {
-  const getBadgeConfig = (status: DomainActivityStatus) => {
-    switch (status) {
-      case 'validated': return { icon: CheckCircle, variant: 'default' as const, text: 'Validated', className: 'bg-green-500 text-white hover:bg-green-600' };
-      case 'generating': return { icon: Dna, variant: 'secondary' as const, text: 'Generating', className: 'bg-blue-500 text-white hover:bg-blue-600' };
-      case 'scanned': return { icon: Search, variant: 'default' as const, text: 'Scanned', className: 'bg-emerald-500 text-white hover:bg-emerald-600' };
-      case 'not_validated': return { icon: XCircle, variant: 'destructive' as const, text: 'Not Validated', className: 'bg-red-500 text-white hover:bg-red-600' };
-      case 'Failed': return { icon: AlertCircle, variant: 'destructive' as const, text: 'Failed', className: 'bg-red-600 text-white hover:bg-red-700' };
-      case 'no_leads': return { icon: ShieldQuestion, variant: 'secondary' as const, text: 'No Leads', className: 'bg-gray-500 text-white hover:bg-gray-600' };
-      case 'Pending': return { icon: Clock, variant: 'secondary' as const, text: 'Pending', className: 'bg-yellow-500 text-black hover:bg-yellow-600' };
-      case 'n_a': return { icon: HelpCircle, variant: 'outline' as const, text: 'N/A', className: 'bg-gray-200 text-gray-600 border-gray-300' };
-      default: return { icon: HelpCircle, variant: 'outline' as const, text: 'Unknown', className: 'bg-gray-200 text-gray-600 border-gray-300' };
+// Helper functions to safely extract domain data - AGGRESSIVE DEBUGGING
+const getCampaignDomainsPhaseAware = (campaign: CampaignViewModel): string[] => {
+  console.log('🚨 [AGGRESSIVE DEBUG] Full campaign object inspection:', {
+    campaignId: campaign.id,
+    campaignName: campaign.name,
+    currentPhase: campaign.currentPhase,
+    phaseStatus: campaign.phaseStatus,
+    allKeys: Object.keys(campaign),
+    domainsProperty: campaign.domains,
+    domainsType: typeof campaign.domains,
+    domainsIsArray: Array.isArray(campaign.domains),
+    domainsLength: Array.isArray(campaign.domains) ? campaign.domains.length : 'not array',
+    fullCampaignObject: campaign
+  });
+
+  // Try EVERY possible domain field in the campaign object
+  const possibleDomainFields = [
+    'domains', 'generatedDomains', 'dnsValidatedDomains', 'httpValidatedDomains',
+    'leads', 'domainList', 'domainNames', 'results', 'items', 'data'
+  ];
+
+  for (const fieldName of possibleDomainFields) {
+    const fieldValue = (campaign as any)[fieldName];
+    console.log(`🚨 [AGGRESSIVE DEBUG] Checking field '${fieldName}':`, {
+      exists: fieldName in campaign,
+      value: fieldValue,
+      type: typeof fieldValue,
+      isArray: Array.isArray(fieldValue),
+      length: fieldValue?.length
+    });
+
+    if (Array.isArray(fieldValue) && fieldValue.length > 0) {
+      console.log(`🚨 [AGGRESSIVE DEBUG] Found data in '${fieldName}', examining first few items:`, {
+        count: fieldValue.length,
+        samples: fieldValue.slice(0, 3),
+        firstItemType: typeof fieldValue[0],
+        firstItemKeys: typeof fieldValue[0] === 'object' ? Object.keys(fieldValue[0]) : 'not object'
+      });
+
+      // Try to extract domains from this field
+      const extractedDomains = fieldValue.map((item: any, index: number) => {
+        if (typeof item === 'string' && item.includes('.') && !item.includes('[object')) {
+          return item;
+        }
+        if (typeof item === 'object' && item) {
+          // Try multiple possible domain name fields
+          const domainFields = ['domainName', 'domain', 'name', 'hostname', 'url'];
+          for (const domainField of domainFields) {
+            if (domainField in item) {
+              const domainValue = item[domainField];
+              if (typeof domainValue === 'string' && domainValue !== '[object Object]') {
+                return domainValue;
+              }
+            }
+          }
+        }
+        return null;
+      }).filter(Boolean);
+
+      if (extractedDomains.length > 0) {
+        console.log(`🚨 [AGGRESSIVE DEBUG] Successfully extracted ${extractedDomains.length} domains from '${fieldName}':`, extractedDomains.slice(0, 5));
+        return extractedDomains as string[];
+      }
     }
-  };
+  }
 
-  const config = getBadgeConfig(status);
-  const IconComponent = config.icon;
+  console.log('🚨 [AGGRESSIVE DEBUG] No domains found in any field!');
+  return [];
+};
 
+// Convert backend status to frontend format - ROBUST STATUS CONVERSION
+const convertStatus = (backendStatus?: string): DomainActivityStatus => {
+  if (!backendStatus) return 'not_validated' as any;
+  const normalized = backendStatus.toLowerCase();
+  
+  switch (normalized) {
+    case 'ok':
+    case 'valid':
+    case 'resolved':
+    case 'validated':
+    case 'succeeded':
+      return 'validated' as any;
+    case 'error':
+    case 'invalid':
+    case 'unresolved':
+    case 'failed':
+    case 'timeout':
+      return 'Failed' as any;
+    case 'pending':
+    case 'processing':
+    case 'queued':
+      return 'Pending' as any;
+    case 'generating':
+      return 'generating' as any;
+    case 'scanned':
+      return 'scanned' as any;
+    case 'no_leads':
+      return 'no_leads' as any;
+    case 'match':
+      return 'validated' as any; // Lead found/keywords matched
+    case 'no match':
+    case 'no_match':
+      return 'no_leads' as any; // No keywords found
+    case 'n_a':
+    case 'na':
+    case '':
+      return 'n_a' as any;
+    default:
+      return 'not_validated' as any;
+  }
+};
+
+// Backend-driven status lookup - no fallbacks, trust API data completely
+const getDomainStatus = (
+  domainName: string,
+  campaign: CampaignViewModel,
+  generatedDomains: GeneratedDomain[],
+  statusType: 'dns' | 'http' | 'lead'
+): DomainActivityStatus => {
+  console.log(`🚀 [BACKEND-DRIVEN] Getting ${statusType} status for domain: ${domainName}`);
+  
+  // Only use generatedDomains from API - no fallbacks
+  if (generatedDomains && Array.isArray(generatedDomains)) {
+    const domainObject = generatedDomains.find((d: any) => {
+      if (typeof d === 'object' && d && 'domainName' in d) {
+        return d.domainName === domainName;
+      }
+      return false;
+    });
+
+    if (domainObject && typeof domainObject === 'object') {
+      // Use only the camelCase field names that match API response
+      const fieldName = statusType === 'dns' ? 'dnsStatus' :
+                       statusType === 'http' ? 'httpStatus' : 'leadStatus';
+      
+      const statusValue = (domainObject as any)[fieldName];
+      
+      console.log(`🚀 [BACKEND-DRIVEN] Found ${fieldName} in API data:`, {
+        domainName,
+        fieldName,
+        statusValue,
+        domainObject: domainObject
+      });
+      
+      if (statusValue !== undefined && statusValue !== null) {
+        return convertStatus(statusValue);
+      }
+    }
+  }
+
+  console.log(`🚀 [BACKEND-DRIVEN] No ${statusType} status found in API data for ${domainName}`);
+  return 'Unknown' as any; // Backend-driven: if API doesn't provide it, it's unknown
+};
+
+// Get lead score from domain object (UPDATED: handle both camelCase and snake_case)
+const getLeadScore = (
+  domainName: string,
+  campaign: CampaignViewModel,
+  generatedDomains: GeneratedDomain[]
+): number => {
+  console.log('🔍 [LEAD SCORE DEBUG] Looking for lead score for domain:', domainName);
+  
+  // Try generatedDomains prop first (typed auto-generated objects)
+  if (generatedDomains && Array.isArray(generatedDomains)) {
+    const domainObject = generatedDomains.find((d: GeneratedDomain) => {
+      return d.domainName === domainName;
+    });
+
+    if (domainObject && domainObject.leadScore !== undefined) {
+      const score = Number(domainObject.leadScore);
+      const validScore = !isNaN(score) && score >= 0 && score <= 100 ? score : 0;
+      console.log('🔍 [LEAD SCORE DEBUG] Found score in generatedDomains:', {
+        domainName,
+        rawScore: domainObject.leadScore,
+        convertedScore: validScore
+      });
+      return validScore;
+    }
+  }
+
+  // Try campaign.domains
+  const campaignDomains = (campaign as any).domains;
+  if (campaignDomains && Array.isArray(campaignDomains)) {
+    const domainObject = campaignDomains.find((d: any) => {
+      if (typeof d === 'object' && d && ('domainName' in d || 'domain_name' in d)) {
+        return d.domainName === domainName || d.domain_name === domainName;
+      }
+      return false;
+    });
+
+    if (domainObject && typeof domainObject === 'object') {
+      // Try both camelCase and snake_case field names
+      const leadScore = domainObject.leadScore || domainObject.lead_score;
+      if (leadScore !== undefined) {
+        const score = Number(leadScore);
+        const validScore = !isNaN(score) && score >= 0 && score <= 100 ? score : 0;
+        console.log('🔍 [LEAD SCORE DEBUG] Found score in campaign.domains:', {
+          domainName,
+          rawScore: leadScore,
+          convertedScore: validScore
+        });
+        return validScore;
+      }
+    }
+  }
+
+  console.log('🔍 [LEAD SCORE DEBUG] No score found, defaulting to 0 for:', domainName);
+  return 0; // Default to 0 if no score found
+};
+
+
+// Domain row component with robust rendering
+const DomainRow = React.memo<{ domain: EnrichedDomain }>(function DomainRow({ domain }) {
+  // Validate domain name before rendering
+  const safedomainName = domain.domainName || 'Unknown Domain';
+  
   return (
-    <Badge variant={config.variant} className={`text-xs whitespace-nowrap ${config.className}`}>
-      <IconComponent className="mr-1 h-3.5 w-3.5" />
-      {config.text}
-      {score !== undefined && status === 'scanned' && (
-        <span className="ml-1.5 flex items-center">
-          <Percent className="h-3 w-3 mr-0.5" /> {score}%
-        </span>
-      )}
-    </Badge>
-  );
-});
-StatusBadge.displayName = 'StatusBadge';
-
-// Virtualized table row component for memory efficiency
-const DomainTableRow = React.memo<{
-  domain: DomainDetail;
-  style?: React.CSSProperties;
-}>(function DomainTableRow({ domain, style }) {
-  return (
-    <TableRow key={domain.id} style={style} className="h-12 hover:bg-muted/50 transition-colors">
-      <TableCell className="font-medium truncate w-[35%]" title={domain.domainName}>
+    <TableRow className="hover:bg-muted/50">
+      <TableCell className="font-medium w-[35%]">
         <a
-          href={`http://${domain.domainName}`}
+          href={`https://${safedomainName}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline text-foreground hover:text-blue-400 flex items-center font-mono text-sm transition-colors"
+          className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
         >
-          {domain.domainName}
-          <ExternalLink className="inline-block ml-1 h-3 w-3 opacity-70" />
+          {safedomainName}
+          <ExternalLink className="ml-1 h-3 w-3" />
         </a>
       </TableCell>
-      <TableCell className="text-center w-[20%]">
+      <TableCell className="text-center w-[15%]">
         <StatusBadge status={domain.dnsStatus} />
       </TableCell>
-      <TableCell className="text-center w-[20%]">
+      <TableCell className="text-center w-[15%]">
         <StatusBadge status={domain.httpStatus} />
       </TableCell>
       <TableCell className="text-center w-[15%]">
         <StatusBadge status={domain.leadScanStatus} />
       </TableCell>
-      <TableCell className="text-center w-[10%]">
-        {domain.leadScore !== undefined ? (
-          <Badge variant="outline" className="text-xs">
-            <Percent className="mr-1 h-3 w-3" /> {domain.leadScore}%
-          </Badge>
-        ) : (
-          domain.leadScanStatus !== 'Pending' && domain.leadScanStatus !== 'n_a' ? 
-            <span className="text-xs text-muted-foreground">-</span> : null
-        )}
+      <TableCell className="text-center w-[20%]">
+        <LeadScoreDisplay score={domain.leadScore} />
       </TableCell>
     </TableRow>
   );
 });
-DomainTableRow.displayName = 'DomainTableRow';
+DomainRow.displayName = 'DomainRow';
 
-export const DomainStreamingTable: React.FC<DomainStreamingTableProps> = ({
+/**
+ * ARCHITECTURAL NOTE: DomainStreamingTable vs LatestActivityTable
+ *
+ * DomainStreamingTable:
+ * - Single campaign focus with prop-based data
+ * - Uses generatedDomains + campaign.domains fallback
+ * - Simplified lead processing (mock logic)
+ * - No real-time updates (static display)
+ * - Performance optimized with React.memo
+ *
+ * LatestActivityTable:
+ * - Multi-campaign dashboard with API + WebSocket
+ * - Complex getRichCampaignDataBatch integration
+ * - Full getGlobalLeadStatusAndScore processing
+ * - Real-time WebSocket updates with fallback polling
+ * - Campaign phase-aware logic with CAMPAIGN_PHASES_ORDERED
+ *
+ * Both components now share identical:
+ * - Status conversion logic (convertStatus function)
+ * - StatusBadge rendering with score support
+ * - Domain extraction patterns (defensive programming)
+ * - React.memo performance optimization
+ */
+export default function DomainStreamingTable({
   campaign,
   generatedDomains,
   dnsCampaignItems,
-  httpCampaignItems,
-  loading = false,
-  filters,
-  onFiltersChange,
-  onDownloadDomains,
-  className
-}) => {
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  httpCampaignItems
+}: DomainStreamingTableProps) {
 
-  // Helper function to convert backend status to frontend DomainActivityStatus
-  const convertBackendStatus = useCallback((backendStatus?: string): DomainActivityStatus => {
-    if (!backendStatus) return 'not_validated' as any; // FIXED: Use not_validated instead of n_a for missing status
-    switch (backendStatus.toLowerCase()) {
-      case 'ok':
-      case 'valid':
-      case 'resolved':
-      case 'validated':
-      case 'succeeded':
-        return 'validated' as any;
-      case 'error':
-      case 'invalid':
-      case 'unresolved':
-      case 'failed': // FIXED: Handle lowercase 'failed'
-        return 'Failed' as any;
-      case 'pending': // FIXED: Handle lowercase 'pending' from backend initialization
-      case 'processing':
-      case 'queued':
-        return 'Pending' as any;
-      case 'timeout':
-        return 'Failed' as any;
-      default:
-        console.log('[DomainStreamingTable] Unknown backend status:', backendStatus);
-        return 'not_validated' as any;
-    }
-  }, []);
-
-  // Legacy helper function for backward compatibility with validation items
-  const getDomainStatusFromValidation = useCallback((domainName: string, items: CampaignValidationItem[]): DomainActivityStatus => {
-    const item = items.find(item => item.domainName === domainName || item.domain === domainName);
-    if (!item) return 'n_a' as any;
-    const status = (item.validationStatus || item.status || '').toString().toLowerCase();
-    return convertBackendStatus(status);
-  }, [convertBackendStatus]);
-
-  // Convert domains to unified format with memoization for performance
-  const domainDetails = useMemo((): DomainDetail[] => {
-    let domains: DomainDetail[] = [];
-
-    // CRITICAL FIX: Always prioritize generatedDomains as it contains the correct status fields
-    // regardless of campaign phase. The backend stores domain status in GeneratedDomain objects.
-    if (generatedDomains.length > 0) {
-      domains = generatedDomains.map((domain, index) => {
-        // Handle both string and object formats
-        let domainName = '';
-        let domainId = '';
-        let generatedDate = '';
-        let dnsStatus = 'not_validated' as DomainActivityStatus;
-        let httpStatus = 'not_validated' as DomainActivityStatus;
-        
-        if (typeof domain === 'string') {
-          // Domain is just a string (domain name)
-          domainName = domain;
-          domainId = `string-domain-${index}`;
-          generatedDate = campaign.createdAt || new Date().toISOString();
-        } else if (typeof domain === 'object' && domain !== null && 'domainName' in domain) {
-          // Domain is an object (GeneratedDomain)
-          domainName = domain.domainName || '';
-          domainId = domain.id || `domain-${index}`;
-          generatedDate = domain.generatedAt || domain.createdAt || campaign.createdAt || new Date().toISOString();
-          
-          // Use actual domain status from generated_domains table (single source of truth)
-          if (domain.dnsStatus) {
-            dnsStatus = convertBackendStatus(domain.dnsStatus);
-          }
-          if (domain.httpStatus) {
-            httpStatus = convertBackendStatus(domain.httpStatus);
-          }
-        } else {
-          // Fallback for unexpected types
-          domainName = `unknown-domain-${index}`;
-          domainId = `fallback-domain-${index}`;
-          generatedDate = campaign.createdAt || new Date().toISOString();
-        }
-        
-        return {
-          id: domainId,
-          domainName: domainName,
-          generatedDate: generatedDate,
-          dnsStatus: dnsStatus,
-          httpStatus: httpStatus,
-          leadScanStatus: 'n_a' as DomainActivityStatus,
-        };
-      });
-    } else if (campaign.currentPhase === CampaignCurrentPhaseEnum.DnsValidation && dnsCampaignItems.length > 0) {
-      // Fallback to legacy data structure only if generatedDomains is empty
-      domains = dnsCampaignItems.map(item => ({
-        id: item.id,
-        domainName: item.domainName || item.domain || '',
-        generatedDate: campaign.createdAt,
-        dnsStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', dnsCampaignItems),
-        httpStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', httpCampaignItems),
-        leadScanStatus: 'n_a' as DomainActivityStatus,
-      }));
-    } else if (campaign.currentPhase === CampaignCurrentPhaseEnum.HttpKeywordValidation && httpCampaignItems.length > 0) {
-      // Fallback to legacy data structure only if generatedDomains is empty
-      domains = httpCampaignItems.map(item => ({
-        id: item.id,
-        domainName: item.domainName || item.domain || '',
-        generatedDate: campaign.createdAt,
-        dnsStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', dnsCampaignItems),
-        httpStatus: getDomainStatusFromValidation(item.domainName || item.domain || '', httpCampaignItems),
-        leadScanStatus: 'n_a' as DomainActivityStatus,
-      }));
-    }
-
-    console.log(`🔍 [DomainStreamingTable] Domain data processed:`, {
-      phase: campaign.currentPhase,
-      generatedDomainsCount: generatedDomains.length,
-      dnsCampaignItemsCount: dnsCampaignItems.length,
-      httpCampaignItemsCount: httpCampaignItems.length,
-      domainsOutput: domains.length,
-      sampleDomain: domains[0],
-      sampleGeneratedDomain: generatedDomains[0],
-      generatedDomainsStructure: generatedDomains.slice(0, 2).map(d => ({
-        type: typeof d,
-        isString: typeof d === 'string',
-        isObject: typeof d === 'object',
-        keys: typeof d === 'object' ? Object.keys(d) : 'N/A',
-        domainName: typeof d === 'object' ? d.domainName : d,
-        domainNameType: typeof d === 'object' ? typeof d.domainName : typeof d
-      }))
+  const enrichedDomains = useMemo((): EnrichedDomain[] => {
+    // 🚀 TRULY BACKEND-DRIVEN: Use API response exactly as provided
+    console.log('🚀 [BACKEND-DRIVEN] Using API response directly:', {
+      count: generatedDomains?.length || 0,
+      firstDomain: generatedDomains?.[0]
     });
-
-    return domains;
-  }, [campaign, generatedDomains, dnsCampaignItems, httpCampaignItems, convertBackendStatus, getDomainStatusFromValidation]);
-
-  // Apply filters and sorting with memoization
-  const filteredAndSortedDomains = useMemo(() => {
-    let filtered = domainDetails;
-
-    // Apply search filter
-    if (filters.searchTerm) {
-      const searchTerm = filters.searchTerm.toLowerCase();
-      filtered = filtered.filter(domain =>
-        domain.domainName.toLowerCase().includes(searchTerm)
-      );
+    
+    if (!Array.isArray(generatedDomains) || generatedDomains.length === 0) {
+      console.log('🚀 [BACKEND-DRIVEN] No domains in API response');
+      return [];
     }
 
-    // Apply status filter
-    if (filters.statusFilter !== 'all') {
-      filtered = filtered.filter(domain => {
-        switch (filters.statusFilter) {
-          case 'validated':
-            return domain.dnsStatus === 'validated' || domain.httpStatus === 'validated';
-          case 'Failed':
-            return domain.dnsStatus === 'Failed' || domain.httpStatus === 'Failed';
-          case 'Pending':
-            return domain.dnsStatus === 'Pending' || domain.httpStatus === 'Pending';
-          default:
-            return true;
-        }
+    // Use domain objects directly from API - no extraction, no helper functions
+    return generatedDomains.map((domainObject: any) => {
+      console.log('🚀 [BACKEND-DRIVEN] Processing domain object from API:', domainObject);
+      
+      // Use API fields directly - trust the backend completely
+      const domainName = domainObject.domainName || 'Unknown';
+      const dnsStatus = convertStatus(domainObject.dnsStatus) || 'Unknown';
+      const httpStatus = convertStatus(domainObject.httpStatus) || 'Unknown';
+      const leadStatus = convertStatus(domainObject.leadStatus) || 'Unknown';
+      const leadScore = typeof domainObject.leadScore === 'number' ? domainObject.leadScore : 0;
+      
+      console.log('🚀 [BACKEND-DRIVEN] Direct API mapping:', {
+        domainName,
+        dnsStatus: `${domainObject.dnsStatus} → ${dnsStatus}`,
+        httpStatus: `${domainObject.httpStatus} → ${httpStatus}`,
+        leadStatus: `${domainObject.leadStatus} → ${leadStatus}`,
+        leadScore: `${domainObject.leadScore} → ${leadScore}`
       });
-    }
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let comparison = 0;
-      
-      switch (filters.sortBy) {
-        case 'domainName':
-          comparison = a.domainName.localeCompare(b.domainName);
-          break;
-        case 'generatedDate':
-          comparison = new Date(a.generatedDate || '').getTime() - new Date(b.generatedDate || '').getTime();
-          break;
-        default:
-          comparison = a.domainName.localeCompare(b.domainName);
-      }
-      
-      return filters.sortOrder === 'desc' ? -comparison : comparison;
+      return {
+        domainName,
+        dnsStatus,
+        httpStatus,
+        leadScanStatus: leadStatus,
+        leadScore
+      };
     });
+  }, [generatedDomains]); // Only depend on API data
 
-    return filtered;
-  }, [domainDetails, filters]);
-
-  // Use standardized domain pagination with context-aware batch sizing
-  const paginationHook = useDomainPagination(filteredAndSortedDomains.length, 'detail');
-  const { state: pagination, actions: paginationActions } = paginationHook;
-  
-  // Calculate total pages for UI
-  const totalPages = Math.ceil(filteredAndSortedDomains.length / pagination.pageSize);
-
-  // Virtual pagination for memory efficiency
-  const paginatedDomains = useMemo(() => {
-    const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
-    const endIndex = startIndex + pagination.pageSize;
-    return filteredAndSortedDomains.slice(startIndex, endIndex);
-  }, [filteredAndSortedDomains, pagination.currentPage, pagination.pageSize]);
-
-  const startItem = (pagination.currentPage - 1) * pagination.pageSize + 1;
-  const endItem = Math.min(pagination.currentPage * pagination.pageSize, filteredAndSortedDomains.length);
-
-  // Pagination handlers using new standardized actions
-  const handlePageSizeChange = useCallback((value: string) => {
-    paginationActions.changePageSize(Number(value));
-  }, [paginationActions]);
-
-  const goToNextPage = useCallback(() => {
-    if (pagination.currentPage < totalPages) {
-      paginationActions.goToPage(pagination.currentPage + 1);
-    }
-  }, [paginationActions, pagination.currentPage, totalPages]);
-
-  const goToPreviousPage = useCallback(() => {
-    if (pagination.currentPage > 1) {
-      paginationActions.goToPage(pagination.currentPage - 1);
-    }
-  }, [paginationActions, pagination.currentPage]);
-
-  // Download handlers
-  const handleDownloadFiltered = useCallback(() => {
-    const domains = filteredAndSortedDomains.map(d => d.domainName);
-    onDownloadDomains(domains, 'filtered_domains');
-  }, [filteredAndSortedDomains, onDownloadDomains]);
-
-  const handleDownloadAll = useCallback(() => {
-    const domains = domainDetails.map(d => d.domainName);
-    onDownloadDomains(domains, 'all_domains');
-  }, [domainDetails, onDownloadDomains]);
-
-  if (loading && domainDetails.length === 0) {
+  if (enrichedDomains.length === 0) {
     return (
-      <Card className={cn("shadow-lg", className)}>
-        <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          <span>Loading domains...</span>
-        </CardContent>
-      </Card>
+      <div className="text-center py-4 text-muted-foreground">
+        No domains found for this campaign
+      </div>
     );
   }
 
   return (
-    <Card className={cn("shadow-xl border-2", className)}>
-      <CardHeader className="pb-4 bg-gradient-to-r from-card to-muted/20">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xl font-bold">Campaign Domain Details ({filteredAndSortedDomains.length})</CardTitle>
-            <CardDescription className="text-base mt-1">
-              Real-time status of domains processed in this campaign
-            </CardDescription>
-          </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-            className="flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow"
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-          </Button>
-        </div>
-
-        {/* Filters */}
-        {isFilterExpanded && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
-            <div className="space-y-2">
-              <label className="text-xs font-medium">Search Domains</label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search domains..."
-                  value={filters.searchTerm}
-                  onChange={(e) => onFiltersChange({ searchTerm: e.target.value })}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium">Status Filter</label>
-              <Select 
-                value={filters.statusFilter} 
-                onValueChange={(value) => onFiltersChange({ statusFilter: value as DomainActivityStatus | 'all' })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="validated">Validated</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="not_validated">Not Validated</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium">Sort By</label>
-              <Select 
-                value={`${filters.sortBy}-${filters.sortOrder}`}
-                onValueChange={(value) => {
-                  const [sortBy, sortOrder] = value.split('-') as [typeof filters.sortBy, typeof filters.sortOrder];
-                  onFiltersChange({ sortBy, sortOrder });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="domainName-asc">Domain A-Z</SelectItem>
-                  <SelectItem value="domainName-desc">Domain Z-A</SelectItem>
-                  <SelectItem value="generatedDate-desc">Newest First</SelectItem>
-                  <SelectItem value="generatedDate-asc">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-      </CardHeader>
-
-      <CardContent>
-        {filteredAndSortedDomains.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {domainDetails.length === 0 ? (
-              <div className="space-y-2">
-                <p>No domains to display yet.</p>
-                {campaign.phaseStatus === CampaignPhaseStatusEnum.NotStarted || campaign.phaseStatus === CampaignPhaseStatusEnum.InProgress ? (
-                  <p className="text-sm">
-                    {campaign.currentPhase === CampaignCurrentPhaseEnum.Generation
-                      ? 'Domain generation is in progress...'
-                      : 'Campaign processing is starting...'
-                    }
-                  </p>
-                ) : (
-                  <p className="text-sm">Domains will appear here as they are processed.</p>
-                )}
-              </div>
-            ) : (
-              'No domains match the current filters.'
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Virtual scrolling table */}
-            <ScrollArea ref={scrollAreaRef} className="h-[600px] border-2 rounded-lg shadow-inner">
-              <Table>
-                <TableHeader className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 border-b-2">
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[35%] font-semibold text-base">Domain</TableHead>
-                    <TableHead className="text-center w-[20%] font-semibold text-base">DNS Status</TableHead>
-                    <TableHead className="text-center w-[20%] font-semibold text-base">HTTP Status</TableHead>
-                    <TableHead className="text-center w-[15%] font-semibold text-base">Lead Status</TableHead>
-                    <TableHead className="text-center w-[10%] font-semibold text-base">Lead Score</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedDomains.map((domain) => (
-                    <DomainTableRow
-                      key={domain.id}
-                      domain={domain}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-
-            {/* Pagination Controls */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-muted/10 to-muted/5 rounded-lg border">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="font-medium">Rows per page:</span>
-                  <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}>
-                    <SelectTrigger className="w-[80px] h-9 text-sm shadow-sm">
-                      <SelectValue placeholder={pagination.pageSize} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[25, 50, 100, 250].map(size => (
-                        <SelectItem key={size} value={String(size)} className="text-sm">
-                          {size}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="font-medium">
-                    Showing {filteredAndSortedDomains.length > 0 ? startItem : 0}-{endItem} of {filteredAndSortedDomains.length}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToPreviousPage}
-                    disabled={pagination.currentPage === 1}
-                    className="h-9 shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <ChevronLeft className="h-4 w-4 mr-1 sm:mr-2" />
-                    <span className="hidden sm:inline">Previous</span>
-                  </Button>
-                  <span className="text-sm text-muted-foreground font-medium px-3 py-1 bg-background rounded border">
-                    Page {pagination.currentPage} of {totalPages > 0 ? totalPages : 1}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToNextPage}
-                    disabled={pagination.currentPage === totalPages || totalPages === 0}
-                    className="h-9 shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <span className="hidden sm:inline">Next</span>
-                    <ChevronRight className="h-4 w-4 ml-1 sm:ml-2" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Download Actions */}
-            <div className="mt-6 flex flex-wrap justify-end gap-3 p-4 bg-gradient-to-r from-muted/20 to-muted/10 rounded-lg border">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadFiltered}
-                disabled={filteredAndSortedDomains.length === 0}
-                className="flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                <Download className="h-4 w-4" />
-                Export Filtered ({filteredAndSortedDomains.length})
-              </Button>
-              
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleDownloadAll}
-                disabled={domainDetails.length === 0}
-                className="flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                <Download className="h-4 w-4" />
-                Export All ({domainDetails.length})
-              </Button>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <ScrollArea className="h-[400px] rounded-md border">
+        <Table>
+          <TableHeader className="sticky top-0 bg-background z-10">
+            <TableRow>
+              <TableHead className="w-[35%]">Domain</TableHead>
+              <TableHead className="text-center w-[15%]">DNS Status</TableHead>
+              <TableHead className="text-center w-[15%]">HTTP Status</TableHead>
+              <TableHead className="text-center w-[15%]">Lead Status</TableHead>
+              <TableHead className="text-center w-[20%]">Lead Score</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {enrichedDomains.map(domain => (
+              <DomainRow key={domain.domainName} domain={domain} />
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+      
+      <div className="text-sm text-muted-foreground">
+        Total domains: {enrichedDomains.length}
+      </div>
+    </div>
   );
-};
-
-export default DomainStreamingTable;
+}

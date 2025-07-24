@@ -18,6 +18,7 @@ Name | Type | Description | Notes
 **id** | **string** | Unique identifier | [optional] [default to undefined]
 **lastValidatedAt** | **string** | Unique identifier | [optional] [default to undefined]
 **leadScore** | **string** |  | [optional] [default to undefined]
+**leadStatus** | **string** |  | [optional] [default to undefined]
 **offsetIndex** | **number** |  | [optional] [default to undefined]
 **sourceKeyword** | **string** |  | [optional] [default to undefined]
 **sourcePattern** | **string** |  | [optional] [default to undefined]
@@ -42,6 +43,7 @@ const instance: GeneratedDomain = {
     id,
     lastValidatedAt,
     leadScore,
+    leadStatus,
     offsetIndex,
     sourceKeyword,
     sourcePattern,

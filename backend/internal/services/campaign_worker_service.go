@@ -221,9 +221,9 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 				// Get current campaign to check its status
 				if currentCampaign, _, err := s.campaignOrchestratorSvc.GetCampaignDetails(jobCtx, job.CampaignID); err != nil {
 					log.Printf("Worker [%s]: Failed to get campaign %s to check status: %v", workerName, job.CampaignID, err)
-				} else if currentCampaign.PhaseStatus != nil && *currentCampaign.PhaseStatus == models.CampaignPhaseStatusPending {
+				} else if currentCampaign.PhaseStatus != nil && *currentCampaign.PhaseStatus == models.PhaseStatusNotStarted {
 					// Campaign is still pending, should be cancelled (not failed)
-					if err := s.campaignOrchestratorSvc.SetCampaignStatus(jobCtx, job.CampaignID, models.CampaignPhaseStatusFailed); err != nil {
+					if err := s.campaignOrchestratorSvc.SetCampaignStatus(jobCtx, job.CampaignID, models.PhaseStatusFailed); err != nil {
 						log.Printf("Worker [%s]: Failed to set campaign %s to failed: %v", workerName, job.CampaignID, err)
 					} else {
 						log.Printf("Worker [%s]: Successfully set pending campaign %s to failed status", workerName, job.CampaignID)

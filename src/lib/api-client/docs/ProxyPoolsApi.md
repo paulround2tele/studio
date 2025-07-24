@@ -12,7 +12,7 @@ All URIs are relative to *http://localhost*
 |[**updateProxyPool**](#updateproxypool) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
 
 # **addProxyToPool**
-> StreamExtractKeywords200Response addProxyToPool(addProxyToPoolRequest)
+> CreateLeadGenerationCampaign200Response addProxyToPool(addProxyToPoolRequest)
 
 Assign a proxy to a proxy pool with optional weight
 
@@ -47,7 +47,7 @@ const { status, data } = await apiInstance.addProxyToPool(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 
@@ -69,7 +69,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **createProxyPool**
-> StreamExtractKeywords200Response createProxyPool(proxyPoolRequest)
+> CreateLeadGenerationCampaign200Response createProxyPool(proxyPoolRequest)
 
 Create a new proxy pool with configuration settings
 
@@ -101,7 +101,7 @@ const { status, data } = await apiInstance.createProxyPool(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 
@@ -123,7 +123,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deleteProxyPool**
-> StandardAPIResponse deleteProxyPool()
+> APIResponse deleteProxyPool()
 
 Delete a proxy pool
 
@@ -154,7 +154,7 @@ const { status, data } = await apiInstance.deleteProxyPool(
 
 ### Return type
 
-**StandardAPIResponse**
+**APIResponse**
 
 ### Authorization
 
@@ -176,7 +176,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listProxyPools**
-> StreamExtractKeywords200Response listProxyPools()
+> CreateLeadGenerationCampaign200Response listProxyPools()
 
 Retrieve all proxy pools with their associated proxies
 
@@ -200,7 +200,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 

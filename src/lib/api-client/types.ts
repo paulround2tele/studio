@@ -152,146 +152,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List all campaigns
-         * @description Retrieve a list of all campaigns with optional filtering and pagination
+         * List campaigns (standalone)
+         * @description Get list of all campaigns with phase-centric bulk data
          */
-        get: operations["listCampaigns"];
-        put?: never;
-        /**
-         * Create new campaign
-         * @description Create a new campaign with specified configuration parameters
-         */
-        post: operations["createCampaign"];
-        /**
-         * Bulk delete campaigns
-         * @description Delete multiple campaigns in a single operation
-         */
-        delete: operations["bulkDeleteCampaigns"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get campaign details
-         * @description Retrieve detailed information about a specific campaign including its configuration parameters
-         */
-        get: operations["getCampaignDetails"];
-        /**
-         * Update campaign configuration
-         * @description Update an existing campaign's configuration parameters
-         */
-        put: operations["updateCampaign"];
-        post?: never;
-        /**
-         * Delete campaign
-         * @description Delete a campaign and all associated data
-         */
-        delete: operations["deleteCampaign"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancel campaign
-         * @description Cancel the execution of a campaign
-         */
-        post: operations["cancelCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/configure-dns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Configure DNS validation phase
-         * @description Configure DNS validation phase for a campaign and transition to dns_validation phase
-         */
-        post: operations["configureDNSValidation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/configure-http": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Configure HTTP validation phase
-         * @description Configure HTTP validation phase for a campaign and transition to http_validation phase
-         */
-        post: operations["configureHTTPValidation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/pause": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Pause campaign
-         * @description Pause the execution of a running campaign
-         */
-        post: operations["pauseCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/results/dns-validation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get DNS validation results
-         * @description Retrieve DNS validation results for a specific campaign with pagination support
-         */
-        get: operations["getDNSValidationResults"];
+        get: operations["getCampaignsStandalone"];
         put?: never;
         post?: never;
         delete?: never;
@@ -300,7 +164,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/campaigns/{campaignId}/results/generated-domains": {
+    "/campaigns/{campaignId}/phases/{phase}/configure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Configure campaign phase (standalone)
+         * @description Configure a specific phase for a campaign using standalone services
+         */
+        post: operations["configurePhaseStandalone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/phases/{phase}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start campaign phase (standalone)
+         * @description Start a specific phase of a campaign using standalone services
+         */
+        post: operations["startPhaseStandalone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/phases/{phase}/status": {
         parameters: {
             query?: never;
             header?: never;
@@ -308,10 +212,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get generated domains
-         * @description Retrieve all generated domains for a specific campaign with pagination support
+         * Get phase status (standalone)
+         * @description Get status information for a specific phase of a campaign using standalone services
          */
-        get: operations["getGeneratedDomains"];
+        get: operations["getPhaseStatusStandalone"];
         put?: never;
         post?: never;
         delete?: never;
@@ -320,7 +224,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/campaigns/{campaignId}/results/http-keyword": {
+    "/campaigns/{campaignId}/progress": {
         parameters: {
             query?: never;
             header?: never;
@@ -328,112 +232,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get HTTP keyword results
-         * @description Retrieve HTTP keyword validation results for a specific campaign with pagination support
+         * Get campaign progress (standalone)
+         * @description Get campaign progress information using standalone services
          */
-        get: operations["getHTTPKeywordResults"];
+        get: operations["getCampaignProgressStandalone"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Resume campaign
-         * @description Resume the execution of a paused campaign
-         */
-        post: operations["resumeCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/start": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start campaign
-         * @description Start the execution of a campaign
-         */
-        post: operations["startCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/validate-dns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Validate DNS for campaign
-         * @description Trigger DNS validation for all domains in a specific campaign
-         */
-        post: operations["validateDNSForCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/{campaignId}/validate-http": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Validate HTTP for campaign
-         * @description Trigger HTTP keyword validation for all domains in a specific campaign
-         */
-        post: operations["validateHTTPForCampaign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/bulk/domains": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get bulk domain data
-         * @description Efficiently retrieve domain data for multiple campaigns
-         */
-        post: operations["getBulkDomains"];
         delete?: never;
         options?: never;
         head?: never;
@@ -451,49 +255,9 @@ export interface paths {
         put?: never;
         /**
          * Get bulk enriched campaign data
-         * @description Efficiently retrieve enriched data for multiple campaigns in a single request for B2B scale
+         * @description Retrieve bulk enriched data across multiple campaigns for enterprise-scale processing
          */
         post: operations["getBulkEnrichedCampaignData"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/bulk/leads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get bulk lead data
-         * @description Efficiently retrieve lead data for multiple campaigns
-         */
-        post: operations["getBulkLeads"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/bulk/logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get bulk log data
-         * @description Efficiently retrieve log data for multiple campaigns
-         */
-        post: operations["getBulkLogs"];
         delete?: never;
         options?: never;
         head?: never;
@@ -511,9 +275,29 @@ export interface paths {
         put?: never;
         /**
          * Get domain generation pattern offset
-         * @description Gets the current offset for a domain generation pattern to prevent duplicate domains across campaigns
+         * @description Get the current offset for domain generation patterns
          */
         post: operations["getPatternOffset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/lead-generation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create lead generation campaign
+         * @description Create a new lead generation campaign with domain generation configuration
+         */
+        post: operations["createLeadGenerationCampaign"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1286,9 +1070,14 @@ export interface components {
         };
         APIResponse: {
             data?: Record<string, never>;
-            error?: string;
-            message?: string;
-            status?: string;
+            error?: components["schemas"]["ErrorInfo"];
+            metadata?: components["schemas"]["Metadata"];
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            requestId?: string;
+            success?: boolean;
         };
         AddProxyToPoolRequest: {
             /**
@@ -1298,6 +1087,13 @@ export interface components {
             proxyId: string;
             /** Format: int32 */
             weight?: number;
+        };
+        AnalysisConfig: {
+            /** @enum {string} */
+            analysisType: "basic" | "comprehensive" | "custom";
+            customRules?: string[];
+            generateReport?: boolean;
+            includeScreenshots?: boolean;
         };
         ArchitectureRefactorLog: {
             afterPattern?: string;
@@ -1454,9 +1250,6 @@ export interface components {
             };
             /** Format: int32 */
             totalCount?: number;
-        };
-        BulkDeleteRequest: {
-            campaignIds: string[];
         };
         BulkDeleteResult: {
             deleted_campaign_ids?: string[];
@@ -1730,85 +1523,7 @@ export interface components {
             cached_at?: string;
             is_valid?: boolean;
         };
-        Campaign: {
-            /** Format: double */
-            avgProcessingRate?: number;
-            businessStatus?: string;
-            /** Format: date-time */
-            completedAt?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /**
-             * @description Phases-based architecture (replaces legacy CampaignType + Status)
-             * @enum {string}
-             */
-            currentPhase?: "setup" | "generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-            /**
-             * Format: int64
-             * @description @swagger:field dnsValidatedDomains
-             */
-            dnsValidatedDomains?: number;
-            dnsValidationParams?: components["schemas"]["DNSValidationCampaignParams"];
-            domainGenerationParams?: components["schemas"]["DomainGenerationCampaignParams"];
-            /**
-             * Format: int64
-             * @description @swagger:field domains
-             */
-            domains?: number;
-            errorMessage?: string;
-            /**
-             * Format: date-time
-             * @description Additional tracking fields
-             */
-            estimatedCompletionAt?: string;
-            /** @description Content analysis data expected by frontend */
-            extractedContent?: components["schemas"]["ExtractedContentItem"][];
-            /** Format: int64 */
-            failedItems?: number;
-            httpKeywordValidationParams?: components["schemas"]["HTTPKeywordCampaignParams"];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
-            /** Format: date-time */
-            lastHeartbeatAt?: string;
-            leadItems?: components["schemas"]["LeadItem"][];
-            /**
-             * Format: int64
-             * @description @swagger:field leads
-             */
-            leads?: number;
-            metadata?: Record<string, never>;
-            name: string;
-            /**
-             * @description @swagger:field phaseStatus
-             * @enum {string}
-             */
-            phaseStatus?: "not_started" | "in_progress" | "paused" | "completed" | "failed";
-            /** Format: int64 */
-            processedItems?: number;
-            /**
-             * Format: double
-             * @description @swagger:field progress
-             */
-            progress?: number;
-            /** Format: double */
-            progressPercentage?: number;
-            /** Format: date-time */
-            startedAt?: string;
-            /** Format: int64 */
-            successfulItems?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
-        };
+        Campaign: components["schemas"]["LeadGenerationCampaign"];
         CampaignAPI: {
             /** Format: double */
             avgProcessingRate?: number;
@@ -1816,11 +1531,7 @@ export interface components {
             completedAt?: string;
             /** Format: date-time */
             createdAt?: string;
-            /**
-             * @description Phases-based architecture (replaces legacy CampaignType + Status)
-             * @enum {string}
-             */
-            currentPhase?: "setup" | "generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+            currentPhase?: components["schemas"]["CampaignPhaseEnum"];
             /** Format: int64 */
             dnsValidatedDomains?: number;
             /** Format: int64 */
@@ -1841,8 +1552,7 @@ export interface components {
             leads?: number;
             metadata?: Record<string, never>;
             name?: string;
-            /** @enum {string} */
-            phaseStatus?: "not_started" | "in_progress" | "paused" | "completed" | "failed";
+            phaseStatus?: components["schemas"]["CampaignPhaseStatusEnum"];
             /** Format: int64 */
             processedItems?: number;
             /** Format: double */
@@ -2003,8 +1713,76 @@ export interface components {
              */
             proxyPoolId?: string;
         };
-        CampaignPhaseEnum: string;
-        CampaignPhaseStatusEnum: string;
+        CampaignPhase: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            /** @description Phase configuration (JSON storage for phase-specific params) */
+            configuration?: Record<string, never>;
+            /**
+             * Format: date-time
+             * @description Audit fields
+             */
+            createdAt?: string;
+            errorMessage?: string;
+            /** Format: date-time */
+            failedAt?: string;
+            /** Format: int64 */
+            failedItems?: number;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** Format: date-time */
+            pausedAt?: string;
+            /** Format: int32 */
+            phaseOrder?: number;
+            /** @enum {string} */
+            phaseType?: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+            /** Format: int64 */
+            processedItems?: number;
+            /** Format: double */
+            progressPercentage?: number;
+            /**
+             * Format: date-time
+             * @description Phase lifecycle timestamps
+             */
+            startedAt?: string;
+            /**
+             * @description Phase execution status
+             * @enum {string}
+             */
+            status?: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
+            /** Format: int64 */
+            successfulItems?: number;
+            /**
+             * Format: int64
+             * @description Phase execution counters
+             */
+            totalItems?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        CampaignPhaseEnum: components["schemas"]["PhaseTypeEnum"];
+        CampaignPhaseStatusEnum: components["schemas"]["PhaseStatusEnum"];
+        CampaignProgressResponse: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            currentPhase?: string;
+            /** Format: double */
+            overallProgress?: number;
+            phaseProgress?: {
+                [key: string]: components["schemas"]["PhaseProgressResponse"];
+            };
+        };
         CampaignStartResponse: {
             /**
              * Format: uuid
@@ -2234,7 +2012,11 @@ export interface components {
         };
         CreateCampaignRequest: {
             description?: string;
+            dnsValidationParams?: components["schemas"]["DNSValidationRequest"];
             domainGenerationParams?: components["schemas"]["DomainGenerationParams"];
+            /** @description Full sequence mode support - when enabled, stores all phase configurations at creation */
+            fullSequenceMode?: boolean;
+            httpKeywordParams?: components["schemas"]["HTTPKeywordValidationRequest"];
             launchSequence?: boolean;
             name: string;
             /**
@@ -2246,9 +2028,9 @@ export interface components {
         CreateDomainGenerationCampaignRequest: {
             characterSet: string;
             constantString: string;
+            description?: string;
             dnsValidationParams?: components["schemas"]["DNSValidationRequest"];
             httpKeywordParams?: components["schemas"]["HTTPKeywordValidationRequest"];
-            /** @description Full sequence support - optional parameters for auto-chaining phases */
             launchSequence?: boolean;
             name: string;
             /** Format: int64 */
@@ -2269,6 +2051,16 @@ export interface components {
             isEnabled?: boolean;
             name: string;
             rules?: components["schemas"]["KeywordRuleRequest"][];
+        };
+        CreateLeadGenerationCampaignRequest: {
+            description?: string;
+            domainConfig: components["schemas"]["DomainGenerationConfig"];
+            name: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
         };
         CreatePersonaRequest: {
             configDetails: Record<string, never>;
@@ -2363,6 +2155,17 @@ export interface components {
              * @description Unique identifier
              */
             sourceGenerationCampaignId?: string;
+        };
+        DNSValidationConfig: {
+            /** Format: int32 */
+            batchSize?: number;
+            personaIds: string[];
+            /** Format: int32 */
+            processingSpeedPerMinute?: number;
+            /** Format: int32 */
+            retryAttempts?: number;
+            /** Format: int32 */
+            rotationIntervalSeconds?: number;
         };
         DNSValidationRequest: {
             /** Format: int32 */
@@ -2583,6 +2386,19 @@ export interface components {
             /** Format: int32 */
             variableLength?: number;
         };
+        DomainGenerationConfig: {
+            /** Format: int32 */
+            batchSize?: number;
+            characterSet: string;
+            constantString: string;
+            /** Format: int32 */
+            numDomainsToGenerate?: number;
+            /** @enum {string} */
+            patternType: "prefix" | "suffix" | "both";
+            tld: string;
+            /** Format: int32 */
+            variableLength: number;
+        };
         DomainGenerationConfigState: {
             configDetails?: Record<string, never>;
             configHash?: string;
@@ -2603,7 +2419,46 @@ export interface components {
             /** Format: int32 */
             variableLength: number;
         };
+        DomainGenerationProgress: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaign_id?: string;
+            /** Format: int32 */
+            domains_generated?: number;
+            /** Format: date-time */
+            estimated_end?: string;
+            /** Format: double */
+            progress?: number;
+            /** Format: date-time */
+            started_at?: string;
+            status?: string;
+            /** Format: int32 */
+            total_domains?: number;
+        };
+        DomainGenerationStats: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaign_id?: string;
+            config_hash?: string;
+            /** Format: int64 */
+            current_offset?: number;
+            /** Format: int32 */
+            domains_generated?: number;
+            /** Format: int64 */
+            estimated_time_left?: number;
+            /** Format: double */
+            generation_rate?: number;
+            /** Format: int64 */
+            memory_usage?: number;
+            /** Format: int64 */
+            total_combinations?: number;
+        };
         DomainHTTPStatusEnum: string;
+        DomainLeadStatusEnum: string;
         DomainPatternType: string;
         EnrichedCampaignData: {
             campaign?: components["schemas"]["CampaignData"];
@@ -2760,6 +2615,14 @@ export interface components {
             details?: string;
             error?: string;
         };
+        GenerateDomainsRequest: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaign_id?: string;
+            config?: components["schemas"]["DomainGenerationConfig"];
+        };
         GeneratedDomain: {
             /** Format: date-time */
             createdAt?: string;
@@ -2793,6 +2656,8 @@ export interface components {
              */
             lastValidatedAt?: string;
             leadScore?: string;
+            /** @enum {string} */
+            leadStatus?: "pending" | "match" | "no_match" | "error" | "timeout";
             /** Format: int64 */
             offsetIndex?: number;
             sourceKeyword?: string;
@@ -2934,7 +2799,7 @@ export interface components {
             maxVersion?: string;
             minVersion?: string;
         };
-        HTTPValidationRequest: {
+        HTTPValidationConfig: {
             adHocKeywords?: string[];
             /** Format: int32 */
             batchSize?: number;
@@ -2942,13 +2807,18 @@ export interface components {
             personaIds: string[];
             /** Format: int32 */
             processingSpeedPerMinute?: number;
+            proxyIds?: string[];
             /**
              * Format: uuid
              * @description Unique identifier
              */
             proxyPoolId?: string;
+            /** @enum {string} */
+            proxySelectionStrategy?: "round_robin" | "random" | "least_used";
             /** Format: int32 */
             retryAttempts?: number;
+            /** Format: int32 */
+            rotationIntervalSeconds?: number;
             targetHttpPorts?: number[];
         };
         HTTPValidationStartResponse: {
@@ -3170,6 +3040,135 @@ export interface components {
             rules?: string[];
             /** Format: date-time */
             updatedAt?: string;
+        };
+        LeadGenerationCampaign: {
+            analysisResults?: Record<string, never>;
+            autoAdvancePhases?: boolean;
+            /** Format: double */
+            avgProcessingRate?: number;
+            businessStatus?: string;
+            /** @description Campaign type (always 'lead_generation' in new architecture) */
+            campaignType: string;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: int32 */
+            completedPhases?: number;
+            /**
+             * Format: date-time
+             * @description Campaign lifecycle timestamps
+             */
+            createdAt?: string;
+            /** @enum {string} */
+            currentPhase?: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+            /**
+             * Format: uuid
+             * @description Phase management
+             */
+            currentPhaseId?: string;
+            dnsConfig?: Record<string, never>;
+            dnsResults?: Record<string, never>;
+            /** Format: int64 */
+            dnsValidatedDomains?: number;
+            dnsValidationParams?: components["schemas"]["DNSValidationCampaignParams"];
+            domainGenerationParams?: components["schemas"]["DomainGenerationCampaignParams"];
+            /**
+             * Format: int64
+             * @description Summary metrics (computed from phases)
+             */
+            domains?: number;
+            /** @description JSONB columns for efficient phase data storage */
+            domainsData?: Record<string, never>;
+            errorMessage?: string;
+            /**
+             * Format: date-time
+             * @description Campaign-level tracking (aggregated from phases)
+             */
+            estimatedCompletionAt?: string;
+            /** @description Content analysis data (from analysis phase) */
+            extractedContent?: components["schemas"]["ExtractedContentItem"][];
+            /** Format: int64 */
+            failedItems?: number;
+            fullSequenceMode?: boolean;
+            httpConfig?: Record<string, never>;
+            httpKeywordValidationParams?: components["schemas"]["HTTPKeywordCampaignParams"];
+            httpResults?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            /** @description Sequence mode configuration */
+            isFullSequenceMode?: boolean;
+            /** Format: date-time */
+            lastHeartbeatAt?: string;
+            leadItems?: components["schemas"]["LeadItem"][];
+            /** Format: int64 */
+            leads?: number;
+            metadata?: Record<string, never>;
+            name: string;
+            /** Format: double */
+            overallProgress?: number;
+            /**
+             * @description Legacy fields for backward compatibility during transition
+             * @enum {string}
+             */
+            phaseStatus?: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
+            /** @description Phase collections (populated when needed) */
+            phases?: components["schemas"]["CampaignPhase"][];
+            /** Format: int64 */
+            processedItems?: number;
+            /**
+             * Format: double
+             * @description Legacy fields for backward compatibility during transition
+             */
+            progressPercentage?: number;
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: int64 */
+            successfulItems?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPhases?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            userId?: string;
+        };
+        LeadGenerationCampaignResponse: {
+            analysisResults?: Record<string, never>;
+            /** Format: date-time */
+            createdAt?: string;
+            currentPhase?: string;
+            description?: string;
+            dnsResults?: Record<string, never>;
+            domainsData?: Record<string, never>;
+            httpResults?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            id?: string;
+            name?: string;
+            status?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        LeadGenerationProgress: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaign_id?: string;
+            current_phase?: string;
+            /** Format: double */
+            overall_progress?: number;
+            phase_progress?: {
+                [key: string]: Record<string, never>;
+            };
         };
         LeadItem: {
             company?: string;
@@ -3455,6 +3454,28 @@ export interface components {
             successCount?: number;
         };
         PersonaTypeEnum: string;
+        PhaseConfigureRequest: {
+            config: Record<string, never>;
+            /** @enum {string} */
+            phaseType: "dns_validation" | "http_keyword_validation" | "analysis";
+        };
+        PhaseProgressResponse: {
+            /** Format: date-time */
+            completedAt?: string;
+            estimatedEnd?: string;
+            phaseType?: string;
+            /** Format: double */
+            progress?: number;
+            /** Format: date-time */
+            startedAt?: string;
+            status?: string;
+        };
+        PhaseStartRequest: {
+            /** @enum {string} */
+            phaseType: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+        };
+        PhaseStatusEnum: string;
+        PhaseTypeEnum: string;
         PingResponse: {
             message?: string;
             /** Format: date-time */
@@ -3985,12 +4006,6 @@ export interface components {
             refreshToken?: string;
             token?: string;
             user?: components["schemas"]["UserPublicResponse"];
-        };
-        StandardAPIResponse: {
-            data?: Record<string, never>;
-            error?: string;
-            message?: string;
-            status?: string;
         };
         Status: {
             message?: string;
@@ -4583,16 +4598,9 @@ export interface operations {
             };
         };
     };
-    listCampaigns: {
+    getCampaignsStandalone: {
         parameters: {
-            query?: {
-                /** @description Maximum number of campaigns to return */
-                limit?: number;
-                /** @description Number of campaigns to skip */
-                offset?: number;
-                /** @description Filter by campaign status */
-                status?: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -4628,271 +4636,21 @@ export interface operations {
             };
         };
     };
-    createCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCampaignRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    bulkDeleteCampaigns: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkDeleteRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkDeleteResult"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getCampaignDetails: {
+    configurePhaseStandalone: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 /** @description Campaign ID (UUID) */
                 campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignDetailsResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
+                /** @description Phase type */
+                phase: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateCampaignRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Campaign"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    deleteCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeletionResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    cancelCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    configureDNSValidation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DNSPhaseConfigRequest"];
+                "application/json": components["schemas"]["PhaseConfigureRequest"];
             };
         };
         responses: {
@@ -4925,21 +4683,19 @@ export interface operations {
             };
         };
     };
-    configureHTTPValidation: {
+    startPhaseStandalone: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 /** @description Campaign ID (UUID) */
                 campaignId: string;
+                /** @description Phase name */
+                phase: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HTTPPhaseConfigRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Operation successful */
             200: {
@@ -4970,13 +4726,15 @@ export interface operations {
             };
         };
     };
-    pauseCampaign: {
+    getPhaseStatusStandalone: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 /** @description Campaign ID (UUID) */
                 campaignId: string;
+                /** @description Phase type */
+                phase: string;
             };
             cookie?: never;
         };
@@ -4988,7 +4746,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
+                    "application/json": components["schemas"]["APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -5011,145 +4769,7 @@ export interface operations {
             };
         };
     };
-    getDNSValidationResults: {
-        parameters: {
-            query?: {
-                /** @description Number of results to return (default: 20) */
-                limit?: number;
-                /** @description Cursor for pagination (default: empty) */
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DNSValidationResultsResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getGeneratedDomains: {
-        parameters: {
-            query?: {
-                /** @description Number of domains to return (default: 20, max: 1000) */
-                limit?: number;
-                /** @description Cursor for pagination (offset index, default: 0) */
-                cursor?: number;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeneratedDomainsResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getHTTPKeywordResults: {
-        parameters: {
-            query?: {
-                /** @description Number of results to return (default: 20) */
-                limit?: number;
-                /** @description Cursor for pagination (default: empty) */
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPKeywordResultsResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    resumeCampaign: {
+    getCampaignProgressStandalone: {
         parameters: {
             query?: never;
             header?: never;
@@ -5160,179 +4780,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    startCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CampaignOperationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    validateDNSForCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DNSValidationAPIRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationOperationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    validateHTTPForCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Campaign ID (UUID) */
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HTTPValidationRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationOperationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getBulkDomains: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkDomainsRequest"];
-            };
-        };
         responses: {
             /** @description Operation successful */
             200: {
@@ -5405,90 +4852,6 @@ export interface operations {
             };
         };
     };
-    getBulkLeads: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkLeadsRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["APIResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getBulkLogs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkLogsRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["APIResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
     getPatternOffset: {
         parameters: {
             query?: never;
@@ -5508,7 +4871,54 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StandardAPIResponse"];
+                    "application/json": components["schemas"]["PatternOffsetResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createLeadGenerationCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLeadGenerationCampaignRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
                 };
             };
             /** @description Bad Request */
@@ -6939,7 +6349,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StandardAPIResponse"];
+                    "application/json": components["schemas"]["APIResponse"];
                 };
             };
             /** @description Bad Request */

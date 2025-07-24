@@ -223,6 +223,17 @@ func main() {
 	)
 	log.Println("HTTPKeywordCampaignService initialized.")
 
+	// Initialize Lead Generation Campaign Service for Phase 2 standalone services refactor
+	leadGenerationCampaignSvc := services.NewLeadGenerationCampaignService(
+		db,
+		campaignStore,
+		domainGenSvc,
+		dnsCampaignSvc,
+		httpKeywordCampaignSvc,
+		wsBroadcaster,
+	)
+	log.Println("LeadGenerationCampaignService initialized - Phase 2 campaign lifecycle coordinator.")
+
 	mq := communication.NewSimpleQueue(100)
 	es := communication.NewInMemoryEventStore()
 	asyncMgr := communication.NewAsyncPatternManager(mq, es, nil)
@@ -276,8 +287,15 @@ func main() {
 	)
 	log.Println("Main APIHandler initialized.")
 
-	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(campaignOrchestratorSvc, dnsCampaignSvc, httpKeywordCampaignSvc, campaignStore, wsBroadcaster)
-	log.Println("CampaignOrchestratorAPIHandler initialized.")
+	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(
+		leadGenerationCampaignSvc,
+		domainGenSvc,
+		dnsCampaignSvc,
+		httpKeywordCampaignSvc,
+		campaignStore,
+		wsBroadcaster,
+		db)
+	log.Println("CampaignOrchestratorAPIHandler initialized with standalone services support.")
 
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)
 	log.Println("WebSocketAPIHandler initialized.")

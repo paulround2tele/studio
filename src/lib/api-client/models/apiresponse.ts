@@ -13,6 +13,12 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ErrorInfo } from './error-info';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { Metadata } from './metadata';
 
 /**
  * 
@@ -28,21 +34,27 @@ export interface APIResponse {
     'data'?: object;
     /**
      * 
-     * @type {string}
+     * @type {ErrorInfo}
      * @memberof APIResponse
      */
-    'error'?: string;
+    'error'?: ErrorInfo;
     /**
      * 
+     * @type {Metadata}
+     * @memberof APIResponse
+     */
+    'metadata'?: Metadata;
+    /**
+     * Unique identifier
      * @type {string}
      * @memberof APIResponse
      */
-    'message'?: string;
+    'requestId'?: string;
     /**
      * 
-     * @type {string}
+     * @type {boolean}
      * @memberof APIResponse
      */
-    'status'?: string;
+    'success'?: boolean;
 }
 

@@ -482,7 +482,6 @@ func (rd *RouteDiscoverer) generateOperationID(handlerName, method string) strin
 	return fallback
 }
 
-
 // extractPathParameters extracts path parameters from a route path
 func (rd *RouteDiscoverer) extractPathParameters(path string) openapi3.Parameters {
 	var params openapi3.Parameters
@@ -568,7 +567,6 @@ func (rd *RouteDiscoverer) filterRoutes(routes []DiscoveredRoute) []DiscoveredRo
 }
 
 // Helper functions
-
 
 // extractFunctionName extracts the function name from a handler identifier
 func extractFunctionName(handlerName string) string {
@@ -749,7 +747,7 @@ func (rd *RouteDiscoverer) parseSuccessAnnotation(text string) *openapi3.SchemaR
 
 	// Handle generic Go types by mapping to standard response models
 	if strings.Contains(responseModel, "map[string]") {
-		responseModel = "StandardAPIResponse"
+		responseModel = "APIResponse"
 	}
 
 	// Strip package prefixes if present to match schema naming

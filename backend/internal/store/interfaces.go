@@ -81,6 +81,20 @@ type CampaignStore interface {
 	// Performance monitoring methods
 	RecordQueryPerformance(ctx context.Context, exec Querier, metric *models.QueryPerformanceMetric) error
 	RecordConnectionPoolMetrics(ctx context.Context, exec Querier, metrics *models.ConnectionPoolMetrics) error
+
+	// JSONB operations for standalone services architecture
+	UpdateDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID, domainsData interface{}) error
+	GetDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID) (interface{}, error)
+	AppendDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID, newDomains interface{}) error
+
+	UpdateDNSResults(ctx context.Context, exec Querier, campaignID uuid.UUID, dnsResults interface{}) error
+	GetDNSResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (interface{}, error)
+
+	UpdateHTTPResults(ctx context.Context, exec Querier, campaignID uuid.UUID, httpResults interface{}) error
+	GetHTTPResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (interface{}, error)
+
+	UpdateAnalysisResults(ctx context.Context, exec Querier, campaignID uuid.UUID, analysisResults interface{}) error
+	GetAnalysisResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (interface{}, error)
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same

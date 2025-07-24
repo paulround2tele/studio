@@ -7,7 +7,7 @@ All URIs are relative to *http://localhost*
 |[**handleConnections**](#handleconnections) | **GET** /ws | WebSocket connection|
 
 # **handleConnections**
-> StreamExtractKeywords200Response handleConnections()
+> CreateLeadGenerationCampaign200Response handleConnections()
 
 Upgrade HTTP connection to WebSocket for real-time communication
 
@@ -38,7 +38,7 @@ const { status, data } = await apiInstance.handleConnections(
 
 ### Return type
 
-**StreamExtractKeywords200Response**
+**CreateLeadGenerationCampaign200Response**
 
 ### Authorization
 

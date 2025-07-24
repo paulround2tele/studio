@@ -76,7 +76,7 @@ isConnected: false,
 
   const [realtimeData, setRealtimeData] = useState({
 domainsGenerated: 0,
-    currentProgress: campaign.progress || 0,
+    currentProgress: campaign.overallProgress ?? campaign.progressPercentage ?? 0,
     currentStatus: normalizeStatus(campaign.phaseStatus),
     currentPhase: campaign.currentPhase || 'Pending'  as any,
 lastActivity: new Date(),
@@ -86,7 +86,6 @@ lastActivity: new Date(),
   // Memoize connection condition to prevent unnecessary effect triggers
   const shouldConnect = useMemo(() => {
     return campaign.currentPhase !== undefined &&
-           campaign.currentPhase !== 'setup' &&
            campaign.phaseStatus === 'in_progress';
   }, [campaign.currentPhase, campaign.phaseStatus]);
 
@@ -134,7 +133,7 @@ title: "Campaign Subscription Active",
             currentProgress: progressData.progress!,
             lastActivity: new Date()
           }));
-          onCampaignUpdate?.({ progress: progressData.progress });
+          onCampaignUpdate?.({ overallProgress: progressData.progress });
         }
         break;
 
@@ -151,7 +150,7 @@ currentStatus: normalizeStatus(phaseData.status),
           onCampaignUpdate?.({
             currentPhase: phaseData.phase as CampaignPhase as any,
             phaseStatus: phaseData.status === 'completed' ? 'completed' : normalizeStatus(phaseData.status),
-            progress: phaseData.progress || 100
+            overallProgress: phaseData.progress || 100
           });
           toast({
 title: "Phase Completed",
@@ -171,7 +170,7 @@ currentStatus: campaignProgressData.status ? normalizeStatus(campaignProgressDat
             lastActivity: new Date()
           }));
           onCampaignUpdate?.({
-progress: campaignProgressData.progress,
+overallProgress: campaignProgressData.progress,
             currentPhase: campaignProgressData.phase as CampaignPhase  as any,
 phaseStatus: campaignProgressData.status as any
           });
@@ -263,17 +262,17 @@ title: "Real-time Monitoring Connected",
   // Optimized campaign state sync effect with memoized dependencies
   useEffect(() => {
     console.log(`[CampaignProgressMonitor] Campaign prop changed for ${campaignKey.id}:`, {
-progress: campaign.progress,
+progress: campaign.overallProgress ?? campaign.progressPercentage ?? 0,
       status: campaign.phaseStatus,
       currentPhase: campaign.currentPhase as any
     });
     setRealtimeData(prev => ({
       ...prev,
-      currentProgress: campaign.progress || 0,
+      currentProgress: campaign.overallProgress ?? campaign.progressPercentage ?? 0,
       currentStatus: normalizeStatus(campaign.phaseStatus),
       currentPhase: campaign.currentPhase || 'Pending' as any
     }));
-  }, [campaignKey.id, campaign.progress, campaign.phaseStatus, campaign.currentPhase]);
+  }, [campaignKey.id, campaign.overallProgress, campaign.progressPercentage, campaign.phaseStatus, campaign.currentPhase]);
 
   // Memoize status color computation
   const statusColor = useMemo(() => getStatusColor(realtimeData.currentStatus), [realtimeData.currentStatus]);

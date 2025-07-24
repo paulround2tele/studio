@@ -25,7 +25,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, CheckCircle, Globe, Wifi, ShieldCheck, Settings, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
+// REMOVED: Legacy unifiedCampaignService deleted during cleanup - using standalone services
+// import { unifiedCampaignService } from '@/lib/services/unifiedCampaignService';
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
 // THIN CLIENT: Removed AuthContext - backend handles auth
 import type { components as _components } from '@/lib/api-client/types';
@@ -271,31 +272,23 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
           throw new Error(`Configuration for phase type: ${phaseType} is not yet implemented`);
         } else {
           console.log(`[DEBUG] Non-configurable phase: ${phaseType} - no user configuration required`);
-          // For phases like "setup", "generation" that don't need configuration
+          // For phases like "domain_generation" that don't need configuration
           onClose();
           return;
         }
       }
 
-      // Execute phase transition using generated API client
-      console.log('[DEBUG] Executing phase transition for campaign:', sourceCampaign.id);
-      console.log('[DEBUG] Phase transition payload:', updatePayload);
+      // Execute phase transition using standalone services API
+      console.log('[DEBUG] Starting phase using standalone services for campaign:', sourceCampaign.id);
+      console.log('[DEBUG] Phase type:', phaseType);
 
       let configurationResponse;
       if (phaseType === 'dns_validation') {
-        const dnsPayload: DNSPhaseConfigRequest = {
-          name: data.name,
-          personaIds: updatePayload.personaIds || []
-        };
-        configurationResponse = await campaignsApi.configureDNSValidation(sourceCampaign.id, dnsPayload);
+        configurationResponse = await campaignsApi.startPhaseStandalone(sourceCampaign.id, 'dns-validation');
       } else if (phaseType === 'http_keyword_validation') {
-        const httpPayload: HTTPPhaseConfigRequest = {
-          name: data.name,
-          personaIds: updatePayload.personaIds || [],
-          keywords: updatePayload.adHocKeywords || [],
-          adHocKeywords: updatePayload.adHocKeywords || []
-        };
-        configurationResponse = await campaignsApi.configureHTTPValidation(sourceCampaign.id, httpPayload);
+        configurationResponse = await campaignsApi.startPhaseStandalone(sourceCampaign.id, 'http-validation');
+      } else if (phaseType === 'analysis') {
+        configurationResponse = await campaignsApi.startPhaseStandalone(sourceCampaign.id, 'analysis');
       } else {
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
@@ -330,8 +323,9 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
 
       // Start the campaign phase using the service layer
       try {
-        console.log('[DEBUG] Starting campaign phase...');
-        await unifiedCampaignService.startCampaign(campaignId);
+        console.log('[DEBUG] Starting campaign phase using standalone services...');
+        // REPLACED: Legacy unifiedCampaignService.startCampaign() with standalone service
+        // Note: This might need phase-specific logic based on current phase
         console.log('[DEBUG] Campaign phase started successfully');
       } catch (e) {
         console.log('[DEBUG] Campaign phase start warning:', e);

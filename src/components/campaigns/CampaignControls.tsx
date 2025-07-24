@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { CheckCircle, Play, Pause, Square, Settings } from 'lucide-react';
+import { CheckCircle, Play, Pause, Square, Settings, RotateCcw, AlertTriangle } from 'lucide-react';
 import PhaseGateButton from './PhaseGateButton';
 import { PhaseConfiguration } from './PhaseConfiguration';
-import { Campaign } from '@/lib/types';
+import type { LeadGenerationCampaign } from '@/lib/api-client/models';
+import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
+import { useToast } from '@/hooks/use-toast';
 
 interface CampaignControlsProps {
-  campaign: Campaign;
+  campaign: LeadGenerationCampaign;
   actionLoading: Record<string, boolean>;
   onStartPhase: (phaseType: string) => Promise<void>;
-  onPauseCampaign: () => void;
-  onResumeCampaign: () => void;
-  onStopCampaign: () => void;
+  onPausePhase: (phaseType: string) => Promise<void>;
+  onResumePhase: (phaseType: string) => Promise<void>;
+  onCancelPhase: (phaseType: string) => Promise<void>;
   className?: string;
 }
 
@@ -18,18 +20,59 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   campaign,
   actionLoading,
   onStartPhase,
-  onPauseCampaign,
-  onResumeCampaign,
-  onStopCampaign,
+  onPausePhase,
+  onResumePhase,
+  onCancelPhase,
   className
 }) => {
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [selectedPhaseType, setSelectedPhaseType] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Determine campaign mode
+  const isFullSequenceMode = campaign.fullSequenceMode === true;
+  const campaignMode = isFullSequenceMode ? 'Full Auto Sequence' : 'Step-by-Step';
+
+  // Get current phase details
+  const getCurrentPhase = () => {
+    return campaign.phases?.find(phase => phase.status === 'in_progress' || phase.status === 'paused');
+  };
+
+  const currentPhase = getCurrentPhase();
 
   // Handle opening the configuration dialog
   const handleConfigurePhase = (phaseType: string) => {
     setSelectedPhaseType(phaseType);
     setConfigDialogOpen(true);
+  };
+
+  // Handle phase restart - use standalone services API
+  const handleRestartPhase = async (phaseType: string) => {
+    try {
+      const campaignsApi = new CampaignsApi();
+      
+      // For standalone services, we directly start the phase
+      // Backend handles any necessary cleanup/restart logic
+      await campaignsApi.startPhaseStandalone(campaign.id!, phaseType);
+
+      toast({
+        title: "Phase Started",
+        description: `${phaseType.replace('_', ' ')} phase has been started successfully.`,
+      });
+
+      // Trigger campaign refresh
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
+          detail: { campaignId: campaign.id }
+        }));
+      }
+    } catch (error) {
+      toast({
+        title: "Start Failed",
+        description: error instanceof Error ? error.message : 'Failed to start phase',
+        variant: "destructive"
+      });
+    }
   };
 
   // Handle phase transition completion
@@ -58,70 +101,67 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
 
   // BACKEND-DRIVEN: Just read the backend state and display appropriate UI
   const renderPhaseButtons = () => {
-    // If current phase is running, show pause/stop controls
-    if (campaign.phaseStatus === "in_progress") {
+    // If current phase is running, show pause/cancel controls
+    if (currentPhase?.status === "in_progress") {
       return (
         <div className="flex gap-2">
           <PhaseGateButton
             label="Pause"
-            onClick={onPauseCampaign}
+            onClick={() => onPausePhase(currentPhase.phaseType!)}
             Icon={Pause}
             variant="secondary"
             isLoading={actionLoading.pause}
             disabled={!!actionLoading.pause}
           />
           <PhaseGateButton
-            label="Stop"
-            onClick={onStopCampaign}
+            label="Cancel"
+            onClick={() => onCancelPhase(currentPhase.phaseType!)}
             Icon={Square}
             variant="destructive"
-            isLoading={actionLoading.stop}
-            disabled={!!actionLoading.stop}
+            isLoading={actionLoading.cancel}
+            disabled={!!actionLoading.cancel}
           />
         </div>
       );
     }
 
-    // If current phase is paused, show resume/stop controls
-    if (campaign.phaseStatus === "paused") {
+    // If current phase is paused, show resume/cancel controls
+    if (currentPhase?.status === "paused") {
       return (
         <div className="flex gap-2">
           <PhaseGateButton
             label="Resume"
-            onClick={onResumeCampaign}
+            onClick={() => onResumePhase(currentPhase.phaseType!)}
             Icon={Play}
             variant="default"
             isLoading={actionLoading.resume}
             disabled={!!actionLoading.resume}
           />
           <PhaseGateButton
-            label="Stop"
-            onClick={onStopCampaign}
+            label="Cancel"
+            onClick={() => onCancelPhase(currentPhase.phaseType!)}
             Icon={Square}
             variant="destructive"
-            isLoading={actionLoading.stop}
-            disabled={!!actionLoading.stop}
+            isLoading={actionLoading.cancel}
+            disabled={!!actionLoading.cancel}
           />
         </div>
       );
     }
 
     // BACKEND-DRIVEN: If current phase is completed, determine next phase
-    if (campaign.phaseStatus === "completed") {
-      // Determine next phase based on current phase
-      const getNextPhase = (currentPhase: string): string | null => {
-        const phaseOrder = ['setup', 'generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
-        const currentIndex = phaseOrder.indexOf(currentPhase);
-        if (currentIndex !== -1 && currentIndex < phaseOrder.length - 1) {
-          const nextPhase = phaseOrder[currentIndex + 1];
-          return nextPhase || null;
-        }
-        return null;
-      };
+    const completedPhase = campaign.phases?.find(phase => phase.status === 'completed');
+    const allPhasesCompleted = campaign.phases?.every(phase =>
+      phase.status === 'completed' || phase.status === 'not_started'
+    ) && campaign.phases?.some(phase => phase.status === 'completed');
 
-      const nextPhase = campaign.currentPhase ? getNextPhase(campaign.currentPhase) : 'generation';
+    if (completedPhase && !currentPhase) {
+      // Get the next phase that needs to be started
+      const phaseOrder = ['domain_generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
+      const completedPhases = campaign.phases?.filter(p => p.status === 'completed').map(p => p.phaseType) || [];
+      const nextPhaseType = phaseOrder.find(phase => !completedPhases.includes(phase as any));
       
-      if (!nextPhase) {
+      if (!nextPhaseType || allPhasesCompleted) {
         // No next phase - campaign pipeline is fully complete
         return (
           <div className="text-center space-y-2">
@@ -139,62 +179,120 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
       // Phase display names mapping
       const getPhaseDisplayName = (phase: string) => {
         const names: Record<string, string> = {
-          'setup': 'Campaign Setup',
-          'generation': 'Domain Generation', 
+          'domain_generation': 'Domain Generation',
           'dns_validation': 'DNS Validation',
-          'http_keyword_validation': 'HTTP Keyword Validation', 
+          'http_keyword_validation': 'HTTP Keyword Validation',
           'analysis': 'Analysis'
         };
         return names[phase] || phase.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
       };
 
-      const nextPhaseDisplayName = getPhaseDisplayName(nextPhase);
-      const currentPhaseDisplayName = getPhaseDisplayName(campaign.currentPhase || 'unknown');
+      const nextPhaseDisplayName = getPhaseDisplayName(nextPhaseType);
+      const completedPhaseDisplayName = getPhaseDisplayName(completedPhase.phaseType!);
 
       // Check if this is an automated phase (like analysis)
-      const isAutomatedPhase = nextPhase === 'analysis';
+      const isAutomatedPhase = nextPhaseType === 'analysis';
+      
+      // Check if restart is available for completed phase (except domain generation)
+      const canRestartCompletedPhase = completedPhase.phaseType !== 'domain_generation';
 
       return (
         <div className="text-center space-y-3">
+          {/* Campaign Mode Badge */}
+          <div className="mb-4">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              isFullSequenceMode
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-gray-100 text-gray-800'
+            }`}>
+              {campaignMode}
+            </span>
+          </div>
+
           <p className="text-lg font-semibold text-green-500 flex items-center justify-center gap-2">
             <CheckCircle className="h-6 w-6" />
-            {currentPhaseDisplayName} Complete!
+            {completedPhaseDisplayName} Complete!
           </p>
           
-          <PhaseGateButton
-            label={isAutomatedPhase ? `Start ${nextPhaseDisplayName}` : `Configure ${nextPhaseDisplayName}`}
-            onClick={() => {
-              if (isAutomatedPhase) {
-                // Start automated phase directly
-                onStartPhase(nextPhase);
-              } else {
-                // Open configuration dialog for manual phases
-                handleConfigurePhase(nextPhase);
-              }
-            }}
-            Icon={isAutomatedPhase ? Play : Settings}
-            variant="default"
-            isLoading={actionLoading[`phase-${nextPhase}`]}
-            disabled={!!actionLoading[`phase-${nextPhase}`]}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          />
-          
-          <p className="text-xs text-muted-foreground">
-            {isAutomatedPhase 
-              ? 'Start the final analysis phase'
-              : 'Configure and start the next phase of the campaign pipeline'
-            }
-          </p>
+          {/* Primary action: Next phase or configure next phase */}
+          {isFullSequenceMode ? (
+            // Full Auto Sequence: Show automatic progression info
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                ✨ In Full Auto Sequence mode, phases progress automatically
+              </p>
+              {nextPhaseType && (
+                <PhaseGateButton
+                  label={isAutomatedPhase ? `Start ${nextPhaseDisplayName}` : `Next: ${nextPhaseDisplayName}`}
+                  onClick={() => {
+                    if (isAutomatedPhase) {
+                      onStartPhase(nextPhaseType);
+                    } else {
+                      handleConfigurePhase(nextPhaseType);
+                    }
+                  }}
+                  Icon={isAutomatedPhase ? Play : Settings}
+                  variant="default"
+                  isLoading={actionLoading[`phase-${nextPhaseType}`]}
+                  disabled={!!actionLoading[`phase-${nextPhaseType}`]}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                />
+              )}
+            </div>
+          ) : (
+            // Step-by-Step: Show manual configuration
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                🚀 Step-by-Step mode: Configure each phase manually
+              </p>
+              {nextPhaseType && (
+                <PhaseGateButton
+                  label={`Configure ${nextPhaseDisplayName}`}
+                  onClick={() => handleConfigurePhase(nextPhaseType)}
+                  Icon={Settings}
+                  variant="default"
+                  isLoading={actionLoading[`phase-${nextPhaseType}`]}
+                  disabled={!!actionLoading[`phase-${nextPhaseType}`] ||
+                    (nextPhaseType === 'http_keyword_validation' && !completedPhases.includes('dns_validation'))}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                />
+              )}
+              {nextPhaseType === 'http_keyword_validation' && !completedPhases.includes('dns_validation') && (
+                <p className="text-xs text-amber-600 flex items-center justify-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  HTTP validation requires DNS validation completion
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Restart completed phase button (except domain generation) */}
+          {canRestartCompletedPhase && (
+            <div className="border-t pt-3 mt-3">
+              <PhaseGateButton
+                label={`Restart ${completedPhaseDisplayName}`}
+                onClick={() => handleRestartPhase(completedPhase.phaseType!)}
+                Icon={RotateCcw}
+                variant="outline"
+                isLoading={actionLoading[`restart-${completedPhase.phaseType}`]}
+                disabled={!!actionLoading[`restart-${completedPhase.phaseType}`]}
+                className="border-gray-300 text-gray-600 hover:bg-gray-50"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Restart this phase with new configuration
+              </p>
+            </div>
+          )}
         </div>
       );
     }
 
-    // If campaign is not started or in setup phase, show start button
-    if (campaign.phaseStatus === "not_started" || campaign.currentPhase === "setup") {
+    // If campaign has no active phases, show start button
+    if (!currentPhase && !completedPhase) {
       return (
         <PhaseGateButton
           label="Start Campaign"
-          onClick={() => onStartPhase('generation')} // Always start with generation phase
+          onClick={() => onStartPhase('domain_generation')} // Always start with domain generation phase
           Icon={Play}
           variant="default"
           isLoading={actionLoading.start}
@@ -205,21 +303,30 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
     }
 
     // If current phase failed, show restart option
-    if (campaign.phaseStatus === "failed") {
-      const currentPhaseDisplayName = campaign.currentPhase 
-        ? campaign.currentPhase.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
-        : 'Current Phase';
+    const failedPhase = campaign.phases?.find(phase => phase.status === 'failed');
+    if (failedPhase) {
+      const getPhaseDisplayName = (phase: string) => {
+        const names: Record<string, string> = {
+          'domain_generation': 'Domain Generation',
+          'dns_validation': 'DNS Validation',
+          'http_keyword_validation': 'HTTP Keyword Validation',
+          'analysis': 'Analysis'
+        };
+        return names[phase] || phase.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      };
+      
+      const failedPhaseDisplayName = getPhaseDisplayName(failedPhase.phaseType!);
         
       return (
         <div className="text-center space-y-3">
           <p className="text-lg font-semibold text-red-500 flex items-center justify-center gap-2">
             <Square className="h-6 w-6" />
-            {currentPhaseDisplayName} Failed
+            {failedPhaseDisplayName} Failed
           </p>
           
           <PhaseGateButton
-            label={`Retry ${currentPhaseDisplayName}`}
-            onClick={() => onStartPhase(campaign.currentPhase || 'generation')}
+            label={`Retry ${failedPhaseDisplayName}`}
+            onClick={() => onStartPhase(failedPhase.phaseType!)}
             Icon={Play}
             variant="default"
             isLoading={actionLoading.start}
@@ -234,11 +341,11 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
       );
     }
 
-    // Default case - show generic start button for current phase
+    // Default case - show generic start button for next available phase
     return (
       <PhaseGateButton
         label="Start Phase"
-        onClick={() => onStartPhase(campaign.currentPhase || 'generation')}
+        onClick={() => onStartPhase('domain_generation')}
         Icon={Play}
         variant="default"
         isLoading={actionLoading.start}
@@ -257,7 +364,7 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
           isOpen={configDialogOpen}
           onClose={() => setConfigDialogOpen(false)}
           phaseType={selectedPhaseType}
-          sourceCampaign={campaign}
+          sourceCampaign={campaign as any}
           onPhaseStarted={handlePhaseStarted}
         />
       )}

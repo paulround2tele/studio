@@ -181,6 +181,41 @@ func CreateProxyStatusMessageV2(payload ProxyStatusPayload) StandardizedWebSocke
 	}
 }
 
+// User-Driven Phase Lifecycle message payloads
+type PhaseStateChangedPayload struct {
+	CampaignID string `json:"campaign_id"`
+	Phase      string `json:"phase"`
+	OldState   string `json:"old_state"`
+	NewState   string `json:"new_state"`
+	Timestamp  string `json:"timestamp"`
+}
+
+type PhaseConfigurationRequiredPayload struct {
+	CampaignID string `json:"campaign_id"`
+	Phase      string `json:"phase"`
+	Message    string `json:"message"`
+}
+
+// CreatePhaseStateChangedMessageV2 creates a standardized phase state change message
+func CreatePhaseStateChangedMessageV2(payload PhaseStateChangedPayload) StandardizedWebSocketMessage {
+	data, _ := json.Marshal(payload)
+	return StandardizedWebSocketMessage{
+		Type:      "phase.state.changed",
+		Timestamp: time.Now(),
+		Data:      data,
+	}
+}
+
+// CreatePhaseConfigurationRequiredMessageV2 creates a standardized phase configuration required message
+func CreatePhaseConfigurationRequiredMessageV2(payload PhaseConfigurationRequiredPayload) StandardizedWebSocketMessage {
+	data, _ := json.Marshal(payload)
+	return StandardizedWebSocketMessage{
+		Type:      "phase.configuration.required",
+		Timestamp: time.Now(),
+		Data:      data,
+	}
+}
+
 // PhaseTransitionPayload represents phase transition events with complete context
 type PhaseTransitionPayload struct {
 	CampaignID         string                 `json:"campaignId"`
