@@ -28,25 +28,19 @@ const (
 )
 
 type campaignWorkerServiceImpl struct {
-	jobStore                store.CampaignJobStore
-	genService              DomainGenerationService
-	dnsService              DNSCampaignService
-	httpKeywordService      HTTPKeywordCampaignService
-	campaignOrchestratorSvc CampaignOrchestratorService
-	workerID                string
-	appConfig               *config.AppConfig
-	db                      *sqlx.DB
-	workerCoordinationSvc   *WorkerCoordinationService
-	txManager               *utils.TransactionManager
+	jobStore              store.CampaignJobStore
+	phaseExecutionService PhaseExecutionService
+	workerID              string
+	appConfig             *config.AppConfig
+	db                    *sqlx.DB
+	workerCoordinationSvc *WorkerCoordinationService
+	txManager             *utils.TransactionManager
 }
 
 // NewCampaignWorkerService creates a new CampaignWorkerService.
 func NewCampaignWorkerService(
 	js store.CampaignJobStore,
-	gs DomainGenerationService,
-	ds DNSCampaignService,
-	hks HTTPKeywordCampaignService,
-	cos CampaignOrchestratorService,
+	phaseExecutionService PhaseExecutionService,
 	serverInstanceID string,
 	appCfg *config.AppConfig,
 	db *sqlx.DB,
@@ -69,16 +63,13 @@ func NewCampaignWorkerService(
 	}
 
 	return &campaignWorkerServiceImpl{
-		jobStore:                js,
-		genService:              gs,
-		dnsService:              ds,
-		httpKeywordService:      hks,
-		campaignOrchestratorSvc: cos,
-		workerID:                workerID,
-		appConfig:               appCfg,
-		db:                      db,
-		workerCoordinationSvc:   workerCoordSvc,
-		txManager:               txManager,
+		jobStore:              js,
+		phaseExecutionService: phaseExecutionService,
+		workerID:              workerID,
+		appConfig:             appCfg,
+		db:                    db,
+		workerCoordinationSvc: workerCoordSvc,
+		txManager:             txManager,
 	}
 }
 
@@ -170,27 +161,20 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 	jobCtx, cancelJobCtx := context.WithTimeout(ctx, jobTimeout)
 	defer cancelJobCtx()
 
-	switch job.JobType {
-	case models.JobTypeGeneration:
-		if s.genService == nil {
-			processErr = fmt.Errorf("domain generation service is nil")
-		} else {
-			batchDone, processedCount, processErr = s.genService.ProcessGenerationCampaignBatch(jobCtx, job.CampaignID)
+	// Unified phase processing using PhaseExecutionService - NO ROUTING NEEDED!
+	if s.phaseExecutionService == nil {
+		processErr = fmt.Errorf("phase execution service is nil")
+	} else {
+		// Phase 4.11: Autonomous phase execution - completely eliminates JobTypeEnum routing!
+		// PhaseExecutionService automatically determines the correct phase based on campaign state
+		// For worker service, determine phase from job type (maintaining dual-mode compatibility)
+		phaseType := string(job.JobType) // JobType maps to phase type
+		processErr = s.phaseExecutionService.StartPhase(jobCtx, job.CampaignID, phaseType)
+		// Set default values since StartPhase doesn't return batch info
+		if processErr == nil {
+			batchDone = false  // Assume more work remains
+			processedCount = 1 // Placeholder count
 		}
-	case models.JobTypeDNSValidation:
-		if s.dnsService == nil {
-			processErr = fmt.Errorf("DNS validation service is nil")
-		} else {
-			batchDone, processedCount, processErr = s.dnsService.ProcessDNSValidationCampaignBatch(jobCtx, job.CampaignID)
-		}
-	case models.JobTypeHTTPValidation:
-		if s.httpKeywordService == nil {
-			processErr = fmt.Errorf("HTTP keyword validation service is nil")
-		} else {
-			batchDone, processedCount, processErr = s.httpKeywordService.ProcessHTTPKeywordCampaignBatch(jobCtx, job.CampaignID)
-		}
-	default:
-		processErr = fmt.Errorf("unknown job type '%s' for job %s", job.JobType, job.ID)
 	}
 
 	job.UpdatedAt = time.Now().UTC()
@@ -212,25 +196,25 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 			log.Printf("Worker [%s]: Job %s failed after %d attempts. Last error: %s", workerName, job.ID, job.Attempts, processErr.Error())
 
 			// Update campaign status - check current status to determine appropriate action
-			if s.campaignOrchestratorSvc != nil {
+			if s.phaseExecutionService != nil {
 				errMsg := fmt.Sprintf("Job %s failed after max retries: %v", job.ID, processErr)
 
 				log.Printf("Worker [%s]: Job %s failed after %d attempts, determining appropriate campaign %s status",
 					workerName, job.ID, job.Attempts, job.CampaignID)
 
 				// Get current campaign to check its status
-				if currentCampaign, _, err := s.campaignOrchestratorSvc.GetCampaignDetails(jobCtx, job.CampaignID); err != nil {
+				if currentCampaign, _, err := s.phaseExecutionService.GetCampaignDetails(jobCtx, job.CampaignID); err != nil {
 					log.Printf("Worker [%s]: Failed to get campaign %s to check status: %v", workerName, job.CampaignID, err)
 				} else if currentCampaign.PhaseStatus != nil && *currentCampaign.PhaseStatus == models.PhaseStatusNotStarted {
 					// Campaign is still pending, should be cancelled (not failed)
-					if err := s.campaignOrchestratorSvc.SetCampaignStatus(jobCtx, job.CampaignID, models.PhaseStatusFailed); err != nil {
+					if err := s.phaseExecutionService.SetCampaignStatus(jobCtx, job.CampaignID, models.PhaseStatusFailed); err != nil {
 						log.Printf("Worker [%s]: Failed to set campaign %s to failed: %v", workerName, job.CampaignID, err)
 					} else {
 						log.Printf("Worker [%s]: Successfully set pending campaign %s to failed status", workerName, job.CampaignID)
 					}
 				} else {
 					// Campaign is running or in other state, can be set to failed
-					if err := s.campaignOrchestratorSvc.SetCampaignErrorStatus(jobCtx, job.CampaignID, errMsg); err != nil {
+					if err := s.phaseExecutionService.SetCampaignErrorStatus(jobCtx, job.CampaignID, errMsg); err != nil {
 						log.Printf("Worker [%s]: Failed to set campaign %s error status: %v", workerName, job.CampaignID, err)
 					} else {
 						log.Printf("Worker [%s]: Successfully set campaign %s to failed status", workerName, job.CampaignID)
@@ -277,66 +261,62 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 			log.Printf("Worker [%s]: Campaign %s reported as fully completed by its service.", workerName, job.CampaignID)
 
 			// When batch is done, check if there are any other active jobs for this campaign
-			if s.campaignOrchestratorSvc != nil {
-				// First, update the current job in the database to mark it as completed
-				jobUpdateSuccessful := true
-				if err := s.jobStore.UpdateJob(jobCtx, nil, job); err != nil {
-					log.Printf("Worker [%s]: Failed to update job %s status to completed: %v", workerName, job.ID, err)
-					jobUpdateSuccessful = false
-				}
-
-				// If job update failed, we should handle this gracefully
-				if !jobUpdateSuccessful {
-					// Try to set job to retry status so it can be picked up again
-					job.Status = models.JobStatusQueued
-					retryStatus := models.JobBusinessStatusRetry
-					job.BusinessStatus = &retryStatus
-					job.NextExecutionAt = sql.NullTime{Time: time.Now().UTC().Add(30 * time.Second), Valid: true}
-					if err := s.jobStore.UpdateJob(jobCtx, nil, job); err != nil {
-						log.Printf("Worker [%s]: CRITICAL - Failed to set job %s to retry after job update failure: %v", workerName, job.ID, err)
-					} else {
-						log.Printf("Worker [%s]: Job %s set to retry due to job update failure", workerName, job.ID)
-					}
-					return // Don't proceed with campaign completion checks if job update failed
-				}
-
-				// Then check for other active jobs for this campaign
-				filter := store.ListJobsFilter{
-					CampaignID: uuid.NullUUID{UUID: job.CampaignID, Valid: true},
-				}
-
-				otherJobs, err := s.jobStore.ListJobs(jobCtx, filter)
-				if err != nil {
-					log.Printf("Worker [%s]: Failed to check for other jobs for campaign %s: %v", workerName, job.CampaignID, err)
-				} else {
-					// Count active jobs (excluding the current one that's being completed)
-					activeJobsCount := 0
-					for _, otherJob := range otherJobs {
-						if otherJob.ID != job.ID &&
-							(otherJob.Status == models.JobStatusQueued ||
-								otherJob.Status == models.JobStatusRunning ||
-								(otherJob.BusinessStatus != nil && *otherJob.BusinessStatus == models.JobBusinessStatusRetry)) {
-							activeJobsCount++
-						}
-					}
-
-					// If no other active jobs, delegate to the orchestrator to handle the completed job.
-					if activeJobsCount == 0 {
-						log.Printf("Worker [%s]: No other active jobs found for campaign %s, campaign may be complete", workerName, job.CampaignID)
-						if s.campaignOrchestratorSvc != nil {
-							log.Printf("[DEBUG] Worker [%s]: Calling HandleCampaignCompletion for campaign %s - this will auto-chain campaigns!", workerName, job.CampaignID)
-							if err := s.campaignOrchestratorSvc.HandleCampaignCompletion(jobCtx, job.CampaignID); err != nil {
-								log.Printf("Worker [%s]: Error handling completion for campaign %s: %v", workerName, job.CampaignID, err)
-							}
-						}
-					} else {
-						log.Printf("Worker [%s]: Found %d other active jobs for campaign %s, not marking as completed yet", workerName, activeJobsCount, job.CampaignID)
-					}
-				}
-
-				// Skip the UpdateJob call at the end of processJob since we've already updated the job
-				return
+			// First, update the current job in the database to mark it as completed
+			jobUpdateSuccessful := true
+			if err := s.jobStore.UpdateJob(jobCtx, nil, job); err != nil {
+				log.Printf("Worker [%s]: Failed to update job %s status to completed: %v", workerName, job.ID, err)
+				jobUpdateSuccessful = false
 			}
+
+			// If job update failed, we should handle this gracefully
+			if !jobUpdateSuccessful {
+				// Try to set job to retry status so it can be picked up again
+				job.Status = models.JobStatusQueued
+				retryStatus := models.JobBusinessStatusRetry
+				job.BusinessStatus = &retryStatus
+				job.NextExecutionAt = sql.NullTime{Time: time.Now().UTC().Add(30 * time.Second), Valid: true}
+				if err := s.jobStore.UpdateJob(jobCtx, nil, job); err != nil {
+					log.Printf("Worker [%s]: CRITICAL - Failed to set job %s to retry after job update failure: %v", workerName, job.ID, err)
+				} else {
+					log.Printf("Worker [%s]: Job %s set to retry due to job update failure", workerName, job.ID)
+				}
+				return // Don't proceed with campaign completion checks if job update failed
+			}
+
+			// Then check for other active jobs for this campaign
+			filter := store.ListJobsFilter{
+				CampaignID: uuid.NullUUID{UUID: job.CampaignID, Valid: true},
+			}
+
+			otherJobs, err := s.jobStore.ListJobs(jobCtx, filter)
+			if err != nil {
+				log.Printf("Worker [%s]: Failed to check for other jobs for campaign %s: %v", workerName, job.CampaignID, err)
+			} else {
+				// Count active jobs (excluding the current one that's being completed)
+				activeJobsCount := 0
+				for _, otherJob := range otherJobs {
+					if otherJob.ID != job.ID &&
+						(otherJob.Status == models.JobStatusQueued ||
+							otherJob.Status == models.JobStatusRunning ||
+							(otherJob.BusinessStatus != nil && *otherJob.BusinessStatus == models.JobBusinessStatusRetry)) {
+						activeJobsCount++
+					}
+				}
+
+				// If no other active jobs, delegate to the phase execution service to handle the completed job.
+				if activeJobsCount == 0 {
+					log.Printf("Worker [%s]: No other active jobs found for campaign %s, campaign may be complete", workerName, job.CampaignID)
+					log.Printf("[DEBUG] Worker [%s]: Calling HandleCampaignCompletion for campaign %s - this will auto-chain campaigns!", workerName, job.CampaignID)
+					if err := s.phaseExecutionService.HandleCampaignCompletion(jobCtx, job.CampaignID); err != nil {
+						log.Printf("Worker [%s]: Error handling completion for campaign %s: %v", workerName, job.CampaignID, err)
+					}
+				} else {
+					log.Printf("Worker [%s]: Found %d other active jobs for campaign %s, not marking as completed yet", workerName, activeJobsCount, job.CampaignID)
+				}
+			}
+
+			// Skip the UpdateJob call at the end of processJob since we've already updated the job
+			return
 		}
 	}
 

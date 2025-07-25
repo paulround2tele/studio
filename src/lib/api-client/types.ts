@@ -1095,6 +1095,12 @@ export interface components {
             generateReport?: boolean;
             includeScreenshots?: boolean;
         };
+        AnalysisPhaseConfig: {
+            analysisRules?: string[];
+            /** Format: double */
+            minLeadScore?: number;
+            requiredFields?: string[];
+        };
         ArchitectureRefactorLog: {
             afterPattern?: string;
             beforePattern?: string;
@@ -1777,11 +1783,12 @@ export interface components {
              */
             campaignId?: string;
             currentPhase?: string;
+            /** Format: date-time */
+            estimatedTimeRemaining?: string;
             /** Format: double */
             overallProgress?: number;
-            phaseProgress?: {
-                [key: string]: components["schemas"]["PhaseProgressResponse"];
-            };
+            phaseStatus?: string;
+            phases?: components["schemas"]["PhaseProgressResponse"][];
         };
         CampaignStartResponse: {
             /**
@@ -2027,23 +2034,33 @@ export interface components {
         };
         CreateDomainGenerationCampaignRequest: {
             characterSet: string;
-            constantString: string;
-            description?: string;
-            dnsValidationParams?: components["schemas"]["DNSValidationRequest"];
-            httpKeywordParams?: components["schemas"]["HTTPKeywordValidationRequest"];
+            constantString?: string;
+            dnsValidationConfig?: components["schemas"]["DNSValidationPhaseConfig"];
+            dnsValidationParams?: components["schemas"]["DNSValidationParams"];
+            enableDnsValidation?: boolean;
+            enableHttpValidation?: boolean;
+            httpKeywordParams?: components["schemas"]["HTTPKeywordParams"];
+            httpValidationConfig?: components["schemas"]["HTTPValidationPhaseConfig"];
+            keywords: string[];
             launchSequence?: boolean;
+            /** Format: int32 */
+            maxResults: number;
             name: string;
-            /** Format: int64 */
-            numDomainsToGenerate?: number;
+            /** Format: int32 */
+            numDomainsToGenerate: number;
             /** @enum {string} */
             patternType: "prefix" | "suffix" | "both";
             tld: string;
+            tlds: string[];
             /**
              * Format: uuid
              * @description Unique identifier
              */
             userId?: string;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Legacy domain generation fields
+             */
             variableLength: number;
         };
         CreateKeywordSetRequest: {
@@ -2166,6 +2183,26 @@ export interface components {
             retryAttempts?: number;
             /** Format: int32 */
             rotationIntervalSeconds?: number;
+        };
+        DNSValidationParams: {
+            /** Format: int32 */
+            batchSize?: number;
+            personaIds: string[];
+            /** Format: int32 */
+            processingSpeedPerMinute?: number;
+            /** Format: int32 */
+            retryAttempts?: number;
+            /** Format: int32 */
+            rotationIntervalSeconds?: number;
+        };
+        DNSValidationPhaseConfig: {
+            /** Format: int32 */
+            batchSize?: number;
+            /** Format: int32 */
+            maxRetries?: number;
+            personaIds: string[];
+            /** Format: int32 */
+            timeout?: number;
         };
         DNSValidationRequest: {
             /** Format: int32 */
@@ -2395,7 +2432,7 @@ export interface components {
             numDomainsToGenerate?: number;
             /** @enum {string} */
             patternType: "prefix" | "suffix" | "both";
-            tld: string;
+            tlds: string[];
             /** Format: int32 */
             variableLength: number;
         };
@@ -2419,43 +2456,72 @@ export interface components {
             /** Format: int32 */
             variableLength: number;
         };
+        DomainGenerationPhaseConfig: {
+            /** Format: int32 */
+            batchSize?: number;
+            characterSet: string;
+            constantString: string;
+            /** Format: int64 */
+            numDomainsToGenerate?: number;
+            /** @enum {string} */
+            patternType: "prefix" | "suffix" | "both";
+            tld: string;
+            /** Format: int32 */
+            variableLength: number;
+        };
         DomainGenerationProgress: {
             /**
              * Format: uuid
              * @description Unique identifier
              */
-            campaign_id?: string;
+            campaignId?: string;
             /** Format: int32 */
-            domains_generated?: number;
+            domainsGenerated?: number;
             /** Format: date-time */
-            estimated_end?: string;
+            estimatedEnd?: string;
+            /** Format: int32 */
+            failedCount?: number;
+            /** Format: int32 */
+            processedCount?: number;
             /** Format: double */
             progress?: number;
+            /** Format: double */
+            progressPercentage?: number;
             /** Format: date-time */
-            started_at?: string;
+            startedAt?: string;
             status?: string;
             /** Format: int32 */
-            total_domains?: number;
+            successfulCount?: number;
+            /** Format: int32 */
+            totalDomains?: number;
         };
         DomainGenerationStats: {
             /**
              * Format: uuid
              * @description Unique identifier
              */
-            campaign_id?: string;
-            config_hash?: string;
+            campaignId?: string;
+            configHash?: string;
             /** Format: int64 */
-            current_offset?: number;
+            currentOffset?: number;
             /** Format: int32 */
-            domains_generated?: number;
+            domainsGenerated?: number;
             /** Format: int64 */
-            estimated_time_left?: number;
+            duplicatesSkipped?: number;
+            /** Format: int64 */
+            errorCount?: number;
+            /** Format: int64 */
+            estimatedTimeLeft?: number;
             /** Format: double */
-            generation_rate?: number;
+            generationRate?: number;
             /** Format: int64 */
-            memory_usage?: number;
+            memoryUsage?: number;
             /** Format: int64 */
-            total_combinations?: number;
+            totalCombinations?: number;
+            /** Format: int64 */
+            totalGenerated?: number;
+            /** Format: int64 */
+            uniqueDomainsCount?: number;
         };
         DomainHTTPStatusEnum: string;
         DomainLeadStatusEnum: string;
@@ -2616,12 +2682,16 @@ export interface components {
             error?: string;
         };
         GenerateDomainsRequest: {
+            /** Format: int32 */
+            batchSize: number;
             /**
              * Format: uuid
              * @description Unique identifier
              */
-            campaign_id?: string;
-            config?: components["schemas"]["DomainGenerationConfig"];
+            campaignId: string;
+            config: components["schemas"]["DomainGenerationConfig"];
+            /** Format: int64 */
+            startFromOffset?: number;
         };
         GeneratedDomain: {
             /** Format: date-time */
@@ -2729,6 +2799,11 @@ export interface components {
             sourceType: string;
             targetHttpPorts?: number[];
         };
+        HTTPKeywordParams: {
+            adHocKeywords?: string[];
+            keywords?: string[];
+            personaIds: string[];
+        };
         HTTPKeywordResult: {
             /** Format: int32 */
             attempts?: number;
@@ -2782,6 +2857,17 @@ export interface components {
             /** Format: int64 */
             totalCount?: number;
         };
+        HTTPKeywordValidationPhaseConfig: {
+            adHocKeywords?: string[];
+            /** Format: int32 */
+            batchSize?: number;
+            keywords?: string[];
+            /** Format: int32 */
+            maxRetries?: number;
+            personaIds: string[];
+            /** Format: int32 */
+            timeout?: number;
+        };
         HTTPKeywordValidationRequest: {
             adHocKeywords: string[];
             keywords: string[];
@@ -2820,6 +2906,19 @@ export interface components {
             /** Format: int32 */
             rotationIntervalSeconds?: number;
             targetHttpPorts?: number[];
+        };
+        HTTPValidationPhaseConfig: {
+            adHocKeywords?: string[];
+            /** Format: int32 */
+            batchSize?: number;
+            keywords?: string[];
+            personaIds: string[];
+            /** Format: int32 */
+            processingSpeedPerMinute?: number;
+            /** Format: int32 */
+            retryAttempts?: number;
+            /** Format: int32 */
+            rotationIntervalSeconds?: number;
         };
         HTTPValidationStartResponse: {
             /**
@@ -3139,21 +3238,51 @@ export interface components {
             userId?: string;
         };
         LeadGenerationCampaignResponse: {
-            analysisResults?: Record<string, never>;
+            campaignType?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: int32 */
+            completedPhases?: number;
             /** Format: date-time */
             createdAt?: string;
+            /** @description Phase management */
             currentPhase?: string;
-            description?: string;
-            dnsResults?: Record<string, never>;
-            domainsData?: Record<string, never>;
-            httpResults?: Record<string, never>;
+            /** Format: int64 */
+            dnsValidatedDomains?: number;
+            /**
+             * Format: int64
+             * @description Summary metrics
+             */
+            domains?: number;
+            errorMessage?: string;
+            /** Format: int64 */
+            failedItems?: number;
             /**
              * Format: uuid
              * @description Unique identifier
              */
             id?: string;
+            /** Format: int64 */
+            leads?: number;
             name?: string;
-            status?: string;
+            /** Format: double */
+            overallProgress?: number;
+            phaseStatus?: string;
+            /** @description Phase execution details */
+            phases?: components["schemas"]["PhaseProgressResponse"][];
+            /** Format: int64 */
+            processedItems?: number;
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: int64 */
+            successfulItems?: number;
+            /**
+             * Format: int64
+             * @description Campaign-level tracking
+             */
+            totalItems?: number;
+            /** Format: int32 */
+            totalPhases?: number;
             /** Format: date-time */
             updatedAt?: string;
         };
@@ -3167,7 +3296,7 @@ export interface components {
             /** Format: double */
             overall_progress?: number;
             phase_progress?: {
-                [key: string]: Record<string, never>;
+                [key: string]: components["schemas"]["PhaseProgress"];
             };
         };
         LeadItem: {
@@ -3454,15 +3583,35 @@ export interface components {
             successCount?: number;
         };
         PersonaTypeEnum: string;
+        PhaseConfig: {
+            analysis?: components["schemas"]["AnalysisPhaseConfig"];
+            dnsValidation?: components["schemas"]["DNSValidationPhaseConfig"];
+            domainGeneration?: components["schemas"]["DomainGenerationPhaseConfig"];
+            httpKeywordValidation?: components["schemas"]["HTTPKeywordValidationPhaseConfig"];
+            phaseType?: string;
+        };
         PhaseConfigureRequest: {
             config: Record<string, never>;
             /** @enum {string} */
             phaseType: "dns_validation" | "http_keyword_validation" | "analysis";
         };
-        PhaseProgressResponse: {
+        PhaseProgress: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            errorMessage?: string;
             /** Format: date-time */
-            completedAt?: string;
             estimatedEnd?: string;
+            /** Format: int64 */
+            itemsFailed?: number;
+            /** Format: int64 */
+            itemsProcessed?: number;
+            /** Format: int64 */
+            itemsSuccessful?: number;
+            /** Format: int64 */
+            itemsTotal?: number;
             phaseType?: string;
             /** Format: double */
             progress?: number;
@@ -3470,9 +3619,48 @@ export interface components {
             startedAt?: string;
             status?: string;
         };
+        PhaseProgressResponse: {
+            /** Format: date-time */
+            completedAt?: string;
+            errorMessage?: string;
+            /** Format: int64 */
+            failedItems?: number;
+            phaseType?: string;
+            /** Format: int64 */
+            processedItems?: number;
+            /** Format: double */
+            progress?: number;
+            /** Format: date-time */
+            startedAt?: string;
+            status?: string;
+            /** Format: int64 */
+            successfulItems?: number;
+            /** Format: int64 */
+            totalItems?: number;
+        };
         PhaseStartRequest: {
             /** @enum {string} */
             phaseType: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+        };
+        PhaseStats: {
+            /**
+             * Format: uuid
+             * @description Unique identifier
+             */
+            campaignId?: string;
+            duration?: string;
+            errorCounts?: {
+                [key: string]: number;
+            };
+            /** Format: int64 */
+            memoryUsage?: number;
+            phaseType?: string;
+            /** Format: double */
+            processingRate?: number;
+            /** Format: double */
+            successRate?: number;
+            /** Format: int64 */
+            totalResults?: number;
         };
         PhaseStatusEnum: string;
         PhaseTypeEnum: string;

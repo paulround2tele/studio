@@ -95,12 +95,9 @@ func getTableNameMapping(modelName string) (string, bool) {
 		"DomainGenerationConfigState":    "domain_generation_config_states",
 		"GeneratedDomain":                "generated_domains",
 		"DNSValidationCampaignParams":    "dns_validation_campaign_params",
-		// NOTE: Legacy validation result tables removed as part of dual architecture elimination
-		// "DNSValidationResult":            "dns_validation_results",
-		"HTTPKeywordCampaignParams": "http_keyword_campaign_params",
-		// "HTTPKeywordResult":              "http_keyword_results",
-		"AuditLog":    "audit_logs",
-		"CampaignJob": "campaign_jobs",
+		"HTTPKeywordCampaignParams":      "http_keyword_campaign_params",
+		"AuditLog":                       "audit_logs",
+		"CampaignJob":                    "campaign_jobs",
 	}
 
 	tableName, ok := tableNameMappings[modelName]
@@ -186,7 +183,7 @@ func buildWrappedModelMap() map[string]interface{} {
 	modelMap := make(map[string]interface{})
 
 	// Add all models from the models package
-	modelMap["Campaign"] = &models.Campaign{}
+	modelMap["LeadGenerationCampaign"] = &models.LeadGenerationCampaign{}
 	modelMap["Persona"] = &models.Persona{}
 	modelMap["Proxy"] = &models.Proxy{}
 	modelMap["KeywordSet"] = &models.KeywordSet{}

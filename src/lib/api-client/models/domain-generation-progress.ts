@@ -25,19 +25,31 @@ export interface DomainGenerationProgress {
      * @type {string}
      * @memberof DomainGenerationProgress
      */
-    'campaign_id'?: string;
+    'campaignId'?: string;
     /**
      * 
      * @type {number}
      * @memberof DomainGenerationProgress
      */
-    'domains_generated'?: number;
+    'domainsGenerated'?: number;
     /**
      * 
      * @type {string}
      * @memberof DomainGenerationProgress
      */
-    'estimated_end'?: string;
+    'estimatedEnd'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainGenerationProgress
+     */
+    'failedCount'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainGenerationProgress
+     */
+    'processedCount'?: number;
     /**
      * 
      * @type {number}
@@ -46,10 +58,16 @@ export interface DomainGenerationProgress {
     'progress'?: number;
     /**
      * 
+     * @type {number}
+     * @memberof DomainGenerationProgress
+     */
+    'progressPercentage'?: number;
+    /**
+     * 
      * @type {string}
      * @memberof DomainGenerationProgress
      */
-    'started_at'?: string;
+    'startedAt'?: string;
     /**
      * 
      * @type {string}
@@ -61,6 +79,12 @@ export interface DomainGenerationProgress {
      * @type {number}
      * @memberof DomainGenerationProgress
      */
-    'total_domains'?: number;
+    'successfulCount'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainGenerationProgress
+     */
+    'totalDomains'?: number;
 }
 

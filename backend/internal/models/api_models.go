@@ -57,10 +57,10 @@ type CampaignAPI struct {
 	LastHeartbeatAt       *time.Time  `json:"lastHeartbeatAt,omitempty"`
 
 	// Phases-based architecture (replaces legacy CampaignType + Status)
-	CurrentPhase        *CampaignPhaseEnum       `json:"currentPhase,omitempty" example:"domain_generation" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
-	PhaseStatus         *CampaignPhaseStatusEnum `json:"phaseStatus,omitempty" example:"in_progress" enums:"not_started,in_progress,paused,completed,failed"`
-	Progress            *float64                 `json:"progress,omitempty" example:"75.5"`
-	Domains             *int64                   `json:"domains,omitempty" example:"1000"`
-	Leads               *int64                   `json:"leads,omitempty" example:"25"`
-	DNSValidatedDomains *int64                   `json:"dnsValidatedDomains,omitempty" example:"800"`
+	CurrentPhase        *PhaseTypeEnum   `json:"currentPhase,omitempty" example:"domain_generation" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus         *PhaseStatusEnum `json:"phaseStatus,omitempty" example:"in_progress" enums:"not_started,in_progress,paused,completed,failed"`
+	Progress            *float64         `json:"progress,omitempty" example:"75.5"`
+	Domains             *int64           `json:"domains,omitempty" example:"1000"`
+	Leads               *int64           `json:"leads,omitempty" example:"25"`
+	DNSValidatedDomains *int64           `json:"dnsValidatedDomains,omitempty" example:"800"`
 }

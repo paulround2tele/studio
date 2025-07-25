@@ -313,15 +313,7 @@ func NewDomainGenerationService(db *sqlx.DB, cs store.CampaignStore, cjs store.C
 	}
 }
 
-// NewDomainGenerationServiceStable creates a new DomainGenerationService with stable backend compatibility
-// This version doesn't require ConfigManagerInterface for backward compatibility
-func NewDomainGenerationServiceStable(db *sqlx.DB, cs store.CampaignStore, cjs store.CampaignJobStore, as store.AuditLogStore) DomainGenerationService {
-	// Create a basic ConfigManager for stable backend compatibility
-	basicConfigManager := NewConfigManager(db)
-	return NewDomainGenerationService(db, cs, cjs, as, basicConfigManager)
-}
-
-func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req CreateDomainGenerationCampaignRequest) (*models.Campaign, error) {
+func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req CreateDomainGenerationCampaignRequest) (*models.LeadGenerationCampaign, error) {
 	log.Printf("DomainGenerationService: CreateCampaign called with Name: %s, PatternType: %s", req.Name, req.PatternType)
 	functionStartTime := time.Now().UTC() // Use a distinct name for clarity
 	campaignID := uuid.New()
@@ -505,10 +497,10 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 	if req.NumDomainsToGenerate == 0 {
 		actualTotalItemsForThisRun = availableFromGlobalOffset
 	} else {
-		if req.NumDomainsToGenerate > availableFromGlobalOffset {
+		if int64(req.NumDomainsToGenerate) > availableFromGlobalOffset {
 			actualTotalItemsForThisRun = availableFromGlobalOffset
 		} else {
-			actualTotalItemsForThisRun = req.NumDomainsToGenerate
+			actualTotalItemsForThisRun = int64(req.NumDomainsToGenerate)
 		}
 	}
 	if actualTotalItemsForThisRun < 0 {
@@ -550,7 +542,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		metadataJSON = &metadataRaw
 	}
 
-	baseCampaign := &models.Campaign{
+	baseCampaign := &models.LeadGenerationCampaign{
 		ID:                 campaignID,
 		Name:               req.Name,
 		CurrentPhase:       &phase,
@@ -704,7 +696,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 	return baseCampaign, opErr
 }
 
-func (s *domainGenerationServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.DomainGenerationCampaignParams, error) {
+func (s *domainGenerationServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.DomainGenerationCampaignParams, error) {
 	var querier store.Querier
 	if s.db != nil {
 		querier = s.db
@@ -742,18 +734,21 @@ func (s *domainGenerationServiceImpl) GetCampaignDetails(ctx context.Context, ca
 	return campaign, params, nil
 }
 
-func (s *domainGenerationServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
+func (s *domainGenerationServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, action, description string) {
 	if s.auditLogger == nil || campaign == nil {
 		return
 	}
 	s.auditLogger.LogCampaignEvent(ctx, exec, campaign, action, description)
 }
 
-func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedInThisBatch int, opErr error) {
+func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context.Context, campaignID uuid.UUID, batchSize int) (batchDone bool, processedCount int, err error) {
 	log.Printf("ProcessGenerationCampaignBatch: Starting for campaignID %s", campaignID)
 
 	var querier store.Querier
 	isSQL := s.db != nil
+	var done bool
+	var processedInThisBatch int
+	var opErr error
 	var sqlTx *sqlx.Tx
 
 	if isSQL {
@@ -812,7 +807,7 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		log.Printf("[ProcessGenerationCampaignBatch] Operating in Firestore mode for %s (no service-level transaction).", campaignID)
 	}
 
-	var campaign *models.Campaign
+	var campaign *models.LeadGenerationCampaign
 	campaign, opErr = s.campaignStore.GetCampaignByID(ctx, querier, campaignID)
 	if opErr != nil {
 		log.Printf("[ProcessGenerationCampaignBatch] Failed to fetch campaign %s: %v", campaignID, opErr)
@@ -1005,8 +1000,8 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			campaign.PhaseStatus = &succeededStatus
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			// 🐛 FIX: Set CurrentPhase to enable frontend phase progression
-			domainGenPhase := models.CampaignPhaseEnum("domain_generation")
-			completedStatus := models.CampaignPhaseStatusEnum("completed")
+			domainGenPhase := models.PhaseTypeEnum("domain_generation")
+			completedStatus := models.PhaseStatusEnum("completed")
 			campaign.CurrentPhase = &domainGenPhase
 			campaign.PhaseStatus = &completedStatus
 			now := time.Now().UTC()
@@ -1044,8 +1039,8 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			campaign.PhaseStatus = &succeededStatus
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			// 🐛 FIX: Set CurrentPhase to enable frontend phase progression
-			domainGenPhase := models.CampaignPhaseEnum("domain_generation")
-			completedStatus := models.CampaignPhaseStatusEnum("completed")
+			domainGenPhase := models.PhaseTypeEnum("domain_generation")
+			completedStatus := models.PhaseStatusEnum("completed")
 			campaign.CurrentPhase = &domainGenPhase
 			campaign.PhaseStatus = &completedStatus
 			now := time.Now().UTC()
@@ -1139,8 +1134,8 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			campaign.PhaseStatus = &succeededStatus
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			// 🐛 FIX: Set CurrentPhase to enable frontend phase progression
-			domainGenPhase := models.CampaignPhaseEnum("domain_generation")
-			completedStatus := models.CampaignPhaseStatusEnum("completed")
+			domainGenPhase := models.PhaseTypeEnum("domain_generation")
+			completedStatus := models.PhaseStatusEnum("completed")
 			campaign.CurrentPhase = &domainGenPhase
 			campaign.PhaseStatus = &completedStatus
 			now := time.Now().UTC()
@@ -1156,11 +1151,11 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 	generatedDomainsToStore := make([]*models.GeneratedDomain, len(generatedDomainsSlice))
 	for i, domainName := range generatedDomainsSlice {
 		newDom := &models.GeneratedDomain{
-			ID:                   uuid.New(),
-			DomainName:           domainName,
-			GenerationCampaignID: campaignID,
-			GeneratedAt:          nowTime,
-			OffsetIndex:          genParams.CurrentOffset + int64(i),
+			ID:          uuid.New(),
+			DomainName:  domainName,
+			CampaignID:  campaignID,
+			GeneratedAt: nowTime,
+			OffsetIndex: genParams.CurrentOffset + int64(i),
 		}
 		generatedDomainsToStore[i] = newDom
 	}
@@ -1744,7 +1739,7 @@ func (cm *ConfigManager) GetDomainGenerationConfig(ctx context.Context, configHa
 		return nil, fmt.Errorf("failed to query domain generation config state: %w", err)
 	}
 
-	// Set the ConfigState field to point to itself for backward compatibility
+	// Set the ConfigState field to point to itself
 	configState.ConfigState = &configState
 
 	return &configState, nil
@@ -1815,7 +1810,7 @@ func (s *domainGenerationServiceImpl) GenerateDomains(ctx context.Context, req G
 	log.Printf("GenerateDomains: Starting standalone domain generation for campaign %s", req.CampaignID)
 
 	// Validate configuration using sophisticated validation
-	if err := s.ValidateGenerationConfig(ctx, req.Config); err != nil {
+	if err := s.ValidateGenerationConfig(ctx, *req.Config); err != nil {
 		return fmt.Errorf("invalid generation config: %w", err)
 	}
 
@@ -1881,7 +1876,7 @@ func (s *domainGenerationServiceImpl) GenerateDomains(ctx context.Context, req G
 	}
 
 	startOffset := int64(0)
-	targetDomains := req.Config.NumDomainsToGenerate
+	targetDomains := int64(req.Config.NumDomainsToGenerate)
 	if targetDomains <= 0 {
 		targetDomains = domainGen.GetTotalCombinations()
 	}

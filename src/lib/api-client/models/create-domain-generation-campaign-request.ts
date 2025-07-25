@@ -15,10 +15,16 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { DNSValidationRequest } from './dnsvalidation-request';
+import type { DNSValidationParams } from './dnsvalidation-params';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { HTTPKeywordValidationRequest } from './httpkeyword-validation-request';
+import type { DNSValidationPhaseConfig } from './dnsvalidation-phase-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { HTTPKeywordParams } from './httpkeyword-params';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { HTTPValidationPhaseConfig } from './httpvalidation-phase-config';
 
 /**
  * 
@@ -37,31 +43,61 @@ export interface CreateDomainGenerationCampaignRequest {
      * @type {string}
      * @memberof CreateDomainGenerationCampaignRequest
      */
-    'constantString': string;
+    'constantString'?: string;
     /**
      * 
-     * @type {string}
+     * @type {DNSValidationPhaseConfig}
      * @memberof CreateDomainGenerationCampaignRequest
      */
-    'description'?: string;
+    'dnsValidationConfig'?: DNSValidationPhaseConfig;
     /**
      * 
-     * @type {DNSValidationRequest}
+     * @type {DNSValidationParams}
      * @memberof CreateDomainGenerationCampaignRequest
      */
-    'dnsValidationParams'?: DNSValidationRequest;
+    'dnsValidationParams'?: DNSValidationParams;
     /**
      * 
-     * @type {HTTPKeywordValidationRequest}
+     * @type {boolean}
      * @memberof CreateDomainGenerationCampaignRequest
      */
-    'httpKeywordParams'?: HTTPKeywordValidationRequest;
+    'enableDnsValidation'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'enableHttpValidation'?: boolean;
+    /**
+     * 
+     * @type {HTTPKeywordParams}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'httpKeywordParams'?: HTTPKeywordParams;
+    /**
+     * 
+     * @type {HTTPValidationPhaseConfig}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'httpValidationConfig'?: HTTPValidationPhaseConfig;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'keywords': Array<string>;
     /**
      * 
      * @type {boolean}
      * @memberof CreateDomainGenerationCampaignRequest
      */
     'launchSequence'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'maxResults': number;
     /**
      * 
      * @type {string}
@@ -73,7 +109,7 @@ export interface CreateDomainGenerationCampaignRequest {
      * @type {number}
      * @memberof CreateDomainGenerationCampaignRequest
      */
-    'numDomainsToGenerate'?: number;
+    'numDomainsToGenerate': number;
     /**
      * 
      * @type {string}
@@ -87,13 +123,19 @@ export interface CreateDomainGenerationCampaignRequest {
      */
     'tld': string;
     /**
+     * 
+     * @type {Array<string>}
+     * @memberof CreateDomainGenerationCampaignRequest
+     */
+    'tlds': Array<string>;
+    /**
      * Unique identifier
      * @type {string}
      * @memberof CreateDomainGenerationCampaignRequest
      */
     'userId'?: string;
     /**
-     * 
+     * Legacy domain generation fields
      * @type {number}
      * @memberof CreateDomainGenerationCampaignRequest
      */

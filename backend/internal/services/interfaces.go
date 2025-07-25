@@ -12,26 +12,26 @@ import (
 
 // --- Campaign Update Request DTOs ---
 type UpdateCampaignRequest struct {
-	Name                       *string                         `json:"name,omitempty"`
-	CampaignType               *models.JobTypeEnum             `json:"campaignType,omitempty"`
-	Status                     *models.CampaignPhaseStatusEnum `json:"status,omitempty"`
-	SourceGenerationCampaignID *uuid.UUID                      `json:"sourceGenerationCampaignId,omitempty"`
-	SourceDnsCampaignID        *uuid.UUID                      `json:"sourceDnsCampaignId,omitempty"`
-	KeywordSetIDs              *[]uuid.UUID                    `json:"keywordSetIds,omitempty"`
-	AdHocKeywords              *[]string                       `json:"adHocKeywords,omitempty"`
-	PersonaIDs                 *[]uuid.UUID                    `json:"personaIds,omitempty"`
-	ProxyPoolID                *uuid.UUID                      `json:"proxyPoolId,omitempty"`
-	ProxySelectionStrategy     *string                         `json:"proxySelectionStrategy,omitempty"`
-	RotationIntervalSeconds    *int                            `json:"rotationIntervalSeconds,omitempty"`
-	ProcessingSpeedPerMinute   *int                            `json:"processingSpeedPerMinute,omitempty"`
-	BatchSize                  *int                            `json:"batchSize,omitempty"`
-	RetryAttempts              *int                            `json:"retryAttempts,omitempty"`
-	TargetHTTPPorts            *[]int                          `json:"targetHttpPorts,omitempty"`
-	NumDomainsToGenerate       *int64                          `json:"numDomainsToGenerate,omitempty"`
-	VariableLength             *int                            `json:"variableLength,omitempty"`
-	CharacterSet               *string                         `json:"characterSet,omitempty"`
-	ConstantString             *string                         `json:"constantString,omitempty"`
-	TLD                        *string                         `json:"tld,omitempty"`
+	Name                       *string                 `json:"name,omitempty"`
+	CampaignType               *models.JobTypeEnum     `json:"campaignType,omitempty"`
+	Status                     *models.PhaseStatusEnum `json:"status,omitempty"`
+	SourceGenerationCampaignID *uuid.UUID              `json:"sourceGenerationCampaignId,omitempty"`
+	SourceDnsCampaignID        *uuid.UUID              `json:"sourceDnsCampaignId,omitempty"`
+	KeywordSetIDs              *[]uuid.UUID            `json:"keywordSetIds,omitempty"`
+	AdHocKeywords              *[]string               `json:"adHocKeywords,omitempty"`
+	PersonaIDs                 *[]uuid.UUID            `json:"personaIds,omitempty"`
+	ProxyPoolID                *uuid.UUID              `json:"proxyPoolId,omitempty"`
+	ProxySelectionStrategy     *string                 `json:"proxySelectionStrategy,omitempty"`
+	RotationIntervalSeconds    *int                    `json:"rotationIntervalSeconds,omitempty"`
+	ProcessingSpeedPerMinute   *int                    `json:"processingSpeedPerMinute,omitempty"`
+	BatchSize                  *int                    `json:"batchSize,omitempty"`
+	RetryAttempts              *int                    `json:"retryAttempts,omitempty"`
+	TargetHTTPPorts            *[]int                  `json:"targetHttpPorts,omitempty"`
+	NumDomainsToGenerate       *int64                  `json:"numDomainsToGenerate,omitempty"`
+	VariableLength             *int                    `json:"variableLength,omitempty"`
+	CharacterSet               *string                 `json:"characterSet,omitempty"`
+	ConstantString             *string                 `json:"constantString,omitempty"`
+	TLD                        *string                 `json:"tld,omitempty"`
 }
 
 // --- Unified Campaign Creation Request DTO ---
@@ -91,7 +91,7 @@ type CreateLeadGenerationCampaignRequest struct {
 	Description string    `json:"description,omitempty"`
 	UserID      uuid.UUID `json:"userId,omitempty"`
 	// Domain generation config for Phase 1 initialization
-	DomainConfig DomainGenerationConfig `json:"domainConfig" validate:"required"`
+	DomainConfig DomainGenerationPhaseConfig `json:"domainConfig" validate:"required"`
 }
 
 // --- Campaign Result Response DTOs ---
@@ -141,95 +141,136 @@ type BulkDeleteResult struct {
 
 // CampaignDependencyInfo provides information about campaign dependencies
 type CampaignDependencyInfo struct {
-	Campaign           models.Campaign   `json:"campaign"`
-	DependentCampaigns []models.Campaign `json:"dependentCampaigns"`
-	HasDependencies    bool              `json:"hasDependencies"`
-	CanDelete          bool              `json:"canDelete"`
+	Campaign           models.LeadGenerationCampaign   `json:"campaign"`
+	DependentCampaigns []models.LeadGenerationCampaign `json:"dependentCampaigns"`
+	HasDependencies    bool                            `json:"hasDependencies"`
+	CanDelete          bool                            `json:"canDelete"`
 }
 
 // --- Service Interfaces ---
 
-// CampaignOrchestratorService defines the interface for managing the lifecycle of all campaigns.
-type CampaignOrchestratorService interface {
-	// Unified campaign creation method (preferred)
-	CreateCampaignUnified(ctx context.Context, req CreateCampaignRequest) (*models.Campaign, error)
+// CampaignOrchestratorService - ELIMINATED: Replaced by PhaseExecutionService for unified architecture
 
-	// Lead generation campaign creation (phase-centric architecture)
-	CreateLeadGenerationCampaign(ctx context.Context, req CreateLeadGenerationCampaignRequest) (*models.Campaign, error)
-
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, interface{}, error) // Stays as interface{} for flexibility at orchestrator level
-	GetCampaignStatus(ctx context.Context, campaignID uuid.UUID) (models.CampaignPhaseStatusEnum, *float64, error)
-	ListCampaigns(ctx context.Context, filter store.ListCampaignsFilter) ([]models.Campaign, int64, error)
-
-	// Methods for fetching campaign results
-	GetGeneratedDomainsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor int64) (*GeneratedDomainsResponse, error)
-	GetDNSValidationResultsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor string, filter store.ListValidationResultsFilter) (*DNSValidationResultsResponse, error)
-	GetHTTPKeywordResultsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor string, filter store.ListValidationResultsFilter) (*HTTPKeywordResultsResponse, error)
-
-	StartCampaign(ctx context.Context, campaignID uuid.UUID) error
-	PauseCampaign(ctx context.Context, campaignID uuid.UUID) error
-	ResumeCampaign(ctx context.Context, campaignID uuid.UUID) error
-	CancelCampaign(ctx context.Context, campaignID uuid.UUID) error
-	UpdateCampaign(ctx context.Context, campaignID uuid.UUID, req UpdateCampaignRequest) (*models.Campaign, error)
-	DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error
-	BulkDeleteCampaigns(ctx context.Context, campaignIDs []uuid.UUID) (*BulkDeleteResult, error)
-	SetCampaignErrorStatus(ctx context.Context, campaignID uuid.UUID, errorMessage string) error
-	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.CampaignPhaseStatusEnum) error
-	HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error
-	GetCampaignDependencies(ctx context.Context, campaignID uuid.UUID) (*CampaignDependencyInfo, error)
-
-	// Clean phase transition methods for single-campaign architecture
-	ConfigureDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.DNSPhaseConfigRequest) (*models.Campaign, error)
-	ConfigureHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.HTTPPhaseConfigRequest) (*models.Campaign, error)
-
-	// Phase restart methods (except domain generation)
-	RestartDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req *DNSValidationRequest) (*models.Campaign, error)
-	RestartHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req *HTTPKeywordValidationRequest) (*models.Campaign, error)
+// DomainGenerationService defines interface for domain generation operations
+type DomainGenerationService interface {
+	ProcessGenerationCampaignBatch(ctx context.Context, campaignID uuid.UUID, batchSize int) (batchDone bool, processedCount int, err error)
 }
 
-// LeadGenerationCampaignService defines the interface for campaign lifecycle management and phase coordination.
-// This service orchestrates standalone phase services but does NOT implement phase business logic.
-type LeadGenerationCampaignService interface {
-	// Campaign lifecycle
-	CreateCampaign(ctx context.Context, req CreateLeadGenerationCampaignRequest) (*models.LeadGenerationCampaign, error)
-	GetCampaign(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, error)
-	UpdateCampaignStatus(ctx context.Context, campaignID uuid.UUID, status string) error
+// CreateDomainGenerationCampaignRequest defines request for creating domain generation campaigns
+type CreateDomainGenerationCampaignRequest struct {
+	Name                 string                     `json:"name" validate:"required,min=1,max=100"`
+	PatternType          string                     `json:"patternType" validate:"required,oneof=prefix suffix both"`
+	Keywords             []string                   `json:"keywords" validate:"required,min=1,dive,min=1,max=50"`
+	TLDs                 []string                   `json:"tlds" validate:"required,min=1,dive,min=2,max=10"`
+	MaxResults           int                        `json:"maxResults" validate:"required,min=1,max=100000"`
+	EnableDNSValidation  bool                       `json:"enableDnsValidation"`
+	EnableHTTPValidation bool                       `json:"enableHttpValidation"`
+	DNSValidationConfig  *DNSValidationPhaseConfig  `json:"dnsValidationConfig,omitempty"`
+	HTTPValidationConfig *HTTPValidationPhaseConfig `json:"httpValidationConfig,omitempty"`
 
-	// Phase orchestration (NOT implementation)
-	InitializePhase1(ctx context.Context, campaignID uuid.UUID) error
-	ConfigurePhase(ctx context.Context, campaignID uuid.UUID, phaseType string, config interface{}) error
-	StartPhase(ctx context.Context, campaignID uuid.UUID, phaseType string) error
-	TransitionToNextPhase(ctx context.Context, campaignID uuid.UUID) error
+	// Domain generation fields
+	VariableLength       int                  `json:"variableLength" validate:"required,min=1,max=50"`
+	CharacterSet         string               `json:"characterSet" validate:"required,min=1"`
+	ConstantString       string               `json:"constantString,omitempty"`
+	TLD                  string               `json:"tld" validate:"required,min=3,max=10"`
+	NumDomainsToGenerate int                  `json:"numDomainsToGenerate" validate:"required,min=1"`
+	UserID               uuid.UUID            `json:"userId,omitempty"`
+	LaunchSequence       *bool                `json:"launchSequence,omitempty"`
+	DNSValidationParams  *DNSValidationParams `json:"dnsValidationParams,omitempty"`
+	HTTPKeywordParams    *HTTPKeywordParams   `json:"httpKeywordParams,omitempty"`
+}
 
-	// Campaign management
-	GetCampaignProgress(ctx context.Context, campaignID uuid.UUID) (*LeadGenerationProgress, error)
-	ListCampaigns(ctx context.Context, userID uuid.UUID) ([]*models.LeadGenerationCampaign, error)
-	DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error
+// DNSValidationParams defines DNS validation parameters
+type DNSValidationParams struct {
+	PersonaIDs               []uuid.UUID `json:"personaIds" validate:"required,min=1"`
+	RotationIntervalSeconds  *int        `json:"rotationIntervalSeconds,omitempty"`
+	ProcessingSpeedPerMinute *int        `json:"processingSpeedPerMinute,omitempty"`
+	BatchSize                *int        `json:"batchSize,omitempty"`
+	RetryAttempts            *int        `json:"retryAttempts,omitempty"`
+}
+
+// HTTPKeywordParams defines HTTP keyword validation parameters
+type HTTPKeywordParams struct {
+	PersonaIDs    []uuid.UUID `json:"personaIds" validate:"required,min=1"`
+	Keywords      []string    `json:"keywords,omitempty"`
+	AdHocKeywords []string    `json:"adHocKeywords,omitempty"`
+}
+
+// HTTPValidationPhaseConfig defines HTTP validation phase configuration
+type HTTPValidationPhaseConfig struct {
+	PersonaIDs               []uuid.UUID `json:"personaIds" validate:"required,min=1"`
+	Keywords                 []string    `json:"keywords,omitempty"`
+	AdHocKeywords            []string    `json:"adHocKeywords,omitempty"`
+	RotationIntervalSeconds  *int        `json:"rotationIntervalSeconds,omitempty"`
+	ProcessingSpeedPerMinute *int        `json:"processingSpeedPerMinute,omitempty"`
+	BatchSize                *int        `json:"batchSize,omitempty"`
+	RetryAttempts            *int        `json:"retryAttempts,omitempty"`
+}
+
+// GenerateDomainsRequest defines request for domain generation
+type GenerateDomainsRequest struct {
+	CampaignID      uuid.UUID               `json:"campaignId" validate:"required"`
+	BatchSize       int                     `json:"batchSize" validate:"required,min=1,max=10000"`
+	StartFromOffset int64                   `json:"startFromOffset"`
+	Config          *DomainGenerationConfig `json:"config" validate:"required"`
+}
+
+// DomainGenerationProgress tracks domain generation progress
+type DomainGenerationProgress struct {
+	CampaignID         uuid.UUID `json:"campaignId"`
+	Status             string    `json:"status"`
+	DomainsGenerated   int       `json:"domainsGenerated"`
+	TotalDomains       int       `json:"totalDomains"`
+	Progress           float64   `json:"progress"`
+	StartedAt          time.Time `json:"startedAt"`
+	EstimatedEnd       time.Time `json:"estimatedEnd"`
+	ProcessedCount     int       `json:"processedCount"`
+	SuccessfulCount    int       `json:"successfulCount"`
+	FailedCount        int       `json:"failedCount"`
+	ProgressPercentage float64   `json:"progressPercentage"`
+}
+
+// DomainGenerationConfig defines domain generation configuration
+type DomainGenerationConfig struct {
+	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both"`
+	Keywords             []string `json:"keywords" validate:"required,min=1"`
+	TLDs                 []string `json:"tlds" validate:"required,min=1"`
+	MaxResults           int      `json:"maxResults" validate:"required,min=1"`
+	VariableLength       int      `json:"variableLength" validate:"required,min=1"`
+	CharacterSet         string   `json:"characterSet" validate:"required,min=1"`
+	ConstantString       string   `json:"constantString,omitempty"`
+	TLD                  string   `json:"tld" validate:"required,min=3"`
+	NumDomainsToGenerate int      `json:"numDomainsToGenerate" validate:"required,min=1"`
+	BatchSize            int      `json:"batchSize,omitempty"`
+}
+
+// DomainGenerationStats tracks domain generation statistics
+type DomainGenerationStats struct {
+	CampaignID         uuid.UUID `json:"campaignId"`
+	TotalCombinations  int64     `json:"totalCombinations"`
+	CurrentOffset      int64     `json:"currentOffset"`
+	DomainsGenerated   int       `json:"domainsGenerated"`
+	GenerationRate     float64   `json:"generationRate"`
+	MemoryUsage        int64     `json:"memoryUsage"`
+	ConfigHash         string    `json:"configHash"`
+	EstimatedTimeLeft  int64     `json:"estimatedTimeLeft"`
+	TotalGenerated     int64     `json:"totalGenerated"`
+	UniqueDomainsCount int64     `json:"uniqueDomainsCount"`
+	DuplicatesSkipped  int64     `json:"duplicatesSkipped"`
+	ErrorCount         int64     `json:"errorCount"`
 }
 
 type LeadGenerationProgress struct {
 	CampaignID      uuid.UUID                `json:"campaign_id"`
-	CurrentPhase    string                   `json:"current_phase"`
+	CurrentPhase    models.PhaseTypeEnum     `json:"current_phase"`
 	PhaseProgress   map[string]PhaseProgress `json:"phase_progress"`
 	OverallProgress float64                  `json:"overall_progress"`
-}
-
-type PhaseProgress struct {
-	Status          string     `json:"status"`
-	ProgressPercent float64    `json:"progress_percent"`
-	ProcessedItems  int64      `json:"processed_items"`
-	TotalItems      int64      `json:"total_items"`
-	SuccessfulItems int64      `json:"successful_items"`
-	FailedItems     int64      `json:"failed_items"`
-	StartedAt       *time.Time `json:"started_at"`
-	CompletedAt     *time.Time `json:"completed_at"`
-	EstimatedEnd    *time.Time `json:"estimated_end"`
 }
 
 // DNSCampaignService defines the interface for DNS validation campaign logic.
 type DNSCampaignService interface {
 	// GetCampaignDetails retrieves the base campaign and its specific DNS validation parameters.
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.DNSValidationCampaignParams, error)
+	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.DNSValidationCampaignParams, error)
 	ProcessDNSValidationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
 
 	// Phase transition methods for single-campaign architecture
@@ -240,7 +281,7 @@ type DNSCampaignService interface {
 // HTTPKeywordCampaignService defines the interface for HTTP & Keyword validation campaign logic.
 type HTTPKeywordCampaignService interface {
 	// GetCampaignDetails retrieves the base campaign and its specific HTTP & Keyword validation parameters.
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.HTTPKeywordCampaignParams, error)
+	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.HTTPKeywordCampaignParams, error)
 	ProcessHTTPKeywordCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
 
 	// Phase transition methods for single-campaign architecture
@@ -253,47 +294,72 @@ type CampaignWorkerService interface {
 	StartWorkers(ctx context.Context, numWorkers int)
 }
 
-// DomainGenerationService defines the interface for standalone domain generation
-type DomainGenerationService interface {
-	// Existing legacy methods (for backward compatibility during refactor)
-	CreateCampaign(ctx context.Context, req CreateDomainGenerationCampaignRequest) (*models.Campaign, error)
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.DomainGenerationCampaignParams, error)
-	ProcessGenerationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedInThisBatch int, err error)
+// PhaseExecutionService defines the universal interface for campaign lifecycle management and phase execution.
+// This service replaces both LeadGenerationCampaignService and CampaignOrchestratorService for simplified architecture.
+type PhaseExecutionService interface {
+	// Campaign lifecycle operations
+	CreateCampaign(ctx context.Context, req CreateLeadGenerationCampaignRequest) (*models.LeadGenerationCampaign, error)
+	StartCampaign(ctx context.Context, campaignID uuid.UUID) error
+	PauseCampaign(ctx context.Context, campaignID uuid.UUID) error
+	ResumeCampaign(ctx context.Context, campaignID uuid.UUID) error
+	CancelCampaign(ctx context.Context, campaignID uuid.UUID) error
 
-	// New standalone service methods
-	GenerateDomains(ctx context.Context, req GenerateDomainsRequest) error
-	GetGenerationProgress(ctx context.Context, campaignID uuid.UUID) (*DomainGenerationProgress, error)
-	PauseGeneration(ctx context.Context, campaignID uuid.UUID) error
-	ResumeGeneration(ctx context.Context, campaignID uuid.UUID) error
-	CancelGeneration(ctx context.Context, campaignID uuid.UUID) error
-	ValidateGenerationConfig(ctx context.Context, config DomainGenerationConfig) error
-	GetGenerationStats(ctx context.Context, campaignID uuid.UUID) (*DomainGenerationStats, error)
+	// Campaign CRUD operations
+	GetCampaign(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, error)
+	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, interface{}, error)
+	UpdateCampaign(ctx context.Context, campaignID uuid.UUID, req UpdateCampaignRequest) (*models.LeadGenerationCampaign, error)
+	DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error
+	BulkDeleteCampaigns(ctx context.Context, campaignIDs []uuid.UUID) (*BulkDeleteResult, error)
+
+	// Campaign listing and status
+	ListCampaigns(ctx context.Context, filter store.ListCampaignsFilter) ([]models.LeadGenerationCampaign, int64, error)
+	GetCampaignStatus(ctx context.Context, campaignID uuid.UUID) (models.PhaseStatusEnum, *float64, error)
+	SetCampaignErrorStatus(ctx context.Context, campaignID uuid.UUID, errorMessage string) error
+	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.PhaseStatusEnum) error
+
+	// Phase execution - Phase 4.11: User-controlled phase management (JobTypeEnum routing eliminated)
+	StartPhase(ctx context.Context, campaignID uuid.UUID, phaseType string) error
+	ConfigurePhase(ctx context.Context, campaignID uuid.UUID, phaseType string, config interface{}) error
+	TransitionToNextPhase(ctx context.Context, campaignID uuid.UUID) error
+
+	// Campaign progress and results
+	GetCampaignProgress(ctx context.Context, campaignID uuid.UUID) (*LeadGenerationProgress, error)
+	GetGeneratedDomainsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor int64) (*GeneratedDomainsResponse, error)
+	GetDNSValidationResultsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor string, filter store.ListValidationResultsFilter) (*DNSValidationResultsResponse, error)
+	GetHTTPKeywordResultsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor string, filter store.ListValidationResultsFilter) (*HTTPKeywordResultsResponse, error)
+
+	// Phase configuration methods
+	ConfigureDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.DNSPhaseConfigRequest) (*models.LeadGenerationCampaign, error)
+	ConfigureHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.HTTPPhaseConfigRequest) (*models.LeadGenerationCampaign, error)
+
+	// Phase restart methods
+	RestartDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req *DNSValidationRequest) (*models.LeadGenerationCampaign, error)
+	RestartHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req *HTTPKeywordValidationRequest) (*models.LeadGenerationCampaign, error)
+
+	// Campaign completion and dependency management
+	HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error
+	GetCampaignDependencies(ctx context.Context, campaignID uuid.UUID) (*CampaignDependencyInfo, error)
 }
 
-// CreateDomainGenerationCampaignRequest represents a request to create a domain generation campaign
-type CreateDomainGenerationCampaignRequest struct {
-	Name                 string                        `json:"name" validate:"required"`
-	Description          string                        `json:"description,omitempty"`
-	UserID               uuid.UUID                     `json:"userId,omitempty"`
-	PatternType          string                        `json:"patternType" validate:"required,oneof=prefix suffix both"`
-	VariableLength       int                           `json:"variableLength" validate:"required,gt=0"`
-	CharacterSet         string                        `json:"characterSet" validate:"required"`
-	ConstantString       string                        `json:"constantString" validate:"required"`
-	TLD                  string                        `json:"tld" validate:"required"`
-	NumDomainsToGenerate int64                         `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0"`
-	LaunchSequence       *bool                         `json:"launchSequence,omitempty"`
-	DNSValidationParams  *DNSValidationRequest         `json:"dnsValidationParams,omitempty"`
-	HTTPKeywordParams    *HTTPKeywordValidationRequest `json:"httpKeywordParams,omitempty"`
+// PhaseConfig contains configuration for any phase type in a lead generation campaign
+type PhaseConfig struct {
+	PhaseType models.PhaseTypeEnum `json:"phaseType"`
+
+	// Domain Generation Phase Config
+	DomainGeneration *DomainGenerationPhaseConfig `json:"domainGeneration,omitempty"`
+
+	// DNS Validation Phase Config
+	DNSValidation *DNSValidationPhaseConfig `json:"dnsValidation,omitempty"`
+
+	// HTTP Keyword Validation Phase Config
+	HTTPKeywordValidation *HTTPKeywordValidationPhaseConfig `json:"httpKeywordValidation,omitempty"`
+
+	// Analysis Phase Config
+	Analysis *AnalysisPhaseConfig `json:"analysis,omitempty"`
 }
 
-// GenerateDomainsRequest represents a request to generate domains for standalone service
-type GenerateDomainsRequest struct {
-	CampaignID uuid.UUID              `json:"campaign_id"`
-	Config     DomainGenerationConfig `json:"config"`
-}
-
-// DomainGenerationConfig contains all domain generation parameters for standalone service
-type DomainGenerationConfig struct {
+// DomainGenerationPhaseConfig contains domain generation phase parameters
+type DomainGenerationPhaseConfig struct {
 	PatternType          string `json:"patternType" validate:"required,oneof=prefix suffix both"`
 	VariableLength       int    `json:"variableLength" validate:"required,gt=0"`
 	CharacterSet         string `json:"characterSet" validate:"required"`
@@ -303,27 +369,56 @@ type DomainGenerationConfig struct {
 	BatchSize            int    `json:"batchSize,omitempty" validate:"omitempty,gt=0"`
 }
 
-// DomainGenerationProgress represents the current progress of domain generation
-type DomainGenerationProgress struct {
-	CampaignID       uuid.UUID `json:"campaign_id"`
-	Status           string    `json:"status"`
-	DomainsGenerated int       `json:"domains_generated"`
-	TotalDomains     int       `json:"total_domains"`
-	Progress         float64   `json:"progress"`
-	StartedAt        time.Time `json:"started_at"`
-	EstimatedEnd     time.Time `json:"estimated_end"`
+// DNSValidationPhaseConfig contains DNS validation phase parameters
+type DNSValidationPhaseConfig struct {
+	PersonaIDs []string `json:"personaIds" validate:"required,min=1"`
+	BatchSize  int      `json:"batchSize,omitempty" validate:"omitempty,gt=0"`
+	Timeout    int      `json:"timeout,omitempty"`
+	MaxRetries int      `json:"maxRetries,omitempty"`
 }
 
-// DomainGenerationStats provides statistics about domain generation
-type DomainGenerationStats struct {
-	CampaignID        uuid.UUID `json:"campaign_id"`
-	TotalCombinations int64     `json:"total_combinations"`
-	CurrentOffset     int64     `json:"current_offset"`
-	DomainsGenerated  int       `json:"domains_generated"`
-	GenerationRate    float64   `json:"generation_rate"`
-	MemoryUsage       int64     `json:"memory_usage"`
-	ConfigHash        string    `json:"config_hash"`
-	EstimatedTimeLeft int64     `json:"estimated_time_left"`
+// HTTPKeywordValidationPhaseConfig contains HTTP keyword validation phase parameters
+type HTTPKeywordValidationPhaseConfig struct {
+	PersonaIDs    []string `json:"personaIds" validate:"required,min=1"`
+	Keywords      []string `json:"keywords,omitempty"`
+	AdHocKeywords []string `json:"adHocKeywords,omitempty"`
+	BatchSize     int      `json:"batchSize,omitempty" validate:"omitempty,gt=0"`
+	Timeout       int      `json:"timeout,omitempty"`
+	MaxRetries    int      `json:"maxRetries,omitempty"`
+}
+
+// AnalysisPhaseConfig contains analysis phase parameters
+type AnalysisPhaseConfig struct {
+	MinLeadScore   float64  `json:"minLeadScore,omitempty"`
+	RequiredFields []string `json:"requiredFields,omitempty"`
+	AnalysisRules  []string `json:"analysisRules,omitempty"`
+}
+
+// PhaseProgress represents the current progress of any phase in a lead generation campaign
+type PhaseProgress struct {
+	CampaignID      uuid.UUID              `json:"campaignId"`
+	PhaseType       models.PhaseTypeEnum   `json:"phaseType"`
+	Status          models.PhaseStatusEnum `json:"status"`
+	ItemsTotal      int64                  `json:"itemsTotal"`
+	ItemsProcessed  int64                  `json:"itemsProcessed"`
+	ItemsSuccessful int64                  `json:"itemsSuccessful"`
+	ItemsFailed     int64                  `json:"itemsFailed"`
+	Progress        float64                `json:"progress"`
+	StartedAt       *time.Time             `json:"startedAt,omitempty"`
+	EstimatedEnd    *time.Time             `json:"estimatedEnd,omitempty"`
+	ErrorMessage    *string                `json:"errorMessage,omitempty"`
+}
+
+// PhaseStats provides statistics about any phase execution
+type PhaseStats struct {
+	CampaignID     uuid.UUID            `json:"campaignId"`
+	PhaseType      models.PhaseTypeEnum `json:"phaseType"`
+	ProcessingRate float64              `json:"processingRate"`
+	MemoryUsage    int64                `json:"memoryUsage"`
+	Duration       time.Duration        `json:"duration"`
+	TotalResults   int64                `json:"totalResults"`
+	SuccessRate    float64              `json:"successRate"`
+	ErrorCounts    map[string]int64     `json:"errorCounts,omitempty"`
 }
 
 // ConfigManagerInterface defines the interface for configuration management

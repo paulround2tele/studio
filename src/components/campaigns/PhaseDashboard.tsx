@@ -178,94 +178,99 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
 
   // Helper functions to determine phase completion based on available data
   const isPhaseCompleted = (phaseKey: string): boolean => {
-    if (!campaign) return false;
+    if (!campaign?.phases) return false;
     
-    switch (phaseKey) {
-      case 'domain_generation':
-        return !!(campaign.domainsData && Object.keys(campaign.domainsData).length > 0);
-      case 'dns_validation':
-        return !!(campaign.dnsResults && Object.keys(campaign.dnsResults).length > 0);
-      case 'http_keyword_validation':
-        return !!(campaign.httpResults && Object.keys(campaign.httpResults).length > 0);
-      case 'analysis':
-        return !!(campaign.analysisResults && Object.keys(campaign.analysisResults).length > 0);
-      default:
-        return false;
-    }
+    const phase = campaign.phases.find(p => p.phaseType === phaseKey);
+    if (!phase) return false;
+    
+    // A phase is completed if it has successful items or is marked as completed
+    return !!(phase.status === 'completed' || (phase.successfulItems && phase.successfulItems > 0));
   };
 
   const getCompletedPhaseCount = (): number => {
-    if (!campaign) return 0;
+    if (!campaign?.phases) return 0;
     
-    let count = 0;
-    if (isPhaseCompleted('domain_generation')) count++;
-    if (isPhaseCompleted('dns_validation')) count++;
-    if (isPhaseCompleted('http_keyword_validation')) count++;
-    if (isPhaseCompleted('analysis')) count++;
-    return count;
+    return campaign.phases.filter(phase =>
+      phase.status === 'completed' || (phase.successfulItems && phase.successfulItems > 0)
+    ).length;
   };
 
   const loadPhaseStatuses = async () => {
     try {
       setLoading(true);
       
-      // Initialize phase statuses based on campaign data and logic
+      // Initialize phase statuses based on campaign phase data
       const statuses: Record<string, PhaseStatus> = {};
       
-      // Phase 1: Domain Generation
-      const phase1Complete = isPhaseCompleted('domain_generation');
-      statuses.domain_generation = {
-        phase: 'domain_generation',
-        status: campaign?.currentPhase === 'domain_generation' ? 'running' :
-               phase1Complete ? 'completed' : 'ready',
-        progress: campaign?.currentPhase === 'domain_generation' ? 50 :
-                 phase1Complete ? 100 : 0,
-        canConfigure: false, // Domain generation configured during campaign creation
-        canStart: campaign?.currentPhase !== 'domain_generation' && !phase1Complete,
-        configurationRequired: false
-      };
-
-      // Phase 2: DNS Validation
-      const phase2Complete = isPhaseCompleted('dns_validation');
-      statuses.dns_validation = {
-        phase: 'dns_validation',
-        status: campaign?.currentPhase === 'dns_validation' ? 'running' :
-               phase2Complete ? 'completed' :
-               phase1Complete ? 'ready' : 'pending',
-        progress: campaign?.currentPhase === 'dns_validation' ? 50 :
-                 phase2Complete ? 100 : 0,
-        canConfigure: phase1Complete,
-        canStart: false, // Will be enabled after configuration
-        configurationRequired: true
-      };
-
-      // Phase 3: HTTP Validation
-      const phase3Complete = isPhaseCompleted('http_keyword_validation');
-      statuses.http_keyword_validation = {
-        phase: 'http_keyword_validation',
-        status: campaign?.currentPhase === 'http_keyword_validation' ? 'running' :
-               phase3Complete ? 'completed' :
-               phase2Complete ? 'ready' : 'pending',
-        progress: campaign?.currentPhase === 'http_keyword_validation' ? 50 :
-                 phase3Complete ? 100 : 0,
-        canConfigure: phase2Complete,
-        canStart: false, // Will be enabled after configuration
-        configurationRequired: true
-      };
-
-      // Phase 4: Analysis
-      const phase4Complete = isPhaseCompleted('analysis');
-      statuses.analysis = {
-        phase: 'analysis',
-        status: campaign?.currentPhase === 'analysis' ? 'running' :
-               phase4Complete ? 'completed' :
-               phase3Complete ? 'ready' : 'pending',
-        progress: campaign?.currentPhase === 'analysis' ? 50 :
-                 phase4Complete ? 100 : 0,
-        canConfigure: phase3Complete,
-        canStart: false, // Will be enabled after configuration
-        configurationRequired: true
-      };
+      // Define the expected phase order
+      const phaseOrder: string[] = ['domain_generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
+      
+      for (let i = 0; i < phaseOrder.length; i++) {
+        const phaseType = phaseOrder[i]!; // Safe because we're within array bounds
+        const phaseData = campaign?.phases?.find(p => p.phaseType === phaseType);
+        const previousPhaseType = i > 0 ? phaseOrder[i - 1]! : null;
+        const previousPhaseComplete = i === 0 || Boolean(previousPhaseType && isPhaseCompleted(previousPhaseType));
+        
+        // Determine phase status
+        let phaseStatus: 'pending' | 'ready' | 'running' | 'completed' | 'failed' = 'pending';
+        let progress = 0;
+        let canConfigure = false;
+        let canStart = false;
+        let configurationRequired = phaseType !== 'domain_generation'; // Domain gen configured at creation
+        
+        if (phaseData) {
+          // Use backend phase data if available
+          switch (phaseData.status) {
+            case 'completed':
+              phaseStatus = 'completed';
+              progress = 100;
+              break;
+            case 'in_progress':
+              phaseStatus = 'running';
+              progress = phaseData.progress || 50;
+              break;
+            case 'failed':
+              phaseStatus = 'failed';
+              progress = phaseData.progress || 0;
+              break;
+            case 'ready':
+            case 'configured':
+              phaseStatus = 'ready';
+              progress = 0;
+              break;
+            default:
+              phaseStatus = previousPhaseComplete ? 'ready' : 'pending';
+              progress = 0;
+          }
+        } else {
+          // Fallback logic if no phase data
+          if (campaign?.currentPhase === phaseType) {
+            phaseStatus = 'running';
+            progress = 50;
+          } else if (previousPhaseComplete) {
+            phaseStatus = 'ready';
+          }
+        }
+        
+        // Configure action availability
+        if (phaseType === 'domain_generation') {
+          canConfigure = false; // Configured during campaign creation
+          canStart = phaseStatus === 'ready';
+          configurationRequired = false;
+        } else {
+          canConfigure = previousPhaseComplete && phaseStatus !== 'completed';
+          canStart = phaseStatus === 'ready';
+        }
+        
+        statuses[phaseType] = {
+          phase: phaseType,
+          status: phaseStatus,
+          progress,
+          canConfigure,
+          canStart,
+          configurationRequired
+        };
+      }
 
       setPhaseStatuses(statuses);
     } catch (error) {
@@ -284,12 +289,13 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
     try {
       setStartingPhase(phaseKey);
       
-      // Use the start phase endpoint from our API
+      // Use autonomous phase execution - backend determines the correct phase based on campaign state
+      // The phaseKey parameter is maintained for UI consistency but backend ignores it
       await campaignsApi.startPhaseStandalone(campaignId, phaseKey);
       
       toast({
         title: "Phase started",
-        description: `${PHASES.find(p => p.key === phaseKey)?.name} phase has been started.`,
+        description: "Next phase has been started autonomously based on campaign state.",
       });
 
       // Refresh phase statuses and campaign data
@@ -299,7 +305,7 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
       console.error('Failed to start phase:', error);
       toast({
         title: "Failed to start phase",
-        description: "Please ensure the phase is properly configured before starting.",
+        description: "Please ensure the campaign is properly configured before starting.",
         variant: "destructive",
       });
     } finally {

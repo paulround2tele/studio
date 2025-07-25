@@ -54,7 +54,7 @@ func toPersonaResponse(p *models.Persona) PersonaResponse {
 	if len(p.ConfigDetails) > 0 {
 		json.Unmarshal(p.ConfigDetails, &configDetails)
 	}
-	
+
 	return PersonaResponse{
 		ID:            p.ID,
 		Name:          p.Name,
@@ -96,7 +96,6 @@ func parseConfigDetails(personaType models.PersonaTypeEnum, configDetails json.R
 		return nil, fmt.Errorf("unsupported persona type: %s", personaType)
 	}
 }
-
 
 // --- Gin Handlers for Personas ---
 
@@ -207,7 +206,7 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 		}
 		configDetails = configBytes
 	}
-	
+
 	// Parse and validate configuration details
 	parsedConfig, err := parseConfigDetails(req.PersonaType, configDetails)
 	if err != nil {
@@ -255,7 +254,7 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 	// Broadcast persona creation to WebSocket clients
 	websocket.BroadcastPersonaCreated(persona.ID.String(), toPersonaResponse(persona))
 	log.Printf("Successfully created persona %s (%s) and broadcasted", persona.ID, persona.Name)
-	
+
 	personaResponse := toPersonaResponse(persona)
 	respondWithJSONGin(c, http.StatusCreated, personaResponse)
 }
@@ -288,7 +287,7 @@ func (h *APIHandler) GetPersonaByIDGin(c *gin.Context) {
 	persona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found"))
+			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
 		} else {
 			log.Printf("Error fetching persona %s: %v", personaIDStr, err)
 			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona")
@@ -328,7 +327,7 @@ func (h *APIHandler) GetHttpPersonaByIDGin(c *gin.Context) {
 	persona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found"))
+			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
 		} else {
 			log.Printf("Error fetching persona %s: %v", personaIDStr, err)
 			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona")
@@ -374,7 +373,7 @@ func (h *APIHandler) GetDnsPersonaByIDGin(c *gin.Context) {
 	persona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found"))
+			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
 		} else {
 			log.Printf("Error fetching persona %s: %v", personaIDStr, err)
 			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona")
@@ -423,7 +422,7 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 	existingPersona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found"))
+			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
 		} else {
 			log.Printf("Error fetching persona %s for update: %v", personaIDStr, err)
 			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona for update")
@@ -456,7 +455,7 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 			return
 		}
 		configDetails = configBytes
-		
+
 		// Parse and validate configuration details
 		parsedConfig, err := parseConfigDetails(existingPersona.PersonaType, configDetails)
 		if err != nil {
@@ -479,7 +478,7 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 	// Update the persona in the database
 	if err := h.PersonaStore.UpdatePersona(c.Request.Context(), querier, existingPersona); err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found"))
+			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
 		} else {
 			log.Printf("Error updating persona %s: %v", personaIDStr, err)
 			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to update persona")
@@ -490,7 +489,7 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 	// Broadcast persona update to WebSocket clients
 	websocket.BroadcastPersonaUpdated(existingPersona.ID.String(), toPersonaResponse(existingPersona))
 	log.Printf("Successfully updated persona %s (%s) and broadcasted", existingPersona.ID, existingPersona.Name)
-	
+
 	respondWithJSONGin(c, http.StatusOK, toPersonaResponse(existingPersona))
 }
 
@@ -523,7 +522,7 @@ func (h *APIHandler) DeletePersonaGin(c *gin.Context) {
 	existingPersona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found"))
+			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
 		} else {
 			log.Printf("Error fetching persona %s for deletion: %v", personaIDStr, err)
 			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona for deletion")
@@ -534,7 +533,7 @@ func (h *APIHandler) DeletePersonaGin(c *gin.Context) {
 	// Delete the persona from the database
 	if err := h.PersonaStore.DeletePersona(c.Request.Context(), querier, existingPersona.ID); err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found"))
+			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
 		} else {
 			log.Printf("Error deleting persona %s: %v", personaIDStr, err)
 			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to delete persona")
@@ -545,7 +544,7 @@ func (h *APIHandler) DeletePersonaGin(c *gin.Context) {
 	// Broadcast persona deletion to WebSocket clients
 	websocket.BroadcastPersonaDeleted(existingPersona.ID.String())
 	log.Printf("Successfully deleted persona %s (%s) and broadcasted", existingPersona.ID, existingPersona.Name)
-	
+
 	respondWithJSONGin(c, http.StatusOK, nil)
 }
 
@@ -577,7 +576,7 @@ func (h *APIHandler) TestPersonaGin(c *gin.Context) {
 	persona, err := h.PersonaStore.GetPersonaByID(c.Request.Context(), querier, personaID)
 	if err != nil {
 		if err == store.ErrNotFound {
-			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found"))
+			respondWithErrorGin(c, http.StatusNotFound, fmt.Sprintf("Persona with ID %s not found", personaIDStr))
 		} else {
 			log.Printf("Error fetching persona %s for testing: %v", personaIDStr, err)
 			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch persona for testing")
@@ -601,10 +600,9 @@ func (h *APIHandler) TestPersonaGin(c *gin.Context) {
 			ErrorCount:   0,
 			Details:      "Mock test data - will be replaced with actual test results",
 		},
-		Results:   PersonaTestResultData{}, // Legacy field for compatibility
+		Results:   PersonaTestResultData{},
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
 
 	respondWithJSONGin(c, http.StatusOK, testResult)
 }
-

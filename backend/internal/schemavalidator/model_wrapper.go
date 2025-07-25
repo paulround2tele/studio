@@ -37,7 +37,7 @@ func (w *ModelWrapper) ValidateSchema(outputFile string) error {
 		"Persona":                        &models.Persona{},
 		"Proxy":                          &models.Proxy{},
 		"KeywordSet":                     &models.KeywordSet{},
-		"Campaign":                       &models.Campaign{},
+		"Campaign":                       &models.LeadGenerationCampaign{},
 		"DomainGenerationCampaignParams": &models.DomainGenerationCampaignParams{},
 		"DomainGenerationConfigState":    &models.DomainGenerationConfigState{},
 		"GeneratedDomain":                &models.GeneratedDomain{},

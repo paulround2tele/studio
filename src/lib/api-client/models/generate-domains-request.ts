@@ -24,16 +24,28 @@ import type { DomainGenerationConfig } from './domain-generation-config';
  */
 export interface GenerateDomainsRequest {
     /**
+     * 
+     * @type {number}
+     * @memberof GenerateDomainsRequest
+     */
+    'batchSize': number;
+    /**
      * Unique identifier
      * @type {string}
      * @memberof GenerateDomainsRequest
      */
-    'campaign_id'?: string;
+    'campaignId': string;
     /**
      * 
      * @type {DomainGenerationConfig}
      * @memberof GenerateDomainsRequest
      */
-    'config'?: DomainGenerationConfig;
+    'config': DomainGenerationConfig;
+    /**
+     * 
+     * @type {number}
+     * @memberof GenerateDomainsRequest
+     */
+    'startFromOffset'?: number;
 }
 

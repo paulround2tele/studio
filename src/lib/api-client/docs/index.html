@@ -946,6 +946,27 @@ ul.nav-tabs {
     }
   }
 };
+    defs["AnalysisPhaseConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "analysisRules" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "minLeadScore" : {
+      "type" : "number",
+      "format" : "double"
+    },
+    "requiredFields" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    }
+  }
+};
     defs["ArchitectureRefactorLog"] = {
   "type" : "object",
   "properties" : {
@@ -2302,13 +2323,20 @@ ul.nav-tabs {
     "currentPhase" : {
       "type" : "string"
     },
+    "estimatedTimeRemaining" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
     "overallProgress" : {
       "type" : "number",
       "format" : "double"
     },
-    "phaseProgress" : {
-      "type" : "object",
-      "additionalProperties" : {
+    "phaseStatus" : {
+      "type" : "string"
+    },
+    "phases" : {
+      "type" : "array",
+      "items" : {
         "$ref" : "#/components/schemas/PhaseProgressResponse"
       }
     }
@@ -2799,7 +2827,7 @@ ul.nav-tabs {
   }
 };
     defs["CreateDomainGenerationCampaignRequest"] = {
-  "required" : [ "characterSet", "constantString", "name", "patternType", "tld", "variableLength" ],
+  "required" : [ "characterSet", "keywords", "maxResults", "name", "numDomainsToGenerate", "patternType", "tld", "tlds", "variableLength" ],
   "type" : "object",
   "properties" : {
     "characterSet" : {
@@ -2808,24 +2836,43 @@ ul.nav-tabs {
     "constantString" : {
       "type" : "string"
     },
-    "description" : {
-      "type" : "string"
+    "dnsValidationConfig" : {
+      "$ref" : "#/components/schemas/DNSValidationPhaseConfig"
     },
     "dnsValidationParams" : {
-      "$ref" : "#/components/schemas/DNSValidationRequest"
+      "$ref" : "#/components/schemas/DNSValidationParams"
+    },
+    "enableDnsValidation" : {
+      "type" : "boolean"
+    },
+    "enableHttpValidation" : {
+      "type" : "boolean"
     },
     "httpKeywordParams" : {
-      "$ref" : "#/components/schemas/HTTPKeywordValidationRequest"
+      "$ref" : "#/components/schemas/HTTPKeywordParams"
+    },
+    "httpValidationConfig" : {
+      "$ref" : "#/components/schemas/HTTPValidationPhaseConfig"
+    },
+    "keywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
     },
     "launchSequence" : {
       "type" : "boolean"
+    },
+    "maxResults" : {
+      "type" : "integer",
+      "format" : "int32"
     },
     "name" : {
       "type" : "string"
     },
     "numDomainsToGenerate" : {
       "type" : "integer",
-      "format" : "int64"
+      "format" : "int32"
     },
     "patternType" : {
       "type" : "string",
@@ -2834,6 +2881,12 @@ ul.nav-tabs {
     "tld" : {
       "type" : "string"
     },
+    "tlds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
     "userId" : {
       "type" : "string",
       "description" : "Unique identifier",
@@ -2841,6 +2894,7 @@ ul.nav-tabs {
     },
     "variableLength" : {
       "type" : "integer",
+      "description" : "Legacy domain generation fields",
       "format" : "int32"
     }
   }
@@ -3150,6 +3204,59 @@ ul.nav-tabs {
       "format" : "int32"
     },
     "rotationIntervalSeconds" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["DNSValidationParams"] = {
+  "required" : [ "personaIds" ],
+  "type" : "object",
+  "properties" : {
+    "batchSize" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "personaIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string",
+        "format" : "uuid"
+      }
+    },
+    "processingSpeedPerMinute" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "retryAttempts" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "rotationIntervalSeconds" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
+    defs["DNSValidationPhaseConfig"] = {
+  "required" : [ "personaIds" ],
+  "type" : "object",
+  "properties" : {
+    "batchSize" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "maxRetries" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "personaIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "timeout" : {
       "type" : "integer",
       "format" : "int32"
     }
@@ -3610,7 +3717,7 @@ ul.nav-tabs {
   }
 };
     defs["DomainGenerationConfig"] = {
-  "required" : [ "characterSet", "constantString", "patternType", "tld", "variableLength" ],
+  "required" : [ "characterSet", "constantString", "patternType", "tlds", "variableLength" ],
   "type" : "object",
   "properties" : {
     "batchSize" : {
@@ -3631,8 +3738,11 @@ ul.nav-tabs {
       "type" : "string",
       "enum" : [ "prefix", "suffix", "both" ]
     },
-    "tld" : {
-      "type" : "string"
+    "tlds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
     },
     "variableLength" : {
       "type" : "integer",
@@ -3689,34 +3799,81 @@ ul.nav-tabs {
     }
   }
 };
+    defs["DomainGenerationPhaseConfig"] = {
+  "required" : [ "characterSet", "constantString", "patternType", "tld", "variableLength" ],
+  "type" : "object",
+  "properties" : {
+    "batchSize" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "characterSet" : {
+      "type" : "string"
+    },
+    "constantString" : {
+      "type" : "string"
+    },
+    "numDomainsToGenerate" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "patternType" : {
+      "type" : "string",
+      "enum" : [ "prefix", "suffix", "both" ]
+    },
+    "tld" : {
+      "type" : "string"
+    },
+    "variableLength" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
     defs["DomainGenerationProgress"] = {
   "type" : "object",
   "properties" : {
-    "campaign_id" : {
+    "campaignId" : {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
     },
-    "domains_generated" : {
+    "domainsGenerated" : {
       "type" : "integer",
       "format" : "int32"
     },
-    "estimated_end" : {
+    "estimatedEnd" : {
       "type" : "string",
       "format" : "date-time"
+    },
+    "failedCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "processedCount" : {
+      "type" : "integer",
+      "format" : "int32"
     },
     "progress" : {
       "type" : "number",
       "format" : "double"
     },
-    "started_at" : {
+    "progressPercentage" : {
+      "type" : "number",
+      "format" : "double"
+    },
+    "startedAt" : {
       "type" : "string",
       "format" : "date-time"
     },
     "status" : {
       "type" : "string"
     },
-    "total_domains" : {
+    "successfulCount" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "totalDomains" : {
       "type" : "integer",
       "format" : "int32"
     }
@@ -3725,35 +3882,51 @@ ul.nav-tabs {
     defs["DomainGenerationStats"] = {
   "type" : "object",
   "properties" : {
-    "campaign_id" : {
+    "campaignId" : {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
     },
-    "config_hash" : {
+    "configHash" : {
       "type" : "string"
     },
-    "current_offset" : {
+    "currentOffset" : {
       "type" : "integer",
       "format" : "int64"
     },
-    "domains_generated" : {
+    "domainsGenerated" : {
       "type" : "integer",
       "format" : "int32"
     },
-    "estimated_time_left" : {
+    "duplicatesSkipped" : {
       "type" : "integer",
       "format" : "int64"
     },
-    "generation_rate" : {
+    "errorCount" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "estimatedTimeLeft" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "generationRate" : {
       "type" : "number",
       "format" : "double"
     },
-    "memory_usage" : {
+    "memoryUsage" : {
       "type" : "integer",
       "format" : "int64"
     },
-    "total_combinations" : {
+    "totalCombinations" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "totalGenerated" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "uniqueDomainsCount" : {
       "type" : "integer",
       "format" : "int64"
     }
@@ -4068,15 +4241,24 @@ ul.nav-tabs {
   }
 };
     defs["GenerateDomainsRequest"] = {
+  "required" : [ "batchSize", "campaignId", "config" ],
   "type" : "object",
   "properties" : {
-    "campaign_id" : {
+    "batchSize" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "campaignId" : {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
     },
     "config" : {
       "$ref" : "#/components/schemas/DomainGenerationConfig"
+    },
+    "startFromOffset" : {
+      "type" : "integer",
+      "format" : "int64"
     }
   }
 };
@@ -4329,6 +4511,31 @@ ul.nav-tabs {
     }
   }
 };
+    defs["HTTPKeywordParams"] = {
+  "required" : [ "personaIds" ],
+  "type" : "object",
+  "properties" : {
+    "adHocKeywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "keywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "personaIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string",
+        "format" : "uuid"
+      }
+    }
+  }
+};
     defs["HTTPKeywordResult"] = {
   "required" : [ "domainName", "httpKeywordCampaignId", "validationStatus" ],
   "type" : "object",
@@ -4420,6 +4627,42 @@ ul.nav-tabs {
     "totalCount" : {
       "type" : "integer",
       "format" : "int64"
+    }
+  }
+};
+    defs["HTTPKeywordValidationPhaseConfig"] = {
+  "required" : [ "personaIds" ],
+  "type" : "object",
+  "properties" : {
+    "adHocKeywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "batchSize" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "keywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "maxRetries" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "personaIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "timeout" : {
+      "type" : "integer",
+      "format" : "int32"
     }
   }
 };
@@ -4557,6 +4800,47 @@ ul.nav-tabs {
         "type" : "integer",
         "format" : "int32"
       }
+    }
+  }
+};
+    defs["HTTPValidationPhaseConfig"] = {
+  "required" : [ "personaIds" ],
+  "type" : "object",
+  "properties" : {
+    "adHocKeywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "batchSize" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "keywords" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "personaIds" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string",
+        "format" : "uuid"
+      }
+    },
+    "processingSpeedPerMinute" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "retryAttempts" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "rotationIntervalSeconds" : {
+      "type" : "integer",
+      "format" : "int32"
     }
   }
 };
@@ -5179,38 +5463,87 @@ ul.nav-tabs {
     defs["LeadGenerationCampaignResponse"] = {
   "type" : "object",
   "properties" : {
-    "analysisResults" : {
-      "type" : "object"
+    "campaignType" : {
+      "type" : "string"
+    },
+    "completedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "completedPhases" : {
+      "type" : "integer",
+      "format" : "int32"
     },
     "createdAt" : {
       "type" : "string",
       "format" : "date-time"
     },
     "currentPhase" : {
+      "type" : "string",
+      "description" : "Phase management"
+    },
+    "dnsValidatedDomains" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "domains" : {
+      "type" : "integer",
+      "description" : "Summary metrics",
+      "format" : "int64"
+    },
+    "errorMessage" : {
       "type" : "string"
     },
-    "description" : {
-      "type" : "string"
-    },
-    "dnsResults" : {
-      "type" : "object"
-    },
-    "domainsData" : {
-      "type" : "object"
-    },
-    "httpResults" : {
-      "type" : "object"
+    "failedItems" : {
+      "type" : "integer",
+      "format" : "int64"
     },
     "id" : {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
     },
+    "leads" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
     "name" : {
       "type" : "string"
     },
-    "status" : {
+    "overallProgress" : {
+      "type" : "number",
+      "format" : "double"
+    },
+    "phaseStatus" : {
       "type" : "string"
+    },
+    "phases" : {
+      "type" : "array",
+      "description" : "Phase execution details",
+      "items" : {
+        "$ref" : "#/components/schemas/PhaseProgressResponse"
+      }
+    },
+    "processedItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "startedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "successfulItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "totalItems" : {
+      "type" : "integer",
+      "description" : "Campaign-level tracking",
+      "format" : "int64"
+    },
+    "totalPhases" : {
+      "type" : "integer",
+      "format" : "int32"
     },
     "updatedAt" : {
       "type" : "string",
@@ -5236,7 +5569,7 @@ ul.nav-tabs {
     "phase_progress" : {
       "type" : "object",
       "additionalProperties" : {
-        "type" : "object"
+        "$ref" : "#/components/schemas/PhaseProgress"
       }
     }
   }
@@ -5823,6 +6156,26 @@ ul.nav-tabs {
     }
   }
 };
+    defs["PhaseConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "analysis" : {
+      "$ref" : "#/components/schemas/AnalysisPhaseConfig"
+    },
+    "dnsValidation" : {
+      "$ref" : "#/components/schemas/DNSValidationPhaseConfig"
+    },
+    "domainGeneration" : {
+      "$ref" : "#/components/schemas/DomainGenerationPhaseConfig"
+    },
+    "httpKeywordValidation" : {
+      "$ref" : "#/components/schemas/HTTPKeywordValidationPhaseConfig"
+    },
+    "phaseType" : {
+      "type" : "string"
+    }
+  }
+};
     defs["PhaseConfigureRequest"] = {
   "required" : [ "config", "phaseType" ],
   "type" : "object",
@@ -5836,15 +6189,36 @@ ul.nav-tabs {
     }
   }
 };
-    defs["PhaseProgressResponse"] = {
+    defs["PhaseProgress"] = {
   "type" : "object",
   "properties" : {
-    "completedAt" : {
+    "campaignId" : {
+      "type" : "string",
+      "description" : "Unique identifier",
+      "format" : "uuid"
+    },
+    "errorMessage" : {
+      "type" : "string"
+    },
+    "estimatedEnd" : {
       "type" : "string",
       "format" : "date-time"
     },
-    "estimatedEnd" : {
-      "type" : "string"
+    "itemsFailed" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "itemsProcessed" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "itemsSuccessful" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "itemsTotal" : {
+      "type" : "integer",
+      "format" : "int64"
     },
     "phaseType" : {
       "type" : "string"
@@ -5862,6 +6236,48 @@ ul.nav-tabs {
     }
   }
 };
+    defs["PhaseProgressResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "completedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "errorMessage" : {
+      "type" : "string"
+    },
+    "failedItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "phaseType" : {
+      "type" : "string"
+    },
+    "processedItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "progress" : {
+      "type" : "number",
+      "format" : "double"
+    },
+    "startedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "status" : {
+      "type" : "string"
+    },
+    "successfulItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "totalItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    }
+  }
+};
     defs["PhaseStartRequest"] = {
   "required" : [ "phaseType" ],
   "type" : "object",
@@ -5869,6 +6285,45 @@ ul.nav-tabs {
     "phaseType" : {
       "type" : "string",
       "enum" : [ "domain_generation", "dns_validation", "http_keyword_validation", "analysis" ]
+    }
+  }
+};
+    defs["PhaseStats"] = {
+  "type" : "object",
+  "properties" : {
+    "campaignId" : {
+      "type" : "string",
+      "description" : "Unique identifier",
+      "format" : "uuid"
+    },
+    "duration" : {
+      "type" : "string"
+    },
+    "errorCounts" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "integer",
+        "format" : "int64"
+      }
+    },
+    "memoryUsage" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "phaseType" : {
+      "type" : "string"
+    },
+    "processingRate" : {
+      "type" : "number",
+      "format" : "double"
+    },
+    "successRate" : {
+      "type" : "number",
+      "format" : "double"
+    },
+    "totalResults" : {
+      "type" : "integer",
+      "format" : "int64"
     }
   }
 };
@@ -11112,13 +11567,13 @@ $(document).ready(function() {
  "http://localhost/campaigns/lead-generation" \
  -d '{
   &quot;domainConfig&quot; : {
+    &quot;tlds&quot; : [ &quot;tlds&quot;, &quot;tlds&quot; ],
     &quot;characterSet&quot; : &quot;characterSet&quot;,
     &quot;variableLength&quot; : 1,
     &quot;numDomainsToGenerate&quot; : 6,
     &quot;patternType&quot; : &quot;prefix&quot;,
     &quot;batchSize&quot; : 0,
-    &quot;constantString&quot; : &quot;constantString&quot;,
-    &quot;tld&quot; : &quot;tld&quot;
+    &quot;constantString&quot; : &quot;constantString&quot;
   },
   &quot;name&quot; : &quot;name&quot;,
   &quot;description&quot; : &quot;description&quot;,

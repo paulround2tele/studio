@@ -157,7 +157,7 @@ func (s *httpKeywordCampaignServiceImpl) TransitionToAnalysisPhase(ctx context.C
 	return nil
 }
 
-func (s *httpKeywordCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.HTTPKeywordCampaignParams, error) {
+func (s *httpKeywordCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.HTTPKeywordCampaignParams, error) {
 	fmt.Printf("[DEBUG http_keyword] GetCampaignDetails called for campaign ID: %s\n", campaignID)
 	var querier store.Querier
 	if s.db != nil {
@@ -270,7 +270,7 @@ func (s *httpKeywordCampaignServiceImpl) validateKeywordSetIDs(ctx context.Conte
 	return nil
 }
 
-func (s *httpKeywordCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
+func (s *httpKeywordCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, action, description string) {
 	if s.auditLogger == nil {
 		return
 	}
@@ -909,20 +909,17 @@ func (s *httpKeywordCampaignServiceImpl) streamHTTPResultWithFallback(ctx contex
 	// Primary attempt: Use WebSocket broadcaster
 	broadcaster := websocket.GetBroadcaster()
 	if broadcaster != nil {
-		// Create standardized message using V2 format
-		message := websocket.CreateHTTPValidationMessageV2(payload)
-
-		// Convert standardized message to legacy format for compatibility
-		legacyMessage := websocket.WebSocketMessage{
+		// Create and broadcast message directly
+		message := websocket.WebSocketMessage{
 			ID:         uuid.New().String(),
-			Timestamp:  message.Timestamp.Format(time.RFC3339),
-			Type:       message.Type,
+			Timestamp:  time.Now().Format(time.RFC3339),
+			Type:       "http.validation.result",
 			CampaignID: campaignID,
 			Data:       payload,
 		}
 
-		// Attempt broadcast using existing method
-		broadcaster.BroadcastToCampaign(campaignID, legacyMessage)
+		// Broadcast message
+		broadcaster.BroadcastToCampaign(campaignID, message)
 		log.Printf("✅ [HTTP_STREAMING_SUCCESS] WebSocket broadcast successful for campaign %s, domain %s, type: %s", campaignID, domainName, message.Type)
 		return nil
 	} else {

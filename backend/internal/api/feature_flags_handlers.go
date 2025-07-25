@@ -36,7 +36,7 @@ func (h *APIHandler) GetFeatureFlagsGin(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Failed to save feature flags"
 // @Router /feature-flags [put]
 func (h *APIHandler) UpdateFeatureFlagsGin(c *gin.Context) {
-	var req FeatureFlagsUpdateRequest
+	var req config.FeatureFlags
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
 		return

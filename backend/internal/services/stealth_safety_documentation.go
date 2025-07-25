@@ -21,7 +21,7 @@ that prevents duplicate domain generation across different campaigns.
 Pattern: "test" + 4 chars + ".com" -> Hash: "abc123..."
 
 Campaign A: Generates domains 0-999    (test0000.com -> test0999.com)
-Campaign B: Generates domains 1000-1999 (test1000.com -> test1999.com) 
+Campaign B: Generates domains 1000-1999 (test1000.com -> test1999.com)
 Campaign C: Generates domains 2000-2999 (test2000.com -> test2999.com)
 
 This prevents ANY campaign from generating the same domain twice!
@@ -66,45 +66,45 @@ type SafetyValidationError struct {
 }
 
 func (e SafetyValidationError) Error() string {
-	return fmt.Sprintf("STEALTH SAFETY VIOLATION: %s - %s (Impact: %s, Fix: %s)", 
+	return fmt.Sprintf("STEALTH SAFETY VIOLATION: %s - %s (Impact: %s, Fix: %s)",
 		e.Operation, e.Violation, e.Impact, e.Remediation)
 }
 
 // ValidateStealthSafety ensures stealth system doesn't break global offset system
 func ValidateStealthSafety(ctx context.Context, domains []*models.GeneratedDomain) error {
 	log.Printf("StealthSafety: Validating safety of stealth operations on %d domains", len(domains))
-	
+
 	if len(domains) == 0 {
 		return nil
 	}
-	
+
 	// Safety Check 1: Verify domains have sequential OffsetIndex values
-	campaignID := domains[0].GenerationCampaignID
+	campaignID := domains[0].CampaignID
 	expectedOffset := domains[0].OffsetIndex
-	
+
 	for i, domain := range domains {
-		if domain.GenerationCampaignID != campaignID {
+		if domain.CampaignID != campaignID {
 			return SafetyValidationError{
 				Operation:   "Domain Collection Validation",
-				Violation:   fmt.Sprintf("Mixed campaign domains detected: %s vs %s", campaignID, domain.GenerationCampaignID),
+				Violation:   fmt.Sprintf("Mixed campaign domains detected: %s vs %s", campaignID, domain.CampaignID),
 				Impact:      "Could corrupt offset tracking across campaigns",
 				Remediation: "Only process domains from a single campaign at once",
 			}
 		}
-		
+
 		if domain.OffsetIndex != expectedOffset+int64(i) {
 			return SafetyValidationError{
-				Operation:   "Sequential Offset Validation", 
+				Operation:   "Sequential Offset Validation",
 				Violation:   fmt.Sprintf("Non-sequential offset detected: expected %d, got %d", expectedOffset+int64(i), domain.OffsetIndex),
 				Impact:      "Indicates corrupted domain generation or missing domains",
 				Remediation: "Verify domain generation completed successfully before applying stealth",
 			}
 		}
 	}
-	
-	log.Printf("StealthSafety: ✅ All domains have valid sequential offsets %d-%d for campaign %s", 
+
+	log.Printf("StealthSafety: ✅ All domains have valid sequential offsets %d-%d for campaign %s",
 		expectedOffset, expectedOffset+int64(len(domains)-1), campaignID)
-	
+
 	// Safety Check 2: Verify domains are already generated (not being generated)
 	for _, domain := range domains {
 		if domain.ID == uuid.Nil {
@@ -115,7 +115,7 @@ func ValidateStealthSafety(ctx context.Context, domains []*models.GeneratedDomai
 				Remediation: "Only apply stealth to domains that are fully generated and stored",
 			}
 		}
-		
+
 		if domain.DomainName == "" {
 			return SafetyValidationError{
 				Operation:   "Domain Completeness",
@@ -125,28 +125,28 @@ func ValidateStealthSafety(ctx context.Context, domains []*models.GeneratedDomai
 			}
 		}
 	}
-	
+
 	log.Printf("StealthSafety: ✅ All domains are fully generated and persisted")
-	
+
 	// Safety Check 3: Verify we're not modifying generation parameters during stealth
 	// This is a design-time check - actual runtime should never reach this state
 	log.Printf("StealthSafety: ✅ Stealth system operates only on validation order, not generation order")
-	
+
 	return nil
 }
 
 // ValidateOffsetIntegrity verifies global offset system integrity
 func ValidateOffsetIntegrity(ctx context.Context, campaignID uuid.UUID, generatedDomains []*models.GeneratedDomain, campaignParams *models.DomainGenerationCampaignParams) error {
 	log.Printf("StealthSafety: Validating offset integrity for campaign %s", campaignID)
-	
+
 	if len(generatedDomains) == 0 {
 		return nil
 	}
-	
+
 	// Verify campaign's CurrentOffset aligns with last generated domain
 	lastDomain := generatedDomains[len(generatedDomains)-1]
 	expectedCurrentOffset := lastDomain.OffsetIndex + 1
-	
+
 	if campaignParams.CurrentOffset != expectedCurrentOffset {
 		return SafetyValidationError{
 			Operation:   "Offset Integrity Check",
@@ -155,10 +155,10 @@ func ValidateOffsetIntegrity(ctx context.Context, campaignID uuid.UUID, generate
 			Remediation: "Fix offset synchronization before proceeding",
 		}
 	}
-	
-	log.Printf("StealthSafety: ✅ Campaign offset integrity verified: CurrentOffset=%d matches last domain %d+1", 
+
+	log.Printf("StealthSafety: ✅ Campaign offset integrity verified: CurrentOffset=%d matches last domain %d+1",
 		campaignParams.CurrentOffset, lastDomain.OffsetIndex)
-	
+
 	return nil
 }
 
@@ -233,54 +233,54 @@ This ensures maximum stealth benefits while maintaining complete data integrity!
 // ExampleSafeStealthIntegration demonstrates safe stealth integration
 func ExampleSafeStealthIntegration(ctx context.Context, campaignID uuid.UUID) error {
 	log.Printf("=== SAFE STEALTH INTEGRATION EXAMPLE ===")
-	
+
 	// Step 1: GENERATION PHASE (NO STEALTH - SEQUENTIAL)
 	log.Printf("Phase 1: Domain Generation (Sequential - Preserves Global Offset)")
 	log.Printf("- Generate domains: test0000.com, test0001.com, test0002.com...")
 	log.Printf("- Store with offsets: 0, 1, 2, 3...")
 	log.Printf("- Update global offset: 0 -> 1000")
 	log.Printf("- ✅ Global deduplication system intact")
-	
+
 	// Step 2: VALIDATION PHASE (STEALTH APPLIED)
 	log.Printf("Phase 2: Domain Validation (Randomized - Stealth Applied)")
-	
+
 	// Simulate getting already-generated domains
 	generatedDomains := []*models.GeneratedDomain{
-		{ID: uuid.New(), DomainName: "test0000.com", OffsetIndex: 0, GenerationCampaignID: campaignID},
-		{ID: uuid.New(), DomainName: "test0001.com", OffsetIndex: 1, GenerationCampaignID: campaignID},
-		{ID: uuid.New(), DomainName: "test0002.com", OffsetIndex: 2, GenerationCampaignID: campaignID},
-		{ID: uuid.New(), DomainName: "test0003.com", OffsetIndex: 3, GenerationCampaignID: campaignID},
-		{ID: uuid.New(), DomainName: "test0004.com", OffsetIndex: 4, GenerationCampaignID: campaignID},
+		{ID: uuid.New(), DomainName: "test0000.com", OffsetIndex: 0, CampaignID: campaignID},
+		{ID: uuid.New(), DomainName: "test0001.com", OffsetIndex: 1, CampaignID: campaignID},
+		{ID: uuid.New(), DomainName: "test0002.com", OffsetIndex: 2, CampaignID: campaignID},
+		{ID: uuid.New(), DomainName: "test0003.com", OffsetIndex: 3, CampaignID: campaignID},
+		{ID: uuid.New(), DomainName: "test0004.com", OffsetIndex: 4, CampaignID: campaignID},
 	}
-	
+
 	// Step 3: SAFETY VALIDATION
 	if err := ValidateStealthSafety(ctx, generatedDomains); err != nil {
 		return fmt.Errorf("stealth safety validation failed: %w", err)
 	}
-	
+
 	// Step 4: APPLY STEALTH (VALIDATION ORDER ONLY)
 	stealthService := NewDomainStealthService(nil, nil)
 	config := DefaultStealthConfig()
-	
+
 	randomizedDomains, err := stealthService.RandomizeDomainOrder(ctx, generatedDomains, config)
 	if err != nil {
 		return fmt.Errorf("stealth randomization failed: %w", err)
 	}
-	
+
 	log.Printf("✅ Stealth applied successfully:")
 	log.Printf("Original order: test0000.com(0), test0001.com(1), test0002.com(2)...")
-	log.Printf("Validation order: %s(%d), %s(%d), %s(%d)...", 
+	log.Printf("Validation order: %s(%d), %s(%d), %s(%d)...",
 		randomizedDomains[0].DomainName, randomizedDomains[0].OriginalOffset,
 		randomizedDomains[1].DomainName, randomizedDomains[1].OriginalOffset,
 		randomizedDomains[2].DomainName, randomizedDomains[2].OriginalOffset)
-	
+
 	// Step 5: PROGRESS TRACKING (USES ORIGINAL OFFSETS)
 	log.Printf("Progress tracking uses original offsets for accuracy:")
 	for i, domain := range randomizedDomains[:3] {
-		log.Printf("- Validated domain %d: %s (progress: %d/%d using original offset %d)", 
+		log.Printf("- Validated domain %d: %s (progress: %d/%d using original offset %d)",
 			i+1, domain.DomainName, domain.OriginalOffset+1, len(generatedDomains), domain.OriginalOffset)
 	}
-	
+
 	log.Printf("=== RESULT: MAXIMUM STEALTH + PERFECT DATA INTEGRITY ===")
 	return nil
 }

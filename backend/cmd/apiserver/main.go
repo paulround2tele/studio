@@ -35,6 +35,8 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/api"
 	"github.com/fntelecomllc/studio/backend/internal/cache"
 	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
+	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
@@ -184,11 +186,21 @@ func main() {
 	proxyMgr := proxymanager.NewProxyManager(appConfig.Proxies, pmCfg, proxyStore, db)
 	log.Println("ProxyManager initialized.")
 
+	// Phase 2.5 & 3.9: Initialize engines directly for Phase Execution Service
 	httpValSvc := httpvalidator.NewHTTPValidator(appConfig)
-	log.Println("HTTPValidator service initialized.")
+	log.Println("HTTPValidator engine initialized.")
 
 	kwordScannerSvc := keywordscanner.NewService(keywordStore)
-	log.Println("KeywordScanner service initialized.")
+	log.Println("KeywordScanner engine initialized.")
+
+	// Initialize additional engines required for direct integration
+	dnsValSvc := dnsvalidator.New(appConfig.DNSValidator)
+	log.Println("DNSValidator engine initialized.")
+
+	contentFetcherSvc := contentfetcher.NewContentFetcher(appConfig, proxyMgr)
+	log.Println("ContentFetcher engine initialized.")
+
+	// Note: DomainGenerator will be created per-campaign based on generation parameters
 
 	// Initialize session service for session-based authentication with environment-aware settings
 	environment := os.Getenv("ENVIRONMENT")
@@ -207,55 +219,40 @@ func main() {
 	}
 	log.Println("Session service initialized.")
 
-	// All stores including campaignJobStore are now properly initialized above
-	configManager := services.NewConfigManager(db)
-	domainGenSvc := services.NewDomainGenerationService(db, campaignStore, campaignJobStore, auditLogStore, configManager)
-	log.Println("DomainGenerationService initialized.")
+	// Phase 2.5 & 3.9: Initialize Phase Execution Service with direct engine integration
+	// AsyncManager is nil since we eliminated CampaignOrchestratorService
+	var asyncManager *communication.AsyncPatternManager = nil
 
-	dnsCampaignSvc := services.NewDNSCampaignService(db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig)
-	log.Println("DNSCampaignService initialized.")
-
-	httpKeywordCampaignSvc := services.NewHTTPKeywordCampaignService(
-		db,
-		campaignStore, personaStore, proxyStore, keywordStore, auditLogStore,
-		campaignJobStore,
-		httpValSvc, kwordScannerSvc, proxyMgr, appConfig,
-	)
-	log.Println("HTTPKeywordCampaignService initialized.")
-
-	// Initialize Lead Generation Campaign Service for Phase 2 standalone services refactor
-	leadGenerationCampaignSvc := services.NewLeadGenerationCampaignService(
-		db,
-		campaignStore,
-		domainGenSvc,
-		dnsCampaignSvc,
-		httpKeywordCampaignSvc,
-		wsBroadcaster,
-	)
-	log.Println("LeadGenerationCampaignService initialized - Phase 2 campaign lifecycle coordinator.")
-
-	mq := communication.NewSimpleQueue(100)
-	es := communication.NewInMemoryEventStore()
-	asyncMgr := communication.NewAsyncPatternManager(mq, es, nil)
-
-	archRegistry := architecture.NewServiceRegistry(db.DB)
-	if err := services.RegisterServiceContracts(archRegistry); err != nil {
-		log.Printf("Warning: failed to register service contracts: %v", err)
-	}
-
-	campaignOrchestratorSvc := services.NewCampaignOrchestratorService(
+	leadGenerationCampaignSvc := services.NewPhaseExecutionService(
 		db,
 		campaignStore,
 		personaStore,
 		keywordStore,
 		auditLogStore,
 		campaignJobStore,
-		domainGenSvc,
-		dnsCampaignSvc,
-		httpKeywordCampaignSvc,
-		asyncMgr,
+		wsBroadcaster,
+		asyncManager,
+		// Direct engine dependencies
+		nil, // domainGenerator will be created per-campaign
+		dnsValSvc,
+		httpValSvc,
+		contentFetcherSvc,
+		kwordScannerSvc,
+		// Legacy service dependencies (Phase 2.5: eliminated)
+		nil, // domainGenerationService eliminated
+		nil, // dnsValidationService eliminated
+		nil, // httpValidationService eliminated
 	)
-	log.Println("CampaignOrchestratorService initialized.")
+	log.Println("PhaseExecutionService initialized - Phase 2.5 & 3.9 direct engine integration complete.")
+
+	// Async pattern manager removed - no longer needed after CampaignOrchestratorService elimination
+
+	archRegistry := architecture.NewServiceRegistry(db.DB)
+	if err := services.RegisterServiceContracts(archRegistry); err != nil {
+		log.Printf("Warning: failed to register service contracts: %v", err)
+	}
+
+	// CampaignOrchestratorService eliminated - replaced by PhaseExecutionService
 
 	serverInstanceID, _ := os.Hostname()
 	if serverInstanceID == "" {
@@ -263,10 +260,7 @@ func main() {
 	}
 	workerService := services.NewCampaignWorkerService(
 		campaignJobStore,
-		domainGenSvc,
-		dnsCampaignSvc,
-		httpKeywordCampaignSvc,
-		campaignOrchestratorSvc,
+		leadGenerationCampaignSvc,
 		serverInstanceID,
 		appConfig,
 		db,
@@ -289,9 +283,6 @@ func main() {
 
 	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(
 		leadGenerationCampaignSvc,
-		domainGenSvc,
-		dnsCampaignSvc,
-		httpKeywordCampaignSvc,
 		campaignStore,
 		wsBroadcaster,
 		db)

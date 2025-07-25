@@ -31,13 +31,25 @@ export interface PhaseProgressResponse {
      * @type {string}
      * @memberof PhaseProgressResponse
      */
-    'estimatedEnd'?: string;
+    'errorMessage'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof PhaseProgressResponse
+     */
+    'failedItems'?: number;
     /**
      * 
      * @type {string}
      * @memberof PhaseProgressResponse
      */
     'phaseType'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof PhaseProgressResponse
+     */
+    'processedItems'?: number;
     /**
      * 
      * @type {number}
@@ -56,5 +68,17 @@ export interface PhaseProgressResponse {
      * @memberof PhaseProgressResponse
      */
     'status'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof PhaseProgressResponse
+     */
+    'successfulItems'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PhaseProgressResponse
+     */
+    'totalItems'?: number;
 }
 

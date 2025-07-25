@@ -76,14 +76,9 @@ func (m *CachedAuthMiddleware) FastSessionAuth() gin.HandlerFunc {
 			return
 		}
 
-		// Get session ID from cookie (try configured name first, then legacy)
+		// Get session ID from cookie
 		sessionID, err := c.Cookie(m.config.CookieName)
 		cookieSource := m.config.CookieName
-		if err != nil {
-			// Try legacy cookie name for backward compatibility
-			sessionID, err = c.Cookie(config.LegacySessionCookieName)
-			cookieSource = config.LegacySessionCookieName
-		}
 
 		if err != nil {
 			duration := time.Since(startTime)
@@ -250,12 +245,8 @@ func (m *CachedAuthMiddleware) FastDualAuth(apiKey string) gin.HandlerFunc {
 		// Fall back to cached session authentication
 		sessionID, err := c.Cookie(m.config.CookieName)
 		if err != nil {
-			// Try legacy cookie name
-			sessionID, err = c.Cookie(config.LegacySessionCookieName)
-			if err != nil {
-				respondWithErrorMiddleware(c, http.StatusUnauthorized, ErrorCodeUnauthorized, "Authentication required")
-				return
-			}
+			respondWithErrorMiddleware(c, http.StatusUnauthorized, ErrorCodeUnauthorized, "Authentication required")
+			return
 		}
 
 		// Get client IP
@@ -400,7 +391,6 @@ func (m *CachedAuthMiddleware) clearSessionCookies(c *gin.Context) {
 		m.config.CookieHttpOnly,
 	)
 
-	// Clear legacy cookies for backward compatibility
-	c.SetCookie(config.LegacySessionCookieName, "", -1, "/", "", m.config.CookieSecure, true)
+	// Clear auth tokens cookie
 	c.SetCookie(config.AuthTokensCookieName, "", -1, "/", "", m.config.CookieSecure, false)
 }

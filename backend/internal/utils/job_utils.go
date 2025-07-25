@@ -22,7 +22,7 @@ func NewJobCreator(campaignJobStore store.CampaignJobStore) *JobCreator {
 }
 
 // CreateInitialJob creates an initial job for a campaign
-func (jc *JobCreator) CreateInitialJob(ctx context.Context, exec store.Querier, campaign *models.Campaign, jobType models.JobTypeEnum) error {
+func (jc *JobCreator) CreateInitialJob(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, jobType models.JobTypeEnum) error {
 	if jc.campaignJobStore == nil {
 		log.Printf("Warning: campaignJobStore is nil for campaign %s. Skipping job creation.", campaign.ID)
 		return nil

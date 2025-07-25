@@ -518,12 +518,9 @@ func getModelNameForTable(tableName string) string {
 		"domain_generation_config_states":   "DomainGenerationConfigState",
 		"generated_domains":                 "GeneratedDomain",
 		"dns_validation_campaign_params":    "DNSValidationCampaignParams",
-		// NOTE: Legacy validation result tables removed as part of dual architecture elimination
-		// "dns_validation_results":            "DNSValidationResult",
-		"http_keyword_campaign_params": "HTTPKeywordCampaignParams",
-		// "http_keyword_results":              "HTTPKeywordResult",
-		"audit_logs":    "AuditLog",
-		"campaign_jobs": "CampaignJob",
+		"http_keyword_campaign_params":      "HTTPKeywordCampaignParams",
+		"audit_logs":                        "AuditLog",
+		"campaign_jobs":                     "CampaignJob",
 	}
 
 	return tableToModel[tableName]
@@ -534,7 +531,7 @@ func buildModelMap() map[string]interface{} {
 	modelMap := make(map[string]interface{})
 
 	// Add all models from the models package
-	modelMap["Campaign"] = &models.Campaign{}
+	modelMap["LeadGenerationCampaign"] = &models.LeadGenerationCampaign{}
 	modelMap["Persona"] = &models.Persona{}
 	modelMap["Proxy"] = &models.Proxy{}
 	modelMap["KeywordSet"] = &models.KeywordSet{}

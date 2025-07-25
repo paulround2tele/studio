@@ -24,7 +24,7 @@ func NewAuditLogger(auditLogStore store.AuditLogStore) *AuditLogger {
 }
 
 // LogCampaignEvent logs an audit event for a campaign
-func (al *AuditLogger) LogCampaignEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
+func (al *AuditLogger) LogCampaignEvent(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, action, description string) {
 	detailsMap := map[string]string{
 		"campaign_name": campaign.Name,
 		"description":   description,
@@ -119,7 +119,7 @@ func (al *AuditLogger) LogGenericEvent(ctx context.Context, exec store.Querier, 
 }
 
 // LogCampaignAuditEvent logs an audit event for a campaign using the consolidated logger
-func LogCampaignAuditEvent(ctx context.Context, exec store.Querier, auditLogStore store.AuditLogStore, campaign *models.Campaign, action, description string) {
+func LogCampaignAuditEvent(ctx context.Context, exec store.Querier, auditLogStore store.AuditLogStore, campaign *models.LeadGenerationCampaign, action, description string) {
 	detailsMap := map[string]string{
 		"campaign_name": campaign.Name,
 		"description":   description,

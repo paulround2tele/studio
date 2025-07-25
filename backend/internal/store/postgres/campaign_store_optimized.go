@@ -191,11 +191,6 @@ func (s *campaignStorePostgres) GetGeneratedDomainsWithCursor(ctx context.Contex
 	}, nil
 }
 
-// NOTE: Legacy cursor-based pagination functions for DNS and HTTP validation results
-// have been removed as part of dual architecture elimination.
-// These functions queried legacy tables (dns_validation_results, http_keyword_results)
-// which are being eliminated in favor of single table architecture using generated_domains.
-
 // RecordQueryPerformance records query performance metrics for monitoring
 func (s *campaignStorePostgres) RecordQueryPerformance(ctx context.Context, exec store.Querier, metric *models.QueryPerformanceMetric) error {
 	query := `INSERT INTO query_performance_metrics

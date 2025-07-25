@@ -392,12 +392,9 @@ func getTableNameForModel(modelName string) string {
 		"DomainGenerationConfigState":    "domain_generation_config_states",
 		"GeneratedDomain":                "generated_domains",
 		"DNSValidationCampaignParams":    "dns_validation_campaign_params",
-		// NOTE: Legacy validation result tables removed as part of dual architecture elimination
-		// "DNSValidationResult":            "dns_validation_results",
-		"HTTPKeywordCampaignParams": "http_keyword_campaign_params",
-		// "HTTPKeywordResult":              "http_keyword_results",
-		"AuditLog":    "audit_logs",
-		"CampaignJob": "campaign_jobs",
+		"HTTPKeywordCampaignParams":      "http_keyword_campaign_params",
+		"AuditLog":                       "audit_logs",
+		"CampaignJob":                    "campaign_jobs",
 	}
 
 	tableName, ok := tableNameMappings[modelName]
@@ -423,12 +420,9 @@ func getModelNameForTable(tableName string) string {
 		"domain_generation_config_states":   "DomainGenerationConfigState",
 		"generated_domains":                 "GeneratedDomain",
 		"dns_validation_campaign_params":    "DNSValidationCampaignParams",
-		// NOTE: Legacy validation result tables removed as part of dual architecture elimination
-		// "dns_validation_results":            "DNSValidationResult",
-		"http_keyword_campaign_params": "HTTPKeywordCampaignParams",
-		// "http_keyword_results":              "HTTPKeywordResult",
-		"audit_logs":    "AuditLog",
-		"campaign_jobs": "CampaignJob",
+		"http_keyword_campaign_params":      "HTTPKeywordCampaignParams",
+		"audit_logs":                        "AuditLog",
+		"campaign_jobs":                     "CampaignJob",
 	}
 
 	modelName, ok := modelNameMappings[tableName]

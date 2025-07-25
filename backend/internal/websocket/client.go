@@ -192,16 +192,8 @@ func (c *Client) writePump() {
 func (c *Client) handleMessage(message []byte) {
 	var clientMsg ClientMessage
 	if err := json.Unmarshal(message, &clientMsg); err != nil {
-		// Try to parse as old format for backward compatibility
-		var wsMsg WebSocketMessage
-		if err2 := json.Unmarshal(message, &wsMsg); err2 == nil {
-			// Convert old format to new
-			clientMsg.Type = wsMsg.Type
-			clientMsg.CampaignID = wsMsg.CampaignID
-		} else {
-			log.Printf("Failed to parse WebSocket message: %v", err)
-			return
-		}
+		log.Printf("Failed to parse WebSocket message: %v", err)
+		return
 	}
 
 	switch clientMsg.Type {
@@ -852,8 +844,8 @@ func BroadcastCampaignDeleted(campaignID string) {
 func BroadcastProxyStatusUpdate(proxyID string, status string, health string, responseTime int64) {
 	log.Printf("[DIAGNOSTIC] BroadcastProxyStatusUpdate called: proxyID=%s, status=%s", proxyID, status)
 
-	// Use legacy format for now (can be updated later to use standardized format)
-	legacyMessage := WebSocketMessage{
+	// Use standardized format
+	message := WebSocketMessage{
 		Type:    "proxy_status_update",
 		Message: "Proxy status updated",
 		Data: map[string]interface{}{
@@ -867,7 +859,7 @@ func BroadcastProxyStatusUpdate(proxyID string, status string, health string, re
 	broadcaster := GetBroadcaster()
 	if broadcaster != nil {
 		// Broadcast to all clients (proxy updates are global)
-		broadcaster.BroadcastToCampaign("", legacyMessage)
+		broadcaster.BroadcastToCampaign("", message)
 	}
 }
 

@@ -1,37 +1,11 @@
 package api
 
 import (
-	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
-	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/google/uuid"
 )
 
 // Common response models to prevent auto-generated inline schemas
-
-// FeatureFlags represents feature flag settings for OpenAPI schema generation
-type FeatureFlags = config.FeatureFlags
-
-// AuthConfig represents authentication configuration for OpenAPI schema generation
-type AuthConfig = config.AuthConfig
-
-// DNSValidatorConfigJSON represents DNS validator configuration for OpenAPI schema generation
-type DNSValidatorConfigJSON = config.DNSValidatorConfigJSON
-
-// HTTPValidatorConfigJSON represents HTTP validator configuration for OpenAPI schema generation
-type HTTPValidatorConfigJSON = config.HTTPValidatorConfigJSON
-
-// LoggingConfig represents logging configuration for OpenAPI schema generation
-type LoggingConfig = config.LoggingConfig
-
-// ProxyManagerConfigJSON represents proxy manager configuration for OpenAPI schema generation
-type ProxyManagerConfigJSON = config.ProxyManagerConfigJSON
-
-// RateLimiterConfig represents rate limiter configuration for OpenAPI schema generation
-type RateLimiterConfig = config.RateLimiterConfig
-
-// WorkerConfig represents worker configuration for OpenAPI schema generation
-type WorkerConfig = config.WorkerConfig
 
 // PatternOffsetRequest represents a request to get domain generation pattern offset
 type PatternOffsetRequest struct {
@@ -54,7 +28,6 @@ type PatternOffsetResponse struct {
 }
 
 // INFRASTRUCTURE COMPLIANCE NOTE: These response models should be auto-generated
-// Currently keeping for backward compatibility while migrating to unified APIResponse format
 // See response_types.go for the unified APIResponse structure
 
 // SuccessMessageResponse represents a simple success message
@@ -213,30 +186,6 @@ type ServerConfigUpdateRequest struct {
 	GinMode         *string `json:"ginMode,omitempty"`
 }
 
-// DNSConfigUpdateRequest represents DNS configuration update request
-type DNSConfigUpdateRequest = config.DNSValidatorConfigJSON
-
-// HTTPConfigUpdateRequest represents HTTP configuration update request
-type HTTPConfigUpdateRequest = config.HTTPValidatorConfigJSON
-
-// LoggingConfigUpdateRequest represents logging configuration update request
-type LoggingConfigUpdateRequest = config.LoggingConfig
-
-// WorkerConfigUpdateRequest represents worker configuration update request
-type WorkerConfigUpdateRequest = config.WorkerConfig
-
-// RateLimiterConfigUpdateRequest represents rate limiter configuration update request
-type RateLimiterConfigUpdateRequest = config.RateLimiterConfig
-
-// AuthConfigUpdateRequest represents authentication configuration update request
-type AuthConfigUpdateRequest = config.AuthConfig
-
-// ProxyManagerConfigUpdateRequest represents proxy manager configuration update request
-type ProxyManagerConfigUpdateRequest = config.ProxyManagerConfigJSON
-
-// FeatureFlagsUpdateRequest represents feature flags update request
-type FeatureFlagsUpdateRequest = config.FeatureFlags
-
 // LoginSuccessResponse represents a successful login response
 type LoginSuccessResponse struct {
 	Message string             `json:"message"`
@@ -351,7 +300,67 @@ type CampaignDetailsResponse struct {
 	Params   CampaignParamsData `json:"params,omitempty"`
 }
 
-// CampaignData represents campaign information
+// LeadGenerationCampaignResponse represents a complete lead generation campaign response
+// @Description Complete lead generation campaign with phase-centric architecture
+type LeadGenerationCampaignResponse struct {
+	ID           string  `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
+	Name         string  `json:"name" example:"Domain Generation Campaign" description:"Campaign name"`
+	CampaignType string  `json:"campaignType" example:"lead_generation" description:"Campaign type"`
+	CreatedAt    string  `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
+	UpdatedAt    string  `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
+	StartedAt    *string `json:"startedAt,omitempty" description:"Campaign start timestamp"`
+	CompletedAt  *string `json:"completedAt,omitempty" description:"Campaign completion timestamp"`
+
+	// Phase management
+	CurrentPhase    *models.PhaseTypeEnum   `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus     *models.PhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
+	TotalPhases     int                     `json:"totalPhases" example:"4" description:"Total number of phases (always 4)"`
+	CompletedPhases int                     `json:"completedPhases" example:"2" description:"Number of completed phases"`
+	OverallProgress *float64                `json:"overallProgress,omitempty" example:"75.5" description:"Overall campaign progress (0-100)"`
+
+	// Phase execution details
+	Phases []PhaseProgressResponse `json:"phases,omitempty" description:"Individual phase progress details"`
+
+	// Campaign-level tracking
+	TotalItems      *int64  `json:"totalItems,omitempty" description:"Total items to process"`
+	ProcessedItems  *int64  `json:"processedItems,omitempty" description:"Items processed so far"`
+	SuccessfulItems *int64  `json:"successfulItems,omitempty" description:"Successfully processed items"`
+	FailedItems     *int64  `json:"failedItems,omitempty" description:"Failed processing items"`
+	ErrorMessage    *string `json:"errorMessage,omitempty" description:"Error message if campaign failed"`
+
+	// Summary metrics
+	Domains             *int64 `json:"domains,omitempty" description:"Total domains generated"`
+	DNSValidatedDomains *int64 `json:"dnsValidatedDomains,omitempty" description:"Domains that passed DNS validation"`
+	Leads               *int64 `json:"leads,omitempty" description:"Total leads identified"`
+}
+
+// PhaseProgressResponse represents progress information for a single phase
+// @Description Progress and status information for a campaign phase
+type PhaseProgressResponse struct {
+	PhaseType       models.PhaseTypeEnum   `json:"phaseType" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	Status          models.PhaseStatusEnum `json:"status" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
+	Progress        float64                `json:"progress" example:"85.5" description:"Phase progress percentage (0-100)"`
+	ProcessedItems  int64                  `json:"processedItems" example:"850" description:"Items processed in this phase"`
+	TotalItems      int64                  `json:"totalItems" example:"1000" description:"Total items to process in this phase"`
+	SuccessfulItems int64                  `json:"successfulItems" example:"820" description:"Successfully processed items"`
+	FailedItems     int64                  `json:"failedItems" example:"30" description:"Failed processing items"`
+	StartedAt       *string                `json:"startedAt,omitempty" description:"Phase start timestamp"`
+	CompletedAt     *string                `json:"completedAt,omitempty" description:"Phase completion timestamp"`
+	ErrorMessage    *string                `json:"errorMessage,omitempty" description:"Error message if phase failed"`
+}
+
+// CampaignProgressResponse represents overall campaign progress
+// @Description Overall campaign progress across all phases
+type CampaignProgressResponse struct {
+	CampaignID             string                  `json:"campaignId"`
+	OverallProgress        float64                 `json:"overallProgress" example:"75.5" description:"Overall campaign progress (0-100)"`
+	CurrentPhase           models.PhaseTypeEnum    `json:"currentPhase" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus            models.PhaseStatusEnum  `json:"phaseStatus" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
+	Phases                 []PhaseProgressResponse `json:"phases" description:"Progress for each phase"`
+	EstimatedTimeRemaining *string                 `json:"estimatedTimeRemaining,omitempty" description:"Estimated time to completion"`
+}
+
+// CampaignData represents campaign information (legacy compatibility)
 // @Description Campaign data with phases-based architecture
 type CampaignData struct {
 	ID          string `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
@@ -363,11 +372,11 @@ type CampaignData struct {
 	// Phases-based architecture fields
 	// @Description Current phase of campaign execution
 	// @Example "domain_generation"
-	CurrentPhase *models.CampaignPhaseEnum `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	CurrentPhase *models.PhaseTypeEnum `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
 
 	// @Description Status of the current phase
 	// @Example "in_progress"
-	PhaseStatus *models.CampaignPhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,in_progress,paused,completed,failed"`
+	PhaseStatus *models.PhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
 
 	// @Description Overall progress percentage (0-100)
 	// @Example 75.5
@@ -387,7 +396,7 @@ type CampaignParamsData struct {
 type EnrichedCampaignData struct {
 	Campaign            CampaignData             `json:"campaign"`
 	Domains             []models.GeneratedDomain `json:"domains"`             // CRITICAL FIX: Full domain objects with status
-	DNSValidatedDomains []string                 `json:"dnsValidatedDomains"` // Keep as strings for backward compatibility
+	DNSValidatedDomains []string                 `json:"dnsValidatedDomains"` // String array format
 	Leads               []models.LeadItem        `json:"leads"`
 	HTTPKeywordResults  []interface{}            `json:"httpKeywordResults"` // TODO: Replace with proper type when available
 }
@@ -433,15 +442,7 @@ type HTTPValidationStartResponse struct {
 	DomainsToTest   int    `json:"domainsToTest"`
 }
 
-// Type aliases for request types to ensure OpenAPI generation works properly
-type LoginRequest = models.LoginRequest
-type ChangePasswordRequest = models.ChangePasswordRequest
-type CreateCampaignRequest = services.CreateCampaignRequest
-type UpdateCampaignRequest = services.UpdateCampaignRequest
-type DNSPhaseConfigRequest = models.DNSPhaseConfigRequest
-type HTTPPhaseConfigRequest = models.HTTPPhaseConfigRequest
-type CreateProxyRequest = models.CreateProxyRequest
-type UpdateProxyRequest = models.UpdateProxyRequest
+// Direct request type definitions
 type DNSValidationAPIRequest struct {
 	CampaignID               uuid.UUID   `json:"campaignId" validate:"required"`
 	PersonaIDs               []uuid.UUID `json:"personaIds" validate:"omitempty,min=1,dive,uuid"`
@@ -657,13 +658,13 @@ type CreateLeadGenerationCampaignRequest struct {
 // DomainGenerationConfig represents domain generation configuration
 // @Description Configuration for domain generation phase
 type DomainGenerationConfig struct {
-	PatternType          string `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
-	VariableLength       int    `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`
-	CharacterSet         string `json:"characterSet" validate:"required" example:"abcdefghijklmnopqrstuvwxyz" description:"Character set for generation"`
-	ConstantString       string `json:"constantString" validate:"required" example:"test" description:"Constant string part"`
-	TLD                  string `json:"tld" validate:"required" example:".com" description:"Top-level domain"`
-	NumDomainsToGenerate int    `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0" example:"1000" description:"Number of domains to generate"`
-	BatchSize            int    `json:"batchSize,omitempty" validate:"omitempty,gt=0" example:"100" description:"Batch size for generation"`
+	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
+	VariableLength       int      `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`
+	CharacterSet         string   `json:"characterSet" validate:"required" example:"abcdefghijklmnopqrstuvwxyz" description:"Character set for generation"`
+	ConstantString       string   `json:"constantString" validate:"required" example:"test" description:"Constant string part"`
+	TLDs                 []string `json:"tlds" validate:"required,min=1" example:"[\".com\"]" description:"Array of top-level domains"`
+	NumDomainsToGenerate int      `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0" example:"1000" description:"Number of domains to generate"`
+	BatchSize            int      `json:"batchSize,omitempty" validate:"omitempty,gt=0" example:"100" description:"Batch size for generation"`
 }
 
 // PhaseConfigureRequest represents a request to configure a specific campaign phase
@@ -714,38 +715,11 @@ type PhaseStartRequest struct {
 	PhaseType string `json:"phaseType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation analysis" example:"dns_validation" description:"Type of phase to start"`
 }
 
-// LeadGenerationCampaignResponse represents a lead generation campaign response for standalone services
-// @Description Lead generation campaign response with JSONB data support
-type LeadGenerationCampaignResponse struct {
-	ID              string      `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
-	Name            string      `json:"name" example:"My Lead Generation Campaign" description:"Campaign name"`
-	Description     string      `json:"description,omitempty" example:"Campaign description" description:"Campaign description"`
-	CurrentPhase    string      `json:"currentPhase" example:"domain_generation" description:"Current phase of execution"`
-	Status          string      `json:"status" example:"in_progress" description:"Current campaign status"`
-	DomainsData     interface{} `json:"domainsData,omitempty" description:"Domain generation phase data"`
-	DNSResults      interface{} `json:"dnsResults,omitempty" description:"DNS validation phase results"`
-	HTTPResults     interface{} `json:"httpResults,omitempty" description:"HTTP validation phase results"`
-	AnalysisResults interface{} `json:"analysisResults,omitempty" description:"Analysis phase results"`
-	CreatedAt       string      `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
-	UpdatedAt       string      `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
-}
+// Note: LeadGenerationCampaignResponse, PhaseProgressResponse, and CampaignProgressResponse
+// are defined above with proper enum types for better type safety
 
-// PhaseProgressResponse represents progress information for a specific phase
-// @Description Progress tracking for individual campaign phases
-type PhaseProgressResponse struct {
-	PhaseType    string  `json:"phaseType" example:"domain_generation" description:"Type of phase"`
-	Status       string  `json:"status" example:"in_progress" description:"Current phase status"`
-	Progress     float64 `json:"progress" example:"75.5" description:"Phase completion percentage (0-100)"`
-	StartedAt    *string `json:"startedAt,omitempty" example:"2024-01-15T10:30:00Z" description:"Phase start timestamp"`
-	CompletedAt  *string `json:"completedAt,omitempty" example:"2024-01-15T11:30:00Z" description:"Phase completion timestamp"`
-	EstimatedEnd *string `json:"estimatedEnd,omitempty" example:"2024-01-15T12:00:00Z" description:"Estimated completion time"`
-}
+// ======================================================================
+// PHASE-CENTRIC CAMPAIGN CONFIGURATION REQUESTS
+// ======================================================================
 
-// CampaignProgressResponse represents overall campaign progress across all phases
-// @Description Comprehensive progress tracking for lead generation campaigns
-type CampaignProgressResponse struct {
-	CampaignID      string                           `json:"campaignId" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
-	CurrentPhase    string                           `json:"currentPhase" example:"dns_validation" description:"Currently active phase"`
-	OverallProgress float64                          `json:"overallProgress" example:"62.5" description:"Overall campaign completion percentage (0-100)"`
-	PhaseProgress   map[string]PhaseProgressResponse `json:"phaseProgress" description:"Progress details for each phase"`
-}
+// Removed duplicate type definitions - using the versions defined earlier in the file

@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { PhaseProgress } from './phase-progress';
 
 /**
  * 
@@ -40,9 +43,9 @@ export interface LeadGenerationProgress {
     'overall_progress'?: number;
     /**
      * 
-     * @type {{ [key: string]: object; }}
+     * @type {{ [key: string]: PhaseProgress; }}
      * @memberof LeadGenerationProgress
      */
-    'phase_progress'?: { [key: string]: object; };
+    'phase_progress'?: { [key: string]: PhaseProgress; };
 }
 

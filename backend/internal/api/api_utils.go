@@ -1,12 +1,7 @@
 // File: backend/internal/api/api_utils.go
 package api
 
-import (
-	// All legacy response functions removed - using unified APIResponse format only
-)
-
 // DNScampaignAPIType is the canonical type string for DNS validation campaigns.
-// This might be deprecated if we move to models.CampaignTypeEnum everywhere.
 const DNScampaignAPIType = "DNS_VALIDATION"
 
 // HTTPcampaignAPIType is the canonical type string for HTTP validation campaigns.
@@ -20,9 +15,6 @@ const (
 	SourceTypeDNSCampaignPrefix = "dnsCampaignID:"
 	SourceTypeFileUpload        = "fileUpload"
 )
-
-// Legacy response functions removed - all handlers now use unified APIResponse format
-// via respondWithJSONGin() and respondWithErrorGin()
 
 // Helper to get a Querier (either *sqlx.DB or *sqlx.Tx) from a store instance.
 // This is useful if a utility function needs to perform read-only operations and the store itself is passed.

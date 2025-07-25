@@ -52,10 +52,10 @@ export interface DomainGenerationConfig {
     'patternType': DomainGenerationConfigPatternTypeEnum;
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof DomainGenerationConfig
      */
-    'tld': string;
+    'tlds': Array<string>;
     /**
      * 
      * @type {number}

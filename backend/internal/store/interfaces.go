@@ -31,13 +31,13 @@ type Transactor interface {
 type CampaignStore interface {
 	Transactor // Only Postgres store will meaningfully implement this
 
-	CreateCampaign(ctx context.Context, exec Querier, campaign *models.Campaign) error
-	GetCampaignByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.Campaign, error)
-	UpdateCampaign(ctx context.Context, exec Querier, campaign *models.Campaign) error
+	CreateCampaign(ctx context.Context, exec Querier, campaign *models.LeadGenerationCampaign) error
+	GetCampaignByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.LeadGenerationCampaign, error)
+	UpdateCampaign(ctx context.Context, exec Querier, campaign *models.LeadGenerationCampaign) error
 	DeleteCampaign(ctx context.Context, exec Querier, id uuid.UUID) error
-	ListCampaigns(ctx context.Context, exec Querier, filter ListCampaignsFilter) ([]*models.Campaign, error)
+	ListCampaigns(ctx context.Context, exec Querier, filter ListCampaignsFilter) ([]*models.LeadGenerationCampaign, error)
 	CountCampaigns(ctx context.Context, exec Querier, filter ListCampaignsFilter) (int64, error)
-	UpdateCampaignStatus(ctx context.Context, exec Querier, id uuid.UUID, status models.CampaignPhaseStatusEnum, errorMessage sql.NullString) error
+	UpdateCampaignStatus(ctx context.Context, exec Querier, id uuid.UUID, status models.PhaseStatusEnum, errorMessage sql.NullString) error
 	UpdateCampaignProgress(ctx context.Context, exec Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error
 
 	CreateDomainGenerationParams(ctx context.Context, exec Querier, params *models.DomainGenerationCampaignParams) error
@@ -74,9 +74,6 @@ type CampaignStore interface {
 
 	// Enhanced cursor-based pagination methods for enterprise scale
 	GetGeneratedDomainsWithCursor(ctx context.Context, exec Querier, filter ListGeneratedDomainsFilter) (*PaginatedResult[*models.GeneratedDomain], error)
-	// NOTE: Legacy validation result cursor methods removed as part of dual architecture elimination
-	// GetDNSValidationResultsWithCursor and GetHTTPKeywordResultsWithCursor have been eliminated
-	// as they queried legacy tables (dns_validation_results, http_keyword_results)
 
 	// Performance monitoring methods
 	RecordQueryPerformance(ctx context.Context, exec Querier, metric *models.QueryPerformanceMetric) error
@@ -100,8 +97,8 @@ type CampaignStore interface {
 // ListCampaignsFilter and ListValidationResultsFilter remain the same
 
 type ListCampaignsFilter struct {
-	CurrentPhase *models.CampaignPhaseEnum       // Phases-based filtering
-	PhaseStatus  *models.CampaignPhaseStatusEnum // Status of current phase
+	CurrentPhase *models.PhaseTypeEnum   // Phases-based filtering
+	PhaseStatus  *models.PhaseStatusEnum // Status of current phase
 	UserID       string
 	Limit        int
 	Offset       int
@@ -222,16 +219,7 @@ func BoolPtr(b bool) *bool {
 	return &b
 }
 
-type SecurityStore interface {
-	Transactor
-	CreateSecurityEvent(ctx context.Context, exec Querier, ev *models.SecurityEvent) error
-	GetSecurityEventByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.SecurityEvent, error)
-	DeleteSecurityEvent(ctx context.Context, exec Querier, id uuid.UUID) error
-
-	CreateAuthorizationDecision(ctx context.Context, exec Querier, d *models.AuthorizationDecision) error
-	GetAuthorizationDecisionByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.AuthorizationDecision, error)
-	DeleteAuthorizationDecision(ctx context.Context, exec Querier, id uuid.UUID) error
-}
+// SecurityStore removed - using simple session-based auth for B2B app
 
 // ArchitectureStore defines operations for service architecture monitoring and
 // related tables.

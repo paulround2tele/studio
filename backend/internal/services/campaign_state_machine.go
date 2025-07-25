@@ -9,14 +9,14 @@ import (
 
 // CampaignStateMachine manages valid state transitions for campaigns
 type CampaignStateMachine struct {
-	transitions map[models.CampaignPhaseStatusEnum][]models.CampaignPhaseStatusEnum
+	transitions map[models.PhaseStatusEnum][]models.PhaseStatusEnum
 	mu          sync.RWMutex
 }
 
 // NewCampaignStateMachine creates a new state machine with valid transitions
 func NewCampaignStateMachine() *CampaignStateMachine {
 	return &CampaignStateMachine{
-		transitions: map[models.CampaignPhaseStatusEnum][]models.CampaignPhaseStatusEnum{
+		transitions: map[models.PhaseStatusEnum][]models.PhaseStatusEnum{
 			models.PhaseStatusNotStarted: {models.PhaseStatusInProgress, models.PhaseStatusFailed},
 			models.PhaseStatusInProgress: {models.PhaseStatusPaused, models.PhaseStatusCompleted, models.PhaseStatusFailed},
 			models.PhaseStatusPaused:     {models.PhaseStatusInProgress},
@@ -27,7 +27,7 @@ func NewCampaignStateMachine() *CampaignStateMachine {
 }
 
 // CanTransition checks if a transition from current to target status is valid
-func (sm *CampaignStateMachine) CanTransition(current, target models.CampaignPhaseStatusEnum) bool {
+func (sm *CampaignStateMachine) CanTransition(current, target models.PhaseStatusEnum) bool {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
@@ -45,7 +45,7 @@ func (sm *CampaignStateMachine) CanTransition(current, target models.CampaignPha
 }
 
 // ValidateTransition returns an error if the transition is invalid
-func (sm *CampaignStateMachine) ValidateTransition(current, target models.CampaignPhaseStatusEnum) error {
+func (sm *CampaignStateMachine) ValidateTransition(current, target models.PhaseStatusEnum) error {
 	if !sm.CanTransition(current, target) {
 		return fmt.Errorf("invalid state transition from %s to %s", current, target)
 	}
@@ -53,21 +53,21 @@ func (sm *CampaignStateMachine) ValidateTransition(current, target models.Campai
 }
 
 // GetValidTransitions returns all valid transitions from the current status
-func (sm *CampaignStateMachine) GetValidTransitions(current models.CampaignPhaseStatusEnum) []models.CampaignPhaseStatusEnum {
+func (sm *CampaignStateMachine) GetValidTransitions(current models.PhaseStatusEnum) []models.PhaseStatusEnum {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
 	if transitions, exists := sm.transitions[current]; exists {
 		// Return a copy to prevent external modification
-		result := make([]models.CampaignPhaseStatusEnum, len(transitions))
+		result := make([]models.PhaseStatusEnum, len(transitions))
 		copy(result, transitions)
 		return result
 	}
-	return []models.CampaignPhaseStatusEnum{}
+	return []models.PhaseStatusEnum{}
 }
 
 // IsTerminalState checks if a status is a terminal state (no further transitions)
-func (sm *CampaignStateMachine) IsTerminalState(status models.CampaignPhaseStatusEnum) bool {
+func (sm *CampaignStateMachine) IsTerminalState(status models.PhaseStatusEnum) bool {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
@@ -76,7 +76,7 @@ func (sm *CampaignStateMachine) IsTerminalState(status models.CampaignPhaseStatu
 }
 
 // StateMachineHook represents a function to be called on state transitions
-type StateMachineHook func(campaignID string, from, to models.CampaignPhaseStatusEnum) error
+type StateMachineHook func(campaignID string, from, to models.PhaseStatusEnum) error
 
 // TransitionWithHooks performs a state transition with pre and post hooks
 type TransitionManager struct {
@@ -110,7 +110,7 @@ func (tm *TransitionManager) AddPostHook(hook StateMachineHook) {
 }
 
 // ExecuteTransition performs a state transition with all hooks
-func (tm *TransitionManager) ExecuteTransition(campaignID string, from, to models.CampaignPhaseStatusEnum) error {
+func (tm *TransitionManager) ExecuteTransition(campaignID string, from, to models.PhaseStatusEnum) error {
 	// Validate transition
 	if err := tm.stateMachine.ValidateTransition(from, to); err != nil {
 		return err

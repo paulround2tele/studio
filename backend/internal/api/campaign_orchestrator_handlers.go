@@ -20,51 +20,42 @@ import (
 
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
 type CampaignOrchestratorAPIHandler struct {
-	leadGenerationService   services.LeadGenerationCampaignService // Standalone lead generation service
-	domainGenerationService services.DomainGenerationService       // Standalone domain generation service
-	dnsService              services.DNSCampaignService            // DNS validation service
-	httpKeywordSvc          services.HTTPKeywordCampaignService    // Domain-centric HTTP validation
-	campaignStore           store.CampaignStore                    // Direct access needed for pattern offset queries
-	broadcaster             websocket.Broadcaster                  // WebSocket broadcaster for real-time updates
-	db                      store.Querier                          // Database connection for store operations
+	phaseExecutionService services.PhaseExecutionService // Universal phase execution service
+	campaignStore         store.CampaignStore            // Direct access needed for pattern offset queries
+	broadcaster           websocket.Broadcaster          // WebSocket broadcaster for real-time updates
+	db                    store.Querier                  // Database connection for store operations
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
 func NewCampaignOrchestratorAPIHandler(
-	leadGenerationService services.LeadGenerationCampaignService,
-	domainGenerationService services.DomainGenerationService,
-	dnsService services.DNSCampaignService,
-	httpKeywordSvc services.HTTPKeywordCampaignService,
+	phaseExecutionService services.PhaseExecutionService,
 	campaignStore store.CampaignStore,
 	broadcaster websocket.Broadcaster,
 	db store.Querier) *CampaignOrchestratorAPIHandler {
 	return &CampaignOrchestratorAPIHandler{
-		leadGenerationService:   leadGenerationService,
-		domainGenerationService: domainGenerationService,
-		dnsService:              dnsService,
-		httpKeywordSvc:          httpKeywordSvc,
-		campaignStore:           campaignStore,
-		broadcaster:             broadcaster,
-		db:                      db,
+		phaseExecutionService: phaseExecutionService,
+		campaignStore:         campaignStore,
+		broadcaster:           broadcaster,
+		db:                    db,
 	}
 }
 
 // Helper functions for phases-based campaign responses
-func getPhaseStatusString(campaign *models.Campaign) string {
+func getPhaseStatusString(campaign *models.LeadGenerationCampaign) string {
 	if campaign.PhaseStatus != nil {
 		return string(*campaign.PhaseStatus)
 	}
 	return "not_started"
 }
 
-func getTotalItemsCount(campaign *models.Campaign) int {
+func getTotalItemsCount(campaign *models.LeadGenerationCampaign) int {
 	if campaign.TotalItems != nil {
 		return int(*campaign.TotalItems)
 	}
 	return 0
 }
 
-func getCurrentPhaseString(campaign *models.Campaign) string {
+func getCurrentPhaseString(campaign *models.LeadGenerationCampaign) string {
 	if campaign.CurrentPhase != nil {
 		return string(*campaign.CurrentPhase)
 	}
@@ -129,17 +120,22 @@ func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Con
 		return
 	}
 
-	// Convert to service request
+	// Convert to service request - map from frontend field names to service field names
+	var tld string
+	if len(req.DomainConfig.TLDs) > 0 {
+		tld = req.DomainConfig.TLDs[0] // Take first TLD from array
+	}
+
 	serviceReq := services.CreateLeadGenerationCampaignRequest{
 		Name:        req.Name,
 		Description: req.Description,
 		UserID:      userID.(uuid.UUID),
-		DomainConfig: services.DomainGenerationConfig{
+		DomainConfig: services.DomainGenerationPhaseConfig{
 			PatternType:          req.DomainConfig.PatternType,
 			VariableLength:       req.DomainConfig.VariableLength,
 			CharacterSet:         req.DomainConfig.CharacterSet,
 			ConstantString:       req.DomainConfig.ConstantString,
-			TLD:                  req.DomainConfig.TLD,
+			TLD:                  tld,
 			NumDomainsToGenerate: int64(req.DomainConfig.NumDomainsToGenerate),
 		},
 	}
@@ -147,7 +143,7 @@ func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Con
 	// Create campaign using the standalone lead generation service
 	log.Printf("Creating lead generation campaign using standalone service: %s", serviceReq.Name)
 
-	campaign, err := h.leadGenerationService.CreateCampaign(c.Request.Context(), serviceReq)
+	campaign, err := h.phaseExecutionService.CreateCampaign(c.Request.Context(), serviceReq)
 	if err != nil {
 		log.Printf("Failed to create lead generation campaign: %v", err)
 		respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
@@ -230,7 +226,7 @@ func (h *CampaignOrchestratorAPIHandler) configurePhaseStandalone(c *gin.Context
 	log.Printf("Configuring phase %s for campaign %s using standalone services", phase, campaignID)
 
 	// Use the lead generation service to configure phases - this method needs to be implemented
-	err = h.leadGenerationService.ConfigurePhase(c.Request.Context(), campaignID, phase, req.Config)
+	err = h.phaseExecutionService.ConfigurePhase(c.Request.Context(), campaignID, phase, req.Config)
 
 	if err != nil {
 		log.Printf("Error configuring phase %s for campaign %s: %v", phase, campaignID, err)
@@ -285,7 +281,8 @@ func (h *CampaignOrchestratorAPIHandler) startPhaseStandalone(c *gin.Context) {
 	log.Printf("Starting phase %s for campaign %s using standalone services", phase, campaignID)
 
 	// Use the lead generation service to start phases
-	err = h.leadGenerationService.StartPhase(c.Request.Context(), campaignID, phase)
+	// Phase 4.11: User-controlled phase execution with dual-mode support
+	err = h.phaseExecutionService.StartPhase(c.Request.Context(), campaignID, phase)
 
 	if err != nil {
 		log.Printf("Error starting phase %s for campaign %s: %v", phase, campaignID, err)
@@ -719,8 +716,8 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 		}
 
 		// Create phase enum pointers
-		currentPhase := models.CampaignPhaseEnum(getCurrentPhaseString(campaign))
-		phaseStatus := models.CampaignPhaseStatusEnum(getPhaseStatusString(campaign))
+		currentPhase := models.PhaseTypeEnum(getCurrentPhaseString(campaign))
+		phaseStatus := models.PhaseStatusEnum(getPhaseStatusString(campaign))
 
 		// Build progress map with bulk JSONB data
 		progressData := make(map[string]interface{})

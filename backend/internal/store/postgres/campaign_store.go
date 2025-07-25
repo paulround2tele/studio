@@ -35,7 +35,7 @@ func (s *campaignStorePostgres) BeginTxx(ctx context.Context, opts *sql.TxOption
 
 // --- Campaign CRUD --- //
 
-func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
+func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign) error {
 	// DEBUG: Log what we're about to store
 	metadataStr := "NULL"
 	if campaign.Metadata != nil {
@@ -43,8 +43,40 @@ func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Q
 	}
 	log.Printf("DEBUG CreateCampaign: About to INSERT campaign %s with metadata: %s", campaign.ID, metadataStr)
 
-	query := `INSERT INTO lead_generation_campaigns (id, name, current_phase, phase_status, user_id, created_at, updated_at, metadata)
-	                         VALUES (:id, :name, :current_phase, :phase_status, :user_id, :created_at, :updated_at, :metadata)`
+	// Ensure all required phase-centric fields are set
+	if campaign.CampaignType == "" {
+		campaign.CampaignType = "lead_generation"
+	}
+	if campaign.TotalPhases == 0 {
+		campaign.TotalPhases = 4
+	}
+	if campaign.CompletedPhases == 0 {
+		campaign.CompletedPhases = 0
+	}
+	if campaign.CurrentPhase == nil {
+		currentPhase := models.PhaseTypeDomainGeneration
+		campaign.CurrentPhase = &currentPhase
+	}
+	if campaign.PhaseStatus == nil {
+		phaseStatus := models.PhaseStatusNotStarted
+		campaign.PhaseStatus = &phaseStatus
+	}
+	if campaign.OverallProgress == nil {
+		progress := float64(0.0)
+		campaign.OverallProgress = &progress
+	}
+
+	query := `INSERT INTO lead_generation_campaigns (
+		id, name, current_phase, phase_status, user_id, created_at, updated_at, metadata,
+		campaign_type, total_phases, completed_phases, overall_progress,
+		is_full_sequence_mode, auto_advance_phases,
+		progress_percentage, total_items, processed_items, successful_items, failed_items
+	) VALUES (
+		:id, :name, :current_phase, :phase_status, :user_id, :created_at, :updated_at, :metadata,
+		:campaign_type, :total_phases, :completed_phases, :overall_progress,
+		:is_full_sequence_mode, :auto_advance_phases,
+		:progress_percentage, :total_items, :processed_items, :successful_items, :failed_items
+	)`
 	_, err := exec.NamedExecContext(ctx, query, campaign)
 
 	if err != nil {
@@ -56,13 +88,17 @@ func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Q
 	return err
 }
 
-func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.Campaign, error) {
+func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.LeadGenerationCampaign, error) {
 	log.Printf("DEBUG GetCampaignByID: About to SELECT campaign %s", id)
 
-	campaign := &models.Campaign{}
+	campaign := &models.LeadGenerationCampaign{}
 	query := `SELECT id, name, current_phase, phase_status, user_id, created_at, updated_at,
-	                                        NULL as started_at, NULL as completed_at, NULL as progress_percentage, NULL as total_items, NULL as processed_items, NULL as successful_items, NULL as failed_items, metadata, NULL as error_message, NULL as business_status
-	                             FROM lead_generation_campaigns WHERE id = $1`
+	                 started_at, completed_at, progress_percentage, total_items, processed_items,
+	                 successful_items, failed_items, metadata, error_message, business_status,
+	                 campaign_type, total_phases, completed_phases, overall_progress,
+	                 is_full_sequence_mode, auto_advance_phases,
+	                 domains_data, dns_results, http_results, analysis_results
+	             FROM lead_generation_campaigns WHERE id = $1`
 	err := exec.GetContext(ctx, campaign, query, id)
 
 	if err == sql.ErrNoRows {
@@ -75,6 +111,14 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 		return campaign, err
 	}
 
+	// Set default values for required fields that may be missing in older records
+	if campaign.CampaignType == "" {
+		campaign.CampaignType = "lead_generation"
+	}
+	if campaign.TotalPhases == 0 {
+		campaign.TotalPhases = 4
+	}
+
 	// DEBUG: Log what we actually retrieved
 	metadataStr := "NULL"
 	if campaign.Metadata != nil {
@@ -85,7 +129,7 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 	return campaign, err
 }
 
-func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Querier, campaign *models.Campaign) error {
+func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign) error {
 	query := `UPDATE lead_generation_campaigns SET
 	                               name = :name, current_phase = :current_phase, phase_status = :phase_status, user_id = :user_id,
 	                               updated_at = :updated_at
@@ -115,8 +159,6 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 
 	// Delete related records first to avoid foreign key constraint violations
 	// Order matters: delete leaf nodes first, then parent nodes
-	// NOTE: Legacy validation tables (dns_validation_results, http_keyword_results)
-	// have been eliminated in favor of single table architecture using generated_domains
 
 	// 3. Delete generated domains (no foreign dependencies)
 	_, err = exec.ExecContext(ctx, `DELETE FROM generated_domains WHERE domain_generation_campaign_id = $1`, id)
@@ -193,14 +235,26 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 	return err
 }
 
-func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Querier, filter store.ListCampaignsFilter) ([]*models.Campaign, error) {
+func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Querier, filter store.ListCampaignsFilter) ([]*models.LeadGenerationCampaign, error) {
 	baseQuery := `SELECT id, name, current_phase, phase_status, user_id, created_at, updated_at,
-	                                        NULL as started_at, NULL as completed_at, NULL as progress_percentage, NULL as total_items, NULL as processed_items, NULL as successful_items, NULL as failed_items, domains_data as metadata, NULL as error_message, NULL as business_status
-	                             FROM lead_generation_campaigns`
+	                     started_at, completed_at, progress_percentage, total_items, processed_items,
+	                     successful_items, failed_items, metadata, error_message, business_status,
+	                     campaign_type, total_phases, completed_phases, overall_progress,
+	                     is_full_sequence_mode, auto_advance_phases,
+	                     domains_data, dns_results, http_results, analysis_results
+	             FROM lead_generation_campaigns`
 	args := []interface{}{}
 	conditions := []string{}
 
-	// Type and Status fields removed - using phase-based filtering instead
+	// Phase-based filtering
+	if filter.CurrentPhase != nil {
+		conditions = append(conditions, "current_phase = ?")
+		args = append(args, *filter.CurrentPhase)
+	}
+	if filter.PhaseStatus != nil {
+		conditions = append(conditions, "phase_status = ?")
+		args = append(args, *filter.PhaseStatus)
+	}
 	if filter.UserID != "" {
 		conditions = append(conditions, "user_id = ?")
 		args = append(args, filter.UserID)
@@ -212,7 +266,14 @@ func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Qu
 	}
 
 	if filter.SortBy != "" {
-		validSortCols := map[string]string{"created_at": "created_at", "name": "name", "phase_status": "phase_status", "updated_at": "updated_at"}
+		validSortCols := map[string]string{
+			"created_at":       "created_at",
+			"name":             "name",
+			"phase_status":     "phase_status",
+			"updated_at":       "updated_at",
+			"overall_progress": "overall_progress",
+			"current_phase":    "current_phase",
+		}
 		if col, ok := validSortCols[filter.SortBy]; ok {
 			finalQuery += " ORDER BY " + col
 			if strings.ToUpper(filter.SortOrder) == "DESC" {
@@ -246,8 +307,19 @@ func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Qu
 		return nil, fmt.Errorf("unexpected Querier type: %T", exec)
 	}
 
-	campaigns := []*models.Campaign{}
+	campaigns := []*models.LeadGenerationCampaign{}
 	err := exec.SelectContext(ctx, &campaigns, reboundQuery, args...)
+
+	// Set defaults for any campaigns missing phase-centric fields
+	for _, campaign := range campaigns {
+		if campaign.CampaignType == "" {
+			campaign.CampaignType = "lead_generation"
+		}
+		if campaign.TotalPhases == 0 {
+			campaign.TotalPhases = 4
+		}
+	}
+
 	return campaigns, err
 }
 
@@ -289,7 +361,7 @@ func (s *campaignStorePostgres) CountCampaigns(ctx context.Context, exec store.Q
 	return count, err
 }
 
-func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec store.Querier, id uuid.UUID, status models.CampaignPhaseStatusEnum, errorMessage sql.NullString) error {
+func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec store.Querier, id uuid.UUID, status models.PhaseStatusEnum, errorMessage sql.NullString) error {
 	// Use the store's database connection if no executor is provided
 	if exec == nil {
 		exec = s.db
@@ -529,8 +601,6 @@ func (s *campaignStorePostgres) GetDNSValidationParams(ctx context.Context, exec
 }
 
 // --- DNS Validation Results --- //
-// NOTE: DNS validation now works directly with generated_domains table
-// Legacy dns_validation_results table has been eliminated
 
 func (s *campaignStorePostgres) UpdateDomainDNSStatus(ctx context.Context, exec store.Querier, domainID uuid.UUID, status models.DomainDNSStatusEnum, dnsIP *string, validatedAt *time.Time) error {
 	updateQuery := `UPDATE generated_domains SET
@@ -622,7 +692,7 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 }
 
 func (s *campaignStorePostgres) GetDNSValidationResultsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, filter store.ListValidationResultsFilter) ([]*models.DNSValidationResult, error) {
-	// Convert generated_domains data to DNSValidationResult format for backward compatibility
+	// Convert generated_domains data to DNSValidationResult format
 	domains := []*models.GeneratedDomain{}
 	query := `SELECT id, domain_generation_campaign_id, domain_name, dns_status, dns_ip, last_validated_at, created_at
 	          FROM generated_domains
@@ -943,7 +1013,7 @@ func (s *campaignStorePostgres) UpdateDomainHTTPStatus(ctx context.Context, exec
 }
 
 func (s *campaignStorePostgres) GetHTTPKeywordResultsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, filter store.ListValidationResultsFilter) ([]*models.HTTPKeywordResult, error) {
-	// Convert generated_domains data to HTTPKeywordResult format for backward compatibility
+	// Convert generated_domains data to HTTPKeywordResult format
 	domains := []*models.GeneratedDomain{}
 	query := `SELECT id, domain_generation_campaign_id, domain_name, http_status, http_status_code, http_title, last_validated_at, created_at
 	          FROM generated_domains
@@ -1039,7 +1109,7 @@ func (s *campaignStorePostgres) GetDomainsForHTTPValidation(ctx context.Context,
 		return nil, err
 	}
 
-	// Convert to DNSValidationResult format for backward compatibility
+	// Convert to DNSValidationResult format
 	results := make([]*models.DNSValidationResult, len(domains))
 	for i, domain := range domains {
 		var lastCheckedAt *time.Time

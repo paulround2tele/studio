@@ -23,8 +23,8 @@ const (
 type CursorInfo struct {
 	ID        uuid.UUID `json:"id"`
 	Timestamp time.Time `json:"timestamp"`
-	Offset    int64     `json:"offset,omitempty"`    // For offset-based cursors
-	Name      string    `json:"name,omitempty"`      // For name-based cursors
+	Offset    int64     `json:"offset,omitempty"` // For offset-based cursors
+	Name      string    `json:"name,omitempty"`   // For name-based cursors
 }
 
 // EncodeCursor encodes cursor information into a base64 string
@@ -33,15 +33,15 @@ func EncodeCursor(info CursorInfo) string {
 		info.ID.String(),
 		strconv.FormatInt(info.Timestamp.Unix(), 10),
 	}
-	
+
 	if info.Offset > 0 {
 		parts = append(parts, strconv.FormatInt(info.Offset, 10))
 	}
-	
+
 	if info.Name != "" {
 		parts = append(parts, info.Name)
 	}
-	
+
 	encoded := strings.Join(parts, "|")
 	return base64.URLEncoding.EncodeToString([]byte(encoded))
 }
@@ -51,42 +51,42 @@ func DecodeCursor(cursor string) (*CursorInfo, error) {
 	if cursor == "" {
 		return nil, nil
 	}
-	
+
 	decoded, err := base64.URLEncoding.DecodeString(cursor)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cursor format: %w", err)
 	}
-	
+
 	parts := strings.Split(string(decoded), "|")
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid cursor structure: insufficient parts")
 	}
-	
+
 	id, err := uuid.Parse(parts[0])
 	if err != nil {
 		return nil, fmt.Errorf("invalid cursor ID: %w", err)
 	}
-	
+
 	timestamp, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cursor timestamp: %w", err)
 	}
-	
+
 	info := &CursorInfo{
 		ID:        id,
 		Timestamp: time.Unix(timestamp, 0),
 	}
-	
+
 	if len(parts) > 2 && parts[2] != "" {
 		if offset, err := strconv.ParseInt(parts[2], 10, 64); err == nil {
 			info.Offset = offset
 		}
 	}
-	
+
 	if len(parts) > 3 && parts[3] != "" {
 		info.Name = parts[3]
 	}
-	
+
 	return info, nil
 }
 
@@ -149,20 +149,6 @@ type ListGeneratedDomainsFilter struct {
 	ValidationStatus string    `json:"validationStatus,omitempty"`
 }
 
-type ListDNSValidationResultsFilter struct {
-	CursorPaginationFilter
-	CampaignID       uuid.UUID `json:"campaignId"`
-	ValidationStatus string    `json:"validationStatus,omitempty"`
-	BusinessStatus   string    `json:"businessStatus,omitempty"`
-}
-
-type ListHTTPValidationResultsFilter struct {
-	CursorPaginationFilter
-	CampaignID       uuid.UUID `json:"campaignId"`
-	ValidationStatus string    `json:"validationStatus,omitempty"`
-	HasKeywords      *bool     `json:"hasKeywords,omitempty"`
-}
-
 // PageInfo represents pagination metadata for cursor-based pagination
 type PageInfo struct {
 	HasNextPage     bool   `json:"hasNextPage"`
@@ -176,20 +162,4 @@ type PageInfo struct {
 type PaginatedResult[T any] struct {
 	Data     []T      `json:"data"`
 	PageInfo PageInfo `json:"pageInfo"`
-}
-
-// Legacy pagination support for backward compatibility
-type LegacyPaginationFilter struct {
-	Limit  int `json:"limit,omitempty"`
-	Offset int `json:"offset,omitempty"`
-}
-
-// ConvertLegacyToEnhanced converts legacy pagination to cursor-based pagination
-func ConvertLegacyToEnhanced(legacy LegacyPaginationFilter) CursorPaginationFilter {
-	return CursorPaginationFilter{
-		First:     legacy.Limit,
-		Direction: CursorDirectionForward,
-		SortBy:    "created_at",
-		SortOrder: "ASC",
-	}
 }

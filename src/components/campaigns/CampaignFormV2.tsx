@@ -26,6 +26,7 @@ import { getProxies } from '@/lib/services/proxyService.production';
 import { listProxyPools } from '@/lib/services/proxyPoolService.production';
 import { listKeywordSets } from '@/lib/services/keywordSetService';
 import { campaignsApi } from '@/lib/api-client/client';
+import { DomainGenerationConfig } from '@/lib/api-client/models/domain-generation-config';
 import { calculateMaxTheoreticalDomains, calculateRemainingDomains } from '@/lib/utils/domainCalculation';
 
 // Response types from OpenAPI - using exact same types as personas page
@@ -203,7 +204,7 @@ export default function CampaignFormV2() {
         patternType: formData.generationPattern.replace('_variable', '') as 'prefix' | 'suffix' | 'both',
         characterSet: formData.allowedCharSet,
         constantString: formData.constantPart,
-        tld: formData.tldsInput,
+        tld: formData.tldsInput.startsWith('.') ? formData.tldsInput : '.' + formData.tldsInput,
         variableLength: formData.generationPattern === 'prefix_variable'
           ? formData.prefixVariableLength
           : formData.generationPattern === 'suffix_variable'
@@ -344,13 +345,16 @@ export default function CampaignFormV2() {
         .map(tld => tld.startsWith('.') ? tld : '.' + tld);
       
       // Build domain generation config using auto-generated types
-      const domainConfig: any = {
-        generationPattern: data.generationPattern,
-        constantPart: data.constantPart,
-        allowedCharSet: data.allowedCharSet,
-        tlds: tlds,
-        prefixVariableLength: data.prefixVariableLength,
-        suffixVariableLength: data.suffixVariableLength,
+      const domainConfig: DomainGenerationConfig = {
+        patternType: data.generationPattern.replace('_variable', '') as 'prefix' | 'suffix' | 'both',
+        constantString: data.constantPart,
+        characterSet: data.allowedCharSet,
+        tlds: tlds, // Backend API expects array of TLDs
+        variableLength: data.generationPattern === 'prefix_variable'
+          ? (data.prefixVariableLength || 3)
+          : data.generationPattern === 'suffix_variable'
+          ? (data.suffixVariableLength || 3)
+          : Math.max(data.prefixVariableLength || 3, data.suffixVariableLength || 3),
         numDomainsToGenerate: data.maxDomainsToGenerate,
       };
 

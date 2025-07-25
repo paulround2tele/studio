@@ -37,15 +37,27 @@ export interface CampaignProgressResponse {
     'currentPhase'?: string;
     /**
      * 
+     * @type {string}
+     * @memberof CampaignProgressResponse
+     */
+    'estimatedTimeRemaining'?: string;
+    /**
+     * 
      * @type {number}
      * @memberof CampaignProgressResponse
      */
     'overallProgress'?: number;
     /**
      * 
-     * @type {{ [key: string]: PhaseProgressResponse; }}
+     * @type {string}
      * @memberof CampaignProgressResponse
      */
-    'phaseProgress'?: { [key: string]: PhaseProgressResponse; };
+    'phaseStatus'?: string;
+    /**
+     * 
+     * @type {Array<PhaseProgressResponse>}
+     * @memberof CampaignProgressResponse
+     */
+    'phases'?: Array<PhaseProgressResponse>;
 }
 

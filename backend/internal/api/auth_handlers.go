@@ -44,7 +44,7 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 // @ID loginUser
 // @Accept json
 // @Produce json
-// @Param request body models.LoginRequest true "Login credentials"
+// @Param request body models.models.LoginRequest true "Login credentials"
 // @Success 200 {object} LoginSuccessResponse "Login successful with user and session info"
 // @Failure 400 {object} StandardErrorResponse "Invalid request format"
 // @Failure 401 {object} StandardErrorResponse "Invalid credentials"
@@ -54,7 +54,7 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Println("DEBUG: Login handler started")
-	var req LoginRequest
+	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		fmt.Printf("DEBUG: JSON binding failed: %v\n", err)
 		fmt.Printf("DEBUG: Validation error details: %T - %v\n", err, err)
@@ -168,17 +168,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Success 200 {object} SuccessMessageResponse "Logout successful"
 // @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
-	// Get session ID from any of the possible cookie names
+	// Get session ID from cookie
 	sessionID, err := c.Cookie(h.config.CookieName)
 	if err != nil {
-		// Try legacy cookie name
-		sessionID, err = c.Cookie(config.LegacySessionCookieName)
-		if err != nil {
-			// No active session - just clear cookies and return success
-			h.clearSessionCookies(c)
-			respondWithJSONGin(c, http.StatusOK, SuccessMessageResponse{Message: "Logged out successfully"})
-			return
-		}
+		// No active session - just clear cookies and return success
+		h.clearSessionCookies(c)
+		respondWithJSONGin(c, http.StatusOK, SuccessMessageResponse{Message: "Logged out successfully"})
+		return
 	}
 
 	// Invalidate session using session service
@@ -275,14 +271,14 @@ func (h *AuthHandler) Me(c *gin.Context) {
 // @ID changePassword
 // @Accept json
 // @Produce json
-// @Param request body models.ChangePasswordRequest true "Password change request"
+// @Param request body models.models.ChangePasswordRequest true "Password change request"
 // @Success 200 {object} PasswordChangeResponse "Password changed successfully"
 // @Failure 400 {object} StandardErrorResponse "Invalid request format"
 // @Failure 401 {object} StandardErrorResponse "Authentication required"
 // @Failure 501 {object} StandardErrorResponse "Not implemented"
 // @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
-	var req ChangePasswordRequest
+	var req models.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request format")
 		return
@@ -306,12 +302,8 @@ func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	// Get session ID from cookie
 	sessionID, err := c.Cookie(h.config.CookieName)
 	if err != nil {
-		// Try legacy cookie name
-		sessionID, err = c.Cookie(config.LegacySessionCookieName)
-		if err != nil {
-			respondWithErrorGin(c, http.StatusUnauthorized, "No active session")
-			return
-		}
+		respondWithErrorGin(c, http.StatusUnauthorized, "No active session")
+		return
 	}
 
 	// Get client IP
@@ -469,8 +461,7 @@ func (h *AuthHandler) clearSessionCookies(c *gin.Context) {
 		h.config.CookieHttpOnly,
 	)
 
-	// Clear legacy cookies for backward compatibility
+	// Clear other cookies
 	c.SetCookie("session_token", "", -1, "/", "", h.config.CookieSecure, true)
 	c.SetCookie("auth_tokens", "", -1, "/", "", h.config.CookieSecure, false)
-	c.SetCookie(config.LegacySessionCookieName, "", -1, "/", "", h.config.CookieSecure, true)
 }

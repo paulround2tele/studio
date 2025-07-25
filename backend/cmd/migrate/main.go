@@ -14,9 +14,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -59,22 +56,9 @@ func main() {
 		log.Fatalf("Failed to load migrations: %v", err)
 	}
 
-	// Check if any migrations contain CONCURRENTLY operations
-	hasConcurrentMigrations := false
-	for _, migration := range migrations {
-		if migration.HasConcurrent {
-			hasConcurrentMigrations = true
-			break
-		}
-	}
-
-	if hasConcurrentMigrations {
-		log.Println("Detected CONCURRENTLY operations, using enhanced migration handler...")
-		err = runEnhancedMigrations(dsn, migrations, direction)
-	} else {
-		log.Println("Using standard golang-migrate for backward compatibility...")
-		err = runStandardMigrations(dsn, migrationsDir, direction)
-	}
+	// Use enhanced migration handler for all migrations
+	log.Println("Using enhanced migration handler...")
+	err = runEnhancedMigrations(dsn, migrations, direction)
 
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
@@ -149,38 +133,6 @@ func loadMigrations(dir string) ([]MigrationFile, error) {
 	})
 
 	return migrations, nil
-}
-
-// runStandardMigrations uses the standard golang-migrate library
-func runStandardMigrations(dsn, migrationsDir, direction string) error {
-	migrationsURL := "file://" + migrationsDir
-
-	m, err := migrate.New(migrationsURL, dsn)
-	if err != nil {
-		return fmt.Errorf("failed to create migrator: %v", err)
-	}
-	defer m.Close()
-
-	switch direction {
-	case "up":
-		log.Println("Running migrations up...")
-		err = m.Up()
-		if err == migrate.ErrNoChange {
-			log.Println("No migrations to run, database is up to date")
-			return nil
-		}
-		return err
-	case "down":
-		log.Println("Running migrations down...")
-		err = m.Down()
-		if err == migrate.ErrNoChange {
-			log.Println("No migrations to roll back")
-			return nil
-		}
-		return err
-	default:
-		return fmt.Errorf("invalid migration direction: %s", direction)
-	}
 }
 
 // runEnhancedMigrations handles migrations with CONCURRENTLY operations

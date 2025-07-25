@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { PhaseProgressResponse } from './phase-progress-response';
 
 /**
  * 
@@ -22,10 +25,22 @@
 export interface LeadGenerationCampaignResponse {
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
-    'analysisResults'?: object;
+    'campaignType'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'completedAt'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'completedPhases'?: number;
     /**
      * 
      * @type {string}
@@ -33,35 +48,35 @@ export interface LeadGenerationCampaignResponse {
      */
     'createdAt'?: string;
     /**
-     * 
+     * Phase management
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
     'currentPhase'?: string;
     /**
      * 
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'dnsValidatedDomains'?: number;
+    /**
+     * Summary metrics
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'domains'?: number;
+    /**
+     * 
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
-    'description'?: string;
+    'errorMessage'?: string;
     /**
      * 
-     * @type {object}
+     * @type {number}
      * @memberof LeadGenerationCampaignResponse
      */
-    'dnsResults'?: object;
-    /**
-     * 
-     * @type {object}
-     * @memberof LeadGenerationCampaignResponse
-     */
-    'domainsData'?: object;
-    /**
-     * 
-     * @type {object}
-     * @memberof LeadGenerationCampaignResponse
-     */
-    'httpResults'?: object;
+    'failedItems'?: number;
     /**
      * Unique identifier
      * @type {string}
@@ -70,16 +85,64 @@ export interface LeadGenerationCampaignResponse {
     'id'?: string;
     /**
      * 
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'leads'?: number;
+    /**
+     * 
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
     'name'?: string;
     /**
      * 
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'overallProgress'?: number;
+    /**
+     * 
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
-    'status'?: string;
+    'phaseStatus'?: string;
+    /**
+     * Phase execution details
+     * @type {Array<PhaseProgressResponse>}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'phases'?: Array<PhaseProgressResponse>;
+    /**
+     * 
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'processedItems'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'startedAt'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'successfulItems'?: number;
+    /**
+     * Campaign-level tracking
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'totalItems'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof LeadGenerationCampaignResponse
+     */
+    'totalPhases'?: number;
     /**
      * 
      * @type {string}

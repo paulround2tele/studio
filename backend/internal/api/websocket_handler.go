@@ -149,13 +149,9 @@ func (h *WebSocketHandler) HandleConnections(c *gin.Context) {
 	// Try the primary session cookie name first
 	sessionID, err := c.Cookie("domainflow_session")
 	if err != nil {
-		// Try legacy cookie name for backward compatibility
-		sessionID, err = c.Cookie("session_id")
-		if err != nil {
-			log.Printf("WebSocket connection rejected: no session cookie found")
-			respondWithErrorGin(c, http.StatusUnauthorized, "Authentication required")
-			return
-		}
+		log.Printf("WebSocket connection rejected: no session cookie found")
+		respondWithErrorGin(c, http.StatusUnauthorized, "Authentication required")
+		return
 	}
 
 	// Origin validation for cross-site request protection (no token-based CSRF needed)

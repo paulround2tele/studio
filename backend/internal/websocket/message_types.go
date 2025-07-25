@@ -311,52 +311,6 @@ func randomString(length int) string {
 	return string(b)
 }
 
-// Legacy compatibility functions that convert old message format to new format
-
-// ConvertLegacyMessage converts old WebSocketMessage to new standardized format
-func ConvertLegacyMessage(legacy WebSocketMessage) (StandardizedWebSocketMessage, error) {
-	var msgType string
-	var payload interface{}
-
-	switch legacy.Type {
-	case "campaign_progress":
-		msgType = "campaign.progress"
-		payload = CampaignProgressPayload{
-			CampaignID:      legacy.CampaignID,
-			ProgressPercent: legacy.Progress,
-			CurrentPhase:    legacy.Phase,
-			PhaseStatus:     legacy.Status,
-			// Note: ProcessedItems, TotalItems would need to be extracted from legacy.Data
-		}
-	case "domain_generated":
-		msgType = "domain.generated"
-		// Extract from legacy.Data if available
-	case "dns_validation_result":
-		msgType = "dns.validation.result"
-		// Extract from legacy.Data if available
-	case "system_notification":
-		msgType = "system.notification"
-		payload = SystemNotificationPayload{
-			Message: legacy.Message,
-			Level:   "info", // default
-		}
-	default:
-		msgType = legacy.Type
-		payload = legacy.Data
-	}
-
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return StandardizedWebSocketMessage{}, err
-	}
-
-	return StandardizedWebSocketMessage{
-		Type:      msgType,
-		Timestamp: time.Now(),
-		Data:      data,
-	}, nil
-}
-
 // BroadcastStandardizedMessage broadcasts a standardized message to campaign subscribers
 func (m *WebSocketManager) BroadcastStandardizedMessage(campaignID string, message StandardizedWebSocketMessage) {
 	m.mutex.RLock()

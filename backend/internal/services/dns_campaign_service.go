@@ -153,7 +153,7 @@ func (s *dnsCampaignServiceImpl) TransitionToHTTPValidationPhase(ctx context.Con
 	return nil
 }
 
-func (s *dnsCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.Campaign, *models.DNSValidationCampaignParams, error) {
+func (s *dnsCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.DNSValidationCampaignParams, error) {
 	var querier store.Querier
 	if s.db != nil {
 		querier = s.db
@@ -200,7 +200,7 @@ func (s *dnsCampaignServiceImpl) validatePersonaIDs(ctx context.Context, querier
 	return nil
 }
 
-func (s *dnsCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.Campaign, action, description string) {
+func (s *dnsCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, action, description string) {
 	if s.auditLogger == nil {
 		return
 	}
@@ -271,7 +271,7 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	}
 
 	// Fix the status transition logic
-	var originalStatus *models.CampaignPhaseStatusEnum
+	var originalStatus *models.PhaseStatusEnum
 	if campaign.PhaseStatus != nil {
 		originalStatus = campaign.PhaseStatus
 	}
@@ -760,20 +760,17 @@ func (s *dnsCampaignServiceImpl) streamDNSResultWithFallback(ctx context.Context
 	// Primary attempt: Use WebSocket broadcaster
 	broadcaster := websocket.GetBroadcaster()
 	if broadcaster != nil {
-		// Create standardized message using new V2 format
-		message := websocket.CreateDNSValidationMessageV2(payload)
-
-		// Convert standardized message to legacy format for compatibility
-		legacyMessage := websocket.WebSocketMessage{
+		// Create and broadcast message directly
+		message := websocket.WebSocketMessage{
 			ID:         uuid.New().String(),
-			Timestamp:  message.Timestamp.Format(time.RFC3339),
-			Type:       message.Type,
+			Timestamp:  time.Now().Format(time.RFC3339),
+			Type:       "dns.validation.result",
 			CampaignID: campaignID,
 			Data:       payload,
 		}
 
-		// Attempt broadcast using existing method
-		broadcaster.BroadcastToCampaign(campaignID, legacyMessage)
+		// Broadcast message
+		broadcaster.BroadcastToCampaign(campaignID, message)
 		log.Printf("✅ [DNS_STREAMING_SUCCESS] WebSocket broadcast successful for campaign %s, type: %s", campaignID, message.Type)
 		return nil
 	} else {
@@ -799,7 +796,7 @@ func (s *dnsCampaignServiceImpl) streamDNSResultWithFallback(ctx context.Context
 }
 
 // atomicPhaseTransition performs atomic campaign phase transition with event broadcasting
-func (s *dnsCampaignServiceImpl) atomicPhaseTransition(ctx context.Context, campaign *models.Campaign, campaignID uuid.UUID) error {
+func (s *dnsCampaignServiceImpl) atomicPhaseTransition(ctx context.Context, campaign *models.LeadGenerationCampaign, campaignID uuid.UUID) error {
 	// Use the established transaction manager pattern from the codebase
 	tm := utils.NewTransactionManager(s.db)
 

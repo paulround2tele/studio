@@ -25,48 +25,72 @@ export interface DomainGenerationStats {
      * @type {string}
      * @memberof DomainGenerationStats
      */
-    'campaign_id'?: string;
+    'campaignId'?: string;
     /**
      * 
      * @type {string}
      * @memberof DomainGenerationStats
      */
-    'config_hash'?: string;
+    'configHash'?: string;
     /**
      * 
      * @type {number}
      * @memberof DomainGenerationStats
      */
-    'current_offset'?: number;
+    'currentOffset'?: number;
     /**
      * 
      * @type {number}
      * @memberof DomainGenerationStats
      */
-    'domains_generated'?: number;
+    'domainsGenerated'?: number;
     /**
      * 
      * @type {number}
      * @memberof DomainGenerationStats
      */
-    'estimated_time_left'?: number;
+    'duplicatesSkipped'?: number;
     /**
      * 
      * @type {number}
      * @memberof DomainGenerationStats
      */
-    'generation_rate'?: number;
+    'errorCount'?: number;
     /**
      * 
      * @type {number}
      * @memberof DomainGenerationStats
      */
-    'memory_usage'?: number;
+    'estimatedTimeLeft'?: number;
     /**
      * 
      * @type {number}
      * @memberof DomainGenerationStats
      */
-    'total_combinations'?: number;
+    'generationRate'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainGenerationStats
+     */
+    'memoryUsage'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainGenerationStats
+     */
+    'totalCombinations'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainGenerationStats
+     */
+    'totalGenerated'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof DomainGenerationStats
+     */
+    'uniqueDomainsCount'?: number;
 }
 
