@@ -22,7 +22,7 @@ Name | Type | Description | Notes
 **tld** | **string** |  | [default to undefined]
 **tlds** | **Array&lt;string&gt;** |  | [default to undefined]
 **userId** | **string** | Unique identifier | [optional] [default to undefined]
-**variableLength** | **number** | Legacy domain generation fields | [default to undefined]
+**variableLength** | **number** | Domain generation fields | [default to undefined]
 
 ## Example
 

@@ -19,8 +19,6 @@ Name | Type | Description | Notes
 **proxySelectionStrategy** | **string** |  | [optional] [default to undefined]
 **retryAttempts** | **number** |  | [optional] [default to undefined]
 **rotationIntervalSeconds** | **number** |  | [optional] [default to undefined]
-**sourceDnsCampaignId** | **string** | Unique identifier | [optional] [default to undefined]
-**sourceGenerationCampaignId** | **string** | Unique identifier | [optional] [default to undefined]
 **status** | **string** |  | [optional] [default to undefined]
 **targetHttpPorts** | **Array&lt;number&gt;** |  | [optional] [default to undefined]
 **tld** | **string** |  | [optional] [default to undefined]
@@ -46,8 +44,6 @@ const instance: UpdateCampaignRequest = {
     proxySelectionStrategy,
     retryAttempts,
     rotationIntervalSeconds,
-    sourceDnsCampaignId,
-    sourceGenerationCampaignId,
     status,
     targetHttpPorts,
     tld,

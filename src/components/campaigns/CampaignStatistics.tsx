@@ -104,7 +104,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
     const failedItems = campaign.failedItems || 0;
     const targetItems = Math.max(
       totalItems,
-      campaign.domainGenerationParams?.numDomainsToGenerate || 0,
+      campaign.domains || 0,
       processedItems // Use processed as minimum target
     );
 
@@ -355,18 +355,14 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
             </div>
           )}
 
-          {/* Campaign Type Specific Metrics */}
-          {campaign.currentPhase === 'domain_generation' && campaign.domainGenerationParams && (
+          {/* Phase-centric architecture: detailed configuration stored in phase records */}
+          {campaign.currentPhase === 'domain_generation' && (
             <div className="pt-4 border-t">
-              <div className="text-xs text-muted-foreground mb-2">Domain Generation Settings</div>
+              <div className="text-xs text-muted-foreground mb-2">Current Phase</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="flex justify-between">
-                  <span>Pattern:</span>
-                  <span className="font-mono text-xs">{campaign.domainGenerationParams.patternType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>TLD:</span>
-                  <span className="font-mono text-xs">{campaign.domainGenerationParams.tld}</span>
+                  <span>Phase:</span>
+                  <span className="font-mono text-xs">{campaign.currentPhase}</span>
                 </div>
               </div>
             </div>

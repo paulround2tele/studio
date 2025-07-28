@@ -76,11 +76,28 @@ function EditCampaignPageContent() {
   return (
     <>
       <PageHeader
-        title={`Edit Campaign: ${campaignData.campaign.name}`}
-        description={`Modify the details for campaign "${campaignData.campaign.name}".`}
-        icon={FilePenLine}
+        title="Edit Not Supported"
+        description="Campaigns cannot be modified after creation in the phase-centric architecture."
+        icon={AlertCircle}
       />
-      <CampaignFormV2 />
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center py-10">
+          <AlertCircle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Campaign Editing Not Available</h2>
+          <p className="text-gray-600 mb-6">
+            In the phase-centric architecture, campaigns are immutable after creation.
+            You can configure individual phases through the Phase Dashboard.
+          </p>
+          <div className="space-x-4">
+            <Button onClick={() => router.push(`/campaigns/${campaignData.campaign.id}`)}>
+              Go to Campaign Details
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/campaigns')}>
+              Back to Campaigns
+            </Button>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

@@ -39,11 +39,11 @@ export interface CampaignAPI {
      */
     'createdAt'?: string;
     /**
-     * 
+     * Phases-based architecture (replaces legacy CampaignType + Status)
      * @type {string}
      * @memberof CampaignAPI
      */
-    'currentPhase'?: string;
+    'currentPhase'?: CampaignAPICurrentPhaseEnum;
     /**
      * 
      * @type {number}
@@ -109,7 +109,7 @@ export interface CampaignAPI {
      * @type {string}
      * @memberof CampaignAPI
      */
-    'phaseStatus'?: string;
+    'phaseStatus'?: CampaignAPIPhaseStatusEnum;
     /**
      * 
      * @type {number}
@@ -159,4 +159,25 @@ export interface CampaignAPI {
      */
     'userId'?: string;
 }
+
+export const CampaignAPICurrentPhaseEnum = {
+    DomainGeneration: 'domain_generation',
+    DnsValidation: 'dns_validation',
+    HttpKeywordValidation: 'http_keyword_validation',
+    Analysis: 'analysis'
+} as const;
+
+export type CampaignAPICurrentPhaseEnum = typeof CampaignAPICurrentPhaseEnum[keyof typeof CampaignAPICurrentPhaseEnum];
+export const CampaignAPIPhaseStatusEnum = {
+    NotStarted: 'not_started',
+    Ready: 'ready',
+    Configured: 'configured',
+    InProgress: 'in_progress',
+    Paused: 'paused',
+    Completed: 'completed',
+    Failed: 'failed'
+} as const;
+
+export type CampaignAPIPhaseStatusEnum = typeof CampaignAPIPhaseStatusEnum[keyof typeof CampaignAPIPhaseStatusEnum];
+
 

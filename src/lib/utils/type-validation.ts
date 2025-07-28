@@ -5,7 +5,7 @@
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types exclusively - no manual duplications
-type Campaign = components['schemas']['Campaign'];
+type Campaign = components['schemas']['LeadGenerationCampaign'];
 type User = components['schemas']['User'];
 type GeneratedDomain = components['schemas']['GeneratedDomain'];
 type DNSValidationResult = components['schemas']['DNSValidationResult'];

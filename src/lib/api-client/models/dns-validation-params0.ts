@@ -56,11 +56,5 @@ export interface DnsValidationParams {
      * @memberof DnsValidationParams
      */
     'sourceCampaignId'?: string;
-    /**
-     * Unique identifier
-     * @type {string}
-     * @memberof DnsValidationParams
-     */
-    'sourceGenerationCampaignId'?: string;
 }
 

@@ -5,7 +5,7 @@ import type { components } from '@/lib/api-client/types';
 import type { LeadGenerationCampaignCurrentPhaseEnum, LeadGenerationCampaignPhaseStatusEnum } from '@/lib/api-client/models/lead-generation-campaign';
 import type { CampaignViewModel } from '@/lib/types';
 
-type OpenAPICampaign = components['schemas']['Campaign'];
+type OpenAPICampaign = components['schemas']['LeadGenerationCampaign'];
 type CampaignPhase = LeadGenerationCampaignCurrentPhaseEnum;
 type CampaignPhaseStatus = LeadGenerationCampaignPhaseStatusEnum;
 
@@ -145,10 +145,7 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
     dnsValidatedDomains: campaign.dnsValidatedDomains || 0,
     leads: campaign.leads || 0,
     
-    // OpenAPI param fields
-    dnsValidationParams: campaign.dnsValidationParams,
-    httpKeywordValidationParams: campaign.httpKeywordValidationParams,
-    domainGenerationParams: campaign.domainGenerationParams,
+    // Phase-centric data (JSONB columns)
     extractedContent: campaign.extractedContent,
     leadItems: campaign.leadItems,
     
@@ -199,9 +196,6 @@ export function extractCampaignFromViewModel(viewModel: CampaignViewModel): Open
     domains: viewModel.domains,
     dnsValidatedDomains: viewModel.dnsValidatedDomains,
     leads: viewModel.leads,
-    dnsValidationParams: viewModel.dnsValidationParams,
-    httpKeywordValidationParams: viewModel.httpKeywordValidationParams,
-    domainGenerationParams: viewModel.domainGenerationParams,
     extractedContent: viewModel.extractedContent,
     leadItems: viewModel.leadItems
   };
@@ -291,16 +285,7 @@ export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: 
     updatedViewModel.phaseStatus = mapToPhaseStatus(apiUpdate.phaseStatus);
   }
   
-  // Update param fields
-  if (apiUpdate.dnsValidationParams !== undefined) {
-    updatedViewModel.dnsValidationParams = apiUpdate.dnsValidationParams;
-  }
-  if (apiUpdate.httpKeywordValidationParams !== undefined) {
-    updatedViewModel.httpKeywordValidationParams = apiUpdate.httpKeywordValidationParams;
-  }
-  if (apiUpdate.domainGenerationParams !== undefined) {
-    updatedViewModel.domainGenerationParams = apiUpdate.domainGenerationParams;
-  }
+  // Phase-centric architecture: phase configuration stored in individual phase records
   if (apiUpdate.extractedContent !== undefined) {
     updatedViewModel.extractedContent = apiUpdate.extractedContent;
   }

@@ -3,6 +3,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -193,29 +194,43 @@ func (s *stealthIntegrationServiceImpl) ProcessValidationWithStealth(ctx context
 
 // getDomainsForDNSValidation gets domains that need DNS validation
 func (s *stealthIntegrationServiceImpl) getDomainsForDNSValidation(ctx context.Context, campaignID uuid.UUID) ([]*models.GeneratedDomain, error) {
-	// Get DNS campaign params to find source domain generation campaign
-	dnsParams, err := s.campaignStore.GetDNSValidationParams(ctx, s.db, campaignID)
+	// PHASE-CENTRIC: Get domains from this campaign's DomainsData JSONB field
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, s.db, campaignID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get DNS validation params: %w", err)
+		return nil, fmt.Errorf("failed to get campaign: %w", err)
 	}
 
-	// Get generated domains from source campaign that haven't been validated yet
-	sourceCampaignID := dnsParams.SourceGenerationCampaignID
+	// Extract domains from DomainsData JSONB field
+	if campaign.DomainsData == nil {
+		log.Printf("StealthIntegration: No domains data found for DNS validation in campaign %s", campaignID)
+		return []*models.GeneratedDomain{}, nil
+	}
 
-	// Query for generated domains that don't have DNS validation results yet
+	var domainsData map[string]interface{}
+	if err := json.Unmarshal(*campaign.DomainsData, &domainsData); err != nil {
+		return nil, fmt.Errorf("failed to parse domains data: %w", err)
+	}
+
+	// Convert domains data to GeneratedDomain structs
 	var domains []*models.GeneratedDomain
-	query := `
-		SELECT id, domain_name, domain_generation_campaign_id, generated_at, offset_index
-		FROM generated_domains
-		WHERE domain_generation_campaign_id = $1
-		  AND (dns_status IS NULL OR dns_status = 'pending')
-		ORDER BY offset_index
-		LIMIT 1000
-	`
+	if domainsSlice, ok := domainsData["domains"].([]interface{}); ok {
+		for i, domainItem := range domainsSlice {
+			if domainMap, ok := domainItem.(map[string]interface{}); ok {
+				if domainName, ok := domainMap["domain_name"].(string); ok {
+					domain := &models.GeneratedDomain{
+						ID:          uuid.New(), // Generate temporary ID for stealth processing
+						DomainName:  domainName,
+						CampaignID:  campaignID,
+						OffsetIndex: int64(i),
+					}
+					domains = append(domains, domain)
+				}
+			}
+		}
+	}
 
-	err = s.db.SelectContext(ctx, &domains, query, sourceCampaignID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query domains for DNS validation: %w", err)
+	if len(domains) > 1000 {
+		domains = domains[:1000] // Limit for stealth processing
 	}
 
 	return domains, nil
@@ -223,29 +238,46 @@ func (s *stealthIntegrationServiceImpl) getDomainsForDNSValidation(ctx context.C
 
 // getDomainsForHTTPValidation gets domains that need HTTP validation
 func (s *stealthIntegrationServiceImpl) getDomainsForHTTPValidation(ctx context.Context, campaignID uuid.UUID) ([]*models.GeneratedDomain, error) {
-	// Get HTTP campaign params to find source DNS campaign
-	httpParams, err := s.campaignStore.GetHTTPKeywordParams(ctx, s.db, campaignID)
+	// PHASE-CENTRIC: Get domains from this campaign's DNSResults JSONB field
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, s.db, campaignID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get HTTP keyword params: %w", err)
+		return nil, fmt.Errorf("failed to get campaign: %w", err)
 	}
 
-	// Get domains from DNS validation results that passed DNS but haven't been HTTP validated yet
-	sourceDNSCampaignID := httpParams.SourceCampaignID
+	// Extract successful DNS validation results from DNSResults JSONB field
+	if campaign.DNSResults == nil {
+		log.Printf("StealthIntegration: No DNS results found for HTTP validation in campaign %s", campaignID)
+		return []*models.GeneratedDomain{}, nil
+	}
 
+	var dnsResults map[string]interface{}
+	if err := json.Unmarshal(*campaign.DNSResults, &dnsResults); err != nil {
+		return nil, fmt.Errorf("failed to parse DNS results: %w", err)
+	}
+
+	// Extract validated domains that passed DNS validation
 	var domains []*models.GeneratedDomain
-	query := `
-		SELECT id, domain_name, domain_generation_campaign_id, generated_at, offset_index
-		FROM generated_domains
-		WHERE domain_generation_campaign_id = $1
-		  AND dns_status = 'ok'
-		  AND (http_status IS NULL OR http_status = 'pending')
-		ORDER BY offset_index
-		LIMIT 1000
-	`
+	if validatedDomains, ok := dnsResults["validated_domains"].([]interface{}); ok {
+		for i, domainItem := range validatedDomains {
+			if domainMap, ok := domainItem.(map[string]interface{}); ok {
+				if domainName, ok := domainMap["domain_name"].(string); ok {
+					// Only include domains that passed DNS validation
+					if status, ok := domainMap["status"].(string); ok && status == "ok" {
+						domain := &models.GeneratedDomain{
+							ID:          uuid.New(), // Generate temporary ID for stealth processing
+							DomainName:  domainName,
+							CampaignID:  campaignID,
+							OffsetIndex: int64(i),
+						}
+						domains = append(domains, domain)
+					}
+				}
+			}
+		}
+	}
 
-	err = s.db.SelectContext(ctx, &domains, query, sourceDNSCampaignID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query domains for HTTP validation: %w", err)
+	if len(domains) > 1000 {
+		domains = domains[:1000] // Limit for stealth processing
 	}
 
 	return domains, nil
@@ -295,10 +327,11 @@ func (s *stealthIntegrationServiceImpl) UpdateDomainGenerationWithStealth(ctx co
 // Integration helper functions for existing services
 
 // IntegrateDNSValidationWithStealth modifies DNS validation to use stealth techniques
+// PHASE-CENTRIC: Works with single campaign's JSONB data flow
 func IntegrateDNSValidationWithStealth(ctx context.Context, dnsCampaignService DNSCampaignService, stealthIntegration StealthIntegrationService, campaignID uuid.UUID) error {
-	log.Printf("StealthIntegration: Integrating DNS validation with stealth for campaign %s", campaignID)
+	log.Printf("StealthIntegration: Integrating DNS validation with stealth for campaign %s (phase-centric)", campaignID)
 
-	// Get randomized domains for DNS validation
+	// PHASE-CENTRIC: Get randomized domains from this campaign's DomainsData
 	randomizedDomains, err := stealthIntegration.RandomizeDomainsForValidation(ctx, campaignID, "dns_validation")
 	if err != nil {
 		return fmt.Errorf("failed to randomize domains for DNS validation: %w", err)
@@ -309,15 +342,16 @@ func IntegrateDNSValidationWithStealth(ctx context.Context, dnsCampaignService D
 		return nil
 	}
 
-	// Process validation with stealth techniques
+	// Process validation with stealth techniques - results will be stored in campaign's DNSResults JSONB
 	return stealthIntegration.ProcessValidationWithStealth(ctx, campaignID, randomizedDomains, "dns_validation")
 }
 
 // IntegrateHTTPValidationWithStealth modifies HTTP validation to use stealth techniques
+// PHASE-CENTRIC: Works with single campaign's JSONB data flow
 func IntegrateHTTPValidationWithStealth(ctx context.Context, httpKeywordService HTTPKeywordCampaignService, stealthIntegration StealthIntegrationService, campaignID uuid.UUID) error {
-	log.Printf("StealthIntegration: Integrating HTTP validation with stealth for campaign %s", campaignID)
+	log.Printf("StealthIntegration: Integrating HTTP validation with stealth for campaign %s (phase-centric)", campaignID)
 
-	// Get randomized domains for HTTP validation
+	// PHASE-CENTRIC: Get randomized domains from this campaign's DNSResults
 	randomizedDomains, err := stealthIntegration.RandomizeDomainsForValidation(ctx, campaignID, "http_keyword_validation")
 	if err != nil {
 		return fmt.Errorf("failed to randomize domains for HTTP validation: %w", err)
@@ -328,6 +362,6 @@ func IntegrateHTTPValidationWithStealth(ctx context.Context, httpKeywordService 
 		return nil
 	}
 
-	// Process validation with stealth techniques
+	// Process validation with stealth techniques - results will be stored in campaign's HTTPResults JSONB
 	return stealthIntegration.ProcessValidationWithStealth(ctx, campaignID, randomizedDomains, "http_keyword_validation")
 }

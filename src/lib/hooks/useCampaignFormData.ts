@@ -9,7 +9,7 @@ import { getProxies } from "@/lib/services/proxyService.production";
 import { campaignsApi } from '@/lib/api-client/client';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
-type Campaign = components['schemas']['Campaign'];
+type Campaign = components['schemas']['LeadGenerationCampaign'];
 type Proxy = components['schemas']['Proxy'];
 
 interface CampaignFormData {

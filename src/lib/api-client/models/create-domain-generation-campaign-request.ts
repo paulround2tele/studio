@@ -135,7 +135,7 @@ export interface CreateDomainGenerationCampaignRequest {
      */
     'userId'?: string;
     /**
-     * Legacy domain generation fields
+     * Domain generation fields
      * @type {number}
      * @memberof CreateDomainGenerationCampaignRequest
      */

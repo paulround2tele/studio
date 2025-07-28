@@ -330,13 +330,10 @@ type LeadGenerationCampaign struct {
 	Phases []CampaignPhase `json:"phases,omitempty"`
 
 	// Transition fields
-	PhaseStatus                 *PhaseStatusEnum                `db:"phase_status" json:"phaseStatus,omitempty"` // Computed from current phase status
-	FullSequenceMode            *bool                           `json:"fullSequenceMode,omitempty"`              // Maps to IsFullSequenceMode
-	DomainGenerationParams      *DomainGenerationCampaignParams `json:"domainGenerationParams,omitempty"`
-	DNSValidationParams         *DNSValidationCampaignParams    `json:"dnsValidationParams,omitempty"`
-	HTTPKeywordValidationParams *HTTPKeywordCampaignParams      `json:"httpKeywordValidationParams,omitempty"`
-	DNSConfig                   *json.RawMessage                `json:"dnsConfig,omitempty"`
-	HTTPConfig                  *json.RawMessage                `json:"httpConfig,omitempty"`
+	PhaseStatus      *PhaseStatusEnum `db:"phase_status" json:"phaseStatus,omitempty"` // Computed from current phase status
+	FullSequenceMode *bool            `json:"fullSequenceMode,omitempty"`              // Maps to IsFullSequenceMode
+	DNSConfig        *json.RawMessage `json:"dnsConfig,omitempty"`
+	HTTPConfig       *json.RawMessage `json:"httpConfig,omitempty"`
 
 	// Content analysis data (from analysis phase)
 	ExtractedContent *[]ExtractedContentItem `json:"extractedContent,omitempty"`
@@ -578,15 +575,15 @@ func (gd GeneratedDomain) MarshalJSON() ([]byte, error) {
 }
 
 // DNSValidationCampaignParams holds parameters for a DNS validation campaign
+// Stored in campaign_phases.configuration JSONB field (phase-centric architecture)
 type DNSValidationCampaignParams struct {
-	CampaignID                 uuid.UUID        `db:"campaign_id" json:"-" firestore:"-"`
-	SourceGenerationCampaignID *uuid.UUID       `db:"source_generation_campaign_id" json:"sourceGenerationCampaignId,omitempty" firestore:"sourceGenerationCampaignId,omitempty" validate:"omitempty,uuid"`
-	PersonaIDs                 []uuid.UUID      `db:"persona_ids" json:"personaIds" firestore:"personaIds" validate:"required,min=1,dive,uuid"`
-	RotationIntervalSeconds    *int             `db:"rotation_interval_seconds" json:"rotationIntervalSeconds,omitempty" firestore:"rotationIntervalSeconds,omitempty" validate:"omitempty,gte=0"`
-	ProcessingSpeedPerMinute   *int             `db:"processing_speed_per_minute" json:"processingSpeedPerMinute,omitempty" firestore:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=0"`
-	BatchSize                  *int             `db:"batch_size" json:"batchSize,omitempty" firestore:"batchSize,omitempty" validate:"omitempty,gt=0"`
-	RetryAttempts              *int             `db:"retry_attempts" json:"retryAttempts,omitempty" firestore:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
-	Metadata                   *json.RawMessage `db:"metadata" json:"metadata,omitempty" firestore:"metadata,omitempty"`
+	CampaignID               uuid.UUID        `json:"-" firestore:"-"`
+	PersonaIDs               []uuid.UUID      `json:"personaIds" firestore:"personaIds" validate:"required,min=1,dive,uuid"`
+	RotationIntervalSeconds  *int             `json:"rotationIntervalSeconds,omitempty" firestore:"rotationIntervalSeconds,omitempty" validate:"omitempty,gte=0"`
+	ProcessingSpeedPerMinute *int             `json:"processingSpeedPerMinute,omitempty" firestore:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=0"`
+	BatchSize                *int             `json:"batchSize,omitempty" firestore:"batchSize,omitempty" validate:"omitempty,gt=0"`
+	RetryAttempts            *int             `json:"retryAttempts,omitempty" firestore:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
+	Metadata                 *json.RawMessage `json:"metadata,omitempty" firestore:"metadata,omitempty"`
 }
 
 // DNSValidationResult stores the outcome of a DNS validation for a domain
@@ -605,23 +602,24 @@ type DNSValidationResult struct {
 }
 
 // HTTPKeywordCampaignParams holds parameters for an HTTP & Keyword validation campaign
+// Stored in campaign_phases.configuration JSONB field (phase-centric architecture)
 type HTTPKeywordCampaignParams struct {
-	CampaignID               uuid.UUID        `db:"campaign_id" json:"-" firestore:"-"`
-	SourceCampaignID         uuid.UUID        `db:"source_campaign_id" json:"sourceCampaignId" firestore:"sourceCampaignId" validate:"required"`
-	SourceType               string           `db:"source_type" json:"sourceType" firestore:"sourceType" validate:"required"`
-	KeywordSetIDs            []uuid.UUID      `db:"keyword_set_ids" json:"keywordSetIds,omitempty" firestore:"keywordSetIds,omitempty"`
-	AdHocKeywords            *[]string        `db:"ad_hoc_keywords" json:"adHocKeywords,omitempty" firestore:"adHocKeywords,omitempty"`
-	PersonaIDs               []uuid.UUID      `db:"persona_ids" json:"personaIds" firestore:"personaIds" validate:"required,min=1,dive,uuid"`
-	ProxyIDs                 *[]uuid.UUID     `db:"proxy_ids" json:"proxyIds,omitempty" firestore:"proxyIds,omitempty"`
-	ProxyPoolID              uuid.NullUUID    `db:"proxy_pool_id" json:"proxyPoolId,omitempty" firestore:"proxyPoolId,omitempty"`
-	ProxySelectionStrategy   *string          `db:"proxy_selection_strategy" json:"proxySelectionStrategy,omitempty" firestore:"proxySelectionStrategy,omitempty"`
-	RotationIntervalSeconds  *int             `db:"rotation_interval_seconds" json:"rotationIntervalSeconds,omitempty" firestore:"rotationIntervalSeconds,omitempty" validate:"omitempty,gte=0"`
-	ProcessingSpeedPerMinute *int             `db:"processing_speed_per_minute" json:"processingSpeedPerMinute,omitempty" firestore:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=0"`
-	BatchSize                *int             `db:"batch_size" json:"batchSize,omitempty" firestore:"batchSize,omitempty" validate:"omitempty,gt=0"`
-	RetryAttempts            *int             `db:"retry_attempts" json:"retryAttempts,omitempty" firestore:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
-	TargetHTTPPorts          *[]int           `db:"target_http_ports" json:"targetHttpPorts,omitempty" firestore:"targetHttpPorts,omitempty"`
-	LastProcessedDomainName  *string          `db:"last_processed_domain_name" json:"lastProcessedDomainName,omitempty" firestore:"lastProcessedDomainName,omitempty"`
-	Metadata                 *json.RawMessage `db:"metadata" json:"metadata,omitempty" firestore:"metadata,omitempty"`
+	CampaignID               uuid.UUID        `json:"-" firestore:"-"`
+	SourceCampaignID         uuid.UUID        `json:"sourceCampaignId" firestore:"sourceCampaignId" validate:"required"`
+	SourceType               string           `json:"sourceType" firestore:"sourceType" validate:"required"`
+	KeywordSetIDs            *[]uuid.UUID     `json:"keywordSetIds,omitempty" firestore:"keywordSetIds,omitempty"`
+	AdHocKeywords            *[]string        `json:"adHocKeywords,omitempty" firestore:"adHocKeywords,omitempty"`
+	PersonaIDs               []uuid.UUID      `json:"personaIds" firestore:"personaIds" validate:"required,min=1,dive,uuid"`
+	ProxyIDs                 *[]uuid.UUID     `json:"proxyIds,omitempty" firestore:"proxyIds,omitempty"`
+	ProxyPoolID              *uuid.UUID       `json:"proxyPoolId,omitempty" firestore:"proxyPoolId,omitempty"`
+	ProxySelectionStrategy   *string          `json:"proxySelectionStrategy,omitempty" firestore:"proxySelectionStrategy,omitempty"`
+	RotationIntervalSeconds  *int             `json:"rotationIntervalSeconds,omitempty" firestore:"rotationIntervalSeconds,omitempty" validate:"omitempty,gte=0"`
+	ProcessingSpeedPerMinute *int             `json:"processingSpeedPerMinute,omitempty" firestore:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=0"`
+	BatchSize                *int             `json:"batchSize,omitempty" firestore:"batchSize,omitempty" validate:"omitempty,gt=0"`
+	RetryAttempts            *int             `json:"retryAttempts,omitempty" firestore:"retryAttempts,omitempty" validate:"omitempty,gte=0"`
+	TargetHTTPPorts          *[]int           `json:"targetHttpPorts,omitempty" firestore:"targetHttpPorts,omitempty"`
+	LastProcessedDomainName  *string          `json:"lastProcessedDomainName,omitempty" firestore:"lastProcessedDomainName,omitempty"`
+	Metadata                 *json.RawMessage `json:"metadata,omitempty" firestore:"metadata,omitempty"`
 }
 
 // HTTPKeywordResult stores the outcome of an HTTP validation and keyword search

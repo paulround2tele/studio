@@ -12,26 +12,24 @@ import (
 
 // --- Campaign Update Request DTOs ---
 type UpdateCampaignRequest struct {
-	Name                       *string                 `json:"name,omitempty"`
-	CampaignType               *models.JobTypeEnum     `json:"campaignType,omitempty"`
-	Status                     *models.PhaseStatusEnum `json:"status,omitempty"`
-	SourceGenerationCampaignID *uuid.UUID              `json:"sourceGenerationCampaignId,omitempty"`
-	SourceDnsCampaignID        *uuid.UUID              `json:"sourceDnsCampaignId,omitempty"`
-	KeywordSetIDs              *[]uuid.UUID            `json:"keywordSetIds,omitempty"`
-	AdHocKeywords              *[]string               `json:"adHocKeywords,omitempty"`
-	PersonaIDs                 *[]uuid.UUID            `json:"personaIds,omitempty"`
-	ProxyPoolID                *uuid.UUID              `json:"proxyPoolId,omitempty"`
-	ProxySelectionStrategy     *string                 `json:"proxySelectionStrategy,omitempty"`
-	RotationIntervalSeconds    *int                    `json:"rotationIntervalSeconds,omitempty"`
-	ProcessingSpeedPerMinute   *int                    `json:"processingSpeedPerMinute,omitempty"`
-	BatchSize                  *int                    `json:"batchSize,omitempty"`
-	RetryAttempts              *int                    `json:"retryAttempts,omitempty"`
-	TargetHTTPPorts            *[]int                  `json:"targetHttpPorts,omitempty"`
-	NumDomainsToGenerate       *int64                  `json:"numDomainsToGenerate,omitempty"`
-	VariableLength             *int                    `json:"variableLength,omitempty"`
-	CharacterSet               *string                 `json:"characterSet,omitempty"`
-	ConstantString             *string                 `json:"constantString,omitempty"`
-	TLD                        *string                 `json:"tld,omitempty"`
+	Name                     *string                 `json:"name,omitempty"`
+	CampaignType             *models.JobTypeEnum     `json:"campaignType,omitempty"`
+	Status                   *models.PhaseStatusEnum `json:"status,omitempty"`
+	KeywordSetIDs            *[]uuid.UUID            `json:"keywordSetIds,omitempty"`
+	AdHocKeywords            *[]string               `json:"adHocKeywords,omitempty"`
+	PersonaIDs               *[]uuid.UUID            `json:"personaIds,omitempty"`
+	ProxyPoolID              *uuid.UUID              `json:"proxyPoolId,omitempty"`
+	ProxySelectionStrategy   *string                 `json:"proxySelectionStrategy,omitempty"`
+	RotationIntervalSeconds  *int                    `json:"rotationIntervalSeconds,omitempty"`
+	ProcessingSpeedPerMinute *int                    `json:"processingSpeedPerMinute,omitempty"`
+	BatchSize                *int                    `json:"batchSize,omitempty"`
+	RetryAttempts            *int                    `json:"retryAttempts,omitempty"`
+	TargetHTTPPorts          *[]int                  `json:"targetHttpPorts,omitempty"`
+	NumDomainsToGenerate     *int64                  `json:"numDomainsToGenerate,omitempty"`
+	VariableLength           *int                    `json:"variableLength,omitempty"`
+	CharacterSet             *string                 `json:"characterSet,omitempty"`
+	ConstantString           *string                 `json:"constantString,omitempty"`
+	TLD                      *string                 `json:"tld,omitempty"`
 }
 
 // --- Unified Campaign Creation Request DTO ---
@@ -61,13 +59,12 @@ type DomainGenerationParams struct {
 }
 
 type DnsValidationParams struct {
-	SourceGenerationCampaignID *uuid.UUID  `json:"sourceGenerationCampaignId,omitempty"` // For phased validation from domain generation
-	SourceCampaignID           *uuid.UUID  `json:"sourceCampaignId,omitempty"`           // For standalone validation from past campaigns
-	PersonaIDs                 []uuid.UUID `json:"personaIds" validate:"required,min=1,dive,uuid"`
-	RotationIntervalSeconds    int         `json:"rotationIntervalSeconds,omitempty" validate:"gte=0"`
-	ProcessingSpeedPerMinute   int         `json:"processingSpeedPerMinute,omitempty" validate:"gte=0"`
-	BatchSize                  int         `json:"batchSize,omitempty" validate:"gt=0"`
-	RetryAttempts              int         `json:"retryAttempts,omitempty" validate:"gte=0"`
+	SourceCampaignID         *uuid.UUID  `json:"sourceCampaignId,omitempty"` // For standalone validation from past campaigns
+	PersonaIDs               []uuid.UUID `json:"personaIds" validate:"required,min=1,dive,uuid"`
+	RotationIntervalSeconds  int         `json:"rotationIntervalSeconds,omitempty" validate:"gte=0"`
+	ProcessingSpeedPerMinute int         `json:"processingSpeedPerMinute,omitempty" validate:"gte=0"`
+	BatchSize                int         `json:"batchSize,omitempty" validate:"gt=0"`
+	RetryAttempts            int         `json:"retryAttempts,omitempty" validate:"gte=0"`
 }
 
 type HttpKeywordParams struct {
@@ -287,6 +284,12 @@ type HTTPKeywordCampaignService interface {
 	// Phase transition methods for single-campaign architecture
 	ConfigureHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.HTTPPhaseConfigRequest) error
 	TransitionToAnalysisPhase(ctx context.Context, campaignID uuid.UUID) error
+}
+
+// AnalysisService defines the interface for content analysis and lead extraction from HTTP results.
+type AnalysisService interface {
+	// ProcessAnalysisCampaignBatch performs content analysis on HTTP results and stores analysis results
+	ProcessAnalysisCampaignBatch(ctx context.Context, campaignID uuid.UUID, batchSize int) (done bool, processedCount int64, err error)
 }
 
 // CampaignWorkerService manages the pool of background workers that process campaign jobs.

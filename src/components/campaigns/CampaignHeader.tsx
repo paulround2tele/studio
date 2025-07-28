@@ -176,31 +176,11 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
               </div>
             )}
             
-            {campaign.domainGenerationParams?.numDomainsToGenerate && (
+            {/* Phase-centric architecture: detailed configuration stored in phase records */}
+            {campaign.domains && (
               <div className="flex justify-between">
-                <span>Domains to Generate:</span>
-                <span className="font-mono">{campaign.domainGenerationParams.numDomainsToGenerate}</span>
-              </div>
-            )}
-            
-            {campaign.domainGenerationParams?.constantString && (
-              <div className="flex justify-between">
-                <span>Constant String:</span>
-                <span className="font-mono">{campaign.domainGenerationParams.constantString}</span>
-              </div>
-            )}
-            
-            {campaign.domainGenerationParams?.tld && (
-              <div className="flex justify-between">
-                <span>TLD:</span>
-                <span className="font-mono">{campaign.domainGenerationParams.tld}</span>
-              </div>
-            )}
-            
-            {campaign.domainGenerationParams?.patternType && (
-              <div className="flex justify-between">
-                <span>Pattern Type:</span>
-                <span className="font-mono">{campaign.domainGenerationParams.patternType}</span>
+                <span>Total Domains:</span>
+                <span className="font-mono">{campaign.domains}</span>
               </div>
             )}
           </div>

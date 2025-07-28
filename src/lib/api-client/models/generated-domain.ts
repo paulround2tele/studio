@@ -21,6 +21,12 @@
  */
 export interface GeneratedDomain {
     /**
+     * Unique identifier
+     * @type {string}
+     * @memberof GeneratedDomain
+     */
+    'campaignId': string;
+    /**
      * 
      * @type {string}
      * @memberof GeneratedDomain
@@ -50,12 +56,6 @@ export interface GeneratedDomain {
      * @memberof GeneratedDomain
      */
     'generatedAt'?: string;
-    /**
-     * Unique identifier
-     * @type {string}
-     * @memberof GeneratedDomain
-     */
-    'generationCampaignId': string;
     /**
      * 
      * @type {string}

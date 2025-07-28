@@ -5,12 +5,12 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**campaignId** | **string** | Unique identifier | [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **dnsIp** | **string** |  | [optional] [default to undefined]
 **dnsStatus** | **string** | Domain-centric validation status fields | [optional] [default to undefined]
 **domainName** | **string** |  | [default to undefined]
 **generatedAt** | **string** |  | [optional] [default to undefined]
-**generationCampaignId** | **string** | Unique identifier | [default to undefined]
 **httpKeywords** | **string** |  | [optional] [default to undefined]
 **httpStatus** | **string** |  | [optional] [default to undefined]
 **httpStatusCode** | **string** |  | [optional] [default to undefined]
@@ -30,12 +30,12 @@ Name | Type | Description | Notes
 import { GeneratedDomain } from './api';
 
 const instance: GeneratedDomain = {
+    campaignId,
     createdAt,
     dnsIp,
     dnsStatus,
     domainName,
     generatedAt,
-    generationCampaignId,
     httpKeywords,
     httpStatus,
     httpStatusCode,

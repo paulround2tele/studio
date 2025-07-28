@@ -22,7 +22,7 @@ All URIs are relative to *http://localhost*
 |[**updateWorkerConfigGin**](#updateworkerconfiggin) | **PUT** /server/worker-config | Update worker configuration|
 
 # **getAuthConfigGin**
-> string getAuthConfigGin()
+> AuthConfig getAuthConfigGin()
 
 Retrieve the current authentication configuration settings
 
@@ -46,7 +46,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**AuthConfig**
 
 ### Authorization
 
@@ -68,7 +68,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getDNSConfigGin**
-> string getDNSConfigGin()
+> DNSValidatorConfigJSON getDNSConfigGin()
 
 Retrieve default DNS validator configuration
 
@@ -92,7 +92,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**DNSValidatorConfigJSON**
 
 ### Authorization
 
@@ -114,7 +114,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getHTTPConfigGin**
-> string getHTTPConfigGin()
+> HTTPValidatorConfigJSON getHTTPConfigGin()
 
 Retrieve default HTTP validator configuration
 
@@ -138,7 +138,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**HTTPValidatorConfigJSON**
 
 ### Authorization
 
@@ -160,7 +160,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getLoggingConfigGin**
-> string getLoggingConfigGin()
+> LoggingConfig getLoggingConfigGin()
 
 Retrieve the current logging configuration settings
 
@@ -184,7 +184,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**LoggingConfig**
 
 ### Authorization
 
@@ -206,7 +206,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getProxyManagerConfigGin**
-> string getProxyManagerConfigGin()
+> ProxyManagerConfigJSON getProxyManagerConfigGin()
 
 Retrieve the current proxy manager configuration settings
 
@@ -230,7 +230,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**ProxyManagerConfigJSON**
 
 ### Authorization
 
@@ -252,7 +252,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getRateLimiterConfigGin**
-> string getRateLimiterConfigGin()
+> RateLimiterConfig getRateLimiterConfigGin()
 
 Retrieve the current rate limiter configuration settings
 
@@ -276,7 +276,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**RateLimiterConfig**
 
 ### Authorization
 
@@ -344,7 +344,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getWorkerConfigGin**
-> string getWorkerConfigGin()
+> WorkerConfig getWorkerConfigGin()
 
 Retrieve the current worker configuration settings
 
@@ -368,7 +368,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**WorkerConfig**
 
 ### Authorization
 
@@ -390,7 +390,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateAuthConfigGin**
-> string updateAuthConfigGin(body)
+> AuthConfig updateAuthConfigGin(authConfig)
 
 Update the authentication configuration settings
 
@@ -399,16 +399,17 @@ Update the authentication configuration settings
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    AuthConfig
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let body: string; //
+let authConfig: AuthConfig; //
 
 const { status, data } = await apiInstance.updateAuthConfigGin(
-    body
+    authConfig
 );
 ```
 
@@ -416,12 +417,12 @@ const { status, data } = await apiInstance.updateAuthConfigGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **string**|  | |
+| **authConfig** | **AuthConfig**|  | |
 
 
 ### Return type
 
-**string**
+**AuthConfig**
 
 ### Authorization
 
@@ -443,7 +444,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateDNSConfigGin**
-> string updateDNSConfigGin(body)
+> DNSValidatorConfigJSON updateDNSConfigGin(dNSValidatorConfigJSON)
 
 Update default DNS validator configuration
 
@@ -452,16 +453,17 @@ Update default DNS validator configuration
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    DNSValidatorConfigJSON
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let body: string; //
+let dNSValidatorConfigJSON: DNSValidatorConfigJSON; //
 
 const { status, data } = await apiInstance.updateDNSConfigGin(
-    body
+    dNSValidatorConfigJSON
 );
 ```
 
@@ -469,12 +471,12 @@ const { status, data } = await apiInstance.updateDNSConfigGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **string**|  | |
+| **dNSValidatorConfigJSON** | **DNSValidatorConfigJSON**|  | |
 
 
 ### Return type
 
-**string**
+**DNSValidatorConfigJSON**
 
 ### Authorization
 
@@ -496,7 +498,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateHTTPConfigGin**
-> string updateHTTPConfigGin(body)
+> HTTPValidatorConfigJSON updateHTTPConfigGin(hTTPValidatorConfigJSON)
 
 Update default HTTP validator configuration
 
@@ -505,16 +507,17 @@ Update default HTTP validator configuration
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    HTTPValidatorConfigJSON
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let body: string; //
+let hTTPValidatorConfigJSON: HTTPValidatorConfigJSON; //
 
 const { status, data } = await apiInstance.updateHTTPConfigGin(
-    body
+    hTTPValidatorConfigJSON
 );
 ```
 
@@ -522,12 +525,12 @@ const { status, data } = await apiInstance.updateHTTPConfigGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **string**|  | |
+| **hTTPValidatorConfigJSON** | **HTTPValidatorConfigJSON**|  | |
 
 
 ### Return type
 
-**string**
+**HTTPValidatorConfigJSON**
 
 ### Authorization
 
@@ -549,7 +552,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateLoggingConfigGin**
-> string updateLoggingConfigGin(body)
+> LoggingConfig updateLoggingConfigGin(loggingConfig)
 
 Update the logging configuration settings
 
@@ -558,16 +561,17 @@ Update the logging configuration settings
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    LoggingConfig
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let body: string; //
+let loggingConfig: LoggingConfig; //
 
 const { status, data } = await apiInstance.updateLoggingConfigGin(
-    body
+    loggingConfig
 );
 ```
 
@@ -575,12 +579,12 @@ const { status, data } = await apiInstance.updateLoggingConfigGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **string**|  | |
+| **loggingConfig** | **LoggingConfig**|  | |
 
 
 ### Return type
 
-**string**
+**LoggingConfig**
 
 ### Authorization
 
@@ -602,7 +606,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateProxyManagerConfigGin**
-> string updateProxyManagerConfigGin(body)
+> ProxyManagerConfigJSON updateProxyManagerConfigGin(proxyManagerConfig)
 
 Update the proxy manager configuration settings
 
@@ -611,16 +615,17 @@ Update the proxy manager configuration settings
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    ProxyManagerConfig
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let body: string; //
+let proxyManagerConfig: ProxyManagerConfig; //
 
 const { status, data } = await apiInstance.updateProxyManagerConfigGin(
-    body
+    proxyManagerConfig
 );
 ```
 
@@ -628,12 +633,12 @@ const { status, data } = await apiInstance.updateProxyManagerConfigGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **string**|  | |
+| **proxyManagerConfig** | **ProxyManagerConfig**|  | |
 
 
 ### Return type
 
-**string**
+**ProxyManagerConfigJSON**
 
 ### Authorization
 
@@ -655,7 +660,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateRateLimiterConfigGin**
-> string updateRateLimiterConfigGin(body)
+> RateLimiterConfig updateRateLimiterConfigGin(rateLimiterConfig)
 
 Update the rate limiter configuration settings
 
@@ -664,16 +669,17 @@ Update the rate limiter configuration settings
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    RateLimiterConfig
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let body: string; //
+let rateLimiterConfig: RateLimiterConfig; //
 
 const { status, data } = await apiInstance.updateRateLimiterConfigGin(
-    body
+    rateLimiterConfig
 );
 ```
 
@@ -681,12 +687,12 @@ const { status, data } = await apiInstance.updateRateLimiterConfigGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **string**|  | |
+| **rateLimiterConfig** | **RateLimiterConfig**|  | |
 
 
 ### Return type
 
-**string**
+**RateLimiterConfig**
 
 ### Authorization
 
@@ -762,7 +768,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateWorkerConfigGin**
-> string updateWorkerConfigGin(body)
+> WorkerConfig updateWorkerConfigGin(workerConfig)
 
 Update the worker configuration settings
 
@@ -771,16 +777,17 @@ Update the worker configuration settings
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    WorkerConfig
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let body: string; //
+let workerConfig: WorkerConfig; //
 
 const { status, data } = await apiInstance.updateWorkerConfigGin(
-    body
+    workerConfig
 );
 ```
 
@@ -788,12 +795,12 @@ const { status, data } = await apiInstance.updateWorkerConfigGin(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **string**|  | |
+| **workerConfig** | **WorkerConfig**|  | |
 
 
 ### Return type
 
-**string**
+**WorkerConfig**
 
 ### Authorization
 

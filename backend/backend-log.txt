@@ -2,64 +2,65 @@ Building application...
 go build -buildvcs=false -o bin/apiserver ./cmd/apiserver
 Running application from binary...
 ./bin/apiserver
-2025/07/25 14:17:54 API Validator initialized and custom validations registered.
-2025/07/25 14:17:54 Starting DomainFlow API Server...
-2025/07/25 14:17:54 Successfully loaded environment variables from ../.env
-2025/07/25 14:17:54 Config: Attempting to load main config from: config.json
-2025/07/25 14:17:54 Configuration loaded with environment overrides.
-2025/07/25 14:17:54 Global WebSocket broadcaster initialized and started.
-2025/07/25 14:17:54 Initializing PostgreSQL database connection...
-2025/07/25 14:17:54 Connecting to database: host=localhost port=5432 user=domainflow dbname=domainflow_production sslmode=disable
-2025/07/25 14:17:54 Successfully connected to PostgreSQL database.
-2025/07/25 14:17:54 PostgreSQL-backed stores initialized.
-2025/07/25 14:17:54 ProxyManager: Initializing with 0 proxy entries.
-2025/07/25 14:17:54 ProxyManager: Performing initial health checks for 0 supported proxies (timeout per proxy: 7s)...
-2025/07/25 14:17:54 ProxyManager: Initialization and initial health checks complete. Total managed: 0, Initially active: 0
-2025/07/25 14:17:54 ProxyManager initialized.
-2025/07/25 14:17:54 HTTPValidator engine initialized.
-2025/07/25 14:17:54 KeywordScanner engine initialized.
-2025/07/25 14:17:54 DNSValidator engine initialized.
-2025/07/25 14:17:54 ContentFetcher engine initialized.
-2025/07/25 14:17:54 Using session configuration for environment: development (CookieSecure: false, CookieDomain: '', CookieName: 'domainflow_session')
-2025/07/25 14:17:54 Session service initialized.
-2025/07/25 14:17:54 PhaseExecutionService initialized - Phase 2.5 & 3.9 direct engine integration complete.
-2025/07/25 14:17:54 Warning: failed to register service contracts: failed to store contract: pq: column "version" of relation "service_contracts" does not exist
-2025/07/25 14:17:54 Worker Lino registered successfully
-2025/07/25 14:17:54 CampaignWorkerService initialized.
-2025/07/25 14:17:54 Main APIHandler initialized.
-2025/07/25 14:17:54 CampaignOrchestratorAPIHandler initialized with standalone services support.
-2025/07/25 14:17:54 WebSocketAPIHandler initialized.
-2025/07/25 14:17:54 DistributedCacheManager: Initialized in-memory cache with 100MB limit
-2025/07/25 14:17:54 DistributedCacheManager initialized with in-memory distributed caching.
-2025/07/25 14:17:54 AuthHandler initialized with user profile caching.
-2025/07/25 14:17:54 CachedSessionService initialized with distributed caching.
-2025/07/25 14:17:54 High-performance cached auth middleware initialized.
-2025/07/25 14:17:54 HealthCheckHandler initialized.
-2025/07/25 14:17:54 DatabaseHandler initialized.
+2025/07/28 11:17:07 API Validator initialized and custom validations registered.
+2025/07/28 11:17:07 Starting DomainFlow API Server...
+2025/07/28 11:17:07 Successfully loaded environment variables from ../.env
+2025/07/28 11:17:07 Config: Attempting to load main config from: config.json
+2025/07/28 11:17:07 Configuration loaded with environment overrides.
+2025/07/28 11:17:07 Global WebSocket broadcaster initialized and started.
+2025/07/28 11:17:07 Initializing PostgreSQL database connection...
+2025/07/28 11:17:07 Connecting to database: host=localhost port=5432 user=domainflow dbname=domainflow_production sslmode=disable
+2025/07/28 11:17:07 Successfully connected to PostgreSQL database.
+2025/07/28 11:17:07 PostgreSQL-backed stores initialized.
+2025/07/28 11:17:07 ProxyManager: Initializing with 0 proxy entries.
+2025/07/28 11:17:07 ProxyManager: Performing initial health checks for 0 supported proxies (timeout per proxy: 7s)...
+2025/07/28 11:17:07 ProxyManager: Initialization and initial health checks complete. Total managed: 0, Initially active: 0
+2025/07/28 11:17:07 ProxyManager initialized.
+2025/07/28 11:17:07 HTTPValidator engine initialized.
+2025/07/28 11:17:07 KeywordScanner engine initialized.
+2025/07/28 11:17:07 DNSValidator engine initialized.
+2025/07/28 11:17:07 ContentFetcher engine initialized.
+2025/07/28 11:17:07 Using session configuration for environment: development (CookieSecure: false, CookieDomain: '', CookieName: 'domainflow_session')
+2025/07/28 11:17:07 Session service initialized.
+2025/07/28 11:17:07 PhaseExecutionService initialized - Phase 2.5 & 3.9 direct engine integration complete.
+2025/07/28 11:17:08 Warning: failed to register service contracts: failed to store contract: pq: relation "service_contracts" does not exist
+2025/07/28 11:17:08 Failed to register worker Lino: pq: relation "worker_coordination" does not exist
+2025/07/28 11:17:08 Failed to initialize worker registration for Lino: pq: relation "worker_coordination" does not exist
+2025/07/28 11:17:08 CampaignWorkerService initialized.
+2025/07/28 11:17:08 Main APIHandler initialized.
+2025/07/28 11:17:08 CampaignOrchestratorAPIHandler initialized with standalone services support.
+2025/07/28 11:17:08 WebSocketAPIHandler initialized.
+2025/07/28 11:17:08 DistributedCacheManager: Initialized in-memory cache with 100MB limit
+2025/07/28 11:17:08 DistributedCacheManager initialized with in-memory distributed caching.
+2025/07/28 11:17:08 AuthHandler initialized with user profile caching.
+2025/07/28 11:17:08 CachedSessionService initialized with distributed caching.
+2025/07/28 11:17:08 High-performance cached auth middleware initialized.
+2025/07/28 11:17:08 HealthCheckHandler initialized.
+2025/07/28 11:17:08 DatabaseHandler initialized.
 [GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
 
 [GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
  - using env:	export GIN_MODE=release
  - using code:	gin.SetMode(gin.ReleaseMode)
 
-2025/07/25 14:17:54 Backend configured for development with CORS support
+2025/07/28 11:17:08 Backend configured for development with CORS support
 [GIN-debug] GET    /api/v2/ws                --> github.com/fntelecomllc/studio/backend/internal/api.(*WebSocketHandler).HandleConnections-fm (8 handlers)
-2025/07/25 14:17:54 Registered WebSocket route under /api/v2/ws.
+2025/07/28 11:17:08 Registered WebSocket route under /api/v2/ws.
 [GIN-debug] GET    /ping                     --> github.com/fntelecomllc/studio/backend/internal/api.PingHandlerGin (8 handlers)
 [GIN-debug] GET    /api/openapi.yaml         --> main.main.(*RouterGroup).StaticFile.func44 (8 handlers)
 [GIN-debug] HEAD   /api/openapi.yaml         --> main.main.(*RouterGroup).StaticFile.func44 (8 handlers)
-2025/07/25 14:17:54 Registered OpenAPI 3.0 specification route under /api/openapi.yaml
+2025/07/28 11:17:08 Registered OpenAPI 3.0 specification route under /api/openapi.yaml
 [GIN-debug] POST   /api/v2/auth/login        --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).Login-fm (9 handlers)
 [GIN-debug] POST   /api/v2/auth/logout       --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).Logout-fm (8 handlers)
 [GIN-debug] POST   /api/v2/auth/refresh      --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).RefreshSession-fm (8 handlers)
 [GIN-debug] GET    /api/v2/auth/me           --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).Me-fm (9 handlers)
 [GIN-debug] POST   /api/v2/auth/change-password --> github.com/fntelecomllc/studio/backend/internal/api.(*AuthHandler).ChangePassword-fm (9 handlers)
-2025/07/25 14:17:54 Registered authentication routes under /api/v2/auth
+2025/07/28 11:17:08 Registered authentication routes under /api/v2/auth
 [GIN-debug] GET    /api/v2/health            --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleHealthCheck-fm (8 handlers)
 [GIN-debug] GET    /api/v2/health/ready      --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleReadinessCheck-fm (8 handlers)
 [GIN-debug] GET    /api/v2/health/live       --> github.com/fntelecomllc/studio/backend/internal/api.(*HealthCheckHandler).HandleLivenessCheck-fm (8 handlers)
-2025/07/25 14:17:54 Registered API v2 health check routes: /api/v2/health, /api/v2/health/ready, /api/v2/health/live
-2025/07/25 14:17:54 Authentication configured for session-only (offline mode)
+2025/07/28 11:17:08 Registered API v2 health check routes: /api/v2/health, /api/v2/health/ready, /api/v2/health/live
+2025/07/28 11:17:08 Authentication configured for session-only (offline mode)
 [GIN-debug] GET    /api/v2/personas          --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).ListAllPersonasGin-fm (10 handlers)
 [GIN-debug] POST   /api/v2/personas          --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).CreatePersonaGin-fm (10 handlers)
 [GIN-debug] GET    /api/v2/personas/:id      --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetPersonaByIDGin-fm (10 handlers)
@@ -71,6 +72,7 @@ Running application from binary...
 [GIN-debug] GET    /api/v2/proxies           --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).ListProxiesGin-fm (10 handlers)
 [GIN-debug] POST   /api/v2/proxies           --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).AddProxyGin-fm (10 handlers)
 [GIN-debug] GET    /api/v2/proxies/status    --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).GetProxyStatusesGin-fm (10 handlers)
+2025/07/28 11:17:08 CampaignWorkerService [Lino]: Starting 5 workers (poll interval: 5s)...
 [GIN-debug] PUT    /api/v2/proxies/:proxyId  --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).UpdateProxyGin-fm (10 handlers)
 [GIN-debug] DELETE /api/v2/proxies/:proxyId  --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).DeleteProxyGin-fm (10 handlers)
 [GIN-debug] POST   /api/v2/proxies/:proxyId/test --> github.com/fntelecomllc/studio/backend/internal/api.(*APIHandler).TestProxyGin-fm (10 handlers)
@@ -110,9 +112,10 @@ Running application from binary...
 [GIN-debug] POST   /api/v2/database/query    --> github.com/fntelecomllc/studio/backend/internal/api.(*DatabaseHandler).HandleBulkDatabaseQuery-fm (10 handlers)
 [GIN-debug] POST   /api/v2/database/stats    --> github.com/fntelecomllc/studio/backend/internal/api.(*DatabaseHandler).HandleBulkDatabaseStats-fm (10 handlers)
 [GIN-debug] GET    /api/v2/broadcast-test    --> main.main.func2 (10 handlers)
-2025/07/25 14:17:54 Registered WebSocket test broadcast route under /api/v2/broadcast-test.
+2025/07/28 11:17:08 Worker [Lino-4]: Started.
+2025/07/28 11:17:08 Registered WebSocket test broadcast route under /api/v2/broadcast-test.
 [GIN-debug] GET    /api/v2/test-campaign-ws/:campaignId --> main.main.func3 (10 handlers)
-2025/07/25 14:17:54 Registered WebSocket campaign test route under /api/v2/test-campaign-ws/:campaignId.
+2025/07/28 11:17:08 Registered WebSocket campaign test route under /api/v2/test-campaign-ws/:campaignId.
 [GIN-debug] POST   /api/v2/campaigns/lead-generation --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).createLeadGenerationCampaign-fm (9 handlers)
 [GIN-debug] GET    /api/v2/campaigns         --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getCampaignsStandalone-fm (9 handlers)
 [GIN-debug] POST   /api/v2/campaigns/:campaignId/phases/:phase/configure --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).configurePhaseStandalone-fm (9 handlers)
@@ -121,24 +124,64 @@ Running application from binary...
 [GIN-debug] GET    /api/v2/campaigns/:campaignId/progress --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getCampaignProgressStandalone-fm (9 handlers)
 [GIN-debug] POST   /api/v2/campaigns/domain-generation/pattern-offset --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getPatternOffset-fm (9 handlers)
 [GIN-debug] POST   /api/v2/campaigns/bulk/enriched-data --> github.com/fntelecomllc/studio/backend/internal/api.(*CampaignOrchestratorAPIHandler).getBulkEnrichedCampaignData-fm (9 handlers)
-2025/07/25 14:17:54 Registered new campaign orchestration routes under /api/v2/campaigns.
-2025/07/25 14:17:54 Generating OpenAPI specification using automatic reflection...
-2025/07/25 14:17:54 CampaignWorkerService [Lino]: Starting 5 workers (poll interval: 5s)...
-2025/07/25 14:17:54 Starting OpenAPI generation with Gin engine routes...
-2025/07/25 14:17:54 Discovering business entities...
+2025/07/28 11:17:08 Registered new campaign orchestration routes under /api/v2/campaigns.
+2025/07/28 11:17:08 Generating OpenAPI specification using automatic reflection...
+2025/07/28 11:17:08 Starting OpenAPI generation with Gin engine routes...
+2025/07/28 11:17:08 Discovering business entities...
 Scanning business entities in package: ./internal/models
-2025/07/25 14:17:54 Worker [Lino-4]: Started.
-2025/07/25 14:17:54 Worker [Lino-0]: Started.
-2025/07/25 14:17:54 Worker [Lino-1]: Started.
-2025/07/25 14:17:54 Worker [Lino-3]: Started.
-2025/07/25 14:17:54 Worker [Lino-2]: Started.
+2025/07/28 11:17:08 Worker [Lino-2]: Started.
+2025/07/28 11:17:08 Worker [Lino-3]: Started.
+2025/07/28 11:17:08 Worker [Lino-0]: Started.
+2025/07/28 11:17:08 Worker [Lino-1]: Started.
 Scanning business entities in package: ./internal/api
 Scanning business entities in package: ./internal/services
-Discovered 218 business entities
+Discovered 219 business entities
+  - HttpPersonaConfig (from models)
+  - HTTP2SettingsConfig (from models)
+  - DnsPersonaConfig (from models)
+  - PasswordResetToken (from models)
+  - SecurityEvent (from models)
+  - AuthorizationDecision (from models)
+  - CampaignAccessGrant (from models)
+  - CacheConfiguration (from models)
+  - CacheEntry (from models)
+  - CacheInvalidationLog (from models)
+  - CacheInvalidation (from models)
+  - CacheMetric (from models)
   - UserAPI (from models)
   - LoginResponseAPI (from models)
   - CampaignAPI (from models)
+  - ConfigLock (from models)
+  - ConfigVersion (from models)
+  - ServiceArchitectureMetric (from models)
+  - ServiceDependency (from models)
+  - ArchitectureRefactorLog (from models)
+  - CommunicationPattern (from models)
+  - ServiceCapacityMetric (from models)
+  - EventStoreRecord (from models)
+  - EventProjection (from models)
+  - CampaignStateEvent (from models)
+  - CampaignStateSnapshot (from models)
+  - CampaignStateTransition (from models)
+  - User (from models)
+  - Session (from models)
+  - AuthAuditLog (from models)
+  - RateLimit (from models)
+  - LoginRequest (from models)
+  - LoginResponse (from models)
+  - ChangePasswordRequest (from models)
+  - CreateUserRequest (from models)
+  - UpdateUserRequest (from models)
+  - AuthResult (from models)
+  - SecurityContext (from models)
+  - ErrorResponse (from models)
   - GeneralErrorResponse (from models)
+  - ConnectionPoolMetrics (from models)
+  - QueryPerformanceReport (from models)
+  - ConnectionPoolReport (from models)
+  - DatabaseOptimizationRecommendation (from models)
+  - PaginationPerformanceMetric (from models)
+  - PerformanceThreshold (from models)
   - DNSPhaseConfigRequest (from models)
   - HTTPPhaseConfigRequest (from models)
   - DNSConfigDetails (from models)
@@ -168,53 +211,6 @@ Discovered 218 business entities
   - ResourceUtilizationMetric (from models)
   - CreateProxyRequest (from models)
   - UpdateProxyRequest (from models)
-  - ConnectionPoolMetrics (from models)
-  - QueryPerformanceReport (from models)
-  - ConnectionPoolReport (from models)
-  - DatabaseOptimizationRecommendation (from models)
-  - PaginationPerformanceMetric (from models)
-  - PerformanceThreshold (from models)
-  - HttpPersonaConfig (from models)
-  - HTTP2SettingsConfig (from models)
-  - DnsPersonaConfig (from models)
-  - PasswordResetToken (from models)
-  - SecurityEvent (from models)
-  - AuthorizationDecision (from models)
-  - CampaignAccessGrant (from models)
-  - CacheConfiguration (from models)
-  - CacheEntry (from models)
-  - CacheInvalidationLog (from models)
-  - CacheInvalidation (from models)
-  - CacheMetric (from models)
-  - ConfigLock (from models)
-  - ConfigVersion (from models)
-  - ServiceArchitectureMetric (from models)
-  - ServiceDependency (from models)
-  - ArchitectureRefactorLog (from models)
-  - CommunicationPattern (from models)
-  - ServiceCapacityMetric (from models)
-  - EventStoreRecord (from models)
-  - EventProjection (from models)
-  - CampaignStateEvent (from models)
-  - CampaignStateSnapshot (from models)
-  - CampaignStateTransition (from models)
-  - User (from models)
-  - Session (from models)
-  - AuthAuditLog (from models)
-  - RateLimit (from models)
-  - LoginRequest (from models)
-  - LoginResponse (from models)
-  - ChangePasswordRequest (from models)
-  - CreateUserRequest (from models)
-  - UpdateUserRequest (from models)
-  - AuthResult (from models)
-  - SecurityContext (from models)
-  - ErrorResponse (from models)
-  - StreamingResponseHandler (from api)
-  - KeywordExtractionRequestItem (from api)
-  - BatchKeywordExtractionRequest (from api)
-  - KeywordExtractionAPIResult (from api)
-  - BatchKeywordExtractionResponse (from api)
   - PatternOffsetRequest (from api)
   - PatternOffsetResponse (from api)
   - SuccessMessageResponse (from api)
@@ -292,9 +288,15 @@ Discovered 218 business entities
   - HTTPValidationConfig (from api)
   - AnalysisConfig (from api)
   - PhaseStartRequest (from api)
+  - StreamingResponseHandler (from api)
+  - KeywordRuleRequest (from api)
+  - CreateKeywordSetRequest (from api)
+  - UpdateKeywordSetRequest (from api)
+  - KeywordSetResponse (from api)
   - CreatePersonaRequest (from api)
   - UpdatePersonaRequest (from api)
   - PersonaResponse (from api)
+  - ProxyPoolRequest (from api)
   - APIResponse (from api)
   - ErrorInfo (from api)
   - PageInfo (from api)
@@ -303,22 +305,10 @@ Discovered 218 business entities
   - HealthStatus (from api)
   - Status (from api)
   - SystemInfo (from api)
-  - KeywordRuleRequest (from api)
-  - CreateKeywordSetRequest (from api)
-  - UpdateKeywordSetRequest (from api)
-  - KeywordSetResponse (from api)
-  - ProxyPoolRequest (from api)
-  - CampaignTransactionOptions (from services)
-  - DomainBatch (from services)
-  - WorkerPoolMetrics (from services)
-  - WorkerPoolConfig (from services)
-  - ConfigManagerConfig (from services)
-  - TOTPSecret (from services)
-  - MFAChallenge (from services)
-  - MFAEnrollment (from services)
-  - StealthConfig (from services)
-  - RandomizedDomain (from services)
-  - StealthMetrics (from services)
+  - KeywordExtractionRequestItem (from api)
+  - BatchKeywordExtractionRequest (from api)
+  - KeywordExtractionAPIResult (from api)
+  - BatchKeywordExtractionResponse (from api)
   - UpdateCampaignRequest (from services)
   - CreateCampaignRequest (from services)
   - DomainGenerationParams (from services)
@@ -348,59 +338,27 @@ Discovered 218 business entities
   - AnalysisPhaseConfig (from services)
   - PhaseProgress (from services)
   - PhaseStats (from services)
+  - DomainBatch (from services)
+  - WorkerPoolMetrics (from services)
+  - WorkerPoolConfig (from services)
+  - ConfigManagerConfig (from services)
+  - StealthConfig (from services)
+  - RandomizedDomain (from services)
+  - StealthMetrics (from services)
   - SessionData (from services)
   - SessionMetrics (from services)
+  - TOTPSecret (from services)
+  - MFAChallenge (from services)
+  - MFAEnrollment (from services)
   - APIKey (from services)
+  - ContentAnalysisResult (from services)
   - CachedSessionConfig (from services)
   - CachedSessionData (from services)
-2025/07/25 14:17:54 Found 218 business entities
-Schema generator received 218 business entities
-2025/07/25 14:17:54 Discovering routes using reflection...
+  - CampaignTransactionOptions (from services)
+2025/07/28 11:17:08 Found 219 business entities
+Schema generator received 219 business entities
+2025/07/28 11:17:08 Discovering routes using reflection...
 Scanning package: ./internal/api
-DEBUG: generateOperationID - handlerName=HandleHealthCheck, funcName=HandleHealthCheck
-DEBUG: Removing standard suffixes from: HandleHealthCheck
-DEBUG: Removing Gin suffix from HandleHealthCheck
-DEBUG: Final operationId: handleHealthCheck
-DEBUG: generateOperationID - handlerName=HandleReadinessCheck, funcName=HandleReadinessCheck
-DEBUG: Removing standard suffixes from: HandleReadinessCheck
-DEBUG: Removing Gin suffix from HandleReadinessCheck
-DEBUG: Final operationId: handleReadinessCheck
-DEBUG: generateOperationID - handlerName=HandleLivenessCheck, funcName=HandleLivenessCheck
-DEBUG: Removing standard suffixes from: HandleLivenessCheck
-DEBUG: Removing Gin suffix from HandleLivenessCheck
-DEBUG: Final operationId: handleLivenessCheck
-DEBUG: generateOperationID - handlerName=PingHandlerGin, funcName=PingHandlerGin
-DEBUG: Removing standard suffixes from: PingHandlerGin
-DEBUG: Removing Gin suffix from PingHandlerGin
-DEBUG: Final operationId: ping
-DEBUG: generateOperationID - handlerName=ListProxyPoolsGin, funcName=ListProxyPoolsGin
-DEBUG: Removing standard suffixes from: ListProxyPoolsGin
-DEBUG: Removing Gin suffix from ListProxyPoolsGin
-DEBUG: Final operationId: listProxyPools
-DEBUG: generateOperationID - handlerName=CreateProxyPoolGin, funcName=CreateProxyPoolGin
-DEBUG: Removing standard suffixes from: CreateProxyPoolGin
-DEBUG: Removing Gin suffix from CreateProxyPoolGin
-DEBUG: Final operationId: createProxyPool
-DEBUG: generateOperationID - handlerName=UpdateProxyPoolGin, funcName=UpdateProxyPoolGin
-DEBUG: Removing standard suffixes from: UpdateProxyPoolGin
-DEBUG: Removing Gin suffix from UpdateProxyPoolGin
-DEBUG: Final operationId: updateProxyPool
-DEBUG: generateOperationID - handlerName=DeleteProxyPoolGin, funcName=DeleteProxyPoolGin
-DEBUG: Removing standard suffixes from: DeleteProxyPoolGin
-DEBUG: Removing Gin suffix from DeleteProxyPoolGin
-DEBUG: Final operationId: deleteProxyPool
-DEBUG: generateOperationID - handlerName=AddProxyToPoolGin, funcName=AddProxyToPoolGin
-DEBUG: Removing standard suffixes from: AddProxyToPoolGin
-DEBUG: Removing Gin suffix from AddProxyToPoolGin
-DEBUG: Final operationId: addProxyToPool
-DEBUG: generateOperationID - handlerName=RemoveProxyFromPoolGin, funcName=RemoveProxyFromPoolGin
-DEBUG: Removing standard suffixes from: RemoveProxyFromPoolGin
-DEBUG: Removing Gin suffix from RemoveProxyFromPoolGin
-DEBUG: Final operationId: removeProxyFromPool
-DEBUG: generateOperationID - handlerName=HandleConnections, funcName=HandleConnections
-DEBUG: Removing standard suffixes from: HandleConnections
-DEBUG: Removing Gin suffix from HandleConnections
-DEBUG: Final operationId: handleConnections
 DEBUG: generateOperationID - handlerName=createLeadGenerationCampaign, funcName=createLeadGenerationCampaign
 DEBUG: Removing standard suffixes from: createLeadGenerationCampaign
 DEBUG: Removing Gin suffix from createLeadGenerationCampaign
@@ -433,14 +391,96 @@ DEBUG: generateOperationID - handlerName=getPatternOffset, funcName=getPatternOf
 DEBUG: Removing standard suffixes from: getPatternOffset
 DEBUG: Removing Gin suffix from getPatternOffset
 DEBUG: Final operationId: getPatternOffset
-DEBUG: generateOperationID - handlerName=GetFeatureFlagsGin, funcName=GetFeatureFlagsGin
-DEBUG: Removing standard suffixes from: GetFeatureFlagsGin
-DEBUG: Removing Gin suffix from GetFeatureFlagsGin
-DEBUG: Final operationId: getFeatureFlags
-DEBUG: generateOperationID - handlerName=UpdateFeatureFlagsGin, funcName=UpdateFeatureFlagsGin
-DEBUG: Removing standard suffixes from: UpdateFeatureFlagsGin
-DEBUG: Removing Gin suffix from UpdateFeatureFlagsGin
-DEBUG: Final operationId: updateFeatureFlags
+DEBUG: generateOperationID - handlerName=HandleHealthCheck, funcName=HandleHealthCheck
+DEBUG: Removing standard suffixes from: HandleHealthCheck
+DEBUG: Removing Gin suffix from HandleHealthCheck
+DEBUG: Final operationId: handleHealthCheck
+DEBUG: generateOperationID - handlerName=HandleReadinessCheck, funcName=HandleReadinessCheck
+DEBUG: Removing standard suffixes from: HandleReadinessCheck
+DEBUG: Removing Gin suffix from HandleReadinessCheck
+DEBUG: Final operationId: handleReadinessCheck
+DEBUG: generateOperationID - handlerName=HandleLivenessCheck, funcName=HandleLivenessCheck
+DEBUG: Removing standard suffixes from: HandleLivenessCheck
+DEBUG: Removing Gin suffix from HandleLivenessCheck
+DEBUG: Final operationId: handleLivenessCheck
+DEBUG: generateOperationID - handlerName=CreateKeywordSetGin, funcName=CreateKeywordSetGin
+DEBUG: Removing standard suffixes from: CreateKeywordSetGin
+DEBUG: Removing Gin suffix from CreateKeywordSetGin
+DEBUG: Final operationId: createKeywordSet
+DEBUG: generateOperationID - handlerName=ListKeywordSetsGin, funcName=ListKeywordSetsGin
+DEBUG: Removing standard suffixes from: ListKeywordSetsGin
+DEBUG: Removing Gin suffix from ListKeywordSetsGin
+DEBUG: Final operationId: listKeywordSets
+DEBUG: generateOperationID - handlerName=GetKeywordSetGin, funcName=GetKeywordSetGin
+DEBUG: Removing standard suffixes from: GetKeywordSetGin
+DEBUG: Removing Gin suffix from GetKeywordSetGin
+DEBUG: Final operationId: getKeywordSet
+DEBUG: generateOperationID - handlerName=UpdateKeywordSetGin, funcName=UpdateKeywordSetGin
+DEBUG: Removing standard suffixes from: UpdateKeywordSetGin
+DEBUG: Removing Gin suffix from UpdateKeywordSetGin
+DEBUG: Final operationId: updateKeywordSet
+DEBUG: generateOperationID - handlerName=DeleteKeywordSetGin, funcName=DeleteKeywordSetGin
+DEBUG: Removing standard suffixes from: DeleteKeywordSetGin
+DEBUG: Removing Gin suffix from DeleteKeywordSetGin
+DEBUG: Final operationId: deleteKeywordSet
+DEBUG: generateOperationID - handlerName=ListProxiesGin, funcName=ListProxiesGin
+DEBUG: Removing standard suffixes from: ListProxiesGin
+DEBUG: Removing Gin suffix from ListProxiesGin
+DEBUG: Final operationId: listProxies
+DEBUG: generateOperationID - handlerName=AddProxyGin, funcName=AddProxyGin
+DEBUG: Removing standard suffixes from: AddProxyGin
+DEBUG: Removing Gin suffix from AddProxyGin
+DEBUG: Final operationId: addProxy
+DEBUG: generateOperationID - handlerName=UpdateProxyGin, funcName=UpdateProxyGin
+DEBUG: Removing standard suffixes from: UpdateProxyGin
+DEBUG: Removing Gin suffix from UpdateProxyGin
+DEBUG: Final operationId: updateProxy
+DEBUG: generateOperationID - handlerName=DeleteProxyGin, funcName=DeleteProxyGin
+DEBUG: Removing standard suffixes from: DeleteProxyGin
+DEBUG: Removing Gin suffix from DeleteProxyGin
+DEBUG: Final operationId: deleteProxy
+DEBUG: generateOperationID - handlerName=GetProxyStatusesGin, funcName=GetProxyStatusesGin
+DEBUG: Removing standard suffixes from: GetProxyStatusesGin
+DEBUG: Removing Gin suffix from GetProxyStatusesGin
+DEBUG: Final operationId: getProxyStatuses
+DEBUG: generateOperationID - handlerName=ForceCheckSingleProxyGin, funcName=ForceCheckSingleProxyGin
+DEBUG: Removing standard suffixes from: ForceCheckSingleProxyGin
+DEBUG: Removing Gin suffix from ForceCheckSingleProxyGin
+DEBUG: Final operationId: forceCheckSingleProxy
+DEBUG: generateOperationID - handlerName=ForceCheckAllProxiesGin, funcName=ForceCheckAllProxiesGin
+DEBUG: Removing standard suffixes from: ForceCheckAllProxiesGin
+DEBUG: Removing Gin suffix from ForceCheckAllProxiesGin
+DEBUG: Final operationId: forceCheckAllProxies
+DEBUG: generateOperationID - handlerName=TestProxyGin, funcName=TestProxyGin
+DEBUG: Removing standard suffixes from: TestProxyGin
+DEBUG: Removing Gin suffix from TestProxyGin
+DEBUG: Final operationId: testProxy
+DEBUG: generateOperationID - handlerName=Login, funcName=Login
+DEBUG: Removing standard suffixes from: Login
+DEBUG: Removing Gin suffix from Login
+DEBUG: Final operationId: login
+DEBUG: generateOperationID - handlerName=Logout, funcName=Logout
+DEBUG: Removing standard suffixes from: Logout
+DEBUG: Removing Gin suffix from Logout
+DEBUG: Final operationId: logout
+DEBUG: generateOperationID - handlerName=Me, funcName=Me
+DEBUG: Converting Me to getCurrentUser
+DEBUG: generateOperationID - handlerName=ChangePassword, funcName=ChangePassword
+DEBUG: Removing standard suffixes from: ChangePassword
+DEBUG: Removing Gin suffix from ChangePassword
+DEBUG: Final operationId: changePassword
+DEBUG: generateOperationID - handlerName=RefreshSession, funcName=RefreshSession
+DEBUG: Removing standard suffixes from: RefreshSession
+DEBUG: Removing Gin suffix from RefreshSession
+DEBUG: Final operationId: refreshSession
+DEBUG: generateOperationID - handlerName=HandleBulkDatabaseQuery, funcName=HandleBulkDatabaseQuery
+DEBUG: Removing standard suffixes from: HandleBulkDatabaseQuery
+DEBUG: Removing Gin suffix from HandleBulkDatabaseQuery
+DEBUG: Final operationId: handleBulkDatabaseQuery
+DEBUG: generateOperationID - handlerName=HandleBulkDatabaseStats, funcName=HandleBulkDatabaseStats
+DEBUG: Removing standard suffixes from: HandleBulkDatabaseStats
+DEBUG: Removing Gin suffix from HandleBulkDatabaseStats
+DEBUG: Final operationId: handleBulkDatabaseStats
 DEBUG: generateOperationID - handlerName=ListAllPersonasGin, funcName=ListAllPersonasGin
 DEBUG: Removing standard suffixes from: ListAllPersonasGin
 DEBUG: Removing Gin suffix from ListAllPersonasGin
@@ -473,6 +513,54 @@ DEBUG: generateOperationID - handlerName=TestPersonaGin, funcName=TestPersonaGin
 DEBUG: Removing standard suffixes from: TestPersonaGin
 DEBUG: Removing Gin suffix from TestPersonaGin
 DEBUG: Final operationId: testPersona
+DEBUG: generateOperationID - handlerName=ListProxyPoolsGin, funcName=ListProxyPoolsGin
+DEBUG: Removing standard suffixes from: ListProxyPoolsGin
+DEBUG: Removing Gin suffix from ListProxyPoolsGin
+DEBUG: Final operationId: listProxyPools
+DEBUG: generateOperationID - handlerName=CreateProxyPoolGin, funcName=CreateProxyPoolGin
+DEBUG: Removing standard suffixes from: CreateProxyPoolGin
+DEBUG: Removing Gin suffix from CreateProxyPoolGin
+DEBUG: Final operationId: createProxyPool
+DEBUG: generateOperationID - handlerName=UpdateProxyPoolGin, funcName=UpdateProxyPoolGin
+DEBUG: Removing standard suffixes from: UpdateProxyPoolGin
+DEBUG: Removing Gin suffix from UpdateProxyPoolGin
+DEBUG: Final operationId: updateProxyPool
+DEBUG: generateOperationID - handlerName=DeleteProxyPoolGin, funcName=DeleteProxyPoolGin
+DEBUG: Removing standard suffixes from: DeleteProxyPoolGin
+DEBUG: Removing Gin suffix from DeleteProxyPoolGin
+DEBUG: Final operationId: deleteProxyPool
+DEBUG: generateOperationID - handlerName=AddProxyToPoolGin, funcName=AddProxyToPoolGin
+DEBUG: Removing standard suffixes from: AddProxyToPoolGin
+DEBUG: Removing Gin suffix from AddProxyToPoolGin
+DEBUG: Final operationId: addProxyToPool
+DEBUG: generateOperationID - handlerName=RemoveProxyFromPoolGin, funcName=RemoveProxyFromPoolGin
+DEBUG: Removing standard suffixes from: RemoveProxyFromPoolGin
+DEBUG: Removing Gin suffix from RemoveProxyFromPoolGin
+DEBUG: Final operationId: removeProxyFromPool
+DEBUG: generateOperationID - handlerName=GetFeatureFlagsGin, funcName=GetFeatureFlagsGin
+DEBUG: Removing standard suffixes from: GetFeatureFlagsGin
+DEBUG: Removing Gin suffix from GetFeatureFlagsGin
+DEBUG: Final operationId: getFeatureFlags
+DEBUG: generateOperationID - handlerName=UpdateFeatureFlagsGin, funcName=UpdateFeatureFlagsGin
+DEBUG: Removing standard suffixes from: UpdateFeatureFlagsGin
+DEBUG: Removing Gin suffix from UpdateFeatureFlagsGin
+DEBUG: Final operationId: updateFeatureFlags
+DEBUG: generateOperationID - handlerName=HandleConnections, funcName=HandleConnections
+DEBUG: Removing standard suffixes from: HandleConnections
+DEBUG: Removing Gin suffix from HandleConnections
+DEBUG: Final operationId: handleConnections
+DEBUG: generateOperationID - handlerName=BatchExtractKeywordsGin, funcName=BatchExtractKeywordsGin
+DEBUG: Removing standard suffixes from: BatchExtractKeywordsGin
+DEBUG: Removing Gin suffix from BatchExtractKeywordsGin
+DEBUG: Final operationId: batchExtractKeywords
+DEBUG: generateOperationID - handlerName=StreamExtractKeywordsGin, funcName=StreamExtractKeywordsGin
+DEBUG: Removing standard suffixes from: StreamExtractKeywordsGin
+DEBUG: Removing Gin suffix from StreamExtractKeywordsGin
+DEBUG: Final operationId: streamExtractKeywords
+DEBUG: generateOperationID - handlerName=PingHandlerGin, funcName=PingHandlerGin
+DEBUG: Removing standard suffixes from: PingHandlerGin
+DEBUG: Removing Gin suffix from PingHandlerGin
+DEBUG: Final operationId: ping
 DEBUG: generateOperationID - handlerName=GetServerConfigGin, funcName=GetServerConfigGin
 DEBUG: Removing standard suffixes from: GetServerConfigGin
 DEBUG: Preserving Gin suffix for config endpoint GetServerConfigGin
@@ -537,219 +625,179 @@ DEBUG: generateOperationID - handlerName=UpdateProxyManagerConfigGin, funcName=U
 DEBUG: Removing standard suffixes from: UpdateProxyManagerConfigGin
 DEBUG: Preserving Gin suffix for config endpoint UpdateProxyManagerConfigGin
 DEBUG: Final operationId: updateProxyManagerConfigGin
-DEBUG: generateOperationID - handlerName=Login, funcName=Login
-DEBUG: Removing standard suffixes from: Login
-DEBUG: Removing Gin suffix from Login
-DEBUG: Final operationId: login
-DEBUG: generateOperationID - handlerName=Logout, funcName=Logout
-DEBUG: Removing standard suffixes from: Logout
-DEBUG: Removing Gin suffix from Logout
-DEBUG: Final operationId: logout
-DEBUG: generateOperationID - handlerName=Me, funcName=Me
-DEBUG: Converting Me to getCurrentUser
-DEBUG: generateOperationID - handlerName=ChangePassword, funcName=ChangePassword
-DEBUG: Removing standard suffixes from: ChangePassword
-DEBUG: Removing Gin suffix from ChangePassword
-DEBUG: Final operationId: changePassword
-DEBUG: generateOperationID - handlerName=RefreshSession, funcName=RefreshSession
-DEBUG: Removing standard suffixes from: RefreshSession
-DEBUG: Removing Gin suffix from RefreshSession
-DEBUG: Final operationId: refreshSession
-DEBUG: generateOperationID - handlerName=BatchExtractKeywordsGin, funcName=BatchExtractKeywordsGin
-DEBUG: Removing standard suffixes from: BatchExtractKeywordsGin
-DEBUG: Removing Gin suffix from BatchExtractKeywordsGin
-DEBUG: Final operationId: batchExtractKeywords
-DEBUG: generateOperationID - handlerName=StreamExtractKeywordsGin, funcName=StreamExtractKeywordsGin
-DEBUG: Removing standard suffixes from: StreamExtractKeywordsGin
-DEBUG: Removing Gin suffix from StreamExtractKeywordsGin
-DEBUG: Final operationId: streamExtractKeywords
-DEBUG: generateOperationID - handlerName=CreateKeywordSetGin, funcName=CreateKeywordSetGin
-DEBUG: Removing standard suffixes from: CreateKeywordSetGin
-DEBUG: Removing Gin suffix from CreateKeywordSetGin
-DEBUG: Final operationId: createKeywordSet
-DEBUG: generateOperationID - handlerName=ListKeywordSetsGin, funcName=ListKeywordSetsGin
-DEBUG: Removing standard suffixes from: ListKeywordSetsGin
-DEBUG: Removing Gin suffix from ListKeywordSetsGin
-DEBUG: Final operationId: listKeywordSets
-DEBUG: generateOperationID - handlerName=GetKeywordSetGin, funcName=GetKeywordSetGin
-DEBUG: Removing standard suffixes from: GetKeywordSetGin
-DEBUG: Removing Gin suffix from GetKeywordSetGin
-DEBUG: Final operationId: getKeywordSet
-DEBUG: generateOperationID - handlerName=UpdateKeywordSetGin, funcName=UpdateKeywordSetGin
-DEBUG: Removing standard suffixes from: UpdateKeywordSetGin
-DEBUG: Removing Gin suffix from UpdateKeywordSetGin
-DEBUG: Final operationId: updateKeywordSet
-DEBUG: generateOperationID - handlerName=DeleteKeywordSetGin, funcName=DeleteKeywordSetGin
-DEBUG: Removing standard suffixes from: DeleteKeywordSetGin
-DEBUG: Removing Gin suffix from DeleteKeywordSetGin
-DEBUG: Final operationId: deleteKeywordSet
-DEBUG: generateOperationID - handlerName=HandleBulkDatabaseQuery, funcName=HandleBulkDatabaseQuery
-DEBUG: Removing standard suffixes from: HandleBulkDatabaseQuery
-DEBUG: Removing Gin suffix from HandleBulkDatabaseQuery
-DEBUG: Final operationId: handleBulkDatabaseQuery
-DEBUG: generateOperationID - handlerName=HandleBulkDatabaseStats, funcName=HandleBulkDatabaseStats
-DEBUG: Removing standard suffixes from: HandleBulkDatabaseStats
-DEBUG: Removing Gin suffix from HandleBulkDatabaseStats
-DEBUG: Final operationId: handleBulkDatabaseStats
-DEBUG: generateOperationID - handlerName=ListProxiesGin, funcName=ListProxiesGin
-DEBUG: Removing standard suffixes from: ListProxiesGin
-DEBUG: Removing Gin suffix from ListProxiesGin
-DEBUG: Final operationId: listProxies
-DEBUG: generateOperationID - handlerName=AddProxyGin, funcName=AddProxyGin
-DEBUG: Removing standard suffixes from: AddProxyGin
-DEBUG: Removing Gin suffix from AddProxyGin
-DEBUG: Final operationId: addProxy
-DEBUG: generateOperationID - handlerName=UpdateProxyGin, funcName=UpdateProxyGin
-DEBUG: Removing standard suffixes from: UpdateProxyGin
-DEBUG: Removing Gin suffix from UpdateProxyGin
-DEBUG: Final operationId: updateProxy
-DEBUG: generateOperationID - handlerName=DeleteProxyGin, funcName=DeleteProxyGin
-DEBUG: Removing standard suffixes from: DeleteProxyGin
-DEBUG: Removing Gin suffix from DeleteProxyGin
-DEBUG: Final operationId: deleteProxy
-DEBUG: generateOperationID - handlerName=GetProxyStatusesGin, funcName=GetProxyStatusesGin
-DEBUG: Removing standard suffixes from: GetProxyStatusesGin
-DEBUG: Removing Gin suffix from GetProxyStatusesGin
-DEBUG: Final operationId: getProxyStatuses
-DEBUG: generateOperationID - handlerName=ForceCheckSingleProxyGin, funcName=ForceCheckSingleProxyGin
-DEBUG: Removing standard suffixes from: ForceCheckSingleProxyGin
-DEBUG: Removing Gin suffix from ForceCheckSingleProxyGin
-DEBUG: Final operationId: forceCheckSingleProxy
-DEBUG: generateOperationID - handlerName=ForceCheckAllProxiesGin, funcName=ForceCheckAllProxiesGin
-DEBUG: Removing standard suffixes from: ForceCheckAllProxiesGin
-DEBUG: Removing Gin suffix from ForceCheckAllProxiesGin
-DEBUG: Final operationId: forceCheckAllProxies
-DEBUG: generateOperationID - handlerName=TestProxyGin, funcName=TestProxyGin
-DEBUG: Removing standard suffixes from: TestProxyGin
-DEBUG: Removing Gin suffix from TestProxyGin
-DEBUG: Final operationId: testProxy
 Scanning package: ./internal/models
-2025/07/25 14:17:54 Discovered 67 routes
-2025/07/25 14:17:54 Generating OpenAPI operations...
-2025/07/25 14:17:54 Route GET /health has 0 parameters
-2025/07/25 14:17:54 Route GET /health/ready has 0 parameters
-2025/07/25 14:17:54 Route GET /health/live has 0 parameters
-2025/07/25 14:17:54 Route GET /ping has 0 parameters
-2025/07/25 14:17:54 Route GET /proxy-pools has 0 parameters
-2025/07/25 14:17:54 Route POST /proxy-pools has 0 parameters
-2025/07/25 14:17:54 Route PUT /proxy-pools/{poolId} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: poolId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route DELETE /proxy-pools/{poolId} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: poolId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route POST /proxy-pools/{poolId}/proxies has 1 parameters
-2025/07/25 14:17:54   Parameter 0: poolId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route DELETE /proxy-pools/{poolId}/proxies/{proxyId} has 2 parameters
-2025/07/25 14:17:54   Parameter 0: poolId (in: path, type: string, required: true)
-2025/07/25 14:17:54   Parameter 1: proxyId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route GET /ws has 1 parameters
-2025/07/25 14:17:54   Parameter 0: domainflow_session (in: header, type: string, required: false)
-2025/07/25 14:17:54 Route POST /campaigns/lead-generation has 0 parameters
-2025/07/25 14:17:54 Route POST /campaigns/{campaignId}/phases/{phase}/configure has 2 parameters
-2025/07/25 14:17:54   Parameter 0: campaignId (in: path, type: string, required: true)
-2025/07/25 14:17:54   Parameter 1: phase (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route POST /campaigns/{campaignId}/phases/{phase}/start has 2 parameters
-2025/07/25 14:17:54   Parameter 0: campaignId (in: path, type: string, required: true)
-2025/07/25 14:17:54   Parameter 1: phase (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route GET /campaigns/{campaignId}/phases/{phase}/status has 2 parameters
-2025/07/25 14:17:54   Parameter 0: campaignId (in: path, type: string, required: true)
-2025/07/25 14:17:54   Parameter 1: phase (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route GET /campaigns/{campaignId}/progress has 1 parameters
-2025/07/25 14:17:54   Parameter 0: campaignId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route GET /campaigns has 0 parameters
-2025/07/25 14:17:54 Route POST /campaigns/bulk/enriched-data has 0 parameters
-2025/07/25 14:17:54 Route POST /campaigns/domain-generation/pattern-offset has 0 parameters
-2025/07/25 14:17:54 Route GET /feature-flags has 0 parameters
-2025/07/25 14:17:54 Route PUT /feature-flags has 0 parameters
-2025/07/25 14:17:54 Route GET /personas has 4 parameters
-2025/07/25 14:17:54   Parameter 0: limit (in: query, type: integer, required: false)
-2025/07/25 14:17:54   Parameter 1: offset (in: query, type: integer, required: false)
-2025/07/25 14:17:54   Parameter 2: isEnabled (in: query, type: boolean, required: false)
-2025/07/25 14:17:54   Parameter 3: personaType (in: query, type: string, required: false)
-2025/07/25 14:17:54 Route POST /personas has 0 parameters
-2025/07/25 14:17:54 Route GET /personas/{id} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: id (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route GET /personas/http/{id} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: id (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route GET /personas/dns/{id} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: id (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route PUT /personas/{id} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: id (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route DELETE /personas/{id} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: id (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route POST /personas/{id}/test has 1 parameters
-2025/07/25 14:17:54   Parameter 0: id (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route GET /server/config has 0 parameters
-2025/07/25 14:17:54 Route PUT /server/config has 0 parameters
-2025/07/25 14:17:54 Route GET /server/dns-config has 0 parameters
-2025/07/25 14:17:54 Route PUT /server/dns-config has 0 parameters
-2025/07/25 14:17:54 Route GET /server/http-config has 0 parameters
-2025/07/25 14:17:54 Route PUT /server/http-config has 0 parameters
-2025/07/25 14:17:54 Route GET /server/logging-config has 0 parameters
-2025/07/25 14:17:54 Route PUT /server/logging-config has 0 parameters
-2025/07/25 14:17:54 Route GET /server/worker-config has 0 parameters
-2025/07/25 14:17:54 Route PUT /server/worker-config has 0 parameters
-2025/07/25 14:17:54 Route GET /server/rate-limiter-config has 0 parameters
-2025/07/25 14:17:54 Route PUT /server/rate-limiter-config has 0 parameters
-2025/07/25 14:17:54 Route GET /server/auth-config has 0 parameters
-2025/07/25 14:17:54 Route PUT /server/auth-config has 0 parameters
-2025/07/25 14:17:54 Route GET /server/proxy-manager-config has 0 parameters
-2025/07/25 14:17:54 Route PUT /server/proxy-manager-config has 0 parameters
-2025/07/25 14:17:54 Route POST /auth/login has 0 parameters
-2025/07/25 14:17:54 Route POST /auth/logout has 0 parameters
-2025/07/25 14:17:54 Route GET /auth/me has 0 parameters
-2025/07/25 14:17:54 Route POST /auth/change-password has 0 parameters
-2025/07/25 14:17:54 Route POST /auth/refresh has 0 parameters
-2025/07/25 14:17:54 Route POST /keyword-extraction/batch has 0 parameters
-2025/07/25 14:17:54 Route GET /keyword-extraction/stream has 4 parameters
-2025/07/25 14:17:54   Parameter 0: url (in: query, type: string, required: true)
-2025/07/25 14:17:54   Parameter 1: keywordSetId (in: query, type: string, required: true)
-2025/07/25 14:17:54   Parameter 2: httpPersonaId (in: query, type: string, required: false)
-2025/07/25 14:17:54   Parameter 3: dnsPersonaId (in: query, type: string, required: false)
-2025/07/25 14:17:54 Route POST /keywords/sets has 0 parameters
-2025/07/25 14:17:54 Route GET /keywords/sets has 4 parameters
-2025/07/25 14:17:54   Parameter 0: limit (in: query, type: integer, required: false)
-2025/07/25 14:17:54   Parameter 1: offset (in: query, type: integer, required: false)
-2025/07/25 14:17:54   Parameter 2: includeRules (in: query, type: boolean, required: false)
-2025/07/25 14:17:54   Parameter 3: isEnabled (in: query, type: boolean, required: false)
-2025/07/25 14:17:54 Route GET /keywords/sets/{setId} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: setId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route PUT /keywords/sets/{setId} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: setId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route DELETE /keywords/sets/{setId} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: setId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route POST /api/v2/database/query has 1 parameters
-2025/07/25 14:17:54   Parameter 0: X-Requested-With (in: header, type: string, required: true)
-2025/07/25 14:17:54 Route POST /api/v2/database/stats has 1 parameters
-2025/07/25 14:17:54   Parameter 0: X-Requested-With (in: header, type: string, required: true)
-2025/07/25 14:17:54 Route GET /proxies has 5 parameters
-2025/07/25 14:17:54   Parameter 0: limit (in: query, type: integer, required: false)
-2025/07/25 14:17:54   Parameter 1: offset (in: query, type: integer, required: false)
-2025/07/25 14:17:54   Parameter 2: protocol (in: query, type: string, required: false)
-2025/07/25 14:17:54   Parameter 3: isEnabled (in: query, type: boolean, required: false)
-2025/07/25 14:17:54   Parameter 4: isHealthy (in: query, type: boolean, required: false)
-2025/07/25 14:17:54 Route POST /proxies has 0 parameters
-2025/07/25 14:17:54 Route PUT /proxies/{proxyId} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: proxyId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route DELETE /proxies/{proxyId} has 1 parameters
-2025/07/25 14:17:54   Parameter 0: proxyId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route GET /proxies/status has 0 parameters
-2025/07/25 14:17:54 Route POST /proxies/{proxyId}/health-check has 1 parameters
-2025/07/25 14:17:54   Parameter 0: proxyId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Route POST /proxies/health-check has 0 parameters
-2025/07/25 14:17:54 Route POST /proxies/{proxyId}/test has 1 parameters
-2025/07/25 14:17:54   Parameter 0: proxyId (in: path, type: string, required: true)
-2025/07/25 14:17:54 Generated 48 paths with operations
-2025/07/25 14:17:54 Generating schemas...
+Scanning package: ./internal/config
+2025/07/28 11:17:08 Discovered 67 routes
+2025/07/28 11:17:08 Generating OpenAPI operations...
+2025/07/28 11:17:08 Route POST /campaigns/lead-generation has 0 parameters
+2025/07/28 11:17:08 Route POST /campaigns/{campaignId}/phases/{phase}/configure has 2 parameters
+2025/07/28 11:17:08   Parameter 0: campaignId (in: path, type: string, required: true)
+2025/07/28 11:17:08   Parameter 1: phase (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route POST /campaigns/{campaignId}/phases/{phase}/start has 2 parameters
+2025/07/28 11:17:08   Parameter 0: campaignId (in: path, type: string, required: true)
+2025/07/28 11:17:08   Parameter 1: phase (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /campaigns/{campaignId}/phases/{phase}/status has 2 parameters
+2025/07/28 11:17:08   Parameter 0: campaignId (in: path, type: string, required: true)
+2025/07/28 11:17:08   Parameter 1: phase (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /campaigns/{campaignId}/progress has 1 parameters
+2025/07/28 11:17:08   Parameter 0: campaignId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /campaigns has 0 parameters
+2025/07/28 11:17:08 Route POST /campaigns/bulk/enriched-data has 0 parameters
+2025/07/28 11:17:08 Route POST /campaigns/domain-generation/pattern-offset has 0 parameters
+2025/07/28 11:17:08 Route GET /health has 0 parameters
+2025/07/28 11:17:08 Route GET /health/ready has 0 parameters
+2025/07/28 11:17:08 Route GET /health/live has 0 parameters
+2025/07/28 11:17:08 Route POST /keywords/sets has 0 parameters
+2025/07/28 11:17:08 Route GET /keywords/sets has 4 parameters
+2025/07/28 11:17:08   Parameter 0: limit (in: query, type: integer, required: false)
+2025/07/28 11:17:08   Parameter 1: offset (in: query, type: integer, required: false)
+2025/07/28 11:17:08   Parameter 2: includeRules (in: query, type: boolean, required: false)
+2025/07/28 11:17:08   Parameter 3: isEnabled (in: query, type: boolean, required: false)
+2025/07/28 11:17:08 Route GET /keywords/sets/{setId} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: setId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route PUT /keywords/sets/{setId} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: setId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route DELETE /keywords/sets/{setId} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: setId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /proxies has 5 parameters
+2025/07/28 11:17:08   Parameter 0: limit (in: query, type: integer, required: false)
+2025/07/28 11:17:08   Parameter 1: offset (in: query, type: integer, required: false)
+2025/07/28 11:17:08   Parameter 2: protocol (in: query, type: string, required: false)
+2025/07/28 11:17:08   Parameter 3: isEnabled (in: query, type: boolean, required: false)
+2025/07/28 11:17:08   Parameter 4: isHealthy (in: query, type: boolean, required: false)
+2025/07/28 11:17:08 Route POST /proxies has 0 parameters
+2025/07/28 11:17:08 Route PUT /proxies/{proxyId} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: proxyId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route DELETE /proxies/{proxyId} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: proxyId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /proxies/status has 0 parameters
+2025/07/28 11:17:08 Route POST /proxies/{proxyId}/health-check has 1 parameters
+2025/07/28 11:17:08   Parameter 0: proxyId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route POST /proxies/health-check has 0 parameters
+2025/07/28 11:17:08 Route POST /proxies/{proxyId}/test has 1 parameters
+2025/07/28 11:17:08   Parameter 0: proxyId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route POST /auth/login has 0 parameters
+2025/07/28 11:17:08 Route POST /auth/logout has 0 parameters
+2025/07/28 11:17:08 Route GET /auth/me has 0 parameters
+2025/07/28 11:17:08 Route POST /auth/change-password has 0 parameters
+2025/07/28 11:17:08 Route POST /auth/refresh has 0 parameters
+2025/07/28 11:17:08 Route POST /api/v2/database/query has 1 parameters
+2025/07/28 11:17:08   Parameter 0: X-Requested-With (in: header, type: string, required: true)
+2025/07/28 11:17:08 Route POST /api/v2/database/stats has 1 parameters
+2025/07/28 11:17:08   Parameter 0: X-Requested-With (in: header, type: string, required: true)
+2025/07/28 11:17:08 Route GET /personas has 4 parameters
+2025/07/28 11:17:08   Parameter 0: limit (in: query, type: integer, required: false)
+2025/07/28 11:17:08   Parameter 1: offset (in: query, type: integer, required: false)
+2025/07/28 11:17:08   Parameter 2: isEnabled (in: query, type: boolean, required: false)
+2025/07/28 11:17:08   Parameter 3: personaType (in: query, type: string, required: false)
+2025/07/28 11:17:08 Route POST /personas has 0 parameters
+2025/07/28 11:17:08 Route GET /personas/{id} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: id (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /personas/http/{id} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: id (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /personas/dns/{id} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: id (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route PUT /personas/{id} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: id (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route DELETE /personas/{id} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: id (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route POST /personas/{id}/test has 1 parameters
+2025/07/28 11:17:08   Parameter 0: id (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /proxy-pools has 0 parameters
+2025/07/28 11:17:08 Route POST /proxy-pools has 0 parameters
+2025/07/28 11:17:08 Route PUT /proxy-pools/{poolId} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: poolId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route DELETE /proxy-pools/{poolId} has 1 parameters
+2025/07/28 11:17:08   Parameter 0: poolId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route POST /proxy-pools/{poolId}/proxies has 1 parameters
+2025/07/28 11:17:08   Parameter 0: poolId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route DELETE /proxy-pools/{poolId}/proxies/{proxyId} has 2 parameters
+2025/07/28 11:17:08   Parameter 0: poolId (in: path, type: string, required: true)
+2025/07/28 11:17:08   Parameter 1: proxyId (in: path, type: string, required: true)
+2025/07/28 11:17:08 Route GET /feature-flags has 0 parameters
+2025/07/28 11:17:08 Route PUT /feature-flags has 0 parameters
+2025/07/28 11:17:08 Route GET /ws has 1 parameters
+2025/07/28 11:17:08   Parameter 0: domainflow_session (in: header, type: string, required: false)
+2025/07/28 11:17:08 Route POST /keyword-extraction/batch has 0 parameters
+2025/07/28 11:17:08 Route GET /keyword-extraction/stream has 4 parameters
+2025/07/28 11:17:08   Parameter 0: url (in: query, type: string, required: true)
+2025/07/28 11:17:08   Parameter 1: keywordSetId (in: query, type: string, required: true)
+2025/07/28 11:17:08   Parameter 2: httpPersonaId (in: query, type: string, required: false)
+2025/07/28 11:17:08   Parameter 3: dnsPersonaId (in: query, type: string, required: false)
+2025/07/28 11:17:08 Route GET /ping has 0 parameters
+2025/07/28 11:17:08 Route GET /server/config has 0 parameters
+2025/07/28 11:17:08 Route PUT /server/config has 0 parameters
+2025/07/28 11:17:08 Route GET /server/dns-config has 0 parameters
+2025/07/28 11:17:08 Route PUT /server/dns-config has 0 parameters
+2025/07/28 11:17:08 Route GET /server/http-config has 0 parameters
+2025/07/28 11:17:08 Route PUT /server/http-config has 0 parameters
+2025/07/28 11:17:08 Route GET /server/logging-config has 0 parameters
+2025/07/28 11:17:08 Route PUT /server/logging-config has 0 parameters
+2025/07/28 11:17:08 Route GET /server/worker-config has 0 parameters
+2025/07/28 11:17:08 Route PUT /server/worker-config has 0 parameters
+2025/07/28 11:17:08 Route GET /server/rate-limiter-config has 0 parameters
+2025/07/28 11:17:08 Route PUT /server/rate-limiter-config has 0 parameters
+2025/07/28 11:17:08 Route GET /server/auth-config has 0 parameters
+2025/07/28 11:17:08 Route PUT /server/auth-config has 0 parameters
+2025/07/28 11:17:08 Route GET /server/proxy-manager-config has 0 parameters
+2025/07/28 11:17:08 Route PUT /server/proxy-manager-config has 0 parameters
+2025/07/28 11:17:08 Generated 48 paths with operations
+2025/07/28 11:17:08 Generating schemas...
+Skipping registration of excluded type: AuthHandler
 Skipping registration of excluded type: StatusResponseWriter
 Skipping registration of excluded type: WebSocketHandler
-Skipping registration of excluded type: CampaignOrchestratorAPIHandler
-Skipping registration of excluded type: AuthHandler
-Skipping registration of excluded type: APIHandler
 Skipping registration of excluded type: HealthCheckHandler
+Skipping registration of excluded type: CampaignOrchestratorAPIHandler
+Skipping registration of excluded type: APIHandler
+Generated schema for business entity: HttpPersonaConfig (clean name: HttpPersonaConfig)
+Generated schema for business entity: HTTP2SettingsConfig (clean name: HTTP2SettingsConfig)
+Applied enum constraints to field: [round_robin random weighted priority random_rotation weighted_rotation sequential_failover]
+Generated schema for business entity: DnsPersonaConfig (clean name: DnsPersonaConfig)
+Generated schema for business entity: PasswordResetToken (clean name: PasswordResetToken)
+Generated schema for business entity: SecurityEvent (clean name: SecurityEvent)
+Generated schema for business entity: AuthorizationDecision (clean name: AuthorizationDecision)
+Generated schema for business entity: CampaignAccessGrant (clean name: CampaignAccessGrant)
+Generated schema for business entity: CacheConfiguration (clean name: CacheConfiguration)
+Generated schema for business entity: CacheEntry (clean name: CacheEntry)
+Generated schema for business entity: CacheInvalidationLog (clean name: CacheInvalidationLog)
+Generated schema for business entity: CacheInvalidation (clean name: CacheInvalidation)
+Generated schema for business entity: CacheMetric (clean name: CacheMetric)
 Generated schema for business entity: UserAPI (clean name: UserAPI)
 Generated schema for business entity: LoginResponseAPI (clean name: LoginResponseAPI)
+Applied enum constraints to field: [domain_generation dns_validation http_keyword_validation analysis]
+Applied enum constraints to field: [not_started ready configured in_progress paused completed failed]
 Generated schema for business entity: CampaignAPI (clean name: CampaignAPI)
+Generated schema for business entity: ConfigLock (clean name: ConfigLock)
+Generated schema for business entity: ConfigVersion (clean name: ConfigVersion)
+Generated schema for business entity: ServiceArchitectureMetric (clean name: ServiceArchitectureMetric)
+Generated schema for business entity: ServiceDependency (clean name: ServiceDependency)
+Generated schema for business entity: ArchitectureRefactorLog (clean name: ArchitectureRefactorLog)
+Generated schema for business entity: CommunicationPattern (clean name: CommunicationPattern)
+Generated schema for business entity: ServiceCapacityMetric (clean name: ServiceCapacityMetric)
+Generated schema for business entity: EventStoreRecord (clean name: EventStoreRecord)
+Generated schema for business entity: EventProjection (clean name: EventProjection)
+Generated schema for business entity: CampaignStateEvent (clean name: CampaignStateEvent)
+Generated schema for business entity: CampaignStateSnapshot (clean name: CampaignStateSnapshot)
+Generated schema for business entity: CampaignStateTransition (clean name: CampaignStateTransition)
+Generated schema for business entity: User (clean name: User)
+Generated schema for business entity: Session (clean name: Session)
+Generated schema for business entity: AuthAuditLog (clean name: AuthAuditLog)
+Generated schema for business entity: RateLimit (clean name: RateLimit)
+Generated schema for business entity: LoginRequest (clean name: LoginRequest)
+Generated schema for business entity: LoginResponse (clean name: LoginResponse)
+Generated schema for business entity: ChangePasswordRequest (clean name: ChangePasswordRequest)
+Generated schema for business entity: CreateUserRequest (clean name: CreateUserRequest)
+Generated schema for business entity: UpdateUserRequest (clean name: UpdateUserRequest)
+Generated schema for business entity: AuthResult (clean name: AuthResult)
+Generated schema for business entity: SecurityContext (clean name: SecurityContext)
+Generated schema for business entity: ErrorResponse (clean name: ErrorResponse)
 Generated schema for business entity: GeneralErrorResponse (clean name: GeneralErrorResponse)
+Generated schema for business entity: ConnectionPoolMetrics (clean name: ConnectionPoolMetrics)
+Generated schema for business entity: QueryPerformanceReport (clean name: QueryPerformanceReport)
+Generated schema for business entity: ConnectionPoolReport (clean name: ConnectionPoolReport)
+Generated schema for business entity: DatabaseOptimizationRecommendation (clean name: DatabaseOptimizationRecommendation)
+Generated schema for business entity: PaginationPerformanceMetric (clean name: PaginationPerformanceMetric)
+Generated schema for business entity: PerformanceThreshold (clean name: PerformanceThreshold)
 Generated schema for business entity: DNSPhaseConfigRequest (clean name: DNSPhaseConfigRequest)
 Generated schema for business entity: HTTPPhaseConfigRequest (clean name: HTTPPhaseConfigRequest)
 Applied enum constraints to field: [round_robin random weighted priority]
@@ -813,54 +861,6 @@ Applied enum constraints to field: [http https socks5 socks4]
 Generated schema for business entity: CreateProxyRequest (clean name: CreateProxyRequest)
 Applied enum constraints to field: [http https socks5 socks4]
 Generated schema for business entity: UpdateProxyRequest (clean name: UpdateProxyRequest)
-Generated schema for business entity: ConnectionPoolMetrics (clean name: ConnectionPoolMetrics)
-Generated schema for business entity: QueryPerformanceReport (clean name: QueryPerformanceReport)
-Generated schema for business entity: ConnectionPoolReport (clean name: ConnectionPoolReport)
-Generated schema for business entity: DatabaseOptimizationRecommendation (clean name: DatabaseOptimizationRecommendation)
-Generated schema for business entity: PaginationPerformanceMetric (clean name: PaginationPerformanceMetric)
-Generated schema for business entity: PerformanceThreshold (clean name: PerformanceThreshold)
-Generated schema for business entity: HttpPersonaConfig (clean name: HttpPersonaConfig)
-Generated schema for business entity: HTTP2SettingsConfig (clean name: HTTP2SettingsConfig)
-Applied enum constraints to field: [round_robin random weighted priority random_rotation weighted_rotation sequential_failover]
-Generated schema for business entity: DnsPersonaConfig (clean name: DnsPersonaConfig)
-Generated schema for business entity: PasswordResetToken (clean name: PasswordResetToken)
-Generated schema for business entity: SecurityEvent (clean name: SecurityEvent)
-Generated schema for business entity: AuthorizationDecision (clean name: AuthorizationDecision)
-Generated schema for business entity: CampaignAccessGrant (clean name: CampaignAccessGrant)
-Generated schema for business entity: CacheConfiguration (clean name: CacheConfiguration)
-Generated schema for business entity: CacheEntry (clean name: CacheEntry)
-Generated schema for business entity: CacheInvalidationLog (clean name: CacheInvalidationLog)
-Generated schema for business entity: CacheInvalidation (clean name: CacheInvalidation)
-Generated schema for business entity: CacheMetric (clean name: CacheMetric)
-Generated schema for business entity: ConfigLock (clean name: ConfigLock)
-Generated schema for business entity: ConfigVersion (clean name: ConfigVersion)
-Generated schema for business entity: ServiceArchitectureMetric (clean name: ServiceArchitectureMetric)
-Generated schema for business entity: ServiceDependency (clean name: ServiceDependency)
-Generated schema for business entity: ArchitectureRefactorLog (clean name: ArchitectureRefactorLog)
-Generated schema for business entity: CommunicationPattern (clean name: CommunicationPattern)
-Generated schema for business entity: ServiceCapacityMetric (clean name: ServiceCapacityMetric)
-Generated schema for business entity: EventStoreRecord (clean name: EventStoreRecord)
-Generated schema for business entity: EventProjection (clean name: EventProjection)
-Generated schema for business entity: CampaignStateEvent (clean name: CampaignStateEvent)
-Generated schema for business entity: CampaignStateSnapshot (clean name: CampaignStateSnapshot)
-Generated schema for business entity: CampaignStateTransition (clean name: CampaignStateTransition)
-Generated schema for business entity: User (clean name: User)
-Generated schema for business entity: Session (clean name: Session)
-Generated schema for business entity: AuthAuditLog (clean name: AuthAuditLog)
-Generated schema for business entity: RateLimit (clean name: RateLimit)
-Generated schema for business entity: LoginRequest (clean name: LoginRequest)
-Generated schema for business entity: LoginResponse (clean name: LoginResponse)
-Generated schema for business entity: ChangePasswordRequest (clean name: ChangePasswordRequest)
-Generated schema for business entity: CreateUserRequest (clean name: CreateUserRequest)
-Generated schema for business entity: UpdateUserRequest (clean name: UpdateUserRequest)
-Generated schema for business entity: AuthResult (clean name: AuthResult)
-Generated schema for business entity: SecurityContext (clean name: SecurityContext)
-Generated schema for business entity: ErrorResponse (clean name: ErrorResponse)
-Generated schema for business entity: StreamingResponseHandler (clean name: StreamingResponseHandler)
-Generated schema for business entity: KeywordExtractionRequestItem (clean name: KeywordExtractionRequestItem)
-Generated schema for business entity: BatchKeywordExtractionRequest (clean name: BatchKeywordExtractionRequest)
-Generated schema for business entity: KeywordExtractionAPIResult (clean name: KeywordExtractionAPIResult)
-Generated schema for business entity: BatchKeywordExtractionResponse (clean name: BatchKeywordExtractionResponse)
 Applied enum constraints to field: [prefix suffix both]
 Generated schema for business entity: PatternOffsetRequest (clean name: PatternOffsetRequest)
 Generated schema for business entity: PatternOffsetResponse (clean name: PatternOffsetResponse)
@@ -944,10 +944,17 @@ Applied enum constraints to field: [basic comprehensive custom]
 Generated schema for business entity: AnalysisConfig (clean name: AnalysisConfig)
 Applied enum constraints to field: [domain_generation dns_validation http_keyword_validation analysis]
 Generated schema for business entity: PhaseStartRequest (clean name: PhaseStartRequest)
+Generated schema for business entity: StreamingResponseHandler (clean name: StreamingResponseHandler)
+Applied enum constraints to field: [string regex]
+Generated schema for business entity: KeywordRuleRequest (clean name: KeywordRuleRequest)
+Generated schema for business entity: CreateKeywordSetRequest (clean name: CreateKeywordSetRequest)
+Generated schema for business entity: UpdateKeywordSetRequest (clean name: UpdateKeywordSetRequest)
+Generated schema for business entity: KeywordSetResponse (clean name: KeywordSetResponse)
 Applied enum constraints to field: [dns http]
 Generated schema for business entity: CreatePersonaRequest (clean name: CreatePersonaRequest)
 Generated schema for business entity: UpdatePersonaRequest (clean name: UpdatePersonaRequest)
 Generated schema for business entity: PersonaResponse (clean name: PersonaResponse)
+Generated schema for business entity: ProxyPoolRequest (clean name: ProxyPoolRequest)
 Generated schema for business entity: APIResponse (clean name: APIResponse)
 Applied enum constraints to field ErrorInfo.code: [BAD_REQUEST UNAUTHORIZED FORBIDDEN NOT_FOUND CONFLICT VALIDATION_ERROR RATE_LIMIT_EXCEEDED REQUEST_TIMEOUT INTERNAL_SERVER_ERROR DATABASE_ERROR SERVICE_UNAVAILABLE GATEWAY_TIMEOUT CAMPAIGN_IN_PROGRESS QUOTA_EXCEEDED INVALID_STATE]
 Applied enum constraints to field: [BAD_REQUEST UNAUTHORIZED FORBIDDEN NOT_FOUND CONFLICT VALIDATION_ERROR RATE_LIMIT_EXCEEDED REQUEST_TIMEOUT INTERNAL_SERVER_ERROR DATABASE_ERROR SERVICE_UNAVAILABLE GATEWAY_TIMEOUT CAMPAIGN_IN_PROGRESS QUOTA_EXCEEDED INVALID_STATE]
@@ -959,23 +966,10 @@ Generated schema for business entity: ProcessingInfo (clean name: ProcessingInfo
 Generated schema for business entity: HealthStatus (clean name: HealthStatus)
 Generated schema for business entity: Status (clean name: Status)
 Generated schema for business entity: SystemInfo (clean name: SystemInfo)
-Applied enum constraints to field: [string regex]
-Generated schema for business entity: KeywordRuleRequest (clean name: KeywordRuleRequest)
-Generated schema for business entity: CreateKeywordSetRequest (clean name: CreateKeywordSetRequest)
-Generated schema for business entity: UpdateKeywordSetRequest (clean name: UpdateKeywordSetRequest)
-Generated schema for business entity: KeywordSetResponse (clean name: KeywordSetResponse)
-Generated schema for business entity: ProxyPoolRequest (clean name: ProxyPoolRequest)
-Generated schema for business entity: CampaignTransactionOptions (clean name: CampaignTransactionOptions)
-Generated schema for business entity: DomainBatch (clean name: DomainBatch)
-Generated schema for business entity: WorkerPoolMetrics (clean name: WorkerPoolMetrics)
-Generated schema for business entity: WorkerPoolConfig (clean name: WorkerPoolConfig)
-Generated schema for business entity: ConfigManagerConfig (clean name: ConfigManagerConfig)
-Generated schema for business entity: TOTPSecret (clean name: TOTPSecret)
-Generated schema for business entity: MFAChallenge (clean name: MFAChallenge)
-Generated schema for business entity: MFAEnrollment (clean name: MFAEnrollment)
-Generated schema for business entity: StealthConfig (clean name: StealthConfig)
-Generated schema for business entity: RandomizedDomain (clean name: RandomizedDomain)
-Generated schema for business entity: StealthMetrics (clean name: StealthMetrics)
+Generated schema for business entity: KeywordExtractionRequestItem (clean name: KeywordExtractionRequestItem)
+Generated schema for business entity: BatchKeywordExtractionRequest (clean name: BatchKeywordExtractionRequest)
+Generated schema for business entity: KeywordExtractionAPIResult (clean name: KeywordExtractionAPIResult)
+Generated schema for business entity: BatchKeywordExtractionResponse (clean name: BatchKeywordExtractionResponse)
 Generated schema for business entity: UpdateCampaignRequest (clean name: UpdateCampaignRequest)
 Generated schema for business entity: CreateCampaignRequest (clean name: CreateCampaignRequest)
 Applied enum constraints to field: [prefix suffix both]
@@ -1008,20 +1002,124 @@ Generated schema for business entity: HTTPKeywordValidationPhaseConfig (clean na
 Generated schema for business entity: AnalysisPhaseConfig (clean name: AnalysisPhaseConfig)
 Generated schema for business entity: PhaseProgress (clean name: PhaseProgress)
 Generated schema for business entity: PhaseStats (clean name: PhaseStats)
+Generated schema for business entity: DomainBatch (clean name: DomainBatch)
+Generated schema for business entity: WorkerPoolMetrics (clean name: WorkerPoolMetrics)
+Generated schema for business entity: WorkerPoolConfig (clean name: WorkerPoolConfig)
+Generated schema for business entity: ConfigManagerConfig (clean name: ConfigManagerConfig)
+Generated schema for business entity: StealthConfig (clean name: StealthConfig)
+Generated schema for business entity: RandomizedDomain (clean name: RandomizedDomain)
+Generated schema for business entity: StealthMetrics (clean name: StealthMetrics)
 Generated schema for business entity: SessionData (clean name: SessionData)
 Generated schema for business entity: SessionMetrics (clean name: SessionMetrics)
+Generated schema for business entity: TOTPSecret (clean name: TOTPSecret)
+Generated schema for business entity: MFAChallenge (clean name: MFAChallenge)
+Generated schema for business entity: MFAEnrollment (clean name: MFAEnrollment)
 Generated schema for business entity: APIKey (clean name: APIKey)
+Generated schema for business entity: ContentAnalysisResult (clean name: ContentAnalysisResult)
 Generated schema for business entity: CachedSessionConfig (clean name: CachedSessionConfig)
 Generated schema for business entity: CachedSessionData (clean name: CachedSessionData)
-2025/07/25 14:17:54 OpenAPI generation completed successfully
-2025/07/25 14:17:54 Generated specification with 260 schemas and 48 paths
-2025/07/25 14:17:54 ✓ OpenAPI specification generated successfully using automatic reflection: docs/openapi-3.yaml
-2025/07/25 14:17:54 Server starting on :8080 (Gin Mode: debug)
-2025/07/25 14:19:29 Shutting down server and workers...
-2025/07/25 14:19:29 Worker [Lino-1]: Stopped.
-2025/07/25 14:19:29 Worker [Lino-0]: Stopped.
-2025/07/25 14:19:29 Worker [Lino-4]: Stopped.
-2025/07/25 14:19:29 Worker [Lino-3]: Stopped.
-2025/07/25 14:19:29 Worker [Lino-2]: Stopped.
-2025/07/25 14:19:29 CampaignWorkerService [Lino]: All workers have stopped.
-2025/07/25 14:19:29 Server and workers exited gracefully.
+Generated schema for business entity: CampaignTransactionOptions (clean name: CampaignTransactionOptions)
+2025/07/28 11:17:08 OpenAPI generation completed successfully
+2025/07/28 11:17:08 Generated specification with 276 schemas and 48 paths
+2025/07/28 11:17:08 ✓ OpenAPI specification generated successfully using automatic reflection: docs/openapi-3.yaml
+2025/07/28 11:17:08 Server starting on :8080 (Gin Mode: debug)
+2025/07/28 11:17:09 WebSocket origin validation check: origin='http://localhost:3000', gin.Mode='debug'
+2025/07/28 11:17:09 WebSocket env debug: ENV='development', DEPLOYMENT_ENVIRONMENT='', DEV_MODE='', NODE_ENV='development'
+2025/07/28 11:17:09 WebSocket origin validation: ALLOWED development origin 'http://localhost:3000'
+2025/07/28 11:17:09 [WebSocket] Creating new client with security for [::1]:56084 (user: 2a244f2a-89a3-4ba6-a917-a09bdc6d379f)
+2025/07/28 11:17:09 [WebSocket] Registering client [::1]:56084 with hub (user: 2a244f2a-89a3-4ba6-a917-a09bdc6d379f)
+2025/07/28 11:17:09 [WebSocket] Starting read/write pumps for client [::1]:56084 (user: 2a244f2a-89a3-4ba6-a917-a09bdc6d379f)
+2025/07/28 11:17:09 WebSocket client connected for user: 2a244f2a-89a3-4ba6-a917-a09bdc6d379f (IP: ::1) with session-based authentication
+[GIN] 2025/07/28 - 11:17:09 | 200 |    3.232844ms |             ::1 | GET      "/api/v2/ws"
+2025/07/28 11:17:09 [WebSocket] Client [::1]:56084 readPump started
+2025/07/28 11:17:09 [WebSocket] Client [::1]:56084 received: {"type":"connection_init","timestamp":"2025-07-28T11:17:09.316Z"}
+2025/07/28 11:17:09 Client [::1]:56084 initialized connection with last sequence: 0
+2025/07/28 11:17:09 [WebSocket] Client [::1]:56084 received: {"type":"subscribe_dashboard_activity","timestamp":"2025-07-28T11:17:09.316Z"}
+2025/07/28 11:17:09 Unknown message type: subscribe_dashboard_activity
+2025/07/28 11:17:33 DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure
+2025/07/28 11:17:33 DEBUG [respondWithJSONGin]: Original payload type: *models.User
+2025/07/28 11:17:33 DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: *models.User, requestId: 729b8ad5-6e69-42c2-9cfb-d753c869050b}
+[GIN] 2025/07/28 - 11:17:33 | 200 |   16.196473ms |             ::1 | GET      "/api/v2/auth/me"
+2025/07/28 11:19:08 DistributedCacheManager: Hot data preloader cycle started
+2025/07/28 11:19:11 DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure
+2025/07/28 11:19:11 DEBUG [respondWithJSONGin]: Original payload type: *api.APIResponse
+2025/07/28 11:19:11 DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: *api.APIResponse, requestId: 3a0f1f51-af6b-4cea-97c4-04a5467632d8}
+[GIN] 2025/07/28 - 11:19:11 | 200 |    9.682905ms |             ::1 | GET      "/api/v2/campaigns"
+2025/07/28 11:19:11 DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure
+2025/07/28 11:19:11 DEBUG [respondWithJSONGin]: Original payload type: *api.APIResponse
+2025/07/28 11:19:11 DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: *api.APIResponse, requestId: c8998658-383d-4eee-8dd1-edcbb3a9f453}
+[GIN] 2025/07/28 - 11:19:11 | 200 |    2.145163ms |             ::1 | GET      "/api/v2/campaigns"
+2025/07/28 11:19:21 DEBUG [NewDomainGenerator]: Input - PatternType=prefix, VariableLength=3, CharSet='abcdefghijklmnopqrstuvwxyz0123456789' (len=36), ConstantStr='b', TLD='.com'
+2025/07/28 11:19:21 DEBUG [NewDomainGenerator]: Processed CharSet - DistinctRunes=36
+2025/07/28 11:19:21 DEBUG [power]: Calculating 36^3
+2025/07/28 11:19:21 DEBUG [power]: Iteration 0, result=36
+2025/07/28 11:19:21 DEBUG [power]: Iteration 1, result=1296
+2025/07/28 11:19:21 DEBUG [power]: Iteration 2, result=46656
+2025/07/28 11:19:21 DEBUG [power]: Final result=46656
+2025/07/28 11:19:21 DEBUG [NewDomainGenerator]: Prefix/Suffix - CharsetSize=36, VariableLength=3, TotalCombinations=46656
+2025/07/28 11:19:21 DEBUG [NewDomainGenerator]: SUCCESS - Final TotalCombinations=46656
+2025/07/28 11:19:21 DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure
+2025/07/28 11:19:21 DEBUG [respondWithJSONGin]: Original payload type: api.PatternOffsetResponse
+2025/07/28 11:19:21 DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: api.PatternOffsetResponse, requestId: c08801a4-0d0e-4460-bc5d-053d8d1a84eb}
+[GIN] 2025/07/28 - 11:19:21 | 200 |     410.515µs |             ::1 | POST     "/api/v2/campaigns/domain-generation/pattern-offset"
+2025/07/28 11:19:23 DEBUG [NewDomainGenerator]: Input - PatternType=prefix, VariableLength=3, CharSet='abcdefghijklmnopqrstuvwxyz0123456789' (len=36), ConstantStr='bikeness', TLD='.com'
+2025/07/28 11:19:23 DEBUG [NewDomainGenerator]: Processed CharSet - DistinctRunes=36
+2025/07/28 11:19:23 DEBUG [power]: Calculating 36^3
+2025/07/28 11:19:23 DEBUG [power]: Iteration 0, result=36
+2025/07/28 11:19:23 DEBUG [power]: Iteration 1, result=1296
+2025/07/28 11:19:23 DEBUG [power]: Iteration 2, result=46656
+2025/07/28 11:19:23 DEBUG [power]: Final result=46656
+2025/07/28 11:19:23 DEBUG [NewDomainGenerator]: Prefix/Suffix - CharsetSize=36, VariableLength=3, TotalCombinations=46656
+2025/07/28 11:19:23 DEBUG [NewDomainGenerator]: SUCCESS - Final TotalCombinations=46656
+2025/07/28 11:19:23 DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure
+2025/07/28 11:19:23 DEBUG [respondWithJSONGin]: Original payload type: api.PatternOffsetResponse
+2025/07/28 11:19:23 DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: api.PatternOffsetResponse, requestId: 78ea0391-83f0-452c-a0f3-54bcda7c7236}
+[GIN] 2025/07/28 - 11:19:23 | 200 |    6.317916ms |             ::1 | POST     "/api/v2/campaigns/domain-generation/pattern-offset"
+2025/07/28 11:19:25 Creating lead generation campaign using standalone service: Fast Test Campaign 1751822558291 - DNS Validationdfddfdgd
+2025/07/28 11:19:25 DEBUG CreateCampaign: Storing metadata: {"domain_generation_config":{"batch_size":100,"character_set":"abcdefghijklmnopqrstuvwxyz0123456789","constant_string":"bikeness","num_domains_to_generate":100,"pattern_type":"prefix","tld":"com","variable_length":3}}
+2025/07/28 11:19:25 DEBUG CreateCampaign: About to call store.CreateCampaign for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG CreateCampaign: About to INSERT campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c with metadata: {"domain_generation_config":{"batch_size":100,"character_set":"abcdefghijklmnopqrstuvwxyz0123456789","constant_string":"bikeness","num_domains_to_generate":100,"pattern_type":"prefix","tld":"com","variable_length":3}}
+2025/07/28 11:19:25 DEBUG CreateCampaign: INSERT SUCCEEDED for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG CreateCampaign: store.CreateCampaign SUCCEEDED for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG CreateCampaign: About to call InitializePhase1 for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG InitializePhase1: Starting initialization for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG GetCampaignByID: About to SELECT campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG GetCampaignByID: SELECT SUCCEEDED for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c, retrieved metadata: {"domain_generation_config": {"tld": "com", "batch_size": 100, "pattern_type": "prefix", "character_set": "abcdefghijklmnopqrstuvwxyz0123456789", "constant_string": "bikeness", "variable_length": 3, "num_domains_to_generate": 100}}
+2025/07/28 11:19:25 DEBUG InitializePhase1: GetCampaign SUCCEEDED for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG InitializePhase1: Campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c has metadata, attempting to parse
+2025/07/28 11:19:25 DEBUG InitializePhase1: Metadata JSON unmarshaling SUCCEEDED for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG InitializePhase1: Available metadata keys: [domain_generation_config]
+2025/07/28 11:19:25 DEBUG InitializePhase1: Found domain_generation_config key for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG InitializePhase1: Successfully cast config to map for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG InitializePhase1: Extracted domain config: {PatternType:prefix VariableLength:3 CharacterSet:abcdefghijklmnopqrstuvwxyz0123456789 ConstantString:bikeness TLD:com NumDomainsToGenerate:100 BatchSize:100}
+2025/07/28 11:19:25 InitializePhase1: Starting domain generation for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c with config: {PatternType:prefix VariableLength:3 CharacterSet:abcdefghijklmnopqrstuvwxyz0123456789 ConstantString:bikeness TLD:com NumDomainsToGenerate:100 BatchSize:100}
+2025/07/28 11:19:25 DEBUG: Domain generation phase initialized for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 [DIAGNOSTIC] IsSubscribedToCampaign check: campaignID=12c578f1-ac05-49c9-988f-b6bcb62e425c, hasSpecific=false, hasWildcard=false, allSubscriptions=map[]
+2025/07/28 11:19:25 [DIAGNOSTIC] BroadcastToCampaign completed: campaignID=12c578f1-ac05-49c9-988f-b6bcb62e425c, messageType=campaign.status.updated, totalClients=1, subscribedClients=0, messagesSent=0
+2025/07/28 11:19:25 [DIAGNOSTIC] IsSubscribedToCampaign check: campaignID=12c578f1-ac05-49c9-988f-b6bcb62e425c, hasSpecific=false, hasWildcard=false, allSubscriptions=map[]
+2025/07/28 11:19:25 [DIAGNOSTIC] BroadcastToCampaign completed: campaignID=12c578f1-ac05-49c9-988f-b6bcb62e425c, messageType=campaign.phase.transition, totalClients=1, subscribedClients=0, messagesSent=0
+2025/07/28 11:19:25 InitializePhase1: Successfully initialized Phase 1 for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG CreateCampaign: InitializePhase1 SUCCEEDED for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 [DIAGNOSTIC] IsSubscribedToCampaign check: campaignID=12c578f1-ac05-49c9-988f-b6bcb62e425c, hasSpecific=false, hasWildcard=false, allSubscriptions=map[]
+2025/07/28 11:19:25 [DIAGNOSTIC] BroadcastToCampaign completed: campaignID=12c578f1-ac05-49c9-988f-b6bcb62e425c, messageType=campaign.created, totalClients=1, subscribedClients=0, messagesSent=0
+2025/07/28 11:19:25 Successfully created lead generation campaign: 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 [DIAGNOSTIC] BroadcastCampaignCreated called: campaignID=12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 ✅ [DIAGNOSTIC] Standardized campaign.list.update message sent for create
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Original payload type: *api.APIResponse
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: *api.APIResponse, requestId: 5d34e59f-416d-40d2-b1d0-ffc1e709a49b}
+[GIN] 2025/07/28 - 11:19:25 | 201 |   18.587356ms |             ::1 | POST     "/api/v2/campaigns/lead-generation"
+[GIN] 2025/07/28 - 11:19:25 | 204 |      44.299µs |             ::1 | OPTIONS  "/api/v2/campaigns/12c578f1-ac05-49c9-988f-b6bcb62e425c/progress"
+[GIN] 2025/07/28 - 11:19:25 | 204 |      28.339µs |             ::1 | OPTIONS  "/api/v2/campaigns/12c578f1-ac05-49c9-988f-b6bcb62e425c/progress"
+2025/07/28 11:19:25 DEBUG GetCampaignByID: About to SELECT campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG GetCampaignByID: SELECT SUCCEEDED for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c, retrieved metadata: {"domain_generation_config": {"tld": "com", "batch_size": 100, "pattern_type": "prefix", "character_set": "abcdefghijklmnopqrstuvwxyz0123456789", "constant_string": "bikeness", "variable_length": 3, "num_domains_to_generate": 100}}
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Original payload type: *api.APIResponse
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: *api.APIResponse, requestId: e6b5b6ae-95f7-433c-8a3d-27f8303966d3}
+[GIN] 2025/07/28 - 11:19:25 | 200 |    2.948677ms |             ::1 | GET      "/api/v2/campaigns/12c578f1-ac05-49c9-988f-b6bcb62e425c/progress"
+2025/07/28 11:19:25 DEBUG GetCampaignByID: About to SELECT campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c
+2025/07/28 11:19:25 DEBUG GetCampaignByID: SELECT SUCCEEDED for campaign 12c578f1-ac05-49c9-988f-b6bcb62e425c, retrieved metadata: {"domain_generation_config": {"tld": "com", "batch_size": 100, "pattern_type": "prefix", "character_set": "abcdefghijklmnopqrstuvwxyz0123456789", "constant_string": "bikeness", "variable_length": 3, "num_domains_to_generate": 100}}
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Original payload type: *api.APIResponse
+2025/07/28 11:19:25 DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: *api.APIResponse, requestId: fd686a06-af4b-4236-98f7-11d456f185e8}
+[GIN] 2025/07/28 - 11:19:25 | 200 |    2.580717ms |             ::1 | GET      "/api/v2/campaigns/12c578f1-ac05-49c9-988f-b6bcb62e425c/progress"

@@ -11,7 +11,6 @@ Name | Type | Description | Notes
 **processingSpeedPerMinute** | **number** |  | [optional] [default to undefined]
 **retryAttempts** | **number** |  | [optional] [default to undefined]
 **rotationIntervalSeconds** | **number** |  | [optional] [default to undefined]
-**sourceGenerationCampaignId** | **string** | Unique identifier | [optional] [default to undefined]
 
 ## Example
 
@@ -25,7 +24,6 @@ const instance: DNSValidationCampaignParams = {
     processingSpeedPerMinute,
     retryAttempts,
     rotationIntervalSeconds,
-    sourceGenerationCampaignId,
 };
 ```
 

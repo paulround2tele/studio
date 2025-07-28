@@ -5,7 +5,7 @@
 
 import type { components } from '@/lib/api-client/types';
 
-type CampaignStatus = NonNullable<components['schemas']['Campaign']['phaseStatus']>;
+type CampaignStatus = NonNullable<components['schemas']['LeadGenerationCampaign']['phaseStatus']>;
 
 // Define the actual status values used by the system (aligned with API)
 export const CAMPAIGN_STATUSES = {

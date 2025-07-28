@@ -16,6 +16,7 @@ import CampaignHeader from '@/components/campaigns/CampaignHeader';
 import CampaignControls from '@/components/campaigns/CampaignControls';
 import { CampaignMetrics } from '@/components/campaigns/CampaignStatistics';
 import DomainStreamingTable from '@/components/campaigns/DomainStreamingTable';
+import PhaseDashboard from '@/components/campaigns/PhaseDashboard';
 
 // Backend-driven data fetching (no stores)
 import { useBackendDrivenCampaignData } from '@/hooks/useBackendDrivenCampaignData';
@@ -116,6 +117,13 @@ export default function CampaignDetailsPage() {
       {/* Campaign Progress */}
       <CampaignProgress
         campaign={campaign}
+      />
+
+      {/* Phase Dashboard - Phase-centric configuration and management */}
+      <PhaseDashboard
+        campaignId={campaign.id!}
+        campaign={campaign}
+        onCampaignUpdate={refetch}
       />
 
       {/* Campaign Controls */}

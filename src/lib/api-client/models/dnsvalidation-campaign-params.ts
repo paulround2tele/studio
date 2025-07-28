@@ -56,11 +56,5 @@ export interface DNSValidationCampaignParams {
      * @memberof DNSValidationCampaignParams
      */
     'rotationIntervalSeconds'?: number;
-    /**
-     * Unique identifier
-     * @type {string}
-     * @memberof DNSValidationCampaignParams
-     */
-    'sourceGenerationCampaignId'?: string;
 }
 

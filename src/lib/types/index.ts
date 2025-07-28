@@ -9,7 +9,7 @@ export type { components } from '@/lib/api-client/types';
 // Core OpenAPI types re-exported
 import type { components } from '@/lib/api-client/types';
 
-export type Campaign = components["schemas"]["Campaign"];
+export type Campaign = components["schemas"]["LeadGenerationCampaign"];
 export type User = components["schemas"]["User"];
 export type Persona = components["schemas"]["Persona"];
 export type Proxy = components["schemas"]["Proxy"];
@@ -52,8 +52,8 @@ export interface ApiResponse<T = unknown> {
 
 // Legacy type aliases for backwards compatibility - now using proper OpenAPI definitions
 // Note: These are duplicated above but kept for backwards compatibility
-export type CampaignPhaseCompat = components['schemas']['Campaign']['currentPhase'];
-export type CampaignPhaseStatusCompat = components['schemas']['Campaign']['phaseStatus'];
+export type CampaignPhaseCompat = components['schemas']['LeadGenerationCampaign']['currentPhase'];
+export type CampaignPhaseStatusCompat = components['schemas']['LeadGenerationCampaign']['phaseStatus'];
 
 // Persona type aliases
 export type HttpPersona = Persona;

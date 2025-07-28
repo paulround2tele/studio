@@ -8,7 +8,7 @@
 import type { components } from '@/lib/api-client/types';
 
 // Core OpenAPI types (re-exported for convenience)
-export type Campaign = components["schemas"]["Campaign"];
+export type Campaign = components["schemas"]["LeadGenerationCampaign"];
 export type PersonaResponse = components["schemas"]["Persona"];
 export type CreatePersonaRequest = components["schemas"]["CreatePersonaRequest"];
 export type UpdatePersonaRequest = components["schemas"]["UpdatePersonaRequest"];
@@ -77,6 +77,6 @@ export type CampaignViewModel = Campaign & CampaignUIExtensions;
 // Form-specific types
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable" | "constant_only";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-export type CampaignPhase = components['schemas']['Campaign']['currentPhase'];
+export type CampaignPhase = components['schemas']['LeadGenerationCampaign']['currentPhase'];
 
 // Note: ApiResponse moved to main types/index.ts for unified usage across all services

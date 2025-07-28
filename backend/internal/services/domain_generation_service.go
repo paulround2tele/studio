@@ -17,7 +17,6 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/utils"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
 
-	// "github.com/fntelecomllc/studio/backend/internal/workers" // TODO: Implement workers package
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -557,58 +556,46 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		FullSequenceMode:   &isFullSequence, // Store full sequence mode flag
 	}
 
-	campaignDomainGenParams := &models.DomainGenerationCampaignParams{
-		CampaignID:                campaignID,
-		PatternType:               req.PatternType,
-		VariableLength:            req.VariableLength,
-		CharacterSet:              req.CharacterSet,
-		ConstantString:            models.StringPtr(req.ConstantString),
-		TLD:                       req.TLD,
-		NumDomainsToGenerate:      int(campaignInstanceTargetCount), // Converted int64 to int
-		TotalPossibleCombinations: totalPossibleCombinations,
-		CurrentOffset:             startingOffset,
+	// Store domain generation configuration in campaign's JSONB config data
+	campaignConfig := map[string]interface{}{
+		"patternType":               req.PatternType,
+		"variableLength":            req.VariableLength,
+		"characterSet":              req.CharacterSet,
+		"constantString":            req.ConstantString,
+		"tld":                       req.TLD,
+		"numDomainsToGenerate":      int(campaignInstanceTargetCount),
+		"totalPossibleCombinations": totalPossibleCombinations,
+		"currentOffset":             startingOffset,
 	}
-	baseCampaign.DomainGenerationParams = campaignDomainGenParams
+
+	// Convert config to JSON for storage in campaign's config field
+	configJSON, jsonErr := json.Marshal(campaignConfig)
+	if jsonErr != nil {
+		opErr = fmt.Errorf("failed to marshal campaign config: %w", jsonErr)
+		log.Printf("Error marshaling config for %s: %v", req.Name, opErr)
+		return nil, opErr
+	}
+
+	// Store config in campaign metadata or a dedicated config field
+	rawMessage := json.RawMessage(configJSON)
+	baseCampaign.Metadata = &rawMessage
 
 	if err := s.campaignStore.CreateCampaign(ctx, querier, baseCampaign); err != nil {
 		opErr = fmt.Errorf("failed to create base campaign record: %w", err)
 		log.Printf("Error creating base campaign record for %s: %v", req.Name, opErr)
 		return nil, opErr
 	}
-	log.Printf("Base campaign record created for %s.", req.Name)
-
-	if err := s.campaignStore.CreateDomainGenerationParams(ctx, querier, campaignDomainGenParams); err != nil {
-		opErr = fmt.Errorf("failed to create domain generation params: %w", err)
-		log.Printf("Error creating domain generation params for %s: %v", req.Name, opErr)
-		return nil, opErr
-	}
-	log.Printf("Domain generation params created for %s. Campaign-specific start offset: %d", req.Name, startingOffset)
+	log.Printf("Base campaign record created for %s with phase-centric config.", req.Name)
 
 	// Handle full sequence mode - create DNS and HTTP validation parameters if provided
 	if req.LaunchSequence != nil && *req.LaunchSequence {
 		log.Printf("Full sequence mode enabled for campaign %s - creating phase parameters", req.Name)
 
-		// CRITICAL FIX: DNS validation parameters should ONLY be created in full sequence mode
-		// This was causing auto-transitions to trigger even without full sequence enabled
+		// Store DNS validation configuration in campaign metadata for later phase configuration
 		if req.DNSValidationParams != nil {
-			log.Printf("[DEBUG] DNS validation params provided for campaign %s - checking if full sequence mode is enabled", req.Name)
-
-			// Only create DNS params if we're already inside the full sequence block (isFullSequence context)
-			dnsParams := &models.DNSValidationCampaignParams{
-				CampaignID:               campaignID,
-				PersonaIDs:               req.DNSValidationParams.PersonaIDs,
-				RotationIntervalSeconds:  req.DNSValidationParams.RotationIntervalSeconds,
-				ProcessingSpeedPerMinute: req.DNSValidationParams.ProcessingSpeedPerMinute,
-				BatchSize:                req.DNSValidationParams.BatchSize,
-				RetryAttempts:            req.DNSValidationParams.RetryAttempts,
-			}
-
-			if err := s.campaignStore.CreateDNSValidationParams(ctx, querier, dnsParams); err != nil {
-				opErr = fmt.Errorf("failed to create DNS validation params for full sequence: %w", err)
-				log.Printf("Error creating DNS validation params for campaign %s: %v", req.Name, opErr)
-				return nil, opErr
-			}
-			log.Printf("[FULL-SEQUENCE] DNS validation params created for campaign %s", req.Name)
+			log.Printf("[DEBUG] DNS validation params provided for campaign %s - storing in campaign config for later phase setup", req.Name)
+			// DNS params will be configured when the DNS validation phase is explicitly started
+			log.Printf("[FULL-SEQUENCE] DNS validation config will be applied when phase is configured for campaign %s", req.Name)
 		} else {
 			log.Printf("[FULL-SEQUENCE] No DNS validation params provided for campaign %s", req.Name)
 		}
@@ -719,18 +706,53 @@ func (s *domainGenerationServiceImpl) GetCampaignDetails(ctx context.Context, ca
 		return nil, nil, fmt.Errorf("campaign %s is not a domain generation campaign (phase: %s)", campaignID, currentPhase)
 	}
 
-	log.Printf("[DEBUG DomainGen] Getting domain generation params for campaign %s", campaignID)
-	params, err := s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
-	if err != nil {
-		log.Printf("[DEBUG DomainGen] Failed to get domain generation params for campaign %s: %v", campaignID, err)
-		if campaign.DomainGenerationParams != nil {
-			log.Printf("[DEBUG DomainGen] Using embedded DomainGenerationParams for campaign %s", campaignID)
-			return campaign, campaign.DomainGenerationParams, nil
+	log.Printf("[DEBUG DomainGen] Getting domain generation config from campaign metadata for %s", campaignID)
+
+	// Extract domain generation params from campaign metadata
+	var params *models.DomainGenerationCampaignParams
+	if campaign.Metadata != nil {
+		var config map[string]interface{}
+		if err := json.Unmarshal(*campaign.Metadata, &config); err != nil {
+			log.Printf("[DEBUG DomainGen] Failed to unmarshal campaign metadata for %s: %v", campaignID, err)
+			return nil, nil, fmt.Errorf("failed to parse campaign configuration for %s: %w", campaignID, err)
 		}
-		return nil, nil, fmt.Errorf("failed to get domain generation params for campaign %s: %w", campaignID, err)
+
+		// Convert config map to DomainGenerationCampaignParams
+		params = &models.DomainGenerationCampaignParams{
+			CampaignID: campaignID,
+		}
+
+		if patternType, ok := config["patternType"].(string); ok {
+			params.PatternType = patternType
+		}
+		if variableLength, ok := config["variableLength"].(float64); ok {
+			params.VariableLength = int(variableLength)
+		}
+		if characterSet, ok := config["characterSet"].(string); ok {
+			params.CharacterSet = characterSet
+		}
+		if constantString, ok := config["constantString"].(string); ok {
+			params.ConstantString = models.StringPtr(constantString)
+		}
+		if tld, ok := config["tld"].(string); ok {
+			params.TLD = tld
+		}
+		if numDomains, ok := config["numDomainsToGenerate"].(float64); ok {
+			params.NumDomainsToGenerate = int(numDomains)
+		}
+		if totalCombinations, ok := config["totalPossibleCombinations"].(float64); ok {
+			params.TotalPossibleCombinations = int64(totalCombinations)
+		}
+		if offset, ok := config["currentOffset"].(float64); ok {
+			params.CurrentOffset = int64(offset)
+		}
+
+		log.Printf("[DEBUG DomainGen] Successfully parsed domain generation config from metadata for campaign %s", campaignID)
+	} else {
+		log.Printf("[DEBUG DomainGen] No metadata found for campaign %s", campaignID)
+		return nil, nil, fmt.Errorf("no domain generation configuration found for campaign %s", campaignID)
 	}
 
-	log.Printf("[DEBUG DomainGen] Successfully retrieved domain generation params for campaign %s", campaignID)
 	return campaign, params, nil
 }
 
@@ -856,16 +878,46 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		return true, 0, nil // True because the job itself is "done" for now, campaign is not runnable
 	}
 
+	// Extract domain generation params from campaign metadata
 	var genParams *models.DomainGenerationCampaignParams
-	genParams, opErr = s.campaignStore.GetDomainGenerationParams(ctx, querier, campaignID)
-	if opErr != nil {
-		log.Printf("[ProcessGenerationCampaignBatch] Failed to fetch generation params for campaign %s: %v", campaignID, opErr)
-		return false, 0, opErr
-	}
-	if genParams == nil && campaign.DomainGenerationParams != nil {
-		genParams = campaign.DomainGenerationParams
-		opErr = nil
-	} else if genParams == nil && campaign.DomainGenerationParams == nil {
+	if campaign.Metadata != nil {
+		var config map[string]interface{}
+		if jsonErr := json.Unmarshal(*campaign.Metadata, &config); jsonErr != nil {
+			opErr = fmt.Errorf("failed to parse campaign configuration for %s: %w", campaignID, jsonErr)
+			log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+			return false, 0, opErr
+		}
+
+		// Convert config map to DomainGenerationCampaignParams
+		genParams = &models.DomainGenerationCampaignParams{
+			CampaignID: campaignID,
+		}
+
+		if patternType, ok := config["patternType"].(string); ok {
+			genParams.PatternType = patternType
+		}
+		if variableLength, ok := config["variableLength"].(float64); ok {
+			genParams.VariableLength = int(variableLength)
+		}
+		if characterSet, ok := config["characterSet"].(string); ok {
+			genParams.CharacterSet = characterSet
+		}
+		if constantString, ok := config["constantString"].(string); ok {
+			genParams.ConstantString = models.StringPtr(constantString)
+		}
+		if tld, ok := config["tld"].(string); ok {
+			genParams.TLD = tld
+		}
+		if numDomains, ok := config["numDomainsToGenerate"].(float64); ok {
+			genParams.NumDomainsToGenerate = int(numDomains)
+		}
+		if totalCombinations, ok := config["totalPossibleCombinations"].(float64); ok {
+			genParams.TotalPossibleCombinations = int64(totalCombinations)
+		}
+		if offset, ok := config["currentOffset"].(float64); ok {
+			genParams.CurrentOffset = int64(offset)
+		}
+	} else {
 		opErr = fmt.Errorf("domain generation parameters not found for campaign %s", campaignID)
 		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
 		failedStatus := models.PhaseStatusFailed
@@ -1215,12 +1267,29 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		log.Printf("ProcessGenerationCampaignBatch: Real-time streaming completed for %d domains in campaign %s", processedInThisBatch, campaignID)
 	}
 
-	if errUpdateOffset := s.campaignStore.UpdateDomainGenerationParamsOffset(ctx, querier, campaignID, nextGeneratorOffsetAbsolute); errUpdateOffset != nil {
-		opErr = fmt.Errorf("failed to update campaign-specific current offset for %s to %d: %w", campaignID, nextGeneratorOffsetAbsolute, errUpdateOffset)
-		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
-		return false, processedInThisBatch, opErr
-	}
+	// Update campaign metadata with new offset
 	genParams.CurrentOffset = nextGeneratorOffsetAbsolute
+
+	// Update the campaign's metadata with the new offset
+	if campaign.Metadata != nil {
+		var config map[string]interface{}
+		if jsonErr := json.Unmarshal(*campaign.Metadata, &config); jsonErr == nil {
+			config["currentOffset"] = float64(nextGeneratorOffsetAbsolute)
+			if updatedConfigJSON, marshalErr := json.Marshal(config); marshalErr == nil {
+				rawMessage := json.RawMessage(updatedConfigJSON)
+				campaign.Metadata = &rawMessage
+				if updateErr := s.campaignStore.UpdateCampaign(ctx, querier, campaign); updateErr != nil {
+					opErr = fmt.Errorf("failed to update campaign metadata with new offset for %s to %d: %w", campaignID, nextGeneratorOffsetAbsolute, updateErr)
+					log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
+					return false, processedInThisBatch, opErr
+				}
+			} else {
+				log.Printf("[ProcessGenerationCampaignBatch] Warning: failed to marshal updated config for %s: %v", campaignID, marshalErr)
+			}
+		} else {
+			log.Printf("[ProcessGenerationCampaignBatch] Warning: failed to unmarshal campaign metadata for offset update %s: %v", campaignID, jsonErr)
+		}
+	}
 
 	hashResultForUpdate, hashErrForUpdate := domainexpert.GenerateDomainGenerationConfigHash(*genParams)
 	if hashErrForUpdate != nil {

@@ -967,6 +967,88 @@ ul.nav-tabs {
     }
   }
 };
+    defs["AppConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "dnsPersonas" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/DNSPersona"
+      }
+    },
+    "dnsValidator" : {
+      "$ref" : "#/components/schemas/DNSValidatorConfig"
+    },
+    "features" : {
+      "$ref" : "#/components/schemas/FeatureFlags"
+    },
+    "httpPersonas" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/HTTPPersona"
+      }
+    },
+    "httpValidator" : {
+      "$ref" : "#/components/schemas/HTTPValidatorConfig"
+    },
+    "keywordSets" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/KeywordSet"
+      }
+    },
+    "logging" : {
+      "$ref" : "#/components/schemas/LoggingConfig"
+    },
+    "proxies" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/ProxyConfigEntry"
+      }
+    },
+    "proxyManager" : {
+      "$ref" : "#/components/schemas/ProxyManagerConfig"
+    },
+    "rateLimiter" : {
+      "$ref" : "#/components/schemas/RateLimiterConfig"
+    },
+    "server" : {
+      "$ref" : "#/components/schemas/ServerConfig"
+    },
+    "worker" : {
+      "$ref" : "#/components/schemas/WorkerConfig"
+    }
+  }
+};
+    defs["AppConfigJSON"] = {
+  "type" : "object",
+  "properties" : {
+    "dnsValidator" : {
+      "$ref" : "#/components/schemas/DNSValidatorConfigJSON"
+    },
+    "features" : {
+      "$ref" : "#/components/schemas/FeatureFlags"
+    },
+    "httpValidator" : {
+      "$ref" : "#/components/schemas/HTTPValidatorConfigJSON"
+    },
+    "logging" : {
+      "$ref" : "#/components/schemas/LoggingConfig"
+    },
+    "proxyManager" : {
+      "$ref" : "#/components/schemas/ProxyManagerConfigJSON"
+    },
+    "rateLimiter" : {
+      "$ref" : "#/components/schemas/RateLimiterConfig"
+    },
+    "server" : {
+      "$ref" : "#/components/schemas/ServerConfig"
+    },
+    "worker" : {
+      "$ref" : "#/components/schemas/WorkerConfig"
+    }
+  }
+};
     defs["ArchitectureRefactorLog"] = {
   "type" : "object",
   "properties" : {
@@ -1092,6 +1174,87 @@ ul.nav-tabs {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
+    }
+  }
+};
+    defs["AuthConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "accountLockDuration" : {
+      "type" : "string"
+    },
+    "bcryptCost" : {
+      "type" : "integer",
+      "description" : "Password security"
+    },
+    "captchaThreshold" : {
+      "type" : "integer"
+    },
+    "fromEmail" : {
+      "type" : "string"
+    },
+    "fromName" : {
+      "type" : "string"
+    },
+    "maxFailedAttempts" : {
+      "type" : "integer",
+      "description" : "Account lockout"
+    },
+    "maxLoginAttempts" : {
+      "type" : "integer"
+    },
+    "maxPasswordResetAttempts" : {
+      "type" : "integer"
+    },
+    "passwordMinLength" : {
+      "type" : "integer"
+    },
+    "pepperKey" : {
+      "type" : "string"
+    },
+    "rateLimitWindow" : {
+      "type" : "string",
+      "description" : "Rate limiting"
+    },
+    "recaptchaSecretKey" : {
+      "type" : "string"
+    },
+    "recaptchaSiteKey" : {
+      "type" : "string",
+      "description" : "CAPTCHA configuration"
+    },
+    "resetTokenExpiry" : {
+      "type" : "string",
+      "description" : "Token configuration"
+    },
+    "sessionCookieDomain" : {
+      "type" : "string"
+    },
+    "sessionCookieName" : {
+      "type" : "string"
+    },
+    "sessionCookieSecure" : {
+      "type" : "boolean"
+    },
+    "sessionDuration" : {
+      "type" : "string",
+      "description" : "Session configuration"
+    },
+    "sessionIdleTimeout" : {
+      "type" : "string"
+    },
+    "smtpHost" : {
+      "type" : "string",
+      "description" : "Email configuration (for password reset)"
+    },
+    "smtpPassword" : {
+      "type" : "string"
+    },
+    "smtpPort" : {
+      "type" : "integer"
+    },
+    "smtpUsername" : {
+      "type" : "string"
     }
   }
 };
@@ -1902,7 +2065,9 @@ ul.nav-tabs {
       "format" : "date-time"
     },
     "currentPhase" : {
-      "$ref" : "#/components/schemas/CampaignPhaseEnum"
+      "type" : "string",
+      "description" : "Phases-based architecture (replaces legacy CampaignType + Status)",
+      "enum" : [ "domain_generation", "dns_validation", "http_keyword_validation", "analysis" ]
     },
     "dnsValidatedDomains" : {
       "type" : "integer",
@@ -1943,7 +2108,8 @@ ul.nav-tabs {
       "type" : "string"
     },
     "phaseStatus" : {
-      "$ref" : "#/components/schemas/CampaignPhaseStatusEnum"
+      "type" : "string",
+      "enum" : [ "not_started", "ready", "configured", "in_progress", "paused", "completed", "failed" ]
     },
     "processedItems" : {
       "type" : "integer",
@@ -2669,6 +2835,29 @@ ul.nav-tabs {
     }
   }
 };
+    defs["ConfigTemplate"] = {
+  "type" : "object",
+  "properties" : {
+    "name" : {
+      "type" : "string"
+    },
+    "schema" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "object"
+      }
+    },
+    "type" : {
+      "type" : "string"
+    },
+    "validation_rules" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/ValidationRule"
+      }
+    }
+  }
+};
     defs["ConfigVersion"] = {
   "type" : "object",
   "properties" : {
@@ -2785,7 +2974,39 @@ ul.nav-tabs {
     }
   }
 };
+    defs["ContentAnalysisResult"] = {
+  "type" : "object",
+  "properties" : {
+    "extractedContent" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "leadItems" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "processedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "summary" : {
+      "type" : "object"
+    }
+  }
+};
     defs["CookieHandling"] = {
+  "type" : "object",
+  "properties" : {
+    "mode" : {
+      "type" : "string"
+    }
+  }
+};
+    defs["CookieHandlingConfig"] = {
   "type" : "object",
   "properties" : {
     "mode" : {
@@ -2894,7 +3115,7 @@ ul.nav-tabs {
     },
     "variableLength" : {
       "type" : "integer",
-      "description" : "Legacy domain generation fields",
+      "description" : "Domain generation fields",
       "format" : "int32"
     }
   }
@@ -3092,6 +3313,23 @@ ul.nav-tabs {
     }
   }
 };
+    defs["DNSPersona"] = {
+  "type" : "object",
+  "properties" : {
+    "config" : {
+      "$ref" : "#/components/schemas/DNSValidatorConfigJSON"
+    },
+    "description" : {
+      "type" : "string"
+    },
+    "id" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    }
+  }
+};
     defs["DNSPhaseConfigRequest"] = {
   "required" : [ "personaIds" ],
   "type" : "object",
@@ -3173,11 +3411,6 @@ ul.nav-tabs {
     "rotationIntervalSeconds" : {
       "type" : "integer",
       "format" : "int32"
-    },
-    "sourceGenerationCampaignId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
     }
   }
 };
@@ -3379,6 +3612,144 @@ ul.nav-tabs {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
+    }
+  }
+};
+    defs["DNSValidatorConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "ConcurrentQueriesPerDomain" : {
+      "type" : "integer"
+    },
+    "MaxConcurrentGoroutines" : {
+      "type" : "integer"
+    },
+    "MaxDomainsPerRequest" : {
+      "type" : "integer"
+    },
+    "QueryDelayMax" : {
+      "type" : "string"
+    },
+    "QueryDelayMin" : {
+      "type" : "string"
+    },
+    "QueryTimeout" : {
+      "type" : "string"
+    },
+    "RateLimitBurst" : {
+      "type" : "integer"
+    },
+    "RateLimitDPS" : {
+      "type" : "number"
+    },
+    "ResolverStrategy" : {
+      "type" : "string"
+    },
+    "Resolvers" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "ResolversPreferredOrder" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "ResolversWeighted" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "integer"
+      }
+    },
+    "UseSystemResolvers" : {
+      "type" : "boolean"
+    }
+  }
+};
+    defs["DNSValidatorConfigJSON"] = {
+  "type" : "object",
+  "properties" : {
+    "concurrentQueriesPerDomain" : {
+      "type" : "integer"
+    },
+    "maxConcurrentGoroutines" : {
+      "type" : "integer"
+    },
+    "maxDomainsPerRequest" : {
+      "type" : "integer"
+    },
+    "queryDelayMaxMs" : {
+      "type" : "integer"
+    },
+    "queryDelayMinMs" : {
+      "type" : "integer"
+    },
+    "queryTimeoutSeconds" : {
+      "type" : "integer"
+    },
+    "rateLimitBurst" : {
+      "type" : "integer"
+    },
+    "rateLimitDps" : {
+      "type" : "number"
+    },
+    "resolverStrategy" : {
+      "type" : "string"
+    },
+    "resolvers" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "resolversPreferredOrder" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "resolversWeighted" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "integer"
+      }
+    },
+    "useSystemResolvers" : {
+      "type" : "boolean"
+    }
+  }
+};
+    defs["DatabaseConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "connectionLifetime" : {
+      "type" : "integer"
+    },
+    "host" : {
+      "type" : "string"
+    },
+    "maxConnections" : {
+      "type" : "integer"
+    },
+    "maxIdleConnections" : {
+      "type" : "integer"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "password" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "integer"
+    },
+    "sslmode" : {
+      "type" : "string"
+    },
+    "user" : {
+      "type" : "string"
     }
   }
 };
@@ -3646,11 +4017,6 @@ ul.nav-tabs {
       "format" : "int32"
     },
     "sourceCampaignId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
-    },
-    "sourceGenerationCampaignId" : {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
@@ -3932,6 +4298,17 @@ ul.nav-tabs {
     }
   }
 };
+    defs["EnhancedServerConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "auth" : {
+      "$ref" : "#/components/schemas/EnvAuthConfig"
+    },
+    "database" : {
+      "$ref" : "#/components/schemas/DatabaseConfig"
+    }
+  }
+};
     defs["EnrichedCampaignData"] = {
   "type" : "object",
   "properties" : {
@@ -3961,6 +4338,61 @@ ul.nav-tabs {
       "items" : {
         "type" : "string"
       }
+    }
+  }
+};
+    defs["EnvAuthConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "apiKeySalt" : {
+      "type" : "string"
+    },
+    "cookieHttpOnly" : {
+      "type" : "boolean"
+    },
+    "cookieSameSite" : {
+      "type" : "string"
+    },
+    "cookieSecure" : {
+      "type" : "boolean"
+    },
+    "encryptionKey" : {
+      "type" : "string"
+    },
+    "jwtSecret" : {
+      "type" : "string"
+    },
+    "sessionSecret" : {
+      "type" : "string"
+    },
+    "sessionTimeout" : {
+      "type" : "string"
+    }
+  }
+};
+    defs["EnvironmentConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "object"
+      }
+    },
+    "encrypted_fields" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "environment" : {
+      "type" : "string"
+    },
+    "service_name" : {
+      "type" : "string"
+    },
+    "version" : {
+      "type" : "string"
     }
   }
 };
@@ -4229,6 +4661,49 @@ ul.nav-tabs {
     }
   }
 };
+    defs["FeatureFlags"] = {
+  "type" : "object",
+  "properties" : {
+    "enableAnalytics" : {
+      "type" : "boolean"
+    },
+    "enableDebugMode" : {
+      "type" : "boolean"
+    },
+    "enableOfflineMode" : {
+      "type" : "boolean"
+    },
+    "enableRealTimeUpdates" : {
+      "type" : "boolean"
+    }
+  }
+};
+    defs["FingerprintConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "hash_algorithm" : {
+      "type" : "string"
+    },
+    "include_ip" : {
+      "type" : "boolean"
+    },
+    "include_language" : {
+      "type" : "boolean"
+    },
+    "include_screen_resolution" : {
+      "type" : "boolean"
+    },
+    "include_timezone" : {
+      "type" : "boolean"
+    },
+    "include_user_agent" : {
+      "type" : "boolean"
+    },
+    "truncate_length" : {
+      "type" : "integer"
+    }
+  }
+};
     defs["GeneralErrorResponse"] = {
   "type" : "object",
   "properties" : {
@@ -4263,9 +4738,14 @@ ul.nav-tabs {
   }
 };
     defs["GeneratedDomain"] = {
-  "required" : [ "domainName", "generationCampaignId" ],
+  "required" : [ "campaignId", "domainName" ],
   "type" : "object",
   "properties" : {
+    "campaignId" : {
+      "type" : "string",
+      "description" : "Unique identifier",
+      "format" : "uuid"
+    },
     "createdAt" : {
       "type" : "string",
       "format" : "date-time"
@@ -4284,11 +4764,6 @@ ul.nav-tabs {
     "generatedAt" : {
       "type" : "string",
       "format" : "date-time"
-    },
-    "generationCampaignId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
     },
     "httpKeywords" : {
       "type" : "string"
@@ -4691,6 +5166,145 @@ ul.nav-tabs {
     }
   }
 };
+    defs["HTTPPersona"] = {
+  "type" : "object",
+  "properties" : {
+    "allowedStatusCodes" : {
+      "type" : "array",
+      "description" : "Validation Rules",
+      "items" : {
+        "type" : "integer"
+      }
+    },
+    "cookieHandling" : {
+      "$ref" : "#/components/schemas/CookieHandlingConfig"
+    },
+    "createdAt" : {
+      "type" : "string",
+      "description" : "Metadata"
+    },
+    "description" : {
+      "type" : "string"
+    },
+    "domSnapshot" : {
+      "type" : "boolean"
+    },
+    "fallbackPolicy" : {
+      "$ref" : "#/components/schemas/FallbackPolicy"
+    },
+    "fetchBodyForKeywords" : {
+      "type" : "boolean"
+    },
+    "followRedirects" : {
+      "type" : "boolean"
+    },
+    "forbiddenContent" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "forbiddenHeaders" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "headerOrder" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "headers" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "string"
+      }
+    },
+    "headlessTimeoutSeconds" : {
+      "type" : "string"
+    },
+    "headlessUserAgent" : {
+      "type" : "string"
+    },
+    "http2Settings" : {
+      "$ref" : "#/components/schemas/HTTP2SettingsConfig"
+    },
+    "id" : {
+      "type" : "string",
+      "description" : "Core Identification & Existing Fields"
+    },
+    "loadImages" : {
+      "type" : "boolean"
+    },
+    "maxRetries" : {
+      "type" : "integer",
+      "description" : "Common or Overarching Settings"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "notes" : {
+      "type" : "string"
+    },
+    "rateLimitBurst" : {
+      "type" : "integer"
+    },
+    "rateLimitDps" : {
+      "type" : "number"
+    },
+    "requestTimeoutSeconds" : {
+      "type" : "string"
+    },
+    "requiredContent" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "requiredHeaders" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "string"
+      }
+    },
+    "screenshot" : {
+      "type" : "boolean"
+    },
+    "scriptExecution" : {
+      "type" : "boolean"
+    },
+    "tags" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "tlsClientHello" : {
+      "$ref" : "#/components/schemas/TLSClientHelloConfig"
+    },
+    "updatedAt" : {
+      "type" : "string"
+    },
+    "useHeadless" : {
+      "type" : "boolean",
+      "description" : "Headless Browser Configuration"
+    },
+    "userAgent" : {
+      "type" : "string"
+    },
+    "viewportHeight" : {
+      "type" : "integer"
+    },
+    "viewportWidth" : {
+      "type" : "integer"
+    },
+    "waitDelaySeconds" : {
+      "type" : "string"
+    }
+  }
+};
     defs["HTTPPhaseConfigRequest"] = {
   "required" : [ "personaIds" ],
   "type" : "object",
@@ -4863,6 +5477,100 @@ ul.nav-tabs {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
+    }
+  }
+};
+    defs["HTTPValidatorConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "AllowInsecureTLS" : {
+      "type" : "boolean"
+    },
+    "DefaultHeaders" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "string"
+      }
+    },
+    "DefaultUserAgent" : {
+      "type" : "string"
+    },
+    "FollowRedirects" : {
+      "type" : "boolean"
+    },
+    "MaxBodyReadBytes" : {
+      "type" : "integer"
+    },
+    "MaxConcurrentGoroutines" : {
+      "type" : "integer"
+    },
+    "MaxDomainsPerRequest" : {
+      "type" : "integer"
+    },
+    "MaxRedirects" : {
+      "type" : "integer"
+    },
+    "RateLimitBurst" : {
+      "type" : "integer"
+    },
+    "RateLimitDPS" : {
+      "type" : "number"
+    },
+    "RequestTimeout" : {
+      "type" : "string"
+    },
+    "UserAgents" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    }
+  }
+};
+    defs["HTTPValidatorConfigJSON"] = {
+  "type" : "object",
+  "properties" : {
+    "allowInsecureTLS" : {
+      "type" : "boolean"
+    },
+    "defaultHeaders" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "string"
+      }
+    },
+    "defaultUserAgent" : {
+      "type" : "string"
+    },
+    "followRedirects" : {
+      "type" : "boolean"
+    },
+    "maxBodyReadBytes" : {
+      "type" : "integer"
+    },
+    "maxConcurrentGoroutines" : {
+      "type" : "integer"
+    },
+    "maxDomainsPerRequest" : {
+      "type" : "integer"
+    },
+    "maxRedirects" : {
+      "type" : "integer"
+    },
+    "rateLimitBurst" : {
+      "type" : "integer"
+    },
+    "rateLimitDps" : {
+      "type" : "number"
+    },
+    "requestTimeoutSeconds" : {
+      "type" : "integer"
+    },
+    "userAgents" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
     }
   }
 };
@@ -5333,12 +6041,6 @@ ul.nav-tabs {
       "type" : "integer",
       "format" : "int64"
     },
-    "dnsValidationParams" : {
-      "$ref" : "#/components/schemas/DNSValidationCampaignParams"
-    },
-    "domainGenerationParams" : {
-      "$ref" : "#/components/schemas/DomainGenerationCampaignParams"
-    },
     "domains" : {
       "type" : "integer",
       "description" : "Summary metrics (computed from phases)",
@@ -5372,9 +6074,6 @@ ul.nav-tabs {
     },
     "httpConfig" : {
       "type" : "object"
-    },
-    "httpKeywordValidationParams" : {
-      "$ref" : "#/components/schemas/HTTPKeywordCampaignParams"
     },
     "httpResults" : {
       "type" : "object"
@@ -5414,7 +6113,7 @@ ul.nav-tabs {
     },
     "phaseStatus" : {
       "type" : "string",
-      "description" : "Legacy fields for backward compatibility during transition",
+      "description" : "Transition fields",
       "enum" : [ "not_started", "ready", "configured", "in_progress", "paused", "completed", "failed" ]
     },
     "phases" : {
@@ -5430,7 +6129,7 @@ ul.nav-tabs {
     },
     "progressPercentage" : {
       "type" : "number",
-      "description" : "Legacy fields for backward compatibility during transition",
+      "description" : "Transition fields",
       "format" : "double"
     },
     "startedAt" : {
@@ -5605,6 +6304,38 @@ ul.nav-tabs {
     "sourceUrl" : {
       "type" : "string",
       "format" : "uri"
+    }
+  }
+};
+    defs["LoggingConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "enableFileLogging" : {
+      "type" : "boolean"
+    },
+    "enableJSONFormat" : {
+      "type" : "boolean"
+    },
+    "enablePerformanceLogging" : {
+      "type" : "boolean"
+    },
+    "enableRequestLogging" : {
+      "type" : "boolean"
+    },
+    "level" : {
+      "type" : "string"
+    },
+    "logDirectory" : {
+      "type" : "string"
+    },
+    "maxAge" : {
+      "type" : "integer"
+    },
+    "maxBackups" : {
+      "type" : "integer"
+    },
+    "maxFileSize" : {
+      "type" : "integer"
     }
   }
 };
@@ -6446,6 +7177,38 @@ ul.nav-tabs {
     }
   }
 };
+    defs["ProxyConfigEntry"] = {
+  "type" : "object",
+  "properties" : {
+    "address" : {
+      "type" : "string"
+    },
+    "description" : {
+      "type" : "string"
+    },
+    "id" : {
+      "type" : "string"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "notes" : {
+      "type" : "string"
+    },
+    "password" : {
+      "type" : "string"
+    },
+    "protocol" : {
+      "type" : "string"
+    },
+    "userEnabled" : {
+      "type" : "boolean"
+    },
+    "username" : {
+      "type" : "string"
+    }
+  }
+};
     defs["ProxyDetailsResponse"] = {
   "type" : "object",
   "properties" : {
@@ -6499,6 +7262,40 @@ ul.nav-tabs {
     "timestamp" : {
       "type" : "string",
       "format" : "date-time"
+    }
+  }
+};
+    defs["ProxyManagerConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "InitialHealthCheckTimeout" : {
+      "type" : "string"
+    },
+    "MaxConcurrentInitialChecks" : {
+      "type" : "integer"
+    },
+    "TestTimeout" : {
+      "type" : "string"
+    },
+    "TestURL" : {
+      "type" : "string"
+    }
+  }
+};
+    defs["ProxyManagerConfigJSON"] = {
+  "type" : "object",
+  "properties" : {
+    "initialHealthCheckTimeoutSeconds" : {
+      "type" : "integer"
+    },
+    "maxConcurrentInitialChecks" : {
+      "type" : "integer"
+    },
+    "testTimeoutSeconds" : {
+      "type" : "integer"
+    },
+    "testUrl" : {
+      "type" : "string"
     }
   }
 };
@@ -6939,6 +7736,34 @@ ul.nav-tabs {
     }
   }
 };
+    defs["RateLimiterConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "maxRequests" : {
+      "type" : "integer"
+    },
+    "windowSeconds" : {
+      "type" : "integer"
+    }
+  }
+};
+    defs["ResolvedConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "data" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "type" : "object"
+      }
+    },
+    "environment" : {
+      "type" : "string"
+    },
+    "service_name" : {
+      "type" : "string"
+    }
+  }
+};
     defs["ResourceUtilizationMetric"] = {
   "type" : "object",
   "properties" : {
@@ -7105,6 +7930,38 @@ ul.nav-tabs {
       "type" : "string",
       "description" : "Unique identifier",
       "format" : "uuid"
+    }
+  }
+};
+    defs["ServerConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "apiKey" : {
+      "type" : "string"
+    },
+    "auth" : {
+      "$ref" : "#/components/schemas/AuthConfig"
+    },
+    "database" : {
+      "$ref" : "#/components/schemas/DatabaseConfig"
+    },
+    "dbConnMaxLifetimeMinutes" : {
+      "type" : "integer"
+    },
+    "dbMaxIdleConns" : {
+      "type" : "integer"
+    },
+    "dbMaxOpenConns" : {
+      "type" : "integer"
+    },
+    "ginMode" : {
+      "type" : "string"
+    },
+    "port" : {
+      "type" : "string"
+    },
+    "streamChunkSize" : {
+      "type" : "integer"
     }
   }
 };
@@ -7303,6 +8160,32 @@ ul.nav-tabs {
     }
   }
 };
+    defs["SessionConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "CleanupInterval" : {
+      "type" : "string"
+    },
+    "Duration" : {
+      "type" : "string"
+    },
+    "IdleTimeout" : {
+      "type" : "string"
+    },
+    "MaxSessionsPerUser" : {
+      "type" : "integer"
+    },
+    "RequireIPMatch" : {
+      "type" : "boolean"
+    },
+    "RequireUAMatch" : {
+      "type" : "boolean"
+    },
+    "SessionIDLength" : {
+      "type" : "integer"
+    }
+  }
+};
     defs["SessionData"] = {
   "type" : "object",
   "properties" : {
@@ -7374,6 +8257,91 @@ ul.nav-tabs {
     },
     "user" : {
       "$ref" : "#/components/schemas/UserPublicResponse"
+    }
+  }
+};
+    defs["SessionSettings"] = {
+  "type" : "object",
+  "properties" : {
+    "allowed_origins" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "cleanup_interval" : {
+      "type" : "string"
+    },
+    "cookie_domain" : {
+      "type" : "string"
+    },
+    "cookie_http_only" : {
+      "type" : "boolean"
+    },
+    "cookie_max_age" : {
+      "type" : "integer"
+    },
+    "cookie_name" : {
+      "type" : "string",
+      "description" : "Cookie settings"
+    },
+    "cookie_path" : {
+      "type" : "string"
+    },
+    "cookie_same_site" : {
+      "type" : "string"
+    },
+    "cookie_secure" : {
+      "type" : "boolean"
+    },
+    "custom_header_name" : {
+      "type" : "string"
+    },
+    "custom_header_value" : {
+      "type" : "string"
+    },
+    "enable_fingerprinting" : {
+      "type" : "boolean"
+    },
+    "idle_timeout" : {
+      "type" : "string"
+    },
+    "max_login_attempts" : {
+      "type" : "integer"
+    },
+    "max_session_validations" : {
+      "type" : "integer"
+    },
+    "max_sessions_per_user" : {
+      "type" : "integer"
+    },
+    "rate_limit_enabled" : {
+      "type" : "boolean",
+      "description" : "Rate limiting"
+    },
+    "rate_limit_window" : {
+      "type" : "string"
+    },
+    "require_custom_header" : {
+      "type" : "boolean"
+    },
+    "require_ip_match" : {
+      "type" : "boolean",
+      "description" : "Security settings"
+    },
+    "require_origin_validation" : {
+      "type" : "boolean",
+      "description" : "CSRF Protection (without tokens)"
+    },
+    "require_ua_match" : {
+      "type" : "boolean"
+    },
+    "session_duration" : {
+      "type" : "string",
+      "description" : "Session duration and timeouts"
+    },
+    "session_id_length" : {
+      "type" : "integer"
     }
   }
 };
@@ -7527,6 +8495,29 @@ ul.nav-tabs {
     }
   }
 };
+    defs["TLSClientHelloConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "cipherSuites" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "curvePreferences" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "maxVersion" : {
+      "type" : "string"
+    },
+    "minVersion" : {
+      "type" : "string"
+    }
+  }
+};
     defs["TOTPSecret"] = {
   "type" : "object",
   "properties" : {
@@ -7657,16 +8648,6 @@ ul.nav-tabs {
     "rotationIntervalSeconds" : {
       "type" : "integer",
       "format" : "int32"
-    },
-    "sourceDnsCampaignId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
-    },
-    "sourceGenerationCampaignId" : {
-      "type" : "string",
-      "description" : "Unique identifier",
-      "format" : "uuid"
     },
     "status" : {
       "type" : "string"
@@ -7942,6 +8923,14 @@ ul.nav-tabs {
     }
   }
 };
+    defs["ValidationRule"] = {
+  "type" : "object",
+  "properties" : {
+    "Field" : {
+      "type" : "string"
+    }
+  }
+};
     defs["ValidationStartResponse"] = {
   "type" : "object",
   "properties" : {
@@ -7972,6 +8961,41 @@ ul.nav-tabs {
     },
     "message" : {
       "type" : "string"
+    }
+  }
+};
+    defs["WorkerConfig"] = {
+  "type" : "object",
+  "properties" : {
+    "batchSize" : {
+      "type" : "integer"
+    },
+    "dnsSubtaskConcurrency" : {
+      "type" : "integer"
+    },
+    "errorRetryDelaySeconds" : {
+      "type" : "integer"
+    },
+    "httpKeywordSubtaskConcurrency" : {
+      "type" : "integer"
+    },
+    "jobProcessingTimeoutMinutes" : {
+      "type" : "integer"
+    },
+    "maxJobRetries" : {
+      "type" : "integer"
+    },
+    "maxRetries" : {
+      "type" : "integer"
+    },
+    "numWorkers" : {
+      "type" : "integer"
+    },
+    "pollIntervalSeconds" : {
+      "type" : "integer"
+    },
+    "retryDelaySeconds" : {
+      "type" : "integer"
     }
   }
 };
@@ -8010,31 +9034,10 @@ ul.nav-tabs {
   }
 };
 
-        defs["AuthConfig"] = {
-  "type" : "string"
-};
-        defs["AuthConfigUpdateRequest"] = {
-  "type" : "string"
-};
-        defs["Campaign"] = {
-  "$ref" : "#/components/schemas/LeadGenerationCampaign"
-};
         defs["CampaignJobStatusEnum"] = {
   "type" : "string"
 };
-        defs["CampaignPhaseEnum"] = {
-  "type" : "string"
-};
-        defs["CampaignPhaseStatusEnum"] = {
-  "type" : "string"
-};
-        defs["DNSConfigUpdateRequest"] = {
-  "type" : "string"
-};
         defs["DNSValidationStatusEnum"] = {
-  "type" : "string"
-};
-        defs["DNSValidatorConfigJSON"] = {
   "type" : "string"
 };
         defs["DomainDNSStatusEnum"] = {
@@ -8052,19 +9055,10 @@ ul.nav-tabs {
         defs["ErrorCode"] = {
   "type" : "string"
 };
-        defs["FeatureFlags"] = {
-  "type" : "string"
-};
-        defs["FeatureFlagsUpdateRequest"] = {
-  "type" : "string"
-};
-        defs["HTTPConfigUpdateRequest"] = {
+        defs["FallbackPolicy"] = {
   "type" : "string"
 };
         defs["HTTPValidationStatusEnum"] = {
-  "type" : "string"
-};
-        defs["HTTPValidatorConfigJSON"] = {
   "type" : "string"
 };
         defs["JobBusinessStatusEnum"] = {
@@ -8074,12 +9068,6 @@ ul.nav-tabs {
   "type" : "string"
 };
         defs["KeywordRuleTypeEnum"] = {
-  "type" : "string"
-};
-        defs["LoggingConfig"] = {
-  "type" : "string"
-};
-        defs["LoggingConfigUpdateRequest"] = {
   "type" : "string"
 };
         defs["PersonaStatusEnum"] = {
@@ -8094,31 +9082,13 @@ ul.nav-tabs {
         defs["PhaseTypeEnum"] = {
   "type" : "string"
 };
-        defs["ProxyManagerConfigJSON"] = {
-  "type" : "string"
-};
-        defs["ProxyManagerConfigUpdateRequest"] = {
-  "type" : "string"
-};
         defs["ProxyProtocolEnum"] = {
   "type" : "string"
 };
         defs["ProxyStatusEnum"] = {
   "type" : "string"
 };
-        defs["RateLimiterConfig"] = {
-  "type" : "string"
-};
-        defs["RateLimiterConfigUpdateRequest"] = {
-  "type" : "string"
-};
         defs["ValidationStatusEnum"] = {
-  "type" : "string"
-};
-        defs["WorkerConfig"] = {
-  "type" : "string"
-};
-        defs["WorkerConfigUpdateRequest"] = {
   "type" : "string"
 };
 
@@ -16523,7 +17493,7 @@ public class FeatureFlagsApiExample {
         FeatureFlagsApi apiInstance = new FeatureFlagsApi();
 
         try {
-            'String' result = apiInstance.getFeatureFlags();
+            FeatureFlags result = apiInstance.getFeatureFlags();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling FeatureFlagsApi#getFeatureFlags");
@@ -16558,7 +17528,7 @@ public class FeatureFlagsApiExample {
         FeatureFlagsApi apiInstance = new FeatureFlagsApi();
 
         try {
-            'String' result = apiInstance.getFeatureFlags();
+            FeatureFlags result = apiInstance.getFeatureFlags();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling FeatureFlagsApi#getFeatureFlags");
@@ -16579,7 +17549,7 @@ FeatureFlagsApi *apiInstance = [[FeatureFlagsApi alloc] init];
 
 // Get feature flags
 [apiInstance getFeatureFlagsWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+              ^(FeatureFlags output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -16628,7 +17598,7 @@ namespace Example
 
             try {
                 // Get feature flags
-                'String' result = apiInstance.getFeatureFlags();
+                FeatureFlags result = apiInstance.getFeatureFlags();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling FeatureFlagsApi.getFeatureFlags: " + e.Message );
@@ -16986,7 +17956,12 @@ pub fn main() {
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
  "http://localhost/feature-flags" \
- -d ''
+ -d '{
+  &quot;enableAnalytics&quot; : true,
+  &quot;enableDebugMode&quot; : true,
+  &quot;enableRealTimeUpdates&quot; : true,
+  &quot;enableOfflineMode&quot; : true
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-FeatureFlags-updateFeatureFlags-0-java">
@@ -17003,10 +17978,10 @@ public class FeatureFlagsApiExample {
 
         // Create an instance of the API class
         FeatureFlagsApi apiInstance = new FeatureFlagsApi();
-        String body = body_example; // String | 
+        FeatureFlags featureFlags = ; // FeatureFlags | 
 
         try {
-            'String' result = apiInstance.updateFeatureFlags(body);
+            FeatureFlags result = apiInstance.updateFeatureFlags(featureFlags);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling FeatureFlagsApi#updateFeatureFlags");
@@ -17022,10 +17997,10 @@ public class FeatureFlagsApiExample {
 
 final api_instance = DefaultApi();
 
-final String body = new String(); // String | 
+final FeatureFlags featureFlags = new FeatureFlags(); // FeatureFlags | 
 
 try {
-    final result = await api_instance.updateFeatureFlags(body);
+    final result = await api_instance.updateFeatureFlags(featureFlags);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->updateFeatureFlags: $e\n');
@@ -17040,10 +18015,10 @@ try {
 public class FeatureFlagsApiExample {
     public static void main(String[] args) {
         FeatureFlagsApi apiInstance = new FeatureFlagsApi();
-        String body = body_example; // String | 
+        FeatureFlags featureFlags = ; // FeatureFlags | 
 
         try {
-            'String' result = apiInstance.updateFeatureFlags(body);
+            FeatureFlags result = apiInstance.updateFeatureFlags(featureFlags);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling FeatureFlagsApi#updateFeatureFlags");
@@ -17061,11 +18036,11 @@ public class FeatureFlagsApiExample {
 
 // Create an instance of the API class
 FeatureFlagsApi *apiInstance = [[FeatureFlagsApi alloc] init];
-String *body = body_example; // 
+FeatureFlags *featureFlags = ; // 
 
 // Update feature flags
-[apiInstance updateFeatureFlagsWith:body
-              completionHandler: ^('String' output, NSError* error) {
+[apiInstance updateFeatureFlagsWith:featureFlags
+              completionHandler: ^(FeatureFlags output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -17081,7 +18056,7 @@ String *body = body_example; //
 
 // Create an instance of the API class
 var api = new StudioApi.FeatureFlagsApi()
-var body = body_example; // {String} 
+var featureFlags = ; // {FeatureFlags} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -17090,7 +18065,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.updateFeatureFlags(body, callback);
+api.updateFeatureFlags(featureFlags, callback);
 </code></pre>
                             </div>
 
@@ -17113,11 +18088,11 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new FeatureFlagsApi();
-            var body = body_example;  // String | 
+            var featureFlags = new FeatureFlags(); // FeatureFlags | 
 
             try {
                 // Update feature flags
-                'String' result = apiInstance.updateFeatureFlags(body);
+                FeatureFlags result = apiInstance.updateFeatureFlags(featureFlags);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling FeatureFlagsApi.updateFeatureFlags: " + e.Message );
@@ -17134,10 +18109,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\FeatureFlagsApi();
-$body = body_example; // String | 
+$featureFlags = ; // FeatureFlags | 
 
 try {
-    $result = $api_instance->updateFeatureFlags($body);
+    $result = $api_instance->updateFeatureFlags($featureFlags);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling FeatureFlagsApi->updateFeatureFlags: ', $e->getMessage(), PHP_EOL;
@@ -17152,10 +18127,10 @@ use WWW::OPenAPIClient::FeatureFlagsApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::FeatureFlagsApi->new();
-my $body = WWW::OPenAPIClient::Object::String->new(); # String | 
+my $featureFlags = WWW::OPenAPIClient::Object::FeatureFlags->new(); # FeatureFlags | 
 
 eval {
-    my $result = $api_instance->updateFeatureFlags(body => $body);
+    my $result = $api_instance->updateFeatureFlags(featureFlags => $featureFlags);
     print Dumper($result);
 };
 if ($@) {
@@ -17172,11 +18147,11 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.FeatureFlagsApi()
-body = body_example # String | 
+featureFlags =  # FeatureFlags | 
 
 try:
     # Update feature flags
-    api_response = api_instance.update_feature_flags(body)
+    api_response = api_instance.update_feature_flags(featureFlags)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling FeatureFlagsApi->updateFeatureFlags: %s\n" % e)</code></pre>
@@ -17186,10 +18161,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate FeatureFlagsApi;
 
 pub fn main() {
-    let body = body_example; // String
+    let featureFlags = ; // FeatureFlags
 
     let mut context = FeatureFlagsApi::Context::default();
-    let result = client.updateFeatureFlags(body, &context).wait();
+    let result = client.updateFeatureFlags(featureFlags, &context).wait();
 
     println!("{:?}", result);
 }
@@ -17212,7 +18187,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <tr><td style="width:150px;">featureFlags <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -17221,7 +18196,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/FeatureFlagsUpdateRequest"
+        "$ref" : "#/components/schemas/FeatureFlags"
       }
     }
   },
@@ -17244,12 +18219,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_updateFeatureFlags_body');
+  var result = $('#d2e199_updateFeatureFlags_featureFlags');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_updateFeatureFlags_body"></div>
+<div id="d2e199_updateFeatureFlags_featureFlags"></div>
 </td>
 </tr>
 
@@ -35476,7 +36451,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getAuthConfigGin();
+            AuthConfig result = apiInstance.getAuthConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getAuthConfigGin");
@@ -35511,7 +36486,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getAuthConfigGin();
+            AuthConfig result = apiInstance.getAuthConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getAuthConfigGin");
@@ -35532,7 +36507,7 @@ ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
 
 // Get authentication configuration
 [apiInstance getAuthConfigGinWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+              ^(AuthConfig output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -35581,7 +36556,7 @@ namespace Example
 
             try {
                 // Get authentication configuration
-                'String' result = apiInstance.getAuthConfigGin();
+                AuthConfig result = apiInstance.getAuthConfigGin();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.getAuthConfigGin: " + e.Message );
@@ -35956,7 +36931,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getDNSConfigGin();
+            DNSValidatorConfigJSON result = apiInstance.getDNSConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getDNSConfigGin");
@@ -35991,7 +36966,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getDNSConfigGin();
+            DNSValidatorConfigJSON result = apiInstance.getDNSConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getDNSConfigGin");
@@ -36012,7 +36987,7 @@ ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
 
 // Get DNS configuration
 [apiInstance getDNSConfigGinWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+              ^(DNSValidatorConfigJSON output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -36061,7 +37036,7 @@ namespace Example
 
             try {
                 // Get DNS configuration
-                'String' result = apiInstance.getDNSConfigGin();
+                DNSValidatorConfigJSON result = apiInstance.getDNSConfigGin();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.getDNSConfigGin: " + e.Message );
@@ -36436,7 +37411,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getHTTPConfigGin();
+            HTTPValidatorConfigJSON result = apiInstance.getHTTPConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getHTTPConfigGin");
@@ -36471,7 +37446,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getHTTPConfigGin();
+            HTTPValidatorConfigJSON result = apiInstance.getHTTPConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getHTTPConfigGin");
@@ -36492,7 +37467,7 @@ ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
 
 // Get HTTP configuration
 [apiInstance getHTTPConfigGinWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+              ^(HTTPValidatorConfigJSON output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -36541,7 +37516,7 @@ namespace Example
 
             try {
                 // Get HTTP configuration
-                'String' result = apiInstance.getHTTPConfigGin();
+                HTTPValidatorConfigJSON result = apiInstance.getHTTPConfigGin();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.getHTTPConfigGin: " + e.Message );
@@ -36916,7 +37891,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getLoggingConfigGin();
+            LoggingConfig result = apiInstance.getLoggingConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getLoggingConfigGin");
@@ -36951,7 +37926,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getLoggingConfigGin();
+            LoggingConfig result = apiInstance.getLoggingConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getLoggingConfigGin");
@@ -36972,7 +37947,7 @@ ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
 
 // Get logging configuration
 [apiInstance getLoggingConfigGinWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+              ^(LoggingConfig output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -37021,7 +37996,7 @@ namespace Example
 
             try {
                 // Get logging configuration
-                'String' result = apiInstance.getLoggingConfigGin();
+                LoggingConfig result = apiInstance.getLoggingConfigGin();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.getLoggingConfigGin: " + e.Message );
@@ -37396,7 +38371,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getProxyManagerConfigGin();
+            ProxyManagerConfigJSON result = apiInstance.getProxyManagerConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getProxyManagerConfigGin");
@@ -37431,7 +38406,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getProxyManagerConfigGin();
+            ProxyManagerConfigJSON result = apiInstance.getProxyManagerConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getProxyManagerConfigGin");
@@ -37452,7 +38427,7 @@ ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
 
 // Get proxy manager configuration
 [apiInstance getProxyManagerConfigGinWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+              ^(ProxyManagerConfigJSON output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -37501,7 +38476,7 @@ namespace Example
 
             try {
                 // Get proxy manager configuration
-                'String' result = apiInstance.getProxyManagerConfigGin();
+                ProxyManagerConfigJSON result = apiInstance.getProxyManagerConfigGin();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.getProxyManagerConfigGin: " + e.Message );
@@ -37876,7 +38851,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getRateLimiterConfigGin();
+            RateLimiterConfig result = apiInstance.getRateLimiterConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getRateLimiterConfigGin");
@@ -37911,7 +38886,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getRateLimiterConfigGin();
+            RateLimiterConfig result = apiInstance.getRateLimiterConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getRateLimiterConfigGin");
@@ -37932,7 +38907,7 @@ ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
 
 // Get rate limiter configuration
 [apiInstance getRateLimiterConfigGinWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+              ^(RateLimiterConfig output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -37981,7 +38956,7 @@ namespace Example
 
             try {
                 // Get rate limiter configuration
-                'String' result = apiInstance.getRateLimiterConfigGin();
+                RateLimiterConfig result = apiInstance.getRateLimiterConfigGin();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.getRateLimiterConfigGin: " + e.Message );
@@ -38836,7 +39811,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getWorkerConfigGin();
+            WorkerConfig result = apiInstance.getWorkerConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getWorkerConfigGin");
@@ -38871,7 +39846,7 @@ public class ServerSettingsApiExample {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
 
         try {
-            'String' result = apiInstance.getWorkerConfigGin();
+            WorkerConfig result = apiInstance.getWorkerConfigGin();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#getWorkerConfigGin");
@@ -38892,7 +39867,7 @@ ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
 
 // Get worker configuration
 [apiInstance getWorkerConfigGinWithCompletionHandler: 
-              ^('String' output, NSError* error) {
+              ^(WorkerConfig output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -38941,7 +39916,7 @@ namespace Example
 
             try {
                 // Get worker configuration
-                'String' result = apiInstance.getWorkerConfigGin();
+                WorkerConfig result = apiInstance.getWorkerConfigGin();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.getWorkerConfigGin: " + e.Message );
@@ -39299,7 +40274,31 @@ pub fn main() {
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
  "http://localhost/server/auth-config" \
- -d ''
+ -d '{
+  &quot;recaptchaSiteKey&quot; : &quot;recaptchaSiteKey&quot;,
+  &quot;smtpUsername&quot; : &quot;smtpUsername&quot;,
+  &quot;captchaThreshold&quot; : 6,
+  &quot;smtpPort&quot; : 7,
+  &quot;maxLoginAttempts&quot; : 5,
+  &quot;maxPasswordResetAttempts&quot; : 5,
+  &quot;sessionDuration&quot; : &quot;sessionDuration&quot;,
+  &quot;passwordMinLength&quot; : 2,
+  &quot;accountLockDuration&quot; : &quot;accountLockDuration&quot;,
+  &quot;fromEmail&quot; : &quot;fromEmail&quot;,
+  &quot;rateLimitWindow&quot; : &quot;rateLimitWindow&quot;,
+  &quot;sessionIdleTimeout&quot; : &quot;sessionIdleTimeout&quot;,
+  &quot;recaptchaSecretKey&quot; : &quot;recaptchaSecretKey&quot;,
+  &quot;smtpHost&quot; : &quot;smtpHost&quot;,
+  &quot;bcryptCost&quot; : 0,
+  &quot;fromName&quot; : &quot;fromName&quot;,
+  &quot;smtpPassword&quot; : &quot;smtpPassword&quot;,
+  &quot;maxFailedAttempts&quot; : 1,
+  &quot;pepperKey&quot; : &quot;pepperKey&quot;,
+  &quot;sessionCookieDomain&quot; : &quot;sessionCookieDomain&quot;,
+  &quot;resetTokenExpiry&quot; : &quot;resetTokenExpiry&quot;,
+  &quot;sessionCookieName&quot; : &quot;sessionCookieName&quot;,
+  &quot;sessionCookieSecure&quot; : true
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-ServerSettings-updateAuthConfigGin-0-java">
@@ -39316,10 +40315,10 @@ public class ServerSettingsApiExample {
 
         // Create an instance of the API class
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        AuthConfig authConfig = ; // AuthConfig | 
 
         try {
-            'String' result = apiInstance.updateAuthConfigGin(body);
+            AuthConfig result = apiInstance.updateAuthConfigGin(authConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateAuthConfigGin");
@@ -39335,10 +40334,10 @@ public class ServerSettingsApiExample {
 
 final api_instance = DefaultApi();
 
-final String body = new String(); // String | 
+final AuthConfig authConfig = new AuthConfig(); // AuthConfig | 
 
 try {
-    final result = await api_instance.updateAuthConfigGin(body);
+    final result = await api_instance.updateAuthConfigGin(authConfig);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->updateAuthConfigGin: $e\n');
@@ -39353,10 +40352,10 @@ try {
 public class ServerSettingsApiExample {
     public static void main(String[] args) {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        AuthConfig authConfig = ; // AuthConfig | 
 
         try {
-            'String' result = apiInstance.updateAuthConfigGin(body);
+            AuthConfig result = apiInstance.updateAuthConfigGin(authConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateAuthConfigGin");
@@ -39374,11 +40373,11 @@ public class ServerSettingsApiExample {
 
 // Create an instance of the API class
 ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
-String *body = body_example; // 
+AuthConfig *authConfig = ; // 
 
 // Update authentication configuration
-[apiInstance updateAuthConfigGinWith:body
-              completionHandler: ^('String' output, NSError* error) {
+[apiInstance updateAuthConfigGinWith:authConfig
+              completionHandler: ^(AuthConfig output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -39394,7 +40393,7 @@ String *body = body_example; //
 
 // Create an instance of the API class
 var api = new StudioApi.ServerSettingsApi()
-var body = body_example; // {String} 
+var authConfig = ; // {AuthConfig} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -39403,7 +40402,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.updateAuthConfigGin(body, callback);
+api.updateAuthConfigGin(authConfig, callback);
 </code></pre>
                             </div>
 
@@ -39426,11 +40425,11 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new ServerSettingsApi();
-            var body = body_example;  // String | 
+            var authConfig = new AuthConfig(); // AuthConfig | 
 
             try {
                 // Update authentication configuration
-                'String' result = apiInstance.updateAuthConfigGin(body);
+                AuthConfig result = apiInstance.updateAuthConfigGin(authConfig);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.updateAuthConfigGin: " + e.Message );
@@ -39447,10 +40446,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\ServerSettingsApi();
-$body = body_example; // String | 
+$authConfig = ; // AuthConfig | 
 
 try {
-    $result = $api_instance->updateAuthConfigGin($body);
+    $result = $api_instance->updateAuthConfigGin($authConfig);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling ServerSettingsApi->updateAuthConfigGin: ', $e->getMessage(), PHP_EOL;
@@ -39465,10 +40464,10 @@ use WWW::OPenAPIClient::ServerSettingsApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::ServerSettingsApi->new();
-my $body = WWW::OPenAPIClient::Object::String->new(); # String | 
+my $authConfig = WWW::OPenAPIClient::Object::AuthConfig->new(); # AuthConfig | 
 
 eval {
-    my $result = $api_instance->updateAuthConfigGin(body => $body);
+    my $result = $api_instance->updateAuthConfigGin(authConfig => $authConfig);
     print Dumper($result);
 };
 if ($@) {
@@ -39485,11 +40484,11 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.ServerSettingsApi()
-body = body_example # String | 
+authConfig =  # AuthConfig | 
 
 try:
     # Update authentication configuration
-    api_response = api_instance.update_auth_config_gin(body)
+    api_response = api_instance.update_auth_config_gin(authConfig)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling ServerSettingsApi->updateAuthConfigGin: %s\n" % e)</code></pre>
@@ -39499,10 +40498,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate ServerSettingsApi;
 
 pub fn main() {
-    let body = body_example; // String
+    let authConfig = ; // AuthConfig
 
     let mut context = ServerSettingsApi::Context::default();
-    let result = client.updateAuthConfigGin(body, &context).wait();
+    let result = client.updateAuthConfigGin(authConfig, &context).wait();
 
     println!("{:?}", result);
 }
@@ -39525,7 +40524,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <tr><td style="width:150px;">authConfig <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -39534,7 +40533,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/AuthConfigUpdateRequest"
+        "$ref" : "#/components/schemas/AuthConfig"
       }
     }
   },
@@ -39557,12 +40556,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_updateAuthConfigGin_body');
+  var result = $('#d2e199_updateAuthConfigGin_authConfig');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_updateAuthConfigGin_body"></div>
+<div id="d2e199_updateAuthConfigGin_authConfig"></div>
 </td>
 </tr>
 
@@ -39840,7 +40839,23 @@ $(document).ready(function() {
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
  "http://localhost/server/dns-config" \
- -d ''
+ -d '{
+  &quot;maxDomainsPerRequest&quot; : 1,
+  &quot;resolvers&quot; : [ &quot;resolvers&quot;, &quot;resolvers&quot; ],
+  &quot;rateLimitDps&quot; : 9.301444243932576,
+  &quot;resolversWeighted&quot; : {
+    &quot;key&quot; : 3
+  },
+  &quot;resolverStrategy&quot; : &quot;resolverStrategy&quot;,
+  &quot;concurrentQueriesPerDomain&quot; : 0,
+  &quot;useSystemResolvers&quot; : true,
+  &quot;maxConcurrentGoroutines&quot; : 6,
+  &quot;queryDelayMaxMs&quot; : 5,
+  &quot;queryTimeoutSeconds&quot; : 2,
+  &quot;resolversPreferredOrder&quot; : [ &quot;resolversPreferredOrder&quot;, &quot;resolversPreferredOrder&quot; ],
+  &quot;rateLimitBurst&quot; : 7,
+  &quot;queryDelayMinMs&quot; : 5
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-ServerSettings-updateDNSConfigGin-0-java">
@@ -39857,10 +40872,10 @@ public class ServerSettingsApiExample {
 
         // Create an instance of the API class
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        DNSValidatorConfigJSON dNSValidatorConfigJSON = ; // DNSValidatorConfigJSON | 
 
         try {
-            'String' result = apiInstance.updateDNSConfigGin(body);
+            DNSValidatorConfigJSON result = apiInstance.updateDNSConfigGin(dNSValidatorConfigJSON);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateDNSConfigGin");
@@ -39876,10 +40891,10 @@ public class ServerSettingsApiExample {
 
 final api_instance = DefaultApi();
 
-final String body = new String(); // String | 
+final DNSValidatorConfigJSON dNSValidatorConfigJSON = new DNSValidatorConfigJSON(); // DNSValidatorConfigJSON | 
 
 try {
-    final result = await api_instance.updateDNSConfigGin(body);
+    final result = await api_instance.updateDNSConfigGin(dNSValidatorConfigJSON);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->updateDNSConfigGin: $e\n');
@@ -39894,10 +40909,10 @@ try {
 public class ServerSettingsApiExample {
     public static void main(String[] args) {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        DNSValidatorConfigJSON dNSValidatorConfigJSON = ; // DNSValidatorConfigJSON | 
 
         try {
-            'String' result = apiInstance.updateDNSConfigGin(body);
+            DNSValidatorConfigJSON result = apiInstance.updateDNSConfigGin(dNSValidatorConfigJSON);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateDNSConfigGin");
@@ -39915,11 +40930,11 @@ public class ServerSettingsApiExample {
 
 // Create an instance of the API class
 ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
-String *body = body_example; // 
+DNSValidatorConfigJSON *dNSValidatorConfigJSON = ; // 
 
 // Update DNS configuration
-[apiInstance updateDNSConfigGinWith:body
-              completionHandler: ^('String' output, NSError* error) {
+[apiInstance updateDNSConfigGinWith:dNSValidatorConfigJSON
+              completionHandler: ^(DNSValidatorConfigJSON output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -39935,7 +40950,7 @@ String *body = body_example; //
 
 // Create an instance of the API class
 var api = new StudioApi.ServerSettingsApi()
-var body = body_example; // {String} 
+var dNSValidatorConfigJSON = ; // {DNSValidatorConfigJSON} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -39944,7 +40959,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.updateDNSConfigGin(body, callback);
+api.updateDNSConfigGin(dNSValidatorConfigJSON, callback);
 </code></pre>
                             </div>
 
@@ -39967,11 +40982,11 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new ServerSettingsApi();
-            var body = body_example;  // String | 
+            var dNSValidatorConfigJSON = new DNSValidatorConfigJSON(); // DNSValidatorConfigJSON | 
 
             try {
                 // Update DNS configuration
-                'String' result = apiInstance.updateDNSConfigGin(body);
+                DNSValidatorConfigJSON result = apiInstance.updateDNSConfigGin(dNSValidatorConfigJSON);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.updateDNSConfigGin: " + e.Message );
@@ -39988,10 +41003,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\ServerSettingsApi();
-$body = body_example; // String | 
+$dNSValidatorConfigJSON = ; // DNSValidatorConfigJSON | 
 
 try {
-    $result = $api_instance->updateDNSConfigGin($body);
+    $result = $api_instance->updateDNSConfigGin($dNSValidatorConfigJSON);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling ServerSettingsApi->updateDNSConfigGin: ', $e->getMessage(), PHP_EOL;
@@ -40006,10 +41021,10 @@ use WWW::OPenAPIClient::ServerSettingsApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::ServerSettingsApi->new();
-my $body = WWW::OPenAPIClient::Object::String->new(); # String | 
+my $dNSValidatorConfigJSON = WWW::OPenAPIClient::Object::DNSValidatorConfigJSON->new(); # DNSValidatorConfigJSON | 
 
 eval {
-    my $result = $api_instance->updateDNSConfigGin(body => $body);
+    my $result = $api_instance->updateDNSConfigGin(dNSValidatorConfigJSON => $dNSValidatorConfigJSON);
     print Dumper($result);
 };
 if ($@) {
@@ -40026,11 +41041,11 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.ServerSettingsApi()
-body = body_example # String | 
+dNSValidatorConfigJSON =  # DNSValidatorConfigJSON | 
 
 try:
     # Update DNS configuration
-    api_response = api_instance.update_dns_config_gin(body)
+    api_response = api_instance.update_dns_config_gin(dNSValidatorConfigJSON)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling ServerSettingsApi->updateDNSConfigGin: %s\n" % e)</code></pre>
@@ -40040,10 +41055,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate ServerSettingsApi;
 
 pub fn main() {
-    let body = body_example; // String
+    let dNSValidatorConfigJSON = ; // DNSValidatorConfigJSON
 
     let mut context = ServerSettingsApi::Context::default();
-    let result = client.updateDNSConfigGin(body, &context).wait();
+    let result = client.updateDNSConfigGin(dNSValidatorConfigJSON, &context).wait();
 
     println!("{:?}", result);
 }
@@ -40066,7 +41081,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <tr><td style="width:150px;">dNSValidatorConfigJSON <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -40075,7 +41090,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/DNSConfigUpdateRequest"
+        "$ref" : "#/components/schemas/DNSValidatorConfigJSON"
       }
     }
   },
@@ -40098,12 +41113,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_updateDNSConfigGin_body');
+  var result = $('#d2e199_updateDNSConfigGin_dNSValidatorConfigJSON');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_updateDNSConfigGin_body"></div>
+<div id="d2e199_updateDNSConfigGin_dNSValidatorConfigJSON"></div>
 </td>
 </tr>
 
@@ -40381,7 +41396,22 @@ $(document).ready(function() {
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
  "http://localhost/server/http-config" \
- -d ''
+ -d '{
+  &quot;maxConcurrentGoroutines&quot; : 6,
+  &quot;maxBodyReadBytes&quot; : 0,
+  &quot;maxDomainsPerRequest&quot; : 1,
+  &quot;rateLimitDps&quot; : 2.3021358869347655,
+  &quot;requestTimeoutSeconds&quot; : 7,
+  &quot;followRedirects&quot; : true,
+  &quot;userAgents&quot; : [ &quot;userAgents&quot;, &quot;userAgents&quot; ],
+  &quot;allowInsecureTLS&quot; : true,
+  &quot;defaultUserAgent&quot; : &quot;defaultUserAgent&quot;,
+  &quot;defaultHeaders&quot; : {
+    &quot;key&quot; : &quot;defaultHeaders&quot;
+  },
+  &quot;rateLimitBurst&quot; : 5,
+  &quot;maxRedirects&quot; : 5
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-ServerSettings-updateHTTPConfigGin-0-java">
@@ -40398,10 +41428,10 @@ public class ServerSettingsApiExample {
 
         // Create an instance of the API class
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        HTTPValidatorConfigJSON hTTPValidatorConfigJSON = ; // HTTPValidatorConfigJSON | 
 
         try {
-            'String' result = apiInstance.updateHTTPConfigGin(body);
+            HTTPValidatorConfigJSON result = apiInstance.updateHTTPConfigGin(hTTPValidatorConfigJSON);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateHTTPConfigGin");
@@ -40417,10 +41447,10 @@ public class ServerSettingsApiExample {
 
 final api_instance = DefaultApi();
 
-final String body = new String(); // String | 
+final HTTPValidatorConfigJSON hTTPValidatorConfigJSON = new HTTPValidatorConfigJSON(); // HTTPValidatorConfigJSON | 
 
 try {
-    final result = await api_instance.updateHTTPConfigGin(body);
+    final result = await api_instance.updateHTTPConfigGin(hTTPValidatorConfigJSON);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->updateHTTPConfigGin: $e\n');
@@ -40435,10 +41465,10 @@ try {
 public class ServerSettingsApiExample {
     public static void main(String[] args) {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        HTTPValidatorConfigJSON hTTPValidatorConfigJSON = ; // HTTPValidatorConfigJSON | 
 
         try {
-            'String' result = apiInstance.updateHTTPConfigGin(body);
+            HTTPValidatorConfigJSON result = apiInstance.updateHTTPConfigGin(hTTPValidatorConfigJSON);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateHTTPConfigGin");
@@ -40456,11 +41486,11 @@ public class ServerSettingsApiExample {
 
 // Create an instance of the API class
 ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
-String *body = body_example; // 
+HTTPValidatorConfigJSON *hTTPValidatorConfigJSON = ; // 
 
 // Update HTTP configuration
-[apiInstance updateHTTPConfigGinWith:body
-              completionHandler: ^('String' output, NSError* error) {
+[apiInstance updateHTTPConfigGinWith:hTTPValidatorConfigJSON
+              completionHandler: ^(HTTPValidatorConfigJSON output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -40476,7 +41506,7 @@ String *body = body_example; //
 
 // Create an instance of the API class
 var api = new StudioApi.ServerSettingsApi()
-var body = body_example; // {String} 
+var hTTPValidatorConfigJSON = ; // {HTTPValidatorConfigJSON} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -40485,7 +41515,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.updateHTTPConfigGin(body, callback);
+api.updateHTTPConfigGin(hTTPValidatorConfigJSON, callback);
 </code></pre>
                             </div>
 
@@ -40508,11 +41538,11 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new ServerSettingsApi();
-            var body = body_example;  // String | 
+            var hTTPValidatorConfigJSON = new HTTPValidatorConfigJSON(); // HTTPValidatorConfigJSON | 
 
             try {
                 // Update HTTP configuration
-                'String' result = apiInstance.updateHTTPConfigGin(body);
+                HTTPValidatorConfigJSON result = apiInstance.updateHTTPConfigGin(hTTPValidatorConfigJSON);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.updateHTTPConfigGin: " + e.Message );
@@ -40529,10 +41559,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\ServerSettingsApi();
-$body = body_example; // String | 
+$hTTPValidatorConfigJSON = ; // HTTPValidatorConfigJSON | 
 
 try {
-    $result = $api_instance->updateHTTPConfigGin($body);
+    $result = $api_instance->updateHTTPConfigGin($hTTPValidatorConfigJSON);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling ServerSettingsApi->updateHTTPConfigGin: ', $e->getMessage(), PHP_EOL;
@@ -40547,10 +41577,10 @@ use WWW::OPenAPIClient::ServerSettingsApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::ServerSettingsApi->new();
-my $body = WWW::OPenAPIClient::Object::String->new(); # String | 
+my $hTTPValidatorConfigJSON = WWW::OPenAPIClient::Object::HTTPValidatorConfigJSON->new(); # HTTPValidatorConfigJSON | 
 
 eval {
-    my $result = $api_instance->updateHTTPConfigGin(body => $body);
+    my $result = $api_instance->updateHTTPConfigGin(hTTPValidatorConfigJSON => $hTTPValidatorConfigJSON);
     print Dumper($result);
 };
 if ($@) {
@@ -40567,11 +41597,11 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.ServerSettingsApi()
-body = body_example # String | 
+hTTPValidatorConfigJSON =  # HTTPValidatorConfigJSON | 
 
 try:
     # Update HTTP configuration
-    api_response = api_instance.update_http_config_gin(body)
+    api_response = api_instance.update_http_config_gin(hTTPValidatorConfigJSON)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling ServerSettingsApi->updateHTTPConfigGin: %s\n" % e)</code></pre>
@@ -40581,10 +41611,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate ServerSettingsApi;
 
 pub fn main() {
-    let body = body_example; // String
+    let hTTPValidatorConfigJSON = ; // HTTPValidatorConfigJSON
 
     let mut context = ServerSettingsApi::Context::default();
-    let result = client.updateHTTPConfigGin(body, &context).wait();
+    let result = client.updateHTTPConfigGin(hTTPValidatorConfigJSON, &context).wait();
 
     println!("{:?}", result);
 }
@@ -40607,7 +41637,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <tr><td style="width:150px;">hTTPValidatorConfigJSON <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -40616,7 +41646,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/HTTPConfigUpdateRequest"
+        "$ref" : "#/components/schemas/HTTPValidatorConfigJSON"
       }
     }
   },
@@ -40639,12 +41669,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_updateHTTPConfigGin_body');
+  var result = $('#d2e199_updateHTTPConfigGin_hTTPValidatorConfigJSON');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_updateHTTPConfigGin_body"></div>
+<div id="d2e199_updateHTTPConfigGin_hTTPValidatorConfigJSON"></div>
 </td>
 </tr>
 
@@ -40922,7 +41952,17 @@ $(document).ready(function() {
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
  "http://localhost/server/logging-config" \
- -d ''
+ -d '{
+  &quot;enableRequestLogging&quot; : true,
+  &quot;logDirectory&quot; : &quot;logDirectory&quot;,
+  &quot;level&quot; : &quot;level&quot;,
+  &quot;maxAge&quot; : 0,
+  &quot;enableFileLogging&quot; : true,
+  &quot;enableJSONFormat&quot; : true,
+  &quot;maxBackups&quot; : 6,
+  &quot;maxFileSize&quot; : 1,
+  &quot;enablePerformanceLogging&quot; : true
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-ServerSettings-updateLoggingConfigGin-0-java">
@@ -40939,10 +41979,10 @@ public class ServerSettingsApiExample {
 
         // Create an instance of the API class
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        LoggingConfig loggingConfig = ; // LoggingConfig | 
 
         try {
-            'String' result = apiInstance.updateLoggingConfigGin(body);
+            LoggingConfig result = apiInstance.updateLoggingConfigGin(loggingConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateLoggingConfigGin");
@@ -40958,10 +41998,10 @@ public class ServerSettingsApiExample {
 
 final api_instance = DefaultApi();
 
-final String body = new String(); // String | 
+final LoggingConfig loggingConfig = new LoggingConfig(); // LoggingConfig | 
 
 try {
-    final result = await api_instance.updateLoggingConfigGin(body);
+    final result = await api_instance.updateLoggingConfigGin(loggingConfig);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->updateLoggingConfigGin: $e\n');
@@ -40976,10 +42016,10 @@ try {
 public class ServerSettingsApiExample {
     public static void main(String[] args) {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        LoggingConfig loggingConfig = ; // LoggingConfig | 
 
         try {
-            'String' result = apiInstance.updateLoggingConfigGin(body);
+            LoggingConfig result = apiInstance.updateLoggingConfigGin(loggingConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateLoggingConfigGin");
@@ -40997,11 +42037,11 @@ public class ServerSettingsApiExample {
 
 // Create an instance of the API class
 ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
-String *body = body_example; // 
+LoggingConfig *loggingConfig = ; // 
 
 // Update logging configuration
-[apiInstance updateLoggingConfigGinWith:body
-              completionHandler: ^('String' output, NSError* error) {
+[apiInstance updateLoggingConfigGinWith:loggingConfig
+              completionHandler: ^(LoggingConfig output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -41017,7 +42057,7 @@ String *body = body_example; //
 
 // Create an instance of the API class
 var api = new StudioApi.ServerSettingsApi()
-var body = body_example; // {String} 
+var loggingConfig = ; // {LoggingConfig} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -41026,7 +42066,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.updateLoggingConfigGin(body, callback);
+api.updateLoggingConfigGin(loggingConfig, callback);
 </code></pre>
                             </div>
 
@@ -41049,11 +42089,11 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new ServerSettingsApi();
-            var body = body_example;  // String | 
+            var loggingConfig = new LoggingConfig(); // LoggingConfig | 
 
             try {
                 // Update logging configuration
-                'String' result = apiInstance.updateLoggingConfigGin(body);
+                LoggingConfig result = apiInstance.updateLoggingConfigGin(loggingConfig);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.updateLoggingConfigGin: " + e.Message );
@@ -41070,10 +42110,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\ServerSettingsApi();
-$body = body_example; // String | 
+$loggingConfig = ; // LoggingConfig | 
 
 try {
-    $result = $api_instance->updateLoggingConfigGin($body);
+    $result = $api_instance->updateLoggingConfigGin($loggingConfig);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling ServerSettingsApi->updateLoggingConfigGin: ', $e->getMessage(), PHP_EOL;
@@ -41088,10 +42128,10 @@ use WWW::OPenAPIClient::ServerSettingsApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::ServerSettingsApi->new();
-my $body = WWW::OPenAPIClient::Object::String->new(); # String | 
+my $loggingConfig = WWW::OPenAPIClient::Object::LoggingConfig->new(); # LoggingConfig | 
 
 eval {
-    my $result = $api_instance->updateLoggingConfigGin(body => $body);
+    my $result = $api_instance->updateLoggingConfigGin(loggingConfig => $loggingConfig);
     print Dumper($result);
 };
 if ($@) {
@@ -41108,11 +42148,11 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.ServerSettingsApi()
-body = body_example # String | 
+loggingConfig =  # LoggingConfig | 
 
 try:
     # Update logging configuration
-    api_response = api_instance.update_logging_config_gin(body)
+    api_response = api_instance.update_logging_config_gin(loggingConfig)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling ServerSettingsApi->updateLoggingConfigGin: %s\n" % e)</code></pre>
@@ -41122,10 +42162,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate ServerSettingsApi;
 
 pub fn main() {
-    let body = body_example; // String
+    let loggingConfig = ; // LoggingConfig
 
     let mut context = ServerSettingsApi::Context::default();
-    let result = client.updateLoggingConfigGin(body, &context).wait();
+    let result = client.updateLoggingConfigGin(loggingConfig, &context).wait();
 
     println!("{:?}", result);
 }
@@ -41148,7 +42188,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <tr><td style="width:150px;">loggingConfig <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -41157,7 +42197,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/LoggingConfigUpdateRequest"
+        "$ref" : "#/components/schemas/LoggingConfig"
       }
     }
   },
@@ -41180,12 +42220,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_updateLoggingConfigGin_body');
+  var result = $('#d2e199_updateLoggingConfigGin_loggingConfig');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_updateLoggingConfigGin_body"></div>
+<div id="d2e199_updateLoggingConfigGin_loggingConfig"></div>
 </td>
 </tr>
 
@@ -41463,7 +42503,12 @@ $(document).ready(function() {
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
  "http://localhost/server/proxy-manager-config" \
- -d ''
+ -d '{
+  &quot;InitialHealthCheckTimeout&quot; : &quot;InitialHealthCheckTimeout&quot;,
+  &quot;TestURL&quot; : &quot;TestURL&quot;,
+  &quot;MaxConcurrentInitialChecks&quot; : 0,
+  &quot;TestTimeout&quot; : &quot;TestTimeout&quot;
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-ServerSettings-updateProxyManagerConfigGin-0-java">
@@ -41480,10 +42525,10 @@ public class ServerSettingsApiExample {
 
         // Create an instance of the API class
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        ProxyManagerConfig proxyManagerConfig = ; // ProxyManagerConfig | 
 
         try {
-            'String' result = apiInstance.updateProxyManagerConfigGin(body);
+            ProxyManagerConfigJSON result = apiInstance.updateProxyManagerConfigGin(proxyManagerConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateProxyManagerConfigGin");
@@ -41499,10 +42544,10 @@ public class ServerSettingsApiExample {
 
 final api_instance = DefaultApi();
 
-final String body = new String(); // String | 
+final ProxyManagerConfig proxyManagerConfig = new ProxyManagerConfig(); // ProxyManagerConfig | 
 
 try {
-    final result = await api_instance.updateProxyManagerConfigGin(body);
+    final result = await api_instance.updateProxyManagerConfigGin(proxyManagerConfig);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->updateProxyManagerConfigGin: $e\n');
@@ -41517,10 +42562,10 @@ try {
 public class ServerSettingsApiExample {
     public static void main(String[] args) {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        ProxyManagerConfig proxyManagerConfig = ; // ProxyManagerConfig | 
 
         try {
-            'String' result = apiInstance.updateProxyManagerConfigGin(body);
+            ProxyManagerConfigJSON result = apiInstance.updateProxyManagerConfigGin(proxyManagerConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateProxyManagerConfigGin");
@@ -41538,11 +42583,11 @@ public class ServerSettingsApiExample {
 
 // Create an instance of the API class
 ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
-String *body = body_example; // 
+ProxyManagerConfig *proxyManagerConfig = ; // 
 
 // Update proxy manager configuration
-[apiInstance updateProxyManagerConfigGinWith:body
-              completionHandler: ^('String' output, NSError* error) {
+[apiInstance updateProxyManagerConfigGinWith:proxyManagerConfig
+              completionHandler: ^(ProxyManagerConfigJSON output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -41558,7 +42603,7 @@ String *body = body_example; //
 
 // Create an instance of the API class
 var api = new StudioApi.ServerSettingsApi()
-var body = body_example; // {String} 
+var proxyManagerConfig = ; // {ProxyManagerConfig} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -41567,7 +42612,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.updateProxyManagerConfigGin(body, callback);
+api.updateProxyManagerConfigGin(proxyManagerConfig, callback);
 </code></pre>
                             </div>
 
@@ -41590,11 +42635,11 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new ServerSettingsApi();
-            var body = body_example;  // String | 
+            var proxyManagerConfig = new ProxyManagerConfig(); // ProxyManagerConfig | 
 
             try {
                 // Update proxy manager configuration
-                'String' result = apiInstance.updateProxyManagerConfigGin(body);
+                ProxyManagerConfigJSON result = apiInstance.updateProxyManagerConfigGin(proxyManagerConfig);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.updateProxyManagerConfigGin: " + e.Message );
@@ -41611,10 +42656,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\ServerSettingsApi();
-$body = body_example; // String | 
+$proxyManagerConfig = ; // ProxyManagerConfig | 
 
 try {
-    $result = $api_instance->updateProxyManagerConfigGin($body);
+    $result = $api_instance->updateProxyManagerConfigGin($proxyManagerConfig);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling ServerSettingsApi->updateProxyManagerConfigGin: ', $e->getMessage(), PHP_EOL;
@@ -41629,10 +42674,10 @@ use WWW::OPenAPIClient::ServerSettingsApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::ServerSettingsApi->new();
-my $body = WWW::OPenAPIClient::Object::String->new(); # String | 
+my $proxyManagerConfig = WWW::OPenAPIClient::Object::ProxyManagerConfig->new(); # ProxyManagerConfig | 
 
 eval {
-    my $result = $api_instance->updateProxyManagerConfigGin(body => $body);
+    my $result = $api_instance->updateProxyManagerConfigGin(proxyManagerConfig => $proxyManagerConfig);
     print Dumper($result);
 };
 if ($@) {
@@ -41649,11 +42694,11 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.ServerSettingsApi()
-body = body_example # String | 
+proxyManagerConfig =  # ProxyManagerConfig | 
 
 try:
     # Update proxy manager configuration
-    api_response = api_instance.update_proxy_manager_config_gin(body)
+    api_response = api_instance.update_proxy_manager_config_gin(proxyManagerConfig)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling ServerSettingsApi->updateProxyManagerConfigGin: %s\n" % e)</code></pre>
@@ -41663,10 +42708,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate ServerSettingsApi;
 
 pub fn main() {
-    let body = body_example; // String
+    let proxyManagerConfig = ; // ProxyManagerConfig
 
     let mut context = ServerSettingsApi::Context::default();
-    let result = client.updateProxyManagerConfigGin(body, &context).wait();
+    let result = client.updateProxyManagerConfigGin(proxyManagerConfig, &context).wait();
 
     println!("{:?}", result);
 }
@@ -41689,7 +42734,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <tr><td style="width:150px;">proxyManagerConfig <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -41698,7 +42743,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/ProxyManagerConfigUpdateRequest"
+        "$ref" : "#/components/schemas/ProxyManagerConfig"
       }
     }
   },
@@ -41721,12 +42766,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_updateProxyManagerConfigGin_body');
+  var result = $('#d2e199_updateProxyManagerConfigGin_proxyManagerConfig');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_updateProxyManagerConfigGin_body"></div>
+<div id="d2e199_updateProxyManagerConfigGin_proxyManagerConfig"></div>
 </td>
 </tr>
 
@@ -42004,7 +43049,10 @@ $(document).ready(function() {
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
  "http://localhost/server/rate-limiter-config" \
- -d ''
+ -d '{
+  &quot;windowSeconds&quot; : 6,
+  &quot;maxRequests&quot; : 0
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-ServerSettings-updateRateLimiterConfigGin-0-java">
@@ -42021,10 +43069,10 @@ public class ServerSettingsApiExample {
 
         // Create an instance of the API class
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        RateLimiterConfig rateLimiterConfig = ; // RateLimiterConfig | 
 
         try {
-            'String' result = apiInstance.updateRateLimiterConfigGin(body);
+            RateLimiterConfig result = apiInstance.updateRateLimiterConfigGin(rateLimiterConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateRateLimiterConfigGin");
@@ -42040,10 +43088,10 @@ public class ServerSettingsApiExample {
 
 final api_instance = DefaultApi();
 
-final String body = new String(); // String | 
+final RateLimiterConfig rateLimiterConfig = new RateLimiterConfig(); // RateLimiterConfig | 
 
 try {
-    final result = await api_instance.updateRateLimiterConfigGin(body);
+    final result = await api_instance.updateRateLimiterConfigGin(rateLimiterConfig);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->updateRateLimiterConfigGin: $e\n');
@@ -42058,10 +43106,10 @@ try {
 public class ServerSettingsApiExample {
     public static void main(String[] args) {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        RateLimiterConfig rateLimiterConfig = ; // RateLimiterConfig | 
 
         try {
-            'String' result = apiInstance.updateRateLimiterConfigGin(body);
+            RateLimiterConfig result = apiInstance.updateRateLimiterConfigGin(rateLimiterConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateRateLimiterConfigGin");
@@ -42079,11 +43127,11 @@ public class ServerSettingsApiExample {
 
 // Create an instance of the API class
 ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
-String *body = body_example; // 
+RateLimiterConfig *rateLimiterConfig = ; // 
 
 // Update rate limiter configuration
-[apiInstance updateRateLimiterConfigGinWith:body
-              completionHandler: ^('String' output, NSError* error) {
+[apiInstance updateRateLimiterConfigGinWith:rateLimiterConfig
+              completionHandler: ^(RateLimiterConfig output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -42099,7 +43147,7 @@ String *body = body_example; //
 
 // Create an instance of the API class
 var api = new StudioApi.ServerSettingsApi()
-var body = body_example; // {String} 
+var rateLimiterConfig = ; // {RateLimiterConfig} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -42108,7 +43156,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.updateRateLimiterConfigGin(body, callback);
+api.updateRateLimiterConfigGin(rateLimiterConfig, callback);
 </code></pre>
                             </div>
 
@@ -42131,11 +43179,11 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new ServerSettingsApi();
-            var body = body_example;  // String | 
+            var rateLimiterConfig = new RateLimiterConfig(); // RateLimiterConfig | 
 
             try {
                 // Update rate limiter configuration
-                'String' result = apiInstance.updateRateLimiterConfigGin(body);
+                RateLimiterConfig result = apiInstance.updateRateLimiterConfigGin(rateLimiterConfig);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.updateRateLimiterConfigGin: " + e.Message );
@@ -42152,10 +43200,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\ServerSettingsApi();
-$body = body_example; // String | 
+$rateLimiterConfig = ; // RateLimiterConfig | 
 
 try {
-    $result = $api_instance->updateRateLimiterConfigGin($body);
+    $result = $api_instance->updateRateLimiterConfigGin($rateLimiterConfig);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling ServerSettingsApi->updateRateLimiterConfigGin: ', $e->getMessage(), PHP_EOL;
@@ -42170,10 +43218,10 @@ use WWW::OPenAPIClient::ServerSettingsApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::ServerSettingsApi->new();
-my $body = WWW::OPenAPIClient::Object::String->new(); # String | 
+my $rateLimiterConfig = WWW::OPenAPIClient::Object::RateLimiterConfig->new(); # RateLimiterConfig | 
 
 eval {
-    my $result = $api_instance->updateRateLimiterConfigGin(body => $body);
+    my $result = $api_instance->updateRateLimiterConfigGin(rateLimiterConfig => $rateLimiterConfig);
     print Dumper($result);
 };
 if ($@) {
@@ -42190,11 +43238,11 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.ServerSettingsApi()
-body = body_example # String | 
+rateLimiterConfig =  # RateLimiterConfig | 
 
 try:
     # Update rate limiter configuration
-    api_response = api_instance.update_rate_limiter_config_gin(body)
+    api_response = api_instance.update_rate_limiter_config_gin(rateLimiterConfig)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling ServerSettingsApi->updateRateLimiterConfigGin: %s\n" % e)</code></pre>
@@ -42204,10 +43252,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate ServerSettingsApi;
 
 pub fn main() {
-    let body = body_example; // String
+    let rateLimiterConfig = ; // RateLimiterConfig
 
     let mut context = ServerSettingsApi::Context::default();
-    let result = client.updateRateLimiterConfigGin(body, &context).wait();
+    let result = client.updateRateLimiterConfigGin(rateLimiterConfig, &context).wait();
 
     println!("{:?}", result);
 }
@@ -42230,7 +43278,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <tr><td style="width:150px;">rateLimiterConfig <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -42239,7 +43287,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/RateLimiterConfigUpdateRequest"
+        "$ref" : "#/components/schemas/RateLimiterConfig"
       }
     }
   },
@@ -42262,12 +43310,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_updateRateLimiterConfigGin_body');
+  var result = $('#d2e199_updateRateLimiterConfigGin_rateLimiterConfig');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_updateRateLimiterConfigGin_body"></div>
+<div id="d2e199_updateRateLimiterConfigGin_rateLimiterConfig"></div>
 </td>
 </tr>
 
@@ -43089,7 +44137,18 @@ $(document).ready(function() {
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
  "http://localhost/server/worker-config" \
- -d ''
+ -d '{
+  &quot;maxRetries&quot; : 7,
+  &quot;retryDelaySeconds&quot; : 2,
+  &quot;httpKeywordSubtaskConcurrency&quot; : 5,
+  &quot;dnsSubtaskConcurrency&quot; : 6,
+  &quot;errorRetryDelaySeconds&quot; : 1,
+  &quot;jobProcessingTimeoutMinutes&quot; : 5,
+  &quot;numWorkers&quot; : 9,
+  &quot;maxJobRetries&quot; : 2,
+  &quot;batchSize&quot; : 0,
+  &quot;pollIntervalSeconds&quot; : 3
+}'
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-ServerSettings-updateWorkerConfigGin-0-java">
@@ -43106,10 +44165,10 @@ public class ServerSettingsApiExample {
 
         // Create an instance of the API class
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        WorkerConfig workerConfig = ; // WorkerConfig | 
 
         try {
-            'String' result = apiInstance.updateWorkerConfigGin(body);
+            WorkerConfig result = apiInstance.updateWorkerConfigGin(workerConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateWorkerConfigGin");
@@ -43125,10 +44184,10 @@ public class ServerSettingsApiExample {
 
 final api_instance = DefaultApi();
 
-final String body = new String(); // String | 
+final WorkerConfig workerConfig = new WorkerConfig(); // WorkerConfig | 
 
 try {
-    final result = await api_instance.updateWorkerConfigGin(body);
+    final result = await api_instance.updateWorkerConfigGin(workerConfig);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->updateWorkerConfigGin: $e\n');
@@ -43143,10 +44202,10 @@ try {
 public class ServerSettingsApiExample {
     public static void main(String[] args) {
         ServerSettingsApi apiInstance = new ServerSettingsApi();
-        String body = body_example; // String | 
+        WorkerConfig workerConfig = ; // WorkerConfig | 
 
         try {
-            'String' result = apiInstance.updateWorkerConfigGin(body);
+            WorkerConfig result = apiInstance.updateWorkerConfigGin(workerConfig);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ServerSettingsApi#updateWorkerConfigGin");
@@ -43164,11 +44223,11 @@ public class ServerSettingsApiExample {
 
 // Create an instance of the API class
 ServerSettingsApi *apiInstance = [[ServerSettingsApi alloc] init];
-String *body = body_example; // 
+WorkerConfig *workerConfig = ; // 
 
 // Update worker configuration
-[apiInstance updateWorkerConfigGinWith:body
-              completionHandler: ^('String' output, NSError* error) {
+[apiInstance updateWorkerConfigGinWith:workerConfig
+              completionHandler: ^(WorkerConfig output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -43184,7 +44243,7 @@ String *body = body_example; //
 
 // Create an instance of the API class
 var api = new StudioApi.ServerSettingsApi()
-var body = body_example; // {String} 
+var workerConfig = ; // {WorkerConfig} 
 
 var callback = function(error, data, response) {
   if (error) {
@@ -43193,7 +44252,7 @@ var callback = function(error, data, response) {
     console.log('API called successfully. Returned data: ' + data);
   }
 };
-api.updateWorkerConfigGin(body, callback);
+api.updateWorkerConfigGin(workerConfig, callback);
 </code></pre>
                             </div>
 
@@ -43216,11 +44275,11 @@ namespace Example
 
             // Create an instance of the API class
             var apiInstance = new ServerSettingsApi();
-            var body = body_example;  // String | 
+            var workerConfig = new WorkerConfig(); // WorkerConfig | 
 
             try {
                 // Update worker configuration
-                'String' result = apiInstance.updateWorkerConfigGin(body);
+                WorkerConfig result = apiInstance.updateWorkerConfigGin(workerConfig);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ServerSettingsApi.updateWorkerConfigGin: " + e.Message );
@@ -43237,10 +44296,10 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 // Create an instance of the API class
 $api_instance = new OpenAPITools\Client\Api\ServerSettingsApi();
-$body = body_example; // String | 
+$workerConfig = ; // WorkerConfig | 
 
 try {
-    $result = $api_instance->updateWorkerConfigGin($body);
+    $result = $api_instance->updateWorkerConfigGin($workerConfig);
     print_r($result);
 } catch (Exception $e) {
     echo 'Exception when calling ServerSettingsApi->updateWorkerConfigGin: ', $e->getMessage(), PHP_EOL;
@@ -43255,10 +44314,10 @@ use WWW::OPenAPIClient::ServerSettingsApi;
 
 # Create an instance of the API class
 my $api_instance = WWW::OPenAPIClient::ServerSettingsApi->new();
-my $body = WWW::OPenAPIClient::Object::String->new(); # String | 
+my $workerConfig = WWW::OPenAPIClient::Object::WorkerConfig->new(); # WorkerConfig | 
 
 eval {
-    my $result = $api_instance->updateWorkerConfigGin(body => $body);
+    my $result = $api_instance->updateWorkerConfigGin(workerConfig => $workerConfig);
     print Dumper($result);
 };
 if ($@) {
@@ -43275,11 +44334,11 @@ from pprint import pprint
 
 # Create an instance of the API class
 api_instance = openapi_client.ServerSettingsApi()
-body = body_example # String | 
+workerConfig =  # WorkerConfig | 
 
 try:
     # Update worker configuration
-    api_response = api_instance.update_worker_config_gin(body)
+    api_response = api_instance.update_worker_config_gin(workerConfig)
     pprint(api_response)
 except ApiException as e:
     print("Exception when calling ServerSettingsApi->updateWorkerConfigGin: %s\n" % e)</code></pre>
@@ -43289,10 +44348,10 @@ except ApiException as e:
                               <pre class="prettyprint"><code class="language-rust">extern crate ServerSettingsApi;
 
 pub fn main() {
-    let body = body_example; // String
+    let workerConfig = ; // WorkerConfig
 
     let mut context = ServerSettingsApi::Context::default();
-    let result = client.updateWorkerConfigGin(body, &context).wait();
+    let result = client.updateWorkerConfigGin(workerConfig, &context).wait();
 
     println!("{:?}", result);
 }
@@ -43315,7 +44374,7 @@ pub fn main() {
                                 <th width="150px">Name</th>
                                 <th>Description</th>
                               </tr>
-                                <tr><td style="width:150px;">body <span style="color:red;">*</span></td>
+                                <tr><td style="width:150px;">workerConfig <span style="color:red;">*</span></td>
 <td>
 <p class="marked"></p>
 <script>
@@ -43324,7 +44383,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/WorkerConfigUpdateRequest"
+        "$ref" : "#/components/schemas/WorkerConfig"
       }
     }
   },
@@ -43347,12 +44406,12 @@ $(document).ready(function() {
   }
 
   var view = new JSONSchemaView(schema,2,{isBodyParam: true});
-  var result = $('#d2e199_updateWorkerConfigGin_body');
+  var result = $('#d2e199_updateWorkerConfigGin_workerConfig');
   result.empty();
   result.append(view.render());
 });
 </script>
-<div id="d2e199_updateWorkerConfigGin_body"></div>
+<div id="d2e199_updateWorkerConfigGin_workerConfig"></div>
 </td>
 </tr>
 

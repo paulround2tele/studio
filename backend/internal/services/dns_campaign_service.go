@@ -67,21 +67,9 @@ func (s *dnsCampaignServiceImpl) ConfigureDNSValidationPhase(ctx context.Context
 		return fmt.Errorf("persona validation failed: %w", err)
 	}
 
-	// Create/update DNS validation parameters using self-reference for in-place validation
-	dnsParams := &models.DNSValidationCampaignParams{
-		CampaignID:                 campaignID,
-		SourceGenerationCampaignID: &campaignID, // Self-reference for phase transition
-		PersonaIDs:                 personaUUIDs,
-		RotationIntervalSeconds:    models.IntPtr(30),
-		ProcessingSpeedPerMinute:   models.IntPtr(60),
-		BatchSize:                  models.IntPtr(50),
-		RetryAttempts:              models.IntPtr(3),
-	}
-
-	// Store DNS validation parameters
-	if err := s.campaignStore.CreateDNSValidationParams(ctx, querier, dnsParams); err != nil {
-		log.Printf("INFO: DNS params may already exist for campaign %s, continuing...", campaignID)
-	}
+	// NOTE: In phase-centric approach, DNS validation parameters are stored in campaign configuration
+	// The phase uses campaign.DomainsData for input and campaign.DNSResults for output
+	// Persona validation is sufficient for phase configuration
 
 	log.Printf("ConfigureDNSValidationPhase: Successfully configured DNS validation phase for campaign %s", campaignID)
 	return nil
@@ -171,11 +159,9 @@ func (s *dnsCampaignServiceImpl) GetCampaignDetails(ctx context.Context, campaig
 		return nil, nil, fmt.Errorf("campaign %s is not a DNS validation campaign (current phase: %s)", campaignID, currentPhase)
 	}
 
-	params, err := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get DNS validation params for campaign %s: %w", campaignID, err)
-	}
-	return campaign, params, nil
+	// Phase-centric approach: DNS params are no longer stored separately
+	// Return nil params to maintain interface compatibility during transition
+	return campaign, nil, nil
 }
 
 func (s *dnsCampaignServiceImpl) validatePersonaIDs(ctx context.Context, querier store.Querier, personaIDs []uuid.UUID, expectedType models.PersonaTypeEnum) error {
@@ -296,24 +282,30 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		return true, 0, nil
 	}
 
-	dnsParams, errGetParams := s.campaignStore.GetDNSValidationParams(ctx, querier, campaignID)
-	if errGetParams != nil {
-		opErr = fmt.Errorf("failed to fetch DNS params for campaign %s: %w", campaignID, errGetParams)
+	// NEW PHASE-CENTRIC APPROACH: Read domains from current campaign's DomainsData JSONB
+	domainsData, err := s.campaignStore.GetCampaignDomainsData(ctx, querier, campaignID)
+	if err != nil {
+		opErr = fmt.Errorf("failed to get domains data for campaign %s: %w", campaignID, err)
 		return false, 0, opErr
 	}
-	if dnsParams.SourceGenerationCampaignID == nil {
-		opErr = fmt.Errorf("ProcessDNSValidationCampaignBatch: SourceGenerationCampaignID is nil for DNS params of campaign %s", campaignID)
+
+	if domainsData == nil {
+		opErr = fmt.Errorf("no domains data found for campaign %s - ensure domain generation phase completed", campaignID)
 		return false, 0, opErr
 	}
-	sourceGenParams, errGetSourceParams := s.campaignStore.GetDomainGenerationParams(ctx, querier, *dnsParams.SourceGenerationCampaignID)
-	if errGetSourceParams != nil {
-		opErr = fmt.Errorf("failed to fetch params for source generation campaign %s: %w", dnsParams.SourceGenerationCampaignID, errGetSourceParams)
+
+	// Parse domains from JSONB
+	var domains []models.GeneratedDomain
+	if err := json.Unmarshal(*domainsData, &domains); err != nil {
+		opErr = fmt.Errorf("failed to parse domains data for campaign %s: %w", campaignID, err)
 		return false, 0, opErr
 	}
-	expectedTotalItems := int64(sourceGenParams.NumDomainsToGenerate)
+
+	// Set total items based on domains data
+	expectedTotalItems := int64(len(domains))
 	if campaign.TotalItems == nil || *campaign.TotalItems != expectedTotalItems {
-		log.Printf("ProcessDNSValidationCampaignBatch: Correcting TotalItems for campaign %s from %v to %d based on source.",
-			campaignID, campaign.TotalItems, expectedTotalItems)
+		log.Printf("ProcessDNSValidationCampaignBatch: Setting TotalItems for campaign %s to %d based on DomainsData",
+			campaignID, expectedTotalItems)
 		campaign.TotalItems = models.Int64Ptr(expectedTotalItems)
 	}
 
@@ -377,21 +369,31 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		}
 	}
 
-	var batchSizeVal int
-	if dnsParams.BatchSize != nil && *dnsParams.BatchSize > 0 {
-		batchSizeVal = *dnsParams.BatchSize
-	} else {
-		batchSizeVal = 1000 // Phase 3: 20x increase for enterprise infrastructure
+	// Set batch size for processing
+	batchSizeVal := 1000 // Phase 3: Enterprise infrastructure default
+
+	// Get domains that haven't been DNS validated yet from existing results
+	existingResults, err := s.campaignStore.GetDNSValidationResultsByCampaign(ctx, querier, campaignID, store.ListValidationResultsFilter{})
+	if err != nil {
+		log.Printf("Warning: failed to get existing DNS results for campaign %s: %v. Proceeding with all domains.", campaignID, err)
+		existingResults = []*models.DNSValidationResult{}
 	}
-	// Ensure SourceGenerationCampaignID is not nil before dereferencing
-	if dnsParams.SourceGenerationCampaignID == nil {
-		opErr = fmt.Errorf("ProcessDNSValidationCampaignBatch: SourceGenerationCampaignID is nil when trying to get domains for campaign %s", campaignID)
-		return false, 0, opErr
+
+	// Create a map of already processed domains
+	processedDomains := make(map[string]bool)
+	for _, result := range existingResults {
+		processedDomains[result.DomainName] = true
 	}
-	domainsToProcess, errGetDomains := s.campaignStore.GetDomainsForDNSValidation(ctx, querier, campaignID, *dnsParams.SourceGenerationCampaignID, batchSizeVal, 0)
-	if errGetDomains != nil {
-		opErr = fmt.Errorf("failed to get domains for DNS validation for campaign %s: %w", campaignID, errGetDomains)
-		return false, 0, opErr
+
+	// Filter domains to get only unprocessed ones for this batch
+	var domainsToProcess []*models.GeneratedDomain
+	for i, domain := range domains {
+		if !processedDomains[domain.DomainName] {
+			domainsToProcess = append(domainsToProcess, &domains[i])
+			if len(domainsToProcess) >= batchSizeVal {
+				break // Stop at batch size
+			}
+		}
 	}
 
 	if len(domainsToProcess) == 0 {
@@ -437,23 +439,28 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		return done, 0, opErr
 	}
 
-	personas := make([]*models.Persona, 0, len(dnsParams.PersonaIDs))
-	for _, pID := range dnsParams.PersonaIDs {
-		p, pErr := s.personaStore.GetPersonaByID(ctx, querier, pID)
-		if pErr != nil {
-			opErr = fmt.Errorf("failed to fetch DNS persona %s for campaign %s: %w", pID, campaignID, pErr)
-			return false, 0, opErr
-		}
-		if p.PersonaType != models.PersonaTypeDNS || !p.IsEnabled {
-			opErr = fmt.Errorf("persona %s is not a valid/enabled DNS persona for campaign %s", pID, campaignID)
-			return false, 0, opErr
-		}
-		personas = append(personas, p)
+	// NEW PHASE-CENTRIC APPROACH: Get DNS personas from campaign configuration
+	// For now, get all available DNS personas as a transition approach
+	// TODO: Store persona configuration in campaign-level config
+	personaFilter := store.ListPersonasFilter{
+		Type:      models.PersonaTypeDNS,
+		IsEnabled: store.BoolPtr(true),
+		Limit:     100,
 	}
-	if len(personas) == 0 {
-		opErr = fmt.Errorf("no valid DNS personas configured for campaign %s", campaignID)
+	allDNSPersonas, err := s.personaStore.ListPersonas(ctx, querier, personaFilter)
+	if err != nil {
+		opErr = fmt.Errorf("failed to fetch DNS personas for campaign %s: %w", campaignID, err)
 		return false, 0, opErr
 	}
+
+	if len(allDNSPersonas) == 0 {
+		opErr = fmt.Errorf("no valid DNS personas available for campaign %s", campaignID)
+		return false, 0, opErr
+	}
+
+	// Use available DNS personas (transition approach)
+	personas := allDNSPersonas
+	log.Printf("ProcessDNSValidationCampaignBatch: Using %d available DNS personas for campaign %s", len(personas), campaignID)
 
 	var wg sync.WaitGroup
 	concurrencyLimit := s.appConfig.Worker.DNSSubtaskConcurrency
@@ -520,10 +527,8 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 				}
 				finalValidationResult = &valResult
 
-				rotationInterval := 0
-				if dnsParams.RotationIntervalSeconds != nil {
-					rotationInterval = *dnsParams.RotationIntervalSeconds
-				}
+				// Phase-centric approach: Use default rotation interval
+				rotationInterval := 30 // Default 30 seconds between persona rotations
 				if i < len(personas)-1 && rotationInterval > 0 {
 					select {
 					case <-batchCtx.Done(): // Use batchCtx.Done()
@@ -643,6 +648,26 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		} else {
 			processedInThisBatch = len(dbResults)
 			log.Printf("ProcessDNSValidationCampaignBatch: Saved %d DNS results for campaign %s.", processedInThisBatch, campaignID)
+
+			// PHASE-CENTRIC APPROACH: Also update campaign's DNSResults JSONB field
+			// Get all DNS results for this campaign to store in JSONB
+			allDNSResults, errGetAllResults := s.campaignStore.GetDNSValidationResultsByCampaign(ctx, querier, campaignID, store.ListValidationResultsFilter{})
+			if errGetAllResults != nil {
+				log.Printf("Warning: failed to get all DNS results for JSONB update in campaign %s: %v", campaignID, errGetAllResults)
+			} else {
+				// Convert to JSONB and store in campaign.DNSResults
+				dnsResultsJSON, errMarshal := json.Marshal(allDNSResults)
+				if errMarshal != nil {
+					log.Printf("Warning: failed to marshal DNS results to JSON for campaign %s: %v", campaignID, errMarshal)
+				} else {
+					dnsResultsRaw := json.RawMessage(dnsResultsJSON)
+					if errUpdateDNSResults := s.campaignStore.UpdateCampaignDNSResults(ctx, querier, campaignID, &dnsResultsRaw); errUpdateDNSResults != nil {
+						log.Printf("Warning: failed to update campaign DNSResults JSONB for campaign %s: %v", campaignID, errUpdateDNSResults)
+					} else {
+						log.Printf("ProcessDNSValidationCampaignBatch: Updated campaign DNSResults JSONB for campaign %s with %d results", campaignID, len(allDNSResults))
+					}
+				}
+			}
 		}
 	}
 

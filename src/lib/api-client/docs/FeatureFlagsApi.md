@@ -8,7 +8,7 @@ All URIs are relative to *http://localhost*
 |[**updateFeatureFlags**](#updatefeatureflags) | **PUT** /feature-flags | Update feature flags|
 
 # **getFeatureFlags**
-> string getFeatureFlags()
+> FeatureFlags getFeatureFlags()
 
 Retrieve current feature flag settings
 
@@ -32,7 +32,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**string**
+**FeatureFlags**
 
 ### Authorization
 
@@ -54,7 +54,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateFeatureFlags**
-> string updateFeatureFlags(body)
+> FeatureFlags updateFeatureFlags(featureFlags)
 
 Update feature flag settings
 
@@ -63,16 +63,17 @@ Update feature flag settings
 ```typescript
 import {
     FeatureFlagsApi,
-    Configuration
+    Configuration,
+    FeatureFlags
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new FeatureFlagsApi(configuration);
 
-let body: string; //
+let featureFlags: FeatureFlags; //
 
 const { status, data } = await apiInstance.updateFeatureFlags(
-    body
+    featureFlags
 );
 ```
 
@@ -80,12 +81,12 @@ const { status, data } = await apiInstance.updateFeatureFlags(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **body** | **string**|  | |
+| **featureFlags** | **FeatureFlags**|  | |
 
 
 ### Return type
 
-**string**
+**FeatureFlags**
 
 ### Authorization
 

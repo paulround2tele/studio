@@ -49,9 +49,9 @@ func (ha *HandlerAnalyzer) AnalyzeHandler(route *DiscoveredRoute) (*HandlerInfo,
 
 	// Analyze the function
 	handlerInfo := &HandlerInfo{
-		FunctionDecl:  funcDecl,
-		PathParams:    ha.extractPathParamsFromRoute(route.Path),
-		QueryParams:   []string{},
+		FunctionDecl:   funcDecl,
+		PathParams:     ha.extractPathParamsFromRoute(route.Path),
+		QueryParams:    []string{},
 		HasRequestBody: false, // Will be set to true by analyzeHandlerBody if ShouldBindJSON is detected
 	}
 
@@ -166,10 +166,25 @@ func (ha *HandlerAnalyzer) analyzeHandlerBody(fn *ast.FuncDecl, info *HandlerInf
 			if genDecl, ok := declStmt.Decl.(*ast.GenDecl); ok && genDecl.Tok == token.VAR {
 				for _, spec := range genDecl.Specs {
 					if valueSpec, ok := spec.(*ast.ValueSpec); ok && valueSpec.Type != nil {
+						var typeName string
+
+						// Handle simple types (e.g., LoginRequest)
 						if ident, ok := valueSpec.Type.(*ast.Ident); ok {
+							typeName = ident.Name
+						}
+						// Handle qualified types (e.g., models.LoginRequest, config.LoggingConfig)
+						if selExpr, ok := valueSpec.Type.(*ast.SelectorExpr); ok {
+							if pkgIdent, ok := selExpr.X.(*ast.Ident); ok {
+								// Use just the type name without package prefix for schema generation
+								typeName = selExpr.Sel.Name
+								fmt.Printf("[DEBUG] analyzeHandlerBody: found qualified type %s.%s, using type name: %s\n", pkgIdent.Name, selExpr.Sel.Name, typeName)
+							}
+						}
+
+						if typeName != "" {
 							for _, name := range valueSpec.Names {
-								varTypes[name.Name] = ident.Name
-								fmt.Printf("[DEBUG] analyzeHandlerBody: found variable mapping %s -> %s\n", name.Name, ident.Name)
+								varTypes[name.Name] = typeName
+								fmt.Printf("[DEBUG] analyzeHandlerBody: found variable mapping %s -> %s\n", name.Name, typeName)
 							}
 						}
 					}
@@ -235,6 +250,7 @@ func (ha *HandlerAnalyzer) analyzeCallExpression(call *ast.CallExpr, info *Handl
 		}
 	}
 }
+
 // analyzeCallExpressionWithTypes analyzes function calls with variable type context
 func (ha *HandlerAnalyzer) analyzeCallExpressionWithTypes(call *ast.CallExpr, info *HandlerInfo, varTypes map[string]string) {
 	if selExpr, ok := call.Fun.(*ast.SelectorExpr); ok {
@@ -267,7 +283,6 @@ func (ha *HandlerAnalyzer) analyzeCallExpressionWithTypes(call *ast.CallExpr, in
 	}
 }
 
-
 // analyzeAssignment analyzes variable assignments within the handler
 func (ha *HandlerAnalyzer) analyzeAssignment(assign *ast.AssignStmt, info *HandlerInfo) {
 	// Look for patterns like: var request RequestType
@@ -277,7 +292,7 @@ func (ha *HandlerAnalyzer) analyzeAssignment(assign *ast.AssignStmt, info *Handl
 		fmt.Printf("[DEBUG] analyzeAssignment: skipping assignment analysis, RequestType already detected: %s\n", info.RequestType)
 		return
 	}
-	
+
 	for i, lhs := range assign.Lhs {
 		if ident, ok := lhs.(*ast.Ident); ok {
 			if strings.Contains(strings.ToLower(ident.Name), "request") && i < len(assign.Rhs) {

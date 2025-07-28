@@ -86,12 +86,13 @@ func (s *httpKeywordCampaignServiceImpl) ConfigureHTTPValidationPhase(ctx contex
 		return fmt.Errorf("persona validation failed: %w", err)
 	}
 
-	// Create/update HTTP validation parameters using self-reference for in-place validation
+	// NOTE: In phase-centric approach, HTTP validation parameters are stored in campaign configuration
+	// The phase uses campaign.DNSResults for input and campaign.HTTPResults for output
+	// Remove SourceCampaignID as we read from current campaign's DNSResults JSONB
 	httpParams := &models.HTTPKeywordCampaignParams{
 		CampaignID:               campaignID,
-		SourceCampaignID:         campaignID, // Self-reference for phase transition
 		PersonaIDs:               personaUUIDs,
-		KeywordSetIDs:            []uuid.UUID{}, // Will be configured separately if needed
+		KeywordSetIDs:            &[]uuid.UUID{}, // Will be configured separately if needed
 		AdHocKeywords:            &req.AdHocKeywords,
 		RotationIntervalSeconds:  models.IntPtr(30),
 		ProcessingSpeedPerMinute: models.IntPtr(60),
@@ -284,6 +285,45 @@ func derefUUIDPtr(id *uuid.UUID) uuid.UUID {
 	return *id
 }
 
+// filterValidDNSResults filters DNS results to only include those with resolved status
+func filterValidDNSResults(dnsResults []models.DNSValidationResult) []models.DNSValidationResult {
+	var validResults []models.DNSValidationResult
+	for _, result := range dnsResults {
+		if result.ValidationStatus == "resolved" {
+			validResults = append(validResults, result)
+		}
+	}
+	return validResults
+}
+
+// getPaginatedDomainsFromDNSResults returns a paginated subset of DNS results for HTTP processing
+func getPaginatedDomainsFromDNSResults(dnsResults []models.DNSValidationResult, lastProcessedDomain string, batchSize int) []*models.DNSValidationResult {
+	var result []*models.DNSValidationResult
+
+	// Find the starting index based on lastProcessedDomain
+	startIndex := 0
+	if lastProcessedDomain != "" {
+		for i, dnsResult := range dnsResults {
+			if dnsResult.DomainName == lastProcessedDomain {
+				startIndex = i + 1 // Start after the last processed domain
+				break
+			}
+		}
+	}
+
+	// Get the next batch of domains
+	endIndex := startIndex + batchSize
+	if endIndex > len(dnsResults) {
+		endIndex = len(dnsResults)
+	}
+
+	for i := startIndex; i < endIndex; i++ {
+		result = append(result, &dnsResults[i])
+	}
+
+	return result
+}
+
 func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedInThisBatch int, err error) {
 	log.Printf("ProcessHTTPKeywordCampaignBatch: Starting for campaignID %s", campaignID)
 
@@ -355,35 +395,33 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		return false, 0, opErr
 	}
 
-	sourceDNSCampaign, sourceCampaignErr := s.campaignStore.GetCampaignByID(ctx, querier, hkParams.SourceCampaignID)
-	if sourceCampaignErr != nil {
-		opErr = fmt.Errorf("failed to fetch source DNS campaign %s for TotalItems update: %w", hkParams.SourceCampaignID, sourceCampaignErr)
+	// NEW PHASE-CENTRIC APPROACH: Read DNS results from current campaign's DNSResults JSONB
+	dnsResultsData, err := s.campaignStore.GetCampaignDNSResults(ctx, querier, campaignID)
+	if err != nil {
+		opErr = fmt.Errorf("failed to get DNS results for campaign %s: %w", campaignID, err)
 		return false, 0, opErr
 	}
-	expectedTotalItems, countErr := s.campaignStore.CountDNSValidationResults(ctx, querier, hkParams.SourceCampaignID, true)
-	if countErr == nil {
-		if campaign.TotalItems == nil || *campaign.TotalItems != expectedTotalItems {
-			log.Printf("ProcessHTTPKeywordCampaignBatch: Updating TotalItems for campaign %s from %v to %d.", campaignID, campaign.TotalItems, expectedTotalItems)
-			campaign.TotalItems = models.Int64Ptr(expectedTotalItems)
-		}
-	} else {
-		log.Printf("ProcessHTTPKeywordCampaignBatch: Warning - could not count valid DNS results for TotalItems update: %v. Using existing %v or source processed %v.",
-			countErr, campaign.TotalItems, sourceDNSCampaign.ProcessedItems)
-		if (campaign.TotalItems == nil || *campaign.TotalItems == 0) && sourceDNSCampaign.PhaseStatus != nil && *sourceDNSCampaign.PhaseStatus == models.PhaseStatusCompleted {
-			if sourceDNSCampaign.ProcessedItems != nil {
-				campaign.TotalItems = models.Int64Ptr(*sourceDNSCampaign.ProcessedItems)
-			} else if sourceDNSCampaign.TotalItems != nil { // Fallback if processed is nil
-				campaign.TotalItems = models.Int64Ptr(*sourceDNSCampaign.TotalItems)
-			} else {
-				campaign.TotalItems = models.Int64Ptr(0)
-			}
-		} else if campaign.TotalItems == nil || *campaign.TotalItems == 0 {
-			if sourceDNSCampaign.TotalItems != nil {
-				campaign.TotalItems = models.Int64Ptr(*sourceDNSCampaign.TotalItems)
-			} else {
-				campaign.TotalItems = models.Int64Ptr(0)
-			}
-		}
+
+	if dnsResultsData == nil {
+		opErr = fmt.Errorf("no DNS results found for campaign %s - ensure DNS validation phase completed", campaignID)
+		return false, 0, opErr
+	}
+
+	// Parse DNS results from JSONB
+	var dnsResults []models.DNSValidationResult
+	if err := json.Unmarshal(*dnsResultsData, &dnsResults); err != nil {
+		opErr = fmt.Errorf("failed to parse DNS results for campaign %s: %w", campaignID, err)
+		return false, 0, opErr
+	}
+
+	// Filter for valid DNS results to process for HTTP validation
+	validDNSResults := filterValidDNSResults(dnsResults)
+	expectedTotalItems := int64(len(validDNSResults))
+
+	if campaign.TotalItems == nil || *campaign.TotalItems != expectedTotalItems {
+		log.Printf("ProcessHTTPKeywordCampaignBatch: Setting TotalItems for campaign %s to %d based on valid DNS results",
+			campaignID, expectedTotalItems)
+		campaign.TotalItems = models.Int64Ptr(expectedTotalItems)
 	}
 	// If opErr was set by store calls, return (defer will handle rollback)
 	if opErr != nil {
@@ -445,11 +483,8 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		lastProcessedDomainNameVal = *hkParams.LastProcessedDomainName
 	}
 
-	domainsToProcess, errGetDomains := s.campaignStore.GetDomainsForHTTPValidation(ctx, querier, campaignID, hkParams.SourceCampaignID, batchSizeVal, lastProcessedDomainNameVal)
-	if errGetDomains != nil {
-		opErr = fmt.Errorf("failed to get domains for HTTP validation for campaign %s: %w", campaignID, errGetDomains)
-		return false, 0, opErr
-	}
+	// NEW PHASE-CENTRIC APPROACH: Process domains from validDNSResults with pagination
+	domainsToProcess := getPaginatedDomainsFromDNSResults(validDNSResults, lastProcessedDomainNameVal, batchSizeVal)
 
 	currentLastProcessedDomainNameInBatch := hkParams.LastProcessedDomainName
 
@@ -511,8 +546,8 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	}
 
 	allKeywordRulesModels := []models.KeywordRule{}
-	if len(hkParams.KeywordSetIDs) > 0 {
-		for _, ksID := range hkParams.KeywordSetIDs {
+	if hkParams.KeywordSetIDs != nil && len(*hkParams.KeywordSetIDs) > 0 {
+		for _, ksID := range *hkParams.KeywordSetIDs {
 			rules, rErr := s.keywordStore.GetKeywordRulesBySetID(ctx, querier, ksID)
 			if rErr != nil {
 				opErr = fmt.Errorf("failed to fetch rules for keyword set %s: %w", ksID, rErr)
@@ -575,7 +610,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 			var adhocKeywordsFoundForThisDomain []string
 
 			var proxyForValidator *models.Proxy
-			if hkParams.ProxyPoolID.Valid && s.proxyManager != nil {
+			if hkParams.ProxyPoolID != nil && s.proxyManager != nil {
 				proxyEntry, errPmGet := s.proxyManager.GetProxy()
 				if errPmGet == nil && proxyEntry != nil {
 					proxyUUID, errParse := uuid.Parse(proxyEntry.ID)
@@ -597,7 +632,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 						log.Printf("Error parsing proxy ID '%s' from manager: %v", proxyEntry.ID, errParse)
 					}
 				} else if errPmGet != nil {
-					log.Printf("Error getting proxy from manager (pool %s): %v", hkParams.ProxyPoolID.UUID, errPmGet)
+					log.Printf("Error getting proxy from manager (pool %s): %v", *hkParams.ProxyPoolID, errPmGet)
 				}
 			}
 
@@ -757,6 +792,26 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 			log.Printf("ProcessHTTPKeywordCampaignBatch: Saved %d HTTP/Keyword results for campaign %s.", processedInThisBatch, campaignID)
 			lastDomainName := domainsToProcess[len(domainsToProcess)-1].DomainName
 			currentLastProcessedDomainNameInBatch = &lastDomainName
+
+			// PHASE-CENTRIC APPROACH: Also update campaign's HTTPResults JSONB field
+			// Get all HTTP results for this campaign to store in JSONB
+			allHTTPResults, errGetAllResults := s.campaignStore.GetHTTPKeywordResultsByCampaign(ctx, querier, campaignID, store.ListValidationResultsFilter{})
+			if errGetAllResults != nil {
+				log.Printf("Warning: failed to get all HTTP results for JSONB update in campaign %s: %v", campaignID, errGetAllResults)
+			} else {
+				// Convert to JSONB and store in campaign.HTTPResults
+				httpResultsJSON, errMarshal := json.Marshal(allHTTPResults)
+				if errMarshal != nil {
+					log.Printf("Warning: failed to marshal HTTP results to JSON for campaign %s: %v", campaignID, errMarshal)
+				} else {
+					httpResultsRaw := json.RawMessage(httpResultsJSON)
+					if errUpdateHTTPResults := s.campaignStore.UpdateCampaignHTTPResults(ctx, querier, campaignID, &httpResultsRaw); errUpdateHTTPResults != nil {
+						log.Printf("Warning: failed to update campaign HTTPResults JSONB for campaign %s: %v", campaignID, errUpdateHTTPResults)
+					} else {
+						log.Printf("ProcessHTTPKeywordCampaignBatch: Updated campaign HTTPResults JSONB for campaign %s with %d results", campaignID, len(allHTTPResults))
+					}
+				}
+			}
 		}
 	}
 
@@ -770,7 +825,7 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		log.Printf("ProcessHTTPKeywordCampaignBatch: Updating LastProcessedDomainName for campaign %s from '%s' to '%s'",
 			campaignID, currentLPDNValue, newDomainName)
 		hkParams.LastProcessedDomainName = models.StringPtr(newDomainName)
-		campaign.HTTPKeywordValidationParams = hkParams
+		// Note: In phase-centric approach, HTTP params are stored separately via campaignStore
 	}
 
 	if opErr == nil || batchProcessingContextErr != nil { // Update processed count if no critical save error or if context cancelled (partial save)

@@ -4,6 +4,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -40,10 +41,6 @@ type CampaignStore interface {
 	UpdateCampaignStatus(ctx context.Context, exec Querier, id uuid.UUID, status models.PhaseStatusEnum, errorMessage sql.NullString) error
 	UpdateCampaignProgress(ctx context.Context, exec Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error
 
-	CreateDomainGenerationParams(ctx context.Context, exec Querier, params *models.DomainGenerationCampaignParams) error
-	GetDomainGenerationParams(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.DomainGenerationCampaignParams, error)
-	UpdateDomainGenerationParamsOffset(ctx context.Context, exec Querier, campaignID uuid.UUID, newOffset int64) error
-
 	// Methods for DomainGenerationConfigState
 	GetDomainGenerationConfigStateByHash(ctx context.Context, exec Querier, configHash string) (*models.DomainGenerationConfigState, error)
 	CreateOrUpdateDomainGenerationConfigState(ctx context.Context, exec Querier, state *models.DomainGenerationConfigState) error
@@ -56,14 +53,19 @@ type CampaignStore interface {
 	GetGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error)
 	CountGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID) (int64, error)
 
-	CreateDNSValidationParams(ctx context.Context, exec Querier, params *models.DNSValidationCampaignParams) error
-	GetDNSValidationParams(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.DNSValidationCampaignParams, error)
-
 	CreateDNSValidationResults(ctx context.Context, exec Querier, results []*models.DNSValidationResult) error
 	GetDNSValidationResultsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, filter ListValidationResultsFilter) ([]*models.DNSValidationResult, error)
 	CountDNSValidationResults(ctx context.Context, exec Querier, campaignID uuid.UUID, onlyValid bool) (int64, error)
 	DeleteDNSValidationResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (int64, error)
-	GetDomainsForDNSValidation(ctx context.Context, exec Querier, dnsCampaignID uuid.UUID, sourceGenerationCampaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error)
+	// Phase-centric JSONB data access methods
+	GetCampaignDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID) (*json.RawMessage, error)
+	UpdateCampaignDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID, data *json.RawMessage) error
+	GetCampaignDNSResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (*json.RawMessage, error)
+	UpdateCampaignDNSResults(ctx context.Context, exec Querier, campaignID uuid.UUID, results *json.RawMessage) error
+	GetCampaignHTTPResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (*json.RawMessage, error)
+	UpdateCampaignHTTPResults(ctx context.Context, exec Querier, campaignID uuid.UUID, results *json.RawMessage) error
+	GetCampaignAnalysisResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (*json.RawMessage, error)
+	UpdateCampaignAnalysisResults(ctx context.Context, exec Querier, campaignID uuid.UUID, results *json.RawMessage) error
 
 	CreateHTTPKeywordParams(ctx context.Context, exec Querier, params *models.HTTPKeywordCampaignParams) error
 	GetHTTPKeywordParams(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.HTTPKeywordCampaignParams, error)

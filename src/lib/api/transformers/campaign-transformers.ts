@@ -1,7 +1,7 @@
 // Campaign transformer functions for API responses
 import type { components } from '@/lib/api-client/types';
 
-type Campaign = components['schemas']['Campaign'];
+type Campaign = components['schemas']['LeadGenerationCampaign'];
 
 /**
  * Transforms a single campaign response from API format

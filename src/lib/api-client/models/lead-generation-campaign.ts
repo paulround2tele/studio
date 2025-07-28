@@ -18,16 +18,7 @@
 import type { CampaignPhase } from './campaign-phase';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { DNSValidationCampaignParams } from './dnsvalidation-campaign-params';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { DomainGenerationCampaignParams } from './domain-generation-campaign-params';
-// May contain unused imports in some cases
-// @ts-ignore
 import type { ExtractedContentItem } from './extracted-content-item';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { HTTPKeywordCampaignParams } from './httpkeyword-campaign-params';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { LeadItem } from './lead-item';
@@ -117,18 +108,6 @@ export interface LeadGenerationCampaign {
      */
     'dnsValidatedDomains'?: number;
     /**
-     * 
-     * @type {DNSValidationCampaignParams}
-     * @memberof LeadGenerationCampaign
-     */
-    'dnsValidationParams'?: DNSValidationCampaignParams;
-    /**
-     * 
-     * @type {DomainGenerationCampaignParams}
-     * @memberof LeadGenerationCampaign
-     */
-    'domainGenerationParams'?: DomainGenerationCampaignParams;
-    /**
      * Summary metrics (computed from phases)
      * @type {number}
      * @memberof LeadGenerationCampaign
@@ -176,12 +155,6 @@ export interface LeadGenerationCampaign {
      * @memberof LeadGenerationCampaign
      */
     'httpConfig'?: object;
-    /**
-     * 
-     * @type {HTTPKeywordCampaignParams}
-     * @memberof LeadGenerationCampaign
-     */
-    'httpKeywordValidationParams'?: HTTPKeywordCampaignParams;
     /**
      * 
      * @type {object}
@@ -237,7 +210,7 @@ export interface LeadGenerationCampaign {
      */
     'overallProgress'?: number;
     /**
-     * Legacy fields for backward compatibility during transition
+     * Transition fields
      * @type {string}
      * @memberof LeadGenerationCampaign
      */
@@ -255,7 +228,7 @@ export interface LeadGenerationCampaign {
      */
     'processedItems'?: number;
     /**
-     * Legacy fields for backward compatibility during transition
+     * Transition fields
      * @type {number}
      * @memberof LeadGenerationCampaign
      */

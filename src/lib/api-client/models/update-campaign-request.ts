@@ -105,18 +105,6 @@ export interface UpdateCampaignRequest {
      */
     'rotationIntervalSeconds'?: number;
     /**
-     * Unique identifier
-     * @type {string}
-     * @memberof UpdateCampaignRequest
-     */
-    'sourceDnsCampaignId'?: string;
-    /**
-     * Unique identifier
-     * @type {string}
-     * @memberof UpdateCampaignRequest
-     */
-    'sourceGenerationCampaignId'?: string;
-    /**
      * 
      * @type {string}
      * @memberof UpdateCampaignRequest
