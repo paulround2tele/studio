@@ -11,6 +11,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import type { UUID } from '../uuid-types';
 
 
 
@@ -67,6 +68,6 @@ export interface CreateDNSValidationCampaignRequest {
      * @type {string}
      * @memberof CreateDNSValidationCampaignRequest
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

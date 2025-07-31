@@ -7,9 +7,9 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **configuration** | **string** |  | [optional] [default to undefined]
 **domainCount** | **number** |  | [optional] [default to undefined]
-**keywordSetId** | **string** | Unique identifier | [optional] [default to undefined]
-**personaId** | **string** | Unique identifier | [optional] [default to undefined]
-**proxyPoolId** | **string** | Unique identifier | [optional] [default to undefined]
+**keywordSetId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**personaId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**proxyPoolId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

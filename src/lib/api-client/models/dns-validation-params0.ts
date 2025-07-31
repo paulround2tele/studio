@@ -51,7 +51,7 @@ export interface DnsValidationParams {
      */
     'rotationIntervalSeconds'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof DnsValidationParams
      */

@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,11 +23,11 @@
  */
 export interface CampaignStateSnapshot {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignStateSnapshot
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -45,11 +47,11 @@ export interface CampaignStateSnapshot {
      */
     'currentState'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignStateSnapshot
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {boolean}

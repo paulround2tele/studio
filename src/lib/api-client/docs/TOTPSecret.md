@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **createdAt** | **string** |  | [optional] [default to undefined]
 **qrCode** | **string** |  | [optional] [default to undefined]
 **secret** | **string** |  | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

@@ -7,9 +7,9 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **enrolledAt** | **string** |  | [optional] [default to undefined]
 **lastUsedAt** | **string** |  | [optional] [default to undefined]
-**preferredMethod** | **object** |  | [optional] [default to undefined]
+**preferredMethod** | **string** |  | [optional] [default to undefined]
 **totpEnabled** | **boolean** |  | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

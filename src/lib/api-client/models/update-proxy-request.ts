@@ -67,7 +67,7 @@ export interface UpdateProxyRequest {
      * @type {string}
      * @memberof UpdateProxyRequest
      */
-    'protocol'?: UpdateProxyRequestProtocolEnum;
+    'protocol'?: 'http' | 'https' | 'socks5' | 'socks4';
     /**
      * 
      * @type {string}
@@ -76,13 +76,10 @@ export interface UpdateProxyRequest {
     'username'?: string;
 }
 
-export const UpdateProxyRequestProtocolEnum = {
-    Http: 'http',
-    Https: 'https',
-    Socks5: 'socks5',
-    Socks4: 'socks4'
-} as const;
-
-export type UpdateProxyRequestProtocolEnum = typeof UpdateProxyRequestProtocolEnum[keyof typeof UpdateProxyRequestProtocolEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum UpdateProxyRequestProtocolEnum converted to direct string literals in interface
 
 

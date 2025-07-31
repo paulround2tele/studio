@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **createdAt** | **string** |  | [optional] [default to undefined]
 **description** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **isEnabled** | **boolean** |  | [optional] [default to undefined]
 **name** | **string** |  | [default to undefined]
 **rules** | [**Array&lt;KeywordRule&gt;**](KeywordRule.md) |  | [optional] [default to undefined]

@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -27,11 +29,11 @@ export interface SecurityEvent {
      */
     'actionAttempted'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof SecurityEvent
      */
-    'auditLogId'?: string;
+    'auditLogId'?: UUID;
     /**
      * 
      * @type {string}
@@ -39,11 +41,11 @@ export interface SecurityEvent {
      */
     'authorizationResult'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof SecurityEvent
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -63,11 +65,11 @@ export interface SecurityEvent {
      */
     'eventType'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof SecurityEvent
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {object}
@@ -75,11 +77,11 @@ export interface SecurityEvent {
      */
     'requestContext'?: object;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof SecurityEvent
      */
-    'resourceId'?: string;
+    'resourceId'?: UUID;
     /**
      * 
      * @type {string}
@@ -93,11 +95,11 @@ export interface SecurityEvent {
      */
     'riskScore'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof SecurityEvent
      */
-    'sessionId'?: string;
+    'sessionId'?: UUID;
     /**
      * 
      * @type {string}
@@ -111,10 +113,10 @@ export interface SecurityEvent {
      */
     'userAgent'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof SecurityEvent
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

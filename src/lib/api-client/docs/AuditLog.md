@@ -8,12 +8,12 @@ Name | Type | Description | Notes
 **action** | **string** |  | [default to undefined]
 **clientIp** | **string** |  | [optional] [default to undefined]
 **details** | **object** |  | [optional] [default to undefined]
-**entityId** | **string** | Unique identifier | [optional] [default to undefined]
+**entityId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **entityType** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **timestamp** | **string** |  | [optional] [default to undefined]
 **userAgent** | **string** |  | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

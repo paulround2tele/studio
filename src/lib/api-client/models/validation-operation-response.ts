@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,17 +23,17 @@
  */
 export interface ValidationOperationResponse {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ValidationOperationResponse
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ValidationOperationResponse
      */
-    'jobId'?: string;
+    'jobId'?: UUID;
     /**
      * 
      * @type {string}
@@ -45,10 +47,10 @@ export interface ValidationOperationResponse {
      */
     'success'?: boolean;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ValidationOperationResponse
      */
-    'validationType'?: string;
+    'validationType'?: UUID;
 }
 

@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **httpKeywordParams** | [**HTTPKeywordValidationRequest**](HTTPKeywordValidationRequest.md) |  | [optional] [default to undefined]
 **launchSequence** | **boolean** |  | [optional] [default to undefined]
 **name** | **string** |  | [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

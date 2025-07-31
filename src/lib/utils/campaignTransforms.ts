@@ -2,12 +2,13 @@
 // Campaign data transformation utilities for UI compatibility (OpenAPI Migration)
 
 import type { components } from '@/lib/api-client/types';
-import type { LeadGenerationCampaignCurrentPhaseEnum, LeadGenerationCampaignPhaseStatusEnum } from '@/lib/api-client/models/lead-generation-campaign';
+import type { UUID } from '@/lib/api-client/uuid-types';
+// Enum types removed - using direct string literals now
 import type { CampaignViewModel } from '@/lib/types';
 
 type OpenAPICampaign = components['schemas']['LeadGenerationCampaign'];
-type CampaignPhase = LeadGenerationCampaignCurrentPhaseEnum;
-type CampaignPhaseStatus = LeadGenerationCampaignPhaseStatusEnum;
+type CampaignPhase = 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis';
+type CampaignPhaseStatus = 'not_started' | 'ready' | 'configured' | 'in_progress' | 'paused' | 'completed' | 'failed';
 
 /**
  * Helper function to find campaign ID in nested API response structures
@@ -113,7 +114,7 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
   
   return {
     // Core OpenAPI Campaign fields (direct mapping)
-    id: campaignId,
+    id: campaignId as UUID,
     name: campaign.name || '',
     campaignType: 'lead_generation', // Required field for lead generation campaigns
     userId: campaign.userId,
@@ -228,7 +229,7 @@ export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: 
   
   // Update OpenAPI fields directly
   if (apiUpdate.id) {
-    updatedViewModel.id = apiUpdate.id;
+    updatedViewModel.id = apiUpdate.id as UUID;
   }
   if (apiUpdate.userId) {
     updatedViewModel.userId = apiUpdate.userId;

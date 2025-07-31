@@ -6,7 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **batchSize** | **number** |  | [optional] [default to undefined]
-**campaignId** | **string** | Unique identifier | [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [default to undefined]
 **onlyInvalidDomains** | **boolean** |  | [optional] [default to undefined]
 **personaIds** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 **processingSpeedPerMinute** | **number** |  | [optional] [default to undefined]

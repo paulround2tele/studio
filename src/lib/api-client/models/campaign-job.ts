@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -31,13 +33,13 @@ export interface CampaignJob {
      * @type {string}
      * @memberof CampaignJob
      */
-    'businessStatus'?: CampaignJobBusinessStatusEnum;
+    'businessStatus'?: 'processing' | 'retry' | 'priority_queued' | 'batch_optimized';
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignJob
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -45,11 +47,11 @@ export interface CampaignJob {
      */
     'createdAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignJob
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {object}
@@ -61,7 +63,7 @@ export interface CampaignJob {
      * @type {string}
      * @memberof CampaignJob
      */
-    'jobType': CampaignJobJobTypeEnum;
+    'jobType': 'generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis';
     /**
      * 
      * @type {string}
@@ -99,11 +101,11 @@ export interface CampaignJob {
      */
     'nextExecutionAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignJob
      */
-    'processingServerId'?: string;
+    'processingServerId'?: UUID;
     /**
      * 
      * @type {string}
@@ -115,7 +117,7 @@ export interface CampaignJob {
      * @type {string}
      * @memberof CampaignJob
      */
-    'status'?: CampaignJobStatusEnum;
+    'status'?: 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
     /**
      * 
      * @type {string}
@@ -124,31 +126,20 @@ export interface CampaignJob {
     'updatedAt'?: string;
 }
 
-export const CampaignJobBusinessStatusEnum = {
-    Processing: 'processing',
-    Retry: 'retry',
-    PriorityQueued: 'priority_queued',
-    BatchOptimized: 'batch_optimized'
-} as const;
-
-export type CampaignJobBusinessStatusEnum = typeof CampaignJobBusinessStatusEnum[keyof typeof CampaignJobBusinessStatusEnum];
-export const CampaignJobJobTypeEnum = {
-    Generation: 'generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation',
-    Analysis: 'analysis'
-} as const;
-
-export type CampaignJobJobTypeEnum = typeof CampaignJobJobTypeEnum[keyof typeof CampaignJobJobTypeEnum];
-export const CampaignJobStatusEnum = {
-    Pending: 'pending',
-    Queued: 'queued',
-    Running: 'running',
-    Completed: 'completed',
-    Failed: 'failed',
-    Cancelled: 'cancelled'
-} as const;
-
-export type CampaignJobStatusEnum = typeof CampaignJobStatusEnum[keyof typeof CampaignJobStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum CampaignJobBusinessStatusEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum CampaignJobJobTypeEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum CampaignJobStatusEnum converted to direct string literals in interface
 
 

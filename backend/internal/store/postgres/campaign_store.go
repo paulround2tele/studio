@@ -161,7 +161,7 @@ func (s *campaignStorePostgres) DeleteCampaign(ctx context.Context, exec store.Q
 	// Order matters: delete leaf nodes first, then parent nodes
 
 	// 3. Delete generated domains (no foreign dependencies)
-	_, err = exec.ExecContext(ctx, `DELETE FROM generated_domains WHERE domain_generation_campaign_id = $1`, id)
+	_, err = exec.ExecContext(ctx, `DELETE FROM generated_domains WHERE campaign_id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete generated domains: %w", err)
 	}
@@ -350,8 +350,8 @@ func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec s
 
 func (s *campaignStorePostgres) UpdateCampaignProgress(ctx context.Context, exec store.Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error {
 	// First, update the progress and set status to 'running' if it's not already completed or failed
-	query := `UPDATE campaigns 
-		SET processed_items = $1, 
+	query := `UPDATE lead_generation_campaigns
+		SET processed_items = $1,
 			total_items = $2, 
 			progress_percentage = $3,
 			phase_status = CASE
@@ -381,10 +381,10 @@ func (s *campaignStorePostgres) UpdateCampaignProgress(ctx context.Context, exec
 // REMOVED: Legacy cross-campaign methods - CreateDomainGenerationParams, GetDomainGenerationParams, UpdateDomainGenerationParamsOffset
 // These methods have been replaced with phase-centric JSONB approach
 
-// --- DomainGenerationConfigState Store Methods ---
+// --- DomainGenerationPhaseConfigState Store Methods ---
 
-func (s *campaignStorePostgres) GetDomainGenerationConfigStateByHash(ctx context.Context, exec store.Querier, configHash string) (*models.DomainGenerationConfigState, error) {
-	state := &models.DomainGenerationConfigState{}
+func (s *campaignStorePostgres) GetDomainGenerationPhaseConfigStateByHash(ctx context.Context, exec store.Querier, configHash string) (*models.DomainGenerationPhaseConfigState, error) {
+	state := &models.DomainGenerationPhaseConfigState{}
 	query := `SELECT config_hash, last_offset, config_details, updated_at
 			  FROM domain_generation_config_states WHERE config_hash = $1`
 
@@ -400,7 +400,7 @@ func (s *campaignStorePostgres) GetDomainGenerationConfigStateByHash(ctx context
 	return state, err
 }
 
-func (s *campaignStorePostgres) CreateOrUpdateDomainGenerationConfigState(ctx context.Context, exec store.Querier, state *models.DomainGenerationConfigState) error {
+func (s *campaignStorePostgres) CreateOrUpdateDomainGenerationPhaseConfigState(ctx context.Context, exec store.Querier, state *models.DomainGenerationPhaseConfigState) error {
 	query := `INSERT INTO domain_generation_config_states (config_hash, last_offset, config_details, updated_at)
 			  VALUES (:config_hash, :last_offset, :config_details, :updated_at)
 			  ON CONFLICT (config_hash) DO UPDATE SET
@@ -418,8 +418,8 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 		return nil
 	}
 	stmt, err := exec.PrepareNamedContext(ctx, `INSERT INTO generated_domains
-		(id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, http_status, http_title, http_keywords, lead_score)
-		VALUES (:id, :domain_generation_campaign_id, :domain_name, :source_keyword, :source_pattern, :tld, :offset_index, :generated_at, :created_at, :dns_status, :http_status, :http_title, :http_keywords, :lead_score)`)
+		(id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, http_status, http_title, http_keywords, lead_score)
+		VALUES (:id, :campaign_id, :domain_name, :source_keyword, :source_pattern, :tld, :offset_index, :generated_at, :created_at, :dns_status, :http_status, :http_title, :http_keywords, :lead_score)`)
 	if err != nil {
 		return err
 	}
@@ -461,9 +461,9 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 func (s *campaignStorePostgres) GetGeneratedDomainsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error) {
 	domains := []*models.GeneratedDomain{}
 	// lastOffsetIndex = -1 can indicate to fetch the first page
-	query := `SELECT id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, dns_ip, http_status, http_status_code, http_title, http_keywords, lead_score, lead_status, last_validated_at
+	query := `SELECT id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at, dns_status, dns_ip, http_status, http_status_code, http_title, http_keywords, lead_score, lead_status, last_validated_at
 			  FROM generated_domains
-			  WHERE domain_generation_campaign_id = $1 AND offset_index >= $2
+			  WHERE campaign_id = $1 AND offset_index >= $2
 			  ORDER BY offset_index ASC
 			  LIMIT $3`
 
@@ -482,7 +482,7 @@ func (s *campaignStorePostgres) GetGeneratedDomainsByCampaign(ctx context.Contex
 
 func (s *campaignStorePostgres) CountGeneratedDomainsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (int64, error) {
 	var count int64
-	query := `SELECT COUNT(*) FROM generated_domains WHERE domain_generation_campaign_id = $1`
+	query := `SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1`
 	err := exec.GetContext(ctx, &count, query, campaignID)
 	return count, err
 }
@@ -515,11 +515,11 @@ func (s *campaignStorePostgres) CountValidatedDomains(ctx context.Context, exec 
 	var query string
 	switch statusType {
 	case "dns":
-		query = `SELECT COUNT(*) FROM generated_domains WHERE domain_generation_campaign_id = $1 AND dns_status = 'ok'`
+		query = `SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1 AND dns_status = 'ok'`
 	case "http":
-		query = `SELECT COUNT(*) FROM generated_domains WHERE domain_generation_campaign_id = $1 AND http_status = 'ok'`
+		query = `SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1 AND http_status = 'ok'`
 	default:
-		query = `SELECT COUNT(*) FROM generated_domains WHERE domain_generation_campaign_id = $1`
+		query = `SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1`
 	}
 
 	var count int64
@@ -572,9 +572,9 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 func (s *campaignStorePostgres) GetDNSValidationResultsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, filter store.ListValidationResultsFilter) ([]*models.DNSValidationResult, error) {
 	// Convert generated_domains data to DNSValidationResult format
 	domains := []*models.GeneratedDomain{}
-	query := `SELECT id, domain_generation_campaign_id, domain_name, dns_status, dns_ip, last_validated_at, created_at
+	query := `SELECT id, campaign_id, domain_name, dns_status, dns_ip, last_validated_at, created_at
 	          FROM generated_domains
-	          WHERE domain_generation_campaign_id = $1`
+	          WHERE campaign_id = $1`
 
 	args := []interface{}{campaignID}
 	if filter.ValidationStatus != "" {
@@ -637,7 +637,7 @@ func (s *campaignStorePostgres) GetDNSValidationResultsByCampaign(ctx context.Co
 }
 
 func (s *campaignStorePostgres) CountDNSValidationResults(ctx context.Context, exec store.Querier, campaignID uuid.UUID, onlyValid bool) (int64, error) {
-	query := `SELECT COUNT(*) FROM generated_domains WHERE domain_generation_campaign_id = $1`
+	query := `SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1`
 	args := []interface{}{campaignID}
 
 	if onlyValid {
@@ -656,7 +656,7 @@ func (s *campaignStorePostgres) DeleteDNSValidationResults(ctx context.Context, 
 	          dns_status = NULL,
 	          dns_ip = NULL,
 	          last_validated_at = NULL
-	          WHERE domain_generation_campaign_id = $1 AND dns_status IS NOT NULL`
+	          WHERE campaign_id = $1 AND dns_status IS NOT NULL`
 
 	result, err := exec.ExecContext(ctx, query, campaignID)
 	if err != nil {
@@ -897,9 +897,9 @@ func (s *campaignStorePostgres) UpdateDomainHTTPStatus(ctx context.Context, exec
 func (s *campaignStorePostgres) GetHTTPKeywordResultsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID, filter store.ListValidationResultsFilter) ([]*models.HTTPKeywordResult, error) {
 	// Convert generated_domains data to HTTPKeywordResult format
 	domains := []*models.GeneratedDomain{}
-	query := `SELECT id, domain_generation_campaign_id, domain_name, http_status, http_status_code, http_title, last_validated_at, created_at
+	query := `SELECT id, campaign_id, domain_name, http_status, http_status_code, http_title, last_validated_at, created_at
 	          FROM generated_domains
-	          WHERE domain_generation_campaign_id = $1`
+	          WHERE campaign_id = $1`
 
 	args := []interface{}{campaignID}
 	if filter.ValidationStatus != "" {
@@ -977,9 +977,9 @@ func (s *campaignStorePostgres) GetDomainsForHTTPValidation(ctx context.Context,
 	// Get domains that have successful DNS validation but need HTTP validation
 	domains := []*models.GeneratedDomain{}
 	query := `
-	       SELECT id, domain_generation_campaign_id, domain_name, dns_status, http_status, last_validated_at, created_at
+	       SELECT id, campaign_id, domain_name, dns_status, http_status, last_validated_at, created_at
 	       FROM generated_domains
-	       WHERE domain_generation_campaign_id = $1
+	       WHERE campaign_id = $1
 	         AND dns_status = $2
 	         AND domain_name > $3
 	         AND (http_status IS NULL OR http_status IN ('pending', 'error'))
@@ -1462,6 +1462,231 @@ func (s *campaignStorePostgres) UpdateCampaignAnalysisResults(ctx context.Contex
 		return store.ErrNotFound
 	}
 	return err
+}
+
+// GetCampaignsByIDs retrieves multiple campaigns in a single query
+func (s *campaignStorePostgres) GetCampaignsByIDs(ctx context.Context, exec store.Querier, campaignIDs []uuid.UUID) ([]*models.LeadGenerationCampaign, error) {
+	// Handle edge case of empty array
+	if len(campaignIDs) == 0 {
+		return []*models.LeadGenerationCampaign{}, nil
+	}
+
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+
+	// Create array of interface{} for the query
+	args := make([]interface{}, len(campaignIDs))
+	placeholders := make([]string, len(campaignIDs))
+	for i, id := range campaignIDs {
+		args[i] = id
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+	}
+
+	query := fmt.Sprintf(`SELECT id, name, current_phase, phase_status, user_id, created_at, updated_at,
+	                 started_at, completed_at, progress_percentage, total_items, processed_items,
+	                 successful_items, failed_items, metadata, error_message, business_status,
+	                 campaign_type, total_phases, completed_phases, overall_progress,
+	                 is_full_sequence_mode, auto_advance_phases,
+	                 domains_data, dns_results, http_results, analysis_results
+	             FROM lead_generation_campaigns WHERE id IN (%s)`, strings.Join(placeholders, ","))
+
+	campaigns := []*models.LeadGenerationCampaign{}
+	err := exec.SelectContext(ctx, &campaigns, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get campaigns by IDs: %w", err)
+	}
+
+	// Set default values for required fields that may be missing in older records
+	for _, campaign := range campaigns {
+		if campaign.CampaignType == "" {
+			campaign.CampaignType = "lead_generation"
+		}
+		if campaign.TotalPhases == 0 {
+			campaign.TotalPhases = 4
+		}
+	}
+
+	return campaigns, nil
+}
+
+// BulkDeleteCampaignsByIDs deletes multiple campaigns in a single transaction
+func (s *campaignStorePostgres) BulkDeleteCampaignsByIDs(ctx context.Context, exec store.Querier, campaignIDs []uuid.UUID) error {
+	// Handle edge case of empty array
+	if len(campaignIDs) == 0 {
+		return nil
+	}
+
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+
+	// Convert UUIDs to pq.Array for PostgreSQL
+	uuidArray := pq.Array(campaignIDs)
+
+	// Delete related records first to avoid foreign key constraint violations
+	// Order matters: delete leaf nodes first, then parent nodes
+
+	// 1. Delete generated domains
+	_, err := exec.ExecContext(ctx, `DELETE FROM generated_domains WHERE campaign_id = ANY($1)`, uuidArray)
+	if err != nil {
+		return fmt.Errorf("failed to delete generated domains: %w", err)
+	}
+
+	// 2. Delete campaign jobs
+	_, err = exec.ExecContext(ctx, `DELETE FROM campaign_jobs WHERE campaign_id = ANY($1)`, uuidArray)
+	if err != nil {
+		return fmt.Errorf("failed to delete campaign jobs: %w", err)
+	}
+
+	// 3. Delete HTTP keyword campaign params
+	_, err = exec.ExecContext(ctx, `DELETE FROM http_keyword_campaign_params WHERE campaign_id = ANY($1)`, uuidArray)
+	if err != nil {
+		return fmt.Errorf("failed to delete HTTP keyword campaign params: %w", err)
+	}
+
+	// 4. Delete domain generation params (legacy table cleanup)
+	_, err = exec.ExecContext(ctx, `DELETE FROM domain_generation_campaign_params WHERE campaign_id = ANY($1)`, uuidArray)
+	if err != nil {
+		return fmt.Errorf("failed to delete domain generation params: %w", err)
+	}
+
+	// 5. Finally, delete the campaigns themselves
+	result, err := exec.ExecContext(ctx, `DELETE FROM lead_generation_campaigns WHERE id = ANY($1)`, uuidArray)
+	if err != nil {
+		return fmt.Errorf("failed to delete campaigns: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	log.Printf("Bulk deleted %d campaigns", rowsAffected)
+	return nil
+}
+
+// UpdateDomainsBulkDNSStatus updates multiple domains with DNS results in batch
+func (s *campaignStorePostgres) UpdateDomainsBulkDNSStatus(ctx context.Context, exec store.Querier, results []models.DNSValidationResult) error {
+	// Handle edge case of empty array
+	if len(results) == 0 {
+		return nil
+	}
+
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+
+	// Build bulk update using UNNEST for efficient batch processing
+	domainNames := make([]string, len(results))
+	validationStatuses := make([]string, len(results))
+	campaignIDs := make([]uuid.UUID, len(results))
+
+	for i, result := range results {
+		domainNames[i] = result.DomainName
+		validationStatuses[i] = result.ValidationStatus
+		campaignIDs[i] = result.DNSCampaignID
+	}
+
+	query := `
+		UPDATE generated_domains
+		SET dns_status = updates.validation_status::text,
+		    last_validated_at = NOW()
+		FROM (
+			SELECT UNNEST($1::text[]) as domain_name,
+			       UNNEST($2::text[]) as validation_status,
+			       UNNEST($3::uuid[]) as campaign_id
+		) AS updates
+		WHERE generated_domains.domain_name = updates.domain_name
+		AND generated_domains.campaign_id = updates.campaign_id`
+
+	result, err := exec.ExecContext(ctx, query,
+		pq.Array(domainNames),
+		pq.Array(validationStatuses),
+		pq.Array(campaignIDs))
+	if err != nil {
+		return fmt.Errorf("failed to bulk update DNS status: %w", err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	log.Printf("Bulk updated DNS status for %d domains", rowsAffected)
+	return nil
+}
+
+// UpdateDomainsBulkHTTPStatus updates multiple domains with HTTP results in batch
+func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context, exec store.Querier, results []models.HTTPKeywordResult) error {
+	// Handle edge case of empty array
+	if len(results) == 0 {
+		return nil
+	}
+
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+
+	// Build bulk update using UNNEST for efficient batch processing
+	domainNames := make([]string, len(results))
+	validationStatuses := make([]string, len(results))
+	httpStatusCodes := make([]*int32, len(results))
+	pageTitles := make([]*string, len(results))
+
+	for i, result := range results {
+		domainNames[i] = result.DomainName
+		validationStatuses[i] = result.ValidationStatus
+		httpStatusCodes[i] = result.HTTPStatusCode
+		pageTitles[i] = result.PageTitle
+	}
+
+	query := `
+		UPDATE generated_domains
+		SET http_status = updates.validation_status::text,
+		    http_status_code = updates.http_status_code,
+		    http_title = updates.page_title,
+		    last_validated_at = NOW()
+		FROM (
+			SELECT UNNEST($1::text[]) as domain_name,
+			       UNNEST($2::text[]) as validation_status,
+			       UNNEST($3::int[]) as http_status_code,
+			       UNNEST($4::text[]) as page_title
+		) AS updates
+		WHERE generated_domains.domain_name = updates.domain_name`
+
+	// Convert nullable fields to arrays that PostgreSQL can handle
+	statusCodeArray := make([]interface{}, len(httpStatusCodes))
+	titleArray := make([]interface{}, len(pageTitles))
+
+	for i, code := range httpStatusCodes {
+		if code != nil {
+			statusCodeArray[i] = *code
+		} else {
+			statusCodeArray[i] = nil
+		}
+	}
+
+	for i, title := range pageTitles {
+		if title != nil {
+			titleArray[i] = *title
+		} else {
+			titleArray[i] = nil
+		}
+	}
+
+	result, err := exec.ExecContext(ctx, query,
+		pq.Array(domainNames),
+		pq.Array(validationStatuses),
+		pq.Array(statusCodeArray),
+		pq.Array(titleArray))
+	if err != nil {
+		return fmt.Errorf("failed to bulk update HTTP status: %w", err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	log.Printf("Bulk updated HTTP status for %d domains", rowsAffected)
+	return nil
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)

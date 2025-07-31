@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,11 +23,11 @@
  */
 export interface DeletionResponse {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof DeletionResponse
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}

@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -30,17 +32,17 @@ export interface ExtractedContentItem {
      */
     'advancedAnalysis'?: ExtractedContentAnalysis;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ExtractedContentItem
      */
-    'id': string;
+    'id': UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ExtractedContentItem
      */
-    'previousCampaignId'?: string;
+    'previousCampaignId'?: UUID;
     /**
      * 
      * @type {number}

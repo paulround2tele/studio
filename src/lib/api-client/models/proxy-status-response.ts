@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -42,11 +44,11 @@ export interface ProxyStatusResponse {
      */
     'proxyDetails'?: ProxyDetailsResponse;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ProxyStatusResponse
      */
-    'proxyId'?: string;
+    'proxyId'?: UUID;
     /**
      * 
      * @type {number}

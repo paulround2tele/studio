@@ -73,7 +73,7 @@ export interface DnsPersonaConfig {
      * @type {string}
      * @memberof DnsPersonaConfig
      */
-    'resolverStrategy': DnsPersonaConfigResolverStrategyEnum;
+    'resolverStrategy': 'round_robin' | 'random' | 'weighted' | 'priority' | 'random_rotation' | 'weighted_rotation' | 'sequential_failover';
     /**
      * 
      * @type {Array<string>}
@@ -100,16 +100,10 @@ export interface DnsPersonaConfig {
     'useSystemResolvers'?: boolean;
 }
 
-export const DnsPersonaConfigResolverStrategyEnum = {
-    RoundRobin: 'round_robin',
-    Random: 'random',
-    Weighted: 'weighted',
-    Priority: 'priority',
-    RandomRotation: 'random_rotation',
-    WeightedRotation: 'weighted_rotation',
-    SequentialFailover: 'sequential_failover'
-} as const;
-
-export type DnsPersonaConfigResolverStrategyEnum = typeof DnsPersonaConfigResolverStrategyEnum[keyof typeof DnsPersonaConfigResolverStrategyEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum DnsPersonaConfigResolverStrategyEnum converted to direct string literals in interface
 
 

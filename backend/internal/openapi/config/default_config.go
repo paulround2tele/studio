@@ -5,6 +5,7 @@ func DefaultConfig() *GenerationConfig {
 	return &GenerationConfig{
 		PackagePaths: []string{
 			"./internal/api",
+			"./internal/services",
 			"./internal/models",
 			"./internal/config",
 		},

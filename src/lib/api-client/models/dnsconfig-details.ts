@@ -73,7 +73,7 @@ export interface DNSConfigDetails {
      * @type {string}
      * @memberof DNSConfigDetails
      */
-    'resolverStrategy'?: DNSConfigDetailsResolverStrategyEnum;
+    'resolverStrategy'?: 'round_robin' | 'random' | 'weighted' | 'priority';
     /**
      * 
      * @type {Array<string>}
@@ -100,13 +100,10 @@ export interface DNSConfigDetails {
     'useSystemResolvers'?: boolean;
 }
 
-export const DNSConfigDetailsResolverStrategyEnum = {
-    RoundRobin: 'round_robin',
-    Random: 'random',
-    Weighted: 'weighted',
-    Priority: 'priority'
-} as const;
-
-export type DNSConfigDetailsResolverStrategyEnum = typeof DNSConfigDetailsResolverStrategyEnum[keyof typeof DNSConfigDetailsResolverStrategyEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum DNSConfigDetailsResolverStrategyEnum converted to direct string literals in interface
 
 

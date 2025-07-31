@@ -14,9 +14,9 @@ Name | Type | Description | Notes
 **riskScore** | **number** |  | [optional] [default to undefined]
 **securityFlags** | **string** |  | [optional] [default to undefined]
 **sessionFingerprint** | **string** |  | [optional] [default to undefined]
-**sessionId** | **string** | Unique identifier | [optional] [default to undefined]
+**sessionId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **userAgent** | **string** |  | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

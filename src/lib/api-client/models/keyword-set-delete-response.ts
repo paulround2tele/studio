@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -27,11 +29,11 @@ export interface KeywordSetDeleteResponse {
      */
     'deleted'?: boolean;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordSetDeleteResponse
      */
-    'keywordSetId'?: string;
+    'keywordSetId'?: UUID;
     /**
      * 
      * @type {string}

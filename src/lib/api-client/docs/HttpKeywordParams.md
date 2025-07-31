@@ -10,11 +10,11 @@ Name | Type | Description | Notes
 **keywordSetIds** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 **personaIds** | **Array&lt;string&gt;** |  | [default to undefined]
 **processingSpeedPerMinute** | **number** |  | [optional] [default to undefined]
-**proxyPoolId** | **string** | Unique identifier | [optional] [default to undefined]
+**proxyPoolId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **proxySelectionStrategy** | **string** |  | [optional] [default to undefined]
 **retryAttempts** | **number** |  | [optional] [default to undefined]
 **rotationIntervalSeconds** | **number** |  | [optional] [default to undefined]
-**sourceCampaignId** | **string** | Unique identifier | [default to undefined]
+**sourceCampaignId** | **string** | Unique identifier (UUID v4) | [default to undefined]
 **targetHttpPorts** | **Array&lt;number&gt;** |  | [optional] [default to undefined]
 
 ## Example

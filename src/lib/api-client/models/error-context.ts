@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -27,11 +29,11 @@ export interface ErrorContext {
      */
     'campaign_count'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ErrorContext
      */
-    'campaign_id'?: string;
+    'campaign_id'?: UUID;
     /**
      * 
      * @type {string}
@@ -63,11 +65,11 @@ export interface ErrorContext {
      */
     'phase_status'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ErrorContext
      */
-    'provided_value'?: string;
+    'provided_value'?: UUID;
     /**
      * 
      * @type {string}
@@ -81,22 +83,22 @@ export interface ErrorContext {
      */
     'result_count'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ErrorContext
      */
-    'source_campaign_id'?: string;
+    'source_campaign_id'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ErrorContext
      */
-    'target_campaign_id'?: string;
+    'target_campaign_id'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ErrorContext
      */
-    'validation_job_id'?: string;
+    'validation_job_id'?: UUID;
 }
 

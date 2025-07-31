@@ -7,11 +7,11 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **createdAt** | **string** |  | [optional] [default to undefined]
 **description** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **isEnabled** | **boolean** |  | [optional] [default to undefined]
 **name** | **string** |  | [optional] [default to undefined]
 **ruleCount** | **number** |  | [optional] [default to undefined]
-**rules** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**rules** | [**Array&lt;KeywordRule&gt;**](KeywordRule.md) |  | [optional] [default to undefined]
 **updatedAt** | **string** |  | [optional] [default to undefined]
 
 ## Example

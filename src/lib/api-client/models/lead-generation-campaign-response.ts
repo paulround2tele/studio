@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -28,7 +30,7 @@ export interface LeadGenerationCampaignResponse {
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
-    'campaignType'?: string;
+    'campaignType': string;
     /**
      * 
      * @type {string}
@@ -46,9 +48,9 @@ export interface LeadGenerationCampaignResponse {
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
-    'createdAt'?: string;
+    'createdAt': string;
     /**
-     * Phase management
+     * 
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
@@ -78,11 +80,11 @@ export interface LeadGenerationCampaignResponse {
      */
     'failedItems'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
-    'id'?: string;
+    'id': UUID;
     /**
      * 
      * @type {number}
@@ -94,7 +96,7 @@ export interface LeadGenerationCampaignResponse {
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
-    'name'?: string;
+    'name': string;
     /**
      * 
      * @type {number}
@@ -148,6 +150,6 @@ export interface LeadGenerationCampaignResponse {
      * @type {string}
      * @memberof LeadGenerationCampaignResponse
      */
-    'updatedAt'?: string;
+    'updatedAt': string;
 }
 

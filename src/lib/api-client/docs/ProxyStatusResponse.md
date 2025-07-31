@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **isHealthy** | **boolean** |  | [optional] [default to undefined]
 **lastChecked** | **string** |  | [optional] [default to undefined]
 **proxyDetails** | [**ProxyDetailsResponse**](ProxyDetailsResponse.md) |  | [optional] [default to undefined]
-**proxyId** | **string** | Unique identifier | [optional] [default to undefined]
+**proxyId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **responseTimeMs** | **number** |  | [optional] [default to undefined]
 **status** | **string** |  | [optional] [default to undefined]
 

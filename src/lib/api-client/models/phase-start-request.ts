@@ -25,16 +25,13 @@ export interface PhaseStartRequest {
      * @type {string}
      * @memberof PhaseStartRequest
      */
-    'phaseType': PhaseStartRequestPhaseTypeEnum;
+    'phaseType': 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis';
 }
 
-export const PhaseStartRequestPhaseTypeEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation',
-    Analysis: 'analysis'
-} as const;
-
-export type PhaseStartRequestPhaseTypeEnum = typeof PhaseStartRequestPhaseTypeEnum[keyof typeof PhaseStartRequestPhaseTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum PhaseStartRequestPhaseTypeEnum converted to direct string literals in interface
 
 

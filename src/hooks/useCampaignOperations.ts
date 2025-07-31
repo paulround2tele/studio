@@ -6,6 +6,9 @@
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { campaignsApi } from '@/lib/api-client/client';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { validateCampaignId, validateBulkEnrichedDataRequest } from '@/lib/utils/uuidValidation';
+import { assertBulkEnrichedDataResponse, extractDomainName } from '@/lib/utils/typeGuards';
 
 export const useCampaignOperations = (campaignId: string) => {
   const { toast } = useToast();
@@ -13,6 +16,13 @@ export const useCampaignOperations = (campaignId: string) => {
   // Start a specific phase using standalone services API
   const startPhase = useCallback(async (phaseType: string) => {
     try {
+      // Validate campaign ID before making API call
+      const campaignValidationResult = validateCampaignId(campaignId);
+      if (!campaignValidationResult.isValid) {
+        // Toast notification already shown by validateCampaignId
+        throw new Error(campaignValidationResult.error || 'Invalid campaign ID');
+      }
+
       await campaignsApi.startPhaseStandalone(campaignId, phaseType);
       
       toast({
@@ -66,18 +76,34 @@ export const useCampaignOperations = (campaignId: string) => {
   // Simple download domains operation
   const downloadDomains = useCallback(async (fileNamePrefix: string = 'domains') => {
     try {
-      // Get campaign progress to access domains data
-      const progressResponse = await campaignsApi.getCampaignProgressStandalone(campaignId);
-      const progress = progressResponse.data.data as any; // Cast to any for legacy cleanup period
+      // Validate campaign ID before making bulk request
+      const campaignValidationResult = validateCampaignId(campaignId);
+      if (!campaignValidationResult.isValid) {
+        // Toast notification already shown by validateCampaignId
+        throw new Error(campaignValidationResult.error || 'Invalid campaign ID');
+      }
+
+      // Validate bulk request
+      const bulkValidationResult = validateBulkEnrichedDataRequest([campaignId]);
+      if (!bulkValidationResult.isValid) {
+        throw new Error(bulkValidationResult.error || 'Invalid bulk request');
+      }
+
+      // ENTERPRISE FIX: Use bulk enriched data instead of individual getCampaignProgressStandalone
+      const bulkRequest = {
+        campaignIds: [campaignId],
+        limit: 1,
+        offset: 0
+      };
       
-      // Extract domains from progress data (backend manages JSONB data)
+      const bulkResponse = await campaignsApi.getBulkEnrichedCampaignData(bulkRequest);
+      const enrichedData = assertBulkEnrichedDataResponse(extractResponseData(bulkResponse));
+      
+      // Extract domains from bulk enriched data
       let domainsText = '';
-      if (progress && progress.phaseProgress) {
-        const domainPhase = progress.phaseProgress['domain_generation'];
-        if (domainPhase) {
-          // Backend provides domains in structured format
-          domainsText = 'Domains data available - implement extraction based on backend format\n';
-        }
+      const campaignData = enrichedData?.campaigns?.[campaignId];
+      if (campaignData?.domains && Array.isArray(campaignData.domains)) {
+        domainsText = campaignData.domains.map(domain => extractDomainName(domain)).join('\n') + '\n';
       }
       
       if (!domainsText) {

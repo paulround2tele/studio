@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -51,11 +53,11 @@ export interface CacheEntry {
      */
     'cacheValueCompressed'?: Array<string>;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheEntry
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -87,11 +89,11 @@ export interface CacheEntry {
      */
     'hitCount'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheEntry
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {boolean}

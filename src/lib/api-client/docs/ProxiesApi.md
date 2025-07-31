@@ -5,6 +5,9 @@ All URIs are relative to *http://localhost*
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
 |[**addProxy**](#addproxy) | **POST** /proxies | Create proxy|
+|[**bulkDeleteProxies**](#bulkdeleteproxies) | **DELETE** /proxies/bulk/delete | Bulk delete proxies|
+|[**bulkTestProxies**](#bulktestproxies) | **POST** /proxies/bulk/test | Bulk test proxies|
+|[**bulkUpdateProxies**](#bulkupdateproxies) | **PUT** /proxies/bulk/update | Bulk update proxies|
 |[**deleteProxy**](#deleteproxy) | **DELETE** /proxies/{proxyId} | Delete proxy|
 |[**forceCheckAllProxies**](#forcecheckallproxies) | **POST** /proxies/health-check | Force health check on all proxies|
 |[**forceCheckSingleProxy**](#forcechecksingleproxy) | **POST** /proxies/{proxyId}/health-check | Force proxy health check|
@@ -47,6 +50,168 @@ const { status, data } = await apiInstance.addProxy(
 ### Return type
 
 **CreateLeadGenerationCampaign200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **bulkDeleteProxies**
+> BulkProxyOperationResponse bulkDeleteProxies(bulkDeleteProxiesRequest)
+
+Delete multiple proxy configurations simultaneously
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration,
+    BulkDeleteProxiesRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let bulkDeleteProxiesRequest: BulkDeleteProxiesRequest; //
+
+const { status, data } = await apiInstance.bulkDeleteProxies(
+    bulkDeleteProxiesRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkDeleteProxiesRequest** | **BulkDeleteProxiesRequest**|  | |
+
+
+### Return type
+
+**BulkProxyOperationResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **bulkTestProxies**
+> BulkProxyTestResponse bulkTestProxies(bulkTestProxiesRequest)
+
+Test multiple proxy configurations simultaneously
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration,
+    BulkTestProxiesRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let bulkTestProxiesRequest: BulkTestProxiesRequest; //
+
+const { status, data } = await apiInstance.bulkTestProxies(
+    bulkTestProxiesRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkTestProxiesRequest** | **BulkTestProxiesRequest**|  | |
+
+
+### Return type
+
+**BulkProxyTestResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **bulkUpdateProxies**
+> BulkProxyOperationResponse bulkUpdateProxies(bulkUpdateProxiesRequest)
+
+Update multiple proxy configurations simultaneously
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration,
+    BulkUpdateProxiesRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let bulkUpdateProxiesRequest: BulkUpdateProxiesRequest; //
+
+const { status, data } = await apiInstance.bulkUpdateProxies(
+    bulkUpdateProxiesRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkUpdateProxiesRequest** | **BulkUpdateProxiesRequest**|  | |
+
+
+### Return type
+
+**BulkProxyOperationResponse**
 
 ### Authorization
 

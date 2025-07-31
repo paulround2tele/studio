@@ -5,11 +5,11 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaignId** | **string** | Unique identifier | [optional] [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **checksum** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **currentState** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **isValid** | **boolean** |  | [optional] [default to undefined]
 **lastEventSequence** | **number** |  | [optional] [default to undefined]
 **snapshotMetadata** | **object** |  | [optional] [default to undefined]

@@ -2,6 +2,7 @@
 // Production Proxy Pool Service - Clean backend integration with generated types
 
 import type { components } from '@/lib/api-client/types';
+import type { UUID } from '@/lib/api-client/uuid-types';
 
 // Import types directly from models
 import type { ProxyPoolRequest } from '@/lib/api-client/models/proxy-pool-request';
@@ -41,7 +42,7 @@ class ProxyPoolService {
         data: data || [],
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || `listPools-${Date.now()}`,
-        message: 'Successfully retrieved proxy pools'
+        
       };
     } catch (error: any) {
       return {
@@ -49,7 +50,7 @@ class ProxyPoolService {
         data: [],
         error: error.message,
         requestId: globalThis.crypto?.randomUUID?.() || `listPools-error-${Date.now()}`,
-        message: error.message
+        
       };
     }
   }
@@ -82,7 +83,7 @@ class ProxyPoolService {
         data: data || undefined,
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || `createPool-${Date.now()}`,
-        message: 'Successfully created proxy pool'
+        
       };
     } catch (error: any) {
       return {
@@ -90,7 +91,7 @@ class ProxyPoolService {
         data: undefined,
         error: error.message,
         requestId: globalThis.crypto?.randomUUID?.() || `createPool-error-${Date.now()}`,
-        message: error.message
+        
       };
     }
   }
@@ -104,7 +105,7 @@ class ProxyPoolService {
         data: data || undefined,
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || `updatePool-${Date.now()}`,
-        message: 'Successfully updated proxy pool'
+        
       };
     } catch (error: any) {
       return {
@@ -112,7 +113,7 @@ class ProxyPoolService {
         data: undefined,
         error: error.message,
         requestId: globalThis.crypto?.randomUUID?.() || `updatePool-error-${Date.now()}`,
-        message: error.message
+        
       };
     }
   }
@@ -126,7 +127,7 @@ class ProxyPoolService {
         data: data || undefined,
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || `deletePool-${Date.now()}`,
-        message: 'Successfully deleted proxy pool'
+        
       };
     } catch (error: any) {
       return {
@@ -134,21 +135,21 @@ class ProxyPoolService {
         data: undefined,
         error: error.message,
         requestId: globalThis.crypto?.randomUUID?.() || `deletePool-error-${Date.now()}`,
-        message: error.message
+        
       };
     }
   }
 
   async addProxy(poolId: string, proxyId: string, weight?: number): Promise<ApiResponse<ProxyPoolMembership>> {
     try {
-      const axiosResponse = await proxyPoolsApi.addProxyToPool(poolId, { proxyId, weight });
+      const axiosResponse = await proxyPoolsApi.addProxyToPool(poolId, { proxyId: proxyId as UUID, weight });
       const data = extractResponseData<ProxyPoolMembership>(axiosResponse);
       return {
         success: true,
         data: data || undefined,
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || `addProxy-${Date.now()}`,
-        message: 'Successfully added proxy to pool'
+        
       };
     } catch (error: any) {
       return {
@@ -156,7 +157,7 @@ class ProxyPoolService {
         data: undefined,
         error: error.message,
         requestId: globalThis.crypto?.randomUUID?.() || `addProxy-error-${Date.now()}`,
-        message: error.message
+        
       };
     }
   }
@@ -170,7 +171,7 @@ class ProxyPoolService {
         data: data || undefined,
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || `removeProxy-${Date.now()}`,
-        message: 'Successfully removed proxy from pool'
+        
       };
     } catch (error: any) {
       return {
@@ -178,7 +179,7 @@ class ProxyPoolService {
         data: undefined,
         error: error.message,
         requestId: globalThis.crypto?.randomUUID?.() || `removeProxy-error-${Date.now()}`,
-        message: error.message
+        
       };
     }
   }

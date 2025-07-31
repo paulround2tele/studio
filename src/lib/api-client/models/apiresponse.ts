@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -45,11 +47,11 @@ export interface APIResponse {
      */
     'metadata'?: Metadata;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof APIResponse
      */
-    'requestId'?: string;
+    'requestId'?: UUID;
     /**
      * 
      * @type {boolean}

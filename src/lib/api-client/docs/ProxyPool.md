@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **description** | **string** |  | [optional] [default to undefined]
 **healthCheckEnabled** | **boolean** |  | [optional] [default to undefined]
 **healthCheckIntervalSeconds** | **number** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **isEnabled** | **boolean** |  | [optional] [default to undefined]
 **maxRetries** | **number** |  | [optional] [default to undefined]
 **name** | **string** |  | [default to undefined]

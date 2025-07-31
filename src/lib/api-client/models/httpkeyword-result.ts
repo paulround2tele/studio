@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -39,11 +41,11 @@ export interface HTTPKeywordResult {
      */
     'createdAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPKeywordResult
      */
-    'dnsResultId'?: string;
+    'dnsResultId'?: UUID;
     /**
      * 
      * @type {string}
@@ -69,11 +71,11 @@ export interface HTTPKeywordResult {
      */
     'foundKeywordsFromSets'?: object;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPKeywordResult
      */
-    'httpKeywordCampaignId': string;
+    'httpKeywordCampaignId': UUID;
     /**
      * 
      * @type {number}
@@ -81,11 +83,11 @@ export interface HTTPKeywordResult {
      */
     'httpStatusCode'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPKeywordResult
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -105,22 +107,22 @@ export interface HTTPKeywordResult {
      */
     'responseHeaders'?: object;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPKeywordResult
      */
-    'usedProxyId'?: string;
+    'usedProxyId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPKeywordResult
      */
-    'validatedByPersonaId'?: string;
+    'validatedByPersonaId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPKeywordResult
      */
-    'validationStatus': string;
+    'validationStatus': UUID;
 }
 

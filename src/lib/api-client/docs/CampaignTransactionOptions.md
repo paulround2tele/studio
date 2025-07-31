@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**CampaignID** | **string** | Unique identifier | [optional] [default to undefined]
+**CampaignID** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **IsolationLevel** | **string** |  | [optional] [default to undefined]
 **MaxRetries** | **number** |  | [optional] [default to undefined]
 **Operation** | **string** |  | [optional] [default to undefined]

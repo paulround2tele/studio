@@ -33,9 +33,10 @@ import type { components as _components } from '@/lib/api-client/types';
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 import { campaignsApi } from '@/lib/api-client/client';
 import type { DNSPhaseConfigRequest, HTTPPhaseConfigRequest } from '@/lib/api-client/models';
-import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
+import { isResponseSuccess, getResponseError } from '@/lib/utils/apiResponseHelpers';
 import { cn } from '@/lib/utils';
 import { mapPhaseToConfigurationType, isConfigurablePhase, getPhaseDisplayName, type BackendPhaseEnum } from '@/lib/utils/phaseMapping';
+import { validateCampaignId, validatePersonaIds, validateUUID } from '@/lib/utils/uuidValidation';
 
 // Types
 type PhaseConfigurationMode = 'panel' | 'dialog';
@@ -138,15 +139,12 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
       console.log('[DEBUG] Phase transition starting with data:', data);
       setIsSubmitting(true);
 
-      // Validate source campaign
+      // Validate source campaign ID using centralized UUID validation
       console.log('[DEBUG] Checking source campaign:', sourceCampaign);
-      if (!sourceCampaign?.id) {
-        console.log('[DEBUG] Source campaign validation failed - no sourceCampaign.id');
-        toast({
-          title: "Invalid Source Campaign",
-          description: "Source campaign is invalid. Please refresh the page and try again.",
-          variant: "destructive"
-        });
+      const campaignValidationResult = validateCampaignId(sourceCampaign?.id);
+      if (!campaignValidationResult.isValid) {
+        console.log('[DEBUG] Source campaign validation failed:', campaignValidationResult.error);
+        // Toast notification is already shown by validateCampaignId
         return;
       }
       console.log('[DEBUG] Source campaign validation passed, id:', sourceCampaign.id);
@@ -193,14 +191,13 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
           return;
         }
 
-        // Validate persona UUID format
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(data.assignedDnsPersonaId)) {
-          toast({
-            title: "Invalid Persona Selection",
-            description: "Selected persona is invalid. Please refresh the page and try again.",
-            variant: "destructive"
-          });
+        // Validate persona UUID format using centralized validation
+        const dnsPersonaValidationResult = validateUUID(data.assignedDnsPersonaId, {
+          fieldName: 'DNS Persona ID',
+          showToast: true
+        });
+        if (!dnsPersonaValidationResult.isValid) {
+          console.log('[DEBUG] DNS persona validation failed:', dnsPersonaValidationResult.error);
           return;
         }
 
@@ -239,14 +236,13 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
           .map((k: string) => k.trim())
           .filter((k: string) => k.length > 0);
 
-        // Validate HTTP persona UUID format
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(data.assignedHttpPersonaId)) {
-          toast({
-            title: "Invalid Persona Selection",
-            description: "Selected HTTP persona is invalid. Please refresh the page and try again.",
-            variant: "destructive"
-          });
+        // Validate HTTP persona UUID format using centralized validation
+        const httpPersonaValidationResult = validateUUID(data.assignedHttpPersonaId, {
+          fieldName: 'HTTP Persona ID',
+          showToast: true
+        });
+        if (!httpPersonaValidationResult.isValid) {
+          console.log('[DEBUG] HTTP persona validation failed:', httpPersonaValidationResult.error);
           return;
         }
 
@@ -282,25 +278,31 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
       console.log('[DEBUG] Starting phase using standalone services for campaign:', sourceCampaign.id);
       console.log('[DEBUG] Phase type:', phaseType);
 
-      let configurationResponse;
-      if (phaseType === 'dns_validation') {
-        configurationResponse = await campaignsApi.startPhaseStandalone(sourceCampaign.id, 'dns-validation');
-      } else if (phaseType === 'http_keyword_validation') {
-        configurationResponse = await campaignsApi.startPhaseStandalone(sourceCampaign.id, 'http-validation');
-      } else if (phaseType === 'analysis') {
-        configurationResponse = await campaignsApi.startPhaseStandalone(sourceCampaign.id, 'analysis');
-      } else {
+      // Phase parameter mapping: frontend underscored format to backend underscored format
+      // Backend expects: 'dns_validation', 'http_keyword_validation', 'analysis'
+      const phaseParameterMap = {
+        'dns_validation': 'dns_validation',
+        'http_keyword_validation': 'http_keyword_validation',
+        'analysis': 'analysis'
+      };
+
+      // Get the correct parameter for the backend API
+      const backendPhaseParam = phaseParameterMap[phaseType as keyof typeof phaseParameterMap];
+      if (!backendPhaseParam) {
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 
+      console.log('[DEBUG] Backend phase parameter:', backendPhaseParam);
+
+      let configurationResponse;
+      configurationResponse = await campaignsApi.startPhaseStandalone(sourceCampaign.id, backendPhaseParam);
+
       console.log('[DEBUG] Phase transition response:', configurationResponse.data);
 
-      // Handle phase transition response using unified response structure
-      if (!isResponseSuccess(configurationResponse.data)) {
-        console.log('[DEBUG] Phase transition failed:', configurationResponse.data.error);
-        const errorMessage = typeof configurationResponse.data.error === 'string'
-          ? configurationResponse.data.error
-          : 'Failed to configure campaign phase transition';
+      // FIXED: Handle phase transition response using unified response structure with proper ErrorInfo
+      if (!isResponseSuccess(configurationResponse)) {
+        console.log('[DEBUG] Phase transition failed:', configurationResponse);
+        const errorMessage = getResponseError(configurationResponse) || 'Failed to configure campaign phase transition';
         throw new Error(errorMessage);
       }
 

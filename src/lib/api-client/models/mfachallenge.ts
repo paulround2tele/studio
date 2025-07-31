@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -27,11 +29,11 @@ export interface MFAChallenge {
      */
     'attempts'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof MFAChallenge
      */
-    'challengeId'?: string;
+    'challengeId'?: UUID;
     /**
      * 
      * @type {string}
@@ -52,15 +54,22 @@ export interface MFAChallenge {
     'maxAttempts'?: number;
     /**
      * 
-     * @type {object}
-     * @memberof MFAChallenge
-     */
-    'method'?: object;
-    /**
-     * Unique identifier
      * @type {string}
      * @memberof MFAChallenge
      */
-    'userId'?: string;
+    'method'?: 'totp' | 'sms' | 'email' | 'backup';
+    /**
+     * Unique identifier (UUID v4)
+     * @type {string}
+     * @memberof MFAChallenge
+     */
+    'userId'?: UUID;
 }
+
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum MFAChallengeMethodEnum converted to direct string literals in interface
+
 

@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -39,11 +41,11 @@ export interface AuditLog {
      */
     'details'?: object;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuditLog
      */
-    'entityId'?: string;
+    'entityId'?: UUID;
     /**
      * 
      * @type {string}
@@ -51,11 +53,11 @@ export interface AuditLog {
      */
     'entityType'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuditLog
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -69,10 +71,10 @@ export interface AuditLog {
      */
     'userAgent'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuditLog
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

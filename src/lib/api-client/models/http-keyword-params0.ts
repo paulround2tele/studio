@@ -51,7 +51,7 @@ export interface HttpKeywordParams {
      */
     'processingSpeedPerMinute'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HttpKeywordParams
      */
@@ -75,7 +75,7 @@ export interface HttpKeywordParams {
      */
     'rotationIntervalSeconds'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HttpKeywordParams
      */

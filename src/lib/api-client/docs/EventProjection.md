@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**aggregateId** | **string** | Unique identifier | [optional] [default to undefined]
+**aggregateId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **id** | **number** |  | [optional] [default to undefined]
 **lastEventPosition** | **number** |  | [optional] [default to undefined]

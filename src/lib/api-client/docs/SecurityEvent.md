@@ -6,21 +6,21 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **actionAttempted** | **string** |  | [optional] [default to undefined]
-**auditLogId** | **string** | Unique identifier | [optional] [default to undefined]
+**auditLogId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **authorizationResult** | **string** |  | [optional] [default to undefined]
-**campaignId** | **string** | Unique identifier | [optional] [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **denialReason** | **string** |  | [optional] [default to undefined]
 **eventType** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **requestContext** | **object** |  | [optional] [default to undefined]
-**resourceId** | **string** | Unique identifier | [optional] [default to undefined]
+**resourceId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **resourceType** | **string** |  | [optional] [default to undefined]
 **riskScore** | **number** |  | [optional] [default to undefined]
-**sessionId** | **string** | Unique identifier | [optional] [default to undefined]
+**sessionId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **sourceIp** | **string** |  | [optional] [default to undefined]
 **userAgent** | **string** |  | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

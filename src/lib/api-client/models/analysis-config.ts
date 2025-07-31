@@ -25,7 +25,7 @@ export interface AnalysisConfig {
      * @type {string}
      * @memberof AnalysisConfig
      */
-    'analysisType': AnalysisConfigAnalysisTypeEnum;
+    'analysisType': 'basic' | 'comprehensive' | 'custom';
     /**
      * 
      * @type {Array<string>}
@@ -46,12 +46,10 @@ export interface AnalysisConfig {
     'includeScreenshots'?: boolean;
 }
 
-export const AnalysisConfigAnalysisTypeEnum = {
-    Basic: 'basic',
-    Comprehensive: 'comprehensive',
-    Custom: 'custom'
-} as const;
-
-export type AnalysisConfigAnalysisTypeEnum = typeof AnalysisConfigAnalysisTypeEnum[keyof typeof AnalysisConfigAnalysisTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum AnalysisConfigAnalysisTypeEnum converted to direct string literals in interface
 
 

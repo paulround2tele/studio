@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -15,7 +17,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { DomainGenerationConfig } from './domain-generation-config';
+import type { DomainGenerationPhaseConfig } from './domain-generation-phase-config';
 
 /**
  * 
@@ -30,17 +32,17 @@ export interface GenerateDomainsRequest {
      */
     'batchSize': number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof GenerateDomainsRequest
      */
-    'campaignId': string;
+    'campaignId': UUID;
     /**
      * 
-     * @type {DomainGenerationConfig}
+     * @type {DomainGenerationPhaseConfig}
      * @memberof GenerateDomainsRequest
      */
-    'config': DomainGenerationConfig;
+    'config': DomainGenerationPhaseConfig;
     /**
      * 
      * @type {number}

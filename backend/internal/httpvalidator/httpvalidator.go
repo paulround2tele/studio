@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sync"
 
 	//"regexp" // Added for title extraction
 	"strings"
@@ -58,6 +59,126 @@ func extractTitle(n *html.Node) string {
 	return ""
 }
 
+// ValidateDomainsBulk processes multiple domains with concurrent HTTP requests, connection pooling, and advanced bulk optimizations
+func (hv *HTTPValidator) ValidateDomainsBulk(
+	ctx context.Context,
+	domains []*models.GeneratedDomain,
+	batchSize int,
+	persona *models.Persona,
+	proxy *models.Proxy,
+) []*ValidationResult {
+	if len(domains) == 0 {
+		return []*ValidationResult{}
+	}
+
+	// Validate batchSize parameter
+	if batchSize <= 0 {
+		batchSize = hv.appConfig.HTTPValidator.MaxDomainsPerRequest
+		if batchSize <= 0 {
+			batchSize = 25 // Conservative default for HTTP validation
+		}
+	}
+
+	results := make([]*ValidationResult, len(domains))
+
+	// Process domains in batches for better resource management
+	for batchStart := 0; batchStart < len(domains); batchStart += batchSize {
+		// Check if context is cancelled before processing each batch
+		select {
+		case <-ctx.Done():
+			// Fill remaining results with cancellation errors
+			for i := batchStart; i < len(domains); i++ {
+				results[i] = &ValidationResult{
+					Domain:       domains[i].DomainName,
+					AttemptedURL: domains[i].DomainName,
+					Status:       "ErrorCancelled",
+					Error:        "Context cancelled during batch processing",
+					Timestamp:    time.Now(),
+					IsSuccess:    false,
+				}
+			}
+			return results
+		default:
+		}
+
+		batchEnd := batchStart + batchSize
+		if batchEnd > len(domains) {
+			batchEnd = len(domains)
+		}
+
+		currentBatch := domains[batchStart:batchEnd]
+		batchResults := hv.processHTTPBatch(currentBatch, ctx, persona, proxy)
+
+		// Copy batch results to main results array
+		copy(results[batchStart:batchEnd], batchResults)
+	}
+
+	return results
+}
+
+// processHTTPBatch handles a single batch of domains with optimized concurrent HTTP processing
+func (hv *HTTPValidator) processHTTPBatch(
+	domains []*models.GeneratedDomain,
+	ctx context.Context,
+	persona *models.Persona,
+	proxy *models.Proxy,
+) []*ValidationResult {
+	results := make([]*ValidationResult, len(domains))
+	var wg sync.WaitGroup
+
+	// Use concurrency control based on config
+	maxConcurrent := hv.appConfig.HTTPValidator.MaxConcurrentGoroutines
+	if maxConcurrent <= 0 {
+		maxConcurrent = 10 // Conservative default
+	}
+	semaphore := make(chan struct{}, maxConcurrent)
+
+	for i, domain := range domains {
+		// Check if context is cancelled before starting each domain
+		select {
+		case <-ctx.Done():
+			// Fill remaining results with cancellation errors
+			for j := i; j < len(domains); j++ {
+				results[j] = &ValidationResult{
+					Domain:       domains[j].DomainName,
+					AttemptedURL: domains[j].DomainName,
+					Status:       "ErrorCancelled",
+					Error:        "Context cancelled during domain processing",
+					Timestamp:    time.Now(),
+					IsSuccess:    false,
+				}
+			}
+			return results
+		default:
+		}
+
+		wg.Add(1)
+		semaphore <- struct{}{}
+
+		go func(idx int, d *models.GeneratedDomain) {
+			defer wg.Done()
+			defer func() { <-semaphore }()
+
+			// Create individual domain timeout context
+			requestTimeout := hv.appConfig.HTTPValidator.RequestTimeout
+			if requestTimeout <= 0 {
+				requestTimeout = 15 * time.Second // Conservative timeout
+			}
+
+			domainCtx, domainCancel := context.WithTimeout(ctx, requestTimeout)
+			defer domainCancel()
+
+			// Use existing validation logic
+			result := hv.validateSingleDomain(domainCtx, d.DomainName, d.DomainName, persona, proxy)
+			results[idx] = result
+		}(i, domain)
+	}
+
+	wg.Wait()
+	return results
+}
+
+// Validate performs HTTP validation for a single domain - original method preserved for compatibility
 func (hv *HTTPValidator) Validate(
 	ctx context.Context,
 	domain string,
@@ -65,6 +186,18 @@ func (hv *HTTPValidator) Validate(
 	persona *models.Persona,
 	proxy *models.Proxy,
 ) (*ValidationResult, error) {
+	result := hv.validateSingleDomain(ctx, domain, initialURL, persona, proxy)
+	return result, nil
+}
+
+// validateSingleDomain performs HTTP validation for a single domain (extracted from original Validate method)
+func (hv *HTTPValidator) validateSingleDomain(
+	ctx context.Context,
+	domain string,
+	initialURL string,
+	persona *models.Persona,
+	proxy *models.Proxy,
+) *ValidationResult {
 	startTime := time.Now()
 	result := &ValidationResult{
 		Domain:       domain,
@@ -106,7 +239,7 @@ func (hv *HTTPValidator) Validate(
 		result.Error = fmt.Sprintf("Invalid target URL: %v", err)
 		result.Status = "ErrorInvalidURL"
 		result.DurationMs = time.Since(startTime).Milliseconds()
-		return result, err
+		return result
 	}
 
 	client := &http.Client{
@@ -161,7 +294,7 @@ func (hv *HTTPValidator) Validate(
 		result.Error = fmt.Sprintf("Failed to create request: %v", err)
 		result.Status = "ErrorRequestCreation"
 		result.DurationMs = time.Since(startTime).Milliseconds()
-		return result, err
+		return result
 	}
 
 	ua := personaCfg.UserAgent
@@ -181,7 +314,7 @@ func (hv *HTTPValidator) Validate(
 			result.Status = "ErrorTimeout"
 		}
 		result.DurationMs = time.Since(startTime).Milliseconds()
-		return result, err
+		return result
 	}
 	defer resp.Body.Close()
 
@@ -269,7 +402,7 @@ func (hv *HTTPValidator) Validate(
 	}
 
 	result.DurationMs = time.Since(startTime).Milliseconds()
-	return result, nil
+	return result
 }
 
 func (hv *HTTPValidator) ValidateHeadless(

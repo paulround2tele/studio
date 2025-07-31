@@ -11,6 +11,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import type { UUID } from '../uuid-types';
 
 
 // May contain unused imports in some cases
@@ -124,7 +125,7 @@ export interface Campaign {
      * @type {string}
      * @memberof Campaign
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -208,7 +209,7 @@ export interface Campaign {
      * @type {string}
      * @memberof Campaign
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 
 export const CampaignCurrentPhaseEnum = {

@@ -9,6 +9,10 @@ export type { components } from '@/lib/api-client/types';
 // Core OpenAPI types re-exported
 import type { components } from '@/lib/api-client/types';
 
+// Import the proper ErrorInfo and Metadata types from the generated models
+import type { ErrorInfo } from '@/lib/api-client/models/error-info';
+import type { Metadata } from '@/lib/api-client/models/metadata';
+
 export type Campaign = components["schemas"]["LeadGenerationCampaign"];
 export type User = components["schemas"]["User"];
 export type Persona = components["schemas"]["Persona"];
@@ -40,14 +44,13 @@ export type {
   DomainSourceSelectionMode
 } from './openapi-extensions';
 
-// Unified API Response wrapper for all services - aligned with backend envelope format
+// Unified API Response wrapper for all services - Compatible with both string and ErrorInfo
 export interface ApiResponse<T = unknown> {
   success: boolean;           // Always boolean, not string
   data?: T;                   // Actual response data
-  error: string | null;       // Error message if success=false
-  metadata?: object;          // Optional metadata
+  error?: ErrorInfo | string | null;   // ErrorInfo object OR string for compatibility
+  metadata?: Metadata;        // Structured metadata object
   requestId: string;          // UUID for request tracking
-  message?: string;           // Keep for backwards compatibility during transition
 }
 
 // Legacy type aliases for backwards compatibility - now using proper OpenAPI definitions

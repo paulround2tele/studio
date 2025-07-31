@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,11 +23,11 @@
  */
 export interface EventStoreRecord {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof EventStoreRecord
      */
-    'aggregateId'?: string;
+    'aggregateId'?: UUID;
     /**
      * 
      * @type {string}
@@ -33,17 +35,17 @@ export interface EventStoreRecord {
      */
     'aggregateType'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof EventStoreRecord
      */
-    'causationId'?: string;
+    'causationId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof EventStoreRecord
      */
-    'correlationId'?: string;
+    'correlationId'?: UUID;
     /**
      * 
      * @type {object}
@@ -51,11 +53,11 @@ export interface EventStoreRecord {
      */
     'eventData'?: object;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof EventStoreRecord
      */
-    'eventId'?: string;
+    'eventId'?: UUID;
     /**
      * 
      * @type {string}

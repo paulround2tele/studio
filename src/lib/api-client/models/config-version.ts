@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -39,11 +41,11 @@ export interface ConfigVersion {
      */
     'createdAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ConfigVersion
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}

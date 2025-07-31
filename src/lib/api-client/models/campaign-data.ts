@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -27,7 +29,7 @@ export interface CampaignData {
      */
     'createdAt'?: string;
     /**
-     * Phases-based architecture fields
+     * 
      * @type {string}
      * @memberof CampaignData
      */
@@ -39,11 +41,11 @@ export interface CampaignData {
      */
     'description'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignData
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -51,7 +53,7 @@ export interface CampaignData {
      */
     'name'?: string;
     /**
-     * @Description Status of the current phase
+     * 
      * @type {string}
      * @memberof CampaignData
      */

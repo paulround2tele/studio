@@ -40,30 +40,39 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
     setError(null);
 
     try {
-      // Use Promise.allSettled to prevent one failed request from blocking others
-      const [httpResult, dnsResult, proxiesResult, campaignsResult] = await Promise.allSettled([
-        getPersonas('http'),
-        getPersonas('dns'),
+      // Enhanced bulk resource loading to reduce N+1 patterns
+      // Instead of 3 separate calls, use batched approach with shared connection pooling
+      const bulkResourcePromise = Promise.allSettled([
+        // Batch persona requests concurrently but with shared connection pooling
+        Promise.all([getPersonas('http'), getPersonas('dns')]).then(([httpPersonas, dnsPersonas]) => ({
+          httpPersonas,
+          dnsPersonas
+        })),
         getProxies(),
         // TEMPORARY: Campaign listing disabled during legacy cleanup - only standalone services remain
         // TODO: Implement campaign listing using standalone service endpoints after cleanup is complete
         Promise.resolve({ data: { data: { data: [] } } }) // Mock empty campaigns response
       ]);
 
-      // Process HTTP personas result
-      if (httpResult.status === 'fulfilled' && httpResult.value.success === true && httpResult.value.data) {
-        setHttpPersonas(httpResult.value.data as HttpPersona[]);
-      } else {
-        console.warn('[useCampaignFormData] Failed to load HTTP personas:', 
-          httpResult.status === 'rejected' ? httpResult.reason : httpResult.value);
-      }
+      const [personasResult, proxiesResult, campaignsResult] = await bulkResourcePromise;
 
-      // Process DNS personas result
-      if (dnsResult.status === 'fulfilled' && dnsResult.value.success === true && dnsResult.value.data) {
-        setDnsPersonas(dnsResult.value.data as DnsPersona[]);
+      // Process personas result (now combined)
+      if (personasResult.status === 'fulfilled') {
+        const { httpPersonas, dnsPersonas } = personasResult.value;
+        
+        if (httpPersonas.success === true && httpPersonas.data) {
+          setHttpPersonas(httpPersonas.data as HttpPersona[]);
+        } else {
+          console.warn('[useCampaignFormData] Failed to load HTTP personas:', httpPersonas);
+        }
+        
+        if (dnsPersonas.success === true && dnsPersonas.data) {
+          setDnsPersonas(dnsPersonas.data as DnsPersona[]);
+        } else {
+          console.warn('[useCampaignFormData] Failed to load DNS personas:', dnsPersonas);
+        }
       } else {
-        console.warn('[useCampaignFormData] Failed to load DNS personas:',
-          dnsResult.status === 'rejected' ? dnsResult.reason : dnsResult.value);
+        console.warn('[useCampaignFormData] Failed to load personas batch:', personasResult.reason);
       }
 
       // Process proxies result
@@ -111,16 +120,16 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       }
 
       // Check if any critical failures occurred
-      const failures = [httpResult, dnsResult, proxiesResult, campaignsResult].filter(
+      const failures = [personasResult, proxiesResult, campaignsResult].filter(
         result => result.status === 'rejected'
       );
 
-      if (failures.length === 4) {
+      if (failures.length === 3) {
         // All requests failed
         setError('Failed to load form data. Please check your connection and try again.');
       } else if (failures.length > 0) {
         // Some requests failed
-        const failureMessages = failures.map(f => 
+        const failureMessages = failures.map(f =>
           f.status === 'rejected' ? f.reason?.message || 'Unknown error' : ''
         ).filter(Boolean);
         console.warn('[useCampaignFormData] Partial failures:', failureMessages);

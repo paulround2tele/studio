@@ -622,3 +622,150 @@ func (h *APIHandler) DeleteKeywordSetGin(c *gin.Context) {
 		Message:      "Keyword set deleted successfully",
 	})
 }
+
+// --- NEW PERFORMANCE ENDPOINTS FOR PHASE 3 HTTP KEYWORD VALIDATION ---
+
+// GetKeywordSetWithRulesGin gets a keyword set with high-performance rules loading via JSONB.
+// @Summary Get keyword set with high-performance rules loading
+// @Description Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
+// @Tags keyword-sets
+// @Produce json
+// @Param id path string true "Keyword Set ID" Format(uuid)
+// @Success 200 {object} APIResponse
+// @Failure 400 {object} APIResponse
+// @Failure 404 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v2/keyword-sets/{id}/rules [get]
+func (h *APIHandler) GetKeywordSetWithRulesGin(c *gin.Context) {
+	keywordSetIDStr := c.Param("id")
+	keywordSetID, err := uuid.Parse(keywordSetIDStr)
+	if err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid keyword set ID format")
+		return
+	}
+
+	// CRITICAL: Use JSONB rules column for high-performance loading
+	var keywordSet models.KeywordSet
+	query := `
+		SELECT id, name, description, is_enabled, created_at, updated_at, rules
+		FROM keyword_sets
+		WHERE id = $1 AND is_enabled = true
+	`
+
+	err = h.DB.Get(&keywordSet, query, keywordSetID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			respondWithErrorGin(c, http.StatusNotFound, "Keyword set not found or disabled")
+			return
+		}
+		log.Printf("Error retrieving keyword set with rules %s: %v", keywordSetIDStr, err)
+		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to retrieve keyword set")
+		return
+	}
+
+	// Log performance optimization usage
+	log.Printf("High-performance JSONB rules loaded for keyword set %s (%s) - Phase 3 optimization",
+		keywordSet.ID, keywordSet.Name)
+
+	respondWithJSONGin(c, http.StatusOK, keywordSet)
+}
+
+// QueryKeywordRulesGin queries keyword rules with advanced filtering.
+// @Summary Query keyword rules with advanced filtering
+// @Description Advanced querying for keyword rule management across sets with multiple filter options
+// @Tags keyword-sets
+// @Produce json
+// @Param keyword_set_id query string false "Filter by keyword set ID" Format(uuid)
+// @Param rule_type query string false "Filter by rule type" Enums(string,regex)
+// @Param category query string false "Filter by category"
+// @Param is_case_sensitive query bool false "Filter by case sensitivity"
+// @Param pattern query string false "Search pattern in rule patterns (partial match)"
+// @Param limit query int false "Maximum number of results" default(50)
+// @Param offset query int false "Number of results to skip" default(0)
+// @Success 200 {object} APIResponse
+// @Failure 400 {object} APIResponse
+// @Failure 500 {object} APIResponse
+// @Router /api/v2/keyword-rules [get]
+func (h *APIHandler) QueryKeywordRulesGin(c *gin.Context) {
+	// Parse query parameters
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+
+	// Validate limit bounds for performance
+	if limit > 1000 {
+		limit = 1000
+	}
+	if limit < 1 {
+		limit = 50
+	}
+
+	// Build dynamic query
+	query := `SELECT id, keyword_set_id, pattern, rule_type, is_case_sensitive, category, context_chars, created_at, updated_at
+			  FROM keyword_rules WHERE 1=1`
+	args := []interface{}{}
+	argIndex := 1
+
+	// Dynamic filtering based on query parameters
+	if keywordSetID := c.Query("keyword_set_id"); keywordSetID != "" {
+		if _, err := uuid.Parse(keywordSetID); err != nil {
+			respondWithErrorGin(c, http.StatusBadRequest, "Invalid keyword_set_id format")
+			return
+		}
+		query += fmt.Sprintf(" AND keyword_set_id = $%d", argIndex)
+		args = append(args, keywordSetID)
+		argIndex++
+	}
+
+	if ruleType := c.Query("rule_type"); ruleType != "" {
+		if ruleType != "string" && ruleType != "regex" {
+			respondWithErrorGin(c, http.StatusBadRequest, "Invalid rule_type. Must be 'string' or 'regex'")
+			return
+		}
+		query += fmt.Sprintf(" AND rule_type = $%d", argIndex)
+		args = append(args, ruleType)
+		argIndex++
+	}
+
+	if category := c.Query("category"); category != "" {
+		query += fmt.Sprintf(" AND category = $%d", argIndex)
+		args = append(args, category)
+		argIndex++
+	}
+
+	if isCaseSensitiveStr := c.Query("is_case_sensitive"); isCaseSensitiveStr != "" {
+		isCaseSensitive, err := strconv.ParseBool(isCaseSensitiveStr)
+		if err != nil {
+			respondWithErrorGin(c, http.StatusBadRequest, "Invalid is_case_sensitive value. Must be boolean")
+			return
+		}
+		query += fmt.Sprintf(" AND is_case_sensitive = $%d", argIndex)
+		args = append(args, isCaseSensitive)
+		argIndex++
+	}
+
+	if pattern := c.Query("pattern"); pattern != "" {
+		query += fmt.Sprintf(" AND pattern ILIKE $%d", argIndex)
+		args = append(args, "%"+pattern+"%")
+		argIndex++
+	}
+
+	// Add ordering and pagination
+	query += " ORDER BY created_at DESC"
+	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
+	args = append(args, limit, offset)
+
+	// Execute query
+	var rules []models.KeywordRule
+	err := h.DB.Select(&rules, query, args...)
+	if err != nil {
+		log.Printf("Error querying keyword rules: %v", err)
+		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to query keyword rules")
+		return
+	}
+
+	// Log advanced filtering usage
+	log.Printf("Advanced keyword rules query executed: %d results, limit=%d, offset=%d",
+		len(rules), limit, offset)
+
+	respondWithJSONGin(c, http.StatusOK, rules)
+}

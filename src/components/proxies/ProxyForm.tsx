@@ -138,7 +138,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
       if (response.success === true && response.data) {
         onSaveSuccess();
       } else {
-        toast({ title: `Error ${isEditing ? "Updating" : "Creating"} Proxy`, description: response.message, variant: "destructive" });
+        toast({ title: `Error ${isEditing ? "Updating" : "Creating"} Proxy`, description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Operation failed.", variant: "destructive" });
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";

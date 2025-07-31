@@ -13,6 +13,15 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { AnalysisSummary } from './analysis-summary';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ExtractedContentItem } from './extracted-content-item';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { LeadItem } from './lead-item';
 
 /**
  * 
@@ -22,16 +31,16 @@
 export interface ContentAnalysisResult {
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<ExtractedContentItem>}
      * @memberof ContentAnalysisResult
      */
-    'extractedContent'?: Array<string>;
+    'extractedContent'?: Array<ExtractedContentItem>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<LeadItem>}
      * @memberof ContentAnalysisResult
      */
-    'leadItems'?: Array<string>;
+    'leadItems'?: Array<LeadItem>;
     /**
      * 
      * @type {string}
@@ -40,9 +49,9 @@ export interface ContentAnalysisResult {
     'processedAt'?: string;
     /**
      * 
-     * @type {object}
+     * @type {AnalysisSummary}
      * @memberof ContentAnalysisResult
      */
-    'summary'?: object;
+    'summary'?: AnalysisSummary;
 }
 

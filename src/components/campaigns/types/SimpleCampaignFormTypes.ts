@@ -7,7 +7,7 @@
  * 3. Uses ONLY auto-generated API types from OpenAPI spec
  */
 import type { CreateLeadGenerationCampaignRequest } from '@/lib/api-client/models/create-lead-generation-campaign-request';
-import type { DomainGenerationConfig, DomainGenerationConfigPatternTypeEnum } from '@/lib/api-client/models/domain-generation-config';
+import type { DomainGenerationPhaseConfig } from '@/lib/api-client/models/domain-generation-phase-config';
 
 /**
  * Form values interface for phase-centric campaign creation
@@ -19,7 +19,7 @@ export interface SimpleCampaignFormValues {
   description?: string;
   
   // Domain generation config (flattened for form convenience)
-  patternType: DomainGenerationConfigPatternTypeEnum;
+  patternType: 'prefix' | 'suffix' | 'both';
   constantString: string;
   characterSet: string;
   variableLength: number;
@@ -34,7 +34,7 @@ export interface SimpleCampaignFormValues {
  * Helper function to convert form values to API request
  */
 export function formToApiRequest(formValues: SimpleCampaignFormValues): CreateLeadGenerationCampaignRequest {
-  const domainConfig: DomainGenerationConfig = {
+  const domainConfig: DomainGenerationPhaseConfig = {
     patternType: formValues.patternType,
     constantString: formValues.constantString,
     characterSet: formValues.characterSet,
@@ -66,4 +66,4 @@ export const defaultFormValues: SimpleCampaignFormValues = {
 };
 
 // Re-export the enum for convenience
-export { DomainGenerationConfigPatternTypeEnum };
+// Enum type removed - using direct string literals now

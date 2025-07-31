@@ -11,6 +11,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/fntelecomllc/studio/backend/internal/cache"
+	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
@@ -20,6 +22,9 @@ import (
 type analysisServiceImpl struct {
 	campaignStore store.CampaignStore
 	db            *sqlx.DB
+	// PHASE 4 REDIS CACHING: Add Redis cache and optimization config
+	redisCache         cache.RedisCache
+	optimizationConfig *config.OptimizationConfig
 }
 
 // NewAnalysisService creates a new instance of AnalysisService
@@ -27,6 +32,16 @@ func NewAnalysisService(campaignStore store.CampaignStore, db *sqlx.DB) Analysis
 	return &analysisServiceImpl{
 		campaignStore: campaignStore,
 		db:            db,
+	}
+}
+
+// NewAnalysisServiceWithCache creates a new instance of AnalysisService with Redis cache integration
+func NewAnalysisServiceWithCache(campaignStore store.CampaignStore, db *sqlx.DB, redisCache cache.RedisCache, optimizationConfig *config.OptimizationConfig) AnalysisService {
+	return &analysisServiceImpl{
+		campaignStore:      campaignStore,
+		db:                 db,
+		redisCache:         redisCache,
+		optimizationConfig: optimizationConfig,
 	}
 }
 

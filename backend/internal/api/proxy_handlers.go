@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv" // For parsing limit/offset
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/config" // For ProxyToProxyConfigEntry
@@ -643,4 +644,430 @@ func (h *APIHandler) TestProxyGin(c *gin.Context) {
 	log.Printf("API: Gin Testing proxy ID '%s' (%s://%s)", targetProxyModel.ID, protocolForLog, targetProxyModel.Address)
 	testResult := proxymanager.TestProxy(proxyCfgForTest)
 	respondWithJSONGin(c, http.StatusOK, testResult)
+}
+
+// BulkUpdateProxiesGin updates multiple proxies at once.
+// @Summary Bulk update proxies
+// @Description Update multiple proxy configurations simultaneously
+// @Tags proxies
+// @Accept json
+// @Produce json
+// @Param request body models.BulkUpdateProxiesRequest true "Bulk proxy update request"
+// @Success 200 {object} models.BulkProxyOperationResponse "Bulk operation results"
+// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /proxies/bulk/update [put]
+func (h *APIHandler) BulkUpdateProxiesGin(c *gin.Context) {
+	var req models.BulkUpdateProxiesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		return
+	}
+
+	if err := validate.Struct(req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Validation failed: "+err.Error())
+		return
+	}
+
+	// Convert string IDs to UUIDs
+	proxyUUIDs := make([]uuid.UUID, 0, len(req.ProxyIDs))
+	for _, idStr := range req.ProxyIDs {
+		proxyID, err := uuid.Parse(idStr)
+		if err != nil {
+			respondWithErrorGin(c, http.StatusBadRequest, fmt.Sprintf("Invalid proxy ID format: %s", idStr))
+			return
+		}
+		proxyUUIDs = append(proxyUUIDs, proxyID)
+	}
+
+	var querier store.Querier
+	var opErr error
+	isSQL := h.DB != nil
+	var sqlTx *sqlx.Tx
+
+	if isSQL {
+		var startTxErr error
+		sqlTx, startTxErr = h.DB.BeginTxx(c.Request.Context(), nil)
+		if startTxErr != nil {
+			log.Printf("[BulkUpdateProxiesGin] Error beginning SQL transaction: %v", startTxErr)
+			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to start SQL transaction")
+			return
+		}
+		querier = sqlTx
+		log.Printf("[BulkUpdateProxiesGin] SQL Transaction started for %d proxies.", len(proxyUUIDs))
+		defer func() {
+			if p := recover(); p != nil {
+				log.Printf("[BulkUpdateProxiesGin] Panic recovered (SQL), rolling back: %v", p)
+				_ = sqlTx.Rollback()
+				panic(p)
+			} else if opErr != nil {
+				log.Printf("[BulkUpdateProxiesGin] Error occurred (SQL), rolling back: %v", opErr)
+				_ = sqlTx.Rollback()
+			} else {
+				if commitErr := sqlTx.Commit(); commitErr != nil {
+					log.Printf("[BulkUpdateProxiesGin] Error committing SQL transaction: %v", commitErr)
+				} else {
+					log.Printf("[BulkUpdateProxiesGin] SQL Transaction committed for %d proxies.", len(proxyUUIDs))
+				}
+			}
+		}()
+	} else {
+		log.Printf("[BulkUpdateProxiesGin] Operating in Firestore mode for %d proxies.", len(proxyUUIDs))
+	}
+
+	// Get all proxies to update using bulk query to avoid N+1
+	existingProxies, err := h.ProxyStore.GetProxiesByIDs(c.Request.Context(), querier, proxyUUIDs)
+	if err != nil {
+		opErr = err
+		log.Printf("Error fetching proxies for bulk update: %v", err)
+		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch proxies for bulk update")
+		return
+	}
+
+	// Track results
+	response := models.BulkProxyOperationResponse{
+		TotalRequested:    len(req.ProxyIDs),
+		SuccessfulProxies: make([]string, 0),
+		FailedProxies:     make([]models.BulkProxyError, 0),
+		Results:           make([]*models.Proxy, 0),
+	}
+
+	// Update each proxy
+	now := time.Now().UTC()
+	for _, proxy := range existingProxies {
+		updated := false
+
+		// Apply updates
+		if req.Updates.Name != nil {
+			proxy.Name = *req.Updates.Name
+			updated = true
+		}
+		if req.Updates.Description != nil {
+			proxy.Description = sql.NullString{String: *req.Updates.Description, Valid: true}
+			updated = true
+		}
+		if req.Updates.Protocol != nil {
+			proxy.Protocol = req.Updates.Protocol
+			updated = true
+		}
+		if req.Updates.Address != nil {
+			proxy.Address = *req.Updates.Address
+			updated = true
+		}
+		if req.Updates.Username != nil {
+			proxy.Username = sql.NullString{String: *req.Updates.Username, Valid: true}
+			updated = true
+		}
+		if req.Updates.Password != nil {
+			if *req.Updates.Password == "" {
+				proxy.PasswordHash = sql.NullString{}
+			} else {
+				hashedBytes, pErr := bcrypt.GenerateFromPassword([]byte(*req.Updates.Password), bcrypt.DefaultCost)
+				if pErr != nil {
+					response.FailedProxies = append(response.FailedProxies, models.BulkProxyError{
+						ProxyID: proxy.ID.String(),
+						Error:   fmt.Sprintf("Failed to process password: %v", pErr),
+					})
+					continue
+				}
+				proxy.PasswordHash = sql.NullString{String: string(hashedBytes), Valid: true}
+			}
+			updated = true
+		}
+		if req.Updates.CountryCode != nil {
+			proxy.CountryCode = sql.NullString{String: *req.Updates.CountryCode, Valid: true}
+			updated = true
+		}
+		if req.Updates.IsEnabled != nil {
+			proxy.IsEnabled = *req.Updates.IsEnabled
+			updated = true
+		}
+
+		if updated {
+			proxy.UpdatedAt = now
+			if errUpdate := h.ProxyStore.UpdateProxy(c.Request.Context(), querier, proxy); errUpdate != nil {
+				response.FailedProxies = append(response.FailedProxies, models.BulkProxyError{
+					ProxyID: proxy.ID.String(),
+					Error:   errUpdate.Error(),
+				})
+				continue
+			}
+
+			// Broadcast proxy update
+			websocket.BroadcastProxyUpdated(proxy.ID.String(), proxy)
+		}
+
+		response.SuccessfulProxies = append(response.SuccessfulProxies, proxy.ID.String())
+		response.Results = append(response.Results, proxy)
+	}
+
+	// Handle missing proxies
+	foundIDs := make(map[string]bool)
+	for _, proxy := range existingProxies {
+		foundIDs[proxy.ID.String()] = true
+	}
+	for _, idStr := range req.ProxyIDs {
+		if !foundIDs[idStr] {
+			response.FailedProxies = append(response.FailedProxies, models.BulkProxyError{
+				ProxyID: idStr,
+				Error:   "Proxy not found",
+			})
+		}
+	}
+
+	response.SuccessCount = len(response.SuccessfulProxies)
+	response.ErrorCount = len(response.FailedProxies)
+
+	log.Printf("Bulk update completed: %d/%d proxies updated successfully", response.SuccessCount, response.TotalRequested)
+	respondWithJSONGin(c, http.StatusOK, response)
+}
+
+// BulkDeleteProxiesGin deletes multiple proxies at once.
+// @Summary Bulk delete proxies
+// @Description Delete multiple proxy configurations simultaneously
+// @Tags proxies
+// @Accept json
+// @Produce json
+// @Param request body models.BulkDeleteProxiesRequest true "Bulk proxy delete request"
+// @Success 200 {object} models.BulkProxyOperationResponse "Bulk operation results"
+// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /proxies/bulk/delete [delete]
+func (h *APIHandler) BulkDeleteProxiesGin(c *gin.Context) {
+	var req models.BulkDeleteProxiesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		return
+	}
+
+	if err := validate.Struct(req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Validation failed: "+err.Error())
+		return
+	}
+
+	// Convert string IDs to UUIDs
+	proxyUUIDs := make([]uuid.UUID, 0, len(req.ProxyIDs))
+	for _, idStr := range req.ProxyIDs {
+		proxyID, err := uuid.Parse(idStr)
+		if err != nil {
+			respondWithErrorGin(c, http.StatusBadRequest, fmt.Sprintf("Invalid proxy ID format: %s", idStr))
+			return
+		}
+		proxyUUIDs = append(proxyUUIDs, proxyID)
+	}
+
+	var querier store.Querier
+	var opErr error
+	isSQL := h.DB != nil
+	var sqlTx *sqlx.Tx
+
+	if isSQL {
+		var startTxErr error
+		sqlTx, startTxErr = h.DB.BeginTxx(c.Request.Context(), nil)
+		if startTxErr != nil {
+			log.Printf("[BulkDeleteProxiesGin] Error beginning SQL transaction: %v", startTxErr)
+			respondWithErrorGin(c, http.StatusInternalServerError, "Failed to start SQL transaction")
+			return
+		}
+		querier = sqlTx
+		log.Printf("[BulkDeleteProxiesGin] SQL Transaction started for %d proxies.", len(proxyUUIDs))
+		defer func() {
+			if p := recover(); p != nil {
+				log.Printf("[BulkDeleteProxiesGin] Panic recovered (SQL), rolling back: %v", p)
+				_ = sqlTx.Rollback()
+				panic(p)
+			} else if opErr != nil {
+				log.Printf("[BulkDeleteProxiesGin] Error occurred (SQL), rolling back: %v", opErr)
+				_ = sqlTx.Rollback()
+			} else {
+				if commitErr := sqlTx.Commit(); commitErr != nil {
+					log.Printf("[BulkDeleteProxiesGin] Error committing SQL transaction: %v", commitErr)
+				} else {
+					log.Printf("[BulkDeleteProxiesGin] SQL Transaction committed for %d proxies.", len(proxyUUIDs))
+				}
+			}
+		}()
+	} else {
+		log.Printf("[BulkDeleteProxiesGin] Operating in Firestore mode for %d proxies.", len(proxyUUIDs))
+	}
+
+	// Track results
+	response := models.BulkProxyOperationResponse{
+		TotalRequested:    len(req.ProxyIDs),
+		SuccessfulProxies: make([]string, 0),
+		FailedProxies:     make([]models.BulkProxyError, 0),
+	}
+
+	// Delete each proxy
+	for _, proxyID := range proxyUUIDs {
+		// Verify proxy exists before deletion
+		_, fetchErr := h.ProxyStore.GetProxyByID(c.Request.Context(), querier, proxyID)
+		if fetchErr != nil {
+			if fetchErr == store.ErrNotFound {
+				response.FailedProxies = append(response.FailedProxies, models.BulkProxyError{
+					ProxyID: proxyID.String(),
+					Error:   "Proxy not found",
+				})
+			} else {
+				response.FailedProxies = append(response.FailedProxies, models.BulkProxyError{
+					ProxyID: proxyID.String(),
+					Error:   fmt.Sprintf("Failed to fetch proxy: %v", fetchErr),
+				})
+			}
+			continue
+		}
+
+		// Delete the proxy
+		if errDel := h.ProxyStore.DeleteProxy(c.Request.Context(), querier, proxyID); errDel != nil {
+			response.FailedProxies = append(response.FailedProxies, models.BulkProxyError{
+				ProxyID: proxyID.String(),
+				Error:   errDel.Error(),
+			})
+			continue
+		}
+
+		// Create audit log
+		auditLog := &models.AuditLog{
+			UserID:     uuid.NullUUID{},
+			Action:     "Bulk Delete Proxy",
+			EntityType: sql.NullString{String: "Proxy", Valid: true},
+			EntityID:   uuid.NullUUID{UUID: proxyID, Valid: true},
+		}
+		if auditErr := h.AuditLogStore.CreateAuditLog(c.Request.Context(), querier, auditLog); auditErr != nil {
+			log.Printf("Error creating audit log for deleted proxy %s: %v", proxyID, auditErr)
+			// Don't fail the operation for audit log errors
+		}
+
+		// Broadcast proxy deletion
+		websocket.BroadcastProxyDeleted(proxyID.String())
+		response.SuccessfulProxies = append(response.SuccessfulProxies, proxyID.String())
+	}
+
+	response.SuccessCount = len(response.SuccessfulProxies)
+	response.ErrorCount = len(response.FailedProxies)
+
+	log.Printf("Bulk delete completed: %d/%d proxies deleted successfully", response.SuccessCount, response.TotalRequested)
+	respondWithJSONGin(c, http.StatusOK, response)
+}
+
+// BulkTestProxiesGin tests multiple proxies at once.
+// @Summary Bulk test proxies
+// @Description Test multiple proxy configurations simultaneously
+// @Tags proxies
+// @Accept json
+// @Produce json
+// @Param request body models.BulkTestProxiesRequest true "Bulk proxy test request"
+// @Success 200 {object} BulkProxyTestResponse "Bulk test results"
+// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /proxies/bulk/test [post]
+func (h *APIHandler) BulkTestProxiesGin(c *gin.Context) {
+	var req models.BulkTestProxiesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		return
+	}
+
+	if err := validate.Struct(req); err != nil {
+		respondWithErrorGin(c, http.StatusBadRequest, "Validation failed: "+err.Error())
+		return
+	}
+
+	// Convert string IDs to UUIDs
+	proxyUUIDs := make([]uuid.UUID, 0, len(req.ProxyIDs))
+	for _, idStr := range req.ProxyIDs {
+		proxyID, err := uuid.Parse(idStr)
+		if err != nil {
+			respondWithErrorGin(c, http.StatusBadRequest, fmt.Sprintf("Invalid proxy ID format: %s", idStr))
+			return
+		}
+		proxyUUIDs = append(proxyUUIDs, proxyID)
+	}
+
+	var querier store.Querier
+	if h.DB != nil {
+		querier = h.DB
+	}
+
+	// Get all proxies to test using bulk query to avoid N+1
+	existingProxies, err := h.ProxyStore.GetProxiesByIDs(c.Request.Context(), querier, proxyUUIDs)
+	if err != nil {
+		log.Printf("Error fetching proxies for bulk test: %v", err)
+		respondWithErrorGin(c, http.StatusInternalServerError, "Failed to fetch proxies for bulk test")
+		return
+	}
+
+	// Track results
+	response := BulkProxyTestResponse{
+		TotalRequested: len(req.ProxyIDs),
+		TestResults:    make([]ProxyTestResponse, 0),
+	}
+
+	// Test each proxy concurrently
+	type proxyTestResult struct {
+		proxyID string
+		result  ProxyTestResponse
+	}
+
+	resultChan := make(chan proxyTestResult, len(existingProxies))
+	var wg sync.WaitGroup
+
+	for _, proxy := range existingProxies {
+		wg.Add(1)
+		go func(p *models.Proxy) {
+			defer wg.Done()
+
+			proxyCfgForTest := proxyToProxyConfigEntry(p)
+			testResult := proxymanager.TestProxy(proxyCfgForTest)
+
+			// Convert proxymanager.ProxyTestResult to ProxyTestResponse
+			result := ProxyTestResponse{
+				ProxyID:      p.ID.String(),
+				Success:      testResult.Success,
+				StatusCode:   testResult.StatusCode,
+				ResponseTime: testResult.DurationMs,
+				Error:        testResult.Error,
+			}
+
+			resultChan <- proxyTestResult{
+				proxyID: p.ID.String(),
+				result:  result,
+			}
+		}(proxy)
+	}
+
+	// Close channel when all goroutines complete
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// Collect results
+	for result := range resultChan {
+		response.TestResults = append(response.TestResults, result.result)
+		if result.result.Success {
+			response.SuccessCount++
+		} else {
+			response.ErrorCount++
+		}
+	}
+
+	// Handle missing proxies
+	foundIDs := make(map[string]bool)
+	for _, proxy := range existingProxies {
+		foundIDs[proxy.ID.String()] = true
+	}
+	for _, idStr := range req.ProxyIDs {
+		if !foundIDs[idStr] {
+			response.TestResults = append(response.TestResults, ProxyTestResponse{
+				ProxyID: idStr,
+				Success: false,
+				Error:   "Proxy not found",
+			})
+			response.ErrorCount++
+		}
+	}
+
+	log.Printf("Bulk test completed: %d/%d proxies tested successfully", response.SuccessCount, response.TotalRequested)
+	respondWithJSONGin(c, http.StatusOK, response)
 }

@@ -49,14 +49,6 @@ export interface KeywordRuleRequest {
      * @type {string}
      * @memberof KeywordRuleRequest
      */
-    'ruleType': KeywordRuleRequestRuleTypeEnum;
+    'ruleType': string;
 }
-
-export const KeywordRuleRequestRuleTypeEnum = {
-    String: 'string',
-    Regex: 'regex'
-} as const;
-
-export type KeywordRuleRequestRuleTypeEnum = typeof KeywordRuleRequestRuleTypeEnum[keyof typeof KeywordRuleRequestRuleTypeEnum];
-
 

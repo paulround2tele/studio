@@ -44,7 +44,15 @@ import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
-import { testProxy, cleanProxies, updateProxy, deleteProxy } from '@/lib/services/proxyService.production';
+import {
+  testProxy,
+  cleanProxies,
+  updateProxy,
+  deleteProxy,
+  bulkUpdateProxies,
+  bulkDeleteProxies,
+  bulkTestProxies
+} from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 
 export interface BulkOperationsProps {
@@ -133,7 +141,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
   }, [activeProxies, disabledProxies, failedProxies, enabledProxies]);
 
   /**
-   * Execute bulk action with progress tracking
+   * Execute bulk action with progress tracking - Enhanced to reduce N+1 patterns
    */
   const executeBulkAction = useCallback(async (action: BulkAction): Promise<BulkOperationResult> => {
     const targetProxies = action === 'clean' ? failedProxies : selectedProxies;
@@ -144,65 +152,109 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
 
     setProcessingProgress({ current: 0, total });
 
-    for (let i = 0; i < targetProxies.length; i++) {
-      const proxy = targetProxies[i];
-      
-      if (!proxy) continue;
-      
+    // Handle clean action separately as it already uses bulk API
+    if (action === 'clean') {
       try {
-        let response: ApiResponse<unknown> | ProxyActionResponse;
+        const response = await cleanProxies();
+        if (isResponseSuccess(response)) {
+          successCount = total;
+        } else {
+          errorCount = total;
+          errors.push(`Clean operation failed: ${(typeof response.error === 'string' ? response.error : response.error?.message) || 'Unknown error'}`);
+        }
+      } catch (error) {
+        errorCount = total;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`Clean operation failed: ${errorMessage}`);
+      }
+      setProcessingProgress({ current: total, total });
+      return {
+        success: errorCount === 0,
+        successCount,
+        errorCount,
+        errors
+      };
+    }
+
+    // Use true bulk operations to eliminate N+1 patterns
+    const proxyIds = targetProxies.map(proxy => proxy.id).filter(Boolean) as string[];
+    
+    if (proxyIds.length === 0) {
+      errors.push('No valid proxy IDs found');
+      errorCount = total;
+    } else {
+      try {
+        let response: ApiResponse<any>;
         
         switch (action) {
           case 'enable':
             const enablePayload: UpdateProxyPayload = { isEnabled: true };
-            if (!proxy.id) continue;
-            response = await updateProxy(proxy.id, enablePayload);
+            response = await bulkUpdateProxies(proxyIds, enablePayload);
             break;
             
           case 'disable':
             const disablePayload: UpdateProxyPayload = { isEnabled: false };
-            if (!proxy.id) continue;
-            response = await updateProxy(proxy.id, disablePayload);
+            response = await bulkUpdateProxies(proxyIds, disablePayload);
             break;
             
           case 'test':
-            if (!proxy.id) continue;
-            response = await testProxy(proxy.id);
+            response = await bulkTestProxies(proxyIds);
             break;
             
           case 'delete':
-            if (!proxy.id) continue;
-            response = await deleteProxy(proxy.id);
-            break;
-            
-          case 'clean':
-            // Clean is handled differently via cleanProxies API
-            response = await cleanProxies();
+            response = await bulkDeleteProxies(proxyIds);
             break;
             
           default:
             throw new Error(`Unknown action: ${action}`);
         }
 
-        if (isResponseSuccess(response)) {
-          successCount++;
+        if (isResponseSuccess(response) && response.data) {
+          // Handle bulk operation response
+          const bulkResult = response.data;
+          
+          if (action === 'test') {
+            // For test operations, use BulkProxyTestResponse format
+            successCount = bulkResult.successCount || 0;
+            errorCount = bulkResult.errorCount || 0;
+            
+            // Extract specific test errors if available
+            if (bulkResult.testResults) {
+              bulkResult.testResults.forEach((testResult: any) => {
+                if (!testResult.success && testResult.error) {
+                  errors.push(`${testResult.proxyId || 'Unknown'}: ${testResult.error}`);
+                }
+              });
+            }
+          } else {
+            // For update/delete operations, use BulkProxyOperationResponse format
+            successCount = bulkResult.successCount || 0;
+            errorCount = bulkResult.errorCount || 0;
+            
+            // Extract specific operation errors if available
+            if (bulkResult.failedProxies) {
+              bulkResult.failedProxies.forEach((failedProxy: any) => {
+                errors.push(`${failedProxy.proxyId || 'Unknown'}: ${failedProxy.error || 'Unknown error'}`);
+              });
+            }
+          }
         } else {
-          errorCount++;
-          errors.push(`${proxy.address}: ${response.message || (response as any).error || 'Unknown error'}`);
+          // Handle API call failure
+          errorCount = total;
+          const errorMessage = typeof response.error === 'string'
+            ? response.error
+            : response.error?.message || 'Unknown error';
+          errors.push(`Bulk ${action} operation failed: ${errorMessage}`);
         }
       } catch (error) {
-        errorCount++;
+        errorCount = total;
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        errors.push(`${proxy.address}: ${errorMessage}`);
-      }
-      
-      setProcessingProgress({ current: i + 1, total });
-      
-      // Small delay to prevent overwhelming the backend
-      if (i < targetProxies.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        errors.push(`Bulk ${action} operation failed: ${errorMessage}`);
       }
     }
+    
+    // Update progress to completion
+    setProcessingProgress({ current: total, total });
 
     return {
       success: errorCount === 0,

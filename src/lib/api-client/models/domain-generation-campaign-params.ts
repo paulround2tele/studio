@@ -55,7 +55,7 @@ export interface DomainGenerationCampaignParams {
      * @type {string}
      * @memberof DomainGenerationCampaignParams
      */
-    'patternType': DomainGenerationCampaignParamsPatternTypeEnum;
+    'patternType': 'prefix_variable' | 'suffix_variable' | 'both_variable';
     /**
      * 
      * @type {string}
@@ -82,12 +82,10 @@ export interface DomainGenerationCampaignParams {
     'variableLength'?: number;
 }
 
-export const DomainGenerationCampaignParamsPatternTypeEnum = {
-    PrefixVariable: 'prefix_variable',
-    SuffixVariable: 'suffix_variable',
-    BothVariable: 'both_variable'
-} as const;
-
-export type DomainGenerationCampaignParamsPatternTypeEnum = typeof DomainGenerationCampaignParamsPatternTypeEnum[keyof typeof DomainGenerationCampaignParamsPatternTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum DomainGenerationCampaignParamsPatternTypeEnum converted to direct string literals in interface
 
 

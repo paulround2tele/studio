@@ -6,6 +6,7 @@
  */
 
 import type { components } from '@/lib/api-client/types';
+import type { UUID } from '@/lib/api-client/uuid-types';
 
 // Core OpenAPI types (re-exported for convenience)
 export type Campaign = components["schemas"]["LeadGenerationCampaign"];
@@ -71,8 +72,10 @@ export interface CampaignUIExtensions {
   };
 }
 
-// Extended Campaign type for UI (extends OpenAPI Campaign)
-export type CampaignViewModel = Campaign & CampaignUIExtensions;
+// Extended Campaign type for UI (ensures proper UUID typing)
+export type CampaignViewModel = Campaign & CampaignUIExtensions & {
+  id: UUID;
+};
 
 // Form-specific types
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable" | "constant_only";

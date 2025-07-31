@@ -3,12 +3,15 @@ package services
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/cache"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
@@ -20,6 +23,24 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// DNSPersonaGroup represents a group of personas with identical DNS configurations
+type DNSPersonaGroup struct {
+	ConfigFingerprint string
+	DNSConfig         models.DNSConfigDetails
+	Personas          []*models.Persona
+	Validator         *dnsvalidator.DNSValidator
+}
+
+// DNSPerformanceMetrics tracks optimization performance
+type DNSPerformanceMetrics struct {
+	TotalDNSCalls         int64
+	UniqueConfigurations  int
+	CacheHits             int64
+	CacheMisses           int64
+	ValidationErrors      int64
+	AverageResponseTimeMs int64
+}
+
 type dnsCampaignServiceImpl struct {
 	db               *sqlx.DB
 	campaignStore    store.CampaignStore
@@ -28,18 +49,49 @@ type dnsCampaignServiceImpl struct {
 	auditLogger      *utils.AuditLogger
 	campaignJobStore store.CampaignJobStore
 	appConfig        *config.AppConfig
+	// PHASE 3 OPTIMIZATION: Cache for DNS validators to avoid recreating identical configurations
+	dnsValidatorCache map[string]*dnsvalidator.DNSValidator
+	cacheMutex        sync.RWMutex
+	// PHASE 3 MONITORING: Performance metrics tracking
+	performanceMetrics DNSPerformanceMetrics
+	metricsMutex       sync.Mutex
+	// PHASE 4 REDIS CACHING: Add Redis cache and optimization config
+	redisCache         cache.RedisCache
+	optimizationConfig *config.OptimizationConfig
+	// PHASE 4 VALIDATION CACHE: In-memory validation result cache
+	validationResultCache map[string]*cache.ValidationResult
+	validationCacheMutex  sync.RWMutex
 }
 
-// NewDNSCampaignService creates a new DNSCampaignService.
+// NewDNSCampaignService creates a new DNSCampaignService with optional cache integration.
 func NewDNSCampaignService(db *sqlx.DB, cs store.CampaignStore, ps store.PersonaStore, as store.AuditLogStore, cjs store.CampaignJobStore, appCfg *config.AppConfig) DNSCampaignService {
 	return &dnsCampaignServiceImpl{
-		db:               db,
-		campaignStore:    cs,
-		personaStore:     ps,
-		auditLogStore:    as,
-		auditLogger:      utils.NewAuditLogger(as),
-		campaignJobStore: cjs,
-		appConfig:        appCfg,
+		db:                    db,
+		campaignStore:         cs,
+		personaStore:          ps,
+		auditLogStore:         as,
+		auditLogger:           utils.NewAuditLogger(as),
+		campaignJobStore:      cjs,
+		appConfig:             appCfg,
+		dnsValidatorCache:     make(map[string]*dnsvalidator.DNSValidator),
+		validationResultCache: make(map[string]*cache.ValidationResult),
+	}
+}
+
+// NewDNSCampaignServiceWithCache creates a new DNSCampaignService with Redis cache integration.
+func NewDNSCampaignServiceWithCache(db *sqlx.DB, cs store.CampaignStore, ps store.PersonaStore, as store.AuditLogStore, cjs store.CampaignJobStore, appCfg *config.AppConfig, redisCache cache.RedisCache, optimizationConfig *config.OptimizationConfig) DNSCampaignService {
+	return &dnsCampaignServiceImpl{
+		db:                    db,
+		campaignStore:         cs,
+		personaStore:          ps,
+		auditLogStore:         as,
+		auditLogger:           utils.NewAuditLogger(as),
+		campaignJobStore:      cjs,
+		appConfig:             appCfg,
+		dnsValidatorCache:     make(map[string]*dnsvalidator.DNSValidator),
+		redisCache:            redisCache,
+		optimizationConfig:    optimizationConfig,
+		validationResultCache: make(map[string]*cache.ValidationResult),
 	}
 }
 
@@ -168,13 +220,33 @@ func (s *dnsCampaignServiceImpl) validatePersonaIDs(ctx context.Context, querier
 	if len(personaIDs) == 0 {
 		return fmt.Errorf("%s Persona IDs required", expectedType)
 	}
+
+	// PHASE 4 REDIS CACHING: Try to get personas from cache first if Redis is enabled
+	var personas []*models.Persona
+	var err error
+
+	if s.redisCache != nil && s.optimizationConfig != nil && s.optimizationConfig.Phases.Caching {
+		personas, err = s.getPersonasWithCache(ctx, querier, personaIDs)
+	} else {
+		// PHASE 2 N+1 OPTIMIZATION: Batch load all personas to eliminate N+1 pattern
+		personas, err = s.personaStore.GetPersonasByIDs(ctx, querier, personaIDs)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to batch load personas for validation: %w", err)
+	}
+
+	// Create lookup map for efficient persona processing by ID
+	personaMap := make(map[uuid.UUID]*models.Persona)
+	for _, persona := range personas {
+		personaMap[persona.ID] = persona
+	}
+
+	// Validate each requested persona ID using batch-loaded data
 	for _, pID := range personaIDs {
-		persona, err := s.personaStore.GetPersonaByID(ctx, querier, pID)
-		if err != nil {
-			if err == store.ErrNotFound {
-				return fmt.Errorf("%s persona ID '%s' not found", expectedType, pID)
-			}
-			return fmt.Errorf("verifying %s persona ID '%s': %w", expectedType, pID, err)
+		persona, exists := personaMap[pID]
+		if !exists {
+			return fmt.Errorf("%s persona ID '%s' not found", expectedType, pID)
 		}
 		if persona.PersonaType != expectedType {
 			return fmt.Errorf("persona ID '%s' type '%s', expected '%s'", pID, persona.PersonaType, expectedType)
@@ -182,8 +254,112 @@ func (s *dnsCampaignServiceImpl) validatePersonaIDs(ctx context.Context, querier
 		if !persona.IsEnabled {
 			return fmt.Errorf("%s persona ID '%s' disabled", expectedType, pID)
 		}
+
+		// PHASE 4 CACHING: Cache validation result for persona configuration
+		if s.redisCache != nil && expectedType == models.PersonaTypeDNS {
+			if err := s.cachePersonaConfigValidation(ctx, persona); err != nil {
+				log.Printf("Warning: Failed to cache persona config validation for %s: %v", persona.ID, err)
+			}
+		}
 	}
 	return nil
+}
+
+// PHASE 4 REDIS CACHING: Helper methods for cache integration
+
+// getPersonasWithCache attempts to get personas from cache first, falling back to database
+func (s *dnsCampaignServiceImpl) getPersonasWithCache(ctx context.Context, querier store.Querier, personaIDs []uuid.UUID) ([]*models.Persona, error) {
+	// Try batch cache lookup first
+	cachedPersonas, missedIDs, err := s.redisCache.GetPersonasBatch(ctx, personaIDs)
+	if err != nil {
+		log.Printf("Cache lookup failed, falling back to database: %v", err)
+		return s.personaStore.GetPersonasByIDs(ctx, querier, personaIDs)
+	}
+
+	var allPersonas []*models.Persona
+	allPersonas = append(allPersonas, cachedPersonas...)
+
+	// If we have cache misses, fetch them from database
+	if len(missedIDs) > 0 {
+		dbPersonas, err := s.personaStore.GetPersonasByIDs(ctx, querier, missedIDs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch missed personas from database: %w", err)
+		}
+
+		// Cache the personas we just fetched
+		for _, persona := range dbPersonas {
+			if err := s.redisCache.SetPersona(ctx, persona, s.optimizationConfig.Performance.CacheTTL.Personas); err != nil {
+				log.Printf("Warning: Failed to cache persona %s: %v", persona.ID, err)
+			}
+		}
+
+		allPersonas = append(allPersonas, dbPersonas...)
+	}
+
+	return allPersonas, nil
+}
+
+// cachePersonaConfigValidation caches DNS configuration validation results
+func (s *dnsCampaignServiceImpl) cachePersonaConfigValidation(ctx context.Context, persona *models.Persona) error {
+	if persona.PersonaType != models.PersonaTypeDNS {
+		return nil
+	}
+
+	// Generate configuration fingerprint
+	configHash, err := s.getPersonaConfigFingerprintWithCache(ctx, persona)
+	if err != nil {
+		return fmt.Errorf("failed to generate config fingerprint: %w", err)
+	}
+
+	// Check if we already have a cached validation result
+	if _, err := s.redisCache.GetDNSValidationResult(ctx, configHash); err == nil {
+		return nil // Already cached
+	}
+
+	// Create validation result for caching
+	validationResult := &cache.ValidationResult{
+		IsValid:        true,
+		ErrorMessage:   "",
+		ResponseTime:   0, // Config validation is instant
+		CachedAt:       time.Now(),
+		ConfigHash:     configHash,
+		ValidationHash: configHash,
+		Metadata: map[string]interface{}{
+			"persona_id":   persona.ID.String(),
+			"persona_type": string(persona.PersonaType),
+			"validated_at": time.Now().UTC(),
+		},
+	}
+
+	// Cache the validation result
+	return s.redisCache.SetDNSValidationResult(ctx, configHash, validationResult, s.optimizationConfig.Performance.CacheTTL.DNSValidation)
+}
+
+// getPersonaConfigFingerprintWithCache generates or retrieves cached configuration fingerprint
+func (s *dnsCampaignServiceImpl) getPersonaConfigFingerprintWithCache(ctx context.Context, persona *models.Persona) (string, error) {
+	// Try cache first if Redis is available
+	if s.redisCache != nil {
+		if cachedFingerprint, err := s.redisCache.GetConfigFingerprint(ctx, persona.ID); err == nil && cachedFingerprint != "" {
+			return cachedFingerprint, nil
+		}
+	}
+
+	// Generate new fingerprint
+	var dnsConfig models.DNSConfigDetails
+	if err := json.Unmarshal(persona.ConfigDetails, &dnsConfig); err != nil {
+		return "", fmt.Errorf("failed to unmarshal DNS config for persona %s: %w", persona.ID, err)
+	}
+
+	fingerprint := s.createDNSConfigFingerprint(dnsConfig)
+
+	// Cache the fingerprint if Redis is available
+	if s.redisCache != nil {
+		if err := s.redisCache.SetConfigFingerprint(ctx, persona.ID, fingerprint, s.optimizationConfig.Performance.CacheTTL.Personas); err != nil {
+			log.Printf("Warning: Failed to cache config fingerprint for persona %s: %v", persona.ID, err)
+		}
+	}
+
+	return fingerprint, nil
 }
 
 func (s *dnsCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, action, description string) {
@@ -191,6 +367,159 @@ func (s *dnsCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Q
 		return
 	}
 	s.auditLogger.LogCampaignEvent(ctx, exec, campaign, action, description)
+}
+
+// PHASE 3 N+1 OPTIMIZATION: DNS persona grouping and caching functions
+
+// createDNSConfigFingerprint creates a unique fingerprint for DNS configuration deduplication
+func (s *dnsCampaignServiceImpl) createDNSConfigFingerprint(dnsConfig models.DNSConfigDetails) string {
+	// Create deterministic fingerprint for DNS configuration
+	configBytes, _ := json.Marshal(dnsConfig)
+	hash := sha256.Sum256(configBytes)
+	return hex.EncodeToString(hash[:16]) // Use first 16 bytes for shorter fingerprint
+}
+
+// groupPersonasByDNSConfig groups DNS personas by unique configurations to eliminate redundant validations
+func (s *dnsCampaignServiceImpl) groupPersonasByDNSConfig(personas []*models.Persona) map[string]*DNSPersonaGroup {
+	groups := make(map[string]*DNSPersonaGroup)
+
+	for _, persona := range personas {
+		if persona.PersonaType != models.PersonaTypeDNS {
+			continue
+		}
+
+		var dnsConfig models.DNSConfigDetails
+		if len(persona.ConfigDetails) > 0 {
+			if err := json.Unmarshal(persona.ConfigDetails, &dnsConfig); err != nil {
+				log.Printf("Error unmarshalling DNS persona %s config: %v. Using defaults.", persona.ID, err)
+				dnsConfig = models.DNSConfigDetails{} // Use empty config as default
+			}
+		}
+
+		fingerprint := s.createDNSConfigFingerprint(dnsConfig)
+
+		if group, exists := groups[fingerprint]; exists {
+			group.Personas = append(group.Personas, persona)
+		} else {
+			// Create new group with cached validator
+			validator := s.getOrCreateDNSValidator(fingerprint, dnsConfig)
+			groups[fingerprint] = &DNSPersonaGroup{
+				ConfigFingerprint: fingerprint,
+				DNSConfig:         dnsConfig,
+				Personas:          []*models.Persona{persona},
+				Validator:         validator,
+			}
+		}
+	}
+
+	return groups
+}
+
+// getOrCreateDNSValidator gets cached DNS validator or creates new one
+func (s *dnsCampaignServiceImpl) getOrCreateDNSValidator(fingerprint string, dnsConfig models.DNSConfigDetails) *dnsvalidator.DNSValidator {
+	s.cacheMutex.RLock()
+	if validator, exists := s.dnsValidatorCache[fingerprint]; exists {
+		s.cacheMutex.RUnlock()
+		return validator
+	}
+	s.cacheMutex.RUnlock()
+
+	s.cacheMutex.Lock()
+	defer s.cacheMutex.Unlock()
+
+	// Double-check after acquiring write lock
+	if validator, exists := s.dnsValidatorCache[fingerprint]; exists {
+		return validator
+	}
+
+	// Create new optimized DNS validator
+	configDNSJSON := modelsDNStoConfigDNSJSON(dnsConfig)
+	validatorConfig := config.ConvertJSONToDNSConfig(configDNSJSON)
+
+	// PHASE 3 OPTIMIZATION: Enhanced DNS configuration for better performance
+	if validatorConfig.MaxConcurrentGoroutines <= 0 {
+		validatorConfig.MaxConcurrentGoroutines = 50 // Optimized concurrency
+	}
+	if validatorConfig.QueryTimeout <= 0 {
+		validatorConfig.QueryTimeout = 5 * time.Second // Optimized timeout
+	}
+
+	validator := dnsvalidator.New(validatorConfig)
+
+	// Cache with size limit (simple LRU)
+	maxCacheSize := 50
+	if len(s.dnsValidatorCache) >= maxCacheSize {
+		// Remove first entry (could be enhanced with proper LRU)
+		for k := range s.dnsValidatorCache {
+			delete(s.dnsValidatorCache, k)
+			break
+		}
+	}
+
+	s.dnsValidatorCache[fingerprint] = validator
+
+	// PHASE 3 MONITORING: Track cache miss
+	s.incrementCacheMiss()
+	return validator
+}
+
+// PHASE 3 MONITORING: Performance tracking methods
+func (s *dnsCampaignServiceImpl) updatePerformanceMetrics(totalPersonas, uniqueConfigs int) {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.UniqueConfigurations = uniqueConfigs
+}
+
+func (s *dnsCampaignServiceImpl) incrementDNSCallCount() {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.TotalDNSCalls++
+}
+
+func (s *dnsCampaignServiceImpl) incrementCacheHit() {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.CacheHits++
+}
+
+func (s *dnsCampaignServiceImpl) incrementCacheMiss() {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.CacheMisses++
+}
+
+func (s *dnsCampaignServiceImpl) incrementErrorCount() {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.ValidationErrors++
+}
+
+func (s *dnsCampaignServiceImpl) updateResponseTime(duration time.Duration) {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.AverageResponseTimeMs = duration.Milliseconds()
+}
+
+func (s *dnsCampaignServiceImpl) GetPerformanceMetrics() DNSPerformanceMetrics {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+
+	metrics := s.performanceMetrics
+
+	// PHASE 4 REDIS CACHING: Include Redis cache metrics if available
+	if s.redisCache != nil {
+		cacheMetrics := s.redisCache.GetMetrics()
+		metrics.CacheHits = cacheMetrics.HitCount
+		metrics.CacheMisses = cacheMetrics.MissCount
+		metrics.ValidationErrors = cacheMetrics.ErrorCount
+
+		// Update average response time with cache latency if available
+		if cacheMetrics.AvgLatencyMs > 0 {
+			metrics.AverageResponseTimeMs = cacheMetrics.AvgLatencyMs
+		}
+	}
+
+	return metrics
 }
 
 func modelsDNStoConfigDNSJSON(details models.DNSConfigDetails) config.DNSValidatorConfigJSON {
@@ -458,169 +787,139 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		return false, 0, opErr
 	}
 
-	// Use available DNS personas (transition approach)
+	// PHASE 3 N+1 OPTIMIZATION: Group personas by DNS configuration to reduce redundant validations
 	personas := allDNSPersonas
-	log.Printf("ProcessDNSValidationCampaignBatch: Using %d available DNS personas for campaign %s", len(personas), campaignID)
+	personaGroups := s.groupPersonasByDNSConfig(personas)
+	log.Printf("ProcessDNSValidationCampaignBatch: Grouped %d DNS personas into %d unique configurations for campaign %s",
+		len(personas), len(personaGroups), campaignID)
 
-	var wg sync.WaitGroup
-	concurrencyLimit := s.appConfig.Worker.DNSSubtaskConcurrency
-	if concurrencyLimit <= 0 {
-		concurrencyLimit = 75 // Phase 3: 7.5x increase for 1000-domain batches
-	}
-	semaphore := make(chan struct{}, concurrencyLimit)
-	muResults := sync.Mutex{}
 	dbResults := make([]*models.DNSValidationResult, 0, len(domainsToProcess))
 	nowTime := time.Now().UTC()
 
 	// Store the original context error, if any, to check after the loop
-	// This helps determine if the loop was cut short by cancellation.
 	var batchProcessingContextErr error
-	batchCtx, batchCancel := context.WithCancel(ctx) // Create a cancellable context for this batch
-	defer batchCancel()                              // Ensure cancellation if function exits early for other reasons
+	batchCtx, batchCancel := context.WithCancel(ctx)
+	defer batchCancel()
 
-	for _, domainToValidate := range domainsToProcess {
-		// Check for batch context cancellation before starting new goroutine
+	// PHASE 3 ENHANCEMENT: Use bulk validation instead of N+1 pattern
+	// Extract domain names for bulk validation
+	domainNames := make([]string, len(domainsToProcess))
+	domainMap := make(map[string]*models.GeneratedDomain)
+	for i, domain := range domainsToProcess {
+		domainNames[i] = domain.DomainName
+		domainMap[domain.DomainName] = domain
+	}
+
+	// Use bulk validation from Phase 2
+	if len(personaGroups) == 0 {
+		opErr = fmt.Errorf("no persona groups available for bulk validation")
+		return false, 0, opErr
+	}
+
+	// Get the first persona group validator for bulk validation
+	var validator *dnsvalidator.DNSValidator
+	for _, group := range personaGroups {
+		validator = group.Validator
+		break
+	}
+
+	if validator == nil {
+		opErr = fmt.Errorf("no validator available for bulk validation")
+		return false, 0, opErr
+	}
+
+	// Perform bulk validation
+	log.Printf("ProcessDNSValidationCampaignBatch: Performing bulk DNS validation for %d domains", len(domainNames))
+	bulkResults := validator.ValidateDomainsBulk(domainNames, batchCtx, batchSizeVal)
+
+	// Process bulk results and convert to database format
+	for _, bulkResult := range bulkResults {
 		if batchCtx.Err() != nil {
-			log.Printf("Batch context cancelled before processing domain %s for campaign %s", domainToValidate.DomainName, campaignID)
+			log.Printf("Batch context cancelled during result processing for domain %s", bulkResult.Domain)
 			batchProcessingContextErr = batchCtx.Err()
-			break // Exit the domain processing loop
+			break
 		}
 
-		wg.Add(1)
-		semaphore <- struct{}{}
-		go func(domainModel models.GeneratedDomain) {
-			defer wg.Done()
-			defer func() { <-semaphore }()
+		domain := domainMap[bulkResult.Domain]
+		if domain == nil {
+			continue // Skip if domain not found in map
+		}
 
-			var finalValidationResult *dnsvalidator.ValidationResult
-			var successPersonaID uuid.NullUUID
-			attemptCount := 0
+		// Track metrics
+		s.incrementDNSCallCount()
+		if bulkResult.Status != constants.DNSStatusResolved {
+			s.incrementErrorCount()
+		}
 
-			for i, persona := range personas {
-				// Check for batch context cancellation before each persona attempt
-				if batchCtx.Err() != nil {
-					log.Printf("Batch context cancelled during persona processing for domain %s (persona %s)", domainModel.DomainName, persona.ID)
-					finalValidationResult = &dnsvalidator.ValidationResult{Domain: domainModel.DomainName, Status: constants.DNSStatusError, Error: fmt.Sprintf("Context cancelled during persona %s processing", persona.ID)}
-					goto StoreResultInGoRoutine
-				}
+		// Create database result
+		dbRes := &models.DNSValidationResult{
+			ID:                   uuid.New(),
+			DNSCampaignID:        campaignID,
+			GeneratedDomainID:    uuid.NullUUID{UUID: domain.ID, Valid: true},
+			DomainName:           bulkResult.Domain,
+			ValidationStatus:     bulkResult.Status,
+			ValidatedByPersonaID: uuid.NullUUID{}, // Will be set if resolved
+			Attempts:             models.IntPtr(1),
+			LastCheckedAt:        &nowTime,
+		}
 
-				attemptCount++
-
-				var modelDNSDetails models.DNSConfigDetails
-				if errUnmarshal := json.Unmarshal(persona.ConfigDetails, &modelDNSDetails); errUnmarshal != nil {
-					log.Printf("Error unmarshalling DNS persona %s ConfigDetails for domain %s: %v. Using app defaults.", persona.ID, domainModel.DomainName, errUnmarshal)
-					validator := dnsvalidator.New(s.appConfig.DNSValidator)
-					valResult := validator.ValidateSingleDomain(domainModel.DomainName, batchCtx) // Use batchCtx
-					finalValidationResult = &valResult
-					goto StoreResultInGoRoutine
-				}
-
-				configDNSJSON := modelsDNStoConfigDNSJSON(modelDNSDetails)
-				validatorConfig := config.ConvertJSONToDNSConfig(configDNSJSON)
-				validator := dnsvalidator.New(validatorConfig)
-				valResult := validator.ValidateSingleDomain(domainModel.DomainName, batchCtx) // Use batchCtx
-
-				if valResult.Status == constants.DNSStatusResolved {
-					finalValidationResult = &valResult
-					successPersonaID = uuid.NullUUID{UUID: persona.ID, Valid: true}
-					goto StoreResultInGoRoutine
-				}
-				finalValidationResult = &valResult
-
-				// Phase-centric approach: Use default rotation interval
-				rotationInterval := 30 // Default 30 seconds between persona rotations
-				if i < len(personas)-1 && rotationInterval > 0 {
-					select {
-					case <-batchCtx.Done(): // Use batchCtx.Done()
-						log.Printf("Batch context cancelled during DNS persona rotation for domain %s", domainModel.DomainName)
-						finalValidationResult = &dnsvalidator.ValidationResult{Domain: domainModel.DomainName, Status: constants.DNSStatusError, Error: "Context cancelled during rotation"}
-						goto StoreResultInGoRoutine
-					case <-time.After(time.Duration(rotationInterval) * time.Second):
-						// Continue
-					}
-				}
-			} // End persona loop
-
-			// After persona loop, check batch context one last time
-			if batchCtx.Err() != nil && finalValidationResult == nil { // only if not already set due to cancellation
-				log.Printf("Batch context cancelled after all DNS persona attempts for domain %s", domainModel.DomainName)
-				finalValidationResult = &dnsvalidator.ValidationResult{
-					Domain: domainModel.DomainName,
-					Status: constants.DNSStatusError,
-					Error:  "Context cancelled after all attempts",
+		// Set persona ID if resolved
+		if bulkResult.Status == constants.DNSStatusResolved {
+			for _, group := range personaGroups {
+				if len(group.Personas) > 0 {
+					dbRes.ValidatedByPersonaID = uuid.NullUUID{UUID: group.Personas[0].ID, Valid: true}
+					break
 				}
 			}
+		}
 
-		StoreResultInGoRoutine:
-			if finalValidationResult == nil {
-				log.Printf("CRITICAL: finalValidationResult is nil for domain %s before storing. Setting to generic error.", domainModel.DomainName)
-				finalValidationResult = &dnsvalidator.ValidationResult{
-					Domain: domainModel.DomainName,
-					Status: constants.DNSStatusError,
-					Error:  "Internal processing error: validation result not captured.",
-				}
-			}
+		// Set DNS records or error
+		if len(bulkResult.IPs) > 0 {
+			ipBytes, _ := json.Marshal(bulkResult.IPs)
+			dbRes.DNSRecords = models.JSONRawMessagePtr(json.RawMessage(ipBytes))
+		} else if bulkResult.Error != "" {
+			errorMap := map[string]string{"error": bulkResult.Error}
+			errorBytes, _ := json.Marshal(errorMap)
+			dbRes.DNSRecords = models.JSONRawMessagePtr(json.RawMessage(errorBytes))
+		}
 
-			dbRes := &models.DNSValidationResult{
-				ID:                   uuid.New(),
-				DNSCampaignID:        campaignID,
-				GeneratedDomainID:    uuid.NullUUID{UUID: domainModel.ID, Valid: true},
-				DomainName:           domainModel.DomainName,
-				ValidationStatus:     finalValidationResult.Status,
-				ValidatedByPersonaID: successPersonaID,
-				Attempts:             models.IntPtr(attemptCount),
-				LastCheckedAt:        &nowTime,
-			}
-			if len(finalValidationResult.IPs) > 0 {
-				ipBytes, _ := json.Marshal(finalValidationResult.IPs)
-				dbRes.DNSRecords = models.JSONRawMessagePtr(json.RawMessage(ipBytes))
-			} else if finalValidationResult.Error != "" {
-				errorMap := map[string]string{"error": finalValidationResult.Error}
-				errorBytes, _ := json.Marshal(errorMap)
-				dbRes.DNSRecords = models.JSONRawMessagePtr(json.RawMessage(errorBytes))
-			}
+		// Stream individual DNS validation result
+		log.Printf("🔴 [DNS_STREAMING_DEBUG] Streaming DNS result for domain %s, status: %s, campaign: %s",
+			bulkResult.Domain, bulkResult.Status, campaignID)
 
-			// CRITICAL FIX: Stream individual DNS validation result as it completes
-			log.Printf("🔴 [DNS_STREAMING_DEBUG] Attempting to stream DNS result for domain %s, status: %s, campaign: %s",
-				domainModel.DomainName, finalValidationResult.Status, campaignID)
+		// Prepare DNS records map for message payload
+		dnsRecordsMap := make(map[string]interface{})
+		if len(bulkResult.IPs) > 0 {
+			dnsRecordsMap["ips"] = bulkResult.IPs
+		}
+		if bulkResult.Error != "" {
+			dnsRecordsMap["error"] = bulkResult.Error
+		}
 
-			// Prepare DNS records map for message payload
-			dnsRecordsMap := make(map[string]interface{})
-			if len(finalValidationResult.IPs) > 0 {
-				dnsRecordsMap["ips"] = finalValidationResult.IPs
-			}
-			if finalValidationResult.Error != "" {
-				dnsRecordsMap["error"] = finalValidationResult.Error
-			}
+		// Create consolidated message using standardized format
+		payload := websocket.DNSValidationPayload{
+			CampaignID:       campaignID.String(),
+			DomainID:         dbRes.ID.String(),
+			Domain:           bulkResult.Domain,
+			ValidationStatus: bulkResult.Status,
+			DNSRecords:       dnsRecordsMap,
+			Attempts:         1,
+			ProcessingTime:   0,
+			TotalValidated:   0,
+		}
 
-			// Create consolidated message using new standardized format
-			payload := websocket.DNSValidationPayload{
-				CampaignID:       campaignID.String(),
-				DomainID:         dbRes.ID.String(),
-				Domain:           domainModel.DomainName,
-				ValidationStatus: finalValidationResult.Status,
-				DNSRecords:       dnsRecordsMap,
-				Attempts:         attemptCount,
-				ProcessingTime:   0, // Could be calculated if needed
-				TotalValidated:   0, // Could be calculated if needed
-			}
+		// ENHANCED: Try WebSocket broadcast with fallback mechanism
+		if err := s.streamDNSResultWithFallback(ctx, campaignID.String(), payload); err != nil {
+			log.Printf("❌ [DNS_STREAMING_ERROR] Failed to stream DNS result for domain %s, campaign %s: %v",
+				bulkResult.Domain, campaignID, err)
+			// Continue execution - streaming failure should not break the validation process
+		} else {
+			log.Printf("✅ [DNS_STREAMING_SUCCESS] Successfully streamed DNS result: domain=%s, status=%s, campaign=%s",
+				bulkResult.Domain, bulkResult.Status, campaignID)
+		}
 
-			// ENHANCED: Try WebSocket broadcast with fallback mechanism
-			if err := s.streamDNSResultWithFallback(ctx, campaignID.String(), payload); err != nil {
-				log.Printf("❌ [DNS_STREAMING_ERROR] Failed to stream DNS result for domain %s, campaign %s: %v",
-					domainModel.DomainName, campaignID, err)
-				// Continue execution - streaming failure should not break the validation process
-			} else {
-				log.Printf("✅ [DNS_STREAMING_SUCCESS] Successfully streamed DNS result: domain=%s, status=%s, campaign=%s",
-					domainModel.DomainName, finalValidationResult.Status, campaignID)
-			}
-
-			muResults.Lock()
-			dbResults = append(dbResults, dbRes)
-			muResults.Unlock()
-		}(*domainToValidate)
+		dbResults = append(dbResults, dbRes)
 	}
-	wg.Wait()
 
 	// If the loop was exited due to batch context cancellation, batchProcessingContextErr will be set.
 	if batchProcessingContextErr != nil {

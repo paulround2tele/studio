@@ -143,9 +143,10 @@ function PersonasPageContent() {
         if (type === 'http') setHttpPersonas(personasWithStatus as HttpPersona[]);
         else setDnsPersonas(personasWithStatus as DnsPersona[]);
       } else {
+        const errorMessage = typeof response.error === 'string' ? response.error : response.error?.message || `Failed to load ${type.toUpperCase()} personas.`;
         toast({
           title: `Error Loading ${type.toUpperCase()} Personas`,
-          description: response.error || `Failed to load ${type.toUpperCase()} personas.`,
+          description: errorMessage,
           variant: "destructive"
         });
       }
@@ -223,7 +224,8 @@ function PersonasPageContent() {
         toast({ title: "Persona Deleted", description: "Persona successfully deleted." });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Error Deleting Persona", description: response.error || "Failed to delete persona.", variant: "destructive"});
+        const errorMessage = typeof response.error === 'string' ? response.error : response.error?.message || "Failed to delete persona.";
+        toast({ title: "Error Deleting Persona", description: errorMessage, variant: "destructive"});
       }
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred while deleting persona.";
@@ -244,7 +246,7 @@ function PersonasPageContent() {
         toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Persona Test Failed", description: response.error || "Could not complete persona test.", variant: "destructive"});
+        toast({ title: "Persona Test Failed", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Could not complete persona test.", variant: "destructive"});
         fetchPersonasData(personaType, false); // Re-fetch even on failure to update potential status changes
       }
     } catch (error: unknown) {
@@ -268,7 +270,7 @@ function PersonasPageContent() {
         toast({ title: `Persona Status Updated`, description: `${response.data.name} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Error Updating Status", description: response.error || "Could not update persona status.", variant: "destructive"});
+        toast({ title: "Error Updating Status", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Could not update persona status.", variant: "destructive"});
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update persona status";
@@ -366,7 +368,7 @@ function PersonasPageContent() {
               importedCount++;
             } else {
               errorCount++;
-              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: response.error || "Failed to import.", variant: "destructive" });
+              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to import.", variant: "destructive" });
             }
         }
         if (importedCount > 0) {

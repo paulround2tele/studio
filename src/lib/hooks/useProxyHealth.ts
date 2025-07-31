@@ -129,7 +129,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     }
 
     try {
-      const response: ApiResponse<Proxy[]> = await getProxies();
+      const response = await getProxies();
       
       if (response.success === true && response.data) {
         // Ensure data is always an array
@@ -141,7 +141,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       } else {
         toast({
           title: "Error Loading Proxy Data",
-          description: response.message || "Failed to fetch proxy information",
+          description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to fetch proxy information",
           variant: "destructive"
         });
       }
@@ -181,7 +181,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       } else {
         toast({
           title: "Health Check Failed",
-          description: response.message || "Failed to run health checks",
+          description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to run health checks",
           variant: "destructive"
         });
       }
@@ -219,7 +219,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
         
         return response.data;
       } else {
-        throw new Error(response.message || 'Test failed');
+        throw new Error((typeof response.error === 'string' ? response.error : response.error?.message) || 'Test failed');
       }
     } catch (error) {
       console.error(`Error testing proxy ${proxyId}:`, error);

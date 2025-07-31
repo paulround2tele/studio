@@ -8,14 +8,14 @@ Name | Type | Description | Notes
 **attempts** | **number** |  | [optional] [default to undefined]
 **businessStatus** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
-**dnsCampaignId** | **string** | Unique identifier | [default to undefined]
+**dnsCampaignId** | **string** | Unique identifier (UUID v4) | [default to undefined]
 **dnsRecords** | **object** |  | [optional] [default to undefined]
 **domainName** | **string** |  | [default to undefined]
-**generatedDomainId** | **string** | Unique identifier | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**generatedDomainId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **lastCheckedAt** | **string** |  | [optional] [default to undefined]
-**validatedByPersonaId** | **string** | Unique identifier | [optional] [default to undefined]
-**validationStatus** | **string** | Unique identifier | [default to undefined]
+**validatedByPersonaId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**validationStatus** | **string** | Unique identifier (UUID v4) | [default to undefined]
 
 ## Example
 

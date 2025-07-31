@@ -28,7 +28,7 @@ export interface ErrorInfo {
      * @type {string}
      * @memberof ErrorInfo
      */
-    'code'?: ErrorInfoCodeEnum;
+    'code'?: 'BAD_REQUEST' | 'UNAUTHORIZED' | 'FORBIDDEN' | 'NOT_FOUND' | 'CONFLICT' | 'VALIDATION_ERROR' | 'RATE_LIMIT_EXCEEDED' | 'REQUEST_TIMEOUT' | 'INTERNAL_SERVER_ERROR' | 'DATABASE_ERROR' | 'SERVICE_UNAVAILABLE' | 'GATEWAY_TIMEOUT' | 'CAMPAIGN_IN_PROGRESS' | 'QUOTA_EXCEEDED' | 'INVALID_STATE';
     /**
      * 
      * @type {Array<ErrorDetail>}
@@ -55,24 +55,10 @@ export interface ErrorInfo {
     'timestamp'?: string;
 }
 
-export const ErrorInfoCodeEnum = {
-    BadRequest: 'BAD_REQUEST',
-    Unauthorized: 'UNAUTHORIZED',
-    Forbidden: 'FORBIDDEN',
-    NotFound: 'NOT_FOUND',
-    Conflict: 'CONFLICT',
-    ValidationError: 'VALIDATION_ERROR',
-    RateLimitExceeded: 'RATE_LIMIT_EXCEEDED',
-    RequestTimeout: 'REQUEST_TIMEOUT',
-    InternalServerError: 'INTERNAL_SERVER_ERROR',
-    DatabaseError: 'DATABASE_ERROR',
-    ServiceUnavailable: 'SERVICE_UNAVAILABLE',
-    GatewayTimeout: 'GATEWAY_TIMEOUT',
-    CampaignInProgress: 'CAMPAIGN_IN_PROGRESS',
-    QuotaExceeded: 'QUOTA_EXCEEDED',
-    InvalidState: 'INVALID_STATE'
-} as const;
-
-export type ErrorInfoCodeEnum = typeof ErrorInfoCodeEnum[keyof typeof ErrorInfoCodeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum ErrorInfoCodeEnum converted to direct string literals in interface
 
 

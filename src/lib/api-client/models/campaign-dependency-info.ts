@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { LeadGenerationCampaign } from './lead-generation-campaign';
 
 /**
  * 
@@ -22,10 +25,10 @@
 export interface CampaignDependencyInfo {
     /**
      * 
-     * @type {string}
+     * @type {LeadGenerationCampaign}
      * @memberof CampaignDependencyInfo
      */
-    'campaign'?: string;
+    'campaign'?: LeadGenerationCampaign;
     /**
      * 
      * @type {boolean}
@@ -34,10 +37,10 @@ export interface CampaignDependencyInfo {
     'canDelete'?: boolean;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<LeadGenerationCampaign>}
      * @memberof CampaignDependencyInfo
      */
-    'dependentCampaigns'?: Array<string>;
+    'dependentCampaigns'?: Array<LeadGenerationCampaign>;
     /**
      * 
      * @type {boolean}

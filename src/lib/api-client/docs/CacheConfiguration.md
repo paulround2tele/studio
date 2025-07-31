@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 **currentSizeBytes** | **number** |  | [optional] [default to undefined]
 **defaultTtlSeconds** | **number** |  | [optional] [default to undefined]
 **evictionPolicy** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **lastCleanupAt** | **string** |  | [optional] [default to undefined]
 **maxEntries** | **number** |  | [optional] [default to undefined]
 **maxSizeBytes** | **number** |  | [optional] [default to undefined]

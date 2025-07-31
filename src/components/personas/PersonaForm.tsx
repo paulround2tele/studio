@@ -243,7 +243,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
         router.push("/personas");
         router.refresh();
       } else {
-        toast({ title: "Save Failed", description: response.message || "Could not save persona.", variant: "destructive" });
+        toast({ title: "Save Failed", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Could not save persona.", variant: "destructive" });
       }
     } catch (error: unknown) {
       console.error("Failed to save persona:", error);
@@ -499,7 +499,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
         router.push("/personas");
         router.refresh();
       } else {
-        toast({ title: "Save Failed", description: response.message || "Could not save persona.", variant: "destructive" });
+        toast({ title: "Save Failed", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Could not save persona.", variant: "destructive" });
       }
     } catch (error: unknown) {
       console.error("Failed to save persona:", error);

@@ -1,0 +1,75 @@
+# N+1 Optimization Configuration for Staging Environment
+# This configuration enables gradual rollout testing and performance monitoring
+
+optimization:
+  enabled: true
+  
+  # All optimization phases enabled for staging validation
+  phases:
+    batch_queries: true
+    service_optimization: true  
+    external_validation: true
+    caching: true
+  
+  # Redis configuration for staging environment
+  redis:
+    enabled: true
+    addr: "${REDIS_ADDR:staging-redis:6379}"
+    password: "${REDIS_PASSWORD:}"
+    db: "${REDIS_DB:0}"
+    pool_size: "${REDIS_POOL_SIZE:25}"
+    min_idle_conns: "${REDIS_MIN_IDLE_CONNS:5}"
+    idle_timeout: "${REDIS_IDLE_TIMEOUT:300s}"
+    dial_timeout: "${REDIS_DIAL_TIMEOUT:5s}"
+    read_timeout: "${REDIS_READ_TIMEOUT:3s}"
+    write_timeout: "${REDIS_WRITE_TIMEOUT:3s}"
+    max_retries: "${REDIS_MAX_RETRIES:3}"
+    
+    # Production-like TTL settings for staging
+    entity_ttl:
+      persona_ttl: "${REDIS_PERSONA_TTL:5m}"
+      keyword_set_ttl: "${REDIS_KEYWORD_SET_TTL:10m}"
+      keyword_ttl: "${REDIS_KEYWORD_TTL:15m}"
+      proxy_ttl: "${REDIS_PROXY_TTL:5m}"
+    
+    validation_ttl:
+      dns_validation_ttl: "${REDIS_DNS_VALIDATION_TTL:2m}"
+      http_validation_ttl: "${REDIS_HTTP_VALIDATION_TTL:1m}"
+      config_fingerprint_ttl: "${REDIS_CONFIG_FINGERPRINT_TTL:30m}"
+    
+    campaign_ttl:
+      campaign_details_ttl: "${REDIS_CAMPAIGN_DETAILS_TTL:3m}"
+      campaign_relationship_ttl: "${REDIS_CAMPAIGN_RELATIONSHIP_TTL:5m}"
+      batch_query_result_ttl: "${REDIS_BATCH_QUERY_RESULT_TTL:2m}"
+    
+    # Metrics enabled for staging performance validation
+    metrics:
+      enabled: true
+      flush_interval: "${REDIS_METRICS_FLUSH_INTERVAL:30s}"
+      performance_threshold:
+        latency_warning_ms: "${REDIS_LATENCY_WARNING_MS:50}"
+        latency_critical_ms: "${REDIS_LATENCY_CRITICAL_MS:100}"
+        hit_ratio_warning: "${REDIS_HIT_RATIO_WARNING:0.7}"
+        error_rate_warning: "${REDIS_ERROR_RATE_WARNING:0.05}"
+  
+  # Performance tuning for staging (production-like settings)
+  performance:
+    batch_size: "${OPTIMIZATION_BATCH_SIZE:75}"
+    max_concurrent_requests: "${OPTIMIZATION_MAX_CONCURRENT:35}"
+    dns_timeout: "${OPTIMIZATION_DNS_TIMEOUT:10s}"
+    http_timeout: "${OPTIMIZATION_HTTP_TIMEOUT:30s}"
+    
+    cache_ttl:
+      personas: "${OPTIMIZATION_PERSONA_TTL:5m}"
+      keyword_sets: "${OPTIMIZATION_KEYWORD_SET_TTL:10m}"
+      keywords: "${OPTIMIZATION_KEYWORD_TTL:15m}"
+      proxies: "${OPTIMIZATION_PROXY_TTL:5m}"
+      dns_validation: "${OPTIMIZATION_DNS_VALIDATION_TTL:2m}"
+      http_validation: "${OPTIMIZATION_HTTP_VALIDATION_TTL:1m}"
+
+  # Feature flags configured for staging rollout testing
+  feature_flags:
+    gradual_rollout: "${OPTIMIZATION_GRADUAL_ROLLOUT:true}"
+    rollout_percentage: "${OPTIMIZATION_ROLLOUT_PERCENTAGE:50}"  # 50% rollout for staging
+    fallback_on_error: "${OPTIMIZATION_FALLBACK_ON_ERROR:true}"
+    debug_logging: "${OPTIMIZATION_DEBUG_LOGGING:false}"

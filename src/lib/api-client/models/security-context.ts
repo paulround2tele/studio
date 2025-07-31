@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -45,16 +47,16 @@ export interface SecurityContext {
      */
     'sessionExpiry'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof SecurityContext
      */
-    'sessionId'?: string;
+    'sessionId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof SecurityContext
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

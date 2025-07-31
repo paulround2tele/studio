@@ -5,11 +5,11 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaignId** | **string** | Unique identifier | [optional] [default to undefined]
-**jobId** | **string** | Unique identifier | [optional] [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**jobId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **message** | **string** |  | [optional] [default to undefined]
 **success** | **boolean** |  | [optional] [default to undefined]
-**validationType** | **string** | Unique identifier | [optional] [default to undefined]
+**validationType** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

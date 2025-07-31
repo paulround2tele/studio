@@ -44,6 +44,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/keyword-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Query keyword rules with advanced filtering
+         * @description Advanced querying for keyword rule management across sets with multiple filter options
+         */
+        get: operations["queryKeywordRules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/keyword-sets/{id}/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get keyword set with high-performance rules loading
+         * @description Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
+         */
+        get: operations["getKeywordSetWithRules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/change-password": {
         parameters: {
             query?: never;
@@ -700,6 +740,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/proxies/bulk/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Bulk delete proxies
+         * @description Delete multiple proxy configurations simultaneously
+         */
+        delete: operations["bulkDeleteProxies"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/proxies/bulk/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk test proxies
+         * @description Test multiple proxy configurations simultaneously
+         */
+        post: operations["bulkTestProxies"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/proxies/bulk/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Bulk update proxies
+         * @description Update multiple proxy configurations simultaneously
+         */
+        put: operations["bulkUpdateProxies"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/proxies/health-check": {
         parameters: {
             query?: never;
@@ -1049,11 +1149,7 @@ export interface components {
             CreatedAt?: string;
             /** Format: date-time */
             ExpiresAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            ID?: string;
+            ID?: components["schemas"]["UUID"];
             Key?: string;
             KeyHash?: string;
             KeyHint?: string;
@@ -1062,29 +1158,23 @@ export interface components {
             LastUsedAt?: string;
             /** Format: date-time */
             UpdatedAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            UserID?: string;
+            UserID?: components["schemas"]["UUID"];
         };
+        APIKeyRotationPolicy: {
+            MaxAge?: string;
+            MaxUsageCount?: number;
+            RotateOnCompromise?: boolean;
+        };
+        APIKeyService: Record<string, never>;
         APIResponse: {
             data?: Record<string, never>;
             error?: components["schemas"]["ErrorInfo"];
             metadata?: components["schemas"]["Metadata"];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            requestId?: string;
+            requestId?: components["schemas"]["UUID"];
             success?: boolean;
         };
         AddProxyToPoolRequest: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyId: string;
+            proxyId: components["schemas"]["UUID"];
             /** Format: int32 */
             weight?: number;
         };
@@ -1101,6 +1191,17 @@ export interface components {
             minLeadScore?: number;
             requiredFields?: string[];
         };
+        AnalysisService: Record<string, never>;
+        AnalysisSummary: {
+            avgKeywordsPerUrl?: number;
+            totalKeywordMatches?: number;
+            totalUrlsAnalyzed?: number;
+            uniqueKeywordsFound?: number;
+            urlsWithKeywords?: number;
+            urlsWithScreenshots?: number;
+            urlsWithoutKeywords?: number;
+            urlsWithoutScreenshots?: number;
+        };
         AppConfig: {
             dnsPersonas?: components["schemas"]["DNSPersona"][];
             dnsValidator?: components["schemas"]["DNSValidatorConfig"];
@@ -1109,6 +1210,7 @@ export interface components {
             httpValidator?: components["schemas"]["HTTPValidatorConfig"];
             keywordSets?: components["schemas"]["KeywordSet"][];
             logging?: components["schemas"]["LoggingConfig"];
+            optimization?: components["schemas"]["OptimizationConfig"];
             proxies?: components["schemas"]["ProxyConfigEntry"][];
             proxyManager?: components["schemas"]["ProxyManagerConfig"];
             rateLimiter?: components["schemas"]["RateLimiterConfig"];
@@ -1145,25 +1247,13 @@ export interface components {
             action: string;
             clientIp?: string;
             details?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            entityId?: string;
+            entityId?: components["schemas"]["UUID"];
             entityType?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: date-time */
             timestamp?: string;
             userAgent?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         AuthAuditLog: {
             /** Format: date-time */
@@ -1179,17 +1269,9 @@ export interface components {
             /** Format: uri */
             securityFlags?: string;
             sessionFingerprint?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sessionId?: string;
+            sessionId?: components["schemas"]["UUID"];
             userAgent?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         AuthConfig: {
             accountLockDuration?: string;
@@ -1235,36 +1317,16 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             decision?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            decisionId?: string;
+            decisionId?: components["schemas"]["UUID"];
             /** Format: int32 */
             decisionTimeMs?: number;
             evaluatedPolicies?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             policyVersion?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            resourceId?: string;
+            resourceId?: components["schemas"]["UUID"];
             resourceType?: string;
-            /**
-             * Format: uri
-             * @description Unique identifier
-             */
-            securityEventId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            securityEventId?: components["schemas"]["UUID"];
+            userId?: components["schemas"]["UUID"];
         };
         BatchKeywordExtractionRequest: {
             items: components["schemas"]["KeywordExtractionRequestItem"][];
@@ -1310,6 +1372,9 @@ export interface components {
             };
             /** Format: int32 */
             totalCount?: number;
+        };
+        BulkDeleteProxiesRequest: {
+            proxyIds: string[];
         };
         BulkDeleteResult: {
             deleted_campaign_ids?: string[];
@@ -1369,7 +1434,7 @@ export interface components {
         };
         BulkLeadsResponse: {
             leads?: {
-                [key: string]: string[];
+                [key: string]: components["schemas"]["LeadItem"][];
             };
             metadata?: components["schemas"]["BulkMetadata"];
             /** Format: int32 */
@@ -1399,6 +1464,30 @@ export interface components {
             /** Format: int32 */
             skippedCampaigns?: number;
         };
+        BulkProxyError: {
+            error?: string;
+            proxyId?: components["schemas"]["UUID"];
+        };
+        BulkProxyOperationResponse: {
+            /** Format: int32 */
+            errorCount?: number;
+            failedProxies?: components["schemas"]["BulkProxyError"][];
+            results?: components["schemas"]["Proxy"][];
+            /** Format: int32 */
+            successCount?: number;
+            successfulProxies?: string[];
+            /** Format: int32 */
+            totalRequested?: number;
+        };
+        BulkProxyTestResponse: {
+            /** Format: int32 */
+            errorCount?: number;
+            /** Format: int32 */
+            successCount?: number;
+            testResults?: components["schemas"]["ProxyTestResponse"][];
+            /** Format: int32 */
+            totalRequested?: number;
+        };
         BulkQueryMetadata: {
             failedQueries?: string[];
             /** Format: int32 */
@@ -1421,6 +1510,13 @@ export interface components {
             /** Format: int32 */
             skippedItems?: number;
         };
+        BulkTestProxiesRequest: {
+            proxyIds: string[];
+        };
+        BulkUpdateProxiesRequest: {
+            proxyIds: string[];
+            updates: components["schemas"]["UpdateProxyRequest"];
+        };
         CacheConfiguration: {
             cacheName?: string;
             cacheStatus?: string;
@@ -1434,11 +1530,7 @@ export interface components {
             /** Format: int32 */
             defaultTtlSeconds?: number;
             evictionPolicy?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: date-time */
             lastCleanupAt?: string;
             /** Format: int32 */
@@ -1455,11 +1547,7 @@ export interface components {
             cacheNamespace?: string;
             cacheValue?: string;
             cacheValueCompressed?: string[];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             campaignPhase?: string;
             contentType?: string;
             /** Format: date-time */
@@ -1468,11 +1556,7 @@ export interface components {
             expiresAt?: string;
             /** Format: int32 */
             hitCount?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isCompressed?: boolean;
             /** Format: date-time */
             lastAccessed?: string;
@@ -1488,26 +1572,10 @@ export interface components {
             /** Format: int64 */
             bytesFreed?: number;
             cacheName?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
-            /**
-             * Format: date-time
-             * @description Unique identifier
-             */
-            invalidatedAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            invalidationReason?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            invalidationType?: string;
+            id?: components["schemas"]["UUID"];
+            invalidatedAt?: components["schemas"]["UUID"];
+            invalidationReason?: components["schemas"]["UUID"];
+            invalidationType?: components["schemas"]["UUID"];
             /** Format: int32 */
             keysInvalidated?: number;
             operationContext?: Record<string, never>;
@@ -1516,32 +1584,16 @@ export interface components {
             /** Format: int32 */
             affectedKeysCount?: number;
             cacheNamespace?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             campaignPhase?: string;
             errorMessage?: string;
             /** Format: date-time */
             executedAt?: string;
             /** Format: double */
             executionTimeMs?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            invalidationPattern?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            invalidationReason?: string;
+            id?: components["schemas"]["UUID"];
+            invalidationPattern?: components["schemas"]["UUID"];
+            invalidationReason?: components["schemas"]["UUID"];
             serviceName?: string;
             success?: boolean;
             triggeredBy?: string;
@@ -1556,17 +1608,21 @@ export interface components {
             executionTimeMs?: number;
             /** Format: double */
             hitRatioPct?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             operationType?: string;
             /** Format: date-time */
             recordedAt?: string;
             serviceName?: string;
             /** Format: int32 */
             ttlUsedSeconds?: number;
+        };
+        CacheTTLConfig: {
+            dns_validation?: string;
+            http_validation?: string;
+            keyword_sets?: string;
+            keywords?: string;
+            personas?: string;
+            proxies?: string;
         };
         CachedSessionConfig: {
             /** @description How long to cache valid sessions in Redis (default: 5 minutes) */
@@ -1583,6 +1639,7 @@ export interface components {
             cached_at?: string;
             is_valid?: boolean;
         };
+        CachedSessionService: Record<string, never>;
         CampaignAPI: {
             /** Format: double */
             avgProcessingRate?: number;
@@ -1604,11 +1661,7 @@ export interface components {
             estimatedCompletionAt?: string;
             /** Format: int64 */
             failedItems?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: date-time */
             lastHeartbeatAt?: string;
             /** Format: int64 */
@@ -1631,19 +1684,11 @@ export interface components {
             totalItems?: number;
             /** Format: date-time */
             updatedAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         CampaignAccessGrant: {
             accessType?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -1651,42 +1696,24 @@ export interface components {
             /** Format: date-time */
             grantedAt?: string;
             grantedBy?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isActive?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         CampaignActionResponse: {
             action?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             message?: string;
             success?: boolean;
         };
         CampaignData: {
             /** Format: date-time */
             createdAt?: string;
-            /** @description Phases-based architecture fields */
-            currentPhase?: string;
+            currentPhase?: components["schemas"]["PhaseTypeEnum"];
             description?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             name?: string;
-            /** @description @Description Status of the current phase */
-            phaseStatus?: string;
+            phaseStatus?: components["schemas"]["PhaseStatusEnum"];
             /** @description @Description Overall progress percentage (0-100) */
             progress?: {
                 [key: string]: Record<string, never>;
@@ -1695,9 +1722,9 @@ export interface components {
             updatedAt?: string;
         };
         CampaignDependencyInfo: {
-            campaign?: string;
+            campaign?: components["schemas"]["LeadGenerationCampaign"];
             canDelete?: boolean;
-            dependentCampaigns?: string[];
+            dependentCampaigns?: components["schemas"]["LeadGenerationCampaign"][];
             hasDependencies?: boolean;
         };
         CampaignDetailsResponse: {
@@ -1709,18 +1736,10 @@ export interface components {
             attempts?: number;
             /** @enum {string} */
             businessStatus?: "processing" | "retry" | "priority_queued" | "batch_optimized";
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             jobPayload?: Record<string, never>;
             /** @enum {string} */
             jobType: "generation" | "dns_validation" | "http_keyword_validation" | "analysis";
@@ -1734,11 +1753,7 @@ export interface components {
             maxAttempts?: number;
             /** Format: date-time */
             nextExecutionAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            processingServerId?: string;
+            processingServerId?: components["schemas"]["UUID"];
             /** Format: date-time */
             scheduledAt?: string;
             /** @enum {string} */
@@ -1748,11 +1763,7 @@ export interface components {
         };
         CampaignJobStatusEnum: string;
         CampaignOperationResponse: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             message?: string;
             status?: string;
             success?: boolean;
@@ -1761,28 +1772,12 @@ export interface components {
             configuration?: string;
             /** Format: int32 */
             domainCount?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            keywordSetId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            personaId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyPoolId?: string;
+            keywordSetId?: components["schemas"]["UUID"];
+            personaId?: components["schemas"]["UUID"];
+            proxyPoolId?: components["schemas"]["UUID"];
         };
         CampaignPhase: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             /** Format: date-time */
             completedAt?: string;
             /** @description Phase configuration (JSON storage for phase-specific params) */
@@ -1797,11 +1792,7 @@ export interface components {
             failedAt?: string;
             /** Format: int64 */
             failedItems?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: date-time */
             pausedAt?: string;
             /** Format: int32 */
@@ -1833,47 +1824,27 @@ export interface components {
             updatedAt?: string;
         };
         CampaignProgressResponse: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
-            currentPhase?: string;
+            campaignId?: components["schemas"]["UUID"];
+            currentPhase?: components["schemas"]["PhaseTypeEnum"];
             /** Format: date-time */
             estimatedTimeRemaining?: string;
             /** Format: double */
             overallProgress?: number;
-            phaseStatus?: string;
+            phaseStatus?: components["schemas"]["PhaseStatusEnum"];
             phases?: components["schemas"]["PhaseProgressResponse"][];
         };
         CampaignStartResponse: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             message?: string;
             /** Format: date-time */
             queuedAt?: string;
         };
         CampaignStateEvent: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            correlationId?: string;
+            campaignId?: components["schemas"]["UUID"];
+            correlationId?: components["schemas"]["UUID"];
             eventData?: Record<string, never>;
             eventType?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: date-time */
             occurredAt?: string;
             operationContext?: Record<string, never>;
@@ -1888,21 +1859,14 @@ export interface components {
             targetState?: string;
             triggeredBy?: string;
         };
+        CampaignStateMachine: Record<string, never>;
         CampaignStateSnapshot: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             checksum?: string;
             /** Format: date-time */
             createdAt?: string;
             currentState?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isValid?: boolean;
             /** Format: int64 */
             lastEventSequence?: number;
@@ -1910,39 +1874,23 @@ export interface components {
             stateData?: Record<string, never>;
         };
         CampaignStateTransition: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             /** Format: date-time */
             completedAt?: string;
             durationMs?: string;
             fromState?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: date-time */
             initiatedAt?: string;
             isValidTransition?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            stateEventId?: string;
+            stateEventId?: components["schemas"]["UUID"];
             toState?: string;
             transitionMetadata?: Record<string, never>;
             triggeredBy?: string;
             validationErrors?: Record<string, never>;
         };
         CampaignTransactionOptions: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            CampaignID?: string;
+            CampaignID?: components["schemas"]["UUID"];
             IsolationLevel?: string;
             /** Format: int32 */
             MaxRetries?: number;
@@ -1952,6 +1900,7 @@ export interface components {
             /** Format: date-time */
             Timeout?: string;
         };
+        CampaignWorkerService: Record<string, never>;
         ChangePasswordRequest: {
             /** Format: password */
             currentPassword: string;
@@ -1993,11 +1942,7 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             expiresAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isActive?: boolean;
             lockType?: string;
             metadata?: Record<string, never>;
@@ -2005,6 +1950,7 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        ConfigManager: Record<string, never>;
         ConfigManagerConfig: {
             /** Format: date-time */
             CacheEvictionTime?: string;
@@ -2013,6 +1959,7 @@ export interface components {
             /** Format: int32 */
             MaxCacheEntries?: number;
         };
+        ConfigManagerInterface: Record<string, never>;
         ConfigTemplate: {
             name?: string;
             schema?: {
@@ -2026,11 +1973,7 @@ export interface components {
             configState?: Record<string, never>;
             /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             lockType?: string;
             /** Format: date-time */
             updatedAt?: string;
@@ -2078,12 +2021,22 @@ export interface components {
             /** Format: int64 */
             totalWaitEvents?: number;
         };
+        ConsistencyReport: {
+            isConsistent?: boolean;
+            /** Format: int32 */
+            jsonbRuleCount?: number;
+            keywordSetId?: components["schemas"]["UUID"];
+            missingFromJsonb?: string[];
+            missingFromRelational?: string[];
+            /** Format: int32 */
+            relationalRuleCount?: number;
+        };
         ContentAnalysisResult: {
-            extractedContent?: string[];
-            leadItems?: string[];
+            extractedContent?: components["schemas"]["ExtractedContentItem"][];
+            leadItems?: components["schemas"]["LeadItem"][];
             /** Format: date-time */
             processedAt?: string;
-            summary?: Record<string, never>;
+            summary?: components["schemas"]["AnalysisSummary"];
         };
         CookieHandling: {
             mode?: string;
@@ -2100,11 +2053,7 @@ export interface components {
             httpKeywordParams?: components["schemas"]["HTTPKeywordValidationRequest"];
             launchSequence?: boolean;
             name: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         CreateDomainGenerationCampaignRequest: {
             characterSet: string;
@@ -2126,11 +2075,7 @@ export interface components {
             patternType: "prefix" | "suffix" | "both";
             tld: string;
             tlds: string[];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
             /**
              * Format: int32
              * @description Domain generation fields
@@ -2145,21 +2090,16 @@ export interface components {
         };
         CreateLeadGenerationCampaignRequest: {
             description?: string;
-            domainConfig: components["schemas"]["DomainGenerationConfig"];
+            domainConfig: components["schemas"]["DomainGenerationPhaseConfig"];
             name: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         CreatePersonaRequest: {
             configDetails: Record<string, never>;
             description?: string;
             isEnabled?: boolean;
             name: string;
-            /** @enum {string} */
-            personaType: "dns" | "http";
+            personaType: components["schemas"]["PersonaTypeEnum"];
         };
         CreateProxyRequest: {
             address: string;
@@ -2182,6 +2122,7 @@ export interface components {
             /** Format: password */
             password: string;
         };
+        DNSCampaignService: Record<string, never>;
         DNSConfigDetails: {
             /** Format: int32 */
             concurrentQueriesPerDomain?: number;
@@ -2208,11 +2149,31 @@ export interface components {
             };
             useSystemResolvers?: boolean;
         };
+        DNSPerformanceMetrics: {
+            /** Format: int64 */
+            AverageResponseTimeMs?: number;
+            /** Format: int64 */
+            CacheHits?: number;
+            /** Format: int64 */
+            CacheMisses?: number;
+            /** Format: int64 */
+            TotalDNSCalls?: number;
+            /** Format: int32 */
+            UniqueConfigurations?: number;
+            /** Format: int64 */
+            ValidationErrors?: number;
+        };
         DNSPersona: {
             config?: components["schemas"]["DNSValidatorConfigJSON"];
             description?: string;
             id?: string;
             name?: string;
+        };
+        DNSPersonaGroup: {
+            ConfigFingerprint?: string;
+            DNSConfig?: components["schemas"]["DNSConfigDetails"];
+            Personas?: components["schemas"]["Persona"][];
+            Validator?: components["schemas"]["UUID"];
         };
         DNSPhaseConfigRequest: {
             name?: string;
@@ -2221,11 +2182,7 @@ export interface components {
         DNSValidationAPIRequest: {
             /** Format: int32 */
             batchSize?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId: string;
+            campaignId: components["schemas"]["UUID"];
             onlyInvalidDomains?: boolean;
             personaIds?: string[];
             /** Format: int32 */
@@ -2248,15 +2205,8 @@ export interface components {
             rotationIntervalSeconds?: number;
         };
         DNSValidationConfig: {
-            /** Format: int32 */
-            batchSize?: number;
+            name?: string;
             personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
         };
         DNSValidationParams: {
             /** Format: int32 */
@@ -2295,56 +2245,28 @@ export interface components {
             businessStatus?: string;
             /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            dnsCampaignId: string;
+            dnsCampaignId: components["schemas"]["UUID"];
             dnsRecords?: Record<string, never>;
             domainName: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            generatedDomainId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            generatedDomainId?: components["schemas"]["UUID"];
+            id?: components["schemas"]["UUID"];
             /** Format: date-time */
             lastCheckedAt?: string;
-            /**
-             * Format: date-time
-             * @description Unique identifier
-             */
-            validatedByPersonaId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            validationStatus: string;
+            validatedByPersonaId?: components["schemas"]["UUID"];
+            validationStatus: components["schemas"]["UUID"];
         };
         DNSValidationResultsResponse: {
-            data?: string[];
+            data?: components["schemas"]["DNSValidationResult"][];
             nextCursor?: string;
             /** Format: int64 */
             totalCount?: number;
         };
         DNSValidationStartResponse: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             /** Format: int32 */
             domainsToProcess?: number;
             message?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            validationJobId?: string;
+            validationJobId?: components["schemas"]["UUID"];
         };
         DNSValidationStatusEnum: string;
         DNSValidatorConfig: {
@@ -2393,6 +2315,7 @@ export interface components {
             user?: string;
         };
         DatabaseHandler: Record<string, never>;
+        DatabaseMonitor: Record<string, never>;
         DatabaseOptimizationRecommendation: {
             /** Format: date-time */
             createdAt?: string;
@@ -2405,11 +2328,7 @@ export interface components {
             type?: string;
         };
         DatabaseQuery: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id: string;
+            id: components["schemas"]["UUID"];
             sql: string;
         };
         DatabaseQueryResult: {
@@ -2441,11 +2360,7 @@ export interface components {
             message?: string;
         };
         DeletionResponse: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             message?: string;
             success?: boolean;
         };
@@ -2460,11 +2375,7 @@ export interface components {
             success?: boolean;
             /** Format: int32 */
             successCount?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            testId?: string;
+            testId?: components["schemas"]["UUID"];
         };
         DnsPersonaConfig: {
             /** Format: int32 */
@@ -2502,18 +2413,10 @@ export interface components {
             retryAttempts?: number;
             /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sourceCampaignId?: string;
+            sourceCampaignId?: components["schemas"]["UUID"];
         };
         DomainBatch: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            CampaignID?: string;
+            CampaignID?: components["schemas"]["UUID"];
             Domains?: string[];
         };
         DomainDNSStatusEnum: string;
@@ -2536,28 +2439,6 @@ export interface components {
             /** Format: int32 */
             variableLength?: number;
         };
-        DomainGenerationConfig: {
-            /** Format: int32 */
-            batchSize?: number;
-            characterSet: string;
-            constantString: string;
-            /** Format: int32 */
-            numDomainsToGenerate?: number;
-            /** @enum {string} */
-            patternType: "prefix" | "suffix" | "both";
-            tlds: string[];
-            /** Format: int32 */
-            variableLength: number;
-        };
-        DomainGenerationConfigState: {
-            configDetails?: Record<string, never>;
-            configHash?: string;
-            configState?: components["schemas"]["DomainGenerationConfigState"];
-            /** Format: int64 */
-            lastOffset?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
         DomainGenerationParams: {
             characterSet: string;
             constantString: string;
@@ -2574,20 +2455,25 @@ export interface components {
             batchSize?: number;
             characterSet: string;
             constantString: string;
-            /** Format: int64 */
+            /** Format: int32 */
             numDomainsToGenerate?: number;
             /** @enum {string} */
             patternType: "prefix" | "suffix" | "both";
-            tld: string;
+            tlds: string[];
             /** Format: int32 */
             variableLength: number;
         };
+        DomainGenerationPhaseConfigState: {
+            configDetails?: Record<string, never>;
+            configHash?: string;
+            configState?: components["schemas"]["DomainGenerationPhaseConfigState"];
+            /** Format: int64 */
+            lastOffset?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         DomainGenerationProgress: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             /** Format: int32 */
             domainsGenerated?: number;
             /** Format: date-time */
@@ -2608,12 +2494,9 @@ export interface components {
             /** Format: int32 */
             totalDomains?: number;
         };
+        DomainGenerationService: Record<string, never>;
         DomainGenerationStats: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             configHash?: string;
             /** Format: int64 */
             currentOffset?: number;
@@ -2639,6 +2522,8 @@ export interface components {
         DomainHTTPStatusEnum: string;
         DomainLeadStatusEnum: string;
         DomainPatternType: string;
+        DomainStealthService: Record<string, never>;
+        EncryptionService: Record<string, never>;
         EnhancedServerConfig: {
             auth?: components["schemas"]["EnvAuthConfig"];
             database?: components["schemas"]["DatabaseConfig"];
@@ -2646,9 +2531,9 @@ export interface components {
         EnrichedCampaignData: {
             campaign?: components["schemas"]["CampaignData"];
             dnsValidatedDomains?: string[];
-            domains?: string[];
+            domains?: components["schemas"]["GeneratedDomain"][];
             httpKeywordResults?: Record<string, never>[];
-            leads?: string[];
+            leads?: components["schemas"]["LeadItem"][];
         };
         EnvAuthConfig: {
             apiKeySalt?: string;
@@ -2674,40 +2559,20 @@ export interface components {
         ErrorContext: {
             /** Format: int32 */
             campaign_count?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaign_id?: string;
+            campaign_id?: components["schemas"]["UUID"];
             campaign_phase?: string;
             /** Format: int32 */
             domain_count?: number;
             error_type?: string;
             help?: string;
             phase_status?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            provided_value?: string;
+            provided_value?: components["schemas"]["UUID"];
             required_field?: string;
             /** Format: int32 */
             result_count?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            source_campaign_id?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            target_campaign_id?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            validation_job_id?: string;
+            source_campaign_id?: components["schemas"]["UUID"];
+            target_campaign_id?: components["schemas"]["UUID"];
+            validation_job_id?: components["schemas"]["UUID"];
         };
         ErrorDetail: {
             code?: components["schemas"]["ErrorCode"];
@@ -2731,11 +2596,7 @@ export interface components {
             status?: string;
         };
         EventProjection: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            aggregateId?: string;
+            aggregateId?: components["schemas"]["UUID"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: int64 */
@@ -2750,28 +2611,12 @@ export interface components {
             version?: number;
         };
         EventStoreRecord: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            aggregateId?: string;
+            aggregateId?: components["schemas"]["UUID"];
             aggregateType?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            causationId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            correlationId?: string;
+            causationId?: components["schemas"]["UUID"];
+            correlationId?: components["schemas"]["UUID"];
             eventData?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            eventId?: string;
+            eventId?: components["schemas"]["UUID"];
             eventType?: string;
             /** Format: int32 */
             eventVersion?: number;
@@ -2796,16 +2641,8 @@ export interface components {
         };
         ExtractedContentItem: {
             advancedAnalysis?: components["schemas"]["ExtractedContentAnalysis"];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            previousCampaignId?: string;
+            id: components["schemas"]["UUID"];
+            previousCampaignId?: components["schemas"]["UUID"];
             /** Format: int32 */
             similarityScore?: number;
             /** Format: uri */
@@ -2813,6 +2650,13 @@ export interface components {
             text: string;
         };
         FallbackPolicy: string;
+        FeatureFlagConfig: {
+            debug_logging?: boolean;
+            fallback_on_error?: boolean;
+            gradual_rollout?: boolean;
+            rollout_percentage?: number;
+        };
+        FeatureFlagService: Record<string, never>;
         FeatureFlags: {
             enableAnalytics?: boolean;
             enableDebugMode?: boolean;
@@ -2835,21 +2679,13 @@ export interface components {
         GenerateDomainsRequest: {
             /** Format: int32 */
             batchSize: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId: string;
-            config: components["schemas"]["DomainGenerationConfig"];
+            campaignId: components["schemas"]["UUID"];
+            config: components["schemas"]["DomainGenerationPhaseConfig"];
             /** Format: int64 */
             startFromOffset?: number;
         };
         GeneratedDomain: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId: string;
+            campaignId: components["schemas"]["UUID"];
             /** Format: date-time */
             createdAt?: string;
             dnsIp?: string;
@@ -2866,16 +2702,8 @@ export interface components {
             httpStatus?: "pending" | "ok" | "error" | "timeout";
             httpStatusCode?: string;
             httpTitle?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
-            /**
-             * Format: date-time
-             * @description Unique identifier
-             */
-            lastValidatedAt?: string;
+            id?: components["schemas"]["UUID"];
+            lastValidatedAt?: components["schemas"]["UUID"];
             leadScore?: string;
             /** @enum {string} */
             leadStatus?: "pending" | "match" | "no_match" | "error" | "timeout";
@@ -2886,7 +2714,7 @@ export interface components {
             tld?: string;
         };
         GeneratedDomainsResponse: {
-            data?: string[];
+            data?: components["schemas"]["GeneratedDomain"][];
             /** Format: int64 */
             nextCursor?: number;
             /** Format: int64 */
@@ -2931,24 +2759,17 @@ export interface components {
             /** Format: int32 */
             processingSpeedPerMinute?: number;
             proxyIds?: string[];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyPoolId?: string;
+            proxyPoolId?: components["schemas"]["UUID"];
             proxySelectionStrategy?: string;
             /** Format: int32 */
             retryAttempts?: number;
             /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sourceCampaignId: string;
+            sourceCampaignId: components["schemas"]["UUID"];
             sourceType: string;
             targetHttpPorts?: number[];
         };
+        HTTPKeywordCampaignService: Record<string, never>;
         HTTPKeywordParams: {
             adHocKeywords?: string[];
             keywords?: string[];
@@ -2960,49 +2781,25 @@ export interface components {
             contentHash?: string;
             /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            dnsResultId?: string;
+            dnsResultId?: components["schemas"]["UUID"];
             domainName: string;
             extractedContentSnippet?: string;
             foundAdHocKeywords?: string[];
             foundKeywordsFromSets?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            httpKeywordCampaignId: string;
+            httpKeywordCampaignId: components["schemas"]["UUID"];
             /** Format: int32 */
             httpStatusCode?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: date-time */
             lastCheckedAt?: string;
             pageTitle?: string;
             responseHeaders?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            usedProxyId?: string;
-            /**
-             * Format: date-time
-             * @description Unique identifier
-             */
-            validatedByPersonaId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            validationStatus: string;
+            usedProxyId?: components["schemas"]["UUID"];
+            validatedByPersonaId?: components["schemas"]["UUID"];
+            validationStatus: components["schemas"]["UUID"];
         };
         HTTPKeywordResultsResponse: {
-            data?: string[];
+            data?: components["schemas"]["HTTPKeywordResult"][];
             nextCursor?: string;
             /** Format: int64 */
             totalCount?: number;
@@ -3023,11 +2820,30 @@ export interface components {
             keywords: string[];
             personaIds?: string[];
         };
+        HTTPPerformanceMetrics: {
+            /** Format: int32 */
+            ActiveConnections?: number;
+            /** Format: int64 */
+            AverageResponseTimeMs?: number;
+            /** Format: int64 */
+            ConnectionPoolHits?: number;
+            /** Format: int64 */
+            ConnectionPoolMisses?: number;
+            /** Format: int64 */
+            TotalHTTPRequests?: number;
+            /** Format: int32 */
+            UniqueConfigurations?: number;
+            /** Format: int64 */
+            ValidationErrors?: number;
+        };
         HTTPPersona: {
             /** @description Validation Rules */
             allowedStatusCodes?: number[];
             cookieHandling?: components["schemas"]["CookieHandlingConfig"];
-            /** @description Metadata */
+            /**
+             * Format: date-time
+             * @description Metadata
+             */
             createdAt?: string;
             description?: string;
             domSnapshot?: boolean;
@@ -3061,6 +2877,7 @@ export interface components {
             scriptExecution?: boolean;
             tags?: string[];
             tlsClientHello?: components["schemas"]["TLSClientHelloConfig"];
+            /** Format: date-time */
             updatedAt?: string;
             /** @description Headless Browser Configuration */
             useHeadless?: boolean;
@@ -3068,6 +2885,12 @@ export interface components {
             viewportHeight?: number;
             viewportWidth?: number;
             waitDelaySeconds?: string;
+        };
+        HTTPPersonaGroup: {
+            ConfigFingerprint?: string;
+            HTTPClient?: string;
+            HTTPConfig?: components["schemas"]["HTTPConfigDetails"];
+            Personas?: components["schemas"]["Persona"][];
         };
         HTTPPhaseConfigRequest: {
             adHocKeywords?: string[];
@@ -3083,25 +2906,9 @@ export interface components {
         };
         HTTPValidationConfig: {
             adHocKeywords?: string[];
-            /** Format: int32 */
-            batchSize?: number;
             keywordSetIds?: string[];
+            name?: string;
             personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            proxyIds?: string[];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyPoolId?: string;
-            /** @enum {string} */
-            proxySelectionStrategy?: "round_robin" | "random" | "least_used";
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-            targetHttpPorts?: number[];
         };
         HTTPValidationPhaseConfig: {
             adHocKeywords?: string[];
@@ -3117,19 +2924,11 @@ export interface components {
             rotationIntervalSeconds?: number;
         };
         HTTPValidationStartResponse: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             /** Format: int32 */
             domainsToTest?: number;
             message?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            validationJobId?: string;
+            validationJobId?: components["schemas"]["UUID"];
         };
         HTTPValidationStatusEnum: string;
         HTTPValidatorConfig: {
@@ -3187,21 +2986,13 @@ export interface components {
             personaIds: string[];
             /** Format: int32 */
             processingSpeedPerMinute?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyPoolId?: string;
+            proxyPoolId?: components["schemas"]["UUID"];
             proxySelectionStrategy?: string;
             /** Format: int32 */
             retryAttempts?: number;
             /** Format: int32 */
             rotationIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sourceCampaignId: string;
+            sourceCampaignId: components["schemas"]["UUID"];
             targetHttpPorts?: number[];
         };
         HttpPersonaConfig: {
@@ -3242,54 +3033,27 @@ export interface components {
             /** Format: int32 */
             waitDelaySeconds?: number;
         };
+        InMemorySessionStore: Record<string, never>;
         JobBusinessStatusEnum: string;
         JobTypeEnum: string;
         KeywordExtractionAPIResult: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            dnsPersonaIdUsed?: string;
+            dnsPersonaIdUsed?: components["schemas"]["UUID"];
             error?: string;
             /** Format: uri */
             finalUrl?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            httpPersonaIdUsed?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            keywordSetIdUsed?: string;
+            httpPersonaIdUsed?: components["schemas"]["UUID"];
+            keywordSetIdUsed?: components["schemas"]["UUID"];
             matches?: string[];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyIdUsed?: string;
+            proxyIdUsed?: components["schemas"]["UUID"];
             /** Format: int32 */
             statusCode?: number;
             /** Format: uri */
             url?: string;
         };
         KeywordExtractionRequestItem: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            dnsPersonaId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            httpPersonaId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            keywordSetId: string;
+            dnsPersonaId?: components["schemas"]["UUID"];
+            httpPersonaId?: components["schemas"]["UUID"];
+            keywordSetId: components["schemas"]["UUID"];
             /** Format: uri */
             url: string;
         };
@@ -3299,17 +3063,9 @@ export interface components {
             contextChars?: number;
             /** Format: date-time */
             createdAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isCaseSensitive?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            keywordSetId?: string;
+            keywordSetId?: components["schemas"]["UUID"];
             pattern: string;
             /** @enum {string} */
             ruleType: "string" | "regex";
@@ -3322,19 +3078,14 @@ export interface components {
             contextChars?: number;
             isCaseSensitive?: boolean;
             pattern: string;
-            /** @enum {string} */
-            ruleType: "string" | "regex";
+            ruleType: components["schemas"]["KeywordRuleTypeEnum"];
         };
         KeywordRuleTypeEnum: string;
         KeywordSet: {
             /** Format: date-time */
             createdAt?: string;
             description?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isEnabled?: boolean;
             name: string;
             rules?: components["schemas"]["KeywordRule"][];
@@ -3343,30 +3094,23 @@ export interface components {
         };
         KeywordSetDeleteResponse: {
             deleted?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            keywordSetId?: string;
+            keywordSetId?: components["schemas"]["UUID"];
             message?: string;
         };
         KeywordSetResponse: {
             /** Format: date-time */
             createdAt?: string;
             description?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isEnabled?: boolean;
             name?: string;
             /** Format: int32 */
             ruleCount?: number;
-            rules?: string[];
+            rules?: components["schemas"]["KeywordRule"][];
             /** Format: date-time */
             updatedAt?: string;
         };
+        KeywordSetService: Record<string, never>;
         LeadGenerationCampaign: {
             analysisResults?: Record<string, never>;
             autoAdvancePhases?: boolean;
@@ -3386,11 +3130,7 @@ export interface components {
             createdAt?: string;
             /** @enum {string} */
             currentPhase?: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-            /**
-             * Format: uuid
-             * @description Phase management
-             */
-            currentPhaseId?: string;
+            currentPhaseId?: components["schemas"]["UUID"];
             dnsConfig?: Record<string, never>;
             dnsResults?: Record<string, never>;
             /** Format: int64 */
@@ -3415,11 +3155,7 @@ export interface components {
             fullSequenceMode?: boolean;
             httpConfig?: Record<string, never>;
             httpResults?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** @description Sequence mode configuration */
             isFullSequenceMode?: boolean;
             /** Format: date-time */
@@ -3455,22 +3191,17 @@ export interface components {
             totalPhases?: number;
             /** Format: date-time */
             updatedAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         LeadGenerationCampaignResponse: {
-            campaignType?: string;
+            campaignType: string;
             /** Format: date-time */
             completedAt?: string;
             /** Format: int32 */
             completedPhases?: number;
             /** Format: date-time */
-            createdAt?: string;
-            /** @description Phase management */
-            currentPhase?: string;
+            createdAt: string;
+            currentPhase?: components["schemas"]["PhaseTypeEnum"];
             /** Format: int64 */
             dnsValidatedDomains?: number;
             /**
@@ -3481,17 +3212,13 @@ export interface components {
             errorMessage?: string;
             /** Format: int64 */
             failedItems?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id: components["schemas"]["UUID"];
             /** Format: int64 */
             leads?: number;
-            name?: string;
+            name: string;
             /** Format: double */
             overallProgress?: number;
-            phaseStatus?: string;
+            phaseStatus?: components["schemas"]["PhaseStatusEnum"];
             /** @description Phase execution details */
             phases?: components["schemas"]["PhaseProgressResponse"][];
             /** Format: int64 */
@@ -3508,15 +3235,11 @@ export interface components {
             /** Format: int32 */
             totalPhases?: number;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
         };
         LeadGenerationProgress: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaign_id?: string;
-            current_phase?: string;
+            campaign_id?: components["schemas"]["UUID"];
+            current_phase?: components["schemas"]["PhaseTypeEnum"];
             /** Format: double */
             overall_progress?: number;
             phase_progress?: {
@@ -3527,17 +3250,9 @@ export interface components {
             company?: string;
             /** Format: email */
             email?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id: string;
+            id: components["schemas"]["UUID"];
             name?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            previousCampaignId?: string;
+            previousCampaignId?: components["schemas"]["UUID"];
             /** Format: int32 */
             similarityScore?: number;
             /** Format: uri */
@@ -3567,11 +3282,7 @@ export interface components {
             /** Format: date-time */
             expiresAt?: string;
             requires_captcha?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sessionId?: string;
+            sessionId?: components["schemas"]["UUID"];
             success?: boolean;
             user?: components["schemas"]["User"];
         };
@@ -3580,11 +3291,7 @@ export interface components {
             /** Format: date-time */
             expiresAt?: string;
             requires_captcha?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sessionId?: string;
+            sessionId?: components["schemas"]["UUID"];
             success?: boolean;
             user?: components["schemas"]["UserAPI"];
         };
@@ -3596,37 +3303,29 @@ export interface components {
         MFAChallenge: {
             /** Format: int32 */
             attempts?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            challengeId?: string;
+            challengeId?: components["schemas"]["UUID"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             expiresAt?: string;
             /** Format: int32 */
             maxAttempts?: number;
-            method?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            /** @enum {string} */
+            method?: "totp" | "sms" | "email" | "backup";
+            userId?: components["schemas"]["UUID"];
         };
         MFAEnrollment: {
             /** Format: date-time */
             enrolledAt?: string;
             /** Format: date-time */
             lastUsedAt?: string;
-            preferredMethod?: Record<string, never>;
+            /** @enum {string} */
+            preferredMethod?: "totp" | "sms" | "email" | "backup";
             totpEnabled?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
+        MFAMethod: string;
+        MFAService: Record<string, never>;
         Metadata: {
             extra?: {
                 [key: string]: Record<string, never>;
@@ -3647,6 +3346,36 @@ export interface components {
             /** Format: int64 */
             offset?: number;
             pattern?: string;
+        };
+        OptimizationConfig: {
+            enabled?: boolean;
+            feature_flags?: components["schemas"]["FeatureFlagConfig"];
+            performance?: components["schemas"]["PerformanceConfig"];
+            phases?: components["schemas"]["PhaseConfig"];
+            redis?: components["schemas"]["RedisConfig"];
+        };
+        OptimizationHealthHandler: Record<string, never>;
+        OptimizationLevel: {
+            batchQueries?: boolean;
+            caching?: boolean;
+            externalValidation?: boolean;
+            identifier?: components["schemas"]["UUID"];
+            serviceOptimization?: boolean;
+        };
+        OptimizationStatus: {
+            cacheAvailable?: boolean;
+            enabled?: boolean;
+            featureFlagConfig?: string;
+            optimizationLevel?: components["schemas"]["OptimizationLevel"];
+            phaseConfig?: components["schemas"]["PhaseConfig"];
+        };
+        OptimizedHTTPClient: {
+            Client?: string;
+            ConfigFingerprint?: string;
+            /** Format: date-time */
+            CreatedAt?: string;
+            /** Format: int64 */
+            UsageCount?: number;
         };
         PageInfo: {
             /** Format: int32 */
@@ -3686,21 +3415,13 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             expiresAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             ipAddress?: string;
             tokenHash?: string;
             /** Format: date-time */
             usedAt?: string;
             userAgent?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         PatternOffsetRequest: {
             characterSet: string;
@@ -3723,6 +3444,13 @@ export interface components {
             /** Format: int32 */
             variableLength?: number;
         };
+        PerformanceConfig: {
+            batch_size?: number;
+            cache_ttl?: components["schemas"]["CacheTTLConfig"];
+            dns_timeout?: string;
+            http_timeout?: string;
+            max_concurrent_requests?: number;
+        };
         PerformanceThreshold: {
             /** Format: int32 */
             maxConnectionWaitTimeMs?: number;
@@ -3741,11 +3469,7 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             description?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isEnabled?: boolean;
             lastError?: string;
             /**
@@ -3765,36 +3489,24 @@ export interface components {
         PersonaDeleteResponse: {
             deleted?: boolean;
             message?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            personaId?: string;
+            personaId?: components["schemas"]["UUID"];
         };
         PersonaResponse: {
             configDetails?: Record<string, never>;
             /** Format: date-time */
             createdAt?: string;
             description?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isEnabled?: boolean;
             name?: string;
-            personaType?: string;
+            personaType?: components["schemas"]["PersonaTypeEnum"];
             /** Format: date-time */
             updatedAt?: string;
         };
         PersonaStatusEnum: string;
         PersonaTestResponse: {
             message?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            personaId?: string;
+            personaId?: components["schemas"]["UUID"];
             personaName?: string;
             personaType?: string;
             results?: components["schemas"]["PersonaTestResultData"];
@@ -3821,19 +3533,16 @@ export interface components {
             dnsValidation?: components["schemas"]["DNSValidationPhaseConfig"];
             domainGeneration?: components["schemas"]["DomainGenerationPhaseConfig"];
             httpKeywordValidation?: components["schemas"]["HTTPKeywordValidationPhaseConfig"];
-            phaseType?: string;
+            phaseType?: components["schemas"]["PhaseTypeEnum"];
         };
         PhaseConfigureRequest: {
             config: Record<string, never>;
             /** @enum {string} */
             phaseType: "dns_validation" | "http_keyword_validation" | "analysis";
         };
+        PhaseExecutionService: Record<string, never>;
         PhaseProgress: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             errorMessage?: string;
             /** Format: date-time */
             estimatedEnd?: string;
@@ -3845,12 +3554,12 @@ export interface components {
             itemsSuccessful?: number;
             /** Format: int64 */
             itemsTotal?: number;
-            phaseType?: string;
+            phaseType?: components["schemas"]["PhaseTypeEnum"];
             /** Format: double */
             progress?: number;
             /** Format: date-time */
             startedAt?: string;
-            status?: string;
+            status?: components["schemas"]["PhaseStatusEnum"];
         };
         PhaseProgressResponse: {
             /** Format: date-time */
@@ -3858,14 +3567,14 @@ export interface components {
             errorMessage?: string;
             /** Format: int64 */
             failedItems?: number;
-            phaseType?: string;
+            phaseType?: components["schemas"]["PhaseTypeEnum"];
             /** Format: int64 */
             processedItems?: number;
             /** Format: double */
             progress?: number;
             /** Format: date-time */
             startedAt?: string;
-            status?: string;
+            status?: components["schemas"]["PhaseStatusEnum"];
             /** Format: int64 */
             successfulItems?: number;
             /** Format: int64 */
@@ -3876,18 +3585,14 @@ export interface components {
             phaseType: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
         };
         PhaseStats: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             duration?: string;
             errorCounts?: {
                 [key: string]: number;
             };
             /** Format: int64 */
             memoryUsage?: number;
-            phaseType?: string;
+            phaseType?: components["schemas"]["PhaseTypeEnum"];
             /** Format: double */
             processingRate?: number;
             /** Format: double */
@@ -3915,11 +3620,7 @@ export interface components {
             description?: string;
             failureCount?: string;
             host?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: password */
             inputPassword?: string;
             /** @description Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash */
@@ -3937,11 +3638,7 @@ export interface components {
             port?: string;
             /** @enum {string} */
             protocol?: "http" | "https" | "socks5" | "socks4";
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            provider?: string;
+            provider?: components["schemas"]["UUID"];
             /**
              * @description Frontend-expected fields
              * @enum {string}
@@ -3975,11 +3672,7 @@ export interface components {
         };
         ProxyHealthCheckResponse: {
             message?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyId?: string;
+            proxyId?: components["schemas"]["UUID"];
             /** Format: int64 */
             responseTimeMs?: number;
             status?: string;
@@ -4006,11 +3699,7 @@ export interface components {
             healthCheckEnabled?: boolean;
             /** Format: int32 */
             healthCheckIntervalSeconds?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isEnabled?: boolean;
             /** Format: int32 */
             maxRetries?: number;
@@ -4026,42 +3715,22 @@ export interface components {
         ProxyPoolDeleteResponse: {
             deleted?: boolean;
             message?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            poolId?: string;
+            poolId?: components["schemas"]["UUID"];
         };
         ProxyPoolMembership: {
             /** Format: date-time */
             addedAt?: string;
             isActive?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            poolId: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyId: string;
+            poolId: components["schemas"]["UUID"];
+            proxyId: components["schemas"]["UUID"];
             /** Format: int32 */
             weight?: number;
         };
         ProxyPoolMembershipResponse: {
             added?: boolean;
             message?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            poolId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyId?: string;
+            poolId?: components["schemas"]["UUID"];
+            proxyId?: components["schemas"]["UUID"];
             removed?: boolean;
         };
         ProxyPoolRequest: {
@@ -4083,22 +3752,14 @@ export interface components {
             isHealthy?: boolean;
             lastChecked?: string;
             proxyDetails?: components["schemas"]["ProxyDetailsResponse"];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyId?: string;
+            proxyId?: components["schemas"]["UUID"];
             /** Format: int64 */
             responseTimeMs?: number;
             status?: string;
         };
         ProxyTestResponse: {
             error?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyId?: string;
+            proxyId?: components["schemas"]["UUID"];
             /** Format: int64 */
             responseTime?: number;
             /** Format: int32 */
@@ -4110,11 +3771,7 @@ export interface components {
             bufferHits?: number;
             /** Format: int64 */
             bufferReads?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             campaignPhase?: string;
             /** Format: double */
             cpuTimeMs?: number;
@@ -4122,11 +3779,7 @@ export interface components {
             executedAt?: string;
             /** Format: double */
             executionTimeMs?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             indexUsage?: Record<string, never>;
             /** Format: double */
             ioWaitMs?: number;
@@ -4150,11 +3803,7 @@ export interface components {
             rowsReturned?: number;
             serviceName?: string;
             tableNames?: string[];
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         QueryPerformanceReport: {
             /** Format: double */
@@ -4191,11 +3840,7 @@ export interface components {
             Priority?: number;
             /** Format: int64 */
             RandomSeed?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            ValidationGroup?: string;
+            ValidationGroup?: components["schemas"]["UUID"];
             /** Format: int64 */
             ValidationOrder?: number;
         };
@@ -4207,11 +3852,7 @@ export interface components {
             blockedUntil?: string;
             /** Format: int64 */
             id?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            identifier?: string;
+            identifier?: components["schemas"]["UUID"];
             /** Format: date-time */
             windowStart?: string;
         };
@@ -4227,6 +3868,76 @@ export interface components {
             maxRequests?: number;
             windowSeconds?: number;
         };
+        RecoveryOptions: {
+            alternativeMethods?: components["schemas"]["MFAMethod"][];
+            backupCodesRemaining?: number;
+            recoveryEmail?: string;
+            recoveryPhone?: string;
+        };
+        RedisCacheConfig: {
+            connMaxLifetime?: string;
+            defaultTTL?: string;
+            dialTimeout?: string;
+            enableMetrics?: boolean;
+            idleTimeout?: string;
+            maxRetries?: number;
+            metricsFlushInterval?: string;
+            minIdleConns?: number;
+            poolSize?: number;
+            readTimeout?: string;
+            redisAddr?: string;
+            redisDB?: number;
+            redisPassword?: string;
+            writeTimeout?: string;
+        };
+        RedisConfig: {
+            addr?: string;
+            /** @description Campaign data TTLs */
+            campaignTTL?: {
+                batchQueryResultTTL?: string;
+                campaignDetailsTTL?: string;
+                campaignRelationshipTTL?: string;
+            };
+            connMaxLifetime?: string;
+            db?: number;
+            /** @description Timeouts */
+            dialTimeout?: string;
+            /** @description Basic connection settings */
+            enabled?: boolean;
+            /** @description TTL settings for different entity types */
+            entityTTL?: {
+                keywordSetTTL?: string;
+                keywordTTL?: string;
+                personaTTL?: string;
+                proxyTTL?: string;
+            };
+            idleTimeout?: string;
+            /** @description Retry and reliability */
+            maxRetries?: number;
+            /** @description Monitoring and metrics */
+            metrics?: {
+                enabled?: boolean;
+                flushInterval?: string;
+                performanceThreshold?: {
+                    errorRateWarning?: number;
+                    hitRatioWarning?: number;
+                    latencyCriticalMs?: number;
+                    latencyWarningMs?: number;
+                };
+            };
+            minIdleConns?: number;
+            password?: string;
+            /** @description Connection pool settings */
+            poolSize?: number;
+            readTimeout?: string;
+            /** @description Validation result TTLs */
+            validationTTL?: {
+                configFingerprintTTL?: string;
+                dnsValidationTTL?: string;
+                httpValidationTTL?: string;
+            };
+            writeTimeout?: string;
+        };
         ResolvedConfig: {
             data?: {
                 [key: string]: Record<string, never>;
@@ -4234,24 +3945,17 @@ export interface components {
             environment?: string;
             service_name?: string;
         };
+        ResourceLockManager: Record<string, never>;
         ResourceUtilizationMetric: {
             bottleneckDetected?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             campaignPhase?: string;
             component?: string;
             /** Format: double */
             currentUsage?: number;
             /** Format: double */
             efficiencyScore?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: double */
             maxCapacity?: number;
             optimizationApplied?: Record<string, never>;
@@ -4261,6 +3965,33 @@ export interface components {
             serviceName?: string;
             /** Format: double */
             utilizationPct?: number;
+        };
+        RuleLoaderService: Record<string, never>;
+        RuleQueryFilter: {
+            category?: string;
+            isCaseSensitive?: boolean;
+            keywordSetId?: components["schemas"]["UUID"];
+            /** Format: int32 */
+            limit?: number;
+            /** Format: int32 */
+            offset?: number;
+            patternSearch?: string;
+            ruleType?: components["schemas"]["KeywordRuleTypeEnum"];
+        };
+        RuleStatistics: {
+            caseSensitiveRules?: number;
+            distinctCategories?: number;
+            enabledKeywordSets?: number;
+            regexRules?: number;
+            stringRules?: number;
+            totalKeywordSets?: number;
+            totalRules?: number;
+        };
+        SafetyValidationError: {
+            Impact?: string;
+            Operation?: string;
+            Remediation?: string;
+            Violation?: string;
         };
         SchemaStats: {
             name?: string;
@@ -4279,60 +4010,28 @@ export interface components {
             riskScore?: number;
             /** Format: date-time */
             sessionExpiry?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sessionId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            sessionId?: components["schemas"]["UUID"];
+            userId?: components["schemas"]["UUID"];
         };
         SecurityEvent: {
             actionAttempted?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            auditLogId?: string;
+            auditLogId?: components["schemas"]["UUID"];
             authorizationResult?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             /** Format: date-time */
             createdAt?: string;
             denialReason?: string;
             eventType?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             requestContext?: Record<string, never>;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            resourceId?: string;
+            resourceId?: components["schemas"]["UUID"];
             resourceType?: string;
             /** Format: int32 */
             riskScore?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            sessionId?: string;
+            sessionId?: components["schemas"]["UUID"];
             sourceIp?: string;
             userAgent?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         ServerConfig: {
             apiKey?: string;
@@ -4382,11 +4081,7 @@ export interface components {
         ServiceCapacityMetric: {
             /** Format: double */
             cpuUtilization?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             /** Format: int32 */
             instanceCount?: number;
             /** Format: double */
@@ -4394,6 +4089,15 @@ export interface components {
             /** Format: date-time */
             recordedAt?: string;
             serviceName?: string;
+        };
+        ServiceConfiguration: {
+            AppConfig?: string;
+            AuditLogStore?: string;
+            CampaignJobStore?: string;
+            CampaignStore?: string;
+            KeywordStore?: string;
+            PersonaStore?: string;
+            ProxyStore?: string;
         };
         ServiceDependency: {
             /** Format: date-time */
@@ -4413,17 +4117,14 @@ export interface components {
             sourceService?: string;
             targetService?: string;
         };
+        ServiceFactory: Record<string, never>;
         Session: {
             browserFingerprint?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             expiresAt?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             ipAddress?: string;
             isActive?: boolean;
             /** Format: date-time */
@@ -4432,11 +4133,7 @@ export interface components {
             sessionFingerprint?: string;
             userAgent?: string;
             userAgentHash?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         SessionConfig: {
             CleanupInterval?: string;
@@ -4480,6 +4177,7 @@ export interface components {
             token?: string;
             user?: components["schemas"]["UserPublicResponse"];
         };
+        SessionService: Record<string, never>;
         SessionSettings: {
             allowed_origins?: string[];
             cleanup_interval?: string;
@@ -4511,6 +4209,7 @@ export interface components {
             session_duration?: string;
             session_id_length?: number;
         };
+        StateMachineHook: Record<string, never>;
         Status: {
             message?: string;
             status?: string;
@@ -4522,8 +4221,11 @@ export interface components {
             batchRandomization?: boolean;
             /** @description OffsetScrambling scrambles the starting offset to avoid predictable patterns */
             offsetScrambling?: boolean;
-            /** @description ShuffleStrategy determines how domains are randomized */
-            shuffleStrategy?: Record<string, never>;
+            /**
+             * @description ShuffleStrategy determines how domains are randomized
+             * @enum {string}
+             */
+            shuffleStrategy?: "sequential" | "full_shuffle" | "block_shuffle" | "weighted" | "interleaved";
             /** Format: double */
             subsetPercentage?: number;
             /** @description SubsetValidation validates random subsets instead of all domains */
@@ -4538,6 +4240,7 @@ export interface components {
             /** @description ValidationPriority allows prioritizing certain domain patterns */
             validationPriority?: string[];
         };
+        StealthIntegrationService: Record<string, never>;
         StealthMetrics: {
             /** Format: int32 */
             avgValidationDelayMs?: number;
@@ -4553,6 +4256,7 @@ export interface components {
             /** Format: double */
             validationCoverage?: number;
         };
+        StealthStrategy: string;
         StreamingResponseHandler: Record<string, never>;
         SuccessMessageResponse: {
             message?: string;
@@ -4590,11 +4294,7 @@ export interface components {
             qrCode?: string;
             /** Format: password */
             secret?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            userId?: string;
+            userId?: components["schemas"]["UUID"];
         };
         TableStats: {
             /** Format: int32 */
@@ -4610,17 +4310,20 @@ export interface components {
             message?: string;
             status?: string;
             success?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            testId?: string;
+            testId?: components["schemas"]["UUID"];
         };
+        TransitionManager: Record<string, never>;
+        /**
+         * Format: uuid
+         * @description Unique identifier (UUID v4)
+         * @example 550e8400-e29b-41d4-a716-446655440000
+         */
+        UUID: string;
         UpdateCampaignRequest: {
             adHocKeywords?: string[];
             /** Format: int32 */
             batchSize?: number;
-            campaignType?: string;
+            campaignType?: components["schemas"]["JobTypeEnum"];
             characterSet?: string;
             constantString?: string;
             keywordSetIds?: string[];
@@ -4630,17 +4333,13 @@ export interface components {
             personaIds?: string[];
             /** Format: int32 */
             processingSpeedPerMinute?: number;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            proxyPoolId?: string;
+            proxyPoolId?: components["schemas"]["UUID"];
             proxySelectionStrategy?: string;
             /** Format: int32 */
             retryAttempts?: number;
             /** Format: int32 */
             rotationIntervalSeconds?: number;
-            status?: string;
+            status?: components["schemas"]["PhaseStatusEnum"];
             targetHttpPorts?: number[];
             tld?: string;
             /** Format: int32 */
@@ -4685,11 +4384,7 @@ export interface components {
             email?: string;
             emailVerified?: boolean;
             firstName?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isActive?: boolean;
             isLocked?: boolean;
             /** Format: date-time */
@@ -4715,11 +4410,7 @@ export interface components {
             email?: string;
             emailVerified?: boolean;
             firstName?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isActive?: boolean;
             isLocked?: boolean;
             /** Format: date-time */
@@ -4737,48 +4428,24 @@ export interface components {
         UserPublicResponse: {
             /** Format: email */
             email?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            id?: string;
+            id?: components["schemas"]["UUID"];
             isActive?: boolean;
             username?: string;
         };
         ValidationOperationResponse: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            jobId?: string;
+            campaignId?: components["schemas"]["UUID"];
+            jobId?: components["schemas"]["UUID"];
             message?: string;
             success?: boolean;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            validationType?: string;
+            validationType?: components["schemas"]["UUID"];
         };
         ValidationRule: {
             Field?: string;
         };
         ValidationStartResponse: {
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            campaignId?: string;
+            campaignId?: components["schemas"]["UUID"];
             message?: string;
-            /**
-             * Format: uuid
-             * @description Unique identifier
-             */
-            validationId?: string;
+            validationId?: components["schemas"]["UUID"];
         };
         ValidationStatusEnum: string;
         WebSocketErrorResponse: {
@@ -4892,6 +4559,100 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkDatabaseStatsResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    queryKeywordRules: {
+        parameters: {
+            query?: {
+                /** @description Filter by keyword set ID */
+                keyword_set_id?: string;
+                /** @description Filter by rule type */
+                rule_type?: string;
+                /** @description Filter by category */
+                category?: string;
+                /** @description Filter by case sensitivity */
+                is_case_sensitive?: boolean;
+                /** @description Search pattern in rule patterns (partial match) */
+                pattern?: string;
+                /** @description Maximum number of results */
+                limit?: number;
+                /** @description Number of results to skip */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getKeywordSetWithRules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Keyword Set ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -6608,6 +6369,132 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProxyTestResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    bulkDeleteProxies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDeleteProxiesRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkProxyOperationResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    bulkTestProxies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkTestProxiesRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkProxyTestResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    bulkUpdateProxies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkUpdateProxiesRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkProxyOperationResponse"];
                 };
             };
             /** @description Bad Request */

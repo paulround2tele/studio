@@ -5,9 +5,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaign** | **string** |  | [optional] [default to undefined]
+**campaign** | [**LeadGenerationCampaign**](LeadGenerationCampaign.md) |  | [optional] [default to undefined]
 **canDelete** | **boolean** |  | [optional] [default to undefined]
-**dependentCampaigns** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**dependentCampaigns** | [**Array&lt;LeadGenerationCampaign&gt;**](LeadGenerationCampaign.md) |  | [optional] [default to undefined]
 **hasDependencies** | **boolean** |  | [optional] [default to undefined]
 
 ## Example

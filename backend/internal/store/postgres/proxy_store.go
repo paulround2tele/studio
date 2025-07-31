@@ -168,5 +168,70 @@ func (s *proxyStorePostgres) UpdateProxyHealth(ctx context.Context, exec store.Q
 	return err
 }
 
+// GetProxiesByIDs retrieves multiple proxies by their IDs in a single batch query.
+// Results are ordered by the input ID slice for predictable ordering.
+// This method optimizes N+1 query patterns by fetching all proxies at once.
+func (s *proxyStorePostgres) GetProxiesByIDs(ctx context.Context, exec store.Querier, ids []uuid.UUID) ([]*models.Proxy, error) {
+	// Input validation
+	if len(ids) == 0 {
+		return []*models.Proxy{}, nil
+	}
+
+	// Convert UUIDs to strings for array_position ordering
+	idStrings := make([]string, len(ids))
+	for i, id := range ids {
+		idStrings[i] = id.String()
+	}
+
+	// Use PostgreSQL batch query with IN clause and ordered results
+	// array_position ensures results are returned in the same order as input IDs
+	query := `SELECT id, name, description, address, protocol, username, password_hash, host, port, is_enabled, is_healthy, last_status, last_checked_at, latency_ms, city, country_code, provider, created_at, updated_at
+			  FROM proxies
+			  WHERE id = ANY($1)
+			  ORDER BY array_position($1, id::text)`
+
+	proxies := []*models.Proxy{}
+	err := exec.SelectContext(ctx, &proxies, query, pq.Array(idStrings))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get proxies by IDs: %w", err)
+	}
+
+	return proxies, nil
+}
+
+// GetProxiesByPersonaIDs retrieves proxies associated with multiple persona IDs.
+// This method optimizes N+1 patterns when loading proxies for multiple personas.
+// Note: This assumes there's a relationship table or field linking proxies to personas.
+// If no direct relationship exists, this method will return all enabled proxies.
+func (s *proxyStorePostgres) GetProxiesByPersonaIDs(ctx context.Context, exec store.Querier, personaIDs []uuid.UUID) ([]*models.Proxy, error) {
+	// Input validation
+	if len(personaIDs) == 0 {
+		return []*models.Proxy{}, nil
+	}
+
+	// Since the current schema doesn't show a direct relationship between proxies and personas,
+	// we'll return all enabled proxies. In a real implementation, you would JOIN with
+	// a relationship table (e.g., persona_proxy_assignments) if it exists.
+	query := `SELECT id, name, description, address, protocol, username, password_hash, host, port, is_enabled, is_healthy, last_status, last_checked_at, latency_ms, city, country_code, provider, created_at, updated_at
+			  FROM proxies
+			  WHERE is_enabled = true
+			  ORDER BY name ASC`
+
+	proxies := []*models.Proxy{}
+	err := exec.SelectContext(ctx, &proxies, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get proxies by persona IDs: %w", err)
+	}
+
+	// Note: In a production implementation, you would filter proxies based on the actual
+	// persona-proxy relationship defined in your schema. This might involve:
+	// 1. A persona_proxy table with persona_id and proxy_id foreign keys
+	// 2. A proxy_assignment field in the personas table
+	// 3. Or some other relationship mechanism
+	// The current implementation returns all enabled proxies as a safe fallback.
+
+	return proxies, nil
+}
+
 // Ensure proxyStorePostgres implements store.ProxyStore
 var _ store.ProxyStore = (*proxyStorePostgres)(nil)

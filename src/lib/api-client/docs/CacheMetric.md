@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 **campaignPhase** | **string** |  | [optional] [default to undefined]
 **executionTimeMs** | **number** |  | [optional] [default to undefined]
 **hitRatioPct** | **number** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **operationType** | **string** |  | [optional] [default to undefined]
 **recordedAt** | **string** |  | [optional] [default to undefined]
 **serviceName** | **string** |  | [optional] [default to undefined]

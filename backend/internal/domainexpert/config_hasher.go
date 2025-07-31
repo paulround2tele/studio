@@ -13,9 +13,9 @@ import (
 	"golang.org/x/exp/slog"                                  // Assuming this is your logging library
 )
 
-// GenerateDomainGenerationConfigHashInput is a subset of DomainGenerationCampaignParams used for hashing.
+// GenerateDomainGenerationPhaseConfigHashInput is a subset of DomainGenerationCampaignParams used for hashing.
 // It is effectively the same as models.NormalizedDomainGenerationParams but defined here for clarity of input.
-type GenerateDomainGenerationConfigHashInput struct { // Corrected: 'type' keyword moved here
+type GenerateDomainGenerationPhaseConfigHashInput struct { // Corrected: 'type' keyword moved here
 	PatternType    string
 	VariableLength int
 	CharacterSet   string
@@ -23,20 +23,20 @@ type GenerateDomainGenerationConfigHashInput struct { // Corrected: 'type' keywo
 	TLD            string
 }
 
-// GenerateDomainGenerationConfigHashResult holds the generated hash and the normalized params used.
-type GenerateDomainGenerationConfigHashResult struct { // Corrected: 'type' keyword moved here
+// GenerateDomainGenerationPhaseConfigHashResult holds the generated hash and the normalized params used.
+type GenerateDomainGenerationPhaseConfigHashResult struct { // Corrected: 'type' keyword moved here
 	HashString       string
 	NormalizedParams models.NormalizedDomainGenerationParams // Assuming this type exists in models
 }
 
-// GenerateDomainGenerationConfigHash creates a stable hash for a given set of domain generation parameters.
+// GenerateDomainGenerationPhaseConfigHash creates a stable hash for a given set of domain generation parameters.
 // It normalizes the parameters (e.g., sorts CharacterSet) before hashing to ensure consistency.
 // It returns the hex-encoded SHA256 hash string and the normalized parameters used for hashing.
-func GenerateDomainGenerationConfigHash(params models.DomainGenerationCampaignParams) (*GenerateDomainGenerationConfigHashResult, error) {
+func GenerateDomainGenerationPhaseConfigHash(params models.DomainGenerationCampaignParams) (*GenerateDomainGenerationPhaseConfigHashResult, error) {
 	// Normalize CharacterSet: convert to lowercase and sort characters
     charSetValue := params.CharacterSet
     if charSetValue == "" {
-            slog.Warn("GenerateDomainGenerationConfigHash: CharacterSet is empty, using empty string for hashing.")
+            slog.Warn("GenerateDomainGenerationPhaseConfigHash: CharacterSet is empty, using empty string for hashing.")
     }
 	charSet := strings.ToLower(charSetValue)
 	chars := strings.Split(charSet, "")
@@ -59,14 +59,14 @@ func GenerateDomainGenerationConfigHash(params models.DomainGenerationCampaignPa
 	// }
     varLengthValue := params.VariableLength
     if varLengthValue == 0 {
-            slog.Warn("GenerateDomainGenerationConfigHash: VariableLength is 0, using 0 for hashing.")
+            slog.Warn("GenerateDomainGenerationPhaseConfigHash: VariableLength is 0, using 0 for hashing.")
     }
 
 	var constStrValue string
 	if params.ConstantString != nil {
 		constStrValue = *params.ConstantString
 	} else {
-		slog.Warn("GenerateDomainGenerationConfigHash: params.ConstantString is nil, using empty string for hashing.")
+		slog.Warn("GenerateDomainGenerationPhaseConfigHash: params.ConstantString is nil, using empty string for hashing.")
 	}
 
 	normalizedParams := models.NormalizedDomainGenerationParams{
@@ -89,7 +89,7 @@ func GenerateDomainGenerationConfigHash(params models.DomainGenerationCampaignPa
 	hash := sha256.Sum256(jsonData)
 	hashString := hex.EncodeToString(hash[:])
 
-	return &GenerateDomainGenerationConfigHashResult{
+	return &GenerateDomainGenerationPhaseConfigHashResult{
 		HashString:       hashString,
 		NormalizedParams: normalizedParams,
 	}, nil

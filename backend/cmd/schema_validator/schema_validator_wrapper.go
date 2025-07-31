@@ -92,7 +92,7 @@ func getTableNameMapping(modelName string) (string, bool) {
 		// "KeywordRule":                    "keyword_rules",
 		"Campaign":                       "campaigns",
 		"DomainGenerationCampaignParams": "domain_generation_campaign_params",
-		"DomainGenerationConfigState":    "domain_generation_config_states",
+		"DomainGenerationPhaseConfigState":    "domain_generation_config_states",
 		"GeneratedDomain":                "generated_domains",
 		"DNSValidationCampaignParams":    "dns_validation_campaign_params",
 		"HTTPKeywordCampaignParams":      "http_keyword_campaign_params",
@@ -197,7 +197,7 @@ func buildWrappedModelMap() map[string]interface{} {
 	modelMap["DomainGenerationCampaignParams"] = &models.DomainGenerationCampaignParams{}
 	modelMap["DNSValidationCampaignParams"] = &models.DNSValidationCampaignParams{}
 	modelMap["HTTPKeywordCampaignParams"] = &models.HTTPKeywordCampaignParams{}
-	modelMap["DomainGenerationConfigState"] = &models.DomainGenerationConfigState{}
+	modelMap["DomainGenerationPhaseConfigState"] = &models.DomainGenerationPhaseConfigState{}
 
 	return modelMap
 }

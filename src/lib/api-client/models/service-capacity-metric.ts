@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -27,11 +29,11 @@ export interface ServiceCapacityMetric {
      */
     'cpuUtilization'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ServiceCapacityMetric
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {number}

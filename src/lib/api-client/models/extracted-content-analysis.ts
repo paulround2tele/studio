@@ -37,7 +37,7 @@ export interface ExtractedContentAnalysis {
      * @type {string}
      * @memberof ExtractedContentAnalysis
      */
-    'sentiment'?: ExtractedContentAnalysisSentimentEnum;
+    'sentiment'?: 'Positive' | 'Negative' | 'Neutral';
     /**
      * 
      * @type {string}
@@ -46,12 +46,10 @@ export interface ExtractedContentAnalysis {
     'summary'?: string;
 }
 
-export const ExtractedContentAnalysisSentimentEnum = {
-    Positive: 'Positive',
-    Negative: 'Negative',
-    Neutral: 'Neutral'
-} as const;
-
-export type ExtractedContentAnalysisSentimentEnum = typeof ExtractedContentAnalysisSentimentEnum[keyof typeof ExtractedContentAnalysisSentimentEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum ExtractedContentAnalysisSentimentEnum converted to direct string literals in interface
 
 

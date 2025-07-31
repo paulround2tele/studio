@@ -37,7 +37,7 @@ export interface PatternOffsetRequest {
      * @type {string}
      * @memberof PatternOffsetRequest
      */
-    'patternType': PatternOffsetRequestPatternTypeEnum;
+    'patternType': 'prefix' | 'suffix' | 'both';
     /**
      * 
      * @type {string}
@@ -52,12 +52,10 @@ export interface PatternOffsetRequest {
     'variableLength': number;
 }
 
-export const PatternOffsetRequestPatternTypeEnum = {
-    Prefix: 'prefix',
-    Suffix: 'suffix',
-    Both: 'both'
-} as const;
-
-export type PatternOffsetRequestPatternTypeEnum = typeof PatternOffsetRequestPatternTypeEnum[keyof typeof PatternOffsetRequestPatternTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum PatternOffsetRequestPatternTypeEnum converted to direct string literals in interface
 
 

@@ -20,23 +20,26 @@ import (
 
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
 type CampaignOrchestratorAPIHandler struct {
-	phaseExecutionService services.PhaseExecutionService // Universal phase execution service
-	campaignStore         store.CampaignStore            // Direct access needed for pattern offset queries
-	broadcaster           websocket.Broadcaster          // WebSocket broadcaster for real-time updates
-	db                    store.Querier                  // Database connection for store operations
+	phaseExecutionService   services.PhaseExecutionService   // Universal phase execution service
+	domainGenerationService services.DomainGenerationService // Domain generation service for offset queries
+	campaignStore           store.CampaignStore              // Direct access needed for pattern offset queries
+	broadcaster             websocket.Broadcaster            // WebSocket broadcaster for real-time updates
+	db                      store.Querier                    // Database connection for store operations
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
 func NewCampaignOrchestratorAPIHandler(
 	phaseExecutionService services.PhaseExecutionService,
+	domainGenerationService services.DomainGenerationService,
 	campaignStore store.CampaignStore,
 	broadcaster websocket.Broadcaster,
 	db store.Querier) *CampaignOrchestratorAPIHandler {
 	return &CampaignOrchestratorAPIHandler{
-		phaseExecutionService: phaseExecutionService,
-		campaignStore:         campaignStore,
-		broadcaster:           broadcaster,
-		db:                    db,
+		phaseExecutionService:   phaseExecutionService,
+		domainGenerationService: domainGenerationService,
+		campaignStore:           campaignStore,
+		broadcaster:             broadcaster,
+		db:                      db,
 	}
 }
 
@@ -100,7 +103,7 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 // @Failure 500 {object} ErrorResponse "Internal Server Error"
 // @Router /campaigns/lead-generation [post]
 func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Context) {
-	var req CreateLeadGenerationCampaignRequest
+	var req services.CreateLeadGenerationCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		var validationErrors []ErrorDetail
 		validationErrors = append(validationErrors, ErrorDetail{
@@ -120,30 +123,13 @@ func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Con
 		return
 	}
 
-	// Convert to service request - map from frontend field names to service field names
-	var tld string
-	if len(req.DomainConfig.TLDs) > 0 {
-		tld = req.DomainConfig.TLDs[0] // Take first TLD from array
-	}
-
-	serviceReq := services.CreateLeadGenerationCampaignRequest{
-		Name:        req.Name,
-		Description: req.Description,
-		UserID:      userID.(uuid.UUID),
-		DomainConfig: services.DomainGenerationPhaseConfig{
-			PatternType:          req.DomainConfig.PatternType,
-			VariableLength:       req.DomainConfig.VariableLength,
-			CharacterSet:         req.DomainConfig.CharacterSet,
-			ConstantString:       req.DomainConfig.ConstantString,
-			TLD:                  tld,
-			NumDomainsToGenerate: int64(req.DomainConfig.NumDomainsToGenerate),
-		},
-	}
+	// Set UserID from authenticated context (frontend doesn't send this)
+	req.UserID = userID.(uuid.UUID)
 
 	// Create campaign using the standalone lead generation service
-	log.Printf("Creating lead generation campaign using standalone service: %s", serviceReq.Name)
+	log.Printf("Creating lead generation campaign using standalone service: %s", req.Name)
 
-	campaign, err := h.phaseExecutionService.CreateCampaign(c.Request.Context(), serviceReq)
+	campaign, err := h.phaseExecutionService.CreateCampaign(c.Request.Context(), req)
 	if err != nil {
 		log.Printf("Failed to create lead generation campaign: %v", err)
 		respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
@@ -697,19 +683,27 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 	// Process bulk data request
 	enrichedCampaigns := make(map[string]EnrichedCampaignData)
 
+	// Convert campaign ID strings to UUIDs, skipping invalid ones
+	campaignUUIDs := make([]uuid.UUID, 0, len(request.CampaignIDs))
 	for _, campaignIDStr := range request.CampaignIDs {
-		campaignID, err := uuid.Parse(campaignIDStr)
-		if err != nil {
+		if campaignID, err := uuid.Parse(campaignIDStr); err == nil {
+			campaignUUIDs = append(campaignUUIDs, campaignID)
+		} else {
 			log.Printf("Invalid campaign ID %s for bulk request: %v", campaignIDStr, err)
-			continue // Skip invalid UUIDs
 		}
+	}
 
-		campaign, err := h.campaignStore.GetCampaignByID(c.Request.Context(), h.db, campaignID)
-		if err != nil {
-			log.Printf("Error getting campaign %s for bulk request: %v", campaignIDStr, err)
-			continue // Skip campaigns that can't be retrieved
-		}
+	// Single bulk query instead of N+1 individual queries
+	campaigns, err := h.campaignStore.GetCampaignsByIDs(c.Request.Context(), h.db, campaignUUIDs)
+	if err != nil {
+		log.Printf("Error getting campaigns for bulk request: %v", err)
+		respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeDatabaseError,
+			"Failed to retrieve campaigns", nil)
+		return
+	}
 
+	// Process each campaign from the bulk result
+	for _, campaign := range campaigns {
 		// Verify user owns this campaign
 		if campaign.UserID == nil || *campaign.UserID != userUUID {
 			continue // Skip campaigns user doesn't own
@@ -835,9 +829,63 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 		return
 	}
 
-	// For pattern offset, we can return current offset as 0 and total combinations
-	offset := int64(0)
+	// Get actual current offset using simplified direct database query
 	totalCombinations := generator.GetTotalCombinations()
+
+	// Generate config hash to lookup existing offset - same logic as CreateCampaign
+	tempGenParams := models.DomainGenerationCampaignParams{
+		PatternType:    req.PatternType,
+		VariableLength: req.VariableLength,
+		CharacterSet:   req.CharacterSet,
+		ConstantString: models.StringPtr(req.ConstantString),
+		TLD:            req.TLD,
+	}
+
+	hashResult, hashErr := domainexpert.GenerateDomainGenerationPhaseConfigHash(tempGenParams)
+	if hashErr != nil {
+		respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
+			"Failed to generate config hash", []ErrorDetail{
+				{
+					Code:    ErrorCodeInternalServer,
+					Message: "Could not generate configuration hash: " + hashErr.Error(),
+				},
+			})
+		return
+	}
+
+	configHashString := hashResult.HashString
+	var currentOffset int64 = 0
+
+	// Query existing offset from campaign store if available
+	if h.campaignStore != nil {
+		ctx := c.Request.Context()
+
+		// Get existing config state directly from campaign store
+		if configState, err := h.campaignStore.GetDomainGenerationPhaseConfigStateByHash(ctx, h.db, configHashString); err == nil && configState != nil {
+			// Check if there are any active campaigns using this pattern
+			countQuery := `
+				SELECT COUNT(DISTINCT dgcp.campaign_id)
+				FROM domain_generation_campaign_params dgcp
+				INNER JOIN campaigns c ON c.id = dgcp.campaign_id
+				WHERE c.current_phase = 'generation'
+				AND dgcp.pattern_type = $1
+				AND dgcp.variable_length = $2
+				AND dgcp.character_set = $3
+				AND COALESCE(dgcp.constant_string, '') = $4
+				AND dgcp.tld = $5
+			`
+			var existingCampaignCount int
+			if countErr := h.db.GetContext(ctx, &existingCampaignCount, countQuery,
+				req.PatternType, req.VariableLength, req.CharacterSet, req.ConstantString, req.TLD); countErr == nil {
+
+				if existingCampaignCount == 0 {
+					currentOffset = 0 // Reset to 0 when no existing campaigns
+				} else {
+					currentOffset = configState.LastOffset
+				}
+			}
+		}
+	}
 
 	response := PatternOffsetResponse{
 		PatternType:               req.PatternType,
@@ -845,7 +893,7 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 		CharacterSet:              req.CharacterSet,
 		ConstantString:            req.ConstantString,
 		TLD:                       req.TLD,
-		CurrentOffset:             offset,
+		CurrentOffset:             currentOffset,
 		TotalPossibleCombinations: totalCombinations,
 	}
 

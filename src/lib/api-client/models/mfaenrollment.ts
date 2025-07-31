@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -34,10 +36,10 @@ export interface MFAEnrollment {
     'lastUsedAt'?: string;
     /**
      * 
-     * @type {object}
+     * @type {string}
      * @memberof MFAEnrollment
      */
-    'preferredMethod'?: object;
+    'preferredMethod'?: 'totp' | 'sms' | 'email' | 'backup';
     /**
      * 
      * @type {boolean}
@@ -45,10 +47,17 @@ export interface MFAEnrollment {
      */
     'totpEnabled'?: boolean;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof MFAEnrollment
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
+
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum MFAEnrollmentPreferredMethodEnum converted to direct string literals in interface
+
 

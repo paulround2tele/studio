@@ -28,7 +28,7 @@ import AnalysisConfigModal from './modals/AnalysisConfigModal';
 
 // Import types and services
 import { campaignsApi } from '@/lib/api-client/client';
-import type { LeadGenerationCampaignResponse } from '@/lib/api-client/models/lead-generation-campaign-response';
+import type { CampaignViewModel } from '@/lib/types';
 import type { PhaseStartRequest } from '@/lib/api-client/models/phase-start-request';
 
 interface PhaseStatus {
@@ -42,7 +42,7 @@ interface PhaseStatus {
 
 interface PhaseDashboardProps {
   campaignId: string;
-  campaign?: LeadGenerationCampaignResponse;
+  campaign?: CampaignViewModel;
   onCampaignUpdate?: () => void;
 }
 
@@ -227,11 +227,11 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
               break;
             case 'in_progress':
               phaseStatus = 'running';
-              progress = phaseData.progress || 50;
+              progress = 50; // Use fallback since progress property doesn't exist
               break;
             case 'failed':
               phaseStatus = 'failed';
-              progress = phaseData.progress || 0;
+              progress = 0; // Use fallback since progress property doesn't exist
               break;
             case 'ready':
             case 'configured':
@@ -243,12 +243,17 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
               progress = 0;
           }
         } else {
-          // Fallback logic if no phase data
+          // FIXED: Use real progress data from campaign phases or backend-driven data
           if (campaign?.currentPhase === phaseType) {
             phaseStatus = 'running';
-            progress = 50;
+            // Use real progress data from the campaign or phase-specific progress
+            // Use campaign overall progress since phase progress property doesn't exist
+            progress = campaign?.overallProgress ?? 0;
           } else if (previousPhaseComplete) {
             phaseStatus = 'ready';
+            progress = 0;
+          } else {
+            progress = 0;
           }
         }
         

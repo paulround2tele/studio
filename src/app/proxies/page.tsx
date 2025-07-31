@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
 import type { components } from '@/lib/api-client/types';
+// CreateProxyRequestProtocolEnum removed - using direct string literals now
 
 type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
 import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
@@ -79,7 +80,7 @@ function ProxiesPageContent() {
         const proxiesArray = Array.isArray(response.data) ? response.data : [];
         setProxies(proxiesArray.map(convertToComponentProxy));
       } else {
-        toast({ title: "Error Loading Proxies", description: response.error || "Failed to load proxies.", variant: "destructive" });
+        toast({ title: "Error Loading Proxies", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to load proxies.", variant: "destructive" });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -196,7 +197,7 @@ function ProxiesPageContent() {
         toast({ title: "Proxy Deleted", description: "Proxy deleted successfully" });
         setProxies(prev => prev.filter(p => p.id !== proxyToDelete!.id));
       } else {
-        toast({ title: "Error Deleting Proxy", description: response.error, variant: "destructive" });
+        toast({ title: "Error Deleting Proxy", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to delete proxy.", variant: "destructive" });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -217,7 +218,7 @@ function ProxiesPageContent() {
         toast({ title: "Proxy Test Completed", description: `Status: ${proxyData.lastStatus || 'Unknown'}` });
         setProxies(prev => prev.map(p => p.id === proxyId ? proxyData : p));
       } else {
-        toast({ title: "Proxy Test Failed", description: response.error, variant: "destructive" });
+        toast({ title: "Proxy Test Failed", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to test proxy.", variant: "destructive" });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -240,7 +241,7 @@ function ProxiesPageContent() {
         toast({ title: `Proxy ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`, description: `Proxy ${proxy.address} is now ${newStatus.toLowerCase()}.`});
         setProxies(prev => prev.map(p => p.id === proxy.id ? response.data! : p));
       } else {
-        toast({ title: "Error Updating Proxy Status", description: response.error, variant: "destructive" });
+        toast({ title: "Error Updating Proxy Status", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to update proxy status.", variant: "destructive" });
       }
     } catch (err: unknown) {
        const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -255,7 +256,7 @@ function ProxiesPageContent() {
     setPageActionLoading("testAll");
     try {
       const response = await testAllProxies();
-      toast({ title: "Test All Proxies", description: response.message || "Testing process initiated/completed." });
+      toast({ title: "Test All Proxies", description: "Testing process initiated/completed." });
       fetchProxiesData(false); // Refresh list to show updated statuses
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -273,7 +274,7 @@ function ProxiesPageContent() {
         toast({ title: "Clean Proxies", description: "Cleaning process completed." });
         fetchProxiesData(false); // Refresh list
       } else {
-        toast({ title: "Error Cleaning Proxies", description: response.error || "Failed to clean proxies.", variant: "destructive" });
+        toast({ title: "Error Cleaning Proxies", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to clean proxies.", variant: "destructive" });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -306,7 +307,7 @@ function ProxiesPageContent() {
           const payload: ProxyModelCreationPayload = {
             name: `Proxy ${ip}:${port}`,
             description: `Imported proxy from file`,
-            protocol: 'http' as const,
+            protocol: 'http',
             address: `${ip}:${port}`,
             isEnabled: true
           };
@@ -317,7 +318,8 @@ function ProxiesPageContent() {
               importedCount++;
             } else {
               errorCount++;
-              if (response.error?.includes('already exists')) {
+              const errorMsg = typeof response.error === 'string' ? response.error : response.error?.message;
+              if (errorMsg?.includes('already exists')) {
                 // Skip duplicate error message for cleaner UI
                 continue;
               }

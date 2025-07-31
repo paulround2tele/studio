@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { BulkMetadata } from './bulk-metadata';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { LeadItem } from './lead-item';
 
 /**
  * 
@@ -25,10 +28,10 @@ import type { BulkMetadata } from './bulk-metadata';
 export interface BulkLeadsResponse {
     /**
      * 
-     * @type {{ [key: string]: Array<string>; }}
+     * @type {{ [key: string]: Array<LeadItem>; }}
      * @memberof BulkLeadsResponse
      */
-    'leads'?: { [key: string]: Array<string>; };
+    'leads'?: { [key: string]: Array<LeadItem>; };
     /**
      * 
      * @type {BulkMetadata}

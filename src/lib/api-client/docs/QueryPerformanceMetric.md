@@ -7,12 +7,12 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **bufferHits** | **number** |  | [optional] [default to undefined]
 **bufferReads** | **number** |  | [optional] [default to undefined]
-**campaignId** | **string** | Unique identifier | [optional] [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **campaignPhase** | **string** |  | [optional] [default to undefined]
 **cpuTimeMs** | **number** |  | [optional] [default to undefined]
 **executedAt** | **string** |  | [optional] [default to undefined]
 **executionTimeMs** | **number** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **indexUsage** | **object** |  | [optional] [default to undefined]
 **ioWaitMs** | **number** |  | [optional] [default to undefined]
 **lockWaitMs** | **number** |  | [optional] [default to undefined]
@@ -30,7 +30,7 @@ Name | Type | Description | Notes
 **rowsReturned** | **number** |  | [optional] [default to undefined]
 **serviceName** | **string** |  | [optional] [default to undefined]
 **tableNames** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

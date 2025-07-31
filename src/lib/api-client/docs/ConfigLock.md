@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **configHash** | **string** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **expiresAt** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **isActive** | **boolean** |  | [optional] [default to undefined]
 **lockType** | **string** |  | [optional] [default to undefined]
 **metadata** | **object** |  | [optional] [default to undefined]

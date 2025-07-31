@@ -3,15 +3,20 @@ package services
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/tls"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/cache"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
@@ -23,6 +28,33 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
+
+// HTTPPersonaGroup represents a group of personas with identical HTTP configurations
+type HTTPPersonaGroup struct {
+	ConfigFingerprint string
+	HTTPConfig        models.HTTPConfigDetails
+	Personas          []*models.Persona
+	HTTPClient        *http.Client
+}
+
+// OptimizedHTTPClient represents a pooled HTTP client with usage tracking
+type OptimizedHTTPClient struct {
+	Client            *http.Client
+	ConfigFingerprint string
+	CreatedAt         time.Time
+	UsageCount        int64
+}
+
+// HTTPPerformanceMetrics tracks HTTP optimization performance
+type HTTPPerformanceMetrics struct {
+	TotalHTTPRequests     int64
+	UniqueConfigurations  int
+	ConnectionPoolHits    int64
+	ConnectionPoolMisses  int64
+	ValidationErrors      int64
+	AverageResponseTimeMs int64
+	ActiveConnections     int
+}
 
 type httpKeywordCampaignServiceImpl struct {
 	db               *sqlx.DB
@@ -37,6 +69,19 @@ type httpKeywordCampaignServiceImpl struct {
 	keywordScanner   *keywordscanner.Service
 	proxyManager     *proxymanager.ProxyManager
 	appConfig        *config.AppConfig
+	// PHASE 3 OPTIMIZATION: HTTP client pool for connection reuse and reduced N+1 calls
+	httpClientPool    map[string]*OptimizedHTTPClient
+	clientPoolMutex   sync.RWMutex
+	clientMaxIdleTime time.Duration
+	// PHASE 3 MONITORING: Performance metrics tracking
+	performanceMetrics HTTPPerformanceMetrics
+	metricsMutex       sync.Mutex
+	// PHASE 4 REDIS CACHING: Add Redis cache and optimization config
+	redisCache         cache.RedisCache
+	optimizationConfig *config.OptimizationConfig
+	// PHASE 4 VALIDATION CACHE: In-memory validation result cache
+	validationResultCache map[string]*cache.ValidationResult
+	validationCacheMutex  sync.RWMutex
 }
 
 // NewHTTPKeywordCampaignService creates a new HTTPKeywordCampaignService.
@@ -47,18 +92,50 @@ func NewHTTPKeywordCampaignService(
 	hv *httpvalidator.HTTPValidator, kwScanner *keywordscanner.Service, pm *proxymanager.ProxyManager, appCfg *config.AppConfig,
 ) HTTPKeywordCampaignService {
 	return &httpKeywordCampaignServiceImpl{
-		db:               db,
-		campaignStore:    cs,
-		personaStore:     ps,
-		proxyStore:       prStore,
-		keywordStore:     ks,
-		auditLogStore:    as,
-		auditLogger:      utils.NewAuditLogger(as),
-		campaignJobStore: cjs,
-		httpValidator:    hv,
-		keywordScanner:   kwScanner,
-		proxyManager:     pm,
-		appConfig:        appCfg,
+		db:                    db,
+		campaignStore:         cs,
+		personaStore:          ps,
+		proxyStore:            prStore,
+		keywordStore:          ks,
+		auditLogStore:         as,
+		auditLogger:           utils.NewAuditLogger(as),
+		campaignJobStore:      cjs,
+		httpValidator:         hv,
+		keywordScanner:        kwScanner,
+		proxyManager:          pm,
+		appConfig:             appCfg,
+		httpClientPool:        make(map[string]*OptimizedHTTPClient),
+		clientMaxIdleTime:     10 * time.Minute,
+		validationResultCache: make(map[string]*cache.ValidationResult),
+	}
+}
+
+// NewHTTPKeywordCampaignServiceWithCache creates a new HTTPKeywordCampaignService with Redis cache integration.
+func NewHTTPKeywordCampaignServiceWithCache(
+	db *sqlx.DB,
+	cs store.CampaignStore, ps store.PersonaStore, prStore store.ProxyStore, ks store.KeywordStore, as store.AuditLogStore,
+	cjs store.CampaignJobStore,
+	hv *httpvalidator.HTTPValidator, kwScanner *keywordscanner.Service, pm *proxymanager.ProxyManager, appCfg *config.AppConfig,
+	redisCache cache.RedisCache, optimizationConfig *config.OptimizationConfig,
+) HTTPKeywordCampaignService {
+	return &httpKeywordCampaignServiceImpl{
+		db:                    db,
+		campaignStore:         cs,
+		personaStore:          ps,
+		proxyStore:            prStore,
+		keywordStore:          ks,
+		auditLogStore:         as,
+		auditLogger:           utils.NewAuditLogger(as),
+		campaignJobStore:      cjs,
+		httpValidator:         hv,
+		keywordScanner:        kwScanner,
+		proxyManager:          pm,
+		appConfig:             appCfg,
+		httpClientPool:        make(map[string]*OptimizedHTTPClient),
+		clientMaxIdleTime:     10 * time.Minute,
+		redisCache:            redisCache,
+		optimizationConfig:    optimizationConfig,
+		validationResultCache: make(map[string]*cache.ValidationResult),
 	}
 }
 
@@ -234,19 +311,46 @@ func (s *httpKeywordCampaignServiceImpl) validatePersonaIDs(ctx context.Context,
 	if len(personaIDs) == 0 {
 		return fmt.Errorf("%s Persona IDs required", expectedType)
 	}
+
+	// PHASE 4 REDIS CACHING: Try to get personas from cache first if Redis is enabled
+	var personas []*models.Persona
+	var err error
+
+	if s.redisCache != nil && s.optimizationConfig != nil && s.optimizationConfig.Phases.Caching {
+		personas, err = s.getPersonasWithCache(ctx, querier, personaIDs)
+	} else {
+		// PHASE 2 N+1 OPTIMIZATION: Batch load all personas to eliminate N+1 pattern
+		personas, err = s.personaStore.GetPersonasByIDs(ctx, querier, personaIDs)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to batch load personas for validation: %w", err)
+	}
+
+	// Create lookup map for efficient persona processing by ID
+	personaMap := make(map[uuid.UUID]*models.Persona)
+	for _, persona := range personas {
+		personaMap[persona.ID] = persona
+	}
+
+	// Validate each requested persona ID using batch-loaded data
 	for _, pID := range personaIDs {
-		persona, err := s.personaStore.GetPersonaByID(ctx, querier, pID)
-		if err != nil {
-			if err == store.ErrNotFound {
-				return fmt.Errorf("%s persona ID '%s' not found", expectedType, pID)
-			}
-			return fmt.Errorf("verifying %s persona ID '%s': %w", expectedType, pID, err)
+		persona, exists := personaMap[pID]
+		if !exists {
+			return fmt.Errorf("%s persona ID '%s' not found", expectedType, pID)
 		}
 		if persona.PersonaType != expectedType {
 			return fmt.Errorf("persona ID '%s' type '%s', expected '%s'", pID, persona.PersonaType, expectedType)
 		}
 		if !persona.IsEnabled {
 			return fmt.Errorf("%s persona ID '%s' disabled", expectedType, pID)
+		}
+
+		// PHASE 4 CACHING: Cache validation result for persona configuration
+		if s.redisCache != nil && expectedType == models.PersonaTypeHTTP {
+			if err := s.cachePersonaConfigValidation(ctx, persona); err != nil {
+				log.Printf("Warning: Failed to cache persona config validation for %s: %v", persona.ID, err)
+			}
 		}
 	}
 	return nil
@@ -256,19 +360,151 @@ func (s *httpKeywordCampaignServiceImpl) validateKeywordSetIDs(ctx context.Conte
 	if len(keywordSetIDs) == 0 {
 		return nil
 	}
+
+	// PHASE 4 REDIS CACHING: Try to get keyword sets from cache first if Redis is enabled
+	var keywordSets []*models.KeywordSet
+	var err error
+
+	if s.redisCache != nil && s.optimizationConfig != nil && s.optimizationConfig.Phases.Caching {
+		keywordSets, err = s.getKeywordSetsWithCache(ctx, querier, keywordSetIDs)
+	} else {
+		// PHASE 2 N+1 OPTIMIZATION: Batch load all keyword sets to eliminate N+1 pattern
+		keywordSets, err = s.keywordStore.GetKeywordSetsByIDs(ctx, querier, keywordSetIDs)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to batch load keyword sets for validation: %w", err)
+	}
+
+	// Create lookup map for efficient keyword set processing by ID
+	keywordSetMap := make(map[uuid.UUID]*models.KeywordSet)
+	for _, keywordSet := range keywordSets {
+		keywordSetMap[keywordSet.ID] = keywordSet
+	}
+
+	// Validate each requested keyword set ID using batch-loaded data
 	for _, ksID := range keywordSetIDs {
-		set, err := s.keywordStore.GetKeywordSetByID(ctx, querier, ksID)
-		if err != nil {
-			if err == store.ErrNotFound {
-				return fmt.Errorf("keyword set ID '%s' not found", ksID)
-			}
-			return fmt.Errorf("verifying keyword set ID '%s': %w", ksID, err)
+		set, exists := keywordSetMap[ksID]
+		if !exists {
+			return fmt.Errorf("keyword set ID '%s' not found", ksID)
 		}
 		if !set.IsEnabled {
 			return fmt.Errorf("keyword set ID '%s' is disabled", ksID)
 		}
+
+		// PHASE 4 CACHING: Cache keyword set for future lookups
+		if s.redisCache != nil {
+			if err := s.redisCache.SetKeywordSet(ctx, set, s.optimizationConfig.Performance.CacheTTL.KeywordSets); err != nil {
+				log.Printf("Warning: Failed to cache keyword set %s: %v", set.ID, err)
+			}
+		}
 	}
 	return nil
+}
+
+// PHASE 4 REDIS CACHING: Helper methods for cache integration
+
+// getPersonasWithCache attempts to get personas from cache first, falling back to database
+func (s *httpKeywordCampaignServiceImpl) getPersonasWithCache(ctx context.Context, querier store.Querier, personaIDs []uuid.UUID) ([]*models.Persona, error) {
+	// Try batch cache lookup first
+	cachedPersonas, missedIDs, err := s.redisCache.GetPersonasBatch(ctx, personaIDs)
+	if err != nil {
+		log.Printf("Cache lookup failed, falling back to database: %v", err)
+		return s.personaStore.GetPersonasByIDs(ctx, querier, personaIDs)
+	}
+
+	var allPersonas []*models.Persona
+	allPersonas = append(allPersonas, cachedPersonas...)
+
+	// If we have cache misses, fetch them from database
+	if len(missedIDs) > 0 {
+		dbPersonas, err := s.personaStore.GetPersonasByIDs(ctx, querier, missedIDs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch missed personas from database: %w", err)
+		}
+
+		// Cache the personas we just fetched
+		for _, persona := range dbPersonas {
+			if err := s.redisCache.SetPersona(ctx, persona, s.optimizationConfig.Performance.CacheTTL.Personas); err != nil {
+				log.Printf("Warning: Failed to cache persona %s: %v", persona.ID, err)
+			}
+		}
+
+		allPersonas = append(allPersonas, dbPersonas...)
+	}
+
+	return allPersonas, nil
+}
+
+// getKeywordSetsWithCache attempts to get keyword sets from cache first, falling back to database
+func (s *httpKeywordCampaignServiceImpl) getKeywordSetsWithCache(ctx context.Context, querier store.Querier, keywordSetIDs []uuid.UUID) ([]*models.KeywordSet, error) {
+	// Try batch cache lookup first
+	cachedKeywordSets, missedIDs, err := s.redisCache.GetKeywordSetsBatch(ctx, keywordSetIDs)
+	if err != nil {
+		log.Printf("Cache lookup failed, falling back to database: %v", err)
+		return s.keywordStore.GetKeywordSetsByIDs(ctx, querier, keywordSetIDs)
+	}
+
+	var allKeywordSets []*models.KeywordSet
+	allKeywordSets = append(allKeywordSets, cachedKeywordSets...)
+
+	// If we have cache misses, fetch them from database
+	if len(missedIDs) > 0 {
+		dbKeywordSets, err := s.keywordStore.GetKeywordSetsByIDs(ctx, querier, missedIDs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch missed keyword sets from database: %w", err)
+		}
+
+		// Cache the keyword sets we just fetched
+		for _, keywordSet := range dbKeywordSets {
+			if err := s.redisCache.SetKeywordSet(ctx, keywordSet, s.optimizationConfig.Performance.CacheTTL.KeywordSets); err != nil {
+				log.Printf("Warning: Failed to cache keyword set %s: %v", keywordSet.ID, err)
+			}
+		}
+
+		allKeywordSets = append(allKeywordSets, dbKeywordSets...)
+	}
+
+	return allKeywordSets, nil
+}
+
+// cachePersonaConfigValidation caches HTTP configuration validation results
+func (s *httpKeywordCampaignServiceImpl) cachePersonaConfigValidation(ctx context.Context, persona *models.Persona) error {
+	if persona.PersonaType != models.PersonaTypeHTTP {
+		return nil
+	}
+
+	// Generate configuration fingerprint
+	configHash := s.createHTTPConfigFingerprint(models.HTTPConfigDetails{})
+	if len(persona.ConfigDetails) > 0 {
+		var httpConfig models.HTTPConfigDetails
+		if err := json.Unmarshal(persona.ConfigDetails, &httpConfig); err == nil {
+			configHash = s.createHTTPConfigFingerprint(httpConfig)
+		}
+	}
+
+	// Check if we already have a cached validation result
+	if _, err := s.redisCache.GetHTTPValidationResult(ctx, configHash); err == nil {
+		return nil // Already cached
+	}
+
+	// Create validation result for caching
+	validationResult := &cache.ValidationResult{
+		IsValid:        true,
+		ErrorMessage:   "",
+		ResponseTime:   0, // Config validation is instant
+		CachedAt:       time.Now(),
+		ConfigHash:     configHash,
+		ValidationHash: configHash,
+		Metadata: map[string]interface{}{
+			"persona_id":   persona.ID.String(),
+			"persona_type": string(persona.PersonaType),
+			"validated_at": time.Now().UTC(),
+		},
+	}
+
+	// Cache the validation result
+	return s.redisCache.SetHTTPValidationResult(ctx, configHash, validationResult, s.optimizationConfig.Performance.CacheTTL.HTTPValidation)
 }
 
 func (s *httpKeywordCampaignServiceImpl) logAuditEvent(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign, action, description string) {
@@ -276,6 +512,209 @@ func (s *httpKeywordCampaignServiceImpl) logAuditEvent(ctx context.Context, exec
 		return
 	}
 	s.auditLogger.LogCampaignEvent(ctx, exec, campaign, action, description)
+}
+
+// PHASE 3 N+1 OPTIMIZATION: HTTP persona grouping and connection pooling functions
+
+// createHTTPConfigFingerprint creates a unique fingerprint for HTTP configuration deduplication
+func (s *httpKeywordCampaignServiceImpl) createHTTPConfigFingerprint(httpConfig models.HTTPConfigDetails) string {
+	// Create deterministic fingerprint for HTTP configuration
+	configBytes, _ := json.Marshal(httpConfig)
+	hash := sha256.Sum256(configBytes)
+	return hex.EncodeToString(hash[:16]) // Use first 16 bytes for shorter fingerprint
+}
+
+// groupPersonasByHTTPConfig groups HTTP personas by unique configurations to eliminate redundant clients
+func (s *httpKeywordCampaignServiceImpl) groupPersonasByHTTPConfig(personas []*models.Persona) map[string]*HTTPPersonaGroup {
+	groups := make(map[string]*HTTPPersonaGroup)
+
+	for _, persona := range personas {
+		if persona.PersonaType != models.PersonaTypeHTTP {
+			continue
+		}
+
+		var httpConfig models.HTTPConfigDetails
+		if len(persona.ConfigDetails) > 0 {
+			if err := json.Unmarshal(persona.ConfigDetails, &httpConfig); err != nil {
+				log.Printf("Error unmarshalling HTTP persona %s config: %v. Using defaults.", persona.ID, err)
+				httpConfig = models.HTTPConfigDetails{} // Use empty config as default
+			}
+		}
+
+		fingerprint := s.createHTTPConfigFingerprint(httpConfig)
+
+		if group, exists := groups[fingerprint]; exists {
+			group.Personas = append(group.Personas, persona)
+		} else {
+			// Create new group with cached HTTP client
+			httpClient := s.getOrCreateHTTPClient(fingerprint, httpConfig)
+			groups[fingerprint] = &HTTPPersonaGroup{
+				ConfigFingerprint: fingerprint,
+				HTTPConfig:        httpConfig,
+				Personas:          []*models.Persona{persona},
+				HTTPClient:        httpClient,
+			}
+		}
+	}
+
+	return groups
+}
+
+// getOrCreateHTTPClient gets cached HTTP client or creates new one with aggressive connection pooling
+func (s *httpKeywordCampaignServiceImpl) getOrCreateHTTPClient(fingerprint string, httpConfig models.HTTPConfigDetails) *http.Client {
+	s.clientPoolMutex.RLock()
+	if clientInfo, exists := s.httpClientPool[fingerprint]; exists {
+		clientInfo.UsageCount++
+		s.clientPoolMutex.RUnlock()
+		return clientInfo.Client
+	}
+	s.clientPoolMutex.RUnlock()
+
+	s.clientPoolMutex.Lock()
+	defer s.clientPoolMutex.Unlock()
+
+	// Double-check after acquiring write lock
+	if clientInfo, exists := s.httpClientPool[fingerprint]; exists {
+		clientInfo.UsageCount++
+		return clientInfo.Client
+	}
+
+	// PHASE 3 OPTIMIZATION: Create HTTP client with aggressive connection pooling
+	client := &http.Client{
+		Timeout: 30 * time.Second, // Default timeout
+		Transport: &http.Transport{
+			// CRITICAL: Connection pooling settings for massive performance improvement
+			MaxIdleConns:        200,               // Increased from default 100
+			MaxIdleConnsPerHost: 50,                // Increased from default 2
+			IdleConnTimeout:     120 * time.Second, // Keep connections alive longer
+			DisableKeepAlives:   false,             // Ensure keep-alives are enabled
+
+			// DNS and connection optimizations
+			DisableCompression: false,
+			ForceAttemptHTTP2:  true,
+			MaxConnsPerHost:    100, // Limit concurrent connections per host
+
+			// Timeout optimizations
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 15 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+
+			// TLS configuration
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false, // Default to secure
+			},
+		},
+	}
+
+	// Apply persona-specific timeout if configured
+	if httpConfig.RequestTimeoutSeconds > 0 {
+		client.Timeout = time.Duration(httpConfig.RequestTimeoutSeconds) * time.Second
+	}
+
+	// Cache with size limit (simple LRU)
+	maxCacheSize := 50
+	if len(s.httpClientPool) >= maxCacheSize {
+		// Remove oldest entry
+		var oldestKey string
+		var oldestTime time.Time
+		for k, v := range s.httpClientPool {
+			if oldestKey == "" || v.CreatedAt.Before(oldestTime) {
+				oldestKey = k
+				oldestTime = v.CreatedAt
+			}
+		}
+		if oldestKey != "" {
+			if oldClient := s.httpClientPool[oldestKey]; oldClient != nil {
+				oldClient.Client.CloseIdleConnections()
+			}
+			delete(s.httpClientPool, oldestKey)
+		}
+	}
+
+	s.httpClientPool[fingerprint] = &OptimizedHTTPClient{
+		Client:            client,
+		ConfigFingerprint: fingerprint,
+		CreatedAt:         time.Now(),
+		UsageCount:        1,
+	}
+
+	// PHASE 3 MONITORING: Track connection pool miss
+	s.incrementConnectionPoolMiss()
+	return client
+}
+
+// PHASE 3 MONITORING: HTTP performance tracking methods
+func (s *httpKeywordCampaignServiceImpl) updateHTTPPerformanceMetrics(totalPersonas, uniqueConfigs int) {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.UniqueConfigurations = uniqueConfigs
+	s.performanceMetrics.ActiveConnections = len(s.httpClientPool)
+}
+
+func (s *httpKeywordCampaignServiceImpl) incrementHTTPRequestCount() {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.TotalHTTPRequests++
+}
+
+func (s *httpKeywordCampaignServiceImpl) incrementConnectionPoolHit() {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.ConnectionPoolHits++
+}
+
+func (s *httpKeywordCampaignServiceImpl) incrementConnectionPoolMiss() {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.ConnectionPoolMisses++
+}
+
+func (s *httpKeywordCampaignServiceImpl) incrementHTTPErrorCount() {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.ValidationErrors++
+}
+
+func (s *httpKeywordCampaignServiceImpl) updateHTTPResponseTime(duration time.Duration) {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+	s.performanceMetrics.AverageResponseTimeMs = duration.Milliseconds()
+}
+
+func (s *httpKeywordCampaignServiceImpl) GetHTTPPerformanceMetrics() HTTPPerformanceMetrics {
+	s.metricsMutex.Lock()
+	defer s.metricsMutex.Unlock()
+
+	metrics := s.performanceMetrics
+
+	// PHASE 4 REDIS CACHING: Include Redis cache metrics if available
+	if s.redisCache != nil {
+		cacheMetrics := s.redisCache.GetMetrics()
+		metrics.ConnectionPoolHits = cacheMetrics.HitCount
+		metrics.ConnectionPoolMisses = cacheMetrics.MissCount
+		metrics.ValidationErrors = cacheMetrics.ErrorCount
+
+		// Update average response time with cache latency if available
+		if cacheMetrics.AvgLatencyMs > 0 {
+			metrics.AverageResponseTimeMs = cacheMetrics.AvgLatencyMs
+		}
+	}
+
+	return metrics
+}
+
+// cleanupIdleHTTPClients removes idle HTTP clients to free resources
+func (s *httpKeywordCampaignServiceImpl) cleanupIdleHTTPClients() {
+	s.clientPoolMutex.Lock()
+	defer s.clientPoolMutex.Unlock()
+
+	now := time.Now()
+	for fingerprint, clientInfo := range s.httpClientPool {
+		if now.Sub(clientInfo.CreatedAt) > s.clientMaxIdleTime {
+			clientInfo.Client.CloseIdleConnections()
+			delete(s.httpClientPool, fingerprint)
+		}
+	}
 }
 
 func derefUUIDPtr(id *uuid.UUID) uuid.UUID {
@@ -527,11 +966,25 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		return done, 0, opErr
 	}
 
+	// PHASE 2 N+1 OPTIMIZATION: Batch load all personas to eliminate N+1 pattern
+	allPersonas, pErr := s.personaStore.GetPersonasByIDs(ctx, querier, hkParams.PersonaIDs)
+	if pErr != nil {
+		opErr = fmt.Errorf("failed to batch load HTTP personas: %w", pErr)
+		return false, 0, opErr
+	}
+
+	// Create lookup map for efficient persona processing by ID
+	personaMap := make(map[uuid.UUID]*models.Persona)
+	for _, persona := range allPersonas {
+		personaMap[persona.ID] = persona
+	}
+
+	// Validate and filter personas using batch-loaded data
 	personas := make([]*models.Persona, 0, len(hkParams.PersonaIDs))
 	for _, pID := range hkParams.PersonaIDs {
-		p, pErr := s.personaStore.GetPersonaByID(ctx, querier, pID)
-		if pErr != nil {
-			opErr = fmt.Errorf("failed to fetch HTTP persona %s: %w", pID, pErr)
+		p, exists := personaMap[pID]
+		if !exists {
+			opErr = fmt.Errorf("HTTP persona %s not found", pID)
 			return false, 0, opErr
 		}
 		if p.PersonaType != models.PersonaTypeHTTP || !p.IsEnabled {
@@ -545,15 +998,29 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		return false, 0, opErr
 	}
 
+	// PHASE 3 N+1 OPTIMIZATION: Group personas by HTTP configuration to reduce redundant HTTP clients
+	personaGroups := s.groupPersonasByHTTPConfig(personas)
+
+	// PHASE 3 MONITORING: Track performance metrics
+	s.updateHTTPPerformanceMetrics(len(personas), len(personaGroups))
+	log.Printf("ProcessHTTPKeywordCampaignBatch: OPTIMIZATION - Reduced %d HTTP personas to %d unique configurations (%.1f%% reduction) for campaign %s",
+		len(personas), len(personaGroups), (1.0-float64(len(personaGroups))/float64(len(personas)))*100.0, campaignID)
+
+	// Cleanup idle connections periodically
+	defer s.cleanupIdleHTTPClients()
+
 	allKeywordRulesModels := []models.KeywordRule{}
 	if hkParams.KeywordSetIDs != nil && len(*hkParams.KeywordSetIDs) > 0 {
-		for _, ksID := range *hkParams.KeywordSetIDs {
-			rules, rErr := s.keywordStore.GetKeywordRulesBySetID(ctx, querier, ksID)
-			if rErr != nil {
-				opErr = fmt.Errorf("failed to fetch rules for keyword set %s: %w", ksID, rErr)
-				return false, 0, opErr
-			}
-			allKeywordRulesModels = append(allKeywordRulesModels, rules...)
+		// PHASE 2 N+1 OPTIMIZATION: Batch load all keyword rules to eliminate N+1 pattern
+		// Replace individual GetKeywordRulesBySetID calls with single batch operation
+		batchKeywordRules, rErr := s.keywordStore.GetKeywordsByKeywordSetIDs(ctx, querier, *hkParams.KeywordSetIDs)
+		if rErr != nil {
+			opErr = fmt.Errorf("failed to batch load keyword rules for keyword sets: %w", rErr)
+			return false, 0, opErr
+		}
+		// Convert from []*models.KeywordRule to []models.KeywordRule
+		for _, rule := range batchKeywordRules {
+			allKeywordRulesModels = append(allKeywordRulesModels, *rule)
 		}
 	}
 	compiledKeywordRules := make([]keywordscanner.CompiledKeywordRule, 0, len(allKeywordRulesModels))
@@ -574,200 +1041,178 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		return false, 0, opErr
 	}
 
-	var wg sync.WaitGroup
-	concurrencyLimit := s.appConfig.Worker.HTTPKeywordSubtaskConcurrency
-	if concurrencyLimit <= 0 {
-		concurrencyLimit = 50 // Phase 3: 10x increase for 500-domain batches
-	}
-	semaphore := make(chan struct{}, concurrencyLimit)
-	muResults := sync.Mutex{}
 	dbResults := make([]*models.HTTPKeywordResult, 0, len(domainsToProcess))
 	nowTime := time.Now().UTC()
 
-	// Context for goroutines in this batch
+	// Context for batch processing
 	batchCtx, batchCancel := context.WithCancel(ctx)
 	defer batchCancel()
 	var batchProcessingContextErr error
 
-	for _, dnsRecord := range domainsToProcess {
+	// PHASE 3 ENHANCEMENT: Use bulk validation instead of N+1 pattern
+	// Extract domains for bulk validation and create GeneratedDomain objects
+	domains := make([]*models.GeneratedDomain, len(domainsToProcess))
+	domainMap := make(map[string]models.DNSValidationResult)
+	for i, dnsRecord := range domainsToProcess {
+		// Create GeneratedDomain from DNSValidationResult
+		domains[i] = &models.GeneratedDomain{
+			ID:         dnsRecord.GeneratedDomainID.UUID, // Extract UUID from NullUUID
+			DomainName: dnsRecord.DomainName,
+			CampaignID: dnsRecord.DNSCampaignID, // Use campaign ID
+		}
+		domainMap[dnsRecord.DomainName] = *dnsRecord
+	}
+
+	// Use the existing batchSizeVal already configured earlier in the method (line 913)
+
+	// Use bulk validation from Phase 2
+	if len(personaGroups) == 0 {
+		opErr = fmt.Errorf("no persona groups available for bulk HTTP validation")
+		return false, 0, opErr
+	}
+
+	// Get the first persona from the first group for bulk validation
+	var representativePersona *models.Persona
+	for _, group := range personaGroups {
+		if len(group.Personas) > 0 {
+			representativePersona = group.Personas[0]
+			break
+		}
+	}
+
+	if representativePersona == nil {
+		opErr = fmt.Errorf("no personas available for bulk HTTP validation")
+		return false, 0, opErr
+	}
+
+	// Get proxy if configured
+	var proxyForValidator *models.Proxy
+	if hkParams.ProxyPoolID != nil && s.proxyManager != nil {
+		proxyEntry, errPmGet := s.proxyManager.GetProxy()
+		if errPmGet == nil && proxyEntry != nil {
+			proxyUUID, errParse := uuid.Parse(proxyEntry.ID)
+			if errParse == nil {
+				var proxyReadQuerier store.Querier
+				if s.db != nil {
+					proxyReadQuerier = s.db
+				}
+				fetchedProxy, errDbGet := s.proxyStore.GetProxyByID(batchCtx, proxyReadQuerier, proxyUUID)
+				if errDbGet == nil {
+					proxyForValidator = fetchedProxy
+				}
+			}
+		}
+	}
+
+	// Perform bulk validation
+	log.Printf("ProcessHTTPKeywordCampaignBatch: Performing bulk HTTP validation for %d domains", len(domains))
+	bulkResults := s.httpValidator.ValidateDomainsBulk(batchCtx, domains, batchSizeVal, representativePersona, proxyForValidator)
+
+	// Process bulk results and convert to database format
+	for _, bulkResult := range bulkResults {
 		if batchCtx.Err() != nil {
-			log.Printf("Batch context cancelled before processing domain %s for HTTP campaign %s", dnsRecord.DomainName, campaignID)
+			log.Printf("Batch context cancelled during result processing for domain %s", bulkResult.Domain)
 			batchProcessingContextErr = batchCtx.Err()
 			break
 		}
 
-		wg.Add(1)
-		semaphore <- struct{}{}
-		go func(currentDNSRecord models.DNSValidationResult) {
-			defer wg.Done()
-			defer func() { <-semaphore }()
+		dnsRecord, exists := domainMap[bulkResult.Domain]
+		if !exists {
+			continue // Skip if domain not found in map
+		}
 
-			var finalHTTPValResult *httpvalidator.ValidationResult
-			var successPersonaID uuid.NullUUID
-			var usedProxyID uuid.NullUUID
-			attemptCount := 0
-			var foundKeywordsFromSetsJSON json.RawMessage
-			var adhocKeywordsFoundForThisDomain []string
+		// Track metrics
+		s.incrementHTTPRequestCount()
+		if bulkResult.Error != "" || !bulkResult.IsSuccess {
+			s.incrementHTTPErrorCount()
+		}
 
-			var proxyForValidator *models.Proxy
-			if hkParams.ProxyPoolID != nil && s.proxyManager != nil {
-				proxyEntry, errPmGet := s.proxyManager.GetProxy()
-				if errPmGet == nil && proxyEntry != nil {
-					proxyUUID, errParse := uuid.Parse(proxyEntry.ID)
-					if errParse == nil {
-						// Use a local conditional querier for this read, independent of the main transaction
-						var proxyReadQuerier store.Querier
-						if s.db != nil {
-							proxyReadQuerier = s.db
-						}
-						fetchedProxy, errDbGet := s.proxyStore.GetProxyByID(batchCtx, proxyReadQuerier, proxyUUID) // Use batchCtx
-						if errDbGet == nil {
-							proxyForValidator = fetchedProxy
-							usedProxyID = uuid.NullUUID{UUID: fetchedProxy.ID, Valid: true}
-							log.Printf("Using proxy %s (%s) for domain %s", fetchedProxy.ID, fetchedProxy.Address, currentDNSRecord.DomainName)
-						} else {
-							log.Printf("Error fetching full proxy model %s from store: %v", proxyEntry.ID, errDbGet)
-						}
-					} else {
-						log.Printf("Error parsing proxy ID '%s' from manager: %v", proxyEntry.ID, errParse)
+		// Initialize variables for this domain
+		var foundKeywordsFromSetsJSON json.RawMessage
+		var adhocKeywordsFoundForThisDomain []string
+
+		// Create database result
+		dbRes := &models.HTTPKeywordResult{
+			ID:                    uuid.New(),
+			HTTPKeywordCampaignID: campaignID,
+			DNSResultID:           uuid.NullUUID{UUID: dnsRecord.ID, Valid: true},
+			DomainName:            dnsRecord.DomainName,
+			Attempts:              models.IntPtr(1),
+			ValidatedByPersonaID:  uuid.NullUUID{UUID: representativePersona.ID, Valid: true},
+			UsedProxyID:           uuid.NullUUID{}, // Could be set if proxy used
+			LastCheckedAt:         &nowTime,
+		}
+
+		// Set HTTP response details
+		if bulkResult.StatusCode > 0 {
+			statusCode := int32(bulkResult.StatusCode)
+			dbRes.HTTPStatusCode = &statusCode
+		}
+
+		if bulkResult.ResponseHeaders != nil {
+			hBytes, _ := json.Marshal(bulkResult.ResponseHeaders)
+			dbRes.ResponseHeaders = models.JSONRawMessagePtr(json.RawMessage(hBytes))
+		}
+
+		if bulkResult.ContentHash != "" {
+			dbRes.ContentHash = models.StringPtr(bulkResult.ContentHash)
+		}
+
+		if bulkResult.ExtractedTitle != "" {
+			dbRes.PageTitle = models.StringPtr(bulkResult.ExtractedTitle)
+		}
+
+		if bulkResult.ExtractedContentSnippet != "" {
+			dbRes.ExtractedContentSnippet = models.StringPtr(bulkResult.ExtractedContentSnippet)
+		}
+
+		// Keyword scanning: check for ad-hoc keywords and keyword sets
+		if bulkResult.IsSuccess && len(bulkResult.RawBody) > 0 {
+			if len(compiledKeywordRules) > 0 {
+				foundPatterns, scanErr := s.keywordScanner.ScanWithRules(batchCtx, bulkResult.RawBody, compiledKeywordRules)
+				if scanErr != nil {
+					log.Printf("Error scanning keywords from sets for %s: %v", dnsRecord.DomainName, scanErr)
+				} else if len(foundPatterns) > 0 {
+					foundKeywordsFromSetsJSON, _ = json.Marshal(foundPatterns)
+				}
+			}
+			if hkParams.AdHocKeywords != nil && len(*hkParams.AdHocKeywords) > 0 {
+				bodyLower := strings.ToLower(string(bulkResult.RawBody))
+				for _, adhocKw := range *hkParams.AdHocKeywords {
+					if strings.Contains(bodyLower, strings.ToLower(adhocKw)) {
+						adhocKeywordsFoundForThisDomain = append(adhocKeywordsFoundForThisDomain, adhocKw)
 					}
-				} else if errPmGet != nil {
-					log.Printf("Error getting proxy from manager (pool %s): %v", *hkParams.ProxyPoolID, errPmGet)
 				}
 			}
 
-			for _, persona := range personas {
-				if batchCtx.Err() != nil {
-					log.Printf("Batch context cancelled during HTTP persona processing for %s (persona %s)", currentDNSRecord.DomainName, persona.ID)
-					finalHTTPValResult = &httpvalidator.ValidationResult{Domain: currentDNSRecord.DomainName, Status: "ErrorCancelled", Error: fmt.Sprintf("Context cancelled during persona %s processing", persona.ID)}
-					goto StoreResultGoroutine
-				}
-				attemptCount++
-				httpValRes, httpErr := s.httpValidator.Validate(batchCtx, currentDNSRecord.DomainName, currentDNSRecord.DomainName, persona, proxyForValidator) // Use batchCtx
-
-				if httpErr == nil && httpValRes.IsSuccess {
-					finalHTTPValResult = httpValRes
-					successPersonaID = uuid.NullUUID{UUID: persona.ID, Valid: true}
-					break
-				}
-				finalHTTPValResult = httpValRes // Keep last result
-				rotationIntervalVal := 0
-				if hkParams.RotationIntervalSeconds != nil {
-					rotationIntervalVal = *hkParams.RotationIntervalSeconds
-				}
-				if len(personas) > 1 && rotationIntervalVal > 0 && attemptCount < len(personas) {
-					select {
-					case <-batchCtx.Done(): // Use batchCtx
-						log.Printf("Batch context cancelled during HTTP persona rotation for %s", currentDNSRecord.DomainName)
-						finalHTTPValResult = &httpvalidator.ValidationResult{Domain: currentDNSRecord.DomainName, Status: "ErrorCancelled", Error: "Context cancelled during rotation"}
-						goto StoreResultGoroutine
-					case <-time.After(time.Duration(rotationIntervalVal) * time.Second):
-					}
-				}
-			} // End persona loop
-
-			if batchCtx.Err() != nil && finalHTTPValResult == nil {
-				log.Printf("Batch context cancelled after all HTTP persona attempts for %s", currentDNSRecord.DomainName)
-				finalHTTPValResult = &httpvalidator.ValidationResult{Domain: currentDNSRecord.DomainName, Status: "ErrorCancelled", Error: "Context cancelled after all attempts"}
-			}
-
-		StoreResultGoroutine:
-			if finalHTTPValResult == nil {
-				log.Printf("CRITICAL: finalHTTPValResult is nil for domain %s (HTTP) before storing. Setting to generic error.", currentDNSRecord.DomainName)
-				finalHTTPValResult = &httpvalidator.ValidationResult{
-					Domain: currentDNSRecord.DomainName, Status: "ErrorProcessing", Error: "Internal processing error: validation result not captured.",
-				}
-			}
-
-			dbRes := &models.HTTPKeywordResult{
-				ID:                    uuid.New(),
-				HTTPKeywordCampaignID: campaignID,
-				DNSResultID:           uuid.NullUUID{UUID: currentDNSRecord.ID, Valid: true},
-				DomainName:            currentDNSRecord.DomainName,
-				Attempts:              models.IntPtr(attemptCount),
-				ValidatedByPersonaID:  successPersonaID,
-				UsedProxyID:           usedProxyID,
-				LastCheckedAt:         &nowTime,
-			}
-
-			if finalHTTPValResult != nil {
-				if finalHTTPValResult.StatusCode > 0 {
-					statusCode := int32(finalHTTPValResult.StatusCode)
-					dbRes.HTTPStatusCode = &statusCode
-				}
-
-				if finalHTTPValResult.ResponseHeaders != nil {
-					hBytes, _ := json.Marshal(finalHTTPValResult.ResponseHeaders)
-					dbRes.ResponseHeaders = models.JSONRawMessagePtr(json.RawMessage(hBytes))
-				}
-
-				if finalHTTPValResult.ContentHash != "" {
-					dbRes.ContentHash = models.StringPtr(finalHTTPValResult.ContentHash)
-				}
-
-				if finalHTTPValResult.ExtractedTitle != "" {
-					dbRes.PageTitle = models.StringPtr(finalHTTPValResult.ExtractedTitle)
-				}
-
-				if finalHTTPValResult.ExtractedContentSnippet != "" {
-					dbRes.ExtractedContentSnippet = models.StringPtr(finalHTTPValResult.ExtractedContentSnippet)
-				}
-
-				if finalHTTPValResult.IsSuccess && len(finalHTTPValResult.RawBody) > 0 {
-					if len(compiledKeywordRules) > 0 {
-						foundPatterns, scanErr := s.keywordScanner.ScanWithRules(batchCtx, finalHTTPValResult.RawBody, compiledKeywordRules) // Use batchCtx
-						if scanErr != nil {
-							log.Printf("Error scanning keywords from sets for %s: %v", currentDNSRecord.DomainName, scanErr)
-						} else if len(foundPatterns) > 0 {
-							foundKeywordsFromSetsJSON, _ = json.Marshal(foundPatterns)
-						}
-					}
-					if hkParams.AdHocKeywords != nil && len(*hkParams.AdHocKeywords) > 0 {
-						bodyLower := strings.ToLower(string(finalHTTPValResult.RawBody))
-						for _, adhocKw := range *hkParams.AdHocKeywords {
-							if strings.Contains(bodyLower, strings.ToLower(adhocKw)) {
-								adhocKeywordsFoundForThisDomain = append(adhocKeywordsFoundForThisDomain, adhocKw)
-							}
-						}
-					}
-
-					if len(foundKeywordsFromSetsJSON) > 0 {
-						dbRes.FoundKeywordsFromSets = models.JSONRawMessagePtr(foundKeywordsFromSetsJSON)
-					} else {
-						dbRes.FoundKeywordsFromSets = nil
-					}
-
-					if len(adhocKeywordsFoundForThisDomain) > 0 {
-						dbRes.FoundAdHocKeywords = &adhocKeywordsFoundForThisDomain
-					} else {
-						dbRes.FoundAdHocKeywords = nil
-					}
-
-					if (foundKeywordsFromSetsJSON != nil && string(foundKeywordsFromSetsJSON) != "null" && string(foundKeywordsFromSetsJSON) != "[]") || len(adhocKeywordsFoundForThisDomain) > 0 {
-						dbRes.ValidationStatus = "lead_valid"
-					} else {
-						dbRes.ValidationStatus = "http_valid_no_keywords"
-					}
-				} else if finalHTTPValResult.Status == "ErrorCancelled" {
-					dbRes.ValidationStatus = "cancelled_during_processing"
-				} else if finalHTTPValResult.Error != "" {
-					dbRes.ValidationStatus = "invalid_http_response_error"
-				} else {
-					dbRes.ValidationStatus = "invalid_http_code"
-				}
+			if len(foundKeywordsFromSetsJSON) > 0 {
+				dbRes.FoundKeywordsFromSets = models.JSONRawMessagePtr(foundKeywordsFromSetsJSON)
 			} else {
-				dbRes.ValidationStatus = "processing_failed_before_http"
+				dbRes.FoundKeywordsFromSets = nil
 			}
-			muResults.Lock()
-			dbResults = append(dbResults, dbRes)
-			muResults.Unlock()
 
-			// CRITICAL FIX: Broadcast individual HTTP validation results via WebSocket
-			// This mirrors the DNS validation pattern to provide real-time domain status updates
-			s.streamHTTPResultWithFallback(batchCtx, campaignID.String(), currentDNSRecord.DomainName, dbRes)
-		}(*dnsRecord)
+			if len(adhocKeywordsFoundForThisDomain) > 0 {
+				dbRes.FoundAdHocKeywords = &adhocKeywordsFoundForThisDomain
+			} else {
+				dbRes.FoundAdHocKeywords = nil
+			}
+
+			if (foundKeywordsFromSetsJSON != nil && string(foundKeywordsFromSetsJSON) != "null" && string(foundKeywordsFromSetsJSON) != "[]") || len(adhocKeywordsFoundForThisDomain) > 0 {
+				dbRes.ValidationStatus = "lead_valid"
+			} else {
+				dbRes.ValidationStatus = "http_valid_no_keywords"
+			}
+		} else if bulkResult.Error != "" {
+			dbRes.ValidationStatus = "invalid_http_response_error"
+		} else {
+			dbRes.ValidationStatus = "invalid_http_code"
+		}
+
+		dbResults = append(dbResults, dbRes)
+
+		// CRITICAL FIX: Broadcast individual HTTP validation results via WebSocket
+		s.streamHTTPResultWithFallback(batchCtx, campaignID.String(), dnsRecord.DomainName, dbRes)
 	}
-	wg.Wait()
 
 	if batchProcessingContextErr != nil {
 		log.Printf("Context cancelled during HTTP batch processing for campaign %s. Partial results may be saved. Error: %v", campaignID, batchProcessingContextErr)

@@ -70,7 +70,7 @@ const DomainSourceConfig = memo<DomainSourceConfigProps>(({
                   <SelectItem value={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}>Select a campaign...</SelectItem>
                   {sourceCampaigns.filter(campaign => campaign.id).map(campaign => (
                     <SelectItem key={campaign.id} value={campaign.id!}>
-                      {campaign.name} ({campaign.selectedType || campaign.currentPhase})
+                      {campaign.name} ({campaign.currentPhase})
                     </SelectItem>
                   ))}
                   {sourceCampaigns.length === 0 && !isLoading && (

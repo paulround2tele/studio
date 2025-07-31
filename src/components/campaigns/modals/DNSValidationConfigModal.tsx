@@ -19,6 +19,7 @@ import { getPersonas } from '@/lib/services/personaService';
 import { campaignsApi } from '@/lib/api-client/client';
 import type { DNSValidationConfig } from '@/lib/api-client/models/dnsvalidation-config';
 import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
+// PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 
 // Response types from OpenAPI - using exact same types as campaign form
 type PersonaBase = components['schemas']['PersonaResponse'];
@@ -30,10 +31,7 @@ interface PersonaResponse extends PersonaBase {
 
 interface DNSValidationFormValues {
   personaIds: string[];
-  rotationIntervalSeconds: number;
-  processingSpeedPerMinute: number;
-  batchSize: number;
-  retryAttempts: number;
+  name: string;
 }
 
 interface DNSValidationConfigModalProps {
@@ -58,14 +56,11 @@ export default function DNSValidationConfigModal({
   const [loadingData, setLoadingData] = useState(true);
   const [configuring, setConfiguring] = useState(false);
 
-  // Form initialization with smart defaults
+  // Form initialization with persona-only configuration
   const form = useForm<DNSValidationFormValues>({
     defaultValues: {
       personaIds: [],
-      rotationIntervalSeconds: 300, // 5 minutes
-      processingSpeedPerMinute: 100,
-      batchSize: 50,
-      retryAttempts: 3,
+      name: `DNS Validation - ${new Date().toLocaleDateString()}`,
     }
   });
 
@@ -78,8 +73,8 @@ export default function DNSValidationConfigModal({
         setLoadingData(true);
         const response = await getPersonas('dns');
         
-        // Extract data from the API response wrapper
-        const personas = response.data || [];
+        // FIXED: Response already properly handled by personaService using extractResponseData
+        const personas = response.success ? (response.data || []) : [];
         
         // Filter for DNS personas only (already filtered by type, but add safety checks)
         const dnsOnly = personas.filter(p =>
@@ -124,13 +119,10 @@ export default function DNSValidationConfigModal({
     try {
       setConfiguring(true);
 
-      // Prepare the configuration using the generated API types
+      // Prepare the simplified persona-only configuration
       const dnsConfig: DNSValidationConfig = {
         personaIds: data.personaIds,
-        rotationIntervalSeconds: data.rotationIntervalSeconds,
-        processingSpeedPerMinute: data.processingSpeedPerMinute,
-        batchSize: data.batchSize,
-        retryAttempts: data.retryAttempts,
+        name: data.name,
       };
 
       const configRequest: PhaseConfigureRequest = {
@@ -143,7 +135,7 @@ export default function DNSValidationConfigModal({
 
       toast({
         title: "DNS validation configured",
-        description: "DNS validation phase has been successfully configured.",
+        description: "DNS validation phase has been successfully configured with selected personas.",
       });
 
       onConfigured();
@@ -172,10 +164,28 @@ export default function DNSValidationConfigModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Configuration Name */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Configuration Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter configuration name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Persona Selection */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">DNS Personas</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Select DNS personas for validation. All technical parameters (timeouts, batch sizes, retry attempts) are automatically configured from persona settings.
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {loadingData ? (
@@ -207,7 +217,7 @@ export default function DNSValidationConfigModal({
                             <div>
                               <div className="font-medium">{persona.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                Status: {persona.status}
+                                Status: {persona.status} • Technical parameters auto-configured
                               </div>
                             </div>
                             {watchedPersonaIds.includes(persona.id || '') && (
@@ -224,8 +234,8 @@ export default function DNSValidationConfigModal({
                           return (
                             <Badge key={personaId} variant="secondary" className="flex items-center gap-1">
                               {persona?.name}
-                              <X 
-                                className="h-3 w-3 cursor-pointer" 
+                              <X
+                                className="h-3 w-3 cursor-pointer"
                                 onClick={() => handlePersonaToggle(personaId)}
                               />
                             </Badge>
@@ -235,96 +245,6 @@ export default function DNSValidationConfigModal({
                     )}
                   </>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Processing Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Processing Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="rotationIntervalSeconds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Rotation Interval (seconds)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="60" 
-                            max="3600" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 300)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="processingSpeedPerMinute"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Processing Speed (per minute)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="1000" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 100)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="batchSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Batch Size</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="100" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 50)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="retryAttempts"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Retry Attempts</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="0" 
-                            max="10" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 3)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
               </CardContent>
             </Card>
 

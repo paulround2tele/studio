@@ -178,7 +178,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
         proxyId: proxy.id || '',
         success: response.success === true,
         responseTime,
-        error: response.success === false ? (response.error || response.message) : undefined,
+        error: response.success === false ? (typeof response.error === 'string' ? response.error : response.error?.message) : undefined,
         timestamp: new Date()
       };
 

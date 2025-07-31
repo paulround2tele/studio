@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **attempts** | **number** |  | [optional] [default to undefined]
 **blockedUntil** | **string** |  | [optional] [default to undefined]
 **id** | **number** |  | [optional] [default to undefined]
-**identifier** | **string** | Unique identifier | [optional] [default to undefined]
+**identifier** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **windowStart** | **string** |  | [optional] [default to undefined]
 
 ## Example

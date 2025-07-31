@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { GeneratedDomain } from './generated-domain';
 
 /**
  * 
@@ -22,10 +25,10 @@
 export interface GeneratedDomainsResponse {
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<GeneratedDomain>}
      * @memberof GeneratedDomainsResponse
      */
-    'data'?: Array<string>;
+    'data'?: Array<GeneratedDomain>;
     /**
      * 
      * @type {number}

@@ -11,6 +11,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import type { UUID } from '../uuid-types';
 
 
 
@@ -55,12 +56,12 @@ export interface DnsValidationParams {
      * @type {string}
      * @memberof DnsValidationParams
      */
-    'sourceCampaignId'?: string;
+    'sourceCampaignId'?: UUID;
     /**
      * Unique identifier
      * @type {string}
      * @memberof DnsValidationParams
      */
-    'sourceGenerationCampaignId'?: string;
+    'sourceGenerationCampaignId'?: UUID;
 }
 

@@ -4,12 +4,12 @@
 import CampaignFormV2 from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
 import type { components } from '@/lib/api-client/types';
-import { CampaignsApi } from '@/lib/api-client';
+import { useSingleCampaign } from '@/providers/CampaignDataProvider';
 
 type CampaignDetailsResponse = components['schemas']['CampaignDetailsResponse'];
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 
@@ -19,34 +19,8 @@ function EditCampaignPageContent() {
 
   const campaignId = params.id as string;
   
-  // Backend-driven architecture: Fetch campaign data directly from API
-  const [campaignData, setCampaignData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!campaignId) {
-      return;
-    }
-    
-    // Load campaign data for editing
-    const loadCampaign = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const campaignsApi = new CampaignsApi();
-        const response = await campaignsApi.getCampaignProgressStandalone(campaignId);
-        setCampaignData(response.data);
-      } catch (err) {
-        console.error('Failed to load campaign:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load campaign');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCampaign();
-  }, [campaignId]);
+  // ENTERPRISE FIX: Use global provider for single bulk call across entire app
+  const { campaign: campaignData, loading, error } = useSingleCampaign(campaignId);
 
   if (loading) {
     return (
@@ -63,7 +37,7 @@ function EditCampaignPageContent() {
     );
   }
 
-  if (error || !campaignData?.campaign) {
+  if (error || !campaignData) {
     return (
        <div className="text-center py-10">
         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
@@ -89,7 +63,7 @@ function EditCampaignPageContent() {
             You can configure individual phases through the Phase Dashboard.
           </p>
           <div className="space-x-4">
-            <Button onClick={() => router.push(`/campaigns/${campaignData.campaign.id}`)}>
+            <Button onClick={() => router.push(`/campaigns/${campaignData.id}`)}>
               Go to Campaign Details
             </Button>
             <Button variant="outline" onClick={() => router.push('/campaigns')}>

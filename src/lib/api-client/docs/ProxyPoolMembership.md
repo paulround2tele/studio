@@ -7,8 +7,8 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **addedAt** | **string** |  | [optional] [default to undefined]
 **isActive** | **boolean** |  | [optional] [default to undefined]
-**poolId** | **string** | Unique identifier | [default to undefined]
-**proxyId** | **string** | Unique identifier | [default to undefined]
+**poolId** | **string** | Unique identifier (UUID v4) | [default to undefined]
+**proxyId** | **string** | Unique identifier (UUID v4) | [default to undefined]
 **weight** | **number** |  | [optional] [default to undefined]
 
 ## Example

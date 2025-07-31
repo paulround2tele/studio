@@ -49,13 +49,13 @@ export interface DomainGenerationPhaseConfig {
      * @type {string}
      * @memberof DomainGenerationPhaseConfig
      */
-    'patternType': DomainGenerationPhaseConfigPatternTypeEnum;
+    'patternType': 'prefix' | 'suffix' | 'both';
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof DomainGenerationPhaseConfig
      */
-    'tld': string;
+    'tlds': Array<string>;
     /**
      * 
      * @type {number}
@@ -64,12 +64,10 @@ export interface DomainGenerationPhaseConfig {
     'variableLength': number;
 }
 
-export const DomainGenerationPhaseConfigPatternTypeEnum = {
-    Prefix: 'prefix',
-    Suffix: 'suffix',
-    Both: 'both'
-} as const;
-
-export type DomainGenerationPhaseConfigPatternTypeEnum = typeof DomainGenerationPhaseConfigPatternTypeEnum[keyof typeof DomainGenerationPhaseConfigPatternTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum DomainGenerationPhaseConfigPatternTypeEnum converted to direct string literals in interface
 
 

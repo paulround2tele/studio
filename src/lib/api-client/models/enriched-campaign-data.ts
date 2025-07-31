@@ -16,6 +16,12 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { CampaignData } from './campaign-data';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { GeneratedDomain } from './generated-domain';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { LeadItem } from './lead-item';
 
 /**
  * 
@@ -37,10 +43,10 @@ export interface EnrichedCampaignData {
     'dnsValidatedDomains'?: Array<string>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<GeneratedDomain>}
      * @memberof EnrichedCampaignData
      */
-    'domains'?: Array<string>;
+    'domains'?: Array<GeneratedDomain>;
     /**
      * 
      * @type {Array<object>}
@@ -49,9 +55,9 @@ export interface EnrichedCampaignData {
     'httpKeywordResults'?: Array<object>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<LeadItem>}
      * @memberof EnrichedCampaignData
      */
-    'leads'?: Array<string>;
+    'leads'?: Array<LeadItem>;
 }
 

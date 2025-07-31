@@ -39,7 +39,7 @@ func (w *ModelWrapper) ValidateSchema(outputFile string) error {
 		"KeywordSet":                     &models.KeywordSet{},
 		"Campaign":                       &models.LeadGenerationCampaign{},
 		"DomainGenerationCampaignParams": &models.DomainGenerationCampaignParams{},
-		"DomainGenerationConfigState":    &models.DomainGenerationConfigState{},
+		"DomainGenerationPhaseConfigState":    &models.DomainGenerationPhaseConfigState{},
 		"GeneratedDomain":                &models.GeneratedDomain{},
 		"DNSValidationCampaignParams":    &models.DNSValidationCampaignParams{},
 		"DNSValidationResult":            &models.DNSValidationResult{},

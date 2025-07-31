@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -13,6 +15,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { KeywordRule } from './keyword-rule';
 
 /**
  * 
@@ -33,11 +38,11 @@ export interface KeywordSetResponse {
      */
     'description'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordSetResponse
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {boolean}
@@ -58,10 +63,10 @@ export interface KeywordSetResponse {
     'ruleCount'?: number;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<KeywordRule>}
      * @memberof KeywordSetResponse
      */
-    'rules'?: Array<string>;
+    'rules'?: Array<KeywordRule>;
     /**
      * 
      * @type {string}

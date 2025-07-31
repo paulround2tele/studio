@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -75,11 +77,11 @@ export interface AuthAuditLog {
      */
     'sessionFingerprint'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuthAuditLog
      */
-    'sessionId'?: string;
+    'sessionId'?: UUID;
     /**
      * 
      * @type {string}
@@ -87,10 +89,10 @@ export interface AuthAuditLog {
      */
     'userAgent'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuthAuditLog
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

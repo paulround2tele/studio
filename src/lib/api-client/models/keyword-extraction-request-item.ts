@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,23 +23,23 @@
  */
 export interface KeywordExtractionRequestItem {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordExtractionRequestItem
      */
-    'dnsPersonaId'?: string;
+    'dnsPersonaId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordExtractionRequestItem
      */
-    'httpPersonaId'?: string;
+    'httpPersonaId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordExtractionRequestItem
      */
-    'keywordSetId': string;
+    'keywordSetId': UUID;
     /**
      * 
      * @type {string}

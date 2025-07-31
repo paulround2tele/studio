@@ -206,10 +206,10 @@ type HTTPValidationPhaseConfig struct {
 
 // GenerateDomainsRequest defines request for domain generation
 type GenerateDomainsRequest struct {
-	CampaignID      uuid.UUID               `json:"campaignId" validate:"required"`
-	BatchSize       int                     `json:"batchSize" validate:"required,min=1,max=10000"`
-	StartFromOffset int64                   `json:"startFromOffset"`
-	Config          *DomainGenerationConfig `json:"config" validate:"required"`
+	CampaignID      uuid.UUID                    `json:"campaignId" validate:"required"`
+	BatchSize       int                          `json:"batchSize" validate:"required,min=1,max=10000"`
+	StartFromOffset int64                        `json:"startFromOffset"`
+	Config          *DomainGenerationPhaseConfig `json:"config" validate:"required"`
 }
 
 // DomainGenerationProgress tracks domain generation progress
@@ -225,20 +225,6 @@ type DomainGenerationProgress struct {
 	SuccessfulCount    int       `json:"successfulCount"`
 	FailedCount        int       `json:"failedCount"`
 	ProgressPercentage float64   `json:"progressPercentage"`
-}
-
-// DomainGenerationConfig defines domain generation configuration
-type DomainGenerationConfig struct {
-	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both"`
-	Keywords             []string `json:"keywords" validate:"required,min=1"`
-	TLDs                 []string `json:"tlds" validate:"required,min=1"`
-	MaxResults           int      `json:"maxResults" validate:"required,min=1"`
-	VariableLength       int      `json:"variableLength" validate:"required,min=1"`
-	CharacterSet         string   `json:"characterSet" validate:"required,min=1"`
-	ConstantString       string   `json:"constantString,omitempty"`
-	TLD                  string   `json:"tld" validate:"required,min=3"`
-	NumDomainsToGenerate int      `json:"numDomainsToGenerate" validate:"required,min=1"`
-	BatchSize            int      `json:"batchSize,omitempty"`
 }
 
 // DomainGenerationStats tracks domain generation statistics
@@ -362,14 +348,15 @@ type PhaseConfig struct {
 }
 
 // DomainGenerationPhaseConfig contains domain generation phase parameters
+// @Description Configuration for domain generation phase
 type DomainGenerationPhaseConfig struct {
-	PatternType          string `json:"patternType" validate:"required,oneof=prefix suffix both"`
-	VariableLength       int    `json:"variableLength" validate:"required,gt=0"`
-	CharacterSet         string `json:"characterSet" validate:"required"`
-	ConstantString       string `json:"constantString" validate:"required"`
-	TLD                  string `json:"tld" validate:"required"`
-	NumDomainsToGenerate int64  `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0"`
-	BatchSize            int    `json:"batchSize,omitempty" validate:"omitempty,gt=0"`
+	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
+	VariableLength       int      `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`
+	CharacterSet         string   `json:"characterSet" validate:"required" example:"abcdefghijklmnopqrstuvwxyz" description:"Character set for generation"`
+	ConstantString       string   `json:"constantString" validate:"required" example:"test" description:"Constant string part"`
+	TLDs                 []string `json:"tlds" validate:"required,min=1" example:"[\".com\"]" description:"Array of top-level domains"`
+	NumDomainsToGenerate int      `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0" example:"1000" description:"Number of domains to generate"`
+	BatchSize            int      `json:"batchSize,omitempty" validate:"omitempty,gt=0" example:"100" description:"Batch size for generation"`
 }
 
 // DNSValidationPhaseConfig contains DNS validation phase parameters
@@ -426,6 +413,6 @@ type PhaseStats struct {
 
 // ConfigManagerInterface defines the interface for configuration management
 type ConfigManagerInterface interface {
-	GetDomainGenerationConfig(ctx context.Context, configHash string) (*models.DomainGenerationConfigState, error)
-	UpdateDomainGenerationConfig(ctx context.Context, configHash string, updateFn func(currentState *models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error)) (*models.DomainGenerationConfigState, error)
+	GetDomainGenerationPhaseConfig(ctx context.Context, configHash string) (*models.DomainGenerationPhaseConfigState, error)
+	UpdateDomainGenerationPhaseConfig(ctx context.Context, configHash string, updateFn func(currentState *models.DomainGenerationPhaseConfigState) (*models.DomainGenerationPhaseConfigState, error)) (*models.DomainGenerationPhaseConfigState, error)
 }

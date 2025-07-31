@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/cache"
+	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -239,6 +241,9 @@ type domainGenerationServiceImpl struct {
 	// PF-003: CPU optimization features
 	workerPool            *EfficientWorkerPool
 	cpuOptimizationConfig *CPUOptimizationConfig
+	// PHASE 4 REDIS CACHING: Add Redis cache and optimization config
+	redisCache         cache.RedisCache
+	optimizationConfig *config.OptimizationConfig
 }
 
 // PF-003: CPU Optimization Configuration
@@ -312,6 +317,49 @@ func NewDomainGenerationService(db *sqlx.DB, cs store.CampaignStore, cjs store.C
 	}
 }
 
+// NewDomainGenerationServiceWithCache creates a new DomainGenerationService with Redis cache integration.
+func NewDomainGenerationServiceWithCache(db *sqlx.DB, cs store.CampaignStore, cjs store.CampaignJobStore, as store.AuditLogStore, cm ConfigManagerInterface, redisCache cache.RedisCache, optimizationConfig *config.OptimizationConfig) DomainGenerationService {
+	var workerCoordService *WorkerCoordinationService
+	var txManager interface{}
+
+	if db != nil {
+		// Initialize worker coordination service with a unique worker ID
+		workerID := fmt.Sprintf("domain-gen-worker-%d", time.Now().Unix())
+		workerCoordService = NewWorkerCoordinationService(db, workerID)
+		txManager = struct{}{} // Stub for now
+	}
+
+	// PF-003: Initialize CPU optimization components
+	cpuConfig := DefaultCPUOptimizationConfig()
+
+	// SI-005: Initialize memory management (must be before other components)
+	memoryMonitor := newMemoryMonitor(db, nil, struct{}{})
+	memoryPoolManager := NewMemoryPoolManager(DefaultMemoryPoolConfig(), memoryMonitor)
+
+	// Initialize efficient worker pool
+	workerPool := newEfficientWorkerPool(WorkerPoolConfig{
+		MinWorkers: cpuConfig.MinWorkers,
+		MaxWorkers: cpuConfig.MaxWorkers,
+		QueueSize:  1000,
+	}, db)
+
+	return &domainGenerationServiceImpl{
+		db:                        db,
+		campaignStore:             cs,
+		campaignJobStore:          cjs,
+		auditLogStore:             as,
+		auditLogger:               utils.NewAuditLogger(as),
+		configManager:             cm,
+		workerCoordinationService: workerCoordService,
+		txManager:                 txManager,
+		memoryPoolManager:         memoryPoolManager,
+		cpuOptimizationConfig:     cpuConfig,
+		workerPool:                workerPool,
+		redisCache:                redisCache,
+		optimizationConfig:        optimizationConfig,
+	}
+}
+
 func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req CreateDomainGenerationCampaignRequest) (*models.LeadGenerationCampaign, error) {
 	log.Printf("DomainGenerationService: CreateCampaign called with Name: %s, PatternType: %s", req.Name, req.PatternType)
 	functionStartTime := time.Now().UTC() // Use a distinct name for clarity
@@ -328,7 +376,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 	log.Printf("DEBUG [CreateCampaign]: About to generate hash - PatternType=%s, VariableLength=%d, CharacterSet='%s', ConstantString='%s', TLD='%s'",
 		req.PatternType, req.VariableLength, req.CharacterSet, req.ConstantString, req.TLD)
 
-	hashResult, hashErr := domainexpert.GenerateDomainGenerationConfigHash(tempGenParamsForHash)
+	hashResult, hashErr := domainexpert.GenerateDomainGenerationPhaseConfigHash(tempGenParamsForHash)
 	if hashErr != nil {
 		log.Printf("Error generating config hash for domain generation campaign %s: %v", req.Name, hashErr)
 		return nil, fmt.Errorf("failed to generate config hash: %w", hashErr)
@@ -423,7 +471,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 
 	// Use thread-safe configuration manager to get existing config state
 	if s.configManager != nil {
-		existingConfig, errGetConfig := s.configManager.GetDomainGenerationConfig(ctx, configHashString)
+		existingConfig, errGetConfig := s.configManager.GetDomainGenerationPhaseConfig(ctx, configHashString)
 		if errGetConfig != nil {
 			opErr = fmt.Errorf("failed to get existing domain generation config state: %w", errGetConfig)
 			log.Printf("Error for campaign %s: %v", req.Name, opErr)
@@ -443,7 +491,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		}
 	} else {
 		// Fallback to direct access if config manager not available
-		existingConfigState, errGetState := s.campaignStore.GetDomainGenerationConfigStateByHash(ctx, querier, configHashString)
+		existingConfigState, errGetState := s.campaignStore.GetDomainGenerationPhaseConfigStateByHash(ctx, querier, configHashString)
 		if errGetState == nil && existingConfigState != nil {
 			// Check if we should reset offset to 0 when no existing campaigns use this pattern
 			if existingCampaignCount == 0 {
@@ -637,7 +685,7 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		return nil, opErr
 	}
 
-	globalConfigState := &models.DomainGenerationConfigState{
+	globalConfigState := &models.DomainGenerationPhaseConfigState{
 		ConfigHash:    configHashString,
 		LastOffset:    startingOffset,
 		ConfigDetails: configDetailsBytes,
@@ -646,9 +694,9 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 
 	// Use thread-safe configuration manager to update config state
 	if s.configManager != nil {
-		_, err := s.configManager.UpdateDomainGenerationConfig(ctx, configHashString, func(currentState *models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error) {
+		_, err := s.configManager.UpdateDomainGenerationPhaseConfig(ctx, configHashString, func(currentState *models.DomainGenerationPhaseConfigState) (*models.DomainGenerationPhaseConfigState, error) {
 			// Create or update the global config state
-			updatedState := &models.DomainGenerationConfigState{
+			updatedState := &models.DomainGenerationPhaseConfigState{
 				ConfigHash:    configHashString,
 				LastOffset:    startingOffset,
 				ConfigDetails: configDetailsBytes,
@@ -658,18 +706,18 @@ func (s *domainGenerationServiceImpl) CreateCampaign(ctx context.Context, req Cr
 		})
 		if err != nil {
 			opErr = fmt.Errorf("failed to create/update domain generation config state via config manager: %w", err)
-			log.Printf("Error creating/updating DomainGenerationConfigState for hash %s, campaign %s: %v", configHashString, req.Name, opErr)
+			log.Printf("Error creating/updating DomainGenerationPhaseConfigState for hash %s, campaign %s: %v", configHashString, req.Name, opErr)
 			return nil, opErr
 		}
-		log.Printf("DomainGenerationConfigState created/updated for hash %s, campaign %s via ConfigManager.", configHashString, req.Name)
+		log.Printf("DomainGenerationPhaseConfigState created/updated for hash %s, campaign %s via ConfigManager.", configHashString, req.Name)
 	} else {
 		// Fallback to direct access
-		if err := s.campaignStore.CreateOrUpdateDomainGenerationConfigState(ctx, querier, globalConfigState); err != nil {
+		if err := s.campaignStore.CreateOrUpdateDomainGenerationPhaseConfigState(ctx, querier, globalConfigState); err != nil {
 			opErr = fmt.Errorf("failed to create/update domain generation config state: %w", err)
-			log.Printf("Error creating/updating DomainGenerationConfigState for hash %s, campaign %s: %v", configHashString, req.Name, opErr)
+			log.Printf("Error creating/updating DomainGenerationPhaseConfigState for hash %s, campaign %s: %v", configHashString, req.Name, opErr)
 			return nil, opErr
 		}
-		log.Printf("DomainGenerationConfigState created/updated for hash %s, campaign %s.", configHashString, req.Name)
+		log.Printf("DomainGenerationPhaseConfigState created/updated for hash %s, campaign %s.", configHashString, req.Name)
 	}
 
 	if opErr == nil {
@@ -722,28 +770,43 @@ func (s *domainGenerationServiceImpl) GetCampaignDetails(ctx context.Context, ca
 			CampaignID: campaignID,
 		}
 
-		if patternType, ok := config["patternType"].(string); ok {
+		// Extract nested domain_generation_config from metadata
+		var domainConfig map[string]interface{}
+		if nestedConfig, ok := config["domain_generation_config"]; ok {
+			if domainConfigMap, ok := nestedConfig.(map[string]interface{}); ok {
+				domainConfig = domainConfigMap
+				log.Printf("[DEBUG DomainGen] Found nested domain_generation_config in GetCampaignDetails")
+			} else {
+				log.Printf("[DEBUG DomainGen] domain_generation_config is not a map, using top-level")
+				domainConfig = config // Fallback to top-level for backward compatibility
+			}
+		} else {
+			log.Printf("[DEBUG DomainGen] No domain_generation_config found, using top-level config")
+			domainConfig = config // Fallback to top-level for backward compatibility
+		}
+
+		if patternType, ok := domainConfig["pattern_type"].(string); ok {
 			params.PatternType = patternType
 		}
-		if variableLength, ok := config["variableLength"].(float64); ok {
+		if variableLength, ok := domainConfig["variable_length"].(float64); ok {
 			params.VariableLength = int(variableLength)
 		}
-		if characterSet, ok := config["characterSet"].(string); ok {
+		if characterSet, ok := domainConfig["character_set"].(string); ok {
 			params.CharacterSet = characterSet
 		}
-		if constantString, ok := config["constantString"].(string); ok {
+		if constantString, ok := domainConfig["constant_string"].(string); ok {
 			params.ConstantString = models.StringPtr(constantString)
 		}
-		if tld, ok := config["tld"].(string); ok {
+		if tld, ok := domainConfig["tld"].(string); ok {
 			params.TLD = tld
 		}
-		if numDomains, ok := config["numDomainsToGenerate"].(float64); ok {
+		if numDomains, ok := domainConfig["num_domains_to_generate"].(float64); ok {
 			params.NumDomainsToGenerate = int(numDomains)
 		}
-		if totalCombinations, ok := config["totalPossibleCombinations"].(float64); ok {
+		if totalCombinations, ok := domainConfig["total_possible_combinations"].(float64); ok {
 			params.TotalPossibleCombinations = int64(totalCombinations)
 		}
-		if offset, ok := config["currentOffset"].(float64); ok {
+		if offset, ok := domainConfig["current_offset"].(float64); ok {
 			params.CurrentOffset = int64(offset)
 		}
 
@@ -893,30 +956,78 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			CampaignID: campaignID,
 		}
 
-		if patternType, ok := config["patternType"].(string); ok {
+		log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Parsing config for campaign %s", campaignID)
+
+		// Extract nested domain_generation_config from metadata
+		var domainConfig map[string]interface{}
+		if nestedConfig, ok := config["domain_generation_config"]; ok {
+			if domainConfigMap, ok := nestedConfig.(map[string]interface{}); ok {
+				domainConfig = domainConfigMap
+				log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found nested domain_generation_config")
+			} else {
+				log.Printf("DEBUG [ProcessGenerationCampaignBatch]: domain_generation_config is not a map")
+				domainConfig = config // Fallback to top-level for backward compatibility
+			}
+		} else {
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: No domain_generation_config found, using top-level config")
+			domainConfig = config // Fallback to top-level for backward compatibility
+		}
+
+		if patternType, ok := domainConfig["pattern_type"].(string); ok {
 			genParams.PatternType = patternType
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found pattern_type: %s", patternType)
 		}
-		if variableLength, ok := config["variableLength"].(float64); ok {
+		if variableLength, ok := domainConfig["variable_length"].(float64); ok {
 			genParams.VariableLength = int(variableLength)
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found variable_length: %d", int(variableLength))
 		}
-		if characterSet, ok := config["characterSet"].(string); ok {
+		if characterSet, ok := domainConfig["character_set"].(string); ok {
 			genParams.CharacterSet = characterSet
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found character_set: %s (len=%d)", characterSet, len(characterSet))
 		}
-		if constantString, ok := config["constantString"].(string); ok {
+		if constantString, ok := domainConfig["constant_string"].(string); ok {
 			genParams.ConstantString = models.StringPtr(constantString)
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found constant_string: %s", constantString)
 		}
-		if tld, ok := config["tld"].(string); ok {
-			genParams.TLD = tld
+		// Handle both new TLDs array format and legacy single TLD format
+		var selectedTLD string
+		if tldsInterface, ok := domainConfig["tlds"].([]interface{}); ok {
+			// New format: TLDs array - select first TLD for this batch
+			for _, tldInterface := range tldsInterface {
+				if tld, ok := tldInterface.(string); ok {
+					selectedTLD = tld
+					log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found TLD from array: %s", tld)
+					break // Use first TLD for now - TODO: implement round-robin for multiple TLDs
+				}
+			}
+		} else if tld, ok := domainConfig["tld"].(string); ok {
+			// Legacy format: single TLD
+			selectedTLD = tld
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found legacy single TLD: %s", tld)
 		}
-		if numDomains, ok := config["numDomainsToGenerate"].(float64); ok {
+
+		if selectedTLD != "" {
+			// Normalize TLD format - ensure dot prefix for domain generator
+			normalizedTLD := selectedTLD
+			if !strings.HasPrefix(normalizedTLD, ".") {
+				normalizedTLD = "." + normalizedTLD
+			}
+			genParams.TLD = normalizedTLD
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Using normalized TLD: %s", normalizedTLD)
+		}
+		if numDomains, ok := domainConfig["num_domains_to_generate"].(float64); ok {
 			genParams.NumDomainsToGenerate = int(numDomains)
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found num_domains_to_generate: %d", int(numDomains))
 		}
-		if totalCombinations, ok := config["totalPossibleCombinations"].(float64); ok {
+		if totalCombinations, ok := domainConfig["total_possible_combinations"].(float64); ok {
 			genParams.TotalPossibleCombinations = int64(totalCombinations)
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found total_possible_combinations: %d", int64(totalCombinations))
 		}
-		if offset, ok := config["currentOffset"].(float64); ok {
+		if offset, ok := domainConfig["current_offset"].(float64); ok {
 			genParams.CurrentOffset = int64(offset)
+			log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Found current_offset: %d", int64(offset))
 		}
+		log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Final genParams.VariableLength = %d", genParams.VariableLength)
 	} else {
 		opErr = fmt.Errorf("domain generation parameters not found for campaign %s", campaignID)
 		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
@@ -955,12 +1066,19 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		// Assuming empty string is acceptable if nil for now.
 	}
 
+	// Normalize TLD - ensure it starts with a dot (domain generator requirement)
+	normalizedTLD := genParams.TLD
+	if normalizedTLD != "" && !strings.HasPrefix(normalizedTLD, ".") {
+		normalizedTLD = "." + normalizedTLD
+		log.Printf("DEBUG [ProcessGenerationCampaignBatch]: Normalized TLD from '%s' to '%s'", genParams.TLD, normalizedTLD)
+	}
+
 	domainGen, expertErr := domainexpert.NewDomainGenerator(
 		domainexpert.CampaignPatternType(genParams.PatternType),
 		varLength,
 		charSet,
 		constStr,
-		genParams.TLD,
+		normalizedTLD,
 	)
 	if expertErr != nil {
 		opErr = fmt.Errorf("failed to initialize domain generator for campaign %s: %w. Campaign marked failed", campaignID, expertErr)
@@ -1291,7 +1409,7 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		}
 	}
 
-	hashResultForUpdate, hashErrForUpdate := domainexpert.GenerateDomainGenerationConfigHash(*genParams)
+	hashResultForUpdate, hashErrForUpdate := domainexpert.GenerateDomainGenerationPhaseConfigHash(*genParams)
 	if hashErrForUpdate != nil {
 		opErr = fmt.Errorf("failed to re-generate config hash for updating global state: %w", hashErrForUpdate)
 		log.Printf("[ProcessGenerationCampaignBatch] %v", opErr)
@@ -1308,10 +1426,10 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 	// Use thread-safe configuration manager for atomic offset updates
 	if s.configManager != nil {
 		log.Printf("DEBUG [Global Offset]: Using ConfigManager path for hash %s, updating to offset %d", configHashStringForUpdate, nextGeneratorOffsetAbsolute)
-		_, errUpdateConfig := s.configManager.UpdateDomainGenerationConfig(ctx, configHashStringForUpdate, func(currentState *models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error) {
+		_, errUpdateConfig := s.configManager.UpdateDomainGenerationPhaseConfig(ctx, configHashStringForUpdate, func(currentState *models.DomainGenerationPhaseConfigState) (*models.DomainGenerationPhaseConfigState, error) {
 			log.Printf("DEBUG [Global Offset]: ConfigManager update function called - currentState: %+v", currentState)
 			// Perform atomic update with copy-on-write semantics
-			updatedState := &models.DomainGenerationConfigState{
+			updatedState := &models.DomainGenerationPhaseConfigState{
 				ConfigHash:    configHashStringForUpdate,
 				LastOffset:    nextGeneratorOffsetAbsolute,
 				ConfigDetails: normalizedHashedParamsBytesForUpdate,
@@ -1336,14 +1454,14 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 	} else {
 		log.Printf("DEBUG [Global Offset]: ConfigManager is nil, using direct store access for hash %s", configHashStringForUpdate)
 		// Fallback to direct access
-		globalConfigState := &models.DomainGenerationConfigState{
+		globalConfigState := &models.DomainGenerationPhaseConfigState{
 			ConfigHash:    configHashStringForUpdate,
 			LastOffset:    nextGeneratorOffsetAbsolute,
 			ConfigDetails: normalizedHashedParamsBytesForUpdate,
 			UpdatedAt:     nowTime,
 		}
 		log.Printf("DEBUG [Global Offset]: About to update global offset for hash %s from current offset to %d for campaign %s", configHashStringForUpdate, nextGeneratorOffsetAbsolute, campaignID)
-		if errUpdateGlobalState := s.campaignStore.CreateOrUpdateDomainGenerationConfigState(ctx, querier, globalConfigState); errUpdateGlobalState != nil {
+		if errUpdateGlobalState := s.campaignStore.CreateOrUpdateDomainGenerationPhaseConfigState(ctx, querier, globalConfigState); errUpdateGlobalState != nil {
 			opErr = fmt.Errorf("failed to update global domain generation config state for hash %s to offset %d: %w", configHashStringForUpdate, nextGeneratorOffsetAbsolute, errUpdateGlobalState)
 			log.Printf("ERROR [Global Offset]: %v", opErr)
 			return false, processedInThisBatch, opErr
@@ -1358,6 +1476,13 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 	}
 	newProcessedItems := currentProcessedItems + int64(processedInThisBatch)
 
+	// DEBUG: Log hardcoded progress diagnosis
+	log.Printf("🔍 [HARDCODED PROGRESS DEBUG] Campaign %s progress calculation:", campaignID)
+	log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - newProcessedItems: %d", newProcessedItems)
+	log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - genParams.NumDomainsToGenerate: %d", genParams.NumDomainsToGenerate)
+	log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - genParams.CurrentOffset: %d", genParams.CurrentOffset)
+	log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - genParams.TotalPossibleCombinations: %d", genParams.TotalPossibleCombinations)
+
 	// MULTI-PHASE PROGRESS: Generation phase covers 0-33% of total campaign progress
 	var progressPercentage float64
 	var targetItems int64
@@ -1367,14 +1492,23 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		// Scale generation progress to 0-33% range
 		generationProgress := (float64(newProcessedItems) / float64(targetItems)) * 100
 		progressPercentage = (generationProgress / 100.0) * 33.0 // Scale to 33%
+
+		log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - Target mode: NumDomainsToGenerate")
+		log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - generationProgress: %.2f%%", generationProgress)
+		log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - scaled progressPercentage: %.2f%%", progressPercentage)
 	} else {
 		targetItems = genParams.TotalPossibleCombinations
 		if genParams.TotalPossibleCombinations > 0 {
 			// Scale generation progress to 0-33% range
 			generationProgress := (float64(genParams.CurrentOffset) / float64(genParams.TotalPossibleCombinations)) * 100
 			progressPercentage = (generationProgress / 100.0) * 33.0 // Scale to 33%
+
+			log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - Target mode: TotalPossibleCombinations")
+			log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - generationProgress: %.2f%%", generationProgress)
+			log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - scaled progressPercentage: %.2f%%", progressPercentage)
 		} else {
 			progressPercentage = 33.0 // Generation complete
+			log.Printf("🔍 [HARDCODED PROGRESS DEBUG] - Target mode: Generation complete (33.0%%)")
 		}
 	}
 	if progressPercentage > 33.0 {
@@ -1779,8 +1913,8 @@ func NewConfigManagerWithConfig(db *sqlx.DB, campaignStore interface{}, stateCoo
 	return NewConfigManager(db)
 }
 
-// GetDomainGenerationConfig gets domain generation configuration by hash (signature corrected)
-func (cm *ConfigManager) GetDomainGenerationConfig(ctx context.Context, configHash string) (*models.DomainGenerationConfigState, error) {
+// GetDomainGenerationPhaseConfig gets domain generation configuration by hash (signature corrected)
+func (cm *ConfigManager) GetDomainGenerationPhaseConfig(ctx context.Context, configHash string) (*models.DomainGenerationPhaseConfigState, error) {
 	if cm.db == nil {
 		return nil, fmt.Errorf("database connection is nil")
 	}
@@ -1792,7 +1926,7 @@ func (cm *ConfigManager) GetDomainGenerationConfig(ctx context.Context, configHa
 		WHERE config_hash = $1
 	`
 
-	var configState models.DomainGenerationConfigState
+	var configState models.DomainGenerationPhaseConfigState
 	err := cm.db.QueryRowContext(ctx, query, configHash).Scan(
 		&configState.ConfigHash,
 		&configState.LastOffset,
@@ -1814,8 +1948,8 @@ func (cm *ConfigManager) GetDomainGenerationConfig(ctx context.Context, configHa
 	return &configState, nil
 }
 
-// UpdateDomainGenerationConfig updates domain generation configuration with atomic update function
-func (cm *ConfigManager) UpdateDomainGenerationConfig(ctx context.Context, configHash string, updateFn func(currentState *models.DomainGenerationConfigState) (*models.DomainGenerationConfigState, error)) (*models.DomainGenerationConfigState, error) {
+// UpdateDomainGenerationPhaseConfig updates domain generation configuration with atomic update function
+func (cm *ConfigManager) UpdateDomainGenerationPhaseConfig(ctx context.Context, configHash string, updateFn func(currentState *models.DomainGenerationPhaseConfigState) (*models.DomainGenerationPhaseConfigState, error)) (*models.DomainGenerationPhaseConfigState, error) {
 	if cm.db == nil {
 		return nil, fmt.Errorf("database connection is nil")
 	}
@@ -1834,7 +1968,7 @@ func (cm *ConfigManager) UpdateDomainGenerationConfig(ctx context.Context, confi
 	}()
 
 	// Get current state within transaction
-	currentState, err := cm.GetDomainGenerationConfig(ctx, configHash)
+	currentState, err := cm.GetDomainGenerationPhaseConfig(ctx, configHash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get current state: %w", err)
 	}
@@ -1901,12 +2035,24 @@ func (s *domainGenerationServiceImpl) GenerateDomains(ctx context.Context, req G
 	}
 
 	// Create domain generator using sophisticated domainexpert logic
+	// Use first TLD from the array for domain generation
+	var tld string
+	if len(req.Config.TLDs) > 0 {
+		tld = req.Config.TLDs[0]
+		// Ensure TLD starts with dot for domain generator
+		if !strings.HasPrefix(tld, ".") {
+			tld = "." + tld
+		}
+	} else {
+		return fmt.Errorf("no TLDs provided in domain configuration")
+	}
+
 	domainGen, err := domainexpert.NewDomainGenerator(
 		domainexpert.CampaignPatternType(req.Config.PatternType),
 		req.Config.VariableLength,
 		req.Config.CharacterSet,
 		req.Config.ConstantString,
-		req.Config.TLD,
+		tld,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create domain generator: %w", err)
@@ -2264,7 +2410,7 @@ func (s *domainGenerationServiceImpl) CancelGeneration(ctx context.Context, camp
 }
 
 // ValidateGenerationConfig validates domain generation configuration
-func (s *domainGenerationServiceImpl) ValidateGenerationConfig(ctx context.Context, config DomainGenerationConfig) error {
+func (s *domainGenerationServiceImpl) ValidateGenerationConfig(ctx context.Context, config DomainGenerationPhaseConfig) error {
 	if config.VariableLength <= 0 {
 		return fmt.Errorf("variable length must be positive")
 	}
@@ -2273,12 +2419,32 @@ func (s *domainGenerationServiceImpl) ValidateGenerationConfig(ctx context.Conte
 		return fmt.Errorf("character set cannot be empty")
 	}
 
-	if config.TLD == "" {
-		return fmt.Errorf("TLD cannot be empty")
+	if len(config.TLDs) == 0 {
+		return fmt.Errorf("TLDs cannot be empty")
 	}
 
-	if !strings.HasPrefix(config.TLD, ".") {
-		return fmt.Errorf("TLD must start with a dot")
+	// Validate each TLD
+	for _, tld := range config.TLDs {
+		if tld == "" {
+			return fmt.Errorf("TLD cannot be empty")
+		}
+
+		normalizedTLD := tld
+		if !strings.HasPrefix(tld, ".") {
+			normalizedTLD = "." + tld
+		}
+
+		// Test each TLD with domain generator
+		_, err := domainexpert.NewDomainGenerator(
+			domainexpert.CampaignPatternType(config.PatternType),
+			config.VariableLength,
+			config.CharacterSet,
+			config.ConstantString,
+			normalizedTLD,
+		)
+		if err != nil {
+			return fmt.Errorf("invalid TLD %s: %w", tld, err)
+		}
 	}
 
 	validPatternTypes := map[string]bool{
@@ -2291,16 +2457,7 @@ func (s *domainGenerationServiceImpl) ValidateGenerationConfig(ctx context.Conte
 		return fmt.Errorf("invalid pattern type: %s", config.PatternType)
 	}
 
-	// Test domain generator creation
-	_, err := domainexpert.NewDomainGenerator(
-		domainexpert.CampaignPatternType(config.PatternType),
-		config.VariableLength,
-		config.CharacterSet,
-		config.ConstantString,
-		config.TLD,
-	)
-
-	return err
+	return nil
 }
 
 // GetGenerationStats returns statistics about domain generation

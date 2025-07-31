@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -39,11 +41,11 @@ export interface DNSValidationResult {
      */
     'createdAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof DNSValidationResult
      */
-    'dnsCampaignId': string;
+    'dnsCampaignId': UUID;
     /**
      * 
      * @type {object}
@@ -57,17 +59,17 @@ export interface DNSValidationResult {
      */
     'domainName': string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof DNSValidationResult
      */
-    'generatedDomainId'?: string;
+    'generatedDomainId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof DNSValidationResult
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -75,16 +77,16 @@ export interface DNSValidationResult {
      */
     'lastCheckedAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof DNSValidationResult
      */
-    'validatedByPersonaId'?: string;
+    'validatedByPersonaId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof DNSValidationResult
      */
-    'validationStatus': string;
+    'validationStatus': UUID;
 }
 

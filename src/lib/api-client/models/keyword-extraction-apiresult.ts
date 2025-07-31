@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,11 +23,11 @@
  */
 export interface KeywordExtractionAPIResult {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordExtractionAPIResult
      */
-    'dnsPersonaIdUsed'?: string;
+    'dnsPersonaIdUsed'?: UUID;
     /**
      * 
      * @type {string}
@@ -39,17 +41,17 @@ export interface KeywordExtractionAPIResult {
      */
     'finalUrl'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordExtractionAPIResult
      */
-    'httpPersonaIdUsed'?: string;
+    'httpPersonaIdUsed'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordExtractionAPIResult
      */
-    'keywordSetIdUsed'?: string;
+    'keywordSetIdUsed'?: UUID;
     /**
      * 
      * @type {Array<string>}
@@ -57,11 +59,11 @@ export interface KeywordExtractionAPIResult {
      */
     'matches'?: Array<string>;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordExtractionAPIResult
      */
-    'proxyIdUsed'?: string;
+    'proxyIdUsed'?: UUID;
     /**
      * 
      * @type {number}

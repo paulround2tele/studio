@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 **email** | **string** |  | [optional] [default to undefined]
 **emailVerified** | **boolean** |  | [optional] [default to undefined]
 **firstName** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **isActive** | **boolean** |  | [optional] [default to undefined]
 **isLocked** | **boolean** |  | [optional] [default to undefined]
 **lastLoginAt** | **string** |  | [optional] [default to undefined]

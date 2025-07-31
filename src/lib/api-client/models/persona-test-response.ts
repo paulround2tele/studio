@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -30,11 +32,11 @@ export interface PersonaTestResponse {
      */
     'message'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof PersonaTestResponse
      */
-    'personaId'?: string;
+    'personaId'?: UUID;
     /**
      * 
      * @type {string}

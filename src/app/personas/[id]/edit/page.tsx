@@ -54,9 +54,10 @@ function EditPersonaPageContent() {
             setPersona(response.data as components['schemas']['Persona']);
           }
         } else {
-          setError(response.error || "Persona not found.");
+          const errorMessage = typeof response.error === 'string' ? response.error : response.error?.message || "Persona not found.";
+          setError(errorMessage);
           setPersona(null);
-          toast({ title: "Error Loading Persona", description: response.message || "Persona not found.", variant: "destructive" });
+          toast({ title: "Error Loading Persona", description: errorMessage, variant: "destructive" });
         }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Failed to load persona data.";

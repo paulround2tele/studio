@@ -624,7 +624,37 @@ type DoHJSONResponse struct {
 	Answer []DoHAnswer `json:"Answer,omitempty"`
 }
 
-func (dv *DNSValidator) ValidateDomains(domains []string) []ValidationResult {
+// ValidateDomainsBulk processes multiple domains in batches with concurrent DNS queries and advanced bulk optimizations
+func (dv *DNSValidator) ValidateDomainsBulk(domains []string, ctx context.Context, batchSize int) []ValidationResult {
+	if len(domains) == 0 {
+		return []ValidationResult{}
+	}
+
+	// Validate batchSize parameter
+	if batchSize <= 0 {
+		batchSize = dv.config.MaxDomainsPerRequest
+		if batchSize <= 0 {
+			batchSize = 100 // Default batch size
+		}
+	}
+
+	// Check if context is already cancelled
+	select {
+	case <-ctx.Done():
+		results := make([]ValidationResult, len(domains))
+		for i, domain := range domains {
+			results[i] = ValidationResult{
+				Domain:    domain,
+				Status:    "Error",
+				Error:     "Context cancelled before validation",
+				Timestamp: time.Now().Format(time.RFC3339),
+			}
+		}
+		return results
+	default:
+	}
+
+	// Check if resolvers are available
 	noResolversAvailable := false
 	if dv.config.ResolverStrategy == "weighted_rotation" {
 		if len(dv.weightedResolvers) == 0 && len(dv.activeResolvers) == 0 {
@@ -642,10 +672,65 @@ func (dv *DNSValidator) ValidateDomains(domains []string) []ValidationResult {
 		}
 		return results
 	}
+
+	results := make([]ValidationResult, len(domains))
+
+	// Process domains in batches for better resource management and performance
+	for batchStart := 0; batchStart < len(domains); batchStart += batchSize {
+		// Check if context is cancelled before processing each batch
+		select {
+		case <-ctx.Done():
+			// Fill remaining results with cancellation errors
+			for i := batchStart; i < len(domains); i++ {
+				results[i] = ValidationResult{
+					Domain:    domains[i],
+					Status:    "Error",
+					Error:     "Context cancelled during batch processing",
+					Timestamp: time.Now().Format(time.RFC3339),
+				}
+			}
+			return results
+		default:
+		}
+
+		batchEnd := batchStart + batchSize
+		if batchEnd > len(domains) {
+			batchEnd = len(domains)
+		}
+
+		currentBatch := domains[batchStart:batchEnd]
+		batchResults := dv.processDomainBatch(currentBatch, ctx)
+
+		// Copy batch results to main results array
+		copy(results[batchStart:batchEnd], batchResults)
+	}
+
+	return results
+}
+
+// processDomainBatch handles a single batch of domains with optimized concurrent processing
+func (dv *DNSValidator) processDomainBatch(domains []string, ctx context.Context) []ValidationResult {
 	results := make([]ValidationResult, len(domains))
 	var wg sync.WaitGroup
 	batchSemaphore := make(chan struct{}, dv.config.MaxConcurrentGoroutines)
+
 	for i, domain := range domains {
+		// Check if context is cancelled before starting each domain
+		select {
+		case <-ctx.Done():
+			// Fill remaining results with cancellation errors
+			for j := i; j < len(domains); j++ {
+				results[j] = ValidationResult{
+					Domain:    domains[j],
+					Status:    "Error",
+					Error:     "Context cancelled during domain processing",
+					Timestamp: time.Now().Format(time.RFC3339),
+				}
+			}
+			return results
+		default:
+		}
+
 		wg.Add(1)
 		batchSemaphore <- struct{}{}
 		go func(idx int, d string) {
@@ -654,25 +739,18 @@ func (dv *DNSValidator) ValidateDomains(domains []string) []ValidationResult {
 
 			var domainOverallTimeout time.Duration
 			if dv.config.ResolverStrategy == "sequential_failover" && len(dv.activeResolvers) > 0 {
-				// For sequential failover, the timeout should accommodate all potential retries.
-				// Each attempt (performSingleDomainAttempt) has its own internal logic tied to QueryTimeout for A/AAAA.
-				// The ValidateSingleDomain's loop uses the context passed to it.
-				// So, this domainOverallTimeout should be for the entire ValidateSingleDomain call.
+				// For sequential failover, the timeout should accommodate all potential retries
 				numAttempts := len(dv.activeResolvers)
-				// A rough estimate: (QueryTimeout + QueryDelayMax) per attempt + some buffer
 				domainOverallTimeout = (dv.config.QueryTimeout+dv.config.QueryDelayMax)*time.Duration(numAttempts) + (time.Second * 5)
 			} else {
-				// For other strategies, it's effectively one attempt for ValidateSingleDomain.
-				// performSingleDomainAttempt will do A and AAAA queries, potentially in parallel.
-				// QueryTimeout is for a single DNS query (e.g., one A record lookup).
-				// So, allow for A, AAAA, plus delay.
+				// For other strategies, it's effectively one attempt for ValidateSingleDomain
 				domainOverallTimeout = dv.config.QueryTimeout*2 + dv.config.QueryDelayMax + (time.Second * 2)
 			}
-			if domainOverallTimeout <= 0 { // Fallback if config values are zero or result in non-positive
+			if domainOverallTimeout <= 0 {
 				domainOverallTimeout = 30 * time.Second
 			}
 
-			domainCtx, domainCancel := context.WithTimeout(context.Background(), domainOverallTimeout)
+			domainCtx, domainCancel := context.WithTimeout(ctx, domainOverallTimeout)
 			defer domainCancel()
 
 			results[idx] = dv.ValidateSingleDomain(d, domainCtx)

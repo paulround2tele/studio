@@ -7,10 +7,10 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **bytesFreed** | **number** |  | [optional] [default to undefined]
 **cacheName** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
-**invalidatedAt** | **string** | Unique identifier | [optional] [default to undefined]
-**invalidationReason** | **string** | Unique identifier | [optional] [default to undefined]
-**invalidationType** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**invalidatedAt** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**invalidationReason** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**invalidationType** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **keysInvalidated** | **number** |  | [optional] [default to undefined]
 **operationContext** | **object** |  | [optional] [default to undefined]
 

@@ -6,12 +6,12 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **bottleneckDetected** | **boolean** |  | [optional] [default to undefined]
-**campaignId** | **string** | Unique identifier | [optional] [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **campaignPhase** | **string** |  | [optional] [default to undefined]
 **component** | **string** |  | [optional] [default to undefined]
 **currentUsage** | **number** |  | [optional] [default to undefined]
 **efficiencyScore** | **number** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **maxCapacity** | **number** |  | [optional] [default to undefined]
 **optimizationApplied** | **object** |  | [optional] [default to undefined]
 **recordedAt** | **string** |  | [optional] [default to undefined]

@@ -296,5 +296,166 @@ func (s *keywordStorePostgres) DeleteKeywordRulesBySetID(ctx context.Context, ex
 	return err
 }
 
+// GetKeywordSetsByIDs retrieves multiple keyword sets by their IDs in a single batch query.
+// Results are ordered by the input ID slice for predictable ordering.
+// This method optimizes N+1 query patterns by fetching all keyword sets at once.
+func (s *keywordStorePostgres) GetKeywordSetsByIDs(ctx context.Context, exec store.Querier, ids []uuid.UUID) ([]*models.KeywordSet, error) {
+	// Input validation
+	if len(ids) == 0 {
+		return []*models.KeywordSet{}, nil
+	}
+
+	// Convert UUIDs to strings for array_position ordering
+	idStrings := make([]string, len(ids))
+	for i, id := range ids {
+		idStrings[i] = id.String()
+	}
+
+	// Use PostgreSQL batch query with IN clause and ordered results
+	// array_position ensures results are returned in the same order as input IDs
+	query := `SELECT id, name, description, is_enabled, created_at, updated_at
+			  FROM keyword_sets
+			  WHERE id = ANY($1)
+			  ORDER BY array_position($1, id::text)`
+
+	keywordSets := []*models.KeywordSet{}
+	err := exec.SelectContext(ctx, &keywordSets, query, pq.Array(idStrings))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get keyword sets by IDs: %w", err)
+	}
+
+	return keywordSets, nil
+}
+
+// GetKeywordSetsWithKeywordsByIDs retrieves multiple keyword sets with their associated keywords
+// in a single batch query using JOINs. This method optimizes complex N+1 patterns where
+// keyword set data and related keywords are needed together.
+func (s *keywordStorePostgres) GetKeywordSetsWithKeywordsByIDs(ctx context.Context, exec store.Querier, ids []uuid.UUID) ([]*models.KeywordSet, error) {
+	// Input validation
+	if len(ids) == 0 {
+		return []*models.KeywordSet{}, nil
+	}
+
+	// Convert UUIDs to strings for array_position ordering
+	idStrings := make([]string, len(ids))
+	for i, id := range ids {
+		idStrings[i] = id.String()
+	}
+
+	// First, get the keyword sets in batch
+	keywordSets, err := s.GetKeywordSetsByIDs(ctx, exec, ids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get keyword sets: %w", err)
+	}
+
+	if len(keywordSets) == 0 {
+		return keywordSets, nil
+	}
+
+	// Extract keyword set IDs for batch keyword retrieval
+	keywordSetIDs := make([]uuid.UUID, len(keywordSets))
+	for i, ks := range keywordSets {
+		keywordSetIDs[i] = ks.ID
+	}
+
+	// Get all keywords for these keyword sets in batch
+	keywords, err := s.GetKeywordsByKeywordSetIDs(ctx, exec, keywordSetIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get keywords for keyword sets: %w", err)
+	}
+
+	// Group keywords by keyword set ID for efficient lookup
+	keywordsBySetID := make(map[uuid.UUID][]models.KeywordRule)
+	for _, keyword := range keywords {
+		keywordsBySetID[keyword.KeywordSetID] = append(keywordsBySetID[keyword.KeywordSetID], *keyword)
+	}
+
+	// Attach keywords to their respective keyword sets
+	for _, keywordSet := range keywordSets {
+		if setKeywords, exists := keywordsBySetID[keywordSet.ID]; exists {
+			keywordSet.Rules = &setKeywords
+		} else {
+			// Initialize empty slice if no keywords found
+			emptyRules := []models.KeywordRule{}
+			keywordSet.Rules = &emptyRules
+		}
+	}
+
+	return keywordSets, nil
+}
+
+// GetKeywordsByKeywordSetIDs retrieves keywords for multiple keyword sets in a single batch query.
+// This method optimizes N+1 patterns when loading keywords for multiple keyword sets.
+func (s *keywordStorePostgres) GetKeywordsByKeywordSetIDs(ctx context.Context, exec store.Querier, keywordSetIDs []uuid.UUID) ([]*models.KeywordRule, error) {
+	// Input validation
+	if len(keywordSetIDs) == 0 {
+		return []*models.KeywordRule{}, nil
+	}
+
+	// Convert UUIDs to strings for array operation
+	idStrings := make([]string, len(keywordSetIDs))
+	for i, id := range keywordSetIDs {
+		idStrings[i] = id.String()
+	}
+
+	// Batch query for keywords by keyword set IDs
+	// Order by keyword_set_id to maintain consistent grouping
+	query := `SELECT id, keyword_set_id, pattern, rule_type, is_case_sensitive, category, context_chars, created_at, updated_at
+			  FROM keyword_rules
+			  WHERE keyword_set_id = ANY($1)
+			  ORDER BY keyword_set_id, created_at ASC`
+
+	var keywords []models.KeywordRule
+	err := exec.SelectContext(ctx, &keywords, query, pq.Array(idStrings))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get keywords by keyword set IDs: %w", err)
+	}
+
+	// Convert to pointer slice to match interface
+	keywordPtrs := make([]*models.KeywordRule, len(keywords))
+	for i := range keywords {
+		keywordPtrs[i] = &keywords[i]
+	}
+
+	return keywordPtrs, nil
+}
+
+// GetKeywordsByIDs retrieves multiple keywords by their IDs in a single batch query.
+// Results are ordered by the input ID slice for predictable ordering.
+// This method optimizes N+1 query patterns by fetching all keywords at once.
+func (s *keywordStorePostgres) GetKeywordsByIDs(ctx context.Context, exec store.Querier, ids []uuid.UUID) ([]*models.KeywordRule, error) {
+	// Input validation
+	if len(ids) == 0 {
+		return []*models.KeywordRule{}, nil
+	}
+
+	// Convert UUIDs to strings for array_position ordering
+	idStrings := make([]string, len(ids))
+	for i, id := range ids {
+		idStrings[i] = id.String()
+	}
+
+	// Use PostgreSQL batch query with IN clause and ordered results
+	// array_position ensures results are returned in the same order as input IDs
+	query := `SELECT id, keyword_set_id, pattern, rule_type, is_case_sensitive, category, context_chars, created_at, updated_at
+			  FROM keyword_rules
+			  WHERE id = ANY($1)
+			  ORDER BY array_position($1, id::text)`
+
+	var keywords []models.KeywordRule
+	err := exec.SelectContext(ctx, &keywords, query, pq.Array(idStrings))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get keywords by IDs: %w", err)
+	}
+
+	// Convert to pointer slice to match interface
+	keywordPtrs := make([]*models.KeywordRule, len(keywords))
+	for i := range keywords {
+		keywordPtrs[i] = &keywords[i]
+	}
+
+	return keywordPtrs, nil
+}
+
 // Ensure keywordStorePostgres implements store.KeywordStore
 var _ store.KeywordStore = (*keywordStorePostgres)(nil)

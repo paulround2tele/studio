@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -72,10 +74,10 @@ export interface CreateCampaignRequest {
      */
     'name': string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CreateCampaignRequest
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

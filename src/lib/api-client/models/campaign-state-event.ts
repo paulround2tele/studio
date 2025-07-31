@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,17 +23,17 @@
  */
 export interface CampaignStateEvent {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignStateEvent
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignStateEvent
      */
-    'correlationId'?: string;
+    'correlationId'?: UUID;
     /**
      * 
      * @type {object}
@@ -45,11 +47,11 @@ export interface CampaignStateEvent {
      */
     'eventType'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignStateEvent
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}

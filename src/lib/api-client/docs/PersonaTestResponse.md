@@ -6,7 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **message** | **string** |  | [optional] [default to undefined]
-**personaId** | **string** | Unique identifier | [optional] [default to undefined]
+**personaId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **personaName** | **string** |  | [optional] [default to undefined]
 **personaType** | **string** |  | [optional] [default to undefined]
 **results** | [**PersonaTestResultData**](PersonaTestResultData.md) |  | [optional] [default to undefined]

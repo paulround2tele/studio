@@ -20,6 +20,7 @@ type AppConfig struct {
 	RateLimiter    RateLimiterConfig   `json:"rateLimiter"`
 	ProxyManager   ProxyManagerConfig  `json:"proxyManager"`
 	Features       FeatureFlags        `json:"features"`
+	Optimization   OptimizationConfig  `json:"optimization"` // N+1 Optimization configuration
 	DNSPersonas    []DNSPersona        `json:"dnsPersonas"`
 	HTTPPersonas   []HTTPPersona       `json:"httpPersonas"`
 	Proxies        []ProxyConfigEntry  `json:"proxies"`

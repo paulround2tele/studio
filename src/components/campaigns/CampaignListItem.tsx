@@ -95,12 +95,15 @@ const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
 
 // Memoized status badge info generation
 const getStatusBadgeInfo = (campaign: CampaignViewModel): { text: string, variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element } => {
-  if ((campaign.currentPhase as any) === "completed") return { text: "completed", variant: "default", icon: <CheckCircle className="h-4 w-4 text-green-500" /> };
-  if ((campaign.phaseStatus as any) === "failed") return { text: `Failed: ${campaign.currentPhase || 'Unknown'}`, variant: "destructive", icon: <AlertTriangle className="h-4 w-4 text-destructive" /> };
-  if ((campaign.phaseStatus as any) === "paused") return { text: `Paused: ${campaign.currentPhase || 'Unknown'}`, variant: "outline", icon: <PauseCircle className="h-4 w-4 text-muted-foreground" /> };
-  if ((campaign.phaseStatus as any) === "in_progress") return { text: `Active: ${campaign.currentPhase || 'Unknown'}`, variant: "secondary", icon: <Loader2 className="h-4 w-4 text-blue-500 animate-spin" /> };
-  if (!campaign.currentPhase || (campaign.phaseStatus as any) === "pending") return { text: "Pending Start", variant: "outline", icon: <Play className="h-4 w-4 text-muted-foreground" /> };
-  if ((campaign.phaseStatus as any) === "completed") {
+  // Check if campaign is fully completed (completed analysis phase = campaign done)
+  if (campaign.phaseStatus === "completed" && campaign.currentPhase === "analysis") {
+    return { text: "Campaign Completed", variant: "default", icon: <CheckCircle className="h-4 w-4 text-green-500" /> };
+  }
+  if (campaign.phaseStatus === "failed") return { text: `Failed: ${campaign.currentPhase || 'Unknown'}`, variant: "destructive", icon: <AlertTriangle className="h-4 w-4 text-destructive" /> };
+  if (campaign.phaseStatus === "paused") return { text: `Paused: ${campaign.currentPhase || 'Unknown'}`, variant: "outline", icon: <PauseCircle className="h-4 w-4 text-muted-foreground" /> };
+  if (campaign.phaseStatus === "in_progress") return { text: `Active: ${campaign.currentPhase || 'Unknown'}`, variant: "secondary", icon: <Loader2 className="h-4 w-4 text-blue-500 animate-spin" /> };
+  if (!campaign.currentPhase || campaign.phaseStatus === "not_started") return { text: "Pending Start", variant: "outline", icon: <Play className="h-4 w-4 text-muted-foreground" /> };
+  if (campaign.phaseStatus === "completed") {
      // Determine next phase in unified workflow
      const getNextPhaseInWorkflow = (currentPhase: string): string | null => {
        const phaseOrder = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
@@ -168,9 +171,9 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
 
   // Memoize conditional rendering flags
   const showActions = useMemo(() => ({
-    showPause: (campaign.phaseStatus as any) === 'InProgress' && onPauseCampaign,
-    showResume: (campaign.phaseStatus as any) === 'paused' && onResumeCampaign,
-    showStop: ((campaign.phaseStatus as any) === 'InProgress' || (campaign.phaseStatus as any) === 'paused') && onStopCampaign
+    showPause: campaign.phaseStatus === 'in_progress' && onPauseCampaign,
+    showResume: campaign.phaseStatus === 'paused' && onResumeCampaign,
+    showStop: (campaign.phaseStatus === 'in_progress' || campaign.phaseStatus === 'paused') && onStopCampaign
   }), [campaign.phaseStatus, onPauseCampaign, onResumeCampaign, onStopCampaign]);
 
   return (

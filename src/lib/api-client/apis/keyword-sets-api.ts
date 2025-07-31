@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { APIResponse } from '../models';
+// @ts-ignore
 import type { CreateKeywordSetRequest } from '../models';
 // @ts-ignore
 import type { CreateLeadGenerationCampaign200Response } from '../models';
@@ -144,6 +146,40 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
             };
         },
         /**
+         * Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
+         * @summary Get keyword set with high-performance rules loading
+         * @param {string} id Keyword Set ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getKeywordSetWithRules: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('getKeywordSetWithRules', 'id', id)
+            const localVarPath = `/api/v2/keyword-sets/{id}/rules`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Retrieve a list of keyword sets with optional filtering
          * @summary List keyword sets
          * @param {number} [limit] Maximum number of results
@@ -180,6 +216,71 @@ export const KeywordSetsApiAxiosParamCreator = function (configuration?: Configu
 
             if (isEnabled !== undefined) {
                 localVarQueryParameter['isEnabled'] = isEnabled;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Advanced querying for keyword rule management across sets with multiple filter options
+         * @summary Query keyword rules with advanced filtering
+         * @param {string} [keywordSetId] Filter by keyword set ID
+         * @param {string} [ruleType] Filter by rule type
+         * @param {string} [category] Filter by category
+         * @param {boolean} [isCaseSensitive] Filter by case sensitivity
+         * @param {string} [pattern] Search pattern in rule patterns (partial match)
+         * @param {number} [limit] Maximum number of results
+         * @param {number} [offset] Number of results to skip
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        queryKeywordRules: async (keywordSetId?: string, ruleType?: string, category?: string, isCaseSensitive?: boolean, pattern?: string, limit?: number, offset?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v2/keyword-rules`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (keywordSetId !== undefined) {
+                localVarQueryParameter['keyword_set_id'] = keywordSetId;
+            }
+
+            if (ruleType !== undefined) {
+                localVarQueryParameter['rule_type'] = ruleType;
+            }
+
+            if (category !== undefined) {
+                localVarQueryParameter['category'] = category;
+            }
+
+            if (isCaseSensitive !== undefined) {
+                localVarQueryParameter['is_case_sensitive'] = isCaseSensitive;
+            }
+
+            if (pattern !== undefined) {
+                localVarQueryParameter['pattern'] = pattern;
+            }
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
             }
 
 
@@ -283,6 +384,19 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
+         * @summary Get keyword set with high-performance rules loading
+         * @param {string} id Keyword Set ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getKeywordSetWithRules(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getKeywordSetWithRules(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.getKeywordSetWithRules']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Retrieve a list of keyword sets with optional filtering
          * @summary List keyword sets
          * @param {number} [limit] Maximum number of results
@@ -296,6 +410,25 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listKeywordSets(limit, offset, includeRules, isEnabled, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.listKeywordSets']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Advanced querying for keyword rule management across sets with multiple filter options
+         * @summary Query keyword rules with advanced filtering
+         * @param {string} [keywordSetId] Filter by keyword set ID
+         * @param {string} [ruleType] Filter by rule type
+         * @param {string} [category] Filter by category
+         * @param {boolean} [isCaseSensitive] Filter by case sensitivity
+         * @param {string} [pattern] Search pattern in rule patterns (partial match)
+         * @param {number} [limit] Maximum number of results
+         * @param {number} [offset] Number of results to skip
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async queryKeywordRules(keywordSetId?: string, ruleType?: string, category?: string, isCaseSensitive?: boolean, pattern?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.queryKeywordRules(keywordSetId, ruleType, category, isCaseSensitive, pattern, limit, offset, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.queryKeywordRules']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -353,6 +486,16 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
             return localVarFp.getKeywordSet(setId, options).then((request) => request(axios, basePath));
         },
         /**
+         * Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
+         * @summary Get keyword set with high-performance rules loading
+         * @param {string} id Keyword Set ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getKeywordSetWithRules(id: string, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.getKeywordSetWithRules(id, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Retrieve a list of keyword sets with optional filtering
          * @summary List keyword sets
          * @param {number} [limit] Maximum number of results
@@ -364,6 +507,22 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
          */
         listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
             return localVarFp.listKeywordSets(limit, offset, includeRules, isEnabled, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Advanced querying for keyword rule management across sets with multiple filter options
+         * @summary Query keyword rules with advanced filtering
+         * @param {string} [keywordSetId] Filter by keyword set ID
+         * @param {string} [ruleType] Filter by rule type
+         * @param {string} [category] Filter by category
+         * @param {boolean} [isCaseSensitive] Filter by case sensitivity
+         * @param {string} [pattern] Search pattern in rule patterns (partial match)
+         * @param {number} [limit] Maximum number of results
+         * @param {number} [offset] Number of results to skip
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        queryKeywordRules(keywordSetId?: string, ruleType?: string, category?: string, isCaseSensitive?: boolean, pattern?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.queryKeywordRules(keywordSetId, ruleType, category, isCaseSensitive, pattern, limit, offset, options).then((request) => request(axios, basePath));
         },
         /**
          * Update an existing keyword set and its rules
@@ -416,6 +575,16 @@ export interface KeywordSetsApiInterface {
     getKeywordSet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetResponse>;
 
     /**
+     * Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
+     * @summary Get keyword set with high-performance rules loading
+     * @param {string} id Keyword Set ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApiInterface
+     */
+    getKeywordSetWithRules(id: string, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
+
+    /**
      * Retrieve a list of keyword sets with optional filtering
      * @summary List keyword sets
      * @param {number} [limit] Maximum number of results
@@ -427,6 +596,22 @@ export interface KeywordSetsApiInterface {
      * @memberof KeywordSetsApiInterface
      */
     listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+
+    /**
+     * Advanced querying for keyword rule management across sets with multiple filter options
+     * @summary Query keyword rules with advanced filtering
+     * @param {string} [keywordSetId] Filter by keyword set ID
+     * @param {string} [ruleType] Filter by rule type
+     * @param {string} [category] Filter by category
+     * @param {boolean} [isCaseSensitive] Filter by case sensitivity
+     * @param {string} [pattern] Search pattern in rule patterns (partial match)
+     * @param {number} [limit] Maximum number of results
+     * @param {number} [offset] Number of results to skip
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApiInterface
+     */
+    queryKeywordRules(keywordSetId?: string, ruleType?: string, category?: string, isCaseSensitive?: boolean, pattern?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
 
     /**
      * Update an existing keyword set and its rules
@@ -485,6 +670,18 @@ export class KeywordSetsApi extends BaseAPI implements KeywordSetsApiInterface {
     }
 
     /**
+     * Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
+     * @summary Get keyword set with high-performance rules loading
+     * @param {string} id Keyword Set ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApi
+     */
+    public getKeywordSetWithRules(id: string, options?: RawAxiosRequestConfig) {
+        return KeywordSetsApiFp(this.configuration).getKeywordSetWithRules(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * Retrieve a list of keyword sets with optional filtering
      * @summary List keyword sets
      * @param {number} [limit] Maximum number of results
@@ -497,6 +694,24 @@ export class KeywordSetsApi extends BaseAPI implements KeywordSetsApiInterface {
      */
     public listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig) {
         return KeywordSetsApiFp(this.configuration).listKeywordSets(limit, offset, includeRules, isEnabled, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Advanced querying for keyword rule management across sets with multiple filter options
+     * @summary Query keyword rules with advanced filtering
+     * @param {string} [keywordSetId] Filter by keyword set ID
+     * @param {string} [ruleType] Filter by rule type
+     * @param {string} [category] Filter by category
+     * @param {boolean} [isCaseSensitive] Filter by case sensitivity
+     * @param {string} [pattern] Search pattern in rule patterns (partial match)
+     * @param {number} [limit] Maximum number of results
+     * @param {number} [offset] Number of results to skip
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof KeywordSetsApi
+     */
+    public queryKeywordRules(keywordSetId?: string, ruleType?: string, category?: string, isCaseSensitive?: boolean, pattern?: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig) {
+        return KeywordSetsApiFp(this.configuration).queryKeywordRules(keywordSetId, ruleType, category, isCaseSensitive, pattern, limit, offset, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

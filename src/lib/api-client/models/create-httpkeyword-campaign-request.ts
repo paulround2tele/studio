@@ -11,6 +11,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import type { UUID } from '../uuid-types';
 
 
 
@@ -61,7 +62,7 @@ export interface CreateHTTPKeywordCampaignRequest {
      * @type {string}
      * @memberof CreateHTTPKeywordCampaignRequest
      */
-    'proxyPoolId'?: string;
+    'proxyPoolId'?: UUID;
     /**
      * 
      * @type {string}
@@ -97,6 +98,6 @@ export interface CreateHTTPKeywordCampaignRequest {
      * @type {string}
      * @memberof CreateHTTPKeywordCampaignRequest
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

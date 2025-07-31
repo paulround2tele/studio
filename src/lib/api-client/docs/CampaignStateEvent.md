@@ -5,11 +5,11 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaignId** | **string** | Unique identifier | [optional] [default to undefined]
-**correlationId** | **string** | Unique identifier | [optional] [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**correlationId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **eventData** | **object** |  | [optional] [default to undefined]
 **eventType** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **occurredAt** | **string** |  | [optional] [default to undefined]
 **operationContext** | **object** |  | [optional] [default to undefined]
 **persistedAt** | **string** |  | [optional] [default to undefined]

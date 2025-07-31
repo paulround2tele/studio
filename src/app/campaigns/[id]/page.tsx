@@ -25,6 +25,7 @@ import useCampaignOperations from '@/hooks/useCampaignOperations';
 // Types
 import type { LeadGenerationCampaign } from '@/lib/api-client/models';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
+import { convertCampaignToLeadGeneration } from '@/lib/utils/typeGuards';
 
 type CampaignPhase = LeadGenerationCampaign['currentPhase'];
 
@@ -33,16 +34,19 @@ export default function CampaignDetailsPage() {
   const campaignId = params.id as string;
 
   // 🚀 BACKEND-DRIVEN: All data comes directly from API, no frontend store
-  const { 
-    campaign, 
-    generatedDomains, 
-    dnsCampaignItems, 
-    httpCampaignItems, 
-    totalDomainCount, 
-    loading, 
+  const {
+    campaign,
+    generatedDomains,
+    dnsCampaignItems,
+    httpCampaignItems,
+    totalDomainCount,
+    loading,
     error,
     refetch
   } = useBackendDrivenCampaignData(campaignId);
+
+  // Explicit type annotation to ensure proper transformation
+  const typedCampaign = campaign as import('@/lib/types').CampaignViewModel | null;
 
   // Simple state for UI-only concerns (no business data)
   const [filters, setFilters] = useState<any>({});
@@ -83,7 +87,7 @@ export default function CampaignDetailsPage() {
   }
 
   // Loading state
-  if (loading || !campaign) {
+  if (loading || !typedCampaign) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-2 text-gray-600">
@@ -104,32 +108,32 @@ export default function CampaignDetailsPage() {
 
       {/* Campaign Header Section */}
       <CampaignHeader
-        campaign={campaign}
+        campaign={typedCampaign}
         onRefresh={refetch}
       />
 
       {/* Campaign Statistics */}
       <CampaignMetrics
-        campaign={campaign}
+        campaign={typedCampaign}
         totalDomains={totalDomainCount}
       />
 
       {/* Campaign Progress */}
       <CampaignProgress
-        campaign={campaign}
+        campaign={typedCampaign}
       />
 
       {/* Phase Dashboard - Phase-centric configuration and management */}
       <PhaseDashboard
-        campaignId={campaign.id!}
-        campaign={campaign}
+        campaignId={campaignId}
+        campaign={typedCampaign}
         onCampaignUpdate={refetch}
       />
 
       {/* Campaign Controls */}
       <CampaignControls
-        campaign={campaign as any}
-        onStartPhase={async (phaseType: string) => { await campaignsApi.startPhaseStandalone(campaign.id!, phaseType); }}
+        campaign={convertCampaignToLeadGeneration(typedCampaign)}
+        onStartPhase={async (phaseType: string) => { await campaignsApi.startPhaseStandalone(campaignId, phaseType); }}
         onPausePhase={async (phaseType: string) => {
           // Note: Pause/Resume/Cancel not available in standalone services - use startPhaseStandalone for control
           console.log('Pause not implemented for standalone services');
@@ -145,8 +149,8 @@ export default function CampaignDetailsPage() {
 
       {/* Domain Streaming Table - Backend-driven data */}
       <DomainStreamingTable
-        campaign={campaign}
-        generatedDomains={generatedDomains}
+        campaign={typedCampaign}
+        generatedDomains={generatedDomains as any}
         dnsCampaignItems={dnsCampaignItems}
         httpCampaignItems={httpCampaignItems}
         totalDomains={totalDomainCount}
@@ -158,8 +162,8 @@ export default function CampaignDetailsPage() {
       />
 
       {/* Content Similarity View - Original component for lead analysis */}
-      {campaign.currentPhase === 'http_keyword_validation' && campaign.phaseStatus === 'completed' && (
-        <ContentSimilarityView campaign={campaign} />
+      {typedCampaign.currentPhase === 'http_keyword_validation' && typedCampaign.phaseStatus === 'completed' && (
+        <ContentSimilarityView campaign={typedCampaign} />
       )}
 
       {/* Refresh Button for Manual Updates */}

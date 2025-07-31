@@ -5,9 +5,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaignId** | **string** | Unique identifier | [optional] [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **message** | **string** |  | [optional] [default to undefined]
-**validationId** | **string** | Unique identifier | [optional] [default to undefined]
+**validationId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

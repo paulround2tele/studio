@@ -6,8 +6,8 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **advancedAnalysis** | [**ExtractedContentAnalysis**](ExtractedContentAnalysis.md) |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [default to undefined]
-**previousCampaignId** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [default to undefined]
+**previousCampaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **similarityScore** | **number** |  | [optional] [default to undefined]
 **sourceUrl** | **string** |  | [optional] [default to undefined]
 **text** | **string** |  | [default to undefined]

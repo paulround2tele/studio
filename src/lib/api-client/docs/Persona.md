@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **configDetails** | **object** |  | [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **description** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **isEnabled** | **boolean** |  | [optional] [default to undefined]
 **lastError** | **string** |  | [optional] [default to undefined]
 **lastTested** | **string** | Frontend-expected properties | [optional] [default to undefined]

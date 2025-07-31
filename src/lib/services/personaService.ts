@@ -214,7 +214,7 @@ export async function getPersonasByType(personaType: 'dns' | 'http'): Promise<Ap
     return {
       ...allPersonas,
       data: filteredPersonas,
-      message: `${personaType.toUpperCase()} personas retrieved successfully`
+      
     };
   }
   return allPersonas;

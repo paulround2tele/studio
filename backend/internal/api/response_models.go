@@ -242,6 +242,14 @@ type ProxyTestResponse struct {
 	Error        string `json:"error,omitempty"`
 }
 
+// BulkProxyTestResponse represents bulk proxy test results
+type BulkProxyTestResponse struct {
+	TotalRequested int                 `json:"totalRequested"`
+	SuccessCount   int                 `json:"successCount"`
+	ErrorCount     int                 `json:"errorCount"`
+	TestResults    []ProxyTestResponse `json:"testResults"`
+}
+
 // ProxyPoolDeleteResponse represents proxy pool deletion
 type ProxyPoolDeleteResponse struct {
 	Deleted bool   `json:"deleted"`
@@ -303,11 +311,11 @@ type CampaignDetailsResponse struct {
 // LeadGenerationCampaignResponse represents a complete lead generation campaign response
 // @Description Complete lead generation campaign with phase-centric architecture
 type LeadGenerationCampaignResponse struct {
-	ID           string  `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
-	Name         string  `json:"name" example:"Domain Generation Campaign" description:"Campaign name"`
-	CampaignType string  `json:"campaignType" example:"lead_generation" description:"Campaign type"`
-	CreatedAt    string  `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
-	UpdatedAt    string  `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
+	ID           string  `json:"id" validate:"required" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
+	Name         string  `json:"name" validate:"required" example:"Domain Generation Campaign" description:"Campaign name"`
+	CampaignType string  `json:"campaignType" validate:"required,eq=lead_generation" example:"lead_generation" description:"Campaign type"`
+	CreatedAt    string  `json:"createdAt" validate:"required" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
+	UpdatedAt    string  `json:"updatedAt" validate:"required" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
 	StartedAt    *string `json:"startedAt,omitempty" description:"Campaign start timestamp"`
 	CompletedAt  *string `json:"completedAt,omitempty" description:"Campaign completion timestamp"`
 
@@ -646,27 +654,6 @@ type BulkStatsMetadata struct {
 
 // === STANDALONE SERVICES ARCHITECTURE RESPONSE MODELS ===
 
-// CreateLeadGenerationCampaignRequest represents a request to create a lead generation campaign
-// @Description Request payload for creating a new lead generation campaign with Phase 1 initialization
-type CreateLeadGenerationCampaignRequest struct {
-	Name         string                 `json:"name" validate:"required" example:"My Lead Generation Campaign" description:"Campaign name"`
-	Description  string                 `json:"description,omitempty" example:"Campaign description" description:"Campaign description"`
-	UserID       string                 `json:"userId,omitempty" example:"550e8400-e29b-41d4-a716-446655440000" description:"User UUID"`
-	DomainConfig DomainGenerationConfig `json:"domainConfig" validate:"required" description:"Domain generation configuration for Phase 1"`
-}
-
-// DomainGenerationConfig represents domain generation configuration
-// @Description Configuration for domain generation phase
-type DomainGenerationConfig struct {
-	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
-	VariableLength       int      `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`
-	CharacterSet         string   `json:"characterSet" validate:"required" example:"abcdefghijklmnopqrstuvwxyz" description:"Character set for generation"`
-	ConstantString       string   `json:"constantString" validate:"required" example:"test" description:"Constant string part"`
-	TLDs                 []string `json:"tlds" validate:"required,min=1" example:"[\".com\"]" description:"Array of top-level domains"`
-	NumDomainsToGenerate int      `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0" example:"1000" description:"Number of domains to generate"`
-	BatchSize            int      `json:"batchSize,omitempty" validate:"omitempty,gt=0" example:"100" description:"Batch size for generation"`
-}
-
 // PhaseConfigureRequest represents a request to configure a specific campaign phase
 // @Description Request payload for configuring campaign phase parameters
 type PhaseConfigureRequest struct {
@@ -675,29 +662,19 @@ type PhaseConfigureRequest struct {
 }
 
 // DNSValidationConfig represents DNS validation phase configuration
-// @Description Configuration for DNS validation phase
+// @Description Configuration for DNS validation phase - all technical parameters derived from persona ConfigDetails
 type DNSValidationConfig struct {
-	PersonaIDs               []string `json:"personaIds" validate:"required,min=1" example:"[\"550e8400-e29b-41d4-a716-446655440000\"]" description:"Array of persona IDs to use for DNS validation"`
-	RotationIntervalSeconds  int      `json:"rotationIntervalSeconds,omitempty" validate:"omitempty,gte=60" example:"300" description:"Interval in seconds between persona rotations"`
-	ProcessingSpeedPerMinute int      `json:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=1" example:"100" description:"Number of domains to process per minute"`
-	BatchSize                int      `json:"batchSize,omitempty" validate:"omitempty,gte=1" example:"50" description:"Number of domains to process in each batch"`
-	RetryAttempts            int      `json:"retryAttempts,omitempty" validate:"omitempty,gte=0" example:"3" description:"Number of retry attempts for failed validations"`
+	PersonaIDs []string `json:"personaIds" validate:"required,min=1" example:"[\"550e8400-e29b-41d4-a716-446655440000\"]" description:"Array of persona IDs to use for DNS validation"`
+	Name       *string  `json:"name,omitempty" example:"My DNS Campaign" description:"Optional name for the campaign"`
 }
 
 // HTTPValidationConfig represents HTTP validation phase configuration
-// @Description Configuration for HTTP keyword validation phase
+// @Description Configuration for HTTP keyword validation phase - all technical parameters derived from persona ConfigDetails
 type HTTPValidationConfig struct {
-	PersonaIDs               []string `json:"personaIds" validate:"required,min=1" example:"[\"550e8400-e29b-41d4-a716-446655440000\"]" description:"Array of persona IDs to use for HTTP validation"`
-	KeywordSetIDs            []string `json:"keywordSetIds,omitempty" example:"[\"set1\", \"set2\"]" description:"Array of predefined keyword set IDs"`
-	AdHocKeywords            []string `json:"adHocKeywords,omitempty" example:"[\"custom1\", \"custom2\"]" description:"Array of custom keywords to search for"`
-	ProxyIDs                 []string `json:"proxyIds,omitempty" example:"[\"proxy1\", \"proxy2\"]" description:"Array of specific proxy IDs to use"`
-	ProxyPoolID              string   `json:"proxyPoolId,omitempty" example:"pool-uuid" description:"Proxy pool ID for automatic proxy selection"`
-	ProxySelectionStrategy   string   `json:"proxySelectionStrategy,omitempty" validate:"omitempty,oneof=round_robin random least_used" example:"round_robin" description:"Strategy for proxy rotation"`
-	TargetHTTPPorts          []int    `json:"targetHttpPorts,omitempty" example:"[80, 443, 8080]" description:"Array of HTTP ports to target"`
-	RotationIntervalSeconds  int      `json:"rotationIntervalSeconds,omitempty" validate:"omitempty,gte=60" example:"300" description:"Interval in seconds between proxy rotations"`
-	ProcessingSpeedPerMinute int      `json:"processingSpeedPerMinute,omitempty" validate:"omitempty,gte=1" example:"50" description:"Number of domains to process per minute"`
-	BatchSize                int      `json:"batchSize,omitempty" validate:"omitempty,gte=1" example:"25" description:"Number of domains to process in each batch"`
-	RetryAttempts            int      `json:"retryAttempts,omitempty" validate:"omitempty,gte=0" example:"3" description:"Number of retry attempts for failed validations"`
+	PersonaIDs    []string `json:"personaIds" validate:"required,min=1" example:"[\"550e8400-e29b-41d4-a716-446655440000\"]" description:"Array of persona IDs to use for HTTP validation"`
+	KeywordSetIDs []string `json:"keywordSetIds,omitempty" example:"[\"set1\", \"set2\"]" description:"Array of predefined keyword set IDs"`
+	AdHocKeywords []string `json:"adHocKeywords,omitempty" example:"[\"custom1\", \"custom2\"]" description:"Array of custom keywords to search for"`
+	Name          *string  `json:"name,omitempty" example:"My HTTP Campaign" description:"Optional name for the campaign"`
 }
 
 // AnalysisConfig represents analysis phase configuration

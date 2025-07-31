@@ -7,7 +7,7 @@ import type {
   CampaignViewModel,
   CampaignValidationItem
 } from '@/lib/types';
-import type { GeneratedDomain, GeneratedDomainLeadStatusEnum } from '@/lib/api-client';
+import type { GeneratedDomain } from '@/lib/api-client';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
@@ -31,6 +31,15 @@ interface EnrichedDomain {
   httpStatus: DomainActivityStatus;
   leadScanStatus: DomainActivityStatus;
   leadScore: number; // 0-100 range
+  // Rich domain data from GeneratedDomain
+  dnsIp?: string;
+  httpStatusCode?: string;
+  httpTitle?: string;
+  httpKeywords?: string;
+  sourceKeyword?: string;
+  sourcePattern?: string;
+  tld?: string;
+  generatedAt?: string;
 }
 
 // Helper functions to safely extract domain data - AGGRESSIVE DEBUGGING
@@ -251,27 +260,58 @@ const DomainRow = React.memo<{ domain: EnrichedDomain }>(function DomainRow({ do
   
   return (
     <TableRow className="hover:bg-muted/50">
-      <TableCell className="font-medium w-[35%]">
-        <a
-          href={`https://${safedomainName}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
-        >
-          {safedomainName}
-          <ExternalLink className="ml-1 h-3 w-3" />
-        </a>
+      <TableCell className="font-medium">
+        <div className="space-y-1">
+          <a
+            href={`https://${safedomainName}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+          >
+            {safedomainName}
+            <ExternalLink className="ml-1 h-3 w-3" />
+          </a>
+          {domain.dnsIp && (
+            <div className="text-xs text-muted-foreground">
+              IP: {domain.dnsIp}
+            </div>
+          )}
+          {domain.sourceKeyword && (
+            <div className="text-xs text-muted-foreground">
+              Source: {domain.sourceKeyword}
+            </div>
+          )}
+        </div>
       </TableCell>
-      <TableCell className="text-center w-[15%]">
+      <TableCell className="text-center">
         <StatusBadge status={domain.dnsStatus} />
       </TableCell>
-      <TableCell className="text-center w-[15%]">
-        <StatusBadge status={domain.httpStatus} />
+      <TableCell className="text-center">
+        <div className="space-y-1">
+          <StatusBadge status={domain.httpStatus} />
+          {domain.httpStatusCode && (
+            <div className="text-xs text-muted-foreground">
+              {domain.httpStatusCode}
+            </div>
+          )}
+        </div>
       </TableCell>
-      <TableCell className="text-center w-[15%]">
-        <StatusBadge status={domain.leadScanStatus} />
+      <TableCell>
+        <div className="space-y-1">
+          <StatusBadge status={domain.leadScanStatus} />
+          {domain.httpTitle && (
+            <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={domain.httpTitle}>
+              {domain.httpTitle}
+            </div>
+          )}
+          {domain.httpKeywords && (
+            <div className="text-xs text-blue-600 truncate max-w-[200px]" title={domain.httpKeywords}>
+              Keywords: {domain.httpKeywords}
+            </div>
+          )}
+        </div>
       </TableCell>
-      <TableCell className="text-center w-[20%]">
+      <TableCell className="text-center">
         <LeadScoreDisplay score={domain.leadScore} />
       </TableCell>
     </TableRow>
@@ -364,11 +404,11 @@ export default function DomainStreamingTable({
         <Table>
           <TableHeader className="sticky top-0 bg-background z-10">
             <TableRow>
-              <TableHead className="w-[35%]">Domain</TableHead>
-              <TableHead className="text-center w-[15%]">DNS Status</TableHead>
-              <TableHead className="text-center w-[15%]">HTTP Status</TableHead>
-              <TableHead className="text-center w-[15%]">Lead Status</TableHead>
-              <TableHead className="text-center w-[20%]">Lead Score</TableHead>
+              <TableHead>Domain & Details</TableHead>
+              <TableHead className="text-center">DNS Status</TableHead>
+              <TableHead className="text-center">HTTP Status</TableHead>
+              <TableHead>Content & Keywords</TableHead>
+              <TableHead className="text-center">Lead Score</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

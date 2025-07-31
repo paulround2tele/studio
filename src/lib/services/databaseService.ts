@@ -1,6 +1,7 @@
 // Database service using auto-generated API clients
 import { databaseApi } from '@/lib/api-client/client';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import type { UUID } from '@/lib/api-client/uuid-types';
 import type {
   BulkDatabaseQueryRequest,
   BulkDatabaseQueryResponse,
@@ -21,7 +22,7 @@ export async function query(sql: string): Promise<QueryResult> {
     const queryId = `query_${Date.now()}`;
     const bulkRequest: BulkDatabaseQueryRequest = {
       queries: [{
-        id: queryId,
+        id: queryId as UUID,
         sql: sql
       }],
       timeout: 30000, // 30 second timeout

@@ -17,9 +17,9 @@ func (s *campaignStorePostgres) GetGeneratedDomainsWithCursor(ctx context.Contex
 	startTime := time.Now()
 
 	domains := []*models.GeneratedDomain{}
-	baseQuery := `SELECT id, domain_generation_campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at
+	baseQuery := `SELECT id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at
 		FROM generated_domains
-		WHERE domain_generation_campaign_id = $1`
+		WHERE campaign_id = $1`
 
 	args := []interface{}{filter.CampaignID}
 	conditions := []string{}

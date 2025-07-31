@@ -4,17 +4,16 @@
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import { keywordExtractionApi } from '@/lib/api-client/client';
 
-// Define types based on actual backend implementation
-export interface KeywordExtractionRequestItem {
-  url: string;
-  keywordSetId: string;
-  httpPersonaId?: string;
-  dnsPersonaId?: string;
-}
+// Import and re-export the generated API client types
+import type {
+  KeywordExtractionRequestItem as APIKeywordExtractionRequestItem,
+  BatchKeywordExtractionRequest as APIBatchKeywordExtractionRequest
+} from '@/lib/api-client/models';
 
-export interface BatchKeywordExtractionRequest {
-  items: KeywordExtractionRequestItem[];
-}
+// Use the generated API client types directly
+export type KeywordExtractionRequestItem = APIKeywordExtractionRequestItem;
+
+export type BatchKeywordExtractionRequest = APIBatchKeywordExtractionRequest;
 
 export interface KeywordExtractionAPIResult {
   url: string;
@@ -53,16 +52,14 @@ class KeywordExtractionService {
         success: true,
         data: data || undefined,
         error: null,
-        requestId: globalThis.crypto?.randomUUID?.() || `extractKeywordsBatch-${Date.now()}`,
-        message: 'Successfully extracted keywords in batch'
+        requestId: globalThis.crypto?.randomUUID?.() || `extractKeywordsBatch-${Date.now()}`
       };
     } catch (error: unknown) {
       return {
         success: false,
         data: undefined,
         error: error instanceof Error ? error.message : 'Unknown error',
-        requestId: globalThis.crypto?.randomUUID?.() || `extractKeywordsBatch-error-${Date.now()}`,
-        message: error instanceof Error ? error.message : 'Unknown error'
+        requestId: globalThis.crypto?.randomUUID?.() || `extractKeywordsBatch-error-${Date.now()}`
       };
     }
   }
@@ -85,16 +82,14 @@ class KeywordExtractionService {
         success: true,
         data: data || undefined,
         error: null,
-        requestId: globalThis.crypto?.randomUUID?.() || `streamKeywordExtraction-${Date.now()}`,
-        message: 'Successfully completed stream keyword extraction'
+        requestId: globalThis.crypto?.randomUUID?.() || `streamKeywordExtraction-${Date.now()}`
       };
     } catch (error: unknown) {
       return {
         success: false,
         data: undefined,
         error: error instanceof Error ? error.message : 'Unknown error',
-        requestId: globalThis.crypto?.randomUUID?.() || `streamKeywordExtraction-error-${Date.now()}`,
-        message: error instanceof Error ? error.message : 'Unknown error'
+        requestId: globalThis.crypto?.randomUUID?.() || `streamKeywordExtraction-error-${Date.now()}`
       };
     }
   }

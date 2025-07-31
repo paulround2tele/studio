@@ -6,7 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **message** | **string** |  | [optional] [default to undefined]
-**proxyId** | **string** | Unique identifier | [optional] [default to undefined]
+**proxyId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **responseTimeMs** | **number** |  | [optional] [default to undefined]
 **status** | **string** |  | [optional] [default to undefined]
 **success** | **boolean** |  | [optional] [default to undefined]

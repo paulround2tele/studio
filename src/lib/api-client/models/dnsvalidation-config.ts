@@ -22,33 +22,15 @@
 export interface DNSValidationConfig {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof DNSValidationConfig
      */
-    'batchSize'?: number;
+    'name'?: string;
     /**
      * 
      * @type {Array<string>}
      * @memberof DNSValidationConfig
      */
     'personaIds': Array<string>;
-    /**
-     * 
-     * @type {number}
-     * @memberof DNSValidationConfig
-     */
-    'processingSpeedPerMinute'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof DNSValidationConfig
-     */
-    'retryAttempts'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof DNSValidationConfig
-     */
-    'rotationIntervalSeconds'?: number;
 }
 

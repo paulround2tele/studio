@@ -41,9 +41,9 @@ type CampaignStore interface {
 	UpdateCampaignStatus(ctx context.Context, exec Querier, id uuid.UUID, status models.PhaseStatusEnum, errorMessage sql.NullString) error
 	UpdateCampaignProgress(ctx context.Context, exec Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error
 
-	// Methods for DomainGenerationConfigState
-	GetDomainGenerationConfigStateByHash(ctx context.Context, exec Querier, configHash string) (*models.DomainGenerationConfigState, error)
-	CreateOrUpdateDomainGenerationConfigState(ctx context.Context, exec Querier, state *models.DomainGenerationConfigState) error
+	// Methods for DomainGenerationPhaseConfigState
+	GetDomainGenerationPhaseConfigStateByHash(ctx context.Context, exec Querier, configHash string) (*models.DomainGenerationPhaseConfigState, error)
+	CreateOrUpdateDomainGenerationPhaseConfigState(ctx context.Context, exec Querier, state *models.DomainGenerationPhaseConfigState) error
 
 	// Methods for pattern reference counting and cleanup
 	CountCampaignsWithPatternHash(ctx context.Context, exec Querier, patternHash string) (int, error)
@@ -94,6 +94,12 @@ type CampaignStore interface {
 
 	UpdateAnalysisResults(ctx context.Context, exec Querier, campaignID uuid.UUID, analysisResults interface{}) error
 	GetAnalysisResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (interface{}, error)
+
+	// Bulk operations for N+1 optimization
+	GetCampaignsByIDs(ctx context.Context, exec Querier, campaignIDs []uuid.UUID) ([]*models.LeadGenerationCampaign, error)
+	BulkDeleteCampaignsByIDs(ctx context.Context, exec Querier, campaignIDs []uuid.UUID) error
+	UpdateDomainsBulkDNSStatus(ctx context.Context, exec Querier, results []models.DNSValidationResult) error
+	UpdateDomainsBulkHTTPStatus(ctx context.Context, exec Querier, results []models.HTTPKeywordResult) error
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same
@@ -125,6 +131,10 @@ type PersonaStore interface {
 	UpdatePersona(ctx context.Context, exec Querier, persona *models.Persona) error
 	DeletePersona(ctx context.Context, exec Querier, id uuid.UUID) error
 	ListPersonas(ctx context.Context, exec Querier, filter ListPersonasFilter) ([]*models.Persona, error)
+
+	// Batch query methods for N+1 optimization
+	GetPersonasByIDs(ctx context.Context, exec Querier, ids []uuid.UUID) ([]*models.Persona, error)
+	GetPersonasWithKeywordSetsByIDs(ctx context.Context, exec Querier, ids []uuid.UUID) ([]*models.Persona, error)
 }
 
 type ListPersonasFilter struct {
@@ -142,6 +152,10 @@ type ProxyStore interface {
 	DeleteProxy(ctx context.Context, exec Querier, id uuid.UUID) error
 	ListProxies(ctx context.Context, exec Querier, filter ListProxiesFilter) ([]*models.Proxy, error)
 	UpdateProxyHealth(ctx context.Context, exec Querier, id uuid.UUID, isHealthy bool, latencyMs sql.NullInt32, lastCheckedAt time.Time) error
+
+	// Batch query methods for N+1 optimization
+	GetProxiesByIDs(ctx context.Context, exec Querier, ids []uuid.UUID) ([]*models.Proxy, error)
+	GetProxiesByPersonaIDs(ctx context.Context, exec Querier, personaIDs []uuid.UUID) ([]*models.Proxy, error)
 }
 
 type ListProxiesFilter struct {
@@ -167,6 +181,12 @@ type KeywordStore interface {
 	UpdateKeywordRule(ctx context.Context, exec Querier, rule *models.KeywordRule) error
 	DeleteKeywordRule(ctx context.Context, exec Querier, id uuid.UUID) error
 	DeleteKeywordRulesBySetID(ctx context.Context, exec Querier, keywordSetID uuid.UUID) error
+
+	// Batch query methods for N+1 optimization
+	GetKeywordSetsByIDs(ctx context.Context, exec Querier, ids []uuid.UUID) ([]*models.KeywordSet, error)
+	GetKeywordSetsWithKeywordsByIDs(ctx context.Context, exec Querier, ids []uuid.UUID) ([]*models.KeywordSet, error)
+	GetKeywordsByKeywordSetIDs(ctx context.Context, exec Querier, keywordSetIDs []uuid.UUID) ([]*models.KeywordRule, error)
+	GetKeywordsByIDs(ctx context.Context, exec Querier, ids []uuid.UUID) ([]*models.KeywordRule, error)
 }
 
 type ListKeywordSetsFilter struct {

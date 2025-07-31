@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -39,11 +41,11 @@ export interface Persona {
      */
     'description'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof Persona
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {boolean}
@@ -73,13 +75,13 @@ export interface Persona {
      * @type {string}
      * @memberof Persona
      */
-    'personaType': PersonaPersonaTypeEnum;
+    'personaType': 'dns' | 'http';
     /**
      * 
      * @type {string}
      * @memberof Persona
      */
-    'status'?: PersonaStatusEnum;
+    'status'?: 'Active' | 'Disabled' | 'Testing' | 'Failed';
     /**
      * 
      * @type {Array<string>}
@@ -94,19 +96,15 @@ export interface Persona {
     'updatedAt'?: string;
 }
 
-export const PersonaPersonaTypeEnum = {
-    Dns: 'dns',
-    Http: 'http'
-} as const;
-
-export type PersonaPersonaTypeEnum = typeof PersonaPersonaTypeEnum[keyof typeof PersonaPersonaTypeEnum];
-export const PersonaStatusEnum = {
-    Active: 'Active',
-    Disabled: 'Disabled',
-    Testing: 'Testing',
-    Failed: 'Failed'
-} as const;
-
-export type PersonaStatusEnum = typeof PersonaStatusEnum[keyof typeof PersonaStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum PersonaPersonaTypeEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum PersonaStatusEnum converted to direct string literals in interface
 
 

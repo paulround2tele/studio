@@ -36,6 +36,9 @@ import type { KeywordSet } from './keyword-set';
 import type { LoggingConfig } from './logging-config';
 // May contain unused imports in some cases
 // @ts-ignore
+import type { OptimizationConfig } from './optimization-config';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { ProxyConfigEntry } from './proxy-config-entry';
 // May contain unused imports in some cases
 // @ts-ignore
@@ -98,6 +101,12 @@ export interface AppConfig {
      * @memberof AppConfig
      */
     'logging'?: LoggingConfig;
+    /**
+     * 
+     * @type {OptimizationConfig}
+     * @memberof AppConfig
+     */
+    'optimization'?: OptimizationConfig;
     /**
      * 
      * @type {Array<ProxyConfigEntry>}

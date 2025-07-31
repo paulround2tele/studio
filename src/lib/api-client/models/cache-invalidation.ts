@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -33,29 +35,29 @@ export interface CacheInvalidation {
      */
     'cacheName'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheInvalidation
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheInvalidation
      */
-    'invalidatedAt'?: string;
+    'invalidatedAt'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheInvalidation
      */
-    'invalidationReason'?: string;
+    'invalidationReason'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheInvalidation
      */
-    'invalidationType'?: string;
+    'invalidationType'?: UUID;
     /**
      * 
      * @type {number}

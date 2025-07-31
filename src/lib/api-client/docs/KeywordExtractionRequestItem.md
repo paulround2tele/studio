@@ -5,9 +5,9 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**dnsPersonaId** | **string** | Unique identifier | [optional] [default to undefined]
-**httpPersonaId** | **string** | Unique identifier | [optional] [default to undefined]
-**keywordSetId** | **string** | Unique identifier | [default to undefined]
+**dnsPersonaId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**httpPersonaId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**keywordSetId** | **string** | Unique identifier (UUID v4) | [default to undefined]
 **url** | **string** |  | [default to undefined]
 
 ## Example

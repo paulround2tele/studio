@@ -5,14 +5,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaignId** | **string** | Unique identifier | [optional] [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **completedAt** | **string** |  | [optional] [default to undefined]
 **durationMs** | **string** |  | [optional] [default to undefined]
 **fromState** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **initiatedAt** | **string** |  | [optional] [default to undefined]
 **isValidTransition** | **boolean** |  | [optional] [default to undefined]
-**stateEventId** | **string** | Unique identifier | [optional] [default to undefined]
+**stateEventId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **toState** | **string** |  | [optional] [default to undefined]
 **transitionMetadata** | **object** |  | [optional] [default to undefined]
 **triggeredBy** | **string** |  | [optional] [default to undefined]

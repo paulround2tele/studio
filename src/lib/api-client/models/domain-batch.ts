@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,11 +23,11 @@
  */
 export interface DomainBatch {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof DomainBatch
      */
-    'CampaignID'?: string;
+    'CampaignID'?: UUID;
     /**
      * 
      * @type {Array<string>}

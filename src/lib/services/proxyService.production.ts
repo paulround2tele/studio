@@ -5,9 +5,13 @@ import {
   CreateProxyRequest,
   UpdateProxyRequest,
   Proxy as ProxyModel,
-  CreateProxyRequestProtocolEnum,
-  UpdateProxyRequestProtocolEnum,
+  BulkUpdateProxiesRequest,
+  BulkDeleteProxiesRequest,
+  BulkTestProxiesRequest,
+  BulkProxyOperationResponse,
+  BulkProxyTestResponse,
 } from '@/lib/api-client/models';
+import type { UUID } from '@/lib/api-client/uuid-types';
 import type { components } from '@/lib/api-client/types';
 import { transformProxyData } from '@/lib/utils/sqlNullTransformers';
 import { proxiesApi } from '@/lib/api-client/client';
@@ -22,16 +26,16 @@ export type ProxyModelCreationPayload = CreateProxyRequest;
 export type ProxyModelUpdatePayload = UpdateProxyRequest;
 
 // Protocol validation utilities
-const validateProtocol = (protocol: string): CreateProxyRequestProtocolEnum => {
+const validateProtocol = (protocol: string): 'http' | 'https' | 'socks5' | 'socks4' => {
   const validProtocols = ['http', 'https', 'socks5', 'socks4'];
   const validatedProtocol = validProtocols.includes(protocol) ? protocol : 'http';
-  return validatedProtocol as CreateProxyRequestProtocolEnum;
+  return validatedProtocol as 'http' | 'https' | 'socks5' | 'socks4';
 };
 
-const validateUpdateProtocol = (protocol: string): UpdateProxyRequestProtocolEnum => {
+const validateUpdateProtocol = (protocol: string): 'http' | 'https' | 'socks5' | 'socks4' => {
   const validProtocols = ['http', 'https', 'socks5', 'socks4'];
   const validatedProtocol = validProtocols.includes(protocol) ? protocol : 'http';
-  return validatedProtocol as UpdateProxyRequestProtocolEnum;
+  return validatedProtocol as 'http' | 'https' | 'socks5' | 'socks4';
 };
 
 // Import unified API response wrapper
@@ -41,7 +45,7 @@ import type { ApiResponse } from '@/lib/types';
 export type ProxyModelStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
 export interface ProxyModelTestResult {
   success: boolean;
-  message: string;
+  
   latency?: number;
 }
 
@@ -66,7 +70,7 @@ class ProxyModelService {
       const cleanedProxies: FrontendProxy[] = (proxiesData || []).map((proxy: any) => {
         const transformed = transformProxyData(proxy) as Record<string, unknown>;
         return {
-          id: transformed.id as string,
+          id: transformed.id as UUID,
           name: (transformed.name as string) || "",
           description: (transformed.description as string) || "",
           address: (transformed.address as string) || "",
@@ -98,7 +102,7 @@ class ProxyModelService {
         data: cleanedProxies,
         error: null,
         requestId,
-        message: 'Proxies retrieved successfully'
+        
       };
     } catch (error: any) {
       console.error('[ProxyService] Error getting proxies:', error);
@@ -107,7 +111,7 @@ class ProxyModelService {
         data: [],
         error: error.message || 'Failed to get proxies',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to get proxies'
+        
       };
     }
   }
@@ -176,7 +180,7 @@ class ProxyModelService {
         data: transformedProxy,
         error: null,
         requestId,
-        message: 'Proxy created successfully'
+        
       };
     } catch (error: any) {
       console.error('[ProxyService] Error creating proxy:', error);
@@ -185,7 +189,7 @@ class ProxyModelService {
         data: undefined,
         error: error.message || 'Failed to create proxy',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error.message || 'Failed to create proxy'
+        
       };
     }
   }
@@ -273,7 +277,7 @@ class ProxyModelService {
         data: response.data,
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36),
-        message: 'Proxy health check completed'
+        
       };
     } catch (error) {
       return {
@@ -292,7 +296,7 @@ class ProxyModelService {
         data: response.data,
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36),
-        message: 'All proxies health check completed'
+        
       };
     } catch (error) {
       return {
@@ -311,7 +315,7 @@ class ProxyModelService {
         data: response.data,
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36),
-        message: 'Proxy statuses retrieved successfully'
+        
       };
     } catch (error) {
       return {
@@ -345,7 +349,7 @@ class ProxyModelService {
         data: result.data,
         error: result.error,
         requestId: result.requestId,
-        message: result.success ? 'Proxy enabled successfully' : (result.error || 'Unknown error')
+        
       };
     } catch (error) {
       return {
@@ -378,13 +382,96 @@ class ProxyModelService {
         data: result.data,
         error: result.error,
         requestId: result.requestId,
-        message: result.success ? 'Proxy disabled successfully' : (result.error || 'Unknown error')
+        
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         requestId: globalThis.crypto?.randomUUID?.() || Math.random().toString(36)
+      };
+    }
+  }
+
+  // Bulk Operations - replacing N+1 patterns
+  async bulkUpdateProxies(proxyIds: string[], updates: UpdateProxyRequest): Promise<ApiResponse<BulkProxyOperationResponse>> {
+    try {
+      const request: BulkUpdateProxiesRequest = {
+        proxyIds,
+        updates
+      };
+      
+      const axiosResponse = await proxiesApi.bulkUpdateProxies(request);
+      const result = extractResponseData<BulkProxyOperationResponse>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `bulk-update-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: result!,
+        error: null,
+        requestId
+      };
+    } catch (error: any) {
+      console.error('[ProxyService] Error bulk updating proxies:', error);
+      return {
+        success: false,
+        data: undefined as any,
+        error: error.message || 'Failed to bulk update proxies',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
+      };
+    }
+  }
+
+  async bulkDeleteProxies(proxyIds: string[]): Promise<ApiResponse<BulkProxyOperationResponse>> {
+    try {
+      const request: BulkDeleteProxiesRequest = {
+        proxyIds
+      };
+      
+      const axiosResponse = await proxiesApi.bulkDeleteProxies(request);
+      const result = extractResponseData<BulkProxyOperationResponse>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `bulk-delete-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: result!,
+        error: null,
+        requestId
+      };
+    } catch (error: any) {
+      console.error('[ProxyService] Error bulk deleting proxies:', error);
+      return {
+        success: false,
+        data: undefined as any,
+        error: error.message || 'Failed to bulk delete proxies',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
+      };
+    }
+  }
+
+  async bulkTestProxies(proxyIds: string[]): Promise<ApiResponse<BulkProxyTestResponse>> {
+    try {
+      const request: BulkTestProxiesRequest = {
+        proxyIds
+      };
+      
+      const axiosResponse = await proxiesApi.bulkTestProxies(request);
+      const result = extractResponseData<BulkProxyTestResponse>(axiosResponse);
+      const requestId = globalThis.crypto?.randomUUID?.() || `bulk-test-${Date.now()}`;
+      
+      return {
+        success: true,
+        data: result!,
+        error: null,
+        requestId
+      };
+    } catch (error: any) {
+      console.error('[ProxyService] Error bulk testing proxies:', error);
+      return {
+        success: false,
+        data: undefined as any,
+        error: error.message || 'Failed to bulk test proxies',
+        requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`
       };
     }
   }
@@ -430,7 +517,7 @@ export const cleanProxies = async (): Promise<ApiResponse<{ deletedCount: number
         data: { deletedCount: 0, errorCount: 0 },
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || `clean-proxies-${Date.now()}`,
-        message: 'No unhealthy proxies found to clean'
+        
       };
     }
 
@@ -454,7 +541,7 @@ export const cleanProxies = async (): Promise<ApiResponse<{ deletedCount: number
     }
 
     if (deletedCount > 0) {
-      const message = errorCount > 0
+      const cleanupMessage = errorCount > 0
         ? `Cleaned ${deletedCount} failed proxies (${errorCount} errors)`
         : `Successfully cleaned ${deletedCount} failed proxies`;
       return {
@@ -462,7 +549,7 @@ export const cleanProxies = async (): Promise<ApiResponse<{ deletedCount: number
         data: { deletedCount, errorCount },
         error: null,
         requestId: globalThis.crypto?.randomUUID?.() || `clean-proxies-${Date.now()}`,
-        message
+        
       };
     } else {
       return {
@@ -481,6 +568,19 @@ export const cleanProxies = async (): Promise<ApiResponse<{ deletedCount: number
       requestId: globalThis.crypto?.randomUUID?.() || `clean-proxies-error-${Date.now()}`
     };
   }
+};
+
+// Bulk operations - replacing N+1 patterns
+export const bulkUpdateProxies = async (proxyIds: string[], updates: UpdateProxyRequest): Promise<ApiResponse<BulkProxyOperationResponse>> => {
+  return await proxyService.bulkUpdateProxies(proxyIds, updates);
+};
+
+export const bulkDeleteProxies = async (proxyIds: string[]): Promise<ApiResponse<BulkProxyOperationResponse>> => {
+  return await proxyService.bulkDeleteProxies(proxyIds);
+};
+
+export const bulkTestProxies = async (proxyIds: string[]): Promise<ApiResponse<BulkProxyTestResponse>> => {
+  return await proxyService.bulkTestProxies(proxyIds);
 };
 
 export default proxyService;

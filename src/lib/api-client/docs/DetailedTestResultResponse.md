@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **status** | **string** |  | [optional] [default to undefined]
 **success** | **boolean** |  | [optional] [default to undefined]
 **successCount** | **number** |  | [optional] [default to undefined]
-**testId** | **string** | Unique identifier | [optional] [default to undefined]
+**testId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

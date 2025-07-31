@@ -49,14 +49,6 @@ export interface CreatePersonaRequest {
      * @type {string}
      * @memberof CreatePersonaRequest
      */
-    'personaType': CreatePersonaRequestPersonaTypeEnum;
+    'personaType': string;
 }
-
-export const CreatePersonaRequestPersonaTypeEnum = {
-    Dns: 'dns',
-    Http: 'http'
-} as const;
-
-export type CreatePersonaRequestPersonaTypeEnum = typeof CreatePersonaRequestPersonaTypeEnum[keyof typeof CreatePersonaRequestPersonaTypeEnum];
-
 

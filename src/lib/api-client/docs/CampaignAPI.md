@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 **errorMessage** | **string** |  | [optional] [default to undefined]
 **estimatedCompletionAt** | **string** |  | [optional] [default to undefined]
 **failedItems** | **number** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **lastHeartbeatAt** | **string** |  | [optional] [default to undefined]
 **leads** | **number** |  | [optional] [default to undefined]
 **metadata** | **object** |  | [optional] [default to undefined]
@@ -27,7 +27,7 @@ Name | Type | Description | Notes
 **successfulItems** | **number** |  | [optional] [default to undefined]
 **totalItems** | **number** |  | [optional] [default to undefined]
 **updatedAt** | **string** |  | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

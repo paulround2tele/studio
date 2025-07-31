@@ -97,7 +97,31 @@ func main() {
 			appConfig = envConfig
 		}
 	}
+
+	// Initialize optimization configuration if not set
+	if appConfig.Optimization.Enabled == false && appConfig.Optimization.Phases.BatchQueries == false {
+		// Set default optimization configuration based on environment
+		environment := os.Getenv("ENVIRONMENT")
+		switch environment {
+		case "development":
+			appConfig.Optimization = config.GetDevelopmentOptimizationConfig()
+		case "staging":
+			appConfig.Optimization = config.GetStagingOptimizationConfig()
+		case "production":
+			appConfig.Optimization = config.GetProductionOptimizationConfig()
+		default:
+			appConfig.Optimization = config.GetDefaultOptimizationConfig()
+		}
+		log.Printf("Optimization configuration initialized for environment: %s", environment)
+	}
+
 	log.Println("Configuration loaded with environment overrides.")
+	log.Printf("Optimization enabled: %v (phases: batch=%v, service=%v, external=%v, caching=%v)",
+		appConfig.Optimization.Enabled,
+		appConfig.Optimization.Phases.BatchQueries,
+		appConfig.Optimization.Phases.ServiceOptimization,
+		appConfig.Optimization.Phases.ExternalValidation,
+		appConfig.Optimization.Phases.Caching)
 
 	wsBroadcaster := websocket.InitGlobalBroadcaster()
 	log.Println("Global WebSocket broadcaster initialized and started.")
@@ -219,6 +243,10 @@ func main() {
 	}
 	log.Println("Session service initialized.")
 
+	// Initialize DomainGenerationService with global offset tracking
+	domainGenerationService := services.NewDomainGenerationService(db, campaignStore, campaignJobStore, auditLogStore, nil)
+	log.Println("DomainGenerationService initialized with global offset tracking.")
+
 	// Phase 2.5 & 3.9: Initialize Phase Execution Service with direct engine integration
 	// AsyncManager is nil since we eliminated CampaignOrchestratorService
 	var asyncManager *communication.AsyncPatternManager = nil
@@ -239,9 +267,9 @@ func main() {
 		contentFetcherSvc,
 		kwordScannerSvc,
 		// Legacy service dependencies (Phase 2.5: eliminated)
-		nil, // domainGenerationService eliminated
-		nil, // dnsValidationService eliminated
-		nil, // httpValidationService eliminated
+		domainGenerationService, // Use shared service with global offset tracking
+		nil,                     // dnsValidationService eliminated
+		nil,                     // httpValidationService eliminated
 	)
 	log.Println("PhaseExecutionService initialized - Phase 2.5 & 3.9 direct engine integration complete.")
 
@@ -283,6 +311,7 @@ func main() {
 
 	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(
 		leadGenerationCampaignSvc,
+		domainGenerationService,
 		campaignStore,
 		wsBroadcaster,
 		db)
@@ -308,6 +337,55 @@ func main() {
 		log.Fatalf("Failed to initialize DistributedCacheManager: %v", err)
 	}
 	log.Println("DistributedCacheManager initialized with in-memory distributed caching.")
+
+	// Initialize Redis cache for N+1 optimization if enabled
+	var optimizationCache cache.Cache
+	if appConfig.Optimization.Enabled && appConfig.Optimization.Phases.Caching && appConfig.Optimization.Redis.Enabled {
+		log.Println("Initializing Redis cache for N+1 optimization...")
+
+		// Convert config package's RedisCacheConfig to cache package's RedisCacheConfig
+		redisCacheConfig := cache.RedisCacheConfig{
+			RedisAddr:            appConfig.Optimization.Redis.Addr,
+			RedisPassword:        appConfig.Optimization.Redis.Password,
+			RedisDB:              appConfig.Optimization.Redis.DB,
+			DefaultTTL:           appConfig.Optimization.Performance.CacheTTL.Personas,
+			MaxRetries:           appConfig.Optimization.Redis.MaxRetries,
+			PoolSize:             appConfig.Optimization.Redis.PoolSize,
+			MinIdleConns:         appConfig.Optimization.Redis.MinIdleConns,
+			IdleTimeout:          appConfig.Optimization.Redis.IdleTimeout,
+			ConnMaxLifetime:      appConfig.Optimization.Redis.ConnMaxLifetime,
+			DialTimeout:          appConfig.Optimization.Redis.DialTimeout,
+			ReadTimeout:          appConfig.Optimization.Redis.ReadTimeout,
+			WriteTimeout:         appConfig.Optimization.Redis.WriteTimeout,
+			EnableMetrics:        appConfig.Optimization.Redis.Metrics.Enabled,
+			MetricsFlushInterval: appConfig.Optimization.Redis.Metrics.FlushInterval,
+		}
+
+		redisCache, redisErr := cache.NewRedisCache(redisCacheConfig)
+		if redisErr != nil {
+			if appConfig.Optimization.FeatureFlags.FallbackOnError {
+				log.Printf("Warning: Failed to initialize Redis cache, falling back to no caching: %v", redisErr)
+				optimizationCache = nil
+			} else {
+				log.Fatalf("Failed to initialize Redis cache: %v", redisErr)
+			}
+		} else {
+			optimizationCache = redisCache
+			log.Println("Redis cache for N+1 optimization initialized successfully.")
+		}
+	} else {
+		log.Println("Redis cache for N+1 optimization disabled in configuration.")
+	}
+
+	// Initialize optimization service factory
+	serviceFactory, factoryErr := services.NewServiceFactory(db, appConfig.Optimization, optimizationCache)
+	if factoryErr != nil {
+		log.Fatalf("Failed to initialize service factory: %v", factoryErr)
+	}
+	log.Printf("Service factory initialized with optimization support (enabled: %v)", appConfig.Optimization.Enabled)
+
+	// Store service factory for use in handlers if needed
+	_ = serviceFactory // Mark as used for now
 
 	// Initialize authentication and security handlers with user profile caching
 	authHandler := api.NewAuthHandler(sessionService, sessionConfig, db, cacheManager)
@@ -449,6 +527,14 @@ func main() {
 			proxyGroup.POST("/:proxyId/test", apiHandler.TestProxyGin)
 			proxyGroup.POST("/:proxyId/health-check", apiHandler.ForceCheckSingleProxyGin)
 			proxyGroup.POST("/health-check", apiHandler.ForceCheckAllProxiesGin)
+
+			// Bulk operations for N+1 pattern elimination
+			bulkProxyGroup := proxyGroup.Group("/bulk")
+			{
+				bulkProxyGroup.PUT("/update", apiHandler.BulkUpdateProxiesGin)
+				bulkProxyGroup.DELETE("/delete", apiHandler.BulkDeleteProxiesGin)
+				bulkProxyGroup.POST("/test", apiHandler.BulkTestProxiesGin)
+			}
 		}
 
 		proxyPoolGroup := apiV2.Group("/proxy-pools")
@@ -485,13 +571,21 @@ func main() {
 		}
 
 		// Keyword set routes (session auth only)
-		keywordSetGroup := apiV2.Group("/keywords/sets")
+		keywordSetGroup := apiV2.Group("/keyword-sets")
 		{
 			keywordSetGroup.POST("", apiHandler.CreateKeywordSetGin)
 			keywordSetGroup.GET("", apiHandler.ListKeywordSetsGin)
 			keywordSetGroup.GET("/:setId", apiHandler.GetKeywordSetGin)
 			keywordSetGroup.PUT("/:setId", apiHandler.UpdateKeywordSetGin)
 			keywordSetGroup.DELETE("/:setId", apiHandler.DeleteKeywordSetGin)
+			// NEW: High-performance endpoint for Phase 3 HTTP keyword validation
+			keywordSetGroup.GET("/:setId/rules", apiHandler.GetKeywordSetWithRulesGin)
+		}
+
+		// NEW: Keyword rules routes for advanced querying (session auth only)
+		keywordRulesGroup := apiV2.Group("/keyword-rules")
+		{
+			keywordRulesGroup.GET("", apiHandler.QueryKeywordRulesGin)
 		}
 
 		// Keyword extraction routes (session auth only)

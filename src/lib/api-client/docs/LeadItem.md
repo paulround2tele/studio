@@ -7,9 +7,9 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **company** | **string** |  | [optional] [default to undefined]
 **email** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [default to undefined]
 **name** | **string** |  | [optional] [default to undefined]
-**previousCampaignId** | **string** | Unique identifier | [optional] [default to undefined]
+**previousCampaignId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **similarityScore** | **number** |  | [optional] [default to undefined]
 **sourceUrl** | **string** |  | [optional] [default to undefined]
 

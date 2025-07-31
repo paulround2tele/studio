@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**campaignId** | **string** | Unique identifier | [default to undefined]
+**campaignId** | **string** | Unique identifier (UUID v4) | [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **dnsIp** | **string** |  | [optional] [default to undefined]
 **dnsStatus** | **string** | Domain-centric validation status fields | [optional] [default to undefined]
@@ -15,8 +15,8 @@ Name | Type | Description | Notes
 **httpStatus** | **string** |  | [optional] [default to undefined]
 **httpStatusCode** | **string** |  | [optional] [default to undefined]
 **httpTitle** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
-**lastValidatedAt** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**lastValidatedAt** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **leadScore** | **string** |  | [optional] [default to undefined]
 **leadStatus** | **string** |  | [optional] [default to undefined]
 **offsetIndex** | **number** |  | [optional] [default to undefined]

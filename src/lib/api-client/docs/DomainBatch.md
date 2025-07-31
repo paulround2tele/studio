@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**CampaignID** | **string** | Unique identifier | [optional] [default to undefined]
+**CampaignID** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **Domains** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 
 ## Example

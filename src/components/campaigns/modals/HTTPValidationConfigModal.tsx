@@ -17,12 +17,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 // Import types and services - using the EXACT same pattern as campaign form
 import type { components } from '@/lib/api-client/types';
 import { getPersonas } from '@/lib/services/personaService';
-import { getProxies } from '@/lib/services/proxyService.production';
-import { listProxyPools } from '@/lib/services/proxyPoolService.production';
 import { listKeywordSets } from '@/lib/services/keywordSetService';
 import { campaignsApi } from '@/lib/api-client/client';
-import type { HTTPValidationConfig, HTTPValidationConfigProxySelectionStrategyEnum } from '@/lib/api-client/models/httpvalidation-config';
+import type { HTTPValidationConfig } from '@/lib/api-client/models/httpvalidation-config';
 import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
+// PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 
 // Response types from OpenAPI - using exact same types as campaign form
 type PersonaBase = components['schemas']['PersonaResponse'];
@@ -32,18 +31,6 @@ interface PersonaResponse extends PersonaBase {
   tags?: string[];
 }
 
-interface ProxyResponse {
-  id?: string;
-  name?: string;
-  isEnabled?: boolean;
-}
-
-interface ProxyPoolResponse {
-  id?: string;
-  name?: string;
-  isEnabled?: boolean;
-}
-
 interface KeywordSetResponse {
   id?: string;
   name: string;
@@ -51,17 +38,10 @@ interface KeywordSetResponse {
 }
 
 interface HTTPValidationFormValues {
+  name: string;
   personaIds: string[];
   keywordSetIds: string[];
   adHocKeywords: string[];
-  proxyIds: string[];
-  proxyPoolId: string;
-  proxySelectionStrategy: string;
-  targetHttpPorts: number[];
-  rotationIntervalSeconds: number;
-  processingSpeedPerMinute: number;
-  batchSize: number;
-  retryAttempts: number;
 }
 
 interface HTTPValidationConfigModalProps {
@@ -72,11 +52,7 @@ interface HTTPValidationConfigModalProps {
 }
 
 const MAX_PERSONAS_SELECTED = 5;
-const MAX_PROXIES_SELECTED = 10;
 const MAX_KEYWORD_SETS_SELECTED = 5;
-
-// Common HTTP ports
-const COMMON_HTTP_PORTS = [80, 443, 8080, 8443, 3000, 5000, 8000, 9000];
 
 export default function HTTPValidationConfigModal({ 
   isOpen, 
@@ -88,33 +64,22 @@ export default function HTTPValidationConfigModal({
   
   // Data state - following campaign form pattern
   const [httpPersonas, setHttpPersonas] = useState<PersonaResponse[]>([]);
-  const [proxies, setProxies] = useState<ProxyResponse[]>([]);
-  const [proxyPools, setProxyPools] = useState<ProxyPoolResponse[]>([]);
   const [keywordSets, setKeywordSets] = useState<KeywordSetResponse[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [configuring, setConfiguring] = useState(false);
 
-  // Form initialization with smart defaults
+  // Form initialization with persona-driven configuration
   const form = useForm<HTTPValidationFormValues>({
     defaultValues: {
+      name: `HTTP Validation - ${new Date().toLocaleDateString()}`,
       personaIds: [],
       keywordSetIds: [],
       adHocKeywords: [],
-      proxyIds: [],
-      proxyPoolId: '',
-      proxySelectionStrategy: 'round_robin',
-      targetHttpPorts: [80, 443],
-      rotationIntervalSeconds: 300, // 5 minutes
-      processingSpeedPerMinute: 50,
-      batchSize: 25,
-      retryAttempts: 3,
     }
   });
 
   const watchedPersonaIds = form.watch('personaIds');
   const watchedKeywordSetIds = form.watch('keywordSetIds');
-  const watchedProxyIds = form.watch('proxyIds');
-  const watchedTargetPorts = form.watch('targetHttpPorts');
   const watchedAdHocKeywords = form.watch('adHocKeywords');
 
   // Load data on mount - using exact same pattern as campaign form
@@ -138,21 +103,6 @@ export default function HTTPValidationConfigModal({
           setHttpPersonas(httpPersonasWithStatus as PersonaResponse[]);
         }
 
-        // Fetch proxies
-        const proxiesResponse = await getProxies();
-        if (proxiesResponse.success && proxiesResponse.data) {
-          const proxiesData = Array.isArray(proxiesResponse.data) ? proxiesResponse.data : [];
-          const enabledProxies = proxiesData.filter(p => p.isEnabled);
-          setProxies(enabledProxies);
-        }
-
-        // Fetch proxy pools
-        const proxyPoolsResponse = await listProxyPools();
-        if (proxyPoolsResponse.success && proxyPoolsResponse.data) {
-          const poolsData = Array.isArray(proxyPoolsResponse.data) ? proxyPoolsResponse.data : [];
-          const enabledProxyPools = poolsData.filter(p => p.isEnabled);
-          setProxyPools(enabledProxyPools);
-        }
 
         // Fetch keyword sets
         const keywordSetsResponse = await listKeywordSets();
@@ -208,29 +158,6 @@ export default function HTTPValidationConfigModal({
     }
   };
 
-  const handleProxyToggle = (proxyId: string) => {
-    const currentProxyIds = form.getValues('proxyIds');
-    if (currentProxyIds.includes(proxyId)) {
-      form.setValue('proxyIds', currentProxyIds.filter(id => id !== proxyId));
-    } else if (currentProxyIds.length < MAX_PROXIES_SELECTED) {
-      form.setValue('proxyIds', [...currentProxyIds, proxyId]);
-    } else {
-      toast({
-        title: "Maximum proxies reached",
-        description: `You can select up to ${MAX_PROXIES_SELECTED} proxies.`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handlePortToggle = (port: number) => {
-    const currentPorts = form.getValues('targetHttpPorts');
-    if (currentPorts.includes(port)) {
-      form.setValue('targetHttpPorts', currentPorts.filter(p => p !== port));
-    } else {
-      form.setValue('targetHttpPorts', [...currentPorts, port]);
-    }
-  };
 
   const handleAddAdHocKeyword = (keyword: string) => {
     if (!keyword.trim()) return;
@@ -249,19 +176,12 @@ export default function HTTPValidationConfigModal({
     try {
       setConfiguring(true);
 
-      // Prepare the configuration using the generated API types
+      // Prepare the simplified persona-driven configuration
       const httpConfig: HTTPValidationConfig = {
+        name: data.name,
         personaIds: data.personaIds,
-        keywordSetIds: data.keywordSetIds,
-        adHocKeywords: data.adHocKeywords,
-        proxyIds: data.proxyIds.length > 0 ? data.proxyIds : undefined,
-        proxyPoolId: data.proxyPoolId || undefined,
-        proxySelectionStrategy: data.proxySelectionStrategy as HTTPValidationConfigProxySelectionStrategyEnum,
-        targetHttpPorts: data.targetHttpPorts,
-        rotationIntervalSeconds: data.rotationIntervalSeconds,
-        processingSpeedPerMinute: data.processingSpeedPerMinute,
-        batchSize: data.batchSize,
-        retryAttempts: data.retryAttempts,
+        keywordSetIds: data.keywordSetIds.length > 0 ? data.keywordSetIds : undefined,
+        adHocKeywords: data.adHocKeywords.length > 0 ? data.adHocKeywords : undefined,
       };
 
       const configRequest: PhaseConfigureRequest = {
@@ -274,7 +194,7 @@ export default function HTTPValidationConfigModal({
 
       toast({
         title: "HTTP validation configured",
-        description: "HTTP validation phase has been successfully configured.",
+        description: "HTTP validation phase has been successfully configured with selected personas and keywords.",
       });
 
       onConfigured();
@@ -297,16 +217,34 @@ export default function HTTPValidationConfigModal({
         <DialogHeader>
           <DialogTitle>Configure HTTP Validation</DialogTitle>
           <DialogDescription>
-            Set up HTTP keyword validation parameters for your campaign. Select personas, keywords, proxies, and configure processing settings.
+            Configure HTTP keyword validation for your campaign by selecting personas and keywords. All technical parameters (timeouts, proxy settings, ports) are automatically configured from persona settings.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Configuration Name */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Configuration Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter configuration name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* HTTP Personas */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">HTTP Personas</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Select HTTP personas for validation. All technical parameters (proxy settings, ports, timeouts, batch sizes) are automatically configured from persona settings.
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {loadingData ? (
@@ -338,7 +276,7 @@ export default function HTTPValidationConfigModal({
                             <div>
                               <div className="font-medium">{persona.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                Status: {persona.status}
+                                Status: {persona.status} • Technical parameters auto-configured
                               </div>
                             </div>
                             {watchedPersonaIds.includes(persona.id || '') && (
@@ -348,6 +286,22 @@ export default function HTTPValidationConfigModal({
                         </div>
                       ))}
                     </div>
+                    {watchedPersonaIds.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {watchedPersonaIds.map((personaId) => {
+                          const persona = httpPersonas.find(p => p.id === personaId);
+                          return (
+                            <Badge key={personaId} variant="secondary" className="flex items-center gap-1">
+                              {persona?.name}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={() => handlePersonaToggle(personaId)}
+                              />
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
                   </>
                 )}
               </CardContent>
@@ -418,205 +372,6 @@ export default function HTTPValidationConfigModal({
               </CardContent>
             </Card>
 
-            {/* Proxy Configuration */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Proxy Configuration</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Proxy Pool Selection */}
-                <FormField
-                  control={form.control}
-                  name="proxyPoolId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Proxy Pool (optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a proxy pool" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="">No proxy pool</SelectItem>
-                          {proxyPools.map((pool) => (
-                            <SelectItem key={pool.id} value={pool.id || ''}>
-                              {pool.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Individual Proxies */}
-                <div>
-                  <div className="text-sm font-medium mb-2">Individual Proxies (optional):</div>
-                  {proxies.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">No proxies available.</div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                      {proxies.map((proxy) => (
-                        <div
-                          key={proxy.id}
-                          className={`p-2 border rounded cursor-pointer transition-colors ${
-                            watchedProxyIds.includes(proxy.id || '')
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                          onClick={() => handleProxyToggle(proxy.id || '')}
-                        >
-                          <div className="text-sm font-medium">{proxy.name}</div>
-                          {watchedProxyIds.includes(proxy.id || '') && (
-                            <Badge variant="secondary" className="mt-1">Selected</Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Proxy Selection Strategy */}
-                <FormField
-                  control={form.control}
-                  name="proxySelectionStrategy"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Proxy Selection Strategy</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="round_robin">Round Robin</SelectItem>
-                          <SelectItem value="random">Random</SelectItem>
-                          <SelectItem value="least_used">Least Used</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Target Ports */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Target HTTP Ports</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-muted-foreground mb-2">
-                  Select HTTP ports to target:
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {COMMON_HTTP_PORTS.map((port) => (
-                    <Badge
-                      key={port}
-                      variant={watchedTargetPorts.includes(port) ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => handlePortToggle(port)}
-                    >
-                      {port}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Processing Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Processing Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="rotationIntervalSeconds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Rotation Interval (seconds)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="60" 
-                            max="3600" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 300)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="processingSpeedPerMinute"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Processing Speed (per minute)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="500" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 50)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="batchSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Batch Size</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="100" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 25)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="retryAttempts"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Retry Attempts</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="0" 
-                            max="10" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 3)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </Card>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>

@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -36,11 +38,11 @@ export interface KeywordSet {
      */
     'description'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordSet
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {boolean}

@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -33,22 +35,22 @@ export interface CampaignParamsData {
      */
     'domainCount'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignParamsData
      */
-    'keywordSetId'?: string;
+    'keywordSetId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignParamsData
      */
-    'personaId'?: string;
+    'personaId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignParamsData
      */
-    'proxyPoolId'?: string;
+    'proxyPoolId'?: UUID;
 }
 

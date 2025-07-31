@@ -5,13 +5,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**dnsPersonaIdUsed** | **string** | Unique identifier | [optional] [default to undefined]
+**dnsPersonaIdUsed** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **error** | **string** |  | [optional] [default to undefined]
 **finalUrl** | **string** |  | [optional] [default to undefined]
-**httpPersonaIdUsed** | **string** | Unique identifier | [optional] [default to undefined]
-**keywordSetIdUsed** | **string** | Unique identifier | [optional] [default to undefined]
+**httpPersonaIdUsed** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**keywordSetIdUsed** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **matches** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
-**proxyIdUsed** | **string** | Unique identifier | [optional] [default to undefined]
+**proxyIdUsed** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **statusCode** | **number** |  | [optional] [default to undefined]
 **url** | **string** |  | [optional] [default to undefined]
 

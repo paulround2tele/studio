@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,11 +23,11 @@
  */
 export interface GeneratedDomain {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'campaignId': string;
+    'campaignId': UUID;
     /**
      * 
      * @type {string}
@@ -43,7 +45,7 @@ export interface GeneratedDomain {
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'dnsStatus'?: GeneratedDomainDnsStatusEnum;
+    'dnsStatus'?: 'pending' | 'ok' | 'error' | 'timeout';
     /**
      * 
      * @type {string}
@@ -67,7 +69,7 @@ export interface GeneratedDomain {
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'httpStatus'?: GeneratedDomainHttpStatusEnum;
+    'httpStatus'?: 'pending' | 'ok' | 'error' | 'timeout';
     /**
      * 
      * @type {string}
@@ -81,17 +83,17 @@ export interface GeneratedDomain {
      */
     'httpTitle'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'lastValidatedAt'?: string;
+    'lastValidatedAt'?: UUID;
     /**
      * 
      * @type {string}
@@ -103,7 +105,7 @@ export interface GeneratedDomain {
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'leadStatus'?: GeneratedDomainLeadStatusEnum;
+    'leadStatus'?: 'pending' | 'match' | 'no_match' | 'error' | 'timeout';
     /**
      * 
      * @type {number}
@@ -130,30 +132,20 @@ export interface GeneratedDomain {
     'tld'?: string;
 }
 
-export const GeneratedDomainDnsStatusEnum = {
-    Pending: 'pending',
-    Ok: 'ok',
-    Error: 'error',
-    Timeout: 'timeout'
-} as const;
-
-export type GeneratedDomainDnsStatusEnum = typeof GeneratedDomainDnsStatusEnum[keyof typeof GeneratedDomainDnsStatusEnum];
-export const GeneratedDomainHttpStatusEnum = {
-    Pending: 'pending',
-    Ok: 'ok',
-    Error: 'error',
-    Timeout: 'timeout'
-} as const;
-
-export type GeneratedDomainHttpStatusEnum = typeof GeneratedDomainHttpStatusEnum[keyof typeof GeneratedDomainHttpStatusEnum];
-export const GeneratedDomainLeadStatusEnum = {
-    Pending: 'pending',
-    Match: 'match',
-    NoMatch: 'no_match',
-    Error: 'error',
-    Timeout: 'timeout'
-} as const;
-
-export type GeneratedDomainLeadStatusEnum = typeof GeneratedDomainLeadStatusEnum[keyof typeof GeneratedDomainLeadStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum GeneratedDomainDnsStatusEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum GeneratedDomainHttpStatusEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum GeneratedDomainLeadStatusEnum converted to direct string literals in interface
 
 

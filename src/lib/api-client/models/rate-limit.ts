@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -45,11 +47,11 @@ export interface RateLimit {
      */
     'id'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof RateLimit
      */
-    'identifier'?: string;
+    'identifier'?: UUID;
     /**
      * 
      * @type {string}

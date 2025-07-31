@@ -6,7 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **cpuUtilization** | **number** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **instanceCount** | **number** |  | [optional] [default to undefined]
 **memoryUtilization** | **number** |  | [optional] [default to undefined]
 **recordedAt** | **string** |  | [optional] [default to undefined]

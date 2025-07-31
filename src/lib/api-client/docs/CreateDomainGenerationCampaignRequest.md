@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 **patternType** | **string** |  | [default to undefined]
 **tld** | **string** |  | [default to undefined]
 **tlds** | **Array&lt;string&gt;** |  | [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **variableLength** | **number** | Domain generation fields | [default to undefined]
 
 ## Example

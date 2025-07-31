@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -24,11 +26,11 @@ import type { PhaseProgress } from './phase-progress';
  */
 export interface LeadGenerationProgress {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof LeadGenerationProgress
      */
-    'campaign_id'?: string;
+    'campaign_id'?: UUID;
     /**
      * 
      * @type {string}

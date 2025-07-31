@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -42,11 +44,11 @@ export interface LoginResponse {
      */
     'requires_captcha'?: boolean;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof LoginResponse
      */
-    'sessionId'?: string;
+    'sessionId'?: UUID;
     /**
      * 
      * @type {boolean}

@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -15,7 +17,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { DomainGenerationConfig } from './domain-generation-config';
+import type { DomainGenerationPhaseConfig } from './domain-generation-phase-config';
 
 /**
  * 
@@ -31,10 +33,10 @@ export interface CreateLeadGenerationCampaignRequest {
     'description'?: string;
     /**
      * 
-     * @type {DomainGenerationConfig}
+     * @type {DomainGenerationPhaseConfig}
      * @memberof CreateLeadGenerationCampaignRequest
      */
-    'domainConfig': DomainGenerationConfig;
+    'domainConfig': DomainGenerationPhaseConfig;
     /**
      * 
      * @type {string}
@@ -42,10 +44,10 @@ export interface CreateLeadGenerationCampaignRequest {
      */
     'name': string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CreateLeadGenerationCampaignRequest
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

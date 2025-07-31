@@ -34,10 +34,10 @@ export interface StealthConfig {
     'offsetScrambling'?: boolean;
     /**
      * ShuffleStrategy determines how domains are randomized
-     * @type {object}
+     * @type {string}
      * @memberof StealthConfig
      */
-    'shuffleStrategy'?: object;
+    'shuffleStrategy'?: 'sequential' | 'full_shuffle' | 'block_shuffle' | 'weighted' | 'interleaved';
     /**
      * 
      * @type {number}
@@ -69,4 +69,11 @@ export interface StealthConfig {
      */
     'validationPriority'?: Array<string>;
 }
+
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum StealthConfigShuffleStrategyEnum converted to direct string literals in interface
+
 

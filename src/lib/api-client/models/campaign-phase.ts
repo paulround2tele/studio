@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,11 +23,11 @@
  */
 export interface CampaignPhase {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignPhase
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -63,11 +65,11 @@ export interface CampaignPhase {
      */
     'failedItems'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignPhase
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -85,7 +87,7 @@ export interface CampaignPhase {
      * @type {string}
      * @memberof CampaignPhase
      */
-    'phaseType'?: CampaignPhasePhaseTypeEnum;
+    'phaseType'?: 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis';
     /**
      * 
      * @type {number}
@@ -109,7 +111,7 @@ export interface CampaignPhase {
      * @type {string}
      * @memberof CampaignPhase
      */
-    'status'?: CampaignPhaseStatusEnum;
+    'status'?: 'not_started' | 'ready' | 'configured' | 'in_progress' | 'paused' | 'completed' | 'failed';
     /**
      * 
      * @type {number}
@@ -130,24 +132,15 @@ export interface CampaignPhase {
     'updatedAt'?: string;
 }
 
-export const CampaignPhasePhaseTypeEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation',
-    Analysis: 'analysis'
-} as const;
-
-export type CampaignPhasePhaseTypeEnum = typeof CampaignPhasePhaseTypeEnum[keyof typeof CampaignPhasePhaseTypeEnum];
-export const CampaignPhaseStatusEnum = {
-    NotStarted: 'not_started',
-    Ready: 'ready',
-    Configured: 'configured',
-    InProgress: 'in_progress',
-    Paused: 'paused',
-    Completed: 'completed',
-    Failed: 'failed'
-} as const;
-
-export type CampaignPhaseStatusEnum = typeof CampaignPhaseStatusEnum[keyof typeof CampaignPhaseStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum CampaignPhasePhaseTypeEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum CampaignPhaseStatusEnum converted to direct string literals in interface
 
 

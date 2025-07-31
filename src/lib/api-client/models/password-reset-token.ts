@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -33,11 +35,11 @@ export interface PasswordResetToken {
      */
     'expiresAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof PasswordResetToken
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -63,10 +65,10 @@ export interface PasswordResetToken {
      */
     'userAgent'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof PasswordResetToken
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

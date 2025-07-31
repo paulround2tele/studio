@@ -9,9 +9,7 @@ components:
                     format: date-time
                     type: string
                 ID:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 Key:
                     type: string
                 KeyHash:
@@ -27,9 +25,18 @@ components:
                     format: date-time
                     type: string
                 UserID:
-                    description: Unique identifier
-                    format: uuid
+                    $ref: '#/components/schemas/UUID'
+            type: object
+        APIKeyRotationPolicy:
+            properties:
+                MaxAge:
                     type: string
+                MaxUsageCount:
+                    type: integer
+                RotateOnCompromise:
+                    type: boolean
+            type: object
+        APIKeyService:
             type: object
         APIResponse:
             properties:
@@ -40,18 +47,14 @@ components:
                 metadata:
                     $ref: '#/components/schemas/Metadata'
                 requestId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 success:
                     type: boolean
             type: object
         AddProxyToPoolRequest:
             properties:
                 proxyId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 weight:
                     format: int32
                     type: integer
@@ -91,6 +94,27 @@ components:
                         type: string
                     type: array
             type: object
+        AnalysisService:
+            type: object
+        AnalysisSummary:
+            properties:
+                avgKeywordsPerUrl:
+                    type: number
+                totalKeywordMatches:
+                    type: integer
+                totalUrlsAnalyzed:
+                    type: integer
+                uniqueKeywordsFound:
+                    type: integer
+                urlsWithKeywords:
+                    type: integer
+                urlsWithScreenshots:
+                    type: integer
+                urlsWithoutKeywords:
+                    type: integer
+                urlsWithoutScreenshots:
+                    type: integer
+            type: object
         AppConfig:
             properties:
                 dnsPersonas:
@@ -113,6 +137,8 @@ components:
                     type: array
                 logging:
                     $ref: '#/components/schemas/LoggingConfig'
+                optimization:
+                    $ref: '#/components/schemas/OptimizationConfig'
                 proxies:
                     items:
                         $ref: '#/components/schemas/ProxyConfigEntry'
@@ -181,24 +207,18 @@ components:
                 details:
                     type: object
                 entityId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 entityType:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 timestamp:
                     format: date-time
                     type: string
                 userAgent:
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             required:
                 - action
             type: object
@@ -227,15 +247,11 @@ components:
                 sessionFingerprint:
                     type: string
                 sessionId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 userAgent:
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         AuthConfig:
             properties:
@@ -316,34 +332,24 @@ components:
                 decision:
                     type: string
                 decisionId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 decisionTimeMs:
                     format: int32
                     type: integer
                 evaluatedPolicies:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 policyVersion:
                     type: string
                 resourceId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 resourceType:
                     type: string
                 securityEventId:
-                    description: Unique identifier
-                    format: uri
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         BatchKeywordExtractionRequest:
             properties:
@@ -432,6 +438,15 @@ components:
                 totalCount:
                     format: int32
                     type: integer
+            type: object
+        BulkDeleteProxiesRequest:
+            properties:
+                proxyIds:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - proxyIds
             type: object
         BulkDeleteResult:
             properties:
@@ -541,7 +556,7 @@ components:
                 leads:
                     additionalProperties:
                         items:
-                            type: string
+                            $ref: '#/components/schemas/LeadItem'
                         type: array
                     type: object
                 metadata:
@@ -595,6 +610,53 @@ components:
                     format: int32
                     type: integer
             type: object
+        BulkProxyError:
+            properties:
+                error:
+                    type: string
+                proxyId:
+                    $ref: '#/components/schemas/UUID'
+            type: object
+        BulkProxyOperationResponse:
+            properties:
+                errorCount:
+                    format: int32
+                    type: integer
+                failedProxies:
+                    items:
+                        $ref: '#/components/schemas/BulkProxyError'
+                    type: array
+                results:
+                    items:
+                        $ref: '#/components/schemas/Proxy'
+                    type: array
+                successCount:
+                    format: int32
+                    type: integer
+                successfulProxies:
+                    items:
+                        type: string
+                    type: array
+                totalRequested:
+                    format: int32
+                    type: integer
+            type: object
+        BulkProxyTestResponse:
+            properties:
+                errorCount:
+                    format: int32
+                    type: integer
+                successCount:
+                    format: int32
+                    type: integer
+                testResults:
+                    items:
+                        $ref: '#/components/schemas/ProxyTestResponse'
+                    type: array
+                totalRequested:
+                    format: int32
+                    type: integer
+            type: object
         BulkQueryMetadata:
             properties:
                 failedQueries:
@@ -633,6 +695,27 @@ components:
                     format: int32
                     type: integer
             type: object
+        BulkTestProxiesRequest:
+            properties:
+                proxyIds:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - proxyIds
+            type: object
+        BulkUpdateProxiesRequest:
+            properties:
+                proxyIds:
+                    items:
+                        type: string
+                    type: array
+                updates:
+                    $ref: '#/components/schemas/UpdateProxyRequest'
+            required:
+                - proxyIds
+                - updates
+            type: object
         CacheConfiguration:
             properties:
                 cacheName:
@@ -656,9 +739,7 @@ components:
                 evictionPolicy:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 lastCleanupAt:
                     format: date-time
                     type: string
@@ -689,9 +770,7 @@ components:
                         type: string
                     type: array
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 campaignPhase:
                     type: string
                 contentType:
@@ -706,9 +785,7 @@ components:
                     format: int32
                     type: integer
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isCompressed:
                     type: boolean
                 lastAccessed:
@@ -735,21 +812,13 @@ components:
                 cacheName:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 invalidatedAt:
-                    description: Unique identifier
-                    format: date-time
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 invalidationReason:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 invalidationType:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 keysInvalidated:
                     format: int32
                     type: integer
@@ -764,9 +833,7 @@ components:
                 cacheNamespace:
                     type: string
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 campaignPhase:
                     type: string
                 errorMessage:
@@ -778,17 +845,11 @@ components:
                     format: double
                     type: number
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 invalidationPattern:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 invalidationReason:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 serviceName:
                     type: string
                 success:
@@ -814,9 +875,7 @@ components:
                     format: double
                     type: number
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 operationType:
                     type: string
                 recordedAt:
@@ -827,6 +886,21 @@ components:
                 ttlUsedSeconds:
                     format: int32
                     type: integer
+            type: object
+        CacheTTLConfig:
+            properties:
+                dns_validation:
+                    type: string
+                http_validation:
+                    type: string
+                keyword_sets:
+                    type: string
+                keywords:
+                    type: string
+                personas:
+                    type: string
+                proxies:
+                    type: string
             type: object
         CachedSessionConfig:
             properties:
@@ -850,6 +924,8 @@ components:
                     type: string
                 is_valid:
                     type: boolean
+            type: object
+        CachedSessionService:
             type: object
         CampaignAPI:
             properties:
@@ -885,9 +961,7 @@ components:
                     format: int64
                     type: integer
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 lastHeartbeatAt:
                     format: date-time
                     type: string
@@ -930,18 +1004,14 @@ components:
                     format: date-time
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         CampaignAccessGrant:
             properties:
                 accessType:
                     type: string
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 createdAt:
                     format: date-time
                     type: string
@@ -954,24 +1024,18 @@ components:
                 grantedBy:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isActive:
                     type: boolean
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         CampaignActionResponse:
             properties:
                 action:
                     type: string
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 message:
                     type: string
                 success:
@@ -983,19 +1047,15 @@ components:
                     format: date-time
                     type: string
                 currentPhase:
-                    description: Phases-based architecture fields
-                    type: string
+                    $ref: '#/components/schemas/PhaseTypeEnum'
                 description:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 name:
                     type: string
                 phaseStatus:
-                    description: '@Description Status of the current phase'
-                    type: string
+                    $ref: '#/components/schemas/PhaseStatusEnum'
                 progress:
                     additionalProperties:
                         type: object
@@ -1008,12 +1068,12 @@ components:
         CampaignDependencyInfo:
             properties:
                 campaign:
-                    type: string
+                    $ref: '#/components/schemas/LeadGenerationCampaign'
                 canDelete:
                     type: boolean
                 dependentCampaigns:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/LeadGenerationCampaign'
                     type: array
                 hasDependencies:
                     type: boolean
@@ -1038,16 +1098,12 @@ components:
                         - batch_optimized
                     type: string
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 createdAt:
                     format: date-time
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 jobPayload:
                     type: object
                 jobType:
@@ -1074,9 +1130,7 @@ components:
                     format: date-time
                     type: string
                 processingServerId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 scheduledAt:
                     format: date-time
                     type: string
@@ -1100,9 +1154,7 @@ components:
         CampaignOperationResponse:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 message:
                     type: string
                 status:
@@ -1118,24 +1170,16 @@ components:
                     format: int32
                     type: integer
                 keywordSetId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 personaId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 proxyPoolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         CampaignPhase:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 completedAt:
                     format: date-time
                     type: string
@@ -1155,9 +1199,7 @@ components:
                     format: int64
                     type: integer
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 pausedAt:
                     format: date-time
                     type: string
@@ -1206,11 +1248,9 @@ components:
         CampaignProgressResponse:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 currentPhase:
-                    type: string
+                    $ref: '#/components/schemas/PhaseTypeEnum'
                 estimatedTimeRemaining:
                     format: date-time
                     type: string
@@ -1218,7 +1258,7 @@ components:
                     format: double
                     type: number
                 phaseStatus:
-                    type: string
+                    $ref: '#/components/schemas/PhaseStatusEnum'
                 phases:
                     items:
                         $ref: '#/components/schemas/PhaseProgressResponse'
@@ -1227,9 +1267,7 @@ components:
         CampaignStartResponse:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 message:
                     type: string
                 queuedAt:
@@ -1239,21 +1277,15 @@ components:
         CampaignStateEvent:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 correlationId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 eventData:
                     type: object
                 eventType:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 occurredAt:
                     format: date-time
                     type: string
@@ -1278,12 +1310,12 @@ components:
                 triggeredBy:
                     type: string
             type: object
+        CampaignStateMachine:
+            type: object
         CampaignStateSnapshot:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 checksum:
                     type: string
                 createdAt:
@@ -1292,9 +1324,7 @@ components:
                 currentState:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isValid:
                     type: boolean
                 lastEventSequence:
@@ -1308,9 +1338,7 @@ components:
         CampaignStateTransition:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 completedAt:
                     format: date-time
                     type: string
@@ -1319,18 +1347,14 @@ components:
                 fromState:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 initiatedAt:
                     format: date-time
                     type: string
                 isValidTransition:
                     type: boolean
                 stateEventId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 toState:
                     type: string
                 transitionMetadata:
@@ -1343,9 +1367,7 @@ components:
         CampaignTransactionOptions:
             properties:
                 CampaignID:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 IsolationLevel:
                     type: string
                 MaxRetries:
@@ -1360,6 +1382,8 @@ components:
                 Timeout:
                     format: date-time
                     type: string
+            type: object
+        CampaignWorkerService:
             type: object
         ChangePasswordRequest:
             properties:
@@ -1430,9 +1454,7 @@ components:
                     format: date-time
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isActive:
                     type: boolean
                 lockType:
@@ -1444,6 +1466,8 @@ components:
                 updatedAt:
                     format: date-time
                     type: string
+            type: object
+        ConfigManager:
             type: object
         ConfigManagerConfig:
             properties:
@@ -1457,6 +1481,8 @@ components:
                 MaxCacheEntries:
                     format: int32
                     type: integer
+            type: object
+        ConfigManagerInterface:
             type: object
         ConfigTemplate:
             properties:
@@ -1483,9 +1509,7 @@ components:
                     format: date-time
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 lockType:
                     type: string
                 updatedAt:
@@ -1557,21 +1581,44 @@ components:
                     format: int64
                     type: integer
             type: object
+        ConsistencyReport:
+            properties:
+                isConsistent:
+                    type: boolean
+                jsonbRuleCount:
+                    format: int32
+                    type: integer
+                keywordSetId:
+                    $ref: '#/components/schemas/UUID'
+                missingFromJsonb:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                missingFromRelational:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                relationalRuleCount:
+                    format: int32
+                    type: integer
+            type: object
         ContentAnalysisResult:
             properties:
                 extractedContent:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/ExtractedContentItem'
                     type: array
                 leadItems:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/LeadItem'
                     type: array
                 processedAt:
                     format: date-time
                     type: string
                 summary:
-                    type: object
+                    $ref: '#/components/schemas/AnalysisSummary'
             type: object
         CookieHandling:
             properties:
@@ -1601,9 +1648,7 @@ components:
                 name:
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             required:
                 - name
             type: object
@@ -1652,9 +1697,7 @@ components:
                         type: string
                     type: array
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 variableLength:
                     description: Domain generation fields
                     format: int32
@@ -1690,13 +1733,11 @@ components:
                 description:
                     type: string
                 domainConfig:
-                    $ref: '#/components/schemas/DomainGenerationConfig'
+                    $ref: '#/components/schemas/DomainGenerationPhaseConfig'
                 name:
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             required:
                 - name
                 - domainConfig
@@ -1712,10 +1753,7 @@ components:
                 name:
                     type: string
                 personaType:
-                    enum:
-                        - dns
-                        - http
-                    type: string
+                    $ref: '#/components/schemas/PersonaTypeEnum'
             required:
                 - name
                 - personaType
@@ -1769,6 +1807,8 @@ components:
                 - lastName
                 - password
             type: object
+        DNSCampaignService:
+            type: object
         DNSConfigDetails:
             properties:
                 concurrentQueriesPerDomain:
@@ -1818,6 +1858,27 @@ components:
                 useSystemResolvers:
                     type: boolean
             type: object
+        DNSPerformanceMetrics:
+            properties:
+                AverageResponseTimeMs:
+                    format: int64
+                    type: integer
+                CacheHits:
+                    format: int64
+                    type: integer
+                CacheMisses:
+                    format: int64
+                    type: integer
+                TotalDNSCalls:
+                    format: int64
+                    type: integer
+                UniqueConfigurations:
+                    format: int32
+                    type: integer
+                ValidationErrors:
+                    format: int64
+                    type: integer
+            type: object
         DNSPersona:
             properties:
                 config:
@@ -1828,6 +1889,19 @@ components:
                     type: string
                 name:
                     type: string
+            type: object
+        DNSPersonaGroup:
+            properties:
+                ConfigFingerprint:
+                    type: string
+                DNSConfig:
+                    $ref: '#/components/schemas/DNSConfigDetails'
+                Personas:
+                    items:
+                        $ref: '#/components/schemas/Persona'
+                    type: array
+                Validator:
+                    $ref: '#/components/schemas/UUID'
             type: object
         DNSPhaseConfigRequest:
             properties:
@@ -1846,9 +1920,7 @@ components:
                     format: int32
                     type: integer
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 onlyInvalidDomains:
                     type: boolean
                 personaIds:
@@ -1894,22 +1966,12 @@ components:
             type: object
         DNSValidationConfig:
             properties:
-                batchSize:
-                    format: int32
-                    type: integer
+                name:
+                    type: string
                 personaIds:
                     items:
                         type: string
                     type: array
-                processingSpeedPerMinute:
-                    format: int32
-                    type: integer
-                retryAttempts:
-                    format: int32
-                    type: integer
-                rotationIntervalSeconds:
-                    format: int32
-                    type: integer
             required:
                 - personaIds
             type: object
@@ -1984,32 +2046,22 @@ components:
                     format: date-time
                     type: string
                 dnsCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 dnsRecords:
                     type: object
                 domainName:
                     type: string
                 generatedDomainId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 lastCheckedAt:
                     format: date-time
                     type: string
                 validatedByPersonaId:
-                    description: Unique identifier
-                    format: date-time
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 validationStatus:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             required:
                 - dnsCampaignId
                 - domainName
@@ -2019,7 +2071,7 @@ components:
             properties:
                 data:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/DNSValidationResult'
                     type: array
                 nextCursor:
                     type: string
@@ -2030,18 +2082,14 @@ components:
         DNSValidationStartResponse:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 domainsToProcess:
                     format: int32
                     type: integer
                 message:
                     type: string
                 validationJobId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         DNSValidationStatusEnum:
             type: string
@@ -2138,6 +2186,8 @@ components:
             type: object
         DatabaseHandler:
             type: object
+        DatabaseMonitor:
+            type: object
         DatabaseOptimizationRecommendation:
             properties:
                 createdAt:
@@ -2161,9 +2211,7 @@ components:
         DatabaseQuery:
             properties:
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 sql:
                     type: string
             required:
@@ -2226,9 +2274,7 @@ components:
         DeletionResponse:
             properties:
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 message:
                     type: string
                 success:
@@ -2254,9 +2300,7 @@ components:
                     format: int32
                     type: integer
                 testId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         DnsPersonaConfig:
             properties:
@@ -2333,18 +2377,14 @@ components:
                     format: int32
                     type: integer
                 sourceCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             required:
                 - personaIds
             type: object
         DomainBatch:
             properties:
                 CampaignID:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 Domains:
                     items:
                         type: string
@@ -2391,53 +2431,6 @@ components:
                 - numDomainsToGenerate
                 - totalPossibleCombinations
             type: object
-        DomainGenerationConfig:
-            properties:
-                batchSize:
-                    format: int32
-                    type: integer
-                characterSet:
-                    type: string
-                constantString:
-                    type: string
-                numDomainsToGenerate:
-                    format: int32
-                    type: integer
-                patternType:
-                    enum:
-                        - prefix
-                        - suffix
-                        - both
-                    type: string
-                tlds:
-                    items:
-                        type: string
-                    type: array
-                variableLength:
-                    format: int32
-                    type: integer
-            required:
-                - patternType
-                - variableLength
-                - characterSet
-                - constantString
-                - tlds
-            type: object
-        DomainGenerationConfigState:
-            properties:
-                configDetails:
-                    type: object
-                configHash:
-                    type: string
-                configState:
-                    $ref: '#/components/schemas/DomainGenerationConfigState'
-                lastOffset:
-                    format: int64
-                    type: integer
-                updatedAt:
-                    format: date-time
-                    type: string
-            type: object
         DomainGenerationParams:
             properties:
                 characterSet:
@@ -2475,7 +2468,7 @@ components:
                 constantString:
                     type: string
                 numDomainsToGenerate:
-                    format: int64
+                    format: int32
                     type: integer
                 patternType:
                     enum:
@@ -2483,8 +2476,10 @@ components:
                         - suffix
                         - both
                     type: string
-                tld:
-                    type: string
+                tlds:
+                    items:
+                        type: string
+                    type: array
                 variableLength:
                     format: int32
                     type: integer
@@ -2493,14 +2488,27 @@ components:
                 - variableLength
                 - characterSet
                 - constantString
-                - tld
+                - tlds
+            type: object
+        DomainGenerationPhaseConfigState:
+            properties:
+                configDetails:
+                    type: object
+                configHash:
+                    type: string
+                configState:
+                    $ref: '#/components/schemas/DomainGenerationPhaseConfigState'
+                lastOffset:
+                    format: int64
+                    type: integer
+                updatedAt:
+                    format: date-time
+                    type: string
             type: object
         DomainGenerationProgress:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 domainsGenerated:
                     format: int32
                     type: integer
@@ -2531,12 +2539,12 @@ components:
                     format: int32
                     type: integer
             type: object
+        DomainGenerationService:
+            type: object
         DomainGenerationStats:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 configHash:
                     type: string
                 currentOffset:
@@ -2576,6 +2584,10 @@ components:
             type: string
         DomainPatternType:
             type: string
+        DomainStealthService:
+            type: object
+        EncryptionService:
+            type: object
         EnhancedServerConfig:
             properties:
                 auth:
@@ -2593,7 +2605,7 @@ components:
                     type: array
                 domains:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/GeneratedDomain'
                     type: array
                 httpKeywordResults:
                     items:
@@ -2601,7 +2613,7 @@ components:
                     type: array
                 leads:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/LeadItem'
                     type: array
             type: object
         EnvAuthConfig:
@@ -2650,9 +2662,7 @@ components:
                     format: int32
                     type: integer
                 campaign_id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 campaign_phase:
                     type: string
                 domain_count:
@@ -2665,26 +2675,18 @@ components:
                 phase_status:
                     type: string
                 provided_value:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 required_field:
                     type: string
                 result_count:
                     format: int32
                     type: integer
                 source_campaign_id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 target_campaign_id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 validation_job_id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         ErrorDetail:
             properties:
@@ -2742,9 +2744,7 @@ components:
         EventProjection:
             properties:
                 aggregateId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 createdAt:
                     format: date-time
                     type: string
@@ -2768,25 +2768,17 @@ components:
         EventStoreRecord:
             properties:
                 aggregateId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 aggregateType:
                     type: string
                 causationId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 correlationId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 eventData:
                     type: object
                 eventId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 eventType:
                     type: string
                 eventVersion:
@@ -2834,13 +2826,9 @@ components:
                 advancedAnalysis:
                     $ref: '#/components/schemas/ExtractedContentAnalysis'
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 previousCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 similarityScore:
                     format: int32
                     type: integer
@@ -2855,6 +2843,19 @@ components:
             type: object
         FallbackPolicy:
             type: string
+        FeatureFlagConfig:
+            properties:
+                debug_logging:
+                    type: boolean
+                fallback_on_error:
+                    type: boolean
+                gradual_rollout:
+                    type: boolean
+                rollout_percentage:
+                    type: integer
+            type: object
+        FeatureFlagService:
+            type: object
         FeatureFlags:
             properties:
                 enableAnalytics:
@@ -2896,11 +2897,9 @@ components:
                     format: int32
                     type: integer
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 config:
-                    $ref: '#/components/schemas/DomainGenerationConfig'
+                    $ref: '#/components/schemas/DomainGenerationPhaseConfig'
                 startFromOffset:
                     format: int64
                     type: integer
@@ -2912,9 +2911,7 @@ components:
         GeneratedDomain:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 createdAt:
                     format: date-time
                     type: string
@@ -2947,13 +2944,9 @@ components:
                 httpTitle:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 lastValidatedAt:
-                    description: Unique identifier
-                    format: date-time
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 leadScore:
                     type: string
                 leadStatus:
@@ -2981,7 +2974,7 @@ components:
             properties:
                 data:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/GeneratedDomain'
                     type: array
                 nextCursor:
                     format: int64
@@ -3076,9 +3069,7 @@ components:
                         type: string
                     type: array
                 proxyPoolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 proxySelectionStrategy:
                     type: string
                 retryAttempts:
@@ -3088,9 +3079,7 @@ components:
                     format: int32
                     type: integer
                 sourceCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 sourceType:
                     type: string
                 targetHttpPorts:
@@ -3102,6 +3091,8 @@ components:
                 - sourceCampaignId
                 - sourceType
                 - personaIds
+            type: object
+        HTTPKeywordCampaignService:
             type: object
         HTTPKeywordParams:
             properties:
@@ -3132,9 +3123,7 @@ components:
                     format: date-time
                     type: string
                 dnsResultId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 domainName:
                     type: string
                 extractedContentSnippet:
@@ -3146,16 +3135,12 @@ components:
                 foundKeywordsFromSets:
                     type: object
                 httpKeywordCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 httpStatusCode:
                     format: int32
                     type: integer
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 lastCheckedAt:
                     format: date-time
                     type: string
@@ -3164,17 +3149,11 @@ components:
                 responseHeaders:
                     type: object
                 usedProxyId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 validatedByPersonaId:
-                    description: Unique identifier
-                    format: date-time
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 validationStatus:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             required:
                 - httpKeywordCampaignId
                 - domainName
@@ -3184,7 +3163,7 @@ components:
             properties:
                 data:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/HTTPKeywordResult'
                     type: array
                 nextCursor:
                     type: string
@@ -3237,6 +3216,30 @@ components:
                 - keywords
                 - adHocKeywords
             type: object
+        HTTPPerformanceMetrics:
+            properties:
+                ActiveConnections:
+                    format: int32
+                    type: integer
+                AverageResponseTimeMs:
+                    format: int64
+                    type: integer
+                ConnectionPoolHits:
+                    format: int64
+                    type: integer
+                ConnectionPoolMisses:
+                    format: int64
+                    type: integer
+                TotalHTTPRequests:
+                    format: int64
+                    type: integer
+                UniqueConfigurations:
+                    format: int32
+                    type: integer
+                ValidationErrors:
+                    format: int64
+                    type: integer
+            type: object
         HTTPPersona:
             properties:
                 allowedStatusCodes:
@@ -3248,6 +3251,7 @@ components:
                     $ref: '#/components/schemas/CookieHandlingConfig'
                 createdAt:
                     description: Metadata
+                    format: date-time
                     type: string
                 description:
                     type: string
@@ -3318,6 +3322,7 @@ components:
                 tlsClientHello:
                     $ref: '#/components/schemas/TLSClientHelloConfig'
                 updatedAt:
+                    format: date-time
                     type: string
                 useHeadless:
                     description: Headless Browser Configuration
@@ -3330,6 +3335,19 @@ components:
                     type: integer
                 waitDelaySeconds:
                     type: string
+            type: object
+        HTTPPersonaGroup:
+            properties:
+                ConfigFingerprint:
+                    type: string
+                HTTPClient:
+                    type: string
+                HTTPConfig:
+                    $ref: '#/components/schemas/HTTPConfigDetails'
+                Personas:
+                    items:
+                        $ref: '#/components/schemas/Persona'
+                    type: array
             type: object
         HTTPPhaseConfigRequest:
             properties:
@@ -3371,44 +3389,15 @@ components:
                     items:
                         type: string
                     type: array
-                batchSize:
-                    format: int32
-                    type: integer
                 keywordSetIds:
                     items:
                         type: string
                     type: array
+                name:
+                    type: string
                 personaIds:
                     items:
                         type: string
-                    type: array
-                processingSpeedPerMinute:
-                    format: int32
-                    type: integer
-                proxyIds:
-                    items:
-                        type: string
-                    type: array
-                proxyPoolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
-                proxySelectionStrategy:
-                    enum:
-                        - round_robin
-                        - random
-                        - least_used
-                    type: string
-                retryAttempts:
-                    format: int32
-                    type: integer
-                rotationIntervalSeconds:
-                    format: int32
-                    type: integer
-                targetHttpPorts:
-                    items:
-                        format: int32
-                        type: integer
                     type: array
             required:
                 - personaIds
@@ -3446,18 +3435,14 @@ components:
         HTTPValidationStartResponse:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 domainsToTest:
                     format: int32
                     type: integer
                 message:
                     type: string
                 validationJobId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         HTTPValidationStatusEnum:
             type: string
@@ -3571,9 +3556,7 @@ components:
                     format: int32
                     type: integer
                 proxyPoolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 proxySelectionStrategy:
                     type: string
                 retryAttempts:
@@ -3583,9 +3566,7 @@ components:
                     format: int32
                     type: integer
                 sourceCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 targetHttpPorts:
                     items:
                         format: int32
@@ -3661,6 +3642,8 @@ components:
             required:
                 - userAgent
             type: object
+        InMemorySessionStore:
+            type: object
         JobBusinessStatusEnum:
             type: string
         JobTypeEnum:
@@ -3668,30 +3651,22 @@ components:
         KeywordExtractionAPIResult:
             properties:
                 dnsPersonaIdUsed:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 error:
                     type: string
                 finalUrl:
                     format: uri
                     type: string
                 httpPersonaIdUsed:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 keywordSetIdUsed:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 matches:
                     items:
                         type: string
                     type: array
                 proxyIdUsed:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 statusCode:
                     format: int32
                     type: integer
@@ -3702,17 +3677,11 @@ components:
         KeywordExtractionRequestItem:
             properties:
                 dnsPersonaId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 httpPersonaId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 keywordSetId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 url:
                     format: uri
                     type: string
@@ -3731,15 +3700,11 @@ components:
                     format: date-time
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isCaseSensitive:
                     type: boolean
                 keywordSetId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 pattern:
                     type: string
                 ruleType:
@@ -3766,10 +3731,7 @@ components:
                 pattern:
                     type: string
                 ruleType:
-                    enum:
-                        - string
-                        - regex
-                    type: string
+                    $ref: '#/components/schemas/KeywordRuleTypeEnum'
             required:
                 - pattern
                 - ruleType
@@ -3784,9 +3746,7 @@ components:
                 description:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isEnabled:
                     type: boolean
                 name:
@@ -3806,9 +3766,7 @@ components:
                 deleted:
                     type: boolean
                 keywordSetId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 message:
                     type: string
             type: object
@@ -3820,9 +3778,7 @@ components:
                 description:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isEnabled:
                     type: boolean
                 name:
@@ -3832,11 +3788,13 @@ components:
                     type: integer
                 rules:
                     items:
-                        type: string
+                        $ref: '#/components/schemas/KeywordRule'
                     type: array
                 updatedAt:
                     format: date-time
                     type: string
+            type: object
+        KeywordSetService:
             type: object
         LeadGenerationCampaign:
             properties:
@@ -3870,9 +3828,7 @@ components:
                         - analysis
                     type: string
                 currentPhaseId:
-                    description: Phase management
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 dnsConfig:
                     type: object
                 dnsResults:
@@ -3908,9 +3864,7 @@ components:
                 httpResults:
                     type: object
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isFullSequenceMode:
                     description: Sequence mode configuration
                     type: boolean
@@ -3970,9 +3924,7 @@ components:
                     format: date-time
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             required:
                 - name
                 - campaignType
@@ -3991,8 +3943,7 @@ components:
                     format: date-time
                     type: string
                 currentPhase:
-                    description: Phase management
-                    type: string
+                    $ref: '#/components/schemas/PhaseTypeEnum'
                 dnsValidatedDomains:
                     format: int64
                     type: integer
@@ -4006,9 +3957,7 @@ components:
                     format: int64
                     type: integer
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 leads:
                     format: int64
                     type: integer
@@ -4018,7 +3967,7 @@ components:
                     format: double
                     type: number
                 phaseStatus:
-                    type: string
+                    $ref: '#/components/schemas/PhaseStatusEnum'
                 phases:
                     description: Phase execution details
                     items:
@@ -4043,15 +3992,19 @@ components:
                 updatedAt:
                     format: date-time
                     type: string
+            required:
+                - id
+                - name
+                - campaignType
+                - createdAt
+                - updatedAt
             type: object
         LeadGenerationProgress:
             properties:
                 campaign_id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 current_phase:
-                    type: string
+                    $ref: '#/components/schemas/PhaseTypeEnum'
                 overall_progress:
                     format: double
                     type: number
@@ -4068,15 +4021,11 @@ components:
                     format: email
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 name:
                     type: string
                 previousCampaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 similarityScore:
                     format: int32
                     type: integer
@@ -4133,9 +4082,7 @@ components:
                 requires_captcha:
                     type: boolean
                 sessionId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 success:
                     type: boolean
                 user:
@@ -4151,9 +4098,7 @@ components:
                 requires_captcha:
                     type: boolean
                 sessionId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 success:
                     type: boolean
                 user:
@@ -4174,9 +4119,7 @@ components:
                     format: int32
                     type: integer
                 challengeId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 createdAt:
                     format: date-time
                     type: string
@@ -4187,11 +4130,14 @@ components:
                     format: int32
                     type: integer
                 method:
-                    type: object
-                userId:
-                    description: Unique identifier
-                    format: uuid
+                    enum:
+                        - totp
+                        - sms
+                        - email
+                        - backup
                     type: string
+                userId:
+                    $ref: '#/components/schemas/UUID'
             type: object
         MFAEnrollment:
             properties:
@@ -4202,13 +4148,20 @@ components:
                     format: date-time
                     type: string
                 preferredMethod:
-                    type: object
+                    enum:
+                        - totp
+                        - sms
+                        - email
+                        - backup
+                    type: string
                 totpEnabled:
                     type: boolean
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
+            type: object
+        MFAMethod:
+            type: string
+        MFAService:
             type: object
         Metadata:
             properties:
@@ -4244,6 +4197,60 @@ components:
                     type: integer
                 pattern:
                     type: string
+            type: object
+        OptimizationConfig:
+            properties:
+                enabled:
+                    type: boolean
+                feature_flags:
+                    $ref: '#/components/schemas/FeatureFlagConfig'
+                performance:
+                    $ref: '#/components/schemas/PerformanceConfig'
+                phases:
+                    $ref: '#/components/schemas/PhaseConfig'
+                redis:
+                    $ref: '#/components/schemas/RedisConfig'
+            type: object
+        OptimizationHealthHandler:
+            type: object
+        OptimizationLevel:
+            properties:
+                batchQueries:
+                    type: boolean
+                caching:
+                    type: boolean
+                externalValidation:
+                    type: boolean
+                identifier:
+                    $ref: '#/components/schemas/UUID'
+                serviceOptimization:
+                    type: boolean
+            type: object
+        OptimizationStatus:
+            properties:
+                cacheAvailable:
+                    type: boolean
+                enabled:
+                    type: boolean
+                featureFlagConfig:
+                    type: string
+                optimizationLevel:
+                    $ref: '#/components/schemas/OptimizationLevel'
+                phaseConfig:
+                    $ref: '#/components/schemas/PhaseConfig'
+            type: object
+        OptimizedHTTPClient:
+            properties:
+                Client:
+                    type: string
+                ConfigFingerprint:
+                    type: string
+                CreatedAt:
+                    format: date-time
+                    type: string
+                UsageCount:
+                    format: int64
+                    type: integer
             type: object
         PageInfo:
             properties:
@@ -4306,9 +4313,7 @@ components:
                     format: date-time
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 ipAddress:
                     type: string
                 tokenHash:
@@ -4319,9 +4324,7 @@ components:
                 userAgent:
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         PatternOffsetRequest:
             properties:
@@ -4367,6 +4370,19 @@ components:
                     format: int32
                     type: integer
             type: object
+        PerformanceConfig:
+            properties:
+                batch_size:
+                    type: integer
+                cache_ttl:
+                    $ref: '#/components/schemas/CacheTTLConfig'
+                dns_timeout:
+                    type: string
+                http_timeout:
+                    type: string
+                max_concurrent_requests:
+                    type: integer
+            type: object
         PerformanceThreshold:
             properties:
                 maxConnectionWaitTimeMs:
@@ -4397,9 +4413,7 @@ components:
                 description:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isEnabled:
                     type: boolean
                 lastError:
@@ -4441,9 +4455,7 @@ components:
                 message:
                     type: string
                 personaId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         PersonaResponse:
             properties:
@@ -4455,15 +4467,13 @@ components:
                 description:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isEnabled:
                     type: boolean
                 name:
                     type: string
                 personaType:
-                    type: string
+                    $ref: '#/components/schemas/PersonaTypeEnum'
                 updatedAt:
                     format: date-time
                     type: string
@@ -4475,9 +4485,7 @@ components:
                 message:
                     type: string
                 personaId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 personaName:
                     type: string
                 personaType:
@@ -4524,7 +4532,7 @@ components:
                 httpKeywordValidation:
                     $ref: '#/components/schemas/HTTPKeywordValidationPhaseConfig'
                 phaseType:
-                    type: string
+                    $ref: '#/components/schemas/PhaseTypeEnum'
             type: object
         PhaseConfigureRequest:
             properties:
@@ -4540,12 +4548,12 @@ components:
                 - phaseType
                 - config
             type: object
+        PhaseExecutionService:
+            type: object
         PhaseProgress:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 errorMessage:
                     type: string
                 estimatedEnd:
@@ -4564,7 +4572,7 @@ components:
                     format: int64
                     type: integer
                 phaseType:
-                    type: string
+                    $ref: '#/components/schemas/PhaseTypeEnum'
                 progress:
                     format: double
                     type: number
@@ -4572,7 +4580,7 @@ components:
                     format: date-time
                     type: string
                 status:
-                    type: string
+                    $ref: '#/components/schemas/PhaseStatusEnum'
             type: object
         PhaseProgressResponse:
             properties:
@@ -4585,7 +4593,7 @@ components:
                     format: int64
                     type: integer
                 phaseType:
-                    type: string
+                    $ref: '#/components/schemas/PhaseTypeEnum'
                 processedItems:
                     format: int64
                     type: integer
@@ -4596,7 +4604,7 @@ components:
                     format: date-time
                     type: string
                 status:
-                    type: string
+                    $ref: '#/components/schemas/PhaseStatusEnum'
                 successfulItems:
                     format: int64
                     type: integer
@@ -4619,9 +4627,7 @@ components:
         PhaseStats:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 duration:
                     type: string
                 errorCounts:
@@ -4633,7 +4639,7 @@ components:
                     format: int64
                     type: integer
                 phaseType:
-                    type: string
+                    $ref: '#/components/schemas/PhaseTypeEnum'
                 processingRate:
                     format: double
                     type: number
@@ -4681,9 +4687,7 @@ components:
                 host:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 inputPassword:
                     format: password
                     type: string
@@ -4719,9 +4723,7 @@ components:
                         - socks4
                     type: string
                 provider:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 status:
                     description: Frontend-expected fields
                     enum:
@@ -4786,9 +4788,7 @@ components:
                 message:
                     type: string
                 proxyId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 responseTimeMs:
                     format: int64
                     type: integer
@@ -4835,9 +4835,7 @@ components:
                     format: int32
                     type: integer
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isEnabled:
                     type: boolean
                 maxRetries:
@@ -4868,9 +4866,7 @@ components:
                 message:
                     type: string
                 poolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         ProxyPoolMembership:
             properties:
@@ -4880,13 +4876,9 @@ components:
                 isActive:
                     type: boolean
                 poolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 proxyId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 weight:
                     format: int32
                     type: integer
@@ -4901,13 +4893,9 @@ components:
                 message:
                     type: string
                 poolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 proxyId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 removed:
                     type: boolean
             type: object
@@ -4948,9 +4936,7 @@ components:
                 proxyDetails:
                     $ref: '#/components/schemas/ProxyDetailsResponse'
                 proxyId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 responseTimeMs:
                     format: int64
                     type: integer
@@ -4962,9 +4948,7 @@ components:
                 error:
                     type: string
                 proxyId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 responseTime:
                     format: int64
                     type: integer
@@ -4983,9 +4967,7 @@ components:
                     format: int64
                     type: integer
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 campaignPhase:
                     type: string
                 cpuTimeMs:
@@ -4998,9 +4980,7 @@ components:
                     format: double
                     type: number
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 indexUsage:
                     type: object
                 ioWaitMs:
@@ -5044,9 +5024,7 @@ components:
                         type: string
                     type: array
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         QueryPerformanceReport:
             properties:
@@ -5103,9 +5081,7 @@ components:
                     format: int64
                     type: integer
                 ValidationGroup:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 ValidationOrder:
                     format: int64
                     type: integer
@@ -5124,9 +5100,7 @@ components:
                     format: int64
                     type: integer
                 identifier:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 windowStart:
                     format: date-time
                     type: string
@@ -5150,6 +5124,132 @@ components:
                 windowSeconds:
                     type: integer
             type: object
+        RecoveryOptions:
+            properties:
+                alternativeMethods:
+                    items:
+                        $ref: '#/components/schemas/MFAMethod'
+                    type: array
+                backupCodesRemaining:
+                    type: integer
+                recoveryEmail:
+                    type: string
+                recoveryPhone:
+                    type: string
+            type: object
+        RedisCacheConfig:
+            properties:
+                connMaxLifetime:
+                    type: string
+                defaultTTL:
+                    type: string
+                dialTimeout:
+                    type: string
+                enableMetrics:
+                    type: boolean
+                idleTimeout:
+                    type: string
+                maxRetries:
+                    type: integer
+                metricsFlushInterval:
+                    type: string
+                minIdleConns:
+                    type: integer
+                poolSize:
+                    type: integer
+                readTimeout:
+                    type: string
+                redisAddr:
+                    type: string
+                redisDB:
+                    type: integer
+                redisPassword:
+                    type: string
+                writeTimeout:
+                    type: string
+            type: object
+        RedisConfig:
+            properties:
+                addr:
+                    type: string
+                campaignTTL:
+                    description: Campaign data TTLs
+                    properties:
+                        batchQueryResultTTL:
+                            type: string
+                        campaignDetailsTTL:
+                            type: string
+                        campaignRelationshipTTL:
+                            type: string
+                    type: object
+                connMaxLifetime:
+                    type: string
+                db:
+                    type: integer
+                dialTimeout:
+                    description: Timeouts
+                    type: string
+                enabled:
+                    description: Basic connection settings
+                    type: boolean
+                entityTTL:
+                    description: TTL settings for different entity types
+                    properties:
+                        keywordSetTTL:
+                            type: string
+                        keywordTTL:
+                            type: string
+                        personaTTL:
+                            type: string
+                        proxyTTL:
+                            type: string
+                    type: object
+                idleTimeout:
+                    type: string
+                maxRetries:
+                    description: Retry and reliability
+                    type: integer
+                metrics:
+                    description: Monitoring and metrics
+                    properties:
+                        enabled:
+                            type: boolean
+                        flushInterval:
+                            type: string
+                        performanceThreshold:
+                            properties:
+                                errorRateWarning:
+                                    type: number
+                                hitRatioWarning:
+                                    type: number
+                                latencyCriticalMs:
+                                    type: integer
+                                latencyWarningMs:
+                                    type: integer
+                            type: object
+                    type: object
+                minIdleConns:
+                    type: integer
+                password:
+                    type: string
+                poolSize:
+                    description: Connection pool settings
+                    type: integer
+                readTimeout:
+                    type: string
+                validationTTL:
+                    description: Validation result TTLs
+                    properties:
+                        configFingerprintTTL:
+                            type: string
+                        dnsValidationTTL:
+                            type: string
+                        httpValidationTTL:
+                            type: string
+                    type: object
+                writeTimeout:
+                    type: string
+            type: object
         ResolvedConfig:
             properties:
                 data:
@@ -5161,14 +5261,14 @@ components:
                 service_name:
                     type: string
             type: object
+        ResourceLockManager:
+            type: object
         ResourceUtilizationMetric:
             properties:
                 bottleneckDetected:
                     type: boolean
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 campaignPhase:
                     type: string
                 component:
@@ -5180,9 +5280,7 @@ components:
                     format: double
                     type: number
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 maxCapacity:
                     format: double
                     type: number
@@ -5198,6 +5296,55 @@ components:
                 utilizationPct:
                     format: double
                     type: number
+            type: object
+        RuleLoaderService:
+            type: object
+        RuleQueryFilter:
+            properties:
+                category:
+                    type: string
+                isCaseSensitive:
+                    type: boolean
+                keywordSetId:
+                    $ref: '#/components/schemas/UUID'
+                limit:
+                    format: int32
+                    type: integer
+                offset:
+                    format: int32
+                    type: integer
+                patternSearch:
+                    type: string
+                ruleType:
+                    $ref: '#/components/schemas/KeywordRuleTypeEnum'
+            type: object
+        RuleStatistics:
+            properties:
+                caseSensitiveRules:
+                    type: integer
+                distinctCategories:
+                    type: integer
+                enabledKeywordSets:
+                    type: integer
+                regexRules:
+                    type: integer
+                stringRules:
+                    type: integer
+                totalKeywordSets:
+                    type: integer
+                totalRules:
+                    type: integer
+            type: object
+        SafetyValidationError:
+            properties:
+                Impact:
+                    type: string
+                Operation:
+                    type: string
+                Remediation:
+                    type: string
+                Violation:
+                    type: string
             type: object
         SchemaStats:
             properties:
@@ -5228,28 +5375,20 @@ components:
                     format: date-time
                     type: string
                 sessionId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         SecurityEvent:
             properties:
                 actionAttempted:
                     type: string
                 auditLogId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 authorizationResult:
                     type: string
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 createdAt:
                     format: date-time
                     type: string
@@ -5258,32 +5397,24 @@ components:
                 eventType:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 requestContext:
                     type: object
                 resourceId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 resourceType:
                     type: string
                 riskScore:
                     format: int32
                     type: integer
                 sessionId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 sourceIp:
                     type: string
                 userAgent:
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         ServerConfig:
             properties:
@@ -5366,9 +5497,7 @@ components:
                     format: double
                     type: number
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 instanceCount:
                     format: int32
                     type: integer
@@ -5379,6 +5508,23 @@ components:
                     format: date-time
                     type: string
                 serviceName:
+                    type: string
+            type: object
+        ServiceConfiguration:
+            properties:
+                AppConfig:
+                    type: string
+                AuditLogStore:
+                    type: string
+                CampaignJobStore:
+                    type: string
+                CampaignStore:
+                    type: string
+                KeywordStore:
+                    type: string
+                PersonaStore:
+                    type: string
+                ProxyStore:
                     type: string
             type: object
         ServiceDependency:
@@ -5410,6 +5556,8 @@ components:
                 targetService:
                     type: string
             type: object
+        ServiceFactory:
+            type: object
         Session:
             properties:
                 browserFingerprint:
@@ -5421,9 +5569,7 @@ components:
                     format: date-time
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 ipAddress:
                     type: string
                 isActive:
@@ -5440,9 +5586,7 @@ components:
                 userAgentHash:
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         SessionConfig:
             properties:
@@ -5514,6 +5658,8 @@ components:
                 user:
                     $ref: '#/components/schemas/UserPublicResponse'
             type: object
+        SessionService:
+            type: object
         SessionSettings:
             properties:
                 allowed_origins:
@@ -5572,6 +5718,8 @@ components:
                 session_id_length:
                     type: integer
             type: object
+        StateMachineHook:
+            type: object
         Status:
             properties:
                 message:
@@ -5592,7 +5740,13 @@ components:
                     type: boolean
                 shuffleStrategy:
                     description: ShuffleStrategy determines how domains are randomized
-                    type: object
+                    enum:
+                        - sequential
+                        - full_shuffle
+                        - block_shuffle
+                        - weighted
+                        - interleaved
+                    type: string
                 subsetPercentage:
                     format: double
                     type: number
@@ -5611,6 +5765,8 @@ components:
                     items:
                         type: string
                     type: array
+            type: object
+        StealthIntegrationService:
             type: object
         StealthMetrics:
             properties:
@@ -5635,6 +5791,8 @@ components:
                     format: double
                     type: number
             type: object
+        StealthStrategy:
+            type: string
         StreamingResponseHandler:
             type: object
         SuccessMessageResponse:
@@ -5708,9 +5866,7 @@ components:
                     format: password
                     type: string
                 userId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         TableStats:
             properties:
@@ -5738,10 +5894,16 @@ components:
                 success:
                     type: boolean
                 testId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
+        TransitionManager:
+            type: object
+        UUID:
+            description: Unique identifier (UUID v4)
+            example: 550e8400-e29b-41d4-a716-446655440000
+            format: uuid
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            type: string
         UpdateCampaignRequest:
             properties:
                 adHocKeywords:
@@ -5752,7 +5914,7 @@ components:
                     format: int32
                     type: integer
                 campaignType:
-                    type: string
+                    $ref: '#/components/schemas/JobTypeEnum'
                 characterSet:
                     type: string
                 constantString:
@@ -5776,9 +5938,7 @@ components:
                     format: int32
                     type: integer
                 proxyPoolId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 proxySelectionStrategy:
                     type: string
                 retryAttempts:
@@ -5788,7 +5948,7 @@ components:
                     format: int32
                     type: integer
                 status:
-                    type: string
+                    $ref: '#/components/schemas/PhaseStatusEnum'
                 targetHttpPorts:
                     items:
                         format: int32
@@ -5876,9 +6036,7 @@ components:
                 firstName:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isActive:
                     type: boolean
                 isLocked:
@@ -5921,9 +6079,7 @@ components:
                 firstName:
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isActive:
                     type: boolean
                 isLocked:
@@ -5954,9 +6110,7 @@ components:
                     format: email
                     type: string
                 id:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 isActive:
                     type: boolean
                 username:
@@ -5965,21 +6119,15 @@ components:
         ValidationOperationResponse:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 jobId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 message:
                     type: string
                 success:
                     type: boolean
                 validationType:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         ValidationRule:
             properties:
@@ -5989,15 +6137,11 @@ components:
         ValidationStartResponse:
             properties:
                 campaignId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
                 message:
                     type: string
                 validationId:
-                    description: Unique identifier
-                    format: uuid
-                    type: string
+                    $ref: '#/components/schemas/UUID'
             type: object
         ValidationStatusEnum:
             type: string
@@ -6088,6 +6232,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkDatabaseQueryRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6107,10 +6257,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Execute bulk database queries
             tags:
                 - database
@@ -6125,6 +6273,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkDatabaseStatsRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6144,17 +6298,120 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get bulk database statistics
             tags:
                 - database
+    /api/v2/keyword-rules:
+        get:
+            description: Advanced querying for keyword rule management across sets with multiple filter options
+            operationId: queryKeywordRules
+            parameters:
+                - description: Filter by keyword set ID
+                  in: query
+                  name: keyword_set_id
+                  schema:
+                    type: string
+                - description: Filter by rule type
+                  in: query
+                  name: rule_type
+                  schema:
+                    type: string
+                - description: Filter by category
+                  in: query
+                  name: category
+                  schema:
+                    type: string
+                - description: Filter by case sensitivity
+                  in: query
+                  name: is_case_sensitive
+                  schema:
+                    type: boolean
+                - description: Search pattern in rule patterns (partial match)
+                  in: query
+                  name: pattern
+                  schema:
+                    type: string
+                - description: Maximum number of results
+                  in: query
+                  name: limit
+                  schema:
+                    type: integer
+                - description: Number of results to skip
+                  in: query
+                  name: offset
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+            security:
+                - {}
+            summary: Query keyword rules with advanced filtering
+            tags:
+                - keyword-sets
+    /api/v2/keyword-sets/{id}/rules:
+        get:
+            description: Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
+            operationId: getKeywordSetWithRules
+            parameters:
+                - description: Keyword Set ID
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+            security:
+                - {}
+            summary: Get keyword set with high-performance rules loading
+            tags:
+                - keyword-sets
     /auth/change-password:
         post:
             description: Change password for the currently authenticated user
             operationId: changePassword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ChangePasswordRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6174,8 +6431,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: Change user password
             tags:
                 - authentication
@@ -6183,6 +6438,12 @@ paths:
         post:
             description: Authenticate user credentials and create session
             operationId: login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoginRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6202,8 +6463,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: User login
             tags:
                 - authentication
@@ -6230,8 +6489,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: User logout
             tags:
                 - authentication
@@ -6258,8 +6515,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: Get current user
             tags:
                 - authentication
@@ -6286,8 +6541,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: Refresh user session
             tags:
                 - authentication
@@ -6314,10 +6567,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List campaigns (standalone)
             tags:
                 - campaigns
@@ -6338,6 +6589,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/PhaseConfigureRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6357,10 +6614,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Configure campaign phase (standalone)
             tags:
                 - campaigns
@@ -6400,10 +6655,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Start campaign phase (standalone)
             tags:
                 - campaigns
@@ -6443,10 +6696,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get phase status (standalone)
             tags:
                 - campaigns
@@ -6480,10 +6731,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get campaign progress (standalone)
             tags:
                 - campaigns
@@ -6491,6 +6740,12 @@ paths:
         post:
             description: Retrieve bulk enriched data across multiple campaigns for enterprise-scale processing
             operationId: getBulkEnrichedCampaignData
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkEnrichedDataRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6510,10 +6765,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get bulk enriched campaign data
             tags:
                 - campaigns
@@ -6521,6 +6774,12 @@ paths:
         post:
             description: Get the current offset for domain generation patterns
             operationId: getPatternOffset
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/PatternOffsetRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6540,10 +6799,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get domain generation pattern offset
             tags:
                 - campaigns
@@ -6551,6 +6808,12 @@ paths:
         post:
             description: Create a new lead generation campaign with domain generation configuration
             operationId: createLeadGenerationCampaign
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateLeadGenerationCampaignRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6576,10 +6839,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create lead generation campaign
             tags:
                 - campaigns
@@ -6606,16 +6867,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get feature flags
             tags:
                 - feature-flags
         put:
             description: Update feature flag settings
             operationId: updateFeatureFlags
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/FeatureFlags'
+                required: true
             responses:
                 "200":
                     content:
@@ -6635,10 +6900,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update feature flags
             tags:
                 - feature-flags
@@ -6665,10 +6928,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Health check
             tags:
                 - health
@@ -6695,10 +6956,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Liveness check
             tags:
                 - health
@@ -6725,10 +6984,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Readiness check
             tags:
                 - health
@@ -6736,6 +6993,12 @@ paths:
         post:
             description: Extract keywords from multiple URLs using specified keyword sets and personas
             operationId: batchExtractKeywords
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BatchKeywordExtractionRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6755,10 +7018,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Batch keyword extraction
             tags:
                 - keyword-extraction
@@ -6814,10 +7075,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Stream keyword extraction
             tags:
                 - keyword-extraction
@@ -6871,16 +7130,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List keyword sets
             tags:
                 - keyword-sets
         post:
             description: Create a new keyword set with optional rules
             operationId: createKeywordSet
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateKeywordSetRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -6906,10 +7169,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create keyword set
             tags:
                 - keyword-sets
@@ -6943,10 +7204,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Delete keyword set
             tags:
                 - keyword-sets
@@ -6979,10 +7238,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get keyword set
             tags:
                 - keyword-sets
@@ -6996,6 +7253,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateKeywordSetRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7015,10 +7278,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update keyword set
             tags:
                 - keyword-sets
@@ -7072,16 +7333,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List all personas
             tags:
                 - personas
         post:
             description: Create a new persona (DNS or HTTP) with configuration details
             operationId: createPersona
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreatePersonaRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7107,10 +7372,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create persona
             tags:
                 - personas
@@ -7144,10 +7407,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Delete persona
             tags:
                 - personas
@@ -7180,10 +7441,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get persona by ID
             tags:
                 - personas
@@ -7197,6 +7456,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdatePersonaRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7216,10 +7481,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update persona
             tags:
                 - personas
@@ -7253,10 +7516,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Test persona
             tags:
                 - personas
@@ -7290,10 +7551,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get DNS persona by ID
             tags:
                 - personas
@@ -7327,10 +7586,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get HTTP persona by ID
             tags:
                 - personas
@@ -7357,10 +7614,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Ping server
             tags:
                 - health
@@ -7419,16 +7674,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List proxies
             tags:
                 - proxies
         post:
             description: Add a new proxy configuration
             operationId: addProxy
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateProxyRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7454,10 +7713,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create proxy
             tags:
                 - proxies
@@ -7497,10 +7754,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Delete proxy
             tags:
                 - proxies
@@ -7514,6 +7769,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateProxyRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7533,10 +7794,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update proxy
             tags:
                 - proxies
@@ -7570,10 +7829,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Force proxy health check
             tags:
                 - proxies
@@ -7607,17 +7864,123 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Test proxy
+            tags:
+                - proxies
+    /proxies/bulk/delete:
+        delete:
+            description: Delete multiple proxy configurations simultaneously
+            operationId: bulkDeleteProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkDeleteProxiesRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BulkProxyOperationResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+            security:
+                - {}
+            summary: Bulk delete proxies
+            tags:
+                - proxies
+    /proxies/bulk/test:
+        post:
+            description: Test multiple proxy configurations simultaneously
+            operationId: bulkTestProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkTestProxiesRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BulkProxyTestResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+            security:
+                - {}
+            summary: Bulk test proxies
+            tags:
+                - proxies
+    /proxies/bulk/update:
+        put:
+            description: Update multiple proxy configurations simultaneously
+            operationId: bulkUpdateProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkUpdateProxiesRequest'
+                required: true
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BulkProxyOperationResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+            security:
+                - {}
+            summary: Bulk update proxies
             tags:
                 - proxies
     /proxies/health-check:
         post:
             description: Force health checks on all registered proxies
             operationId: forceCheckAllProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyHealthCheckRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7637,10 +8000,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Force health check on all proxies
             tags:
                 - proxies
@@ -7667,10 +8028,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get proxy statuses
             tags:
                 - proxies
@@ -7703,16 +8062,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List proxy pools
             tags:
                 - proxy-pools
         post:
             description: Create a new proxy pool with configuration settings
             operationId: createProxyPool
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyPoolRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7738,10 +8101,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create proxy pool
             tags:
                 - proxy-pools
@@ -7775,10 +8136,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Delete proxy pool
             tags:
                 - proxy-pools
@@ -7792,6 +8151,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyPoolRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7811,10 +8176,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update proxy pool
             tags:
                 - proxy-pools
@@ -7829,6 +8192,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AddProxyToPoolRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7854,10 +8223,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Add proxy to pool
             tags:
                 - proxy-pools
@@ -7897,10 +8264,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Remove proxy from pool
             tags:
                 - proxy-pools
@@ -7927,16 +8292,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get authentication configuration
             tags:
                 - server-settings
         put:
             description: Update the authentication configuration settings
             operationId: updateAuthConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AuthConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -7956,10 +8325,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update authentication configuration
             tags:
                 - server-settings
@@ -7986,16 +8353,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get server configuration
             tags:
                 - server-settings
         put:
             description: Update server-wide configuration settings
             operationId: updateServerConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ServerConfigUpdateRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8015,10 +8386,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update server configuration
             tags:
                 - server-settings
@@ -8045,16 +8414,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get DNS configuration
             tags:
                 - server-settings
         put:
             description: Update default DNS validator configuration
             operationId: updateDNSConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DNSValidatorConfigJSON'
+                required: true
             responses:
                 "200":
                     content:
@@ -8074,10 +8447,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update DNS configuration
             tags:
                 - server-settings
@@ -8104,16 +8475,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get HTTP configuration
             tags:
                 - server-settings
         put:
             description: Update default HTTP validator configuration
             operationId: updateHTTPConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/HTTPValidatorConfigJSON'
+                required: true
             responses:
                 "200":
                     content:
@@ -8133,10 +8508,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update HTTP configuration
             tags:
                 - server-settings
@@ -8163,16 +8536,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get logging configuration
             tags:
                 - server-settings
         put:
             description: Update the logging configuration settings
             operationId: updateLoggingConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoggingConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -8192,10 +8569,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update logging configuration
             tags:
                 - server-settings
@@ -8222,16 +8597,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get proxy manager configuration
             tags:
                 - server-settings
         put:
             description: Update the proxy manager configuration settings
             operationId: updateProxyManagerConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyManagerConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -8251,10 +8630,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update proxy manager configuration
             tags:
                 - server-settings
@@ -8281,16 +8658,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get rate limiter configuration
             tags:
                 - server-settings
         put:
             description: Update the rate limiter configuration settings
             operationId: updateRateLimiterConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RateLimiterConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -8310,10 +8691,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update rate limiter configuration
             tags:
                 - server-settings
@@ -8340,16 +8719,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get worker configuration
             tags:
                 - server-settings
         put:
             description: Update the worker configuration settings
             operationId: updateWorkerConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/WorkerConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -8369,10 +8752,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update worker configuration
             tags:
                 - server-settings
@@ -8411,10 +8792,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: WebSocket connection
             tags:
                 - websocket

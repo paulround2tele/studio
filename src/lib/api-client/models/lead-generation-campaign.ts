@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -82,13 +84,13 @@ export interface LeadGenerationCampaign {
      * @type {string}
      * @memberof LeadGenerationCampaign
      */
-    'currentPhase'?: LeadGenerationCampaignCurrentPhaseEnum;
+    'currentPhase'?: 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis';
     /**
-     * Phase management
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof LeadGenerationCampaign
      */
-    'currentPhaseId'?: string;
+    'currentPhaseId'?: UUID;
     /**
      * 
      * @type {object}
@@ -162,11 +164,11 @@ export interface LeadGenerationCampaign {
      */
     'httpResults'?: object;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof LeadGenerationCampaign
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * Sequence mode configuration
      * @type {boolean}
@@ -214,7 +216,7 @@ export interface LeadGenerationCampaign {
      * @type {string}
      * @memberof LeadGenerationCampaign
      */
-    'phaseStatus'?: LeadGenerationCampaignPhaseStatusEnum;
+    'phaseStatus'?: 'not_started' | 'ready' | 'configured' | 'in_progress' | 'paused' | 'completed' | 'failed';
     /**
      * Phase collections (populated when needed)
      * @type {Array<CampaignPhase>}
@@ -264,31 +266,22 @@ export interface LeadGenerationCampaign {
      */
     'updatedAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof LeadGenerationCampaign
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 
-export const LeadGenerationCampaignCurrentPhaseEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation',
-    Analysis: 'analysis'
-} as const;
-
-export type LeadGenerationCampaignCurrentPhaseEnum = typeof LeadGenerationCampaignCurrentPhaseEnum[keyof typeof LeadGenerationCampaignCurrentPhaseEnum];
-export const LeadGenerationCampaignPhaseStatusEnum = {
-    NotStarted: 'not_started',
-    Ready: 'ready',
-    Configured: 'configured',
-    InProgress: 'in_progress',
-    Paused: 'paused',
-    Completed: 'completed',
-    Failed: 'failed'
-} as const;
-
-export type LeadGenerationCampaignPhaseStatusEnum = typeof LeadGenerationCampaignPhaseStatusEnum[keyof typeof LeadGenerationCampaignPhaseStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum LeadGenerationCampaignCurrentPhaseEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum LeadGenerationCampaignPhaseStatusEnum converted to direct string literals in interface
 
 

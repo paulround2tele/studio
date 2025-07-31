@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**data** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**data** | [**Array&lt;GeneratedDomain&gt;**](GeneratedDomain.md) |  | [optional] [default to undefined]
 **nextCursor** | **number** |  | [optional] [default to undefined]
 **totalCount** | **number** |  | [optional] [default to undefined]
 

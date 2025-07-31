@@ -11,6 +11,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import type { UUID } from '../uuid-types';
 
 
 
@@ -55,7 +56,7 @@ export interface HTTPValidationRequest {
      * @type {string}
      * @memberof HTTPValidationRequest
      */
-    'proxyPoolId'?: string;
+    'proxyPoolId'?: UUID;
     /**
      * 
      * @type {number}

@@ -16,11 +16,12 @@ import PageHeader from '@/components/shared/PageHeader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Use ONLY auto-generated types and new simplified form types
-import type { SimpleCampaignFormValues, DomainGenerationConfigPatternTypeEnum } from './types/SimpleCampaignFormTypes';
+import type { SimpleCampaignFormValues } from './types/SimpleCampaignFormTypes';
 import { formToApiRequest, defaultFormValues } from './types/SimpleCampaignFormTypes';
 import { campaignsApi } from '@/lib/api-client/client';
 import { calculateMaxTheoreticalDomains, calculateRemainingDomains } from '@/lib/utils/domainCalculation';
 import type { LeadGenerationCampaignResponse } from '@/lib/api-client/models/lead-generation-campaign-response';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Common TLD options
 const COMMON_TLDS = [
@@ -182,28 +183,8 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         // Create campaign using phase-centric API
         const response = await campaignsApi.createLeadGenerationCampaign(apiRequest);
         
-        // Handle response
-        const responseData = response.data;
-        let newCampaignData: any = null;
-        
-        if (responseData && typeof responseData === 'object') {
-          // Check if response follows APIResponse<T> pattern with data field
-          if ('data' in responseData) {
-            const firstLevel = (responseData as any).data;
-            // Handle double-wrapped API response structure
-            if (firstLevel && typeof firstLevel === 'object' && 'data' in firstLevel) {
-              newCampaignData = firstLevel.data;
-            } else {
-              newCampaignData = firstLevel;
-            }
-          } else if ('id' in responseData) {
-            // Direct campaign object response
-            newCampaignData = responseData;
-          } else if ('error' in responseData) {
-            // Handle error response
-            throw new Error((responseData as any).error || 'Failed to create campaign');
-          }
-        }
+        // FIXED: Use extractResponseData helper instead of manual unwrapping
+        const newCampaignData = extractResponseData<LeadGenerationCampaignResponse>(response);
         
         if (!newCampaignData || !newCampaignData.id) {
           throw new Error('Campaign creation succeeded but no campaign ID returned');

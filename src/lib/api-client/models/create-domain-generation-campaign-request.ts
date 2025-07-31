@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -115,7 +117,7 @@ export interface CreateDomainGenerationCampaignRequest {
      * @type {string}
      * @memberof CreateDomainGenerationCampaignRequest
      */
-    'patternType': CreateDomainGenerationCampaignRequestPatternTypeEnum;
+    'patternType': 'prefix' | 'suffix' | 'both';
     /**
      * 
      * @type {string}
@@ -129,11 +131,11 @@ export interface CreateDomainGenerationCampaignRequest {
      */
     'tlds': Array<string>;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CreateDomainGenerationCampaignRequest
      */
-    'userId'?: string;
+    'userId'?: UUID;
     /**
      * Domain generation fields
      * @type {number}
@@ -142,12 +144,10 @@ export interface CreateDomainGenerationCampaignRequest {
     'variableLength': number;
 }
 
-export const CreateDomainGenerationCampaignRequestPatternTypeEnum = {
-    Prefix: 'prefix',
-    Suffix: 'suffix',
-    Both: 'both'
-} as const;
-
-export type CreateDomainGenerationCampaignRequestPatternTypeEnum = typeof CreateDomainGenerationCampaignRequestPatternTypeEnum[keyof typeof CreateDomainGenerationCampaignRequestPatternTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum CreateDomainGenerationCampaignRequestPatternTypeEnum converted to direct string literals in interface
 
 

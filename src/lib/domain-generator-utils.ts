@@ -14,12 +14,12 @@ const MAX_SLD_LENGTH = 63;
 const MIN_SLD_LENGTH = 1;
 
 /**
- * Generates a stable hash for a DomainGenerationConfig object.
+ * Generates a stable hash for a DomainGenerationPhaseConfig object.
  * Normalizes arrays (tlds, allowedCharSet) to ensure consistent hash for same logical config.
- * @param config The domain generation configuration.
+ * @param config The domain generation phase configuration.
  * @returns A string hash.
  */
-export function getDomainGenerationConfigHash(config: DomainGenerationParams): string {
+export function getDomainGenerationPhaseConfigHash(config: DomainGenerationParams): string {
   const normalizedConfig = {
     pt: config.patternType,
     cs: config.constantString,

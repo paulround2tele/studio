@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -21,11 +23,11 @@
  */
 export interface HTTPValidationStartResponse {
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPValidationStartResponse
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {number}
@@ -39,10 +41,10 @@ export interface HTTPValidationStartResponse {
      */
     'message'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPValidationStartResponse
      */
-    'validationJobId'?: string;
+    'validationJobId'?: UUID;
 }
 

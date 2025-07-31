@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **OriginalOffset** | **number** |  | [optional] [default to undefined]
 **Priority** | **number** |  | [optional] [default to undefined]
 **RandomSeed** | **number** |  | [optional] [default to undefined]
-**ValidationGroup** | **string** | Unique identifier | [optional] [default to undefined]
+**ValidationGroup** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **ValidationOrder** | **number** |  | [optional] [default to undefined]
 
 ## Example

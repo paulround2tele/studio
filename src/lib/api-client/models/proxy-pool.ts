@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -48,11 +50,11 @@ export interface ProxyPool {
      */
     'healthCheckIntervalSeconds'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ProxyPool
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {boolean}

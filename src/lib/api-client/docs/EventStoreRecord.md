@@ -5,12 +5,12 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**aggregateId** | **string** | Unique identifier | [optional] [default to undefined]
+**aggregateId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **aggregateType** | **string** |  | [optional] [default to undefined]
-**causationId** | **string** | Unique identifier | [optional] [default to undefined]
-**correlationId** | **string** | Unique identifier | [optional] [default to undefined]
+**causationId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**correlationId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **eventData** | **object** |  | [optional] [default to undefined]
-**eventId** | **string** | Unique identifier | [optional] [default to undefined]
+**eventId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **eventType** | **string** |  | [optional] [default to undefined]
 **eventVersion** | **number** |  | [optional] [default to undefined]
 **globalPosition** | **number** |  | [optional] [default to undefined]

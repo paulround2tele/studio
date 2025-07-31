@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -27,11 +29,11 @@ export interface ResourceUtilizationMetric {
      */
     'bottleneckDetected'?: boolean;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ResourceUtilizationMetric
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -57,11 +59,11 @@ export interface ResourceUtilizationMetric {
      */
     'efficiencyScore'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ResourceUtilizationMetric
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {number}

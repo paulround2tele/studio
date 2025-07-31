@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -33,11 +35,11 @@ export interface CacheInvalidationLog {
      */
     'cacheNamespace'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheInvalidationLog
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -63,23 +65,23 @@ export interface CacheInvalidationLog {
      */
     'executionTimeMs'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheInvalidationLog
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheInvalidationLog
      */
-    'invalidationPattern'?: string;
+    'invalidationPattern'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CacheInvalidationLog
      */
-    'invalidationReason'?: string;
+    'invalidationReason'?: UUID;
     /**
      * 
      * @type {string}

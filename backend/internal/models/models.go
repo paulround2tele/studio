@@ -457,13 +457,13 @@ type NormalizedDomainGenerationParams struct {
 	TLD            string `json:"tld"`
 }
 
-// DomainGenerationConfigState tracks the global last offset for a unique domain generation configuration.
-type DomainGenerationConfigState struct {
-	ConfigHash    string                       `db:"config_hash" json:"configHash" firestore:"config_hash"` // Primary Key (e.g., SHA256 of normalized generation parameters)
-	LastOffset    int64                        `db:"last_offset" json:"lastOffset" firestore:"last_offset"`
-	ConfigDetails json.RawMessage              `db:"config_details" json:"configDetails" firestore:"config_details"` // Stores marshalled NormalizedDomainGenerationParams
-	UpdatedAt     time.Time                    `db:"updated_at" json:"updatedAt" firestore:"updated_at"`
-	ConfigState   *DomainGenerationConfigState `json:"configState,omitempty"`
+// DomainGenerationPhaseConfigState tracks the global last offset for a unique domain generation configuration.
+type DomainGenerationPhaseConfigState struct {
+	ConfigHash    string                            `db:"config_hash" json:"configHash" firestore:"config_hash"` // Primary Key (e.g., SHA256 of normalized generation parameters)
+	LastOffset    int64                             `db:"last_offset" json:"lastOffset" firestore:"last_offset"`
+	ConfigDetails json.RawMessage                   `db:"config_details" json:"configDetails" firestore:"config_details"` // Stores marshalled NormalizedDomainGenerationParams
+	UpdatedAt     time.Time                         `db:"updated_at" json:"updatedAt" firestore:"updated_at"`
+	ConfigState   *DomainGenerationPhaseConfigState `json:"configState,omitempty"`
 }
 
 // DomainDNSStatusEnum defines DNS validation status for domains
@@ -889,4 +889,36 @@ type UpdateProxyRequest struct {
 	CountryCode *string            `json:"countryCode,omitempty"`
 	IsEnabled   *bool              `json:"isEnabled,omitempty"`
 	Notes       *string            `json:"notes,omitempty"`
+}
+
+// BulkUpdateProxiesRequest represents a request to update multiple proxies
+type BulkUpdateProxiesRequest struct {
+	ProxyIDs []string           `json:"proxyIds" binding:"required,min=1,max=1000" validate:"required,min=1,max=1000,dive,uuid"`
+	Updates  UpdateProxyRequest `json:"updates" binding:"required" validate:"required"`
+}
+
+// BulkDeleteProxiesRequest represents a request to delete multiple proxies
+type BulkDeleteProxiesRequest struct {
+	ProxyIDs []string `json:"proxyIds" binding:"required,min=1,max=1000" validate:"required,min=1,max=1000,dive,uuid"`
+}
+
+// BulkTestProxiesRequest represents a request to test multiple proxies
+type BulkTestProxiesRequest struct {
+	ProxyIDs []string `json:"proxyIds" binding:"required,min=1,max=1000" validate:"required,min=1,max=1000,dive,uuid"`
+}
+
+// BulkProxyOperationResponse represents the response for bulk proxy operations
+type BulkProxyOperationResponse struct {
+	TotalRequested    int              `json:"totalRequested"`
+	SuccessCount      int              `json:"successCount"`
+	ErrorCount        int              `json:"errorCount"`
+	SuccessfulProxies []string         `json:"successfulProxies,omitempty"`
+	FailedProxies     []BulkProxyError `json:"failedProxies,omitempty"`
+	Results           []*Proxy         `json:"results,omitempty"` // For bulk update operations
+}
+
+// BulkProxyError represents an error for a specific proxy in bulk operations
+type BulkProxyError struct {
+	ProxyID string `json:"proxyId"`
+	Error   string `json:"error"`
 }

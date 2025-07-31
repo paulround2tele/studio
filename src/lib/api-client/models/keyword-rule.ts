@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -39,11 +41,11 @@ export interface KeywordRule {
      */
     'createdAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordRule
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {boolean}
@@ -51,11 +53,11 @@ export interface KeywordRule {
      */
     'isCaseSensitive'?: boolean;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof KeywordRule
      */
-    'keywordSetId'?: string;
+    'keywordSetId'?: UUID;
     /**
      * 
      * @type {string}
@@ -67,7 +69,7 @@ export interface KeywordRule {
      * @type {string}
      * @memberof KeywordRule
      */
-    'ruleType': KeywordRuleRuleTypeEnum;
+    'ruleType': 'string' | 'regex';
     /**
      * 
      * @type {string}
@@ -76,11 +78,10 @@ export interface KeywordRule {
     'updatedAt'?: string;
 }
 
-export const KeywordRuleRuleTypeEnum = {
-    String: 'string',
-    Regex: 'regex'
-} as const;
-
-export type KeywordRuleRuleTypeEnum = typeof KeywordRuleRuleTypeEnum[keyof typeof KeywordRuleRuleTypeEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum KeywordRuleRuleTypeEnum converted to direct string literals in interface
 
 

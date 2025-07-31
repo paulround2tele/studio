@@ -31,7 +31,8 @@ const getSimilarityBadgeVariant = (score: number) => {
 export default function ContentSimilarityView({ campaign, onAnalysisComplete }: ContentSimilarityViewProps) {
   // Now using proper generated types from OpenAPI schema
   const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];
-  const leads: LeadItem[] = Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];
+  const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :
+                           Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];
   const { toast } = useToast();
   const [analyzingContentId, setAnalyzingContentId] = useState<string | null>(null);
 

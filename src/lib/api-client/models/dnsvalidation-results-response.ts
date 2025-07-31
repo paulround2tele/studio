@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { DNSValidationResult } from './dnsvalidation-result';
 
 /**
  * 
@@ -22,10 +25,10 @@
 export interface DNSValidationResultsResponse {
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<DNSValidationResult>}
      * @memberof DNSValidationResultsResponse
      */
-    'data'?: Array<string>;
+    'data'?: Array<DNSValidationResult>;
     /**
      * 
      * @type {string}

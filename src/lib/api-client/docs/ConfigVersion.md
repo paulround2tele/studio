@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **configHash** | **string** |  | [optional] [default to undefined]
 **configState** | **object** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **lockType** | **string** |  | [optional] [default to undefined]
 **updatedAt** | **string** |  | [optional] [default to undefined]
 **version** | **number** |  | [optional] [default to undefined]

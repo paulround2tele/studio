@@ -28,72 +28,21 @@ export interface HTTPValidationConfig {
     'adHocKeywords'?: Array<string>;
     /**
      * 
-     * @type {number}
-     * @memberof HTTPValidationConfig
-     */
-    'batchSize'?: number;
-    /**
-     * 
      * @type {Array<string>}
      * @memberof HTTPValidationConfig
      */
     'keywordSetIds'?: Array<string>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {string}
      * @memberof HTTPValidationConfig
      */
-    'personaIds': Array<string>;
-    /**
-     * 
-     * @type {number}
-     * @memberof HTTPValidationConfig
-     */
-    'processingSpeedPerMinute'?: number;
+    'name'?: string;
     /**
      * 
      * @type {Array<string>}
      * @memberof HTTPValidationConfig
      */
-    'proxyIds'?: Array<string>;
-    /**
-     * Unique identifier
-     * @type {string}
-     * @memberof HTTPValidationConfig
-     */
-    'proxyPoolId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof HTTPValidationConfig
-     */
-    'proxySelectionStrategy'?: HTTPValidationConfigProxySelectionStrategyEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof HTTPValidationConfig
-     */
-    'retryAttempts'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof HTTPValidationConfig
-     */
-    'rotationIntervalSeconds'?: number;
-    /**
-     * 
-     * @type {Array<number>}
-     * @memberof HTTPValidationConfig
-     */
-    'targetHttpPorts'?: Array<number>;
+    'personaIds': Array<string>;
 }
-
-export const HTTPValidationConfigProxySelectionStrategyEnum = {
-    RoundRobin: 'round_robin',
-    Random: 'random',
-    LeastUsed: 'least_used'
-} as const;
-
-export type HTTPValidationConfigProxySelectionStrategyEnum = typeof HTTPValidationConfigProxySelectionStrategyEnum[keyof typeof HTTPValidationConfigProxySelectionStrategyEnum];
-
 

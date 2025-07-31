@@ -10,15 +10,15 @@ Name | Type | Description | Notes
 **context** | **object** |  | [optional] [default to undefined]
 **createdAt** | **string** |  | [optional] [default to undefined]
 **decision** | **string** |  | [optional] [default to undefined]
-**decisionId** | **string** | Unique identifier | [optional] [default to undefined]
+**decisionId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **decisionTimeMs** | **number** |  | [optional] [default to undefined]
 **evaluatedPolicies** | **string** |  | [optional] [default to undefined]
-**id** | **string** | Unique identifier | [optional] [default to undefined]
+**id** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **policyVersion** | **string** |  | [optional] [default to undefined]
-**resourceId** | **string** | Unique identifier | [optional] [default to undefined]
+**resourceId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 **resourceType** | **string** |  | [optional] [default to undefined]
-**securityEventId** | **string** | Unique identifier | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**securityEventId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

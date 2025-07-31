@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -45,10 +47,10 @@ export interface TOTPSecret {
      */
     'secret'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof TOTPSecret
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

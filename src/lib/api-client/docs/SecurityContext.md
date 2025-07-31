@@ -9,8 +9,8 @@ Name | Type | Description | Notes
 **requiresPasswordChange** | **boolean** |  | [optional] [default to undefined]
 **riskScore** | **number** |  | [optional] [default to undefined]
 **sessionExpiry** | **string** |  | [optional] [default to undefined]
-**sessionId** | **string** | Unique identifier | [optional] [default to undefined]
-**userId** | **string** | Unique identifier | [optional] [default to undefined]
+**sessionId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
+**userId** | **string** | Unique identifier (UUID v4) | [optional] [default to undefined]
 
 ## Example
 

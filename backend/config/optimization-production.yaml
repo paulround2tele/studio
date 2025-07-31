@@ -1,0 +1,83 @@
+# N+1 Optimization Configuration for Production Environment
+# This configuration provides production-ready settings with full optimization
+
+optimization:
+  enabled: true
+  
+  # All optimization phases enabled for production
+  phases:
+    batch_queries: true
+    service_optimization: true  
+    external_validation: true
+    caching: true
+  
+  # Redis configuration for production environment
+  redis:
+    enabled: true
+    addr: "${REDIS_ADDR}"  # Required in production
+    password: "${REDIS_PASSWORD}"  # Required in production
+    db: "${REDIS_DB:0}"
+    pool_size: "${REDIS_POOL_SIZE:50}"  # Larger pool for production load
+    min_idle_conns: "${REDIS_MIN_IDLE_CONNS:10}"
+    idle_timeout: "${REDIS_IDLE_TIMEOUT:300s}"
+    conn_max_lifetime: "${REDIS_CONN_MAX_LIFETIME:1800s}"
+    dial_timeout: "${REDIS_DIAL_TIMEOUT:5s}"
+    read_timeout: "${REDIS_READ_TIMEOUT:3s}"
+    write_timeout: "${REDIS_WRITE_TIMEOUT:3s}"
+    max_retries: "${REDIS_MAX_RETRIES:3}"
+    
+    # Production TTL settings optimized for performance
+    entity_ttl:
+      persona_ttl: "${REDIS_PERSONA_TTL:5m}"
+      keyword_set_ttl: "${REDIS_KEYWORD_SET_TTL:10m}"
+      keyword_ttl: "${REDIS_KEYWORD_TTL:15m}"
+      proxy_ttl: "${REDIS_PROXY_TTL:5m}"
+    
+    validation_ttl:
+      dns_validation_ttl: "${REDIS_DNS_VALIDATION_TTL:2m}"
+      http_validation_ttl: "${REDIS_HTTP_VALIDATION_TTL:1m}"
+      config_fingerprint_ttl: "${REDIS_CONFIG_FINGERPRINT_TTL:30m}"
+    
+    campaign_ttl:
+      campaign_details_ttl: "${REDIS_CAMPAIGN_DETAILS_TTL:3m}"
+      campaign_relationship_ttl: "${REDIS_CAMPAIGN_RELATIONSHIP_TTL:5m}"
+      batch_query_result_ttl: "${REDIS_BATCH_QUERY_RESULT_TTL:2m}"
+    
+    # Production metrics configuration
+    metrics:
+      enabled: "${REDIS_METRICS_ENABLED:true}"
+      flush_interval: "${REDIS_METRICS_FLUSH_INTERVAL:30s}"
+      performance_threshold:
+        latency_warning_ms: "${REDIS_LATENCY_WARNING_MS:50}"
+        latency_critical_ms: "${REDIS_LATENCY_CRITICAL_MS:100}"
+        hit_ratio_warning: "${REDIS_HIT_RATIO_WARNING:0.8}"  # Higher threshold for production
+        error_rate_warning: "${REDIS_ERROR_RATE_WARNING:0.02}"  # Lower tolerance for production
+  
+  # Production performance tuning
+  performance:
+    batch_size: "${OPTIMIZATION_BATCH_SIZE:100}"
+    max_concurrent_requests: "${OPTIMIZATION_MAX_CONCURRENT:50}"
+    dns_timeout: "${OPTIMIZATION_DNS_TIMEOUT:10s}"
+    http_timeout: "${OPTIMIZATION_HTTP_TIMEOUT:30s}"
+    
+    cache_ttl:
+      personas: "${OPTIMIZATION_PERSONA_TTL:5m}"
+      keyword_sets: "${OPTIMIZATION_KEYWORD_SET_TTL:10m}"
+      keywords: "${OPTIMIZATION_KEYWORD_TTL:15m}"
+      proxies: "${OPTIMIZATION_PROXY_TTL:5m}"
+      dns_validation: "${OPTIMIZATION_DNS_VALIDATION_TTL:2m}"
+      http_validation: "${OPTIMIZATION_HTTP_VALIDATION_TTL:1m}"
+
+  # Production feature flags with gradual rollout capability
+  feature_flags:
+    gradual_rollout: "${OPTIMIZATION_GRADUAL_ROLLOUT:true}"
+    rollout_percentage: "${OPTIMIZATION_ROLLOUT_PERCENTAGE:100}"  # Full rollout by default
+    fallback_on_error: "${OPTIMIZATION_FALLBACK_ON_ERROR:true}"
+    debug_logging: "${OPTIMIZATION_DEBUG_LOGGING:false}"  # Disabled for production performance
+
+# Production deployment notes:
+# 1. All Redis environment variables must be set
+# 2. Monitor REDIS_METRICS_* for performance alerts
+# 3. Adjust OPTIMIZATION_ROLLOUT_PERCENTAGE for gradual deployment
+# 4. Set OPTIMIZATION_DEBUG_LOGGING=true only for troubleshooting
+# 5. Use OPTIMIZATION_FALLBACK_ON_ERROR=true for zero-downtime deployments

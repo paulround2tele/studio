@@ -5,7 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**proxyId** | **string** | Unique identifier | [default to undefined]
+**proxyId** | **string** | Unique identifier (UUID v4) | [default to undefined]
 **weight** | **number** |  | [optional] [default to undefined]
 
 ## Example

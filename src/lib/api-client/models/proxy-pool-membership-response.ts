@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -33,17 +35,17 @@ export interface ProxyPoolMembershipResponse {
      */
     'message'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ProxyPoolMembershipResponse
      */
-    'poolId'?: string;
+    'poolId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof ProxyPoolMembershipResponse
      */
-    'proxyId'?: string;
+    'proxyId'?: UUID;
     /**
      * 
      * @type {boolean}

@@ -7,8 +7,8 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/fntelecomllc/studio/backend/internal/openapi/config"
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
 // SchemaGenerator generates OpenAPI schemas from Go types
@@ -459,6 +459,39 @@ func (sg *SchemaGenerator) convertSelectorToSchema(sel *ast.SelectorExpr) (*open
 				},
 			}, nil
 		}
+
+		// Check if this is a known business entity from models package
+		if pkgName == "models" {
+			// Check if this type is a registered business entity
+			if entity, exists := sg.entityRegistry[typeName]; exists {
+				if sg.config.VerboseLogging {
+					fmt.Printf("Found business entity %s for external selector models.%s\n", entity.Name, typeName)
+				}
+				return &openapi3.SchemaRef{
+					Ref: "#/components/schemas/" + typeName,
+				}, nil
+			}
+
+			// Also check if the type exists in our type registry
+			if _, exists := sg.typeRegistry[typeName]; exists {
+				if sg.config.VerboseLogging {
+					fmt.Printf("Found type registry entry for models.%s\n", typeName)
+				}
+				return &openapi3.SchemaRef{
+					Ref: "#/components/schemas/" + typeName,
+				}, nil
+			}
+		}
+
+		// For other packages, also check if the type name exists as a business entity
+		if entity, exists := sg.entityRegistry[typeName]; exists {
+			if sg.config.VerboseLogging {
+				fmt.Printf("Found business entity %s for external selector %s.%s\n", entity.Name, pkgName, typeName)
+			}
+			return &openapi3.SchemaRef{
+				Ref: "#/components/schemas/" + typeName,
+			}, nil
+		}
 	}
 
 	// Default to string for unknown external types
@@ -615,7 +648,13 @@ func (sg *SchemaGenerator) enhanceFieldSchema(schema *openapi3.SchemaRef, fieldN
 	// Enhance based on field name patterns
 	if strings.Contains(lowerFieldName, "id") || strings.Contains(lowerOriginalName, "id") {
 		if schema.Value.Type != nil && len(*schema.Value.Type) > 0 && (*schema.Value.Type)[0] == "string" {
-			schema.Value.Format = "uuid"
+			// Use the UUID schema reference for better type safety
+			*schema = openapi3.SchemaRef{
+				Ref: "#/components/schemas/UUID",
+			}
+			if schema.Value == nil {
+				schema.Value = &openapi3.Schema{}
+			}
 			if schema.Value.Description == "" {
 				schema.Value.Description = "Unique identifier"
 			}
@@ -752,12 +791,8 @@ func (sg *SchemaGenerator) convertTypeToSchema(astType ast.Expr, typeName string
 		// Pointer type - convert the underlying type
 		return sg.convertTypeToSchema(t.X, typeName)
 	case *ast.SelectorExpr:
-		// External package type - treat as string for now
-		return &openapi3.SchemaRef{
-			Value: &openapi3.Schema{
-				Type: &openapi3.Types{"string"},
-			},
-		}, nil
+		// External package type - use the enhanced selector handling
+		return sg.convertSelectorToSchema(t)
 	default:
 		// Unknown type - treat as object
 		return &openapi3.SchemaRef{
@@ -958,6 +993,21 @@ func extractJSONTag(tag string) string {
 
 // addCommonSchemas adds common schemas used across the API
 func (sg *SchemaGenerator) addCommonSchemas(spec *openapi3.T) {
+	// Standard UUID schema with validation
+	uuidSchema := &openapi3.SchemaRef{
+		Value: &openapi3.Schema{
+			Type:        &openapi3.Types{"string"},
+			Format:      "uuid",
+			Pattern:     "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+			Description: "Unique identifier (UUID v4)",
+			Example:     "550e8400-e29b-41d4-a716-446655440000",
+		},
+	}
+	spec.Components.Schemas["UUID"] = uuidSchema
+
+	// Add all enum schemas for better type safety
+	sg.addEnumSchemas(spec)
+
 	// Error response schema
 	errorSchema := &openapi3.SchemaRef{
 		Value: &openapi3.Schema{
@@ -1002,6 +1052,49 @@ func (sg *SchemaGenerator) addCommonSchemas(spec *openapi3.T) {
 	}
 	spec.Components.Schemas["SuccessResponse"] = successSchema
 
+}
+
+// addEnumSchemas adds dedicated enum schemas for all enum types
+func (sg *SchemaGenerator) addEnumSchemas(spec *openapi3.T) {
+	// Define all enum types with their values
+	enumDefinitions := map[string][]string{
+		"PersonaTypeEnum":          {"dns", "http"},
+		"ProxyProtocolEnum":        {"http", "https", "socks5", "socks4"},
+		"ProxyStatusEnum":          {"Active", "Disabled", "Testing", "Failed"},
+		"PersonaStatusEnum":        {"Active", "Disabled", "Testing", "Failed"},
+		"KeywordRuleTypeEnum":      {"string", "regex"},
+		"JobTypeEnum":              {"generation", "dns_validation", "http_keyword_validation", "analysis"},
+		"CampaignJobStatusEnum":    {"pending", "queued", "running", "completed", "failed", "cancelled"},
+		"JobBusinessStatusEnum":    {"processing", "retry", "priority_queued", "batch_optimized"},
+		"ValidationStatusEnum":     {"pending", "valid", "invalid", "error", "skipped"},
+		"DNSValidationStatusEnum":  {"resolved", "unresolved", "timeout", "error"},
+		"HTTPValidationStatusEnum": {"success", "failed", "timeout", "error"},
+		"PhaseTypeEnum":            {"domain_generation", "dns_validation", "http_keyword_validation", "analysis"},
+		"PhaseStatusEnum":          {"not_started", "ready", "configured", "in_progress", "paused", "completed", "failed"},
+		"DomainDNSStatusEnum":      {"pending", "ok", "error", "timeout"},
+		"DomainHTTPStatusEnum":     {"pending", "ok", "error", "timeout"},
+		"DomainLeadStatusEnum":     {"pending", "match", "no_match", "error", "timeout"},
+	}
+
+	for enumName, enumValues := range enumDefinitions {
+		enumInterfaces := make([]interface{}, len(enumValues))
+		for i, val := range enumValues {
+			enumInterfaces[i] = val
+		}
+
+		enumSchema := &openapi3.SchemaRef{
+			Value: &openapi3.Schema{
+				Type:        &openapi3.Types{"string"},
+				Enum:        enumInterfaces,
+				Description: fmt.Sprintf("Enumeration for %s", enumName),
+			},
+		}
+		spec.Components.Schemas[enumName] = enumSchema
+
+		if sg.config.VerboseLogging {
+			fmt.Printf("Added enum schema for %s with values: %v\n", enumName, enumValues)
+		}
+	}
 }
 
 // getExplicitSchemaForType returns predefined schemas for known free-form object types
@@ -1067,7 +1160,7 @@ func (sg *SchemaGenerator) isStringEnumByName(typeName string) bool {
 	if sg.config.VerboseLogging && (typeName == "CampaignTypeEnum" || typeName == "CampaignStatusEnum") {
 		fmt.Printf("Looking for enum type %s in %d packages\n", typeName, len(sg.packages))
 	}
-	
+
 	// Look up the type spec in our parsed files
 	for pkgName, pkg := range sg.packages {
 		for fileName, file := range pkg.Files {
@@ -1085,7 +1178,7 @@ func (sg *SchemaGenerator) isStringEnumByName(typeName string) bool {
 			}
 		}
 	}
-	
+
 	if sg.config.VerboseLogging && (typeName == "CampaignTypeEnum" || typeName == "CampaignStatusEnum") {
 		fmt.Printf("Enum type %s not found in any package\n", typeName)
 	}
@@ -1095,7 +1188,7 @@ func (sg *SchemaGenerator) isStringEnumByName(typeName string) bool {
 // extractEnumValues extracts enum values from Go const declarations
 func (sg *SchemaGenerator) extractEnumValues(typeName string) []string {
 	var enumValues []string
-	
+
 	// Look through all packages for const declarations of this type
 	for _, pkg := range sg.packages {
 		for _, file := range pkg.Files {
@@ -1122,6 +1215,6 @@ func (sg *SchemaGenerator) extractEnumValues(typeName string) []string {
 			}
 		}
 	}
-	
+
 	return enumValues
 }

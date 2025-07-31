@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -63,11 +65,11 @@ export interface Proxy {
      */
     'host'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof Proxy
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -145,19 +147,19 @@ export interface Proxy {
      * @type {string}
      * @memberof Proxy
      */
-    'protocol'?: ProxyProtocolEnum;
+    'protocol'?: 'http' | 'https' | 'socks5' | 'socks4';
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof Proxy
      */
-    'provider'?: string;
+    'provider'?: UUID;
     /**
      * Frontend-expected fields
      * @type {string}
      * @memberof Proxy
      */
-    'status'?: ProxyStatusEnum;
+    'status'?: 'Active' | 'Disabled' | 'Testing' | 'Failed';
     /**
      * 
      * @type {string}
@@ -178,21 +180,15 @@ export interface Proxy {
     'username'?: string;
 }
 
-export const ProxyProtocolEnum = {
-    Http: 'http',
-    Https: 'https',
-    Socks5: 'socks5',
-    Socks4: 'socks4'
-} as const;
-
-export type ProxyProtocolEnum = typeof ProxyProtocolEnum[keyof typeof ProxyProtocolEnum];
-export const ProxyStatusEnum = {
-    Active: 'Active',
-    Disabled: 'Disabled',
-    Testing: 'Testing',
-    Failed: 'Failed'
-} as const;
-
-export type ProxyStatusEnum = typeof ProxyStatusEnum[keyof typeof ProxyStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum ProxyProtocolEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum ProxyStatusEnum converted to direct string literals in interface
 
 

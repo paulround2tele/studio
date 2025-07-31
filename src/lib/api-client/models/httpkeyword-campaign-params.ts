@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -69,11 +71,11 @@ export interface HTTPKeywordCampaignParams {
      */
     'proxyIds'?: Array<string>;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPKeywordCampaignParams
      */
-    'proxyPoolId'?: string;
+    'proxyPoolId'?: UUID;
     /**
      * 
      * @type {string}
@@ -93,11 +95,11 @@ export interface HTTPKeywordCampaignParams {
      */
     'rotationIntervalSeconds'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof HTTPKeywordCampaignParams
      */
-    'sourceCampaignId': string;
+    'sourceCampaignId': UUID;
     /**
      * 
      * @type {string}

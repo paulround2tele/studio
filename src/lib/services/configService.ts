@@ -48,8 +48,7 @@ class ConfigService {
         success: true,
         data: apiResponse.data as FeatureFlags,
         error: null,
-        requestId: apiResponse.requestId || randomUUID(),
-        message: apiResponse.message
+        requestId: apiResponse.requestId || randomUUID()
       };
     } catch (error) {
       return {
@@ -78,8 +77,7 @@ class ConfigService {
         success: true,
         data: apiResponse.data as FeatureFlags,
         error: null,
-        requestId: apiResponse.requestId || randomUUID(),
-        message: apiResponse.message
+        requestId: apiResponse.requestId || randomUUID()
       };
     } catch (error) {
       return {

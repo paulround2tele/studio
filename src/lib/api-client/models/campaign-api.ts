@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -43,7 +45,7 @@ export interface CampaignAPI {
      * @type {string}
      * @memberof CampaignAPI
      */
-    'currentPhase'?: CampaignAPICurrentPhaseEnum;
+    'currentPhase'?: 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis';
     /**
      * 
      * @type {number}
@@ -75,11 +77,11 @@ export interface CampaignAPI {
      */
     'failedItems'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignAPI
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -109,7 +111,7 @@ export interface CampaignAPI {
      * @type {string}
      * @memberof CampaignAPI
      */
-    'phaseStatus'?: CampaignAPIPhaseStatusEnum;
+    'phaseStatus'?: 'not_started' | 'ready' | 'configured' | 'in_progress' | 'paused' | 'completed' | 'failed';
     /**
      * 
      * @type {number}
@@ -153,31 +155,22 @@ export interface CampaignAPI {
      */
     'updatedAt'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignAPI
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 
-export const CampaignAPICurrentPhaseEnum = {
-    DomainGeneration: 'domain_generation',
-    DnsValidation: 'dns_validation',
-    HttpKeywordValidation: 'http_keyword_validation',
-    Analysis: 'analysis'
-} as const;
-
-export type CampaignAPICurrentPhaseEnum = typeof CampaignAPICurrentPhaseEnum[keyof typeof CampaignAPICurrentPhaseEnum];
-export const CampaignAPIPhaseStatusEnum = {
-    NotStarted: 'not_started',
-    Ready: 'ready',
-    Configured: 'configured',
-    InProgress: 'in_progress',
-    Paused: 'paused',
-    Completed: 'completed',
-    Failed: 'failed'
-} as const;
-
-export type CampaignAPIPhaseStatusEnum = typeof CampaignAPIPhaseStatusEnum[keyof typeof CampaignAPIPhaseStatusEnum];
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum CampaignAPICurrentPhaseEnum converted to direct string literals in interface
+/**
+    * @export
+    * @enum {string}
+    */
+// Enum CampaignAPIPhaseStatusEnum converted to direct string literals in interface
 
 

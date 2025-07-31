@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -51,11 +53,11 @@ export interface AuthorizationDecision {
      */
     'decision'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuthorizationDecision
      */
-    'decisionId'?: string;
+    'decisionId'?: UUID;
     /**
      * 
      * @type {number}
@@ -69,11 +71,11 @@ export interface AuthorizationDecision {
      */
     'evaluatedPolicies'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuthorizationDecision
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {string}
@@ -81,11 +83,11 @@ export interface AuthorizationDecision {
      */
     'policyVersion'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuthorizationDecision
      */
-    'resourceId'?: string;
+    'resourceId'?: UUID;
     /**
      * 
      * @type {string}
@@ -93,16 +95,16 @@ export interface AuthorizationDecision {
      */
     'resourceType'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuthorizationDecision
      */
-    'securityEventId'?: string;
+    'securityEventId'?: UUID;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof AuthorizationDecision
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

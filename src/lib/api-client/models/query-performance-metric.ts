@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -33,11 +35,11 @@ export interface QueryPerformanceMetric {
      */
     'bufferReads'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof QueryPerformanceMetric
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -63,11 +65,11 @@ export interface QueryPerformanceMetric {
      */
     'executionTimeMs'?: number;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof QueryPerformanceMetric
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {object}
@@ -171,10 +173,10 @@ export interface QueryPerformanceMetric {
      */
     'tableNames'?: Array<string>;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof QueryPerformanceMetric
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

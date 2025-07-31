@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -27,11 +29,11 @@ export interface CampaignAccessGrant {
      */
     'accessType'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignAccessGrant
      */
-    'campaignId'?: string;
+    'campaignId'?: UUID;
     /**
      * 
      * @type {string}
@@ -57,11 +59,11 @@ export interface CampaignAccessGrant {
      */
     'grantedBy'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignAccessGrant
      */
-    'id'?: string;
+    'id'?: UUID;
     /**
      * 
      * @type {boolean}
@@ -69,10 +71,10 @@ export interface CampaignAccessGrant {
      */
     'isActive'?: boolean;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof CampaignAccessGrant
      */
-    'userId'?: string;
+    'userId'?: UUID;
 }
 

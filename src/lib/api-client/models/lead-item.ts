@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -33,11 +35,11 @@ export interface LeadItem {
      */
     'email'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof LeadItem
      */
-    'id': string;
+    'id': UUID;
     /**
      * 
      * @type {string}
@@ -45,11 +47,11 @@ export interface LeadItem {
      */
     'name'?: string;
     /**
-     * Unique identifier
+     * Unique identifier (UUID v4)
      * @type {string}
      * @memberof LeadItem
      */
-    'previousCampaignId'?: string;
+    'previousCampaignId'?: UUID;
     /**
      * 
      * @type {number}

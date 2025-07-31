@@ -41,8 +41,7 @@ class KeywordSetService {
         success: true,
         data: keywordSets || [],
         error: null,
-        requestId,
-        message: 'Keyword sets retrieved successfully'
+        requestId
       };
     } catch (error: unknown) {
       console.error('[KeywordSetService] Error fetching keyword sets:', error);
@@ -51,7 +50,7 @@ class KeywordSetService {
         data: [],
         error: error instanceof Error ? error.message : 'Failed to get keyword sets',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error instanceof Error ? error.message : 'Failed to get keyword sets'
+        
       };
     }
   }
@@ -67,7 +66,7 @@ class KeywordSetService {
         data: keywordSet || undefined,
         error: null,
         requestId,
-        message: 'Keyword set retrieved successfully'
+        
       };
     } catch (error: unknown) {
       console.error('[KeywordSetService] Error fetching keyword set by ID:', error);
@@ -76,7 +75,7 @@ class KeywordSetService {
         data: undefined,
         error: error instanceof Error ? error.message : 'Failed to get keyword set',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error instanceof Error ? error.message : 'Failed to get keyword set'
+        
       };
     }
   }
@@ -92,7 +91,7 @@ class KeywordSetService {
         data: keywordSet || undefined,
         error: null,
         requestId,
-        message: 'Keyword set created successfully'
+        
       };
     } catch (error: unknown) {
       console.error('[KeywordSetService] Error creating keyword set:', error);
@@ -101,7 +100,7 @@ class KeywordSetService {
         data: undefined,
         error: error instanceof Error ? error.message : 'Failed to create keyword set',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error instanceof Error ? error.message : 'Failed to create keyword set'
+        
       };
     }
   }
@@ -117,7 +116,7 @@ class KeywordSetService {
         data: keywordSet || undefined,
         error: null,
         requestId,
-        message: 'Keyword set updated successfully'
+        
       };
     } catch (error: unknown) {
       console.error('[KeywordSetService] Error updating keyword set:', error);
@@ -126,7 +125,7 @@ class KeywordSetService {
         data: undefined,
         error: error instanceof Error ? error.message : 'Failed to update keyword set',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error instanceof Error ? error.message : 'Failed to update keyword set'
+        
       };
     }
   }
@@ -142,7 +141,7 @@ class KeywordSetService {
         data: null,
         error: null,
         requestId,
-        message: 'Keyword set deleted successfully'
+        
       };
     } catch (error: unknown) {
       console.error('[KeywordSetService] Error deleting keyword set:', error);
@@ -151,7 +150,7 @@ class KeywordSetService {
         data: null,
         error: error instanceof Error ? error.message : 'Failed to delete keyword set',
         requestId: globalThis.crypto?.randomUUID?.() || `error-${Date.now()}`,
-        message: error instanceof Error ? error.message : 'Failed to delete keyword set'
+        
       };
     }
   }
