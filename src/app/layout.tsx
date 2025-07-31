@@ -6,6 +6,7 @@ import AdvancedConditionalLayout from '@/components/layout/AdvancedConditionalLa
 import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { CampaignDataProvider } from '@/providers/CampaignDataProvider';
 import { NoSSR } from '@/components/providers/NoSSR';
 
 export const metadata: Metadata = {
@@ -28,10 +29,12 @@ export default function RootLayout({
         }>
           <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
             <AuthProvider>
-              <GlobalLoadingIndicator />
-              <AdvancedConditionalLayout>
-                {children}
-              </AdvancedConditionalLayout>
+              <CampaignDataProvider>
+                <GlobalLoadingIndicator />
+                <AdvancedConditionalLayout>
+                  {children}
+                </AdvancedConditionalLayout>
+              </CampaignDataProvider>
             </AuthProvider>
           </ThemeProvider>
         </NoSSR>
