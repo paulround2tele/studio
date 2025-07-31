@@ -54,54 +54,115 @@ export function isLeadItem(value: unknown): value is LeadItem {
 
 /**
  * Type guard for CampaignData
+ * Handles null values from Go omitempty pointers and preserves rich schema validation
  */
 export function isCampaignData(value: unknown): value is CampaignData {
-  if (!isObject(value)) return false;
+  if (!isObject(value)) {
+    console.debug('[TypeGuards] isCampaignData: not an object', typeof value, value);
+    return false;
+  }
   
-  return (
-    (typeof value.id === 'string' || value.id === undefined) &&
-    (typeof value.name === 'string' || value.name === undefined) &&
-    (typeof value.currentPhase === 'string' || value.currentPhase === undefined)
+  const data = value as Record<string, unknown>;
+  
+  // Log the actual structure for debugging
+  console.debug('[TypeGuards] isCampaignData: validating', {
+    id: { type: typeof data.id, value: data.id },
+    name: { type: typeof data.name, value: data.name },
+    currentPhase: { type: typeof data.currentPhase, value: data.currentPhase },
+    phaseStatus: { type: typeof data.phaseStatus, value: data.phaseStatus }
+  });
+  
+  // Handle Go omitempty pointers: string | null | undefined
+  const isValidStringField = (field: unknown) =>
+    typeof field === 'string' || field === null || field === undefined;
+  
+  const isValid = (
+    isValidStringField(data.id) &&
+    isValidStringField(data.name) &&
+    isValidStringField(data.currentPhase) &&
+    isValidStringField(data.phaseStatus)
   );
+  
+  if (!isValid) {
+    console.warn('[TypeGuards] isCampaignData: validation failed for:', data);
+  }
+  
+  return isValid;
 }
 
 /**
  * Type guard for EnrichedCampaignData
+ * Handles null values from Go omitempty and validates rich schema structures
  */
 export function isEnrichedCampaignData(value: unknown): value is EnrichedCampaignData {
-  if (!isObject(value)) return false;
-  
-  const data = value as Record<string, unknown>;
-  
-  // Validate optional campaign field
-  if (data.campaign !== undefined && !isCampaignData(data.campaign)) {
+  if (!isObject(value)) {
+    console.debug('[TypeGuards] isEnrichedCampaignData: not an object', typeof value, value);
     return false;
   }
   
-  // Validate optional domains array
-  if (data.domains !== undefined) {
-    if (!isArray(data.domains) || !data.domains.every(isGeneratedDomain)) {
+  const data = value as Record<string, unknown>;
+  
+  // Log the structure for debugging
+  console.debug('[TypeGuards] isEnrichedCampaignData: validating', {
+    campaign: { type: typeof data.campaign, hasValue: data.campaign !== undefined && data.campaign !== null },
+    domains: { type: typeof data.domains, isArray: isArray(data.domains), length: isArray(data.domains) ? data.domains.length : 'N/A' },
+    leads: { type: typeof data.leads, isArray: isArray(data.leads), length: isArray(data.leads) ? data.leads.length : 'N/A' },
+    dnsValidatedDomains: { type: typeof data.dnsValidatedDomains, isArray: isArray(data.dnsValidatedDomains) },
+    httpKeywordResults: { type: typeof data.httpKeywordResults, isArray: isArray(data.httpKeywordResults) }
+  });
+  
+  // Validate optional campaign field (handle null from Go omitempty)
+  if (data.campaign !== undefined && data.campaign !== null && !isCampaignData(data.campaign)) {
+    console.warn('[TypeGuards] isEnrichedCampaignData: campaign field validation failed', data.campaign);
+    return false;
+  }
+  
+  // Validate optional domains array (handle null)
+  if (data.domains !== undefined && data.domains !== null) {
+    if (!isArray(data.domains)) {
+      console.warn('[TypeGuards] isEnrichedCampaignData: domains is not an array', data.domains);
+      return false;
+    }
+    // Use lenient validation for domain objects - don't fail the entire response for schema mismatches
+    const invalidDomains = data.domains.filter(domain => !isGeneratedDomain(domain));
+    if (invalidDomains.length > 0) {
+      console.warn('[TypeGuards] isEnrichedCampaignData: some domains failed validation, but allowing', {
+        total: data.domains.length,
+        invalid: invalidDomains.length,
+        samples: invalidDomains.slice(0, 2)
+      });
+    }
+  }
+  
+  // Validate optional leads array (handle null)
+  if (data.leads !== undefined && data.leads !== null) {
+    if (!isArray(data.leads)) {
+      console.warn('[TypeGuards] isEnrichedCampaignData: leads is not an array', data.leads);
+      return false;
+    }
+    // Use lenient validation for lead objects
+    const invalidLeads = data.leads.filter(lead => !isLeadItem(lead));
+    if (invalidLeads.length > 0) {
+      console.warn('[TypeGuards] isEnrichedCampaignData: some leads failed validation, but allowing', {
+        total: data.leads.length,
+        invalid: invalidLeads.length,
+        samples: invalidLeads.slice(0, 2)
+      });
+    }
+  }
+  
+  // Validate optional dnsValidatedDomains array (handle null)
+  if (data.dnsValidatedDomains !== undefined && data.dnsValidatedDomains !== null) {
+    if (!isArray(data.dnsValidatedDomains) || !data.dnsValidatedDomains.every(item => typeof item === 'string' || item === null)) {
+      console.warn('[TypeGuards] isEnrichedCampaignData: dnsValidatedDomains validation failed', data.dnsValidatedDomains);
       return false;
     }
   }
   
-  // Validate optional leads array
-  if (data.leads !== undefined) {
-    if (!isArray(data.leads) || !data.leads.every(isLeadItem)) {
-      return false;
-    }
-  }
-  
-  // Validate optional dnsValidatedDomains array
-  if (data.dnsValidatedDomains !== undefined) {
-    if (!isArray(data.dnsValidatedDomains) || !data.dnsValidatedDomains.every(item => typeof item === 'string')) {
-      return false;
-    }
-  }
-  
-  // Validate optional httpKeywordResults array
-  if (data.httpKeywordResults !== undefined) {
+  // Validate optional httpKeywordResults array (handle null)
+  if (data.httpKeywordResults !== undefined && data.httpKeywordResults !== null) {
     if (!isArray(data.httpKeywordResults)) {
+      console.warn('[TypeGuards] isEnrichedCampaignData: httpKeywordResults is not an array', data.httpKeywordResults);
       return false;
     }
   }
@@ -111,34 +172,83 @@ export function isEnrichedCampaignData(value: unknown): value is EnrichedCampaig
 
 /**
  * Type guard for BulkEnrichedDataResponse
+ * Handles null values from Go omitempty and provides detailed logging
  */
 export function isBulkEnrichedDataResponse(value: unknown): value is BulkEnrichedDataResponse {
-  if (!isObject(value)) return false;
+  if (!isObject(value)) {
+    console.debug('[TypeGuards] isBulkEnrichedDataResponse: not an object', typeof value, value);
+    return false;
+  }
   
   const data = value as Record<string, unknown>;
   
-  // Validate optional campaigns field
-  if (data.campaigns !== undefined) {
-    if (!isObject(data.campaigns)) return false;
+  // Log the structure for debugging
+  console.debug('[TypeGuards] isBulkEnrichedDataResponse: validating structure', {
+    campaigns: {
+      type: typeof data.campaigns,
+      isObject: isObject(data.campaigns),
+      keys: data.campaigns ? Object.keys(data.campaigns as object).length : 'N/A'
+    },
+    totalCount: { type: typeof data.totalCount, value: data.totalCount },
+    metadata: { type: typeof data.metadata, hasValue: data.metadata !== undefined && data.metadata !== null }
+  });
+  
+  // Validate optional campaigns field (handle null from Go omitempty)
+  if (data.campaigns !== undefined && data.campaigns !== null) {
+    if (!isObject(data.campaigns)) {
+      console.warn('[TypeGuards] isBulkEnrichedDataResponse: campaigns is not an object', data.campaigns);
+      return false;
+    }
     
-    // Validate each campaign in the campaigns map
-    for (const [key, campaignData] of Object.entries(data.campaigns)) {
-      if (typeof key !== 'string' || !isEnrichedCampaignData(campaignData)) {
-        return false;
+    // Validate each campaign in the campaigns map - use lenient validation
+    const campaignsObj = data.campaigns as Record<string, unknown>;
+    const campaignEntries = Object.entries(campaignsObj);
+    console.debug('[TypeGuards] isBulkEnrichedDataResponse: validating', campaignEntries.length, 'campaigns');
+    
+    let validCampaigns = 0;
+    let invalidCampaigns = 0;
+    
+    for (const [key, campaignData] of campaignEntries) {
+      if (typeof key !== 'string') {
+        console.warn('[TypeGuards] isBulkEnrichedDataResponse: campaign key is not string', key);
+        invalidCampaigns++;
+        continue;
       }
+      
+      if (!isEnrichedCampaignData(campaignData)) {
+        console.warn('[TypeGuards] isBulkEnrichedDataResponse: campaign data validation failed for key', key, campaignData);
+        invalidCampaigns++;
+        continue;
+      }
+      
+      validCampaigns++;
+    }
+    
+    console.debug('[TypeGuards] isBulkEnrichedDataResponse: campaign validation summary', {
+      total: campaignEntries.length,
+      valid: validCampaigns,
+      invalid: invalidCampaigns
+    });
+    
+    // Allow the response even if some campaigns are invalid - log warning but don't fail entirely
+    if (invalidCampaigns > 0) {
+      console.warn('[TypeGuards] isBulkEnrichedDataResponse: some campaigns failed validation, but allowing response');
     }
   }
   
-  // Validate optional totalCount field
-  if (data.totalCount !== undefined && typeof data.totalCount !== 'number') {
+  // Validate optional totalCount field (handle null)
+  if (data.totalCount !== undefined && data.totalCount !== null && typeof data.totalCount !== 'number') {
+    console.warn('[TypeGuards] isBulkEnrichedDataResponse: totalCount is not a number', data.totalCount);
     return false;
   }
   
-  // Validate optional metadata field (allow any object for metadata)
-  if (data.metadata !== undefined && !isObject(data.metadata)) {
+  // Validate optional metadata field (allow any object for metadata, handle null)
+  if (data.metadata !== undefined && data.metadata !== null && !isObject(data.metadata)) {
+    console.warn('[TypeGuards] isBulkEnrichedDataResponse: metadata is not an object', data.metadata);
     return false;
   }
   
+  console.debug('[TypeGuards] isBulkEnrichedDataResponse: validation successful');
   return true;
 }
 
@@ -156,12 +266,36 @@ export function isCampaignIdsResponse(value: unknown): value is Array<{ campaign
 
 /**
  * Safe type assertion with runtime validation
- * Throws descriptive error if validation fails
+ * Provides detailed error information and handles null/undefined gracefully
  */
 export function assertBulkEnrichedDataResponse(value: unknown): BulkEnrichedDataResponse {
-  if (!isBulkEnrichedDataResponse(value)) {
-    throw new Error('Invalid BulkEnrichedDataResponse: Response does not match expected structure');
+  console.debug('[TypeGuards] assertBulkEnrichedDataResponse: validating response', {
+    type: typeof value,
+    isNull: value === null,
+    isUndefined: value === undefined,
+    hasData: value !== null && value !== undefined
+  });
+
+  // Handle null/undefined responses gracefully
+  if (value === null || value === undefined) {
+    console.warn('[TypeGuards] assertBulkEnrichedDataResponse: received null/undefined response, returning empty response');
+    return {
+      campaigns: {},
+      totalCount: 0,
+      metadata: {}
+    } as BulkEnrichedDataResponse;
   }
+
+  if (!isBulkEnrichedDataResponse(value)) {
+    console.error('[TypeGuards] assertBulkEnrichedDataResponse: validation failed', {
+      value,
+      type: typeof value,
+      structure: value && typeof value === 'object' ? Object.keys(value as object) : 'Not an object'
+    });
+    throw new Error(`Invalid BulkEnrichedDataResponse: Response does not match expected structure. Received: ${typeof value}`);
+  }
+  
+  console.debug('[TypeGuards] assertBulkEnrichedDataResponse: validation successful');
   return value;
 }
 

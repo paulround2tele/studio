@@ -1,7 +1,7 @@
 // Enterprise Bulk Campaign Data Provider
-// Replaces all individual N+1 API calls with optimized bulk operations
+// 🚀 WEBSOCKET PUSH MODEL: Real-time campaign updates with polling fallback
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { campaignsApi } from '@/lib/api-client/client';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type { UUID } from '@/lib/api-client/uuid-types';
@@ -60,6 +60,80 @@ export function useBulkCampaignData(options: BulkCampaignDataOptions): BulkCampa
   const [campaigns, setCampaigns] = useState<Map<string, LocalEnrichedCampaignData>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // 🚀 WEBSOCKET PUSH MODEL: Real-time campaign updates
+  const wsCleanupRef = useRef<(() => void) | null>(null);
+
+  // Real-time campaign progress handler
+  const handleCampaignProgress = useCallback((message: { type: string; data?: unknown }) => {
+    console.log('[BulkCampaignData] 🚀 Real-time campaign progress:', message);
+    
+    if (message.type === 'campaign_progress' && message.data) {
+      const progressData = message.data as {
+        campaignId?: string;
+        progress?: number;
+        phase?: string;
+        status?: string;
+      };
+      
+      if (progressData.campaignId) {
+        setCampaigns(prev => {
+          const updated = new Map(prev);
+          const existing = updated.get(progressData.campaignId!);
+          
+          if (existing) {
+            // Update campaign with real-time progress
+            const updatedCampaign: LocalEnrichedCampaignData = {
+              ...existing,
+              currentPhase: progressData.phase || existing.currentPhase,
+              phaseStatus: progressData.status || existing.phaseStatus,
+              overallProgress: progressData.progress ?? existing.overallProgress
+            };
+            
+            updated.set(progressData.campaignId!, updatedCampaign);
+            console.log(`[BulkCampaignData] 🚀 Updated campaign ${progressData.campaignId} progress: ${progressData.progress}%`);
+          }
+          
+          return updated;
+        });
+      }
+    }
+  }, []);
+
+  // Real-time phase transition handler
+  const handlePhaseTransition = useCallback((message: { type: string; data?: unknown }) => {
+    console.log('[BulkCampaignData] 🚀 Real-time phase transition:', message);
+    
+    if (message.type === 'phase_transition' && message.data) {
+      const transitionData = message.data as {
+        campaignId?: string;
+        fromPhase?: string;
+        toPhase?: string;
+        status?: string;
+      };
+      
+      if (transitionData.campaignId) {
+        setCampaigns(prev => {
+          const updated = new Map(prev);
+          const existing = updated.get(transitionData.campaignId!);
+          
+          if (existing) {
+            // Update campaign with phase transition
+            const updatedCampaign: LocalEnrichedCampaignData = {
+              ...existing,
+              currentPhase: transitionData.toPhase || existing.currentPhase,
+              phaseStatus: transitionData.status || existing.phaseStatus
+            };
+            
+            updated.set(transitionData.campaignId!, updatedCampaign);
+            console.log(`[BulkCampaignData] 🚀 Campaign ${transitionData.campaignId} transitioned: ${transitionData.fromPhase} → ${transitionData.toPhase}`);
+          }
+          
+          return updated;
+        });
+      }
+    }
+  }, []);
 
   const fetchBulkData = useCallback(async () => {
     if (!campaignIds.length) {
@@ -110,21 +184,98 @@ export function useBulkCampaignData(options: BulkCampaignDataOptions): BulkCampa
     }
   }, [campaignIds, limit, offset]);
 
-  // Auto-refresh functionality
+  // 🚀 WEBSOCKET PUSH MODEL: Real-time campaign connections
+  const connectCampaignWebSockets = useCallback(async (campaignIds: string[]) => {
+    if (!campaignIds.length) return;
+    
+    try {
+      // Import the WebSocket service dynamically to avoid SSR issues
+      const { websocketService } = await import('@/lib/services/websocketService.simple');
+      
+      console.log(`[BulkCampaignData] 🚀 Connecting to WebSocket for ${campaignIds.length} campaigns...`);
+      
+      // Clean up existing connections
+      if (wsCleanupRef.current) {
+        wsCleanupRef.current();
+        wsCleanupRef.current = null;
+      }
+      
+      // Connect to each campaign individually for targeted updates
+      const cleanupFunctions: (() => void)[] = [];
+      
+      for (const campaignId of campaignIds) {
+        const cleanup = websocketService.connect(`campaign-${campaignId}`, {
+          onMessage: (standardMessage: { type: string; data?: unknown }) => {
+            console.log(`[BulkCampaignData] 🚀 WebSocket message for campaign ${campaignId}:`, standardMessage);
+            
+            // Route campaign-specific messages
+            if (standardMessage.type === 'campaign_progress') {
+              handleCampaignProgress(standardMessage);
+            } else if (standardMessage.type === 'phase_transition') {
+              handlePhaseTransition(standardMessage);
+            } else if (standardMessage.type === 'campaign_complete') {
+              handleCampaignProgress(standardMessage); // Treat as progress update
+            }
+          },
+          onConnect: () => {
+            console.log(`[BulkCampaignData] 🚀 WebSocket connected for campaign ${campaignId}`);
+          },
+          onError: (error: Error | Event) => {
+            console.error(`[BulkCampaignData] WebSocket error for campaign ${campaignId}:`, error);
+          },
+          onDisconnect: () => {
+            console.log(`[BulkCampaignData] WebSocket disconnected for campaign ${campaignId}`);
+          }
+        });
+        
+        if (cleanup) {
+          cleanupFunctions.push(cleanup);
+        }
+      }
+      
+      // Store combined cleanup function
+      wsCleanupRef.current = () => {
+        console.log('[BulkCampaignData] 🚀 Cleaning up all campaign WebSocket connections');
+        cleanupFunctions.forEach(cleanup => cleanup());
+      };
+      
+      console.log(`[BulkCampaignData] 🚀 WebSocket connections established for ${campaignIds.length} campaigns`);
+      
+    } catch (error) {
+      console.error('[BulkCampaignData] Failed to connect campaign WebSockets:', error);
+    }
+  }, [handleCampaignProgress, handlePhaseTransition]);
+
+  // Auto-refresh functionality (reduced frequency with WebSocket push model)
   useEffect(() => {
     if (!autoRefresh || !campaignIds.length) return;
 
+    // 🚀 WEBSOCKET PUSH MODEL: Reduced polling frequency as WebSocket provides real-time updates
     const interval = setInterval(() => {
+      console.log('[BulkCampaignData] 🚀 Polling fallback refresh (WebSocket primary)');
       fetchBulkData();
     }, refreshInterval);
 
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, fetchBulkData, campaignIds.length]);
 
-  // Initial fetch
+  // Initial fetch and WebSocket setup
   useEffect(() => {
     fetchBulkData();
-  }, [fetchBulkData]);
+    
+    // 🚀 WEBSOCKET PUSH MODEL: Connect to real-time updates for all campaigns
+    if (campaignIds.length > 0) {
+      connectCampaignWebSockets(campaignIds);
+    }
+    
+    return () => {
+      // Cleanup WebSocket connections when component unmounts or campaignIds change
+      if (wsCleanupRef.current) {
+        wsCleanupRef.current();
+        wsCleanupRef.current = null;
+      }
+    };
+  }, [fetchBulkData, campaignIds, connectCampaignWebSockets]);
 
   // Memoized getter function
   const getCampaign = useCallback((campaignId: string): LocalEnrichedCampaignData | undefined => {
@@ -160,7 +311,7 @@ export function useSingleCampaignData(campaignId: string) {
   const bulkResult = useBulkCampaignData({
     campaignIds: validatedCampaignIds,
     autoRefresh: true,
-    refreshInterval: 15000
+    refreshInterval: 60000 // 🚀 WEBSOCKET PUSH MODEL: Reduced from 15s to 60s as WebSocket provides real-time updates
   });
 
   return useMemo(() => ({

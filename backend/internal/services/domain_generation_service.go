@@ -1339,6 +1339,33 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		processedInThisBatch = len(generatedDomainsToStore)
 		log.Printf("ProcessGenerationCampaignBatch: Saved %d domains for campaign %s.", processedInThisBatch, campaignID)
 
+		// CRITICAL FIX: Update JSONB domains_data field for bulk API endpoint
+		// Frontend bulk API reads from campaign.DomainsData, not individual domain records
+		domainsData := make([]map[string]interface{}, len(generatedDomainsToStore))
+		for i, domain := range generatedDomainsToStore {
+			domainsData[i] = map[string]interface{}{
+				"id":          domain.ID.String(),
+				"domain_name": domain.DomainName,
+				"offset":      domain.OffsetIndex,
+				"created_at":  domain.CreatedAt.Format(time.RFC3339),
+			}
+		}
+
+		// Structure the data for frontend consumption
+		domainsDataStructure := map[string]interface{}{
+			"domains":      domainsData,
+			"total_count":  len(generatedDomainsToStore),
+			"batch_size":   len(generatedDomainsToStore),
+			"last_updated": time.Now().Format(time.RFC3339),
+		}
+
+		if errUpdateDomains := s.campaignStore.UpdateDomainsData(ctx, querier, campaignID, domainsDataStructure); errUpdateDomains != nil {
+			log.Printf("⚠️ [CRITICAL_FIX] Failed to update JSONB domains_data for campaign %s: %v", campaignID, errUpdateDomains)
+			// Don't fail the entire operation, but log the error
+		} else {
+			log.Printf("✅ [CRITICAL_FIX] Successfully updated JSONB domains_data with %d domains for campaign %s", len(generatedDomainsToStore), campaignID)
+		}
+
 		// Real-time streaming: Broadcast each domain individually as it's generated
 		log.Printf("🔵 [DOMAIN_STREAMING_DEBUG] Starting to stream %d domains for campaign %s", len(generatedDomainsToStore), campaignID)
 
@@ -1467,6 +1494,28 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			return false, processedInThisBatch, opErr
 		}
 		log.Printf("SUCCESS [Global Offset]: Updated global offset for config hash %s to %d for campaign %s", configHashStringForUpdate, nextGeneratorOffsetAbsolute, campaignID)
+
+		// Update campaign metadata current_offset to reflect the new offset
+		if campaign.Metadata != nil {
+			var metadata map[string]interface{}
+			if err := json.Unmarshal(*campaign.Metadata, &metadata); err == nil {
+				if domainConfig, exists := metadata["domain_generation_config"]; exists {
+					if configMap, ok := domainConfig.(map[string]interface{}); ok {
+						configMap["current_offset"] = nextGeneratorOffsetAbsolute
+						if updatedMetadata, err := json.Marshal(metadata); err == nil {
+							campaign.Metadata = (*json.RawMessage)(&updatedMetadata)
+							log.Printf("SUCCESS [Campaign Metadata]: Updated campaign %s metadata current_offset to %d", campaignID, nextGeneratorOffsetAbsolute)
+						} else {
+							log.Printf("ERROR [Campaign Metadata]: Failed to marshal updated metadata for campaign %s: %v", campaignID, err)
+						}
+					}
+				}
+			} else {
+				log.Printf("ERROR [Campaign Metadata]: Failed to unmarshal campaign %s metadata: %v", campaignID, err)
+			}
+		} else {
+			log.Printf("WARNING [Campaign Metadata]: Campaign %s has no metadata to update", campaignID)
+		}
 	}
 
 	// Calculate new progress values
@@ -1567,6 +1616,8 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			log.Printf("Domain generation complete for campaign %s - Full Sequence Mode enabled, automatically transitioning to dns_validation", campaignID)
 		} else {
 			// Individual Phase Mode: Stay in domain generation phase (completed)
+			completedStatus := models.PhaseStatusEnum("completed")
+			campaign.PhaseStatus = &completedStatus
 			log.Printf("Domain generation complete for campaign %s - Individual Phase Mode, staying in generation phase for manual configuration", campaignID)
 		}
 		done = true

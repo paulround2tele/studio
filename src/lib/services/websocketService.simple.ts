@@ -108,7 +108,7 @@ class WebSocketServiceImpl {
       try {
         // Use the same auto-detection logic as the API client
         const apiUrl = getApiBaseUrlSync();
-        const wsUrl = apiUrl.replace(/^http/, 'ws').replace(/\/api\/v2$/, '') + '/ws';
+        const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws';
         console.log(`🔗 [WebSocketService] Auto-detected WebSocket URL from API: ${wsUrl}`);
         return wsUrl;
       } catch (error) {

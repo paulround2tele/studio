@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { sessionWebSocketClient } from '@/lib/websocket/client';
+import { websocketService } from '@/lib/services/websocketService.simple';
 import { createValidatedWebSocketHandlers } from '@/lib/websocket/message-handlers';
 import type { PhaseStateChangedMessage, PhaseConfigurationRequiredMessage } from '@/lib/websocket/message-handlers';
 import { Button } from '@/components/ui/button';
@@ -124,56 +124,40 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
       }
     };
 
-    // Create WebSocket handlers
+    // 🚀 WEBSOCKET PUSH MODEL: Specialized phase management handlers
+    // Campaign progress now handled at data layer, keep phase-specific handlers
     const wsHandlers = createValidatedWebSocketHandlers({
       onPhaseStateChanged: handlePhaseStateChanged,
       onPhaseConfigurationRequired: handlePhaseConfigurationRequired,
-      onCampaignProgress: (message) => {
-        if (message.data.campaignId === campaignId) {
-          // Refresh phase statuses on progress updates
-          loadPhaseStatuses();
+      // Removed onCampaignProgress and onCampaignStatus - now handled at data layer
+    });
+
+    // 🚀 FIXED: Use correct WebSocket service with proper backend protocol
+    const unsubscribeFromWebSocket = websocketService.connect(`campaign-${campaignId}`, {
+      onMessage: (message: any) => {
+        if (message && typeof message === 'object' && message.type) {
+          // Route phase-specific messages only
+          if (message.type === 'phase.state.changed') {
+            handlePhaseStateChanged(message as PhaseStateChangedMessage);
+          } else if (message.type === 'phase.configuration.required') {
+            handlePhaseConfigurationRequired(message as PhaseConfigurationRequiredMessage);
+          }
+          // 🚀 WEBSOCKET PUSH MODEL: campaign_progress and campaign_status now handled at data layer
         }
       },
-      onCampaignStatus: (message) => {
-        if (message.data.campaignId === campaignId) {
-          // Refresh phase statuses on status changes
-          loadPhaseStatuses();
-          onCampaignUpdate?.();
-        }
+      onOpen: () => {
+        console.log(`✅ [PhaseDashboard] Connected to WebSocket for campaign ${campaignId}`);
+      },
+      onError: (error) => {
+        console.error(`❌ [PhaseDashboard] WebSocket error for campaign ${campaignId}:`, error);
+      },
+      onClose: () => {
+        console.log(`🔌 [PhaseDashboard] Disconnected from WebSocket for campaign ${campaignId}`);
       }
     });
-
-    // Subscribe to WebSocket messages
-    const unsubscribeMessage = sessionWebSocketClient.on('message', (event: any) => {
-      if (event && typeof event === 'object' && event.type && event.data) {
-        // Route the message to appropriate handlers
-        if (event.type === 'phase.state.changed') {
-          handlePhaseStateChanged(event as PhaseStateChangedMessage);
-        } else if (event.type === 'phase.configuration.required') {
-          handlePhaseConfigurationRequired(event as PhaseConfigurationRequiredMessage);
-        } else if (event.type === 'campaign_progress') {
-          wsHandlers.onCampaignProgress?.(event);
-        } else if (event.type === 'campaign_status') {
-          wsHandlers.onCampaignStatus?.(event);
-        }
-      }
-    });
-
-    // Connect to WebSocket if not already connected
-    if (!sessionWebSocketClient.isConnected()) {
-      sessionWebSocketClient.connect().catch(error => {
-        console.error('Failed to connect to WebSocket:', error);
-      });
-    }
-
-    // Subscribe to campaign-specific topics
-    sessionWebSocketClient.subscribe(`campaign.${campaignId}`);
 
     // Cleanup function
-    return () => {
-      unsubscribeMessage();
-      sessionWebSocketClient.unsubscribe(`campaign.${campaignId}`);
-    };
+    return unsubscribeFromWebSocket;
   }, [campaignId, campaign, toast, onCampaignUpdate]);
 
   // Helper functions to determine phase completion based on available data
@@ -257,14 +241,38 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
           }
         }
         
-        // Configure action availability
+        // Configure action availability based on campaign mode
+        const isFullSequenceMode = campaign?.fullSequenceMode === true;
+        
         if (phaseType === 'domain_generation') {
+          // Domain generation is auto-started at campaign creation in BOTH modes
           canConfigure = false; // Configured during campaign creation
-          canStart = phaseStatus === 'ready';
+          canStart = false; // ❌ FIX: Never show start button - auto-started by backend
           configurationRequired = false;
+        } else if (isFullSequenceMode) {
+          // Full Auto Sequence Mode: All phases pre-configured during campaign creation
+          canConfigure = false; // No runtime configuration - all done upfront during campaign setup
+          canStart = false; // No manual start - backend auto-transitions through pre-configured phases
+          configurationRequired = false; // Already configured during campaign setup
         } else {
-          canConfigure = previousPhaseComplete && phaseStatus !== 'completed';
-          canStart = phaseStatus === 'ready';
+          // Step-by-Step Mode: Runtime configure → start workflow
+          if (phaseType === 'dns_validation') {
+            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready');
+            canStart = previousPhaseComplete && phaseStatus === 'ready';
+            configurationRequired = true; // Choose DNS personas at runtime
+          } else if (phaseType === 'http_keyword_validation') {
+            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready');
+            canStart = previousPhaseComplete && phaseStatus === 'ready';
+            configurationRequired = true; // Choose HTTP personas + keywords at runtime
+          } else if (phaseType === 'analysis') {
+            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready');
+            canStart = previousPhaseComplete && phaseStatus === 'ready';
+            configurationRequired = false; // Minimal config at runtime
+          } else {
+            // Fallback for any other phases
+            canConfigure = previousPhaseComplete && phaseStatus !== 'completed';
+            canStart = phaseStatus === 'ready';
+          }
         }
         
         statuses[phaseType] = {

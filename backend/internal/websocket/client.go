@@ -2,7 +2,9 @@ package websocket
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -288,6 +290,10 @@ func (c *Client) handleMessage(message []byte) {
 				"lastSequenceNumber": clientMsg.LastSequenceNumber,
 			}
 			c.sendMessage(response)
+
+			// 🚀 BACKEND STATE SYNC FIX: Send current campaign state immediately
+			// This prevents the race condition where frontend connects after generation completes
+			go c.sendCurrentCampaignState(clientMsg.CampaignID)
 		}
 
 	case "unsubscribe_campaign":
@@ -373,6 +379,15 @@ func (c *Client) GetLastSequenceNumber(campaignID string) int64 {
 	c.subscriptionMutex.RLock()
 	defer c.subscriptionMutex.RUnlock()
 	return c.sequenceNumbers[campaignID]
+}
+
+// sendCurrentCampaignState fetches and sends current campaign state to client on subscription
+// This prevents race condition where frontend connects after campaign generation completes
+func (c *Client) sendCurrentCampaignState(campaignID string) {
+	log.Printf("🔄 [STATE_SYNC] sendCurrentCampaignState called for campaign %s", campaignID)
+
+	// Use global pattern to fetch and broadcast current campaign state
+	BroadcastCurrentCampaignState(campaignID)
 }
 
 // NewClient creates a new client, registers it with the hub, and starts its read/write pumps.
@@ -1100,4 +1115,90 @@ func BroadcastSystemNotification(message string, level string) {
 	} else {
 		log.Printf("[DIAGNOSTIC] ERROR: No broadcaster available for system notification")
 	}
+}
+
+// BroadcastCurrentCampaignState fetches and broadcasts current campaign state for late-connecting clients
+// This prevents race condition where frontend connects after campaign generation completes
+func BroadcastCurrentCampaignState(campaignID string) {
+	log.Printf("🔄 [STATE_SYNC] BroadcastCurrentCampaignState called for campaign %s", campaignID)
+
+	broadcaster := GetBroadcaster()
+	if broadcaster == nil {
+		log.Printf("❌ [STATE_SYNC] ERROR: No broadcaster available for campaign state sync")
+		return
+	}
+
+	stateService := GetCampaignStateService()
+	if stateService == nil {
+		log.Printf("⚠️ [STATE_SYNC] Campaign state service not initialized, sending basic sync message for campaign %s", campaignID)
+		// Fallback to basic message if service not available
+		message := WebSocketMessage{
+			ID:             uuid.New().String(),
+			Timestamp:      time.Now().UTC().Format(time.RFC3339),
+			Type:           "campaign.state.sync",
+			SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+			CampaignID:     campaignID,
+			Message:        "State sync requested - service unavailable",
+		}
+		broadcaster.BroadcastToCampaign(campaignID, message)
+		return
+	}
+
+	// Fetch comprehensive campaign state from database
+	ctx := context.Background()
+	stateData, err := stateService.GetCampaignState(ctx, campaignID)
+	if err != nil {
+		log.Printf("❌ [STATE_SYNC] Failed to fetch campaign state for %s: %v", campaignID, err)
+		// Send error state sync message
+		message := WebSocketMessage{
+			ID:             uuid.New().String(),
+			Timestamp:      time.Now().UTC().Format(time.RFC3339),
+			Type:           "campaign.state.sync.error",
+			SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+			CampaignID:     campaignID,
+			Message:        fmt.Sprintf("Failed to fetch campaign state: %v", err),
+		}
+		broadcaster.BroadcastToCampaign(campaignID, message)
+		return
+	}
+
+	// Send comprehensive campaign progress message with enhanced data
+	progressMessage := WebSocketMessage{
+		ID:             uuid.New().String(),
+		Timestamp:      time.Now().UTC().Format(time.RFC3339),
+		Type:           "campaign.progress",
+		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+		CampaignID:     campaignID,
+		Message:        fmt.Sprintf("Campaign progress: %.1f%% complete", stateData.Progress),
+		Data: map[string]interface{}{
+			"progress":         stateData.Progress,
+			"status":           stateData.PhaseStatus,
+			"phase":            stateData.CurrentPhase,
+			"processedItems":   stateData.ProcessedItems,
+			"totalItems":       stateData.TotalItems,
+			"domainsGenerated": stateData.DomainsGenerated,
+			"dnsValidated":     stateData.DNSValidated,
+			"httpValidated":    stateData.HTTPValidated,
+			"leadsGenerated":   stateData.LeadsGenerated,
+			"isCompleted":      stateData.IsCompleted,
+		},
+	}
+
+	broadcaster.BroadcastToCampaign(campaignID, progressMessage)
+	log.Printf("✅ [STATE_SYNC] Comprehensive campaign state broadcasted for campaign %s: %.1f%% complete, phase: %s, status: %s",
+		campaignID, stateData.Progress, stateData.CurrentPhase, stateData.PhaseStatus)
+
+	// Also send a specific state sync confirmation message
+	syncMessage := WebSocketMessage{
+		ID:             uuid.New().String(),
+		Timestamp:      time.Now().UTC().Format(time.RFC3339),
+		Type:           "campaign.state.sync.complete",
+		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+		CampaignID:     campaignID,
+		Message:        fmt.Sprintf("State sync complete: %.1f%% progress in %s phase", stateData.Progress, stateData.CurrentPhase),
+		Data: map[string]interface{}{
+			"stateData": stateData,
+		},
+	}
+	broadcaster.BroadcastToCampaign(campaignID, syncMessage)
 }

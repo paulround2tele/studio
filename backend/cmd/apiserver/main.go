@@ -199,6 +199,10 @@ func main() {
 	campaignJobStore = pg_store.NewCampaignJobStorePostgres(db)
 	log.Println("PostgreSQL-backed stores initialized.")
 
+	// Initialize campaign state service for WebSocket state sync
+	websocket.InitializeCampaignStateService(campaignStore, db)
+	log.Println("Campaign state service initialized for WebSocket state sync.")
+
 	pmCfg := appConfig.ProxyManager
 	if pmCfg.TestTimeout == 0 {
 		if appConfig.HTTPValidator.RequestTimeoutSeconds > 0 {

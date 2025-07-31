@@ -7,6 +7,7 @@ import type { GeneratedDomain } from '@/lib/api-client/models/generated-domain';
 import type { LeadItem } from '@/lib/api-client/models/lead-item';
 import { validateBulkEnrichedDataRequest } from '@/lib/utils/uuidValidation';
 import { assertBulkEnrichedDataResponse, assertCampaignIdsResponse, LocalEnrichedCampaignData } from '@/lib/utils/typeGuards';
+import { sessionWebSocketClient } from '@/lib/websocket/client';
 
 interface CampaignDataContextType {
   campaigns: Map<string, LocalEnrichedCampaignData>;
@@ -108,14 +109,79 @@ export function CampaignDataProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // Initial fetch and auto-refresh
+  // WebSocket event handlers for real-time campaign list updates
+  const handleCampaignListUpdate = useCallback((data: any) => {
+    console.log('[CampaignDataProvider] WebSocket campaign list update received:', data);
+    
+    // Handle different types of campaign list updates
+    const { action, campaignId, campaignData } = data;
+    
+    switch (action) {
+      case 'created':
+      case 'updated':
+        if (campaignData && campaignId) {
+          setCampaigns(prev => {
+            const newMap = new Map(prev);
+            newMap.set(campaignId, campaignData);
+            return newMap;
+          });
+        } else {
+          // If no campaign data provided, refetch all campaigns
+          fetchAllCampaigns();
+        }
+        break;
+        
+      case 'deleted':
+        if (campaignId) {
+          setCampaigns(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(campaignId);
+            return newMap;
+          });
+        }
+        break;
+        
+      default:
+        // Unknown action, refetch all campaigns
+        fetchAllCampaigns();
+        break;
+    }
+  }, [fetchAllCampaigns]);
+
+  // Initial fetch and WebSocket subscription for real-time updates
   useEffect(() => {
+    // Initial data fetch
     fetchAllCampaigns();
     
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchAllCampaigns, 30000);
-    return () => clearInterval(interval);
-  }, [fetchAllCampaigns]);
+    // 🚀 PURE WEBSOCKET MODEL: Subscribe to campaign list updates - NO MORE POLLING!
+    console.log('[CampaignDataProvider] Setting up WebSocket subscription for campaign list updates');
+    
+    // Connect to WebSocket
+    sessionWebSocketClient.connect();
+    
+    // Set up event listeners for campaign updates
+    const handleMessage = (message: any) => {
+      console.log('[CampaignDataProvider] WebSocket message received:', message);
+      
+      if (message.type === 'campaign.list.update') {
+        handleCampaignListUpdate(message.payload);
+      } else if (message.type === 'campaign.progress') {
+        console.log('[CampaignDataProvider] Campaign progress update received:', message.payload);
+        // Refresh the specific campaign to get updated progress
+        if (message.payload?.campaignId) {
+          fetchAllCampaigns();
+        }
+      }
+    };
+    
+    // Subscribe to WebSocket messages - the on() method returns an unsubscribe function
+    const unsubscribeFromMessages = sessionWebSocketClient.on('message', handleMessage);
+    
+    return () => {
+      console.log('[CampaignDataProvider] Cleaning up WebSocket subscriptions');
+      unsubscribeFromMessages();
+    };
+  }, [fetchAllCampaigns, handleCampaignListUpdate]);
 
   const getCampaign = useCallback((campaignId: string): LocalEnrichedCampaignData | undefined => {
     return campaigns.get(campaignId);

@@ -210,54 +210,21 @@ default:
     }
   }, [campaignKey.id, toast, onDomainReceived, onCampaignUpdate]);
 
-  // Optimized WebSocket connection effect with minimal dependencies
+  // 🚀 WEBSOCKET PUSH MODEL: WebSocket now handled at data layer (useBulkCampaignData)
+  // Component receives real-time updates via props instead of direct WebSocket connection
   useEffect(() => {
-    console.log(`[DEBUG] useEffect triggered for campaign ${campaignKey.id} - shouldConnect: ${shouldConnect}, phase: ${campaignKey.currentPhase}, status: ${campaignKey.status}`);
+    console.log(`[CampaignProgressMonitor] 🚀 Using data layer WebSocket, campaign ${campaignKey.id} - phase: ${campaignKey.currentPhase}, status: ${campaignKey.status}`);
     
-    if (shouldConnect && user) {
-      // Use the websocketService
-      if (!campaignKey.id) return;
-      cleanupRef.current = websocketService.connect(
-        `campaign-${campaignKey.id}`,
-        {
-onMessage: (standardMessage: WebSocketMessage) => {
-            // Convert to legacy format and then back to compatible format
-            const legacyMessage = adaptWebSocketMessage(standardMessage);
-            const compatibleMessage: WebSocketMessage & { campaignId?: string; message?: string } = {
-              ...legacyMessage,
-              timestamp: new Date(legacyMessage.timestamp).toISOString()
-            };
-            handleWebSocketMessage(compatibleMessage);
-          },
-          onError: (error: Event | Error) => {
-            console.error('WebSocket error:', error);
-            setConnectionHealth({ isConnected: false, lastHeartbeat: null });
-            toast({
-title: "Connection Error",
-              description: "Lost connection to real-time updates.",
-              variant: "destructive"
-            });
-          }
-        }
-      );
-      
+    // Set connection health based on campaign data being received
+    if (campaignKey.id && campaign) {
       setConnectionHealth({ isConnected: true, lastHeartbeat: new Date() });
-      
-      toast({
-title: "Real-time Monitoring Connected",
-        description: "Now receiving live updates for this campaign."
-      });
     }
 
     return () => {
-      console.log(`[DEBUG] useEffect cleanup for campaign ${campaignKey.id}`);
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-      setConnectionHealth({ isConnected: false, lastHeartbeat: null });
+      console.log(`[CampaignProgressMonitor] 🚀 Cleanup for campaign ${campaignKey.id}`);
+      // No WebSocket cleanup needed - handled by data layer
     };
-  }, [campaignKey.id, campaignKey.currentPhase, campaignKey.phaseStatus, campaignKey.status, shouldConnect, user, toast, handleWebSocketMessage]);
+  }, [campaignKey.id, campaignKey.currentPhase, campaignKey.phaseStatus, campaignKey.status, campaign]);
 
   // Optimized campaign state sync effect with memoized dependencies
   useEffect(() => {

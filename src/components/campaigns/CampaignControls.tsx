@@ -287,18 +287,18 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
       );
     }
 
-    // If campaign has no active phases, show start button
+    // If campaign has no active phases, this indicates domain generation should have auto-started
+    // Domain generation is auto-started at campaign creation, so this state shouldn't normally occur
     if (!currentPhase && !completedPhase) {
       return (
-        <PhaseGateButton
-          label="Start Campaign"
-          onClick={() => onStartPhase('domain_generation')} // Always start with domain generation phase
-          Icon={Play}
-          variant="default"
-          isLoading={actionLoading.start}
-          disabled={!!actionLoading.start}
-          className="bg-green-600 hover:bg-green-700 text-white"
-        />
+        <div className="text-center p-4">
+          <p className="text-sm text-muted-foreground mb-2">
+            ⚡ Domain generation should start automatically after campaign creation
+          </p>
+          <p className="text-xs text-muted-foreground">
+            If you're seeing this, the campaign may still be initializing or there may be an issue.
+          </p>
+        </div>
       );
     }
 
@@ -341,16 +341,16 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
       );
     }
 
-    // Default case - show generic start button for next available phase
+    // Default case - This shouldn't normally occur since domain generation auto-starts
     return (
-      <PhaseGateButton
-        label="Start Phase"
-        onClick={() => onStartPhase('domain_generation')}
-        Icon={Play}
-        variant="default"
-        isLoading={actionLoading.start}
-        disabled={!!actionLoading.start}
-      />
+      <div className="text-center p-4">
+        <p className="text-sm text-muted-foreground mb-2">
+          ⚠️ Unexpected campaign state detected
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Domain generation should have started automatically. Please refresh or contact support if this persists.
+        </p>
+      </div>
     );
   };
 

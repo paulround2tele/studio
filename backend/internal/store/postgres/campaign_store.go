@@ -132,7 +132,7 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 func (s *campaignStorePostgres) UpdateCampaign(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign) error {
 	query := `UPDATE lead_generation_campaigns SET
 	                               name = :name, current_phase = :current_phase, phase_status = :phase_status, user_id = :user_id,
-	                               updated_at = :updated_at
+	                               updated_at = :updated_at, metadata = :metadata
 	                         WHERE id = :id`
 	result, err := exec.NamedExecContext(ctx, query, campaign)
 	if err != nil {
